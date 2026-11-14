@@ -45,6 +45,7 @@ const LAND_KUERZEL = /^[A-Z]{2}$/;
 
 // CSV mit Anfuehrungszeichen — Orte wie "Freiburg im Breisgau" sind harmlos,
 // aber Firmennamen enthalten Kommata. Deshalb ein echter Parser, kein split(',').
+/** @param {string} zeile */
 function parseCsvZeile(zeile) {
   const felder = [];
   let feld = '';
@@ -96,7 +97,7 @@ for (let n = 1; n < zeilen.length; n++) {
   if (!ort) continue;
 
   if (!karte.has(plz)) karte.set(plz, new Set());
-  karte.get(plz).add(ort);
+  karte.get(plz)?.add(ort);
   // Bundesland ueber `state_code` (BW/BY/…), nicht ueber den ausgeschriebenen
   // Namen: das ist der Schluessel, mit dem `heilmittel_tarif.bundesland` gefuellt
   // ist. Und alle Werte sammeln statt nur den ersten — elf PLZ liegen wirklich
@@ -104,11 +105,12 @@ for (let n = 1; n < zeilen.length; n++) {
   // Fehler, der hier abgestellt wird.
   const blKuerzel = (f[iLandKrz] || '').trim();
   if (!bundesland.has(plz)) bundesland.set(plz, new Set());
-  bundesland.get(plz).add(blKuerzel);
+  bundesland.get(plz)?.add(blKuerzel);
 }
 
 // Ein PLZ-Gebiet kann echt mehrere Orte haben (laendlicher Raum). Mehrere Werte
 // bleiben als Liste erhalten — die Maske schlaegt dann vor statt zu setzen.
+/** @type {Record<string, string | string[]>} */
 const daten = {};
 let mehrdeutig = 0;
 for (const [plz, orte] of [...karte].sort((a, b) => a[0].localeCompare(b[0]))) {
@@ -133,6 +135,7 @@ const ausgabe = {
 // Preisabfrage `heilmittel_tarif.bundesland` dran (Ops-Karte 178). NICHT das
 // Tarifkennzeichen — das kommt aus dem Vertrag, siehe billing/codes/legs.js.
 if (process.argv.includes('--bundesland')) {
+  /** @type {Record<string, string | string[]>} */
   const bl = {};
   let grenzfaelle = 0;
   for (const [plz, kuerzel] of [...bundesland].sort((a, b) => a[0].localeCompare(b[0]))) {

@@ -10,7 +10,7 @@
 (function () {
   if (typeof window === 'undefined') return;
 
-  fetch('/api/config').then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; }).then(function (cfg) {
+  fetch('/api/config').then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; }).then(function (/** @type {any} */ cfg) {
     if (cfg.telemetryEnabled !== true) return; // safe default: off (box) unless SaaS says on
 
     var loader = document.createElement('script');
@@ -21,7 +21,8 @@
   });
 
   function initSentry() {
-  if (!window.Sentry || !window.Sentry.onLoad) {
+  var sentry = /** @type {any} */ (window).Sentry;
+  if (!sentry || !sentry.onLoad) {
     // Loader failed to expose expected API — fail silent.
     return;
   }
@@ -40,7 +41,7 @@
     { re: /\b[A-Z]\d{2}\.\d{1,2}[A-Z]?\b/g, sub: '[ICD_REDACTED]' },
   ];
 
-  function scrubString(s) {
+  function scrubString(/** @type {any} */ s) {
     if (typeof s !== 'string') return s;
     var out = s;
     for (var i = 0; i < PII_PATTERNS.length; i++) {
@@ -49,11 +50,17 @@
     return out;
   }
 
+  /**
+   * @param {any} obj
+   * @param {number} depth
+   * @returns {any}
+   */
   function deepScrub(obj, depth) {
     if (depth > 5 || obj == null) return obj;
     if (typeof obj === 'string') return scrubString(obj);
     if (Array.isArray(obj)) return obj.map(function (x) { return deepScrub(x, depth + 1); });
     if (typeof obj === 'object') {
+      /** @type {Record<string, any>} */
       var out = {};
       for (var k in obj) {
         if (Object.prototype.hasOwnProperty.call(obj, k)) {
@@ -65,8 +72,8 @@
     return obj;
   }
 
-  window.Sentry.onLoad(function () {
-    window.Sentry.init({
+  sentry.onLoad(function () {
+    sentry.init({
       environment: environment,
 
       // Performance tracing disabled — the lightweight CDN loader doesn't ship
@@ -89,7 +96,7 @@
       ],
 
       // Strip PII from anything that bubbles up.
-      beforeSend: function (event) {
+      beforeSend: function (/** @type {any} */ event) {
         try {
           if (event.message)            event.message            = scrubString(event.message);
           if (event.exception)          event.exception          = deepScrub(event.exception, 0);
@@ -107,7 +114,7 @@
       },
 
       // Same scrubbing for breadcrumbs (e.g. fetch URLs with KVNR in query string)
-      beforeBreadcrumb: function (crumb) {
+      beforeBreadcrumb: function (/** @type {any} */ crumb) {
         try {
           if (crumb.message) crumb.message = scrubString(crumb.message);
           if (crumb.data)    crumb.data    = deepScrub(crumb.data, 0);
@@ -122,7 +129,7 @@
       if (raw) {
         var parsed = JSON.parse(raw);
         var uid = parsed && parsed.user && parsed.user.id;
-        if (uid) window.Sentry.setUser({ id: uid });
+        if (uid) sentry.setUser({ id: uid });
       }
     } catch (e) {}
   });

@@ -14,9 +14,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 let pass = 0, fail = 0;
+/** @param {string} name @param {() => void} fn */
 function test(name, fn) {
   try { fn(); console.log('  ok   ' + name); pass++; }
-  catch (e) { console.log('  FAIL ' + name + '\n       ' + e.message); fail++; }
+  catch (e) { console.log('  FAIL ' + name + '\n       ' + (e instanceof Error ? e.message : String(e))); fail++; }
 }
 
 console.log('plz-bundesland');
@@ -81,7 +82,7 @@ test('Zahl 38100 wird wie die Zeichenkette behandelt', () =>
 
 test('Fehlertext nennt die PLZ und bleibt bei eindeutiger PLZ leer', () => {
   assert.equal(bundeslandFehlerText('38100'), null);
-  assert.match(bundeslandFehlerText('99999'), /99999/);
+  assert.match(bundeslandFehlerText('99999') ?? '', /99999/);
 });
 
 // ── Grenzfälle: lieber nachfragen als raten ───────────────────────────────
@@ -89,7 +90,7 @@ test('Fehlertext nennt die PLZ und bleibt bei eindeutiger PLZ leer', () => {
 test('07919 liegt auf der Grenze SN/TH → null + zwei Kandidaten', () => {
   assert.deepEqual(bundeslandKandidaten('07919'), ['SN', 'TH']);
   assert.equal(bundeslandFuerPlz('07919'), null);
-  assert.match(bundeslandFehlerText('07919'), /Landesgrenze/);
+  assert.match(bundeslandFehlerText('07919') ?? '', /Landesgrenze/);
 });
 
 test('21039 liegt auf der Grenze HH/SH → null', () => {

@@ -3,6 +3,10 @@ import { getAuthedUser, json } from '../_lib/auth.js';
 
 const APIFY_TOKEN = process.env.APIFY_TOKEN;
 
+/**
+ * @param {import('../_lib/auth.js').VercelRequest} req
+ * @param {import('../_lib/auth.js').VercelResponse} res
+ */
 async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
 
@@ -47,7 +51,7 @@ async function handler(req, res) {
 
     return json(res, 200, { items });
   } catch (e) {
-    return json(res, 500, { error: e.message || 'Apify request failed' });
+    return json(res, 500, { error: (e instanceof Error ? e.message : '') || 'Apify request failed' });
   }
 }
 

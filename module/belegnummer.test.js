@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { belegnummerText, belegnummerRosette } from './belegnummer.js';
 
+/** @param {any} s */
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 test('setzt die Nummer aus Patienten- und Verordnungsnummer zusammen', () => {

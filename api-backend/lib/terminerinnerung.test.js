@@ -5,6 +5,7 @@ import {
 } from './terminerinnerung.js';
 import { protokollSchluessel, IN_ARBEIT, einteilen } from './sondertag-mitteilung.js';
 
+/** @param {string} iso */
 const J = iso => new Date(iso);
 
 // ── G-3 Berliner Zeit ───────────────────────────────────────────────────────────────────────────
@@ -42,7 +43,8 @@ test('G-3 morgenBerlin: Mitternacht, Jahreswechsel, Zeitumstellung, Monatsende',
 
 // ── Auswahl der Termine ──────────────────────────────────────────────────────────────────────────
 const jetzt = J('2026-12-10T17:00:00Z'); // 18:00 MEZ, morgen = 2026-12-11
-const b = (id, start, extra = {}) => ({ id, start_time: start, status: 'confirmed', created_at: '2026-01-01T08:00:00Z', ...extra });
+/** @param {string} id @param {string | null} start @param {Record<string, unknown>} [extra] @returns {Parameters<typeof zuErinnern>[0][number]} */
+const b = (id, start, extra = {}) => /** @type {Parameters<typeof zuErinnern>[0][number]} */ ({ id, start_time: start, status: 'confirmed', created_at: '2026-01-01T08:00:00Z', ...extra });
 
 test('zuErinnern: nur morgen, Zukunft, aktiv, kein Gruppen-Kind, nicht kurz vorher gebucht', () => {
   const liste = zuErinnern([
@@ -81,7 +83,7 @@ test('zuErinnern: Zeitumstellungstage (23 und 25 Stunden) werden vollstaendig un
 test('G-1 protokollZustandErinnerung: gesendet/endgueltig/unklar nie erneut, nur sicher nicht angenommene Mails wiederholbar', () => {
   const beginn = '2026-12-11T09:00:00Z';
   const zeilen = [
-    { booking_id: 'a', termin_beginn: beginn, status: 'gesendet', fehler_code: null },
+    { booking_id: 'a', termin_beginn: beginn, status: 'gesendet', fehler_code: /** @type {string | undefined} */ (/** @type {unknown} */ (null)) },
     { booking_id: 'b', termin_beginn: beginn, status: 'fehler', fehler_code: IN_ARBEIT },
     { booking_id: 'c', termin_beginn: beginn, status: 'fehler', fehler_code: 'EENVELOPE' },     // Empfaenger endgueltig abgelehnt
     { booking_id: 'd', termin_beginn: beginn, status: 'fehler', fehler_code: 'ETIMEDOUT' },     // Timeout: Mail evtl. schon angenommen
@@ -89,14 +91,16 @@ test('G-1 protokollZustandErinnerung: gesendet/endgueltig/unklar nie erneut, nur
     { booking_id: 'f', termin_beginn: beginn, status: 'fehler', fehler_code: 'SMTP_4XX' },      // Greylisting: nicht angenommen
     { booking_id: 'g', termin_beginn: beginn, status: 'fehler', fehler_code: 'ESOCKET' },       // wie ETIMEDOUT: unsicher
   ];
-  const m = protokollZustandErinnerung(zeilen, protokollSchluessel, IN_ARBEIT);
+  const schluessel = /** @type {Parameters<typeof protokollZustandErinnerung>[1]} */ (/** @type {unknown} */ (protokollSchluessel));
+  const m = protokollZustandErinnerung(zeilen, schluessel, IN_ARBEIT);
+  /** @param {string} id */
   const z = id => m.get(protokollSchluessel(id, beginn));
   assert.equal(z('a'), 'gesendet'); assert.equal(z('b'), 'unklar'); assert.equal(z('c'), 'unklar');
   assert.equal(z('d'), 'unklar'); assert.equal(z('e'), 'unklar'); assert.equal(z('g'), 'unklar');
   assert.equal(z('f'), undefined); // einzig SMTP_4XX wird wieder angeboten
   assert.deepEqual([...WIEDERHOLBAR].sort(), ['EAUTH', 'EDNS', 'SMTP_4XX']);
   for (const code of WIEDERHOLBAR) assert.equal(protokollZustandErinnerung(
-    [{ booking_id: 'x', termin_beginn: beginn, status: 'fehler', fehler_code: code }], protokollSchluessel, IN_ARBEIT).size, 0);
+    [{ booking_id: 'x', termin_beginn: beginn, status: 'fehler', fehler_code: code }], schluessel, IN_ARBEIT).size, 0);
 });
 
 test('G-1/G-2 einteilen mit Erinnerungs-Protokoll: schon gesendet -> nicht erneut; unklar -> Anrufliste; verschobener Termin wieder angeboten', () => {

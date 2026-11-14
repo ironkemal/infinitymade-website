@@ -4,12 +4,13 @@ import assert from 'node:assert/strict';
 process.env.SUPABASE_URL = 'http://ausfall.test';
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'synthetic-test-key';
 const originalFetch = globalThis.fetch;
+/** @type {any} */
 let scenario;
 globalThis.fetch = async (input, options = {}) => {
   const url = new URL(String(input));
   assert.equal(url.hostname, 'ausfall.test');
   const table = url.pathname.split('/').at(-1);
-  const body = options.body ? JSON.parse(options.body) : null;
+  const body = options.body ? JSON.parse(String(options.body)) : null;
   scenario.requests.push({ table, method: options.method || 'GET', body });
   let data;
   if (url.pathname === '/auth/v1/user') data = { id: 'owner-test', email: 'owner@example.test' };
@@ -32,18 +33,26 @@ globalThis.fetch = async (input, options = {}) => {
 };
 after(() => { globalThis.fetch = originalFetch; });
 const { default: router } = await import('./ausfall.routes.js');
+/**
+ * @param {string} path
+ * @param {Record<string, any>} [body]
+ * @param {Record<string, any>} [overrides]
+ * @returns {Promise<any>}
+ */
 async function call(path, body = {}, overrides = {}) {
-  scenario = { requests: [], ...overrides };
+  scenario = { requests: /** @type {any[]} */ ([]), ...overrides };
+  /** @type {{ status: number, body?: any }} */
   const result = { status: 200 };
-  const res = { status(value) { result.status = value; return this; }, json(value) { result.body = value; return this; }, set() { return this; }, send(value) { result.body = value; return this; } };
-  const handler = router.stack.find(layer => layer.route?.path === path).route.stack[0].handle;
+  /** @type {any} */
+  const res = { status(/** @type {number} */ value) { result.status = value; return this; }, json(/** @type {any} */ value) { result.body = value; return this; }, set() { return this; }, send(/** @type {any} */ value) { result.body = value; return this; } };
+  const handler = (/** @type {any} */ (router)).stack.find((/** @type {any} */ layer) => layer.route?.path === path).route.stack[0].handle;
   await handler({ headers: { authorization: 'Bearer synthetic-token' }, params: { id: 'af-test' }, body }, res);
   return { ...result, ...scenario };
 }
 test('Zahlung schreibt ausschließlich atomare RPC mit Mandant und Akteur', async () => {
   const result = await call('/ausfall/:id/status', { status: 'bezahlt', zahlart: 'bar' });
   assert.equal(result.status, 200);
-  const writes = result.requests.filter(r => r.method !== 'GET');
+  const writes = result.requests.filter((/** @type {any} */ r) => r.method !== 'GET');
   assert.equal(writes.length, 1);
   assert.equal(writes[0].table, 'ausfall_status_buchen');
   assert.deepEqual(writes[0].body, { p_owner_id: 'owner-test', p_actor_id: 'owner-test', p_ausfall_id: 'af-test', p_status: 'bezahlt', p_zahlart: 'bar' });
@@ -52,7 +61,7 @@ test('Fehlende RPC: 503 ohne REST-Fallback oder Statusänderung', async () => {
   for (const code of ['PGRST202', '42883']) {
     const result = await call('/ausfall/:id/status', { status: 'bezahlt', zahlart: 'bar' }, { rpcError: { code, message: 'missing function' } });
     assert.equal(result.status, 503);
-    assert.equal(result.requests.some(r => ['belegliste', 'ausfallrechnungen'].includes(r.table)), false);
+    assert.equal(result.requests.some((/** @type {any} */ r) => ['belegliste', 'ausfallrechnungen'].includes(r.table)), false);
   }
 });
 test('Journalfehler wird Fehler statt falscher Zahlungsbestätigung', async () => {
@@ -61,16 +70,16 @@ test('Journalfehler wird Fehler statt falscher Zahlungsbestätigung', async () =
   assert.match(result.body.error, /nicht geändert/);
 });
 test('Konflikt, Fremdmandant und unbekannte Rechnung werden korrekt abgebildet', async () => {
-  for (const [code, expected] of [['23514', 409], ['42501', 403], ['P0002', 404]]) {
+  for (const [code, expected] of /** @type {Array<[string, number]>} */ ([['23514', 409], ['42501', 403], ['P0002', 404]])) {
     const result = await call('/ausfall/:id/status', { status: 'bezahlt', zahlart: 'bar' }, { rpcError: { code, message: 'blocked' } });
     assert.equal(result.status, expected);
   }
 });
 test('Mitarbeiter, ungültiger Status oder fehlende Zahlart erzeugen keine RPC', async () => {
-  for (const [body, overrides] of [[{ status: 'bezahlt' }, {}], [{ status: 'offen' }, {}], [{ status: 'bezahlt', zahlart: 'bar' }, { role: 'employee' }]]) {
+  for (const [body, overrides] of /** @type {Array<[Record<string, any>, Record<string, any>]>} */ ([[{ status: 'bezahlt' }, {}], [{ status: 'offen' }, {}], [{ status: 'bezahlt', zahlart: 'bar' }, { role: 'employee' }]])) {
     const result = await call('/ausfall/:id/status', body, overrides);
     assert.ok([400, 403].includes(result.status));
-    assert.equal(result.requests.some(r => r.table === 'ausfall_status_buchen'), false);
+    assert.equal(result.requests.some((/** @type {any} */ r) => r.table === 'ausfall_status_buchen'), false);
   }
 });
 test('Storno und Abschreibung nutzen ebenfalls atomaren Statusweg', async () => {

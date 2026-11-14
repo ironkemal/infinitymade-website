@@ -6,6 +6,7 @@ import {
 } from './widget-guards.js';
 
 const JETZT = new Date('2026-10-12T10:00:00Z');
+/** @returns {any} */
 const gut = () => ({
   payment_type: 'gkv',
   patient: { vorname: 'Erika', nachname: 'Musterfrau', geburtsdatum: '1975-04-12', telefon: '0151 1234567' },
@@ -16,6 +17,7 @@ const gut = () => ({
 test('gueltige Widget-Anfrage', () => assert.equal(pruefeWidgetAnfrage(gut(), JETZT), null));
 
 test('jede Regel greift auch ohne Client', () => {
+  /** @type {Array<[(b: any) => void, RegExp]>} */
   const faelle = [
     [(b) => { b.patient.vorname = '<b>'; }, /Nachnamen/],
     [(b) => { b.patient.geburtsdatum = '2999-01-01'; }, /Geburtsdatum/],

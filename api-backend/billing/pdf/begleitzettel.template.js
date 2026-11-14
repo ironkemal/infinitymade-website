@@ -21,11 +21,16 @@
 // Empfaenger werden getrennt aufgeloest (annahmestelle.js). Die Papierannahmestelle
 // erscheint als optionaler dritter Adressblock, wenn sie aufgeloest werden konnte.
 
-const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
+/** @type {Record<string, string>} */
+const HTML_ESC = {
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-}[c]));
+};
+/** @param {unknown} s */
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => HTML_ESC[c] ?? c);
 
+/** @param {unknown} n */
 const fmtEur = (n) => (n == null ? '' : Number(n).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })) + ' €';
+/** @param {Date | string | null | undefined} d */
 const fmtDate = (d) => {
   if (!d) return '';
   const dt = d instanceof Date ? d : new Date(d);
@@ -103,26 +108,39 @@ const DRUCK_SKRIPT = `
 `;
 
 /**
+ * @typedef {{
+ *   praxis?: { name?: string, strasse?: string, plz_ort?: string, telefon?: string, ik?: string },
+ *   abrechnung?: {
+ *     dateiname?: string,
+ *     rechnungsnummer?: string,
+ *     datum?: Date | string,
+ *     abrechnungsmonat?: string,
+ *     leistungsbereich?: string,
+ *     prescription_count?: number,
+ *     total_brutto?: number | string | null,
+ *     total_zuzahlung?: number | string | null,
+ *     total_netto?: number | string | null,
+ *     krankenkasse_name?: string,
+ *     krankenkasse_ik?: string,
+ *     kostentraeger_name?: string,
+ *     kostentraeger_ik?: string,
+ *   },
+ *   belege?: Array<{
+ *     belegnummer?: string,
+ *     patient_nachname?: string,
+ *     patient_vorname?: string,
+ *     verordnungsdatum?: Date | string | null,
+ *     brutto?: number | string | null,
+ *   }>,
+ *   blatt?: { nummer: number, von: number } | null,
+ *   papierannahmestelle?: { ik?: string, name?: string, anschrift?: { art?: string, plz?: string, ort?: string, strasse?: string } | null } | null,
+ * }} BegleitzettelOpts
+ */
+
+/**
  * Ein Blatt = eine Gesamtrechnung.
  *
- * @param {object} opts
- * @param {object} opts.praxis      { name, strasse, plz_ort, telefon, ik }
- * @param {object} opts.abrechnung  {
- *   dateiname,           // 'EHK5678900000023' — die Datei, in der diese Rechnung steckt
- *   rechnungsnummer,     // Einzel-Rechnungsnummer DIESER Gesamtrechnung (= SLGA.REC)
- *   datum, abrechnungsmonat, leistungsbereich,
- *   prescription_count,  // Urbelege DIESER Gesamtrechnung
- *   total_brutto, total_zuzahlung, total_netto,
- *   krankenkasse_name,   // Name zur Karten-IK
- *   krankenkasse_ik,     // Karten-IK des Versicherten (SLGA.FKT Feld 5)
- *   kostentraeger_name,  // Rechnungsadressat
- *   kostentraeger_ik,    // Kostenträger-IK        (SLGA.FKT Feld 4)
- * }
- * @param {Array} opts.belege
- * @param {{nummer:number,von:number}} [opts.blatt]  Seitenzähler bei mehreren Blättern
- * @param {{ik:string, name:string, anschrift:{art:string,plz:string,ort:string,strasse:string}|null}|undefined} [opts.papierannahmestelle]
- *   Papierannahmestelle (VKG 09). Fehlt das Feld komplett → kein Adressblock.
- *   Ist anschrift null → IK + Name + Klartext-Warnung (Adresse nicht hinterlegt).
+ * @param {BegleitzettelOpts} opts
  */
 function renderBlatt({ praxis = {}, abrechnung = {}, belege = [], blatt = null, papierannahmestelle }) {
   const belegRows = belege.map((b, i) => `
@@ -247,6 +265,7 @@ function renderBlatt({ praxis = {}, abrechnung = {}, belege = [], blatt = null, 
   </section>`;
 }
 
+/** @param {{ titel: string, blaetter: string[], hinweis: string }} opts */
 function huelle({ titel, blaetter, hinweis }) {
   return `<!DOCTYPE html>
 <html lang="de">
@@ -273,7 +292,10 @@ ${blaetter.join('\n')}
 </html>`;
 }
 
-/** Ein einzelner Begleitzettel (eine Gesamtrechnung). */
+/**
+ * Ein einzelner Begleitzettel (eine Gesamtrechnung).
+ * @param {BegleitzettelOpts} opts
+ */
 export function renderBegleitzettel(opts) {
   return huelle({
     titel:   `Begleitzettel — ${opts?.abrechnung?.dateiname || ''}`,
@@ -285,7 +307,7 @@ export function renderBegleitzettel(opts) {
 /**
  * Mehrere Gesamtrechnungen einer Datei — ein Blatt je Gesamtrechnung.
  * @param {object} opts
- * @param {Array} opts.blaetter  je Eintrag ein renderBlatt()-opts (ohne `blatt`)
+ * @param {BegleitzettelOpts[]} [opts.blaetter]  je Eintrag ein renderBlatt()-opts (ohne `blatt`)
  * @param {string} [opts.dateiname]
  */
 export function renderBegleitzettelBundle({ blaetter = [], dateiname = '' }) {

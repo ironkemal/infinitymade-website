@@ -11,10 +11,34 @@
  * eigener Schritt (KUTU_HAZIRLIK_SPRINT.md §4, Rechnungs-Snapshot (v)).
  */
 
+/** @param {unknown} w */
 const t = (w) => String(w ?? '').trim();
+/** @param {unknown} w */
 const n = (w) => t(w) || null;
 
-/** Spiegel von module/branding.js ausstellerSnapshot — Profilzeile der PRAXIS → Aussteller-Snapshot. */
+/**
+ * @typedef {object} PraxisProfilSnapshotInput
+ * @property {string|null} [business_name]
+ * @property {string|null} [praxis_inhaber]
+ * @property {string|null} [owner_first_name]
+ * @property {string|null} [owner_last_name]
+ * @property {string|null} [street]
+ * @property {string|null} [house_number]
+ * @property {string|null} [plz]
+ * @property {string|null} [zip]
+ * @property {string|null} [city]
+ * @property {string|null} [phone]
+ * @property {string|null} [email]
+ * @property {string|null} [ik_number]
+ * @property {string|null} [bank_name]
+ * @property {string|null} [iban]
+ * @property {string|null} [bic]
+ */
+
+/**
+ * Spiegel von module/branding.js ausstellerSnapshot — Profilzeile der PRAXIS → Aussteller-Snapshot.
+ * @param {PraxisProfilSnapshotInput | null | undefined} p
+ */
 export function ausstellerSnapshot(p) {
   const x = p || {};
   const plz = t(x.plz) || t(x.zip);
@@ -35,6 +59,8 @@ export function ausstellerSnapshot(p) {
  * Normalisierung statt vier eigener Blöcke (PLZ `plz|zip`, Hausnummer, Praxis-E-Mail). `ersatzEmail` nur,
  * wenn der Inhaber selbst druckt: die Login-Adresse eines Mitarbeiters gehört nicht auf den Beleg.
  * Nur serverseitig (kein Gegenstück im Frontend, das liest den Snapshot direkt).
+ * @param {PraxisProfilSnapshotInput | null | undefined} p
+ * @param {{ ersatzEmail?: string }} [opts]
  */
 export function praxisKopf(p, { ersatzEmail = '' } = {}) {
   const a = ausstellerSnapshot(p);
@@ -44,12 +70,19 @@ export function praxisKopf(p, { ersatzEmail = '' } = {}) {
   };
 }
 
+/** @param {unknown} iso */
 const deutsch = (iso) => {
   const m = String(iso ?? '').match(/^(\d{4})-(\d{2})-(\d{2})/);
   return m ? `${m[3]}.${m[2]}.${m[1]}` : String(iso ?? '');
 };
 
-/** Spiegel von module/bg-angaben.js empfaengerSnapshot — leads- + prescriptions-Zeile → Empfänger-Snapshot. */
+/**
+ * Spiegel von module/bg-angaben.js empfaengerSnapshot — leads- + prescriptions-Zeile → Empfänger-Snapshot.
+ * @param {object} [opts]
+ * @param {{ first_name?: string|null, last_name?: string|null, title?: string|null, geburtsdatum?: string|null, street?: string|null, plz?: string|null, city?: string|null, krankenkasse?: string|null, versichertennummer?: string|null } | null} [opts.patient]
+ * @param {{ rezeptart?: string|null, bg_traeger_name?: string|null, bg_traeger_anschrift?: string|null, bg_unfalltag?: string|null, bg_aktenzeichen?: string|null } | null} [opts.rx]
+ * @param {string|null} [opts.invoiceType]
+ */
 export function empfaengerSnapshot({ patient = null, rx = null, invoiceType = null } = {}) {
   const name = patient ? ([n(patient.first_name), n(patient.last_name)].filter(Boolean).join(' ') || n(patient.title) || '') : '';
   if (invoiceType === 'bg' && rx?.rezeptart === 'bg' && n(rx.bg_traeger_name)) {
@@ -63,7 +96,7 @@ export function empfaengerSnapshot({ patient = null, rx = null, invoiceType = nu
     if (aktenzeichen) bezug.push(`Aktenzeichen: ${aktenzeichen}`);
     return { v: 1, art: 'bg', empfaenger, bezug };
   }
-  if (!name) return null;
+  if (!name || !patient) return null;
   return {
     v: 1, art: 'patient', name,
     strasse: n(patient.street), plzOrt: [n(patient.plz), n(patient.city)].filter(Boolean).join(' ') || null,

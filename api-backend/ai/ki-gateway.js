@@ -34,21 +34,35 @@ import { createConfirmationService } from './ki-rueckfrage.js';
 import { createJetonClient } from './ki-jeton.js';
 import { makeUsageAggregateSupplier, makeDefaultUsageAggregateSupplier, getAiSupabaseClient } from './audit.js';
 
+/** @type {Map<string, ReturnType<typeof createJetonClient>>} */
 const tenantJetonClients = new Map();
 
+/**
+ * @param {string} tenantId
+ * @param {import('@supabase/supabase-js').SupabaseClient | null} [supabase]
+ * @param {() => Record<string, any>} [configProvider]
+ * @returns {ReturnType<typeof createJetonClient>}
+ */
 export function getTenantJetonClient(tenantId, supabase, configProvider) {
   if (!tenantJetonClients.has(tenantId)) {
     const aggregateSupplier = supabase ? makeUsageAggregateSupplier(supabase, tenantId) : makeDefaultUsageAggregateSupplier(tenantId);
-    if (tenantJetonClients.size >= 1000) { const first = tenantJetonClients.keys().next().value; tenantJetonClients.get(first)?.invalidate?.(); tenantJetonClients.delete(first); }
+    if (tenantJetonClients.size >= 1000) {
+      const first = tenantJetonClients.keys().next().value;
+      if (first !== undefined) {
+        tenantJetonClients.get(first)?.invalidate?.();
+        tenantJetonClients.delete(first);
+      }
+    }
     const client = createJetonClient({
       aggregateSupplier,
       configProvider
     });
     tenantJetonClients.set(tenantId, client);
   }
-  return tenantJetonClients.get(tenantId);
+  return /** @type {ReturnType<typeof createJetonClient>} */ (tenantJetonClients.get(tenantId));
 }
 
+/** @param {string} tenantId */
 export function invalidateTenantJeton(tenantId) {
   const client = tenantJetonClients.get(tenantId);
   if (client && typeof client.invalidate === 'function') {
@@ -74,7 +88,90 @@ const MAIL_TASKS = new Set([
   'transkribieren'
 ]);
 
+/**
+ * @typedef {{ userId: string, tenantId: string, role: string }} GatewayAuth
+ * @typedef {Error & {
+ *   status?: number,
+ *   code?: string,
+ *   challengeId?: string,
+ *   expiresAt?: number,
+ *   candidates?: unknown[]
+ * }} GatewayError
+ * @typedef {{
+ *   valid?: boolean,
+ *   mode?: string,
+ *   activationReady?: boolean,
+ *   mailReady?: boolean,
+ *   allowFreeText?: boolean,
+ *   transcribeDeployment?: string | null,
+ *   deployment?: string | null,
+ *   [key: string]: unknown
+ * }} GatewayConfig
+ * @typedef {{
+ *   content?: string,
+ *   text?: string,
+ *   model?: string,
+ *   deployment?: string,
+ *   usage?: Record<string, unknown>,
+ *   dry_run?: boolean,
+ *   latency_ms?: number
+ * }} GatewayTransportResult
+ * @typedef {{
+ *   configProvider?: () => (GatewayConfig | Promise<GatewayConfig>),
+ *   config?: GatewayConfig,
+ *   ownerDecision?: { enabled?: boolean },
+ *   ownerDecisionStore?: import('./ki-einwilligung.js').OwnerDecisionStore,
+ *   transcribeTransport?: (opts: Record<string, unknown>) => Promise<GatewayTransportResult>,
+ *   transport?: (opts: Record<string, unknown>) => Promise<GatewayTransportResult>,
+ *   jetonClient?: ReturnType<typeof createJetonClient>,
+ *   supabase?: import('@supabase/supabase-js').SupabaseClient | null,
+ *   dictionary?: string[],
+ *   loadDictionary?: (auth: GatewayAuth) => Promise<string[]>,
+ *   confirmationService?: ReturnType<typeof createConfirmationService>
+ * }} GatewayDependencies
+ * @typedef {{
+ *   userId?: string | null,
+ *   tenantId?: string | null,
+ *   role?: string | null
+ * }} GatewayAuthInput
+ * @typedef {{
+ *   req?: { auth?: GatewayAuthInput | null },
+ *   auth?: GatewayAuthInput | null,
+ *   userId?: string | null,
+ *   tenantId?: string | null,
+ *   role?: string | null,
+ *   dependencies?: GatewayDependencies
+ * }} GatewayContext
+ * @typedef {{
+ *   tenantId?: string,
+ *   tenant_id?: string,
+ *   audioBuffer?: Buffer | Uint8Array,
+ *   mimeType?: string,
+ *   duration?: number,
+ *   contacts?: Array<{ id?: string, name?: string, contact_name?: string, first_name?: string, last_name?: string, email?: string, phone?: string, company?: string, notes?: string, geburtsdatum?: string, kvnr?: string }>,
+ *   patient?: { name?: string, email?: string, phone?: string },
+ *   customer?: { id?: string | null, name?: string, email?: string, phone?: string },
+ *   slots?: Array<{ date: string, time: string, employeeName?: string, employeeId?: string }>,
+ *   service?: { title?: string, duration?: number },
+ *   owner_info?: { business_name?: string, sender_name?: string, city?: string, sector?: string, phone?: string, extra_context?: string },
+ *   employees?: Array<{ id?: string, name?: string, anrede?: string | null }>,
+ *   candidates?: Array<{ date: string, time: string, employeeId?: string, employeeName?: string, bucket?: number, shiftedFromDate?: string, dateShiftDays?: number }>,
+ *   previousSelected?: Array<{ date: string, time: string, employeeId?: string, employeeName?: string }>,
+ *   count?: number,
+ *   feedbackApplied?: boolean | string | null,
+ *   rezept?: Record<string, unknown>,
+ *   heilmittel_positionen?: Array<{ x: string, label: string, kat?: string | null }>,
+ *   intent?: string,
+ *   image_base64?: string,
+ *   userFeedback?: string | null,
+ *   preferences?: { sameEmployee?: string | boolean, preferredEmployee?: string | null, timeOfDay?: string, notes?: string | null },
+ *   ki_confirmation?: import('./ki-rueckfrage.js').KiConfirmationInput
+ * }} GatewayPayload
+ */
+
+/** @type {ReturnType<typeof createConfirmationService> | null} */
 let _defaultConfirmationService = null;
+/** @type {ReturnType<typeof createOwnerDecisionStore> | null} */
 let _defaultOwnerDecisionStore = null;
 
 async function getConfirmationService() {
@@ -106,7 +203,14 @@ export function getOwnerDecisionStore() {
   return _defaultOwnerDecisionStore;
 }
 
+/**
+ * @param {string} message
+ * @param {number} [status=500]
+ * @param {string} [code='KI_GATEWAY_ERROR']
+ * @returns {GatewayError}
+ */
 function createGatewayError(message, status = 500, code = 'KI_GATEWAY_ERROR') {
+  /** @type {GatewayError} */
   const err = new Error(message);
   err.status = status;
   err.code = code;
@@ -118,13 +222,13 @@ function createGatewayError(message, status = 500, code = 'KI_GATEWAY_ERROR') {
  *
  * @param {Object} params
  * @param {string} params.task task identifier (e.g. 'b2c-draft', 'series-scheduler')
- * @param {Object} params.payload client task payload
- * @param {Object} params.context request context ({ req: { auth: { userId, tenantId, role } } } or direct auth)
- * @param {Function} params.buildMessages function(sanitizedPayload, meta) => Array<{role: string, content: string}>
- * @param {Function} [params.validateOutput] function(parsedOutput, meta) => boolean
- * @param {Object} [params.chatOptions] additional chat options
- * @param {Object} [params.dependencies] test injection seams
- * @returns {Promise<{output: any, meta: {model: string, deployment: string, usage: Object, dry_run: boolean, latency_ms: number}}>}
+ * @param {GatewayPayload} params.payload client task payload
+ * @param {GatewayContext} params.context request context ({ req: { auth: { userId, tenantId, role } } } or direct auth)
+ * @param {(sanitizedPayload: GatewayPayload, meta: { nonce: string }) => Array<{ role: string, content: string }>} [params.buildMessages]
+ * @param {(parsedOutput: Record<string, unknown>, meta: { maskMap: Record<string, string>, nonce: string }) => boolean | Promise<boolean>} [params.validateOutput]
+ * @param {Record<string, unknown>} [params.chatOptions] additional chat options
+ * @param {GatewayDependencies} [params.dependencies] test injection seams
+ * @returns {Promise<{ output: Record<string, unknown>, meta: { model?: string, deployment?: string, usage?: Record<string, unknown>, dry_run: boolean, latency_ms?: number } }>}
  */
 export async function executeKiTask({
   task,
@@ -136,15 +240,17 @@ export async function executeKiTask({
   dependencies = {}
 }) {
   // 1. Auth context verification: require authenticated tenant & user
-  const auth = context?.req?.auth || context?.auth || (
+  const rawAuth = context?.req?.auth || context?.auth || (
     context?.userId && context?.tenantId && context?.role
       ? { userId: context.userId, tenantId: context.tenantId, role: context.role }
       : null
   );
 
-  if (!auth || !auth.userId || !auth.tenantId || !['owner', 'employee'].includes(auth.role)) {
+  if (!rawAuth || !rawAuth.userId || !rawAuth.tenantId || typeof rawAuth.role !== 'string' || !['owner', 'employee'].includes(rawAuth.role)) {
     throw createGatewayError('Authentifizierter Benutzer und Mandant erforderlich', 401, 'KI_AUTH_REQUIRED');
   }
+  /** @type {GatewayAuth} */
+  const auth = { userId: rawAuth.userId, tenantId: rawAuth.tenantId, role: rawAuth.role };
 
   // Reject untrusted clienttenant from payload
   if (payload && (payload.tenantId || payload.tenant_id)) {
@@ -153,9 +259,9 @@ export async function executeKiTask({
 
   // 2. Gating checks BEFORE dictionary / model / token
   // Context.config is NOT client approved: ignore any context.config
-  const cfg = await (dependencies.configProvider?.() || dependencies.config || createAiConfig());
+  const cfg = /** @type {GatewayConfig} */ (await (dependencies.configProvider?.() || dependencies.config || createAiConfig()));
 
-  if (cfg.mode === 'aus' || cfg.valid !== true || !['direkt', 'jeton'].includes(cfg.mode)) {
+  if (cfg.mode === 'aus' || cfg.valid !== true || typeof cfg.mode !== 'string' || !['direkt', 'jeton'].includes(cfg.mode)) {
     throw createGatewayError('KI-Dienst ist deaktiviert', 503, 'AI_MODE_AUS');
   }
 
@@ -186,7 +292,7 @@ export async function executeKiTask({
 
   // 3. Schema validation
   const allowFreeText = cfg.allowFreeText === true;
-  validateTaskPayload(task, payload, { mode: cfg.mode, allowFreeText });
+  validateTaskPayload(task, payload, { mode: /** @type {'direkt' | 'jeton'} */ (cfg.mode), allowFreeText });
 
   if (task === 'transkribieren') {
     const audioBuffer = payload.audioBuffer;
@@ -214,8 +320,8 @@ export async function executeKiTask({
       throw createGatewayError('Einwilligung widerrufen oder geändert während der Ausführung', 503, 'AI_OWNER_OPTIN_REQUIRED');
     }
 
-    const freshCfg = await (dependencies.configProvider?.() || dependencies.config || createAiConfig());
-    if (freshCfg.mode !== cfg.mode || freshCfg.valid !== true || !['direkt', 'jeton'].includes(freshCfg.mode) || freshCfg.activationReady !== true || freshCfg.mailReady !== true) {
+    const freshCfg = /** @type {GatewayConfig} */ (await (dependencies.configProvider?.() || dependencies.config || createAiConfig()));
+    if (freshCfg.mode !== cfg.mode || freshCfg.valid !== true || typeof freshCfg.mode !== 'string' || !['direkt', 'jeton'].includes(freshCfg.mode) || freshCfg.activationReady !== true || freshCfg.mailReady !== true) {
       throw createGatewayError('KI-Dienst wurde während der Ausführung deaktiviert', 503, 'AI_MODE_AUS');
     }
 
@@ -223,7 +329,7 @@ export async function executeKiTask({
       throw createGatewayError('Transkription ist nicht eingerichtet', 503, 'AI_TRANSKRIPTION_NICHT_EINGERICHTET');
     }
 
-    const transport = dependencies.transcribeTransport || dependencies.transport || transcribe;
+    const transport = dependencies.transcribeTransport || dependencies.transport || /** @type {(opts: Record<string, unknown>) => Promise<GatewayTransportResult>} */ (/** @type {unknown} */ (transcribe));
     const injectedJetonClient = freshCfg.mode === 'jeton' ? (dependencies.jetonClient || getTenantJetonClient(auth.tenantId, dependencies.supabase, dependencies.configProvider || (() => dependencies.config || createAiConfig()))) : undefined;
 
     const transportRes = await transport({
@@ -232,7 +338,7 @@ export async function executeKiTask({
       config: freshCfg,
       jetonClient: injectedJetonClient,
       beforeSend: async () => {
-        const currentConfig = await (dependencies.configProvider?.() || dependencies.config || createAiConfig());
+        const currentConfig = /** @type {GatewayConfig | undefined} */ (await (dependencies.configProvider?.() || dependencies.config || createAiConfig()));
         const currentOwner = dependencies.ownerDecision || await (dependencies.ownerDecisionStore || getOwnerDecisionStore()).read(auth.tenantId);
         if (currentOwner?.enabled !== true) throw createGatewayError('Einwilligung widerrufen', 503, 'AI_OWNER_OPTIN_REQUIRED');
         if (currentConfig?.valid !== true || currentConfig.mode !== cfg.mode || currentConfig.activationReady !== true || currentConfig.mailReady !== true) throw createGatewayError('KI-Dienst wurde deaktiviert', 503, 'AI_MODE_AUS');
@@ -253,18 +359,20 @@ export async function executeKiTask({
   }
 
   // 4. Tenant dictionary loading (fail-closed)
+  /** @type {string[]} */
   let dictionary = [];
   if (dependencies.dictionary) {
     dictionary = dependencies.dictionary;
   } else if (typeof dependencies.loadDictionary === 'function') {
     dictionary = await dependencies.loadDictionary(auth);
   } else {
-    dictionary = await loadTenantDictionary(dependencies.supabase || getAiSupabaseClient(), auth);
+    dictionary = await loadTenantDictionary(/** @type {import('@supabase/supabase-js').SupabaseClient} */ (dependencies.supabase || getAiSupabaseClient()), auth);
   }
   if (!Array.isArray(dictionary) || dictionary.some(value => typeof value !== 'string')) throw createGatewayError('Wörterbuch ungültig', 503, 'KI_WOERTERBUCH_FEHLER');
 
   // 5. Structured entities extraction & local transforms
   const nonce = crypto.randomBytes(16).toString('hex');
+  /** @type {import('./pii-mask.js').PiiEntity[]} */
   const explicitEntities = [];
 
   // Extract from contacts
@@ -319,6 +427,7 @@ export async function executeKiTask({
 
   // 6. B-Freetext residual scanning & Rückfrage
   let confirmationService = dependencies.confirmationService;
+  /** @type {Array<{ type?: string, art?: string, text?: string, ausschnitt?: string }>} */
   const rawCandidates = [];
 
   const maskingContext = createMaskingContext({
@@ -331,9 +440,10 @@ export async function executeKiTask({
   try {
     // Scan freetext fields whenever freetext is allowed: this scan is what makes jeton freetext safe
     if (allowFreeText) {
+      /** @type {string[]} */
       const textsToScan = [];
       if (payload.intent) textsToScan.push(payload.intent);
-      if (payload.rezept?.heilmittel_feld_text) textsToScan.push(payload.rezept.heilmittel_feld_text);
+      if (typeof payload.rezept?.heilmittel_feld_text === 'string' && payload.rezept.heilmittel_feld_text) textsToScan.push(payload.rezept.heilmittel_feld_text);
       if (payload.preferences?.notes) textsToScan.push(payload.preferences.notes);
       if (payload.userFeedback) textsToScan.push(payload.userFeedback);
       if (payload.owner_info?.extra_context) textsToScan.push(payload.owner_info.extra_context);
@@ -351,6 +461,7 @@ export async function executeKiTask({
 
     if (rawCandidates.some(candidate => candidate.art === 'QUASI_REIDENTIFIKATION')) throw createGatewayError('Reidentifizierbare Angaben sind gesperrt', 403, 'KI_REST_BLOCKIERT');
     const distinctCandidates = [...new Map(rawCandidates.map(c => [(c.text || c.ausschnitt) + ':' + (c.type || c.art), c])).values()];
+    /** @type {string[]} */
     const acceptedNonNames = [];
     const freetextCandidates = distinctCandidates.map((c, i) => ({
       id: `c_${i + 1}`,
@@ -370,9 +481,7 @@ export async function executeKiTask({
           candidates: freetextCandidates
         });
 
-        const err = new Error('Rückfrage zu unmaskiertem Freitext erforderlich');
-        err.code = 'KI_RUECKFRAGE';
-        err.status = 409;
+        const err = createGatewayError('Rückfrage zu unmaskiertem Freitext erforderlich', 409, 'KI_RUECKFRAGE');
         err.challengeId = challenge.challengeId;
         err.expiresAt = challenge.expiresAt;
         err.candidates = challenge.candidates;
@@ -389,11 +498,8 @@ export async function executeKiTask({
         currentCandidates: freetextCandidates
       });
 
-      if (!verification.valid) {
-        const err = new Error('Ungültige Rückfrage-Bestätigung');
-        err.code = verification.code || 'KI_RUECKFRAGE_INVALID';
-        err.status = 409;
-        throw err;
+      if (!verification.valid || !verification.choices) {
+        throw createGatewayError('Ungültige Rückfrage-Bestätigung', 409, verification.code || 'KI_RUECKFRAGE_INVALID');
       }
 
       // Apply choices: if 'maskieren', allocate explicit token
@@ -404,7 +510,7 @@ export async function executeKiTask({
           acceptedNonNames.push(candidate.text);
         }
         if (choice.action === 'maskieren') {
-          const matchingCand = freetextCandidates.find(c => c.id === choice.id || c.ausschnitt === choice.id);
+          const matchingCand = freetextCandidates.find(c => c.id === choice.id);
           if (matchingCand && matchingCand.text) {
              maskingContext.entities.push({ value: matchingCand.text, type: 'NAME' });
           }
@@ -412,11 +518,17 @@ export async function executeKiTask({
       }
     }
 
-    // Field-aware transform runs before task-specific prompt construction.
+    /**
+     * Field-aware transform runs before task-specific prompt construction.
+     * @param {unknown} obj
+     * @param {import('./pii-mask.js').MaskingContext} ctx
+     * @param {string} [keyPath='']
+     * @returns {unknown}
+     */
     function maskPayloadValues(obj, ctx, keyPath = '') {
       if (obj === null || typeof obj !== 'object') {
         if (typeof obj === 'string') {
-          const currentKey = keyPath.split('.').pop();
+          const currentKey = keyPath.split('.').pop() || '';
           const typedKeys = ['recurrence', 'sameEmployee', 'timeOfDay', 'genderFilterApplied', 'sector', 'frequenz', 'diagnosegruppe', 'heilmittel', 'ergaenzendes_heilmittel', 'therapiebereich', 'x', 'label', 'anrede'];
           if (typedKeys.includes(currentKey)) return obj;
           if (task === 'series-scheduler' && (['date', 'time', 'shiftedFromDate'].includes(currentKey) || keyPath.startsWith('targetDates[') || keyPath.startsWith('emptyDates['))) return obj;
@@ -432,15 +544,17 @@ export async function executeKiTask({
       if (Array.isArray(obj)) {
         return obj.map((v, i) => maskPayloadValues(v, ctx, `${keyPath}[${i}]`));
       }
+      const rec = /** @type {Record<string, unknown>} */ (obj);
+      /** @type {Record<string, unknown>} */
       const result = {};
-      for (const k of Object.keys(obj)) {
+      for (const k of Object.keys(rec)) {
         if (k === 'ki_confirmation') continue;
-        result[k] = maskPayloadValues(obj[k], ctx, keyPath ? `${keyPath}.${k}` : k);
+        result[k] = maskPayloadValues(rec[k], ctx, keyPath ? `${keyPath}.${k}` : k);
       }
       return result;
     }
 
-    const maskedPayload = maskPayloadValues(sanitizedPayload, maskingContext);
+    const maskedPayload = /** @type {GatewayPayload} */ (maskPayloadValues(sanitizedPayload, maskingContext));
 
     // 7. Build prompt & mask messages
     if (typeof buildMessages !== 'function') {
@@ -478,13 +592,13 @@ export async function executeKiTask({
       throw createGatewayError('Einwilligung widerrufen oder geändert während der Ausführung', 503, 'AI_OWNER_OPTIN_REQUIRED');
     }
 
-    const freshCfg = await (dependencies.configProvider?.() || dependencies.config || createAiConfig());
-    if (freshCfg.mode !== cfg.mode || freshCfg.valid !== true || !['direkt', 'jeton'].includes(freshCfg.mode) || freshCfg.activationReady !== true || (MAIL_TASKS.has(task) && freshCfg.mailReady !== true) || (allowFreeText && freshCfg.allowFreeText !== true)) {
+    const freshCfg = /** @type {GatewayConfig} */ (await (dependencies.configProvider?.() || dependencies.config || createAiConfig()));
+    if (freshCfg.mode !== cfg.mode || freshCfg.valid !== true || typeof freshCfg.mode !== 'string' || !['direkt', 'jeton'].includes(freshCfg.mode) || freshCfg.activationReady !== true || (MAIL_TASKS.has(task) && freshCfg.mailReady !== true) || (allowFreeText && freshCfg.allowFreeText !== true)) {
       throw createGatewayError('KI-Dienst wurde während der Ausführung deaktiviert', 503, 'AI_MODE_AUS');
     }
 
     if (!dependencies.ownerDecision) { const lastOwner = await (dependencies.ownerDecisionStore || getOwnerDecisionStore()).read(auth.tenantId); if (lastOwner?.enabled !== true) throw createGatewayError('Einwilligung widerrufen', 503, 'AI_OWNER_OPTIN_REQUIRED'); }
-    const transport = dependencies.transport || chat;
+    const transport = dependencies.transport || /** @type {(opts: Record<string, unknown>) => Promise<GatewayTransportResult>} */ (/** @type {unknown} */ (chat));
     const injectedJetonClient = freshCfg.mode === 'jeton' ? (dependencies.jetonClient || getTenantJetonClient(auth.tenantId, dependencies.supabase, dependencies.configProvider || (() => dependencies.config || createAiConfig()))) : undefined;
     const transportOptions = {
       ...chatOptions,
@@ -492,7 +606,7 @@ export async function executeKiTask({
       config: freshCfg,
       jetonClient: injectedJetonClient,
       beforeSend: async () => {
-        const currentConfig = await (dependencies.configProvider?.() || dependencies.config || createAiConfig());
+        const currentConfig = /** @type {GatewayConfig | undefined} */ (await (dependencies.configProvider?.() || dependencies.config || createAiConfig()));
         const currentOwner = dependencies.ownerDecision || await (dependencies.ownerDecisionStore || getOwnerDecisionStore()).read(auth.tenantId);
         if (currentOwner?.enabled !== true) throw createGatewayError('Einwilligung widerrufen', 503, 'AI_OWNER_OPTIN_REQUIRED');
         if (currentConfig?.valid !== true || currentConfig.mode !== cfg.mode || currentConfig.activationReady !== true || (MAIL_TASKS.has(task) && currentConfig.mailReady !== true) || (allowFreeText && currentConfig.allowFreeText !== true)) throw createGatewayError('KI-Dienst wurde deaktiviert', 503, 'AI_MODE_AUS');
@@ -503,15 +617,13 @@ export async function executeKiTask({
     const transportRes = await transport(transportOptions);
 
     // 9. Output processing & validation
-    const rawContent = transportRes.content;
+    const rawContent = String(transportRes.content ?? '');
+    /** @type {Record<string, unknown>} */
     let parsedOutput;
     try {
       parsedOutput = JSON.parse(rawContent);
     } catch {
-      const err = new Error('KI-Antwort konnte nicht als JSON verarbeitet werden');
-      err.code = 'KI_ANTWORT_UNGUELTIG';
-      err.status = 502;
-      throw err;
+      throw createGatewayError('KI-Antwort konnte nicht als JSON verarbeitet werden', 502, 'KI_ANTWORT_UNGUELTIG');
     }
 
     // validateOutput callback on parsed pseudonymized object
@@ -520,25 +632,28 @@ export async function executeKiTask({
       nonce
     });
     if (validationResult !== true) {
-      const err = new Error('Validierung der Modellantwort fehlgeschlagen');
-      err.code = 'KI_ANTWORT_UNGUELTIG';
-      err.status = 502;
-      throw err;
+      throw createGatewayError('Validierung der Modellantwort fehlgeschlagen', 502, 'KI_ANTWORT_UNGUELTIG');
     }
 
     // Output PII scan before restore
     const outputScan = scanOutputPII(JSON.stringify(parsedOutput), maskingContext.map, { dictionary });
     if (!outputScan.safe) {
-      const err = new Error('KI-Antwort enthält unzulässige Daten');
-      err.code = 'KI_ANTWORT_UNGUELTIG';
-      err.status = 502;
-      throw err;
+      throw createGatewayError('KI-Antwort enthält unzulässige Daten', 502, 'KI_ANTWORT_UNGUELTIG');
     }
 
     // Unmask parsed values only (never object keys)
-    function rejectTokenKeys(value) { if (value && typeof value === 'object') for (const key of Object.keys(value)) { if (/[⟦⟧]|<<|>>/.test(key)) throw createGatewayError('Antwortschlüssel ungültig', 502, 'KI_ANTWORT_UNGUELTIG'); rejectTokenKeys(value[key]); } }
+    /** @param {unknown} value */
+    function rejectTokenKeys(value) {
+      if (value && typeof value === 'object') {
+        const rec = /** @type {Record<string, unknown>} */ (value);
+        for (const key of Object.keys(rec)) {
+          if (/[⟦⟧]|<<|>>/.test(key)) throw createGatewayError('Antwortschlüssel ungültig', 502, 'KI_ANTWORT_UNGUELTIG');
+          rejectTokenKeys(rec[key]);
+        }
+      }
+    }
     rejectTokenKeys(parsedOutput);
-    const restoredOutput = unmaskValues(parsedOutput, maskingContext.unmaskStreng);
+    const restoredOutput = /** @type {Record<string, unknown>} */ (unmaskValues(parsedOutput, maskingContext.unmaskStreng));
 
     return {
       output: restoredOutput,
@@ -546,7 +661,7 @@ export async function executeKiTask({
         model: transportRes.model,
         deployment: transportRes.deployment,
         usage: transportRes.usage,
-        dry_run: transportRes.dry_run,
+        dry_run: !!transportRes.dry_run,
         latency_ms: transportRes.latency_ms
       }
     };

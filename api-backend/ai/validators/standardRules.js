@@ -30,6 +30,16 @@ import { parseIsoDatum, pruefeBehandlungsbeginn } from './fristen.js';
 const ZUZAHLUNG_PERCENT = 10;
 const ZUZAHLUNG_PER_BLATT_EUR = 10;
 
+/**
+ * @typedef {import('./validate.js').RezeptEingabe} RezeptEingabe
+ * @typedef {import('./validate.js').ValidatorBefund} ValidatorBefund
+ */
+
+/**
+ * @param {string | null | undefined} geburtsdatum
+ * @param {Date | null | undefined} [referenceDate]
+ * @returns {boolean}
+ */
 function isUnder18(geburtsdatum, referenceDate) {
   const dob = parseIsoDatum(geburtsdatum);
   if (!dob) return false;
@@ -39,8 +49,13 @@ function isUnder18(geburtsdatum, referenceDate) {
   return age < 18;
 }
 
+/**
+ * @param {RezeptEingabe} rezept
+ */
 export function validateStandard(rezept) {
+  /** @type {ValidatorBefund[]} */
   const warnings = [];
+  /** @type {ValidatorBefund[]} */
   const blockers = [];
 
   const dg = rezept.diagnosegruppe;
@@ -91,8 +106,8 @@ export function validateStandard(rezept) {
     behandlungsbeginn: rezept.behandlungsbeginn,
     isDringend: !!rezept.is_dringend
   });
-  blockers.push(...fristPruefung.blockers);
-  warnings.push(...fristPruefung.warnings);
+  blockers.push(.../** @type {ValidatorBefund[]} */ (fristPruefung.blockers));
+  warnings.push(.../** @type {ValidatorBefund[]} */ (fristPruefung.warnings));
 
   // Zuzahlung
   const under18 = isUnder18(rezept.patient_geburtsdatum, ausstellung);

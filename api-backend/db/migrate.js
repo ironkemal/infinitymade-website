@@ -36,13 +36,15 @@ const DATEI_MUSTER = /^(\d{4})_([a-z0-9_]+)\.sql$/;
 /**
  * Liest das Migrationsverzeichnis und gibt die Dateien in Reihenfolge zurück.
  * Rein — kein DB-Zugriff, deshalb testbar ohne Postgres.
+ * @param {string} verzeichnis
+ * @returns {Array<{ version: string, name: string, sql: string, checksum: string, transaktional: boolean }>}
  */
 export function migrationenLesen(verzeichnis) {
   let eintraege;
   try {
     eintraege = readdirSync(verzeichnis);
   } catch (err) {
-    if (err.code === 'ENOENT') return [];
+    if ((/** @type {any} */ (err)).code === 'ENOENT') return [];
     throw err;
   }
 
@@ -79,6 +81,8 @@ export function migrationenLesen(verzeichnis) {
  * Findet doppelte Versionsnummern. Lücken sind erlaubt (eine Migration kann vor
  * dem Commit verworfen werden), doppelte Nummern nicht — bei ihnen ist die
  * Reihenfolge nicht mehr definiert.
+ * @param {Array<{ version: string, name: string }>} dateien
+ * @returns {{ ok: boolean, grund?: string }}
  */
 export function pruefeVersionen(dateien) {
   const gesehen = new Map();
@@ -100,6 +104,8 @@ export function pruefeVersionen(dateien) {
  *   unbekannt  — im Buch steht eine Version, die es als Datei nicht gibt.
  *                Das heisst: die Box lief schon mal mit einem NEUEREN Image.
  *                Ein Downgrade darf das Schema nicht anfassen (§6.3).
+ * @param {Array<{ version: string, name: string, checksum: string, sql?: string, transaktional?: boolean }>} dateien
+ * @param {Array<{ version: string, name?: string, checksum: string }>} buch
  */
 export function planErstellen(dateien, buch) {
   const angewandt = new Map(buch.map(z => [z.version, z]));
@@ -173,13 +179,22 @@ REVOKE ALL ON public.praxura_migrations FROM anon, authenticated;
  */
 const VERBINDUNG_TIMEOUT_MS = 5000;
 
+/**
+ * @param {object}   opt
+ * @param {string}   [opt.databaseUrl]  Direkte Postgres-Verbindung. FEHLT SIE, wird
+ *                                      übersprungen — so ändert sich im SaaS nichts,
+ *                                      solange die Variable dort nicht gesetzt ist.
+ * @param {string}   [opt.verzeichnis]  Pfad zu db/migrations
+ * @param {string}   [opt.appVersion]   Image-Version, kommt ins Buch
+ * @param {(...args: any[]) => void} [opt.log]
+ */
 export async function runMigrations({ databaseUrl, verzeichnis, appVersion, log = console.log }) {
   if (!databaseUrl) {
     log('[migrate] DATABASE_URL nicht gesetzt — Migrationen werden übersprungen.');
     return { status: 'uebersprungen', grund: 'keine DATABASE_URL', angewandt: [] };
   }
 
-  const dateien = migrationenLesen(verzeichnis);
+  const dateien = migrationenLesen(/** @type {string} */ (verzeichnis));
   if (dateien.length === 0) {
     return { status: 'ok', angewandt: [], hinweis: 'keine Migrationsdateien gefunden' };
   }
@@ -204,15 +219,19 @@ export async function runMigrations({ databaseUrl, verzeichnis, appVersion, log 
   // und pg_publication_tables NICHT sehen — diese Verbindung schon. Deshalb laeuft
   // der Zaehler-Selbstcheck (§5.4/1) hier, auf der offenen Verbindung, nicht im
   // setup-Router (onprem-Konsultation, Faz 2.2 dilim 2b, 12.09.2026).
+  /**
+   * @param {any} client
+   * @param {Array<{ version: string }>} dateien
+   */
   async function zaehlerLaufen(client, dateien) {
     try {
-      const erwartet = erwarteteZaehlerLesen(join(verzeichnis, '..'));
+      const erwartet = erwarteteZaehlerLesen(join(/** @type {string} */ (verzeichnis), '..'));
       const aktuelleVersion = dateien.reduce((max, d) => (d.version > max ? d.version : max), '0000');
       return await zaehlerPruefen(client, erwartet, aktuelleVersion);
     } catch (err) {
       // erwartete-zaehler.json fehlt oder ist kaputt: der Selbstcheck faellt aus,
       // die Migration selbst NICHT — das ist eine Zusatzpruefung, kein Torwaechter.
-      log(`[migrate] Zaehler-Selbstcheck uebersprungen: ${err.message}`);
+      log(`[migrate] Zaehler-Selbstcheck uebersprungen: ${(/** @type {any} */ (err)).message}`);
       return null;
     }
   }
@@ -274,7 +293,7 @@ export async function runMigrations({ databaseUrl, verzeichnis, appVersion, log 
       const start = Date.now();
       try {
         if (datei.transaktional) await client.query('BEGIN');
-        await client.query(datei.sql);
+        await client.query(/** @type {string} */ (datei.sql));
         const dauer = Date.now() - start;
         await client.query(
           `INSERT INTO public.praxura_migrations (version, name, checksum, duration_ms, app_version)
@@ -296,9 +315,9 @@ export async function runMigrations({ databaseUrl, verzeichnis, appVersion, log 
           fehler: {
             art: 'migration',
             datei: datei.name,
-            code: err.code || null,        // Postgres-SQLSTATE, z. B. 42P07
-            position: err.position || null,
-            text: err.message,
+            code: (/** @type {any} */ (err)).code || null,        // Postgres-SQLSTATE, z. B. 42P07
+            position: (/** @type {any} */ (err)).position || null,
+            text: (/** @type {any} */ (err)).message,
             transaktional: datei.transaktional
           }
         };
@@ -313,7 +332,7 @@ export async function runMigrations({ databaseUrl, verzeichnis, appVersion, log 
       angewandt,
       // pg meldet sein eigenes Verbindungs-Timeout als Error('timeout expired')
       // OHNE code — ohne diese Zuordnung fiele es aus der Wiederholungsliste.
-      fehler: { art: 'verbindung', code: err.code || (/timeout expired/i.test(err.message || '') ? 'ETIMEDOUT' : null), text: err.message }
+      fehler: { art: 'verbindung', code: (/** @type {any} */ (err)).code || (/timeout expired/i.test((/** @type {any} */ (err)).message || '') ? 'ETIMEDOUT' : null), text: (/** @type {any} */ (err)).message }
     };
   } finally {
     try {
@@ -341,6 +360,7 @@ const VERBINDUNG_NOCH_NICHT_DA = new Set([
 // bleibt unter der start_period (120 s) des Box-Healthchecks.
 export const VERBINDUNG_PAUSEN_MS = Object.freeze([2000, 4000, 8000, 15000, 15000, 15000]);
 
+/** @param {any} ergebnis */
 export function istStartrennen(ergebnis) {
   return ergebnis?.status === 'fehler'
     && ergebnis.fehler?.art === 'verbindung'
@@ -350,17 +370,17 @@ export function istStartrennen(ergebnis) {
 
 /**
  * runMigrations mit Geduld für das Startrennen. Gleiche Rückgabe wie runMigrations.
- * @param {object}   opt                wie runMigrations
+ * @param {{ databaseUrl?: string, verzeichnis?: string, appVersion?: string, log?: (...args: any[]) => void }} opt                wie runMigrations
  * @param {object}   [o]
- * @param {number[]} [o.pausenMs]       Wartezeiten zwischen den Versuchen
- * @param {function} [o.lauf]           (Test) Ersatz für runMigrations
- * @param {function} [o.warte]          (Test) Ersatz für das Warten
+ * @param {readonly number[]} [o.pausenMs]       Wartezeiten zwischen den Versuchen
+ * @param {Function} [o.lauf]           (Test) Ersatz für runMigrations
+ * @param {(ms: number) => Promise<any>} [o.warte]          (Test) Ersatz für das Warten
  */
 export async function runMigrationsMitGeduld(opt, { pausenMs = VERBINDUNG_PAUSEN_MS, lauf = runMigrations, warte = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) {
   const log = opt?.log || console.log;
   let ergebnis = await lauf(opt);
   for (let i = 0; i < pausenMs.length && istStartrennen(ergebnis); i++) {
-    log(`[migrate] Datenbank noch nicht erreichbar (${ergebnis.fehler.code}) — Versuch ${i + 2}/${pausenMs.length + 1} in ${pausenMs[i] / 1000} s.`);
+    log(`[migrate] Datenbank noch nicht erreichbar (${(/** @type {any} */ (ergebnis.fehler)).code}) — Versuch ${i + 2}/${pausenMs.length + 1} in ${pausenMs[i] / 1000} s.`);
     await warte(pausenMs[i]);
     ergebnis = await lauf(opt);
   }

@@ -16,15 +16,26 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ladeBetriebsart } from './betriebsart.js';
 
+/** @param {{ data?: any, error?: any }} p */
 function erstelleMockDb({ data = null, error = null }) {
   return {
+    /** @param {string} table */
     from(table) {
       assert.equal(table, 'betriebsart_empfaenger');
       return {
+        /** @param {string} spalten */
         select(spalten) {
           return {
+            /**
+             * @param {string} k1
+             * @param {any} v1
+             */
             eq(k1, v1) {
               return {
+                /**
+                 * @param {string} k2
+                 * @param {any} v2
+                 */
                 eq(k2, v2) {
                   return {
                     async maybeSingle() {
@@ -138,7 +149,7 @@ test('4. Zeile sagt "echt", Zulassungsangaben fehlen -> wirft mit status 422', a
         db: dbOhneRef,
       });
     },
-    (err) => {
+    (/** @type {any} */ err) => {
       assert.equal(err.status, 422);
       assert.match(err.message, /660530010/);
       assert.match(err.message, /Krankenkasse/);
@@ -160,7 +171,7 @@ test('4. Zeile sagt "echt", Zulassungsangaben fehlen -> wirft mit status 422', a
         db: dbOhneDatum,
       });
     },
-    (err) => {
+    (/** @type {any} */ err) => {
       assert.equal(err.status, 422);
       return true;
     }
@@ -184,7 +195,7 @@ test('5. Vorgabewert sagt "echt", Zulassungsangaben fehlen -> wirft mit status 4
         db: dbLeer,
       });
     },
-    (err) => {
+    (/** @type {any} */ err) => {
       assert.equal(err.status, 422);
       assert.match(err.message, /Krankenkasse/);
       assert.match(err.message, /Zulassung/);
@@ -224,8 +235,8 @@ test('8. Unvollstaendige Argumente -> wirft, statt still den Vorgabewert zu nehm
     { ownerId: 'owner-uuid-1', empfaengerIk: '660530010', db: null   },
   ]) {
     await assert.rejects(
-      async () => { await ladeBetriebsart({ ...fehlend, cert: { betriebsart: 'test' } }); },
-      (err) => {
+      async () => { await ladeBetriebsart(/** @type {any} */ ({ ...fehlend, cert: { betriebsart: 'test' } })); },
+      (/** @type {any} */ err) => {
         assert.equal(err.status, 500);
         assert.match(err.message, /Pflicht/);
         return true;
@@ -253,7 +264,7 @@ test('7. Beliebiger anderer DB-Fehler -> wirft Fehler mit status 500 (faellt nic
         db: dbNetzwerkFehler,
       });
     },
-    (err) => {
+    (/** @type {any} */ err) => {
       assert.equal(err.status, 500);
       assert.match(err.message, /Fehler beim Lesen der Betriebsart/);
       assert.match(err.message, /connection failure/);
@@ -274,8 +285,8 @@ test('verordnungFestschreiben: erprobung und echt schreiben fest wie bisher', ()
 });
 
 test('verordnungFestschreiben: leer/unbekannt gilt als test, schreibt nicht fest', () => {
-  assert.equal(verordnungFestschreiben(undefined), false);
-  assert.equal(verordnungFestschreiben(null), false);
+  assert.equal(verordnungFestschreiben(/** @type {any} */ (undefined)), false);
+  assert.equal(verordnungFestschreiben(/** @type {any} */ (null)), false);
   assert.equal(verordnungFestschreiben(''), false);
   assert.equal(verordnungFestschreiben('produktiv'), false);
 });

@@ -24,7 +24,15 @@ import {
 const ANLASS = 'sondertag_geschlossen';
 export const SMTP_ABBRUCH = new Set(['ECONNECTION', 'ETIMEDOUT', 'ESOCKET', 'EDNS', 'EAUTH', 'ECONNREFUSED']);
 
-/** Alles, was Vorschau und Senden brauchen — immer frisch aus der DB, Mandant aus dem JWT. */
+/**
+ * Alles, was Vorschau und Senden brauchen — immer frisch aus der DB, Mandant aus dem JWT.
+ * @param {any} supabase
+ * @param {string} tenantId
+ * @param {string} von
+ * @param {string} bis
+ * @param {{ env?: any, kutu?: boolean, jetzt?: Date }} [opt]
+ * @returns {Promise<any>}
+ */
 export async function ladeLage(supabase, tenantId, von, bis, { env = process.env, kutu = istKutu(), jetzt = new Date() } = {}) {
   const tage = tageVonBis(von, bis);
   if (!tage) return { fehler: 'Ungültiger Zeitraum (höchstens 31 Tage).', status: 400 };
@@ -49,7 +57,7 @@ export async function ladeLage(supabase, tenantId, von, bis, { env = process.env
     supabase.from('profiles').select('business_name,phone,b2b_from_email').eq('id', tenantId).maybeSingle(),
   ]);
   for (const r of [leadsR, einwR, protR, profR]) if (r.error) throw r.error;
-  const leads = new Map((leadsR.data || []).map(l => [l.id, l]));
+  const leads = new Map((leadsR.data || []).map((/** @type {any} */ l) => [l.id, l]));
   const einw = new Map();
   for (const e of einwR.data || []) { if (!einw.has(e.patient_id)) einw.set(e.patient_id, []); einw.get(e.patient_id).push(e); }
   const kanal = await mailKanal({ supabase, ownerId: tenantId, zweck: 'dokument', env, kutu });
@@ -67,6 +75,8 @@ export async function ladeLage(supabase, tenantId, von, bis, { env = process.env
  *  3. Abschluss: Erfolg -> 'gesendet', Fehler -> fehler_code = Transportcode. Jedes Update wird ausgewertet; misslingt
  *     es, bleibt IN_ARBEIT stehen -> Vorschau zeigt „Versandstatus unklar – bitte anrufen", nie automatisch erneut.
  *     Ein Prozessabbruch zwischen 1 und 3 hinterlaesst ebenso IN_ARBEIT, nie einen falschen Erfolg (Review 02.11.).
+ * @param {any} supabase
+ * @param {{ tenantId: string, userId: string, ids: string[], lage: any, transportFabrik?: any, gmail?: any, jetzt?: Date, anlass?: string, textFn?: any, deckel?: number, tag?: string }} opt
  */
 export async function sendeLauf(supabase, {
   tenantId, userId, ids, lage, transportFabrik = createSMTPTransport, gmail = null, jetzt = new Date(),
@@ -74,7 +84,7 @@ export async function sendeLauf(supabase, {
 }) {
   const gewuenscht = new Set(ids);
   // Nur, was die frische Pruefung erlaubt — nie dem Vorschau-Ergebnis des Browsers vertrauen.
-  const ziele = lage.mail.filter(x => gewuenscht.has(x.termin.id));
+  const ziele = lage.mail.filter((/** @type {any} */ x) => gewuenscht.has(x.termin.id));
   const abgelehnt = ids.length - ziele.length;
   const seit = new Date(jetzt.getTime() - 24 * 60 * 60 * 1000).toISOString();
   const { count, error: cErr } = await supabase.from('termin_mitteilungen').select('id', { count: 'exact', head: true })
@@ -84,7 +94,7 @@ export async function sendeLauf(supabase, {
     return { status: 429, body: { error: `Tagesgrenze von ${deckel} Mitteilungen erreicht.`, code: 'TAGESDECKEL' } };
   }
   const zaehler = { gesendet: 0, fehler: 0, doppelt: 0, abgelehnt, unklar: 0 };
-  const abschliessen = async (zeileId, werte) => {
+  const abschliessen = async (/** @type {any} */ zeileId, /** @type {any} */ werte) => {
     const { data, error } = await supabase.from('termin_mitteilungen').update(werte)
       .eq('id', zeileId).eq('owner_id', tenantId).eq('fehler_code', IN_ARBEIT).select('id').maybeSingle();
     if (error || !data) zaehler.unklar += 1;
@@ -114,18 +124,18 @@ export async function sendeLauf(supabase, {
         const from = lage.kanal ? lage.kanal.from(lage.profil.business_name) : getMailFrom(lage.profil.business_name);
         await transportFabrikFuer(lage.kanal, transportFabrik)({ requireTLS: true }).sendMail({ from, to: email, subject: betreff, text });
       } else {
-        if (!gmail) { const f = new Error('gmail fehlt'); f.code = 'GMAIL_NICHT_VERBUNDEN'; throw f; }
+        if (!gmail) { const f = /** @type {any} */ (new Error('gmail fehlt')); f.code = 'GMAIL_NICHT_VERBUNDEN'; throw f; }
         await sendeUeberGmail({ supabase, ...gmail, userId: tenantId, to: email, subject: betreff, text, senderName: lage.profil.business_name });
       }
     } catch (e) {
       zaehler.fehler += 1;
-      const code = String(e?.code || 'VERSAND_FEHLER').slice(0, 64);
+      const code = String((/** @type {any} */ (e))?.code || 'VERSAND_FEHLER').slice(0, 64);
       // 4xx-Antwort des Mailservers (z. B. Greylisting): Mail nachweislich nicht angenommen -> eigener, wiederholbarer Code.
-      const gespeichert = e?.responseCode >= 400 && e?.responseCode < 500 ? 'SMTP_4XX' : code;
+      const gespeichert = (/** @type {any} */ (e))?.responseCode >= 400 && (/** @type {any} */ (e))?.responseCode < 500 ? 'SMTP_4XX' : code;
       await abschliessen(zeileId, { status: 'fehler', fehler_code: gespeichert === IN_ARBEIT ? 'VERSAND_FEHLER' : gespeichert });
       // SMTP nicht erreichbar / Gmail getrennt: sofort abbrechen statt je Empfaenger auf den Timeout zu warten (onprem O-240).
       if (SMTP_ABBRUCH.has(code)) {
-        await meldeVerbindungsfehler(supabase, tenantId, lage.kanal, e);
+        await meldeVerbindungsfehler(supabase, tenantId, lage.kanal, /** @type {any} */ (e));
         console.error(`[${logTag}] SMTP abgebrochen`, code, zaehler);
         return { status: 409, body: { error: 'Der Mailserver der Praxis ist nicht erreichbar. Bitte später erneut oder telefonisch informieren.', code, ...zaehler } };
       }
@@ -142,17 +152,20 @@ export async function sendeLauf(supabase, {
   return { status: 200, body: zaehler };
 }
 
-const kurz = ({ termin }) => ({ bookingId: termin.id, start: termin.start_time, name: termin.customer_name || null });
+const kurz = (/** @type {any} */ { termin }) => ({ bookingId: termin.id, start: termin.start_time, name: termin.customer_name || null });
 
+/**
+ * @param {{ supabase?: any, transportFabrik?: any, env?: any, kutu?: () => boolean, gmail?: any, jetzt?: () => Date }} [opt]
+ */
 export function createSondertagMitteilungRouter({ supabase, transportFabrik = createSMTPTransport, env = process.env, kutu = istKutu, gmail = null, jetzt = () => new Date() } = {}) {
   const router = express.Router();
-  const schluessel = req => req.auth?.tenantId || req.ip;
+  const schluessel = (/** @type {any} */ req) => /** @type {string} */ (req.auth?.tenantId || req.ip);
   const vorschauLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: 'draft-7', legacyHeaders: false, keyGenerator: schluessel,
     message: { error: 'Zu viele Anfragen. Bitte später erneut versuchen.' } });
   const sendeLimit = rateLimit({ windowMs: 60 * 60 * 1000, limit: 3, standardHeaders: 'draft-7', legacyHeaders: false, keyGenerator: schluessel,
     message: { error: 'Höchstens drei Versandläufe pro Stunde.' } });
 
-  router.post('/sondertag/mitteilung/vorschau', requireAuth, vorschauLimit, async (req, res) => {
+  router.post('/sondertag/mitteilung/vorschau', requireAuth, vorschauLimit, async (/** @type {any} */ req, /** @type {any} */ res) => {
     const { tenantId } = req.auth;
     try {
       const lage = await ladeLage(supabase, tenantId, String(req.body?.von || ''), String(req.body?.bis || req.body?.von || ''), { env, kutu: kutu(), jetzt: jetzt() });
@@ -161,17 +174,17 @@ export function createSondertagMitteilungRouter({ supabase, transportFabrik = cr
       return res.json({
         weg: lage.weg,
         mail: lage.mail.map(kurz),
-        anruf: lage.anruf.map(x => ({ ...kurz(x), telefon: x.termin.customer_phone || null, grund: x.grund, grundText: GRUND_TEXT[x.grund] })),
+        anruf: lage.anruf.map((/** @type {any} */ x) => ({ ...kurz(x), telefon: x.termin.customer_phone || null, grund: x.grund, grundText: (/** @type {Record<string, string>} */ (GRUND_TEXT))[x.grund] })),
         bereits: lage.schon.map(kurz),
         beispiel: muster ? mitteilungsText({ praxis: lage.profil.business_name, telefon: lage.profil.phone, startIso: muster.termin.start_time }) : null,
       });
     } catch (e) {
-      console.error('[sondertag/vorschau]', e?.code || 'Fehler');
+      console.error('[sondertag/vorschau]', (/** @type {any} */ (e))?.code || 'Fehler');
       return res.status(500).json({ error: 'Vorschau konnte nicht erstellt werden.' });
     }
   });
 
-  router.post('/sondertag/mitteilung/senden', requireAuth, sendeLimit, async (req, res) => {
+  router.post('/sondertag/mitteilung/senden', requireAuth, sendeLimit, async (/** @type {any} */ req, /** @type {any} */ res) => {
     const { tenantId, userId } = req.auth;
     const ids = req.body?.bookingIds;
     if (!Array.isArray(ids) || !ids.length || ids.length > MAX_IDS || !ids.every(istUuid)) {
@@ -184,7 +197,7 @@ export function createSondertagMitteilungRouter({ supabase, transportFabrik = cr
       const { status, body } = await sendeLauf(supabase, { tenantId, userId, ids, lage, transportFabrik, gmail, jetzt: jetzt() });
       return res.status(status).json(body);
     } catch (e) {
-      console.error('[sondertag/senden]', e?.code || 'Fehler');
+      console.error('[sondertag/senden]', (/** @type {any} */ (e))?.code || 'Fehler');
       return res.status(500).json({ error: 'Versand konnte nicht durchgeführt werden.' });
     }
   });

@@ -33,7 +33,14 @@ const SEBEP = ['nightly', 'vor-migration', 'manuel'];
 const RE_FP = /^[0-9a-f]{16}$/;
 const RE_DIGEST = /^sha256:[0-9a-f]{64}$/;
 
+/**
+ * @template T
+ * @param {Promise<T>} promise
+ * @param {number} [ms]
+ * @returns {Promise<T>}
+ */
 export function mitTimeout(promise, ms = STANDARD_TIMEOUT_MS) {
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
   let t;
   return Promise.race([
     promise,
@@ -41,12 +48,14 @@ export function mitTimeout(promise, ms = STANDARD_TIMEOUT_MS) {
   ]).finally(() => clearTimeout(t));
 }
 
+/** @param {unknown} err */
 export function fehlerCode(err) {
-  if (!err) return 'unbekannt';
-  const code = err.code || err.cause?.code || '';
-  if (code === 'ETIMEOUT' || code === 'ETIMEDOUT' || err.name === 'AbortError') return 'timeout';
+  if (!err || typeof err !== 'object') return 'unbekannt';
+  const e = /** @type {{ code?: unknown, cause?: { code?: unknown }, name?: unknown, status?: unknown, statusCode?: unknown }} */ (err);
+  const code = String(e.code || e.cause?.code || '');
+  if (code === 'ETIMEOUT' || code === 'ETIMEDOUT' || e.name === 'AbortError') return 'timeout';
   if (['ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN', 'ECONNRESET', 'EHOSTUNREACH', 'UND_ERR_SOCKET', 'UND_ERR_CONNECT_TIMEOUT'].includes(code)) return 'refused';
-  const s = Number(err.status ?? err.statusCode);
+  const s = Number(e.status ?? e.statusCode);
   if (s === 401 || s === 403) return 'auth';
   if (s >= 500) return 'http_5xx';
   return 'unbekannt';
@@ -54,33 +63,59 @@ export function fehlerCode(err) {
 
 // Führt eine Prüfung aus, misst die Zeit, wandelt Ausnahmen in {status:'fehler', code}.
 // Die Prüfung selbst darf ein Ergebnisobjekt liefern (z. B. warnung + Zahlen).
+/**
+ * @param {string} name
+ * @param {() => unknown} fn
+ * @param {(msg: string) => void} log
+ * @returns {Promise<Record<string, any>>}
+ */
 async function laufen(name, fn, log) {
   const start = Date.now();
   try {
-    const erg = (await mitTimeout(Promise.resolve().then(fn))) || {};
+    const erg = /** @type {Record<string, unknown> | null | undefined} */ (await mitTimeout(Promise.resolve().then(fn))) || {};
     return { status: 'ok', ...erg, ms: Date.now() - start };
   } catch (err) {
-    log(`[status] ${name}: ${fehlerCode(err)} — ${err?.message || err}`);
+    log(`[status] ${name}: ${fehlerCode(err)} — ${err instanceof Error ? err.message : String(err)}`);
     return { status: 'fehler', code: fehlerCode(err), ms: Date.now() - start };
   }
 }
 
+/** @type {Record<string, number>} */
 const RANG = { fehler: 3, warnung: 2, ok: 1, unbekannt: 0, nicht_implementiert: 0, info: 0 };
 
+/** @param {Record<string, { status?: string } | null | undefined>} felder */
 export function gesamtStatus(felder) {
   let max = 'ok';
   for (const f of Object.values(felder)) {
     const s = f?.status;
-    if ((RANG[s] ?? 0) > RANG[max]) max = s;
+    if (s && (RANG[s] ?? 0) > RANG[max]) max = s;
   }
   return max;
 }
 
 /**
- * @param {object} p  Prüfungen: { postgres, rest, auth, storage, disk, dataKey, realtime } (async, je optional),
+ * @typedef {{
+ *   postgres?: (() => unknown) | null,
+ *   rest?: (() => unknown) | null,
+ *   auth?: (() => unknown) | null,
+ *   storage?: (() => unknown) | null,
+ *   disk?: (() => unknown) | null,
+ *   dataKey?: (() => unknown) | null,
+ *   realtime?: (() => unknown) | null,
+ *   dateien?: (() => Promise<{ verzeichnis: boolean, sicherung?: unknown, stand?: unknown, zeit?: unknown }>) | null,
+ *   schema?: { imageMax?: string | null, wartung?: { art?: string | null } | null, zaehler?: { status?: string | null } | null },
+ *   version?: { version?: string | null },
+ *   eigenerFingerprint?: (() => string | null) | null,
+ * }} StatusPruefungen
+ */
+
+/**
+ * @param {StatusPruefungen} p  Prüfungen: { postgres, rest, auth, storage, disk, dataKey, realtime } (async, je optional),
  *                    plus statische Angaben { version, schema }.
+ * @param {{ log?: (msg: string) => void, jetzt?: () => Date }} [opts]
  */
 export async function statusSammeln(p, { log = console.warn, jetzt = () => new Date() } = {}) {
+  /** @type {(name: string, fn: (() => unknown) | null | undefined) => Promise<Record<string, any>>} */
   const lauf = (name, fn) => (fn ? laufen(name, fn, log) : Promise.resolve({ status: 'unbekannt' }));
   const [postgres, rest, auth, storage, disk, dataKey, realtime, dateien] = await Promise.all([
     lauf('postgres', p.postgres), lauf('rest', p.rest), lauf('auth', p.auth),
@@ -88,7 +123,7 @@ export async function statusSammeln(p, { log = console.warn, jetzt = () => new D
     lauf('realtime', p.realtime),
     // Host-Dateien (O-191): jeder Lesefehler heißt „nicht messbar", nie „kaputt".
     Promise.resolve().then(() => (p.dateien ? mitTimeout(p.dateien()) : null))
-      .catch((err) => { log(`[status] dateien: ${err?.message || err}`); return null; }),
+      .catch((err) => { log(`[status] dateien: ${err instanceof Error ? err.message : String(err)}`); return null; }),
   ]);
   const jetztMs = jetzt().getTime();
   const d = dateien || { verzeichnis: false };
@@ -119,8 +154,20 @@ export async function statusSammeln(p, { log = console.warn, jetzt = () => new D
   return { gesamt: gesamtStatus(felder), gemessen_am: jetzt().toISOString(), felder };
 }
 
+/**
+ * @param {string} a
+ * @param {string} b
+ */
 function schlechter(a, b) { return (RANG[a] ?? 0) >= (RANG[b] ?? 0) ? a : b; }
 
+/**
+ * @param {{
+ *   imageMax?: string | null,
+ *   buchMax?: string | null,
+ *   wartung?: { art?: string | null } | null,
+ *   zaehler?: { status?: string | null } | null,
+ * }} [opts]
+ */
 export function schemaBewerten({ imageMax = null, buchMax = null, wartung = null, zaehler = null } = {}) {
   const out = { image: imageMax, buch: buchMax, zaehler: zaehler?.status ?? null };
   if (wartung) return { status: 'fehler', code: 'migration', ...out, art: wartung.art ?? null };
@@ -130,9 +177,14 @@ export function schemaBewerten({ imageMax = null, buchMax = null, wartung = null
   return { status: 'ok', ...out };
 }
 
+/**
+ * @param {{ status?: string, gesamtBytes?: number, freiBytes?: number } | null | undefined} disk
+ * @param {number | null | undefined} belegtBytes
+ */
 export function diskBewerten(disk, belegtBytes) {
   if (!disk || disk.status !== 'ok' || !disk.gesamtBytes) return disk?.status === 'fehler' ? disk : { status: 'unbekannt' };
-  const { freiBytes, gesamtBytes } = disk;
+  const freiBytes = disk.freiBytes ?? 0;
+  const { gesamtBytes } = disk;
   const anteilFrei = freiBytes / gesamtBytes;
   const out = { frei_prozent: Math.round(anteilFrei * 1000) / 10, frei_bytes: freiBytes, gesamt_bytes: gesamtBytes };
   if (anteilFrei < DISK_FEHLER_FREI) return { status: 'fehler', code: 'voll', ...out };
@@ -141,8 +193,16 @@ export function diskBewerten(disk, belegtBytes) {
   return { status: 'ok', ...out };
 }
 
-const istEpoch = (n) => Number.isSafeInteger(n) && n > 0;
-const istV1 = (o) => !!o && typeof o === 'object' && !Array.isArray(o) && o.v === 1;
+/**
+ * @param {unknown} n
+ * @returns {n is number}
+ */
+const istEpoch = (n) => Number.isSafeInteger(n) && /** @type {number} */ (n) > 0;
+/**
+ * @param {unknown} o
+ * @returns {o is Record<string, unknown> & { v: 1 }}
+ */
+const istV1 = (o) => !!o && typeof o === 'object' && !Array.isArray(o) && /** @type {{ v?: unknown }} */ (o).v === 1;
 
 /**
  * backup (§6.5/§6.6). Verzeichnis fehlt → unbekannt (altes compose + neues Image, J7).
@@ -150,6 +210,9 @@ const istV1 = (o) => !!o && typeof o === 'object' && !Array.isArray(o) && o.v ==
  * gesichert hat, darf `gesamt` nicht grün lassen (praxura-backup.timer ist bis zur
  * Schlüsselbestätigung aus). Das Alter rechnet DIESER Prozess aus dem Epoch —
  * nie einem Feld „alter" aus der Datei glauben (guvenlik B3).
+ *
+ * @param {unknown} roh
+ * @param {{ verzeichnis?: boolean, jetztMs?: number }} [opts]
  */
 export function backupBewerten(roh, { verzeichnis = false, jetztMs = Date.now() } = {}) {
   if (!verzeichnis) return { status: 'unbekannt' };
@@ -162,7 +225,7 @@ export function backupBewerten(roh, { verzeichnis = false, jetztMs = Date.now() 
   const out = {
     letzte_ok: new Date(ms).toISOString(),
     alter_stunden: alter,
-    anlass: SEBEP.includes(roh.sebep) ? roh.sebep : null,
+    anlass: typeof roh.sebep === 'string' && SEBEP.includes(roh.sebep) ? roh.sebep : null,
     ziel_ausserhalb: ausserhalb,
   };
   if (alter > BACKUP_MAX_STUNDEN) return { status: 'fehler', code: 'alt', ...out };
@@ -175,6 +238,9 @@ export function backupBewerten(roh, { verzeichnis = false, jetztMs = Date.now() 
  * zeit: Container teilt die Host-Uhr, „Abweichung < 60 s" ist von hier nicht
  * messbar — bewertet wird das NTPSynchronized-Flag des Hosts. null (kein
  * timedatectl, z. B. WSL) und veraltete Datei (Timer tot) = unbekannt.
+ *
+ * @param {unknown} roh
+ * @param {number} [jetztMs]
  */
 export function zeitBewerten(roh, jetztMs = Date.now()) {
   if (!istV1(roh) || !istEpoch(roh.gemessen_epoch)) return { status: 'unbekannt' };
@@ -192,6 +258,10 @@ export function zeitBewerten(roh, jetztMs = Date.now()) {
  * gültigen Schlüssel, ohne `_erst` würde eine Abweichung nach 24 h von selbst
  * verschwinden (onprem 11.10.2026). null in der Künye (api war aus) = unbekannt,
  * nicht Abweichung. Der Abdruck selbst geht NIE in die Antwort (S-60 f).
+ *
+ * @param {({ status?: string } & Record<string, unknown>) | null | undefined} feld
+ * @param {unknown} sicherung
+ * @param {(() => string | null) | null | undefined} [eigenerFingerprint]
  */
 export function dataKeyVergleichen(feld, sicherung, eigenerFingerprint) {
   const basis = { ...feld };
@@ -207,6 +277,7 @@ export function dataKeyVergleichen(feld, sicherung, eigenerFingerprint) {
     : { ...basis, status: 'fehler', code: 'schluessel_abweichung', vergleich: 'abweichung' };
 }
 
+/** @param {unknown} stand */
 export function digestAus(stand) {
   return istV1(stand) && typeof stand.api_digest === 'string' && RE_DIGEST.test(stand.api_digest) ? stand.api_digest : null;
 }
@@ -216,11 +287,14 @@ export function digestAus(stand) {
  * O_NOFOLLOW + fstat auf dem Deskriptor (guvenlik B1): ein Symlink auf
  * /proc/self/environ oder ein FIFO darf weder gelesen werden noch blockieren.
  * Rückgabe je Datei: Objekt · null (da, aber unlesbar/kaputt) · undefined (fehlt).
+ *
+ * @param {string} verzeichnis
  */
 export async function statusDateienLesen(verzeichnis) {
   try {
     if (!(await fs.stat(verzeichnis)).isDirectory()) return { verzeichnis: false };
   } catch { return { verzeichnis: false }; }
+  /** @param {string} name */
   const eine = async (name) => {
     let fh;
     try {
@@ -232,7 +306,7 @@ export async function statusDateienLesen(verzeichnis) {
       const o = JSON.parse(buf.subarray(0, bytesRead).toString('utf8'));
       return o && typeof o === 'object' && !Array.isArray(o) ? o : null;
     } catch (err) {
-      return err?.code === 'ENOENT' ? undefined : null;
+      return /** @type {{ code?: unknown } | null} */ (err)?.code === 'ENOENT' ? undefined : null;
     } finally {
       await fh?.close().catch(() => {});
     }
@@ -244,6 +318,15 @@ export async function statusDateienLesen(verzeichnis) {
 /**
  * Die echten Prüfungen. Nur Box (Route ist auf SaaS 404). Keine neue env:
  * DATABASE_URL, SUPABASE_URL (http://kong:8000), SUPABASE_ANON_KEY, DATA_ENCRYPTION_KEY.
+ *
+ * @param {{
+ *   supabase: import('@supabase/supabase-js').SupabaseClient,
+ *   env?: NodeJS.ProcessEnv | Record<string, string | undefined>,
+ *   diskPfad?: string,
+ *   statusPfad?: string,
+ *   rundlaufTest?: typeof echterRundlauf,
+ *   fingerprint?: typeof echterFingerprint,
+ * }} opts
  */
 export function standardPruefungen({ supabase, env = process.env, diskPfad = '/var/lib/praxura/ip', statusPfad = '/var/lib/praxura/status', rundlaufTest = echterRundlauf, fingerprint = echterFingerprint }) {
   const kong = (env.SUPABASE_URL || '').replace(/\/+$/, '');
@@ -274,7 +357,10 @@ export function standardPruefungen({ supabase, env = process.env, diskPfad = '/v
     } : null,
     rest: async () => {
       const { error } = await supabase.from('profiles').select('id', { head: true, count: 'planned' }).limit(1);
-      if (error) throw Object.assign(new Error(error.message), { status: error.status || error.code });
+      if (error) {
+        const pgErr = /** @type {{ message: string, status?: number, code?: string }} */ (error);
+        throw Object.assign(new Error(pgErr.message), { status: pgErr.status || pgErr.code });
+      }
     },
     auth: kong ? async () => {
       const r = await fetch(`${kong}/auth/v1/health`, { headers: { apikey: env.SUPABASE_ANON_KEY || '' }, signal: AbortSignal.timeout(3500) });
@@ -292,12 +378,15 @@ export function standardPruefungen({ supabase, env = process.env, diskPfad = '/v
     // listBuckets statt eines bestimmten Buckets: unabhängig vom Schema-Stand.
     storage: async () => {
       const { error } = await supabase.storage.listBuckets();
-      if (error) throw Object.assign(new Error(error.message), { status: error.status || error.statusCode });
+      if (error) {
+        const stErr = /** @type {{ message: string, status?: number, statusCode?: string | number }} */ (error);
+        throw Object.assign(new Error(stErr.message), { status: stErr.status || stErr.statusCode });
+      }
     },
     disk: async () => {
       let s;
       try { s = await fs.statfs(diskPfad); } catch (err) {
-        if (err.code === 'ENOENT') return { status: 'unbekannt' };
+        if (/** @type {{ code?: unknown } | null} */ (err)?.code === 'ENOENT') return { status: 'unbekannt' };
         throw err;
       }
       return { gesamtBytes: s.blocks * s.bsize, freiBytes: s.bavail * s.bsize };

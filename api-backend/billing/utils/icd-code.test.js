@@ -39,7 +39,7 @@ test('icdOhneStrich: entfernt nachgestellte Bindestriche und trimmt', () => {
   // Leere / ungültige Eingaben
   assert.equal(icdOhneStrich(''), '');
   assert.equal(icdOhneStrich(null), '');
-  assert.equal(icdOhneStrich(undefined), '');
+  assert.equal(icdOhneStrich(/** @type {string | null} */ (/** @type {unknown} */ (undefined))), '');
   assert.equal(icdOhneStrich('-'), '');
   assert.equal(icdOhneStrich('---'), '');
 });
@@ -54,8 +54,8 @@ test('icdAbfrageKodes: generiert bindestrichfreie und gestrichelte Form', () => 
 
   // Leere / ungültige Eingaben
   assert.deepEqual(icdAbfrageKodes([]), []);
-  assert.deepEqual(icdAbfrageKodes(null), []);
-  assert.deepEqual(icdAbfrageKodes(['', null, undefined]), []);
+  assert.deepEqual(icdAbfrageKodes(/** @type {string[]} */ (/** @type {unknown} */ (null))), []);
+  assert.deepEqual(icdAbfrageKodes(/** @type {string[]} */ (/** @type {unknown} */ (['', null, undefined]))), []);
 });
 
 test('icdTerminalMap: mappt DB-Zeilen bindestrichfrei, nicht endständig gewinnt', () => {
@@ -100,8 +100,8 @@ test('icdTerminalMap: mappt DB-Zeilen bindestrichfrei, nicht endständig gewinnt
 
   // Leere / ungültige Eingaben
   assert.deepEqual(icdTerminalMap([]), {});
-  assert.deepEqual(icdTerminalMap(null), {});
-  assert.deepEqual(icdTerminalMap([{ code: null, terminal: true }]), {});
+  assert.deepEqual(icdTerminalMap(/** @type {Parameters<typeof icdTerminalMap>[0]} */ (/** @type {unknown} */ (null))), {});
+  assert.deepEqual(icdTerminalMap(/** @type {Parameters<typeof icdTerminalMap>[0]} */ (/** @type {unknown} */ ([{ code: null, terminal: true }]))), {});
 });
 
 import { icdOhneStrich as _o, icdAbfrageKodes as _a, icdTerminalMap as _m } from './icd-code.js';
@@ -112,7 +112,7 @@ _test('dreistellige Kategorie: E11.- -> E11, Abfrage fragt auch E11.-; terminal 
   _assert.ok(_a(['E11']).includes('E11.-'));
   _assert.ok(_a(['E11.7']).includes('E11.7-') && !_a(['E11.7']).includes('E11.7.-'));
   _assert.equal(_m([{ code: 'E11.-', terminal: false }]).E11, false);
-  _assert.equal(_m([{ code: 'X99', terminal: null }]).X99, null);
+  _assert.equal(_m(/** @type {Parameters<typeof _m>[0]} */ (/** @type {unknown} */ ([{ code: 'X99', terminal: null }]))).X99, null);
 });
 
 test('icdFuerDta: Kennzeichen/Strich hinter den Zusätzen (cold review 01.10.2026)', () => {

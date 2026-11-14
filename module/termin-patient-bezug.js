@@ -51,10 +51,10 @@ export function parseNameMitGeburt(customerName) {
 }
 
 /** Nur Ziffern — „0170 / 123-45 67" und „017012 34567" sind dieselbe Nummer. */
-const nurZiffern = (s) => String(s || '').replace(/\D/g, '');
+const nurZiffern = (/** @type {any} */ s) => String(s || '').replace(/\D/g, '');
 
 /** Name eines Patienten so, wie er auf einem Termin stünde. */
-const leadName = (l) =>
+const leadName = (/** @type {any} */ l) =>
   ([l?.first_name, l?.last_name].filter(Boolean).join(' ').trim() || l?.title || '').trim();
 
 /**
@@ -65,11 +65,11 @@ const leadName = (l) =>
  *   2. Telefonnummer (normalisiert und roh)
  *   3. Name; bei angehängtem Geburtsdatum muss dieses zusätzlich passen
  *
- * @param {object} sb        Supabase-Client
- * @param {object} booking   { lead_id, customer_name, customer_phone, ... }
+ * @param {any} sb        Supabase-Client
+ * @param {any} booking   { lead_id, customer_name, customer_phone, ... }
  * @param {string} ownerId
  * @param {object} [opts]
- * @param {Array}  [opts.leads]  bereits geladene Patienten (leadsCache) — spart die Abfrage
+ * @param {Array<any>} [opts.leads]  bereits geladene Patienten (leadsCache) — spart die Abfrage
  * @returns {Promise<string|null>} lead_id oder null, wenn nicht eindeutig
  */
 export async function findeLeadIdZuTermin(sb, booking, ownerId, opts = {}) {
@@ -81,6 +81,7 @@ export async function findeLeadIdZuTermin(sb, booking, ownerId, opts = {}) {
   if (!name && !telZiffern) return null;
 
   // Vorhandene Liste bevorzugen: der Seitenbereich hat sie meist schon geladen.
+  /** @type {any} */
   let kandidaten = Array.isArray(opts.leads) && opts.leads.length ? opts.leads : null;
   if (!kandidaten) {
     const { data, error } = await sb
@@ -93,7 +94,7 @@ export async function findeLeadIdZuTermin(sb, booking, ownerId, opts = {}) {
 
   // 2. Telefon — die Nummer gehört zu einer Person, der Name nicht unbedingt.
   if (telZiffern) {
-    const perTelefon = kandidaten.filter(l =>
+    const perTelefon = kandidaten.filter((/** @type {any} */ l) =>
       nurZiffern(l.phone_normalized) === telZiffern || nurZiffern(l.phone) === telZiffern);
     if (perTelefon.length === 1) return perTelefon[0].id;
   }
@@ -102,12 +103,12 @@ export async function findeLeadIdZuTermin(sb, booking, ownerId, opts = {}) {
   // Patient, und die Schreibweise im Termin stammt aus einem Textfeld.
   if (!name) return null;
   const klein = name.toLowerCase();
-  let perName = kandidaten.filter(l => leadName(l).toLowerCase() === klein);
+  let perName = kandidaten.filter((/** @type {any} */ l) => leadName(l).toLowerCase() === klein);
 
   // Steht am Termin ein Geburtsdatum, entscheidet es die Namensdopplung.
   if (perName.length > 1 && geburtsdatum) {
     const gebDe = datumDe(geburtsdatum);
-    const genau = perName.filter(l => datumDe(l.geburtsdatum || l.metadata?.geburtsdatum) === gebDe);
+    const genau = perName.filter((/** @type {any} */ l) => datumDe(l.geburtsdatum || l.metadata?.geburtsdatum) === gebDe);
     if (genau.length) perName = genau;
   }
 
@@ -128,7 +129,9 @@ export async function findeLeadIdZuTermin(sb, booking, ownerId, opts = {}) {
  * Punkte, und die zerlegen einen PostgREST-Filterausdruck. Die Menge ist
  * unkritisch, es sind die kommenden Termine einer Praxis.
  *
- * @returns {Promise<{termine: Array, error: object|null}>}
+ * @param {any} sb
+ * @param {{ ownerId: string, leadId?: string | null, booking?: any, limit?: number }} p
+ * @returns {Promise<{termine: Array<any>, error: object|null}>}
  */
 export async function ladeKommendeTermineDesPatienten(sb, { ownerId, leadId, booking, limit = 30 }) {
   const abISO = new Date(Date.now() - 3600000).toISOString();
@@ -152,7 +155,7 @@ export async function ladeKommendeTermineDesPatienten(sb, { ownerId, leadId, boo
 
   const { name } = parseNameMitGeburt(booking?.customer_name);
   const klein = name.toLowerCase();
-  const gefiltert = (data || []).filter(b =>
+  const gefiltert = (data || []).filter((/** @type {any} */ b) =>
     parseNameMitGeburt(b.customer_name).name.toLowerCase() === klein);
   return { termine: gefiltert, error: null };
 }

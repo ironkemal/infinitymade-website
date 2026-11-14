@@ -57,7 +57,7 @@ test('Gültige Mehrfachelemente in Physio und Ergo berechnen summeEinheiten', ()
   const r1 = pruefeHeilmittelItems(itemsPhysio, { therapie_bereich: 'physiotherapy' });
   assert.equal(r1.ok, true);
   assert.equal(r1.summeEinheiten, 12);
-  assert.equal(r1.items.length, 2);
+  assert.equal(r1.items?.length, 2);
 
   const itemsErgo = [
     { code: 'X2101', einheiten: 10, doppelbehandlung: false },
@@ -67,7 +67,7 @@ test('Gültige Mehrfachelemente in Physio und Ergo berechnen summeEinheiten', ()
   const r2 = pruefeHeilmittelItems(itemsErgo, { therapie_bereich: 'ergotherapy' });
   assert.equal(r2.ok, true);
   assert.equal(r2.summeEinheiten, 30);
-  assert.equal(r2.items.length, 3);
+  assert.equal(r2.items?.length, 3);
 });
 
 test('>3 vorrangige Heilmittel wird mit 422 abgewiesen', () => {

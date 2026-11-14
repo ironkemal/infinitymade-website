@@ -10,7 +10,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
-const lies = (...p) => fs.readFileSync(path.join(repoRoot, ...p), 'utf8');
+const lies = (/** @type {string[]} */ ...p) => fs.readFileSync(path.join(repoRoot, ...p), 'utf8');
 
 const { setupKapisi, jetonAbgelaufen, JETON_GUELTIG_TAGE } = await import(
   pathToFileURL(path.join(repoRoot, 'api-backend', 'setup', 'kapi.js')).href
@@ -18,15 +18,24 @@ const { setupKapisi, jetonAbgelaufen, JETON_GUELTIG_TAGE } = await import(
 
 function fakeRes() {
   return {
-    code: 200, body: null,
+    code: 200,
+    /** @type {any} */
+    body: null,
+    /** @param {number} c */
     status(c) { this.code = c; return this; },
+    /** @param {any} b */
     json(b) { this.body = b; return this; },
   };
 }
+/**
+ * @param {import('express').RequestHandler} kapi
+ * @param {string} method
+ * @param {string} pfad
+ */
 async function durchKapi(kapi, method, pfad) {
   const res = fakeRes();
   let weiter = false;
-  await kapi({ method, path: pfad }, res, () => { weiter = true; });
+  await kapi(/** @type {any} */ ({ method, path: pfad }), /** @type {any} */ (res), () => { weiter = true; });
   return { res, weiter };
 }
 
@@ -35,7 +44,7 @@ async function durchKapi(kapi, method, pfad) {
 test('jetonAbgelaufen: 14 Tage, leer/ungültig = kein Ablauf (alte Box)', () => {
   assert.equal(JETON_GUELTIG_TAGE, 14);
   const jetzt = Date.UTC(2026, 9, 7);
-  const sek = (tage) => String(Math.floor((jetzt - tage * 86400_000) / 1000));
+  const sek = (/** @type {number} */ tage) => String(Math.floor((jetzt - tage * 86400_000) / 1000));
   assert.equal(jetonAbgelaufen(sek(13), jetzt), false);
   assert.equal(jetonAbgelaufen(sek(15), jetzt), true);
   for (const v of [undefined, null, '', '  ', 'abc', '0', '-5']) {
@@ -84,7 +93,7 @@ test('router.js: Tor ist die ERSTE Schicht, jede Route (auch künftige) liegt da
   const stack = router.stack;
   assert.ok(!stack[0].route, 'erste Schicht darf keine Route sein');
   assert.equal(stack[0].name, 'setupKapi', 'erste Schicht muss das Tor sein');
-  const routen = stack.filter((l) => l.route);
+  const routen = stack.filter((/** @type {any} */ l) => l.route);
   // 5 seit AUFTRAG-MAILVERSAND (09.11.2026): /test-smtp entfallen, Mail kommt in Einstellungen → E-Mail-Versand.
   assert.ok(routen.length >= 5, `erwartet ≥5 Routen, gefunden ${routen.length}`);
 
@@ -111,10 +120,10 @@ test('setup.js: 404 bei /setup/status zeigt "bereits eingerichtet", abgelaufen e
   assert.equal((s.match(/zeigeGeschlossen\(!!data\.abgelaufen\)/g) || []).length, 3, 'verify/owner/branding');
   // setup.js darf einrichtung-hinweis.js nicht importieren (onprem-setup-jeton.test.js) —
   // derselbe Text muss trotzdem drinstehen, sonst laufen Login- und Setup-Hinweis auseinander.
-  const linux = lies('module/einrichtung-hinweis.js').match(/NEUER_LINK_LINUX = '([^']+)'/)[1];
+  const linux = lies('module/einrichtung-hinweis.js').match(/NEUER_LINK_LINUX = '([^']+)'/)?.[1] ?? '';
   assert.match(linux, /\/opt\/praxura\/onprem\/install\.sh --neuer-jeton/);
-  assert.ok(/abgelaufenSub: .*/.exec(s)[0].includes(linux), 'abgelaufenSub nennt den Linux-Befehl');
-  assert.ok(/tokenSub: .*/.exec(s)[0].includes(linux), 'tokenSub nennt den Linux-Befehl');
+  assert.ok(/abgelaufenSub: .*/.exec(s)?.[0].includes(linux), 'abgelaufenSub nennt den Linux-Befehl');
+  assert.ok(/tokenSub: .*/.exec(s)?.[0].includes(linux), 'tokenSub nennt den Linux-Befehl');
 });
 
 // ── Caddy ────────────────────────────────────────────────────────────────────
@@ -184,6 +193,11 @@ test('praxura-installieren.ps1: -NeuerJeton ruft install.sh --neuer-jeton und ö
 
 const libPosix = path.join(repoRoot, 'onprem', 'lib-setup-jeton.sh').replace(/\\/g, '/');
 
+/**
+ * @param {import('node:test').TestContext} t
+ * @param {string | null} dockerAusgabe
+ * @param {string} envInhalt
+ */
 function laufe(t, dockerAusgabe, envInhalt) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'praxura-jeton-'));
   const envPfad = path.join(dir, '.env');
@@ -193,7 +207,7 @@ function laufe(t, dockerAusgabe, envInhalt) {
     : `docker() { printf '%s\\n' '${dockerAusgabe}'; }`;
   const cmd = `set -euo pipefail; ${docker}; ENV_FILE="${envPfad.replace(/\\/g, '/')}"; source "${libPosix}"; setup_jeton_aufraeumen`;
   const res = spawnSync('bash', ['-c', cmd], { encoding: 'utf8' });
-  if (res.error && res.error.code === 'ENOENT') { t.skip('bash nicht gefunden'); return null; }
+  if (res.error && /** @type {NodeJS.ErrnoException} */ (res.error).code === 'ENOENT') { t.skip('bash nicht gefunden'); return null; }
   const env = fs.readFileSync(envPfad, 'utf8');
   fs.rmSync(dir, { recursive: true, force: true });
   return { res, env };
@@ -236,7 +250,7 @@ test('Verhalten: setup_jeton_neu schreibt 48-Hex-Jeton + SEIT, gibt den Jeton au
   fs.writeFileSync(envPfad, 'POSTGRES_DB=postgres\nSETUP_TOKEN=\nSETUP_TOKEN_SEIT=\n');
   const cmd = `set -euo pipefail; ENV_FILE="${envPfad.replace(/\\/g, '/')}"; source "${libPosix}"; setup_jeton_neu`;
   const res = spawnSync('bash', ['-c', cmd], { encoding: 'utf8' });
-  if (res.error && res.error.code === 'ENOENT') { t.skip('bash nicht gefunden'); return; }
+  if (res.error && /** @type {NodeJS.ErrnoException} */ (res.error).code === 'ENOENT') { t.skip('bash nicht gefunden'); return; }
   try {
     assert.equal(res.status, 0, res.stderr);
     const jeton = res.stdout.trim();

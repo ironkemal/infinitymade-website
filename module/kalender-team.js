@@ -26,9 +26,10 @@
 /**
  * Teamliste fuer Kalenderspalten: ohne Doppelte, eigener Zugang zuerst.
  *
- * @param {Array<{id?: string}>} members  Rohe Teamliste (z. B. aus `profiles`).
- * @param {string|null} selfId            Eigene user_id; fehlt sie, bleibt die Reihenfolge.
- * @returns {Array} Neue Liste — die Eingabe wird nicht veraendert.
+ * @template {{id?: string}} T
+ * @param {T[]} members  Rohe Teamliste (z. B. aus `profiles`).
+ * @param {string|null} [selfId]            Eigene user_id; fehlt sie, bleibt die Reihenfolge.
+ * @returns {T[]} Neue Liste — die Eingabe wird nicht veraendert.
  */
 export function teamReihenfolge(members, selfId) {
   const gesehen = new Set();
@@ -50,7 +51,7 @@ export function teamReihenfolge(members, selfId) {
  *
  * @param {Object}   o
  * @param {HTMLElement|null} o.container  Zielelement; fehlt es, passiert nichts.
- * @param {Array}    o.members            Teamliste (bereits in Anzeigereihenfolge).
+ * @param {Array<{id: string, business_name?: string, email?: string}>} o.members Teamliste (bereits in Anzeigereihenfolge).
  * @param {string}   o.activeId           Aktiver Filter — 'all' oder eine user_id.
  * @param {string[]} o.colors             Farbpalette, wird zyklisch vergeben.
  * @param {string}   o.allLabel           Beschriftung des "Alle"-Chips.

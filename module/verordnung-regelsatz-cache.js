@@ -22,7 +22,7 @@ import { bereichSchluessel, regelnFuerBereich } from './verordnung-regeln.js?v=2
 const _cache = new Map();
 
 /**
- * @param {object} supabase
+ * @param {{ from: (table: string) => any }} supabase
  * @param {string} bereich  roher Wert (z. B. 'podo', 'physio', 'Podologie') —
  *   wird über `bereichSchluessel()` normalisiert, bevor er als Cache-Key dient.
  * @returns {Promise<{bereich:string, profil:object|null, gruppen:object, luecken:string[]}|null>}

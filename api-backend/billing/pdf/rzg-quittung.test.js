@@ -6,9 +6,13 @@ import { renderRzgQuittung } from './rzg-quittung.template.js';
 import assert from 'node:assert/strict';
 
 let pass = 0, fail = 0;
+/**
+ * @param {string} name
+ * @param {() => void} fn
+ */
 function test(name, fn) {
   try { fn(); console.log('  ok   ' + name); pass++; }
-  catch (e) { console.log('  FAIL ' + name + '\n       ' + e.message); fail++; }
+  catch (e) { console.log('  FAIL ' + name + '\n       ' + (e instanceof Error ? e.message : String(e))); fail++; }
 }
 
 console.log('RZG-Quittung template');
@@ -39,7 +43,7 @@ test('zeigt weder Behandlungsbetrag noch Kassenanteil', () => {
 // Lieber gar keine Quittung als eine mit dem falschen Betrag.
 test('bricht ab statt den Gesamtbetrag zu drucken', () => {
   assert.throws(
-    () => renderRzgQuittung({ ...opts, totals: { gesamt: 59.26 } }),
+    () => renderRzgQuittung({ ...opts, totals: /** @type {typeof opts.totals} */ (/** @type {unknown} */ ({ gesamt: 59.26 })) }),
     /gesZuzahlung/
   );
 });

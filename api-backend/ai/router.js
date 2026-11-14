@@ -41,33 +41,52 @@ export const TASKS = Object.freeze({
 });
 
 const CHALLENGE_TYPES = new Set(['NAME','UNKNOWN','ANREDE_REST','ZIFFERNFOLGE','EMAIL_REST','PLZ_REST','QUASI_REIDENTIFIKATION','FUZZY_NAME_REST']);
+/**
+ * @param {unknown} err
+ * @returns {boolean}
+ */
 function validChallenge(err) {
+  if (!err || typeof err !== 'object') return false;
+  const e = /** @type {{ challengeId?: unknown, expiresAt?: unknown, candidates?: unknown }} */ (err);
   const now = Date.now();
-  if (typeof err.challengeId !== 'string' || !/^[0-9a-f]{64}\.\d{13}$/.test(err.challengeId)) return false;
-  if (!Number.isSafeInteger(err.expiresAt) || err.expiresAt <= now || err.expiresAt > now + 300000) return false;
-  if (Number(err.challengeId.split('.')[1]) !== err.expiresAt) return false;
-  if (!Array.isArray(err.candidates) || err.candidates.length < 1 || err.candidates.length > 5) return false;
+  if (typeof e.challengeId !== 'string' || !/^[0-9a-f]{64}\.\d{13}$/.test(e.challengeId)) return false;
+  if (typeof e.expiresAt !== 'number' || !Number.isSafeInteger(e.expiresAt) || e.expiresAt <= now || e.expiresAt > now + 300000) return false;
+  if (Number(e.challengeId.split('.')[1]) !== e.expiresAt) return false;
+  if (!Array.isArray(e.candidates) || e.candidates.length < 1 || e.candidates.length > 5) return false;
   const ids = new Set();
-  return err.candidates.every(c => c && typeof c.id === 'string' && /^[a-zA-Z0-9_-]{1,64}$/.test(c.id) && !ids.has(c.id) && (ids.add(c.id), true) && typeof c.text === 'string' && c.text.length > 0 && c.text.length <= 200 && CHALLENGE_TYPES.has(c.type));
+  return e.candidates.every((/** @type {unknown} */ c) => {
+    if (!c || typeof c !== 'object') return false;
+    const cand = /** @type {{ id?: unknown, text?: unknown, type?: unknown }} */ (c);
+    return typeof cand.id === 'string' && /^[a-zA-Z0-9_-]{1,64}$/.test(cand.id) && !ids.has(cand.id) && (ids.add(cand.id), true) && typeof cand.text === 'string' && cand.text.length > 0 && cand.text.length <= 200 && typeof cand.type === 'string' && CHALLENGE_TYPES.has(cand.type);
+  });
 }
+
+/**
+ * @typedef {import('./ki-einwilligung.js').OwnerDecisionStore} RouterOwnerDecisionStore
+ * @typedef {(payload: any, context?: any) => Promise<Record<string, any>>} RouterTaskHandler
+ */
 
 /**
  * Creates the AI router instance with dependency injection for testing.
  *
  * @param {Object} [options]
- * @param {Object} [options.store] owner decision store
- * @param {Object} [options.jetonClient] jeton client for token invalidation on revocation
- * @param {Function} [options.configProvider] returns AiConfig object
- * @param {Object} [options.tasks] task handlers map
- * @param {Function} [options.summaryProvider] returns summary metadata
- * @returns {express.Router}
+ * @param {RouterOwnerDecisionStore} [options.store] owner decision store
+ * @param {Record<string, unknown>} [options.jetonClient] jeton client for token invalidation on revocation
+ * @param {() => Record<string, any>} [options.configProvider] returns AiConfig object
+ * @param {Record<string, RouterTaskHandler>} [options.tasks] task handlers map
+ * @param {() => Record<string, unknown>} [options.summaryProvider] returns summary metadata
+ * @param {import('express').RequestHandler} [options.authMiddleware] auth middleware
+ * @param {import('@supabase/supabase-js').SupabaseClient | null} [options.supabase] supabase client
+ * @param {(tenantId: string) => void} [options.invalidateJeton] jeton invalidator
+ * @param {import('express').RequestHandler | null} [options.rateLimiter] optional rate limiter
+ * @returns {ReturnType<typeof express.Router>}
  */
 export function createAiRouter({
   store = getOwnerDecisionStore(),
   configProvider = () => createAiConfig(),
   tasks = TASKS,
   summaryProvider = healthSummary,
-  authMiddleware = requireAuth,
+  authMiddleware = /** @type {import('express').RequestHandler} */ (/** @type {unknown} */ (requireAuth)),
   supabase = null,
   invalidateJeton = invalidateTenantJeton,
   rateLimiter = null
@@ -79,7 +98,7 @@ export function createAiRouter({
   });
 
   // GET /_health: try-safe, requires auth, returns task list and whitelisted config summary
-  router.get('/_health', authMiddleware, (req, res) => {
+  router.get('/_health', authMiddleware, (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
     try {
       const summary = typeof summaryProvider === 'function'
         ? summaryProvider()
@@ -95,9 +114,9 @@ export function createAiRouter({
   });
 
   // GET /_healthstate: employee-safe read
-  router.get('/_healthstate', authMiddleware, async (req, res) => {
+  router.get('/_healthstate', authMiddleware, async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
     try {
-      const decision = await store.read(req.auth.tenantId);
+      const decision = await store.read(/** @type {string} */ (req.auth?.tenantId));
       const cfg = typeof configProvider === 'function' ? configProvider() : createAiConfig();
 
       const operatorReady = cfg.activationReady === true;
@@ -123,7 +142,7 @@ export function createAiRouter({
   });
 
   // GET /_config: private owner-only, returns effective state without calling external provider or dictionary
-  router.get('/_config', authMiddleware, async (req, res) => {
+  router.get('/_config', authMiddleware, async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
     if (req.auth?.role !== 'owner' || req.auth?.userId !== req.auth?.tenantId) {
       return res.status(403).json({
         success: false,
@@ -132,7 +151,7 @@ export function createAiRouter({
     }
 
     try {
-      const decision = await store.read(req.auth.tenantId);
+      const decision = await store.read(/** @type {string} */ (req.auth.tenantId));
       const cfg = typeof configProvider === 'function' ? configProvider() : createAiConfig();
 
       const operatorReady = cfg.activationReady === true;
@@ -183,7 +202,7 @@ export function createAiRouter({
   });
 
   // PATCH /_config: private owner-only, exact local opt-in fields only
-  router.patch('/_config', authMiddleware, async (req, res) => {
+  router.patch('/_config', authMiddleware, async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
     if (req.auth?.role !== 'owner' || req.auth?.userId !== req.auth?.tenantId) {
       return res.status(403).json({
         success: false,
@@ -210,13 +229,13 @@ export function createAiRouter({
     }
 
     try {
-      const result = await store.set(req.auth, {
+      const result = await store.set(/** @type {Parameters<RouterOwnerDecisionStore['set']>[0]} */ (/** @type {unknown} */ (req.auth)), {
         enabled: body.enabled,
         informationVersion: body.informationVersion
       });
 
       // Revocation invalidates in-memory token if transport/jeton client supports it
-      if (body.enabled === false) {
+      if (body.enabled === false && req.auth?.tenantId) {
         try {
           invalidateJeton(req.auth.tenantId);
         } catch {}
@@ -247,20 +266,22 @@ export function createAiRouter({
   const transcribeLimiter = rateLimiter || defaultLimiter;
 
   // POST /transkribieren: audio speech-to-text with raw body parser
-  router.post('/transkribieren', authMiddleware, transcribeLimiter, (req, res, next) => {
-    rawAudioParser(req, res, (err) => {
+  router.post('/transkribieren', authMiddleware, transcribeLimiter, (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res, /** @type {import('express').NextFunction} */ next) => {
+    rawAudioParser(req, res, (/** @type {unknown} */ err) => {
       if (err) {
-        if (err.type === 'entity.too.large' || err.status === 413) {
+        const parseErr = /** @type {{ type?: string, status?: number }} */ (err);
+        if (parseErr.type === 'entity.too.large' || parseErr.status === 413) {
           return res.status(413).json({ success: false, code: 'AI_PAYLOAD_TOO_LARGE', error: 'Datenmenge zu groß' });
         }
         return res.status(400).json({ success: false, code: 'KI_SCHEMA', error: 'Ungültiges Audioformat' });
       }
       next();
     });
-  }, async (req, res) => {
+  }, async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
     const t0 = Date.now();
     let status = 'ok';
     let errorMsg = null;
+    /** @type {{ model?: string | null, deployment?: string | null, usage?: Record<string, unknown>, dry_run?: boolean, latency_ms?: number }} */
     let meta = {};
 
     const context = {
@@ -299,9 +320,10 @@ export function createAiRouter({
       }
 
       const handler = Object.hasOwn(tasks, 'transkribieren') ? tasks['transkribieren'] : transkribieren;
+      const rawContentType = req.headers['content-type'];
       const result = await handler({
         audioBuffer: req.body,
-        mimeType: req.headers['content-type'],
+        mimeType: Array.isArray(rawContentType) ? rawContentType[0] : rawContentType,
         duration
       }, context);
 
@@ -337,8 +359,8 @@ export function createAiRouter({
   });
 
   // POST /:task: dispatch to task with server-auth context
-  router.post('/:task', authMiddleware, async (req, res) => {
-    const { task } = req.params;
+  router.post('/:task', authMiddleware, async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
+    const task = String(req.params.task);
     const handler = Object.hasOwn(tasks, task) ? tasks[task] : null;
     if (!handler) {
       // Fixed German 404 with no reflected parameter
@@ -349,6 +371,7 @@ export function createAiRouter({
     const requestHash = hashRequest(req.body);
     let status = 'ok';
     let errorMsg = null;
+    /** @type {{ model?: string | null, deployment?: string | null, usage?: Record<string, unknown>, dry_run?: boolean, latency_ms?: number }} */
     let meta = {};
 
     const context = {
@@ -368,16 +391,19 @@ export function createAiRouter({
 
       res.json({ success: true, ...result });
     } catch (err) {
-      if (err.code === 'KI_RUECKFRAGE' && validChallenge(err)) {
+      const errObj = /** @type {{ code?: string, challengeId?: unknown, expiresAt?: unknown, candidates?: Array<{ id?: unknown, text?: unknown, type?: unknown }> }} */ (
+        err && typeof err === 'object' ? err : {}
+      );
+      if (errObj.code === 'KI_RUECKFRAGE' && validChallenge(err)) {
         status = 'rueckfrage';
         errorMsg = 'KI_RUECKFRAGE';
         return res.status(409).json({
           success: false,
           code: 'KI_RUECKFRAGE',
           error: 'Rückfrage zu unmaskiertem Freitext erforderlich',
-          challengeId: err.challengeId,
-          expiresAt: err.expiresAt,
-          candidates: Array.isArray(err.candidates) ? err.candidates.slice(0, 5).map(c => ({
+          challengeId: errObj.challengeId,
+          expiresAt: errObj.expiresAt,
+          candidates: Array.isArray(errObj.candidates) ? errObj.candidates.slice(0, 5).map(c => ({
             id: String(c.id || ''),
             text: String(c.text || ''),
             type: c.type

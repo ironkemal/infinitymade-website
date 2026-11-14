@@ -1,4 +1,8 @@
 import { withServerlessTelemetry } from './_lib/telemetry.js';
+/**
+ * @param {import('./_lib/auth.js').VercelRequest} req
+ * @param {import('./_lib/auth.js').VercelResponse} res
+ */
 function handler(req, res) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;

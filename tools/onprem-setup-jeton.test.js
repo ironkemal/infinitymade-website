@@ -61,7 +61,7 @@ test('setup.js: Imports nur supabase-config.js oder setup-fragment.js, kein dyna
 
 test('setup.js: setup-fragment.js ist der ERSTE Import (vor supabase-config.js, dessen Top-Level-fetch sonst vor replaceState liefe)', () => {
   // Kommentarzeilen zählen nicht.
-  const ohneKommentar = (text) => text.split(/\r?\n/).filter((z) => !/^\s*(\/\/|\*|\/\*)/.test(z)).join('\n');
+  const ohneKommentar = (/** @type {string} */ text) => text.split(/\r?\n/).filter((z) => !/^\s*(\/\/|\*|\/\*)/.test(z)).join('\n');
   const inhalt = ohneKommentar(fs.readFileSync(setupJsPfad, 'utf8'));
   const importe = inhalt.split('\n').filter((z) => /^\s*import\s/.test(z));
   assert.ok(importe.length >= 2, 'setup.js muss mindestens zwei Imports haben');

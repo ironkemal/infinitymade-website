@@ -51,12 +51,24 @@ export function morgenBerlin(jetzt = new Date()) {
 }
 
 /**
+ * @typedef {object} ErinnerungsTermin
+ * @property {string} [id]
+ * @property {string} [start_time]
+ * @property {string} [status]
+ * @property {string|null} [group_parent_id]
+ * @property {string} [created_at]
+ */
+
+/**
  * Termine, die erinnert werden sollen: am morgigen Berliner Tag, noch in der Zukunft, nicht abgesagt/ausgeblieben,
  * kein Gruppen-Kind (die Gruppe hat einen Elterntermin), nicht erst kurz vorher gebucht.
- * @returns {Array<{termin, tag: null}>} im Format von einteilen()
+ * @param {Array<ErinnerungsTermin>} termine
+ * @param {{ jetzt?: Date, morgen?: string }} [opts]
+ * @returns {Array<{ termin: ErinnerungsTermin, tag: null }>} im Format von einteilen()
  */
 export function zuErinnern(termine, { jetzt = new Date(), morgen = morgenBerlin(jetzt) } = {}) {
   const grenze = jetzt.getTime() - MIN_VORLAUF_STUNDEN * 3600 * 1000;
+  /** @type {Array<{ termin: ErinnerungsTermin, tag: null }>} */
   const aus = [];
   for (const b of Array.isArray(termine) ? termine : []) {
     if (!b?.start_time) continue;
@@ -76,19 +88,27 @@ export function zuErinnern(termine, { jetzt = new Date(), morgen = morgenBerlin(
  * Protokollzeilen (nur Anlass erinnerung_vortag) -> Map fuer einteilen():
  * gesendet -> 'gesendet'; Reservierung ohne Abschluss (IN_ARBEIT) -> 'unklar'; endgueltiger Fehler -> 'unklar'
  * (nie erneut senden); nur WIEDERHOLBARE Fehler (siehe oben) fehlen in der Map und werden erneut versucht.
+ * @param {Array<{ booking_id?: string, termin_beginn?: string, status?: string, fehler_code?: string }>} zeilen
+ * @param {(bookingId: string, terminBeginn: string | undefined) => string} schluessel
+ * @param {string} inArbeit
+ * @returns {Map<string, string>}
  */
 export function protokollZustandErinnerung(zeilen, schluessel, inArbeit) {
+  /** @type {Map<string, string>} */
   const m = new Map();
   for (const z of Array.isArray(zeilen) ? zeilen : []) {
     if (!z?.booking_id) continue;
     const k = schluessel(z.booking_id, z.termin_beginn);
     if (z.status === 'gesendet') m.set(k, 'gesendet');
-    else if (z.status === 'fehler' && (z.fehler_code === inArbeit || !WIEDERHOLBAR.has(z.fehler_code))) m.set(k, 'unklar');
+    else if (z.status === 'fehler' && (z.fehler_code === inArbeit || !z.fehler_code || !WIEDERHOLBAR.has(z.fehler_code))) m.set(k, 'unklar');
   }
   return m;
 }
 
-/** Fester Text. Keine Namensanrede, kein Grund, keine Behandlung; Absage telefonisch (Phase A ohne Link). */
+/**
+ * Fester Text. Keine Namensanrede, kein Grund, keine Behandlung; Absage telefonisch (Phase A ohne Link).
+ * @param {{ praxis?: string | null, telefon?: string | null, startIso: string, standort?: string | null }} opts
+ */
 export function erinnerungsText({ praxis, telefon, startIso, standort }) {
   const { datum, uhr } = datumUhrDe(startIso);
   const name = clean(praxis) || 'Ihre Praxis';

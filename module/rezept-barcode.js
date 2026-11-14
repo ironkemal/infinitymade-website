@@ -80,6 +80,8 @@ const MAX_FELD_LAENGEN = Object.freeze([
 /**
  * Prüft und formatiert ein achtstelliges Datum (JJJJMMTT).
  * Liefert das ISO-Format 'YYYY-MM-DD' oder null bei ungültigem Kalenderdatum.
+ * @param {string} datumStr
+ * @returns {string|null}
  */
 function parseKalenderdatum(datumStr) {
   if (!/^\d{8}$/.test(datumStr)) return null;
@@ -117,10 +119,12 @@ function parseKalenderdatum(datumStr) {
  *       ausstellungsdatum: string|null
  *     },
  *     rezept: {
- *       therapiebereich: 'podo',
+ *       therapiebereich: 'podo'|'physio'|'ergo',
  *       heilmittel: string|null,
  *       heilmittel_feld_text: string|null,
+ *       vorrangig_einheiten: number|null,
  *       anzahl_einheiten: number|null,
+ *       heilmittel_items: Array<{bezeichnung: string, einheiten: number, code: null|string, doppelbehandlung: boolean}>|null,
  *       icd10: string|null,
  *       icd10_2: string|null,
  *       diagnosegruppe: string|null,

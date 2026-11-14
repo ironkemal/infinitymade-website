@@ -12,14 +12,38 @@
 // (abrechnung.routes.js, mapVerordnungToDtaShape: Behandlung × hpnr_codes),
 // damit die ZU dieselbe Zuzahlung zeigt, die die Kasse absetzt.
 
-/**
- * @param {{ supabase: any, rx: any, tenantId: string }} args
- *   rx: Zeile aus `prescriptions` inkl. `prescription_sessions(id, status, done_at)`
- * @returns {Promise<{ podo: boolean, sitzungen: Array<{ id: string, done_at: string|null, code: string }> }>}
- *   chronologisch sortiert; `id` ist je Zeile eindeutig (Podologie: `<behandlung>:<hpnr>`)
- */
 import { physioLeistungszeilen } from '../codes/physio-leistungszeilen.js';
 
+/**
+ * @typedef {{
+ *   id: string,
+ *   therapie_bereich?: string | null,
+ *   prescription_sessions?: Array<{
+ *     id: string,
+ *     status?: string | null,
+ *     done_at?: string | null,
+ *     ergaenzend_erbracht?: boolean | null,
+ *     heilmittel_index?: number | null,
+ *     bookings?: { hausbesuch?: boolean | null } | null,
+ *   }> | null,
+ *   heilmittel_position?: string | null,
+ *   ergaenzend_position?: string | null,
+ *   ergaenzend_einheiten?: number | string | null,
+ *   vorrangig_einheiten?: number | string | null,
+ *   anzahl_einheiten?: number | string | null,
+ *   doppelbehandlung?: boolean | null,
+ *   hausbesuch?: boolean | null,
+ *   hausbesuch_ort?: string | null,
+ *   heilmittel_items?: Array<{ code?: string | null, position?: string | null, bezeichnung?: string | null, einheiten?: number | string | null, doppelbehandlung?: boolean | null }> | null,
+ * }} ErbrachteSitzungenRx
+ */
+
+/**
+ * @param {{ supabase: import('@supabase/supabase-js').SupabaseClient, rx: ErbrachteSitzungenRx, tenantId: string }} args
+ *   rx: Zeile aus `prescriptions` inkl. `prescription_sessions(id, status, done_at)`
+ * @returns {Promise<{ podo: boolean, sitzungen: Array<{ id: string, done_at: string|null, code: string, art?: 'vorrangig'|'ergaenzend'|'hausbesuch' }> }>}
+ *   chronologisch sortiert; `id` ist je Zeile eindeutig (Podologie: `<behandlung>:<hpnr>`)
+ */
 export async function ladeErbrachteSitzungen({ supabase, rx, tenantId }) {
   if (rx?.therapie_bereich === 'podo') {
     const { data, error } = await supabase
@@ -38,6 +62,7 @@ export async function ladeErbrachteSitzungen({ supabase, rx, tenantId }) {
   const erbrachtSortiert = (rx?.prescription_sessions || [])
     .filter(s => s.status === 'done')
     .sort((a, b) => (a.done_at || '').localeCompare(b.done_at || ''));
+  /** @type {Array<{ id: string, done_at: string|null, code: string, art: 'vorrangig'|'ergaenzend'|'hausbesuch' }>} */
   const sitzungen = [];
   for (const z of physioLeistungszeilen(rx, erbrachtSortiert)) {
     for (let i = 0; i < z.anzahl; i++) {
@@ -47,10 +72,16 @@ export async function ladeErbrachteSitzungen({ supabase, rx, tenantId }) {
   return { podo: false, sitzungen };
 }
 
-/** Behandlung × hpnr_codes → eine Zeile je Position (rein, ohne DB). */
+/**
+ * Behandlung × hpnr_codes → eine Zeile je Position (rein, ohne DB).
+ * @param {Array<{ id: string, behandlungsdatum?: string | null, hpnr_codes?: Array<string | number> | null }> | null | undefined} behandlungen
+ * @returns {Array<{ id: string, done_at: string|null, code: string }>}
+ */
 export function flacheBehandlungen(behandlungen) {
+  /** @type {Array<{ id: string, done_at: string|null, code: string }>} */
   const zeilen = [];
   for (const b of behandlungen || []) {
+    /** @type {Map<string, number>} */
     const gesehen = new Map(); // 78610 darf 2× je Tag — id bleibt trotzdem eindeutig
     for (const hpnr of (b.hpnr_codes || [])) {
       const code = String(hpnr).trim();

@@ -43,8 +43,9 @@ test('pruefePng: weist ungültige Magic-Bytes, zu kurze Puffer und übergroße D
   // Zu kurz (< 33 Bytes)
   const rKurz = Buffer.alloc(20);
   rKurz.set(PNG_MAGIC_BYTES, 0);
-  assert.equal(pruefePng(rKurz).ok, false);
-  assert.match(pruefePng(rKurz).fehler, /33 Bytes/i);
+  const rKurzCheck = pruefePng(rKurz);
+  assert.equal(rKurzCheck.ok, false);
+  assert.match(rKurzCheck.ok ? '' : rKurzCheck.fehler, /33 Bytes/i);
 
   // Leer / null
   assert.equal(pruefePng(null).ok, false);
@@ -74,15 +75,17 @@ test('pruefePng: prüft IHDR-Header, Bildabmessungen (1..4096) und Pixelanzahl (
   // Höhe > 4096 (z. B. 5000)
   const grossHoehe = Buffer.from(EIN_MAL_EINS_PNG_BUFFER);
   grossHoehe.writeUInt32BE(5000, 20);
-  assert.equal(pruefePng(grossHoehe).ok, false);
-  assert.match(pruefePng(grossHoehe).fehler, /4096/);
+  const rGrossHoehe = pruefePng(grossHoehe);
+  assert.equal(rGrossHoehe.ok, false);
+  assert.match(rGrossHoehe.ok ? '' : rGrossHoehe.fehler, /4096/);
 
   // Pixelanzahl > 4.000.000 (z. B. 3000 x 3000 = 9.000.000)
   const zuVielePixel = Buffer.from(EIN_MAL_EINS_PNG_BUFFER);
   zuVielePixel.writeUInt32BE(3000, 16);
   zuVielePixel.writeUInt32BE(3000, 20);
-  assert.equal(pruefePng(zuVielePixel).ok, false);
-  assert.match(pruefePng(zuVielePixel).fehler, /4\.000\.000/);
+  const rZuVielePixel = pruefePng(zuVielePixel);
+  assert.equal(rZuVielePixel.ok, false);
+  assert.match(rZuVielePixel.ok ? '' : rZuVielePixel.fehler, /4\.000\.000/);
 });
 
 test('prozentZuPunkte: rechnet Koordinaten korrekt von oben-links nach unten-links um', () => {
@@ -100,8 +103,8 @@ test('prozentZuPunkte: rechnet Koordinaten korrekt von oben-links nach unten-lin
 });
 
 test('prozentZuPunkte: prüft Grenzen (x,y >= 0, w,h > 0, x+w <= 100.01, y+h <= 100.01)', () => {
-  assert.throws(() => prozentZuPunkte(null, 500, 500));
-  assert.throws(() => prozentZuPunkte({ x: 'ungueltig', y: 0, w: 10, h: 10 }, 500, 500));
+  assert.throws(() => prozentZuPunkte(/** @type {Parameters<typeof prozentZuPunkte>[0]} */ (/** @type {unknown} */ (null)), 500, 500));
+  assert.throws(() => prozentZuPunkte({ x: /** @type {number} */ (/** @type {unknown} */ ('ungueltig')), y: 0, w: 10, h: 10 }, 500, 500));
   assert.throws(() => prozentZuPunkte({ x: -1, y: 0, w: 10, h: 10 }, 500, 500));
   assert.throws(() => prozentZuPunkte({ x: 0, y: -0.5, w: 10, h: 10 }, 500, 500));
   assert.throws(() => prozentZuPunkte({ x: 0, y: 0, w: 0, h: 10 }, 500, 500));
@@ -177,8 +180,8 @@ test('bettePdfSignaturen: weist ungültige Seitennummern und leere PDFs ab', asy
     async () => {
       await bettePdfSignaturen(initialBytes, felder, pngs);
     },
-    (err) => {
-      assert.match(err.message, /Ungültige Seitennummer/);
+    (/** @type {unknown} */ err) => {
+      assert.match(err instanceof Error ? err.message : String(err), /Ungültige Seitennummer/);
       return true;
     }
   );
@@ -191,8 +194,8 @@ test('bettePdfSignaturen: prüft PDF-Größe (<= 10 MB) und Seitenzahl (<= 100)'
     async () => {
       await bettePdfSignaturen(riesenPdf, [], []);
     },
-    (err) => {
-      assert.match(err.message, /10 MB/);
+    (/** @type {unknown} */ err) => {
+      assert.match(err instanceof Error ? err.message : String(err), /10 MB/);
       return true;
     }
   );
@@ -207,8 +210,8 @@ test('bettePdfSignaturen: prüft PDF-Größe (<= 10 MB) und Seitenzahl (<= 100)'
     async () => {
       await bettePdfSignaturen(bytes101, [], []);
     },
-    (err) => {
-      assert.match(err.message, /100 Seiten/);
+    (/** @type {unknown} */ err) => {
+      assert.match(err instanceof Error ? err.message : String(err), /100 Seiten/);
       return true;
     }
   );

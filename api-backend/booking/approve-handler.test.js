@@ -8,12 +8,17 @@ const source = fs.readFileSync(new URL('../server.js', import.meta.url), 'utf8')
 const start = source.indexOf("app.post('/api/booking-request/approve'");
 const code = source.slice(start, source.indexOf('// POST /api/booking-request/decline', start));
 
+/** @param {any} rpcResult */
 function fixture(rpcResult) {
-  const writes = [], rpcCalls = [];
+  /** @type {string[]} */
+  const writes = [];
+  /** @type {any[]} */
+  const rpcCalls = [];
+  /** @type {any} */
   let handler;
   const request = { id: 'request', owner_id: 'owner', employee_id: 'employee', updated_at: '2026-10-15T00:00:00Z', status: 'pending', preferred_date: '2026-11-01', preferred_time: '10:00', patients: { vorname: 'QA', nachname: 'Test' } };
   const supabase = {
-    from(table) {
+    from(/** @type {string} */ table) {
       const b = {
         select: () => b, eq: () => b,
         maybeSingle: async () => ({ data: table === 'profiles' ? { id: 'owner' } : request }),
@@ -22,18 +27,18 @@ function fixture(rpcResult) {
       };
       return b;
     },
-    rpc: async (name, args) => { rpcCalls.push({ name, args }); return rpcResult; },
+    rpc: async (/** @type {string} */ name, /** @type {any} */ args) => { rpcCalls.push({ name, args }); return rpcResult; },
   };
   const createBookingsFromRequest = createBookingsFromRequestFactory({
-    supabase, berlinLocalToUTC: (date, time) => new Date(`${date}T${time}:00Z`),
+    supabase, berlinLocalToUTC: (/** @type {string} */ date, /** @type {string} */ time) => new Date(`${date}T${time}:00Z`),
     generateRecurringDates: () => [], getAvailableSlots: async () => ({ slots: ['10:00'] }),
   });
   vm.runInNewContext(code, {
-    app: { post: (_path, _auth, _limiter, fn) => { handler = fn; } }, requireAuthAI: () => {}, bookingRequestApprovalLimiter: () => {},
+    app: { post: (/** @type {any} */ _path, /** @type {any} */ _auth, /** @type {any} */ _limiter, /** @type {any} */ fn) => { handler = fn; } }, requireAuthAI: () => {}, bookingRequestApprovalLimiter: () => {},
     supabase, gehoertZurPraxis: async () => true, anfrageKorrekturenPruefen: async () => ({ aenderungen: {} }),
     createBookingsFromRequest, leadAusAnfrage: async () => 'lead-qa', console: { error: () => {} },
   });
-  const res = { statusCode: 200, status(n) { this.statusCode = n; return this; }, json(body) { this.body = body; return this; } };
+  const res = { statusCode: 200, body: /** @type {any} */ (undefined), status(/** @type {number} */ n) { this.statusCode = n; return this; }, json(/** @type {any} */ body) { this.body = body; return this; } };
   return { writes, rpcCalls, res, run: () => handler({ auth: { userId: 'owner' }, body: { request_id: 'request', owner_id: 'owner' } }, res) };
 }
 

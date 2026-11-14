@@ -16,16 +16,73 @@ import { validateLhbBvb } from './lhbBvbRules.js';
 import { validateBlanko } from './blankoRules.js';
 import { lookupLhbBvb, lookupBlankoShoulder, getIcdDgRules } from './catalog.js';
 
+/**
+ * @typedef {object} RezeptEingabe
+ * @property {string | ReadonlyArray<unknown> | null} [icd10]
+ * @property {string | null} [diagnosegruppe]
+ * @property {number | string | null} [anzahl_einheiten]
+ * @property {string | null} [ausstellungsdatum]
+ * @property {string | null} [behandlungsbeginn]
+ * @property {boolean | null} [is_dringend]
+ * @property {string | null} [patient_geburtsdatum]
+ * @property {string | null} [insurance_type]
+ * @property {string | null} [diagnose_freitext]
+ * @property {string | null} [diagnosetext]
+ * @property {string | null} [heilmittel]
+ * @property {string | null} [heilmittel_feld_text]
+ * @property {string | null} [rezept_typ]
+ * @property {string | null} [heilmittel_typ_blanko]
+ * @property {number | string | null} [vorrangig_einheiten]
+ * @property {number | string | null} [ergaenzend_einheiten]
+ * @property {boolean | null} [include_bedarfsdiagnostik]
+ */
+
+/**
+ * @typedef {object} ValidatorBefund
+ * @property {string} code
+ * @property {string} msg
+ * @property {string} [field]
+ * @property {string} [regulation]
+ * @property {boolean} [requires_confirmation]
+ * @property {number} [max_allowed]
+ * @property {number} [requested]
+ * @property {string} [latest_allowed]
+ * @property {number} [heuristic_max]
+ * @property {string[]} [allowed]
+ * @property {string} [hinweis]
+ * @property {string} [diagnosegruppe]
+ * @property {string[]} [affected_codes]
+ * @property {string[]} [hints]
+ * @property {unknown} [ampel]
+ */
+
+/**
+ * @typedef {object} ValidatorResult
+ * @property {boolean} ok
+ * @property {ValidatorBefund[]} warnings
+ * @property {ValidatorBefund[]} blockers
+ * @property {Record<string, unknown>} computed
+ * @property {string | null} [engine]
+ */
+
 const PODOLOGIE_DGS = new Set(Object.keys(getIcdDgRules()));
 
-/** Prüft, ob die normalisierte Diagnosegruppe zu Podologie (DF/NF/QF/UI1/UI2) gehört. */
+/**
+ * Prüft, ob die normalisierte Diagnosegruppe zu Podologie (DF/NF/QF/UI1/UI2) gehört.
+ * @param {string | null | undefined} dg
+ * @returns {boolean}
+ */
 function istPodologieDg(dg) {
   if (!dg) return false;
   const norm = String(dg).trim().toUpperCase().replace(/\s+/g, '').replace(/-[ABC]$/, '');
   return PODOLOGIE_DGS.has(norm);
 }
 
-/** Prüft, ob eine Diagnosegruppe nicht-leer angegeben ist. */
+/**
+ * Prüft, ob eine Diagnosegruppe nicht-leer angegeben ist.
+ * @param {string | null | undefined} dg
+ * @returns {boolean}
+ */
 function hatDiagnosegruppe(dg) {
   return !!String(dg || '').trim();
 }
@@ -33,6 +90,8 @@ function hatDiagnosegruppe(dg) {
 /**
  * Prüft, ob für ein Rezept ein automatischer LHB/BVB-Bezug möglich ist
  * (vorhandene Nicht-Podologie-Diagnosegruppe und ICD auf der KBV-Diagnoseliste).
+ * @param {RezeptEingabe} rezept
+ * @returns {boolean}
  */
 function istAutoLhbKandidat(rezept) {
   return !!rezept.icd10
@@ -41,6 +100,10 @@ function istAutoLhbKandidat(rezept) {
     && !!lookupLhbBvb(rezept.icd10);
 }
 
+/**
+ * @param {RezeptEingabe} rezept
+ * @returns {string}
+ */
 function inferRezeptTyp(rezept) {
   if (rezept.rezept_typ) return rezept.rezept_typ;
   const marker = (rezept.heilmittel_feld_text || '').toUpperCase();
@@ -65,6 +128,10 @@ function inferRezeptTyp(rezept) {
 // ICD E11.7x), wird die Engine gar nicht erst betreten — sonst entstünden mehrere irreführende
 // Einzelfehler (NOT_ON_BLANKO_LIST + BLANKO_DG_NOT_EX) statt einer verständlichen Aussage.
 // Ratsbeschluss 2026-08-05 (konsey/tutanak/2026-08-05-blanko-fachbereich.md).
+/**
+ * @param {RezeptEingabe} rezept
+ * @returns {ValidatorResult | null}
+ */
 function blankoScopeGuard(rezept) {
   const icdOffList = !lookupBlankoShoulder(rezept.icd10);
   const dgNotEx = !!rezept.diagnosegruppe && rezept.diagnosegruppe !== 'EX';
@@ -82,6 +149,10 @@ function blankoScopeGuard(rezept) {
   };
 }
 
+/**
+ * @param {RezeptEingabe | null | undefined} rezept
+ * @returns {ValidatorResult}
+ */
 export function validateRezept(rezept) {
   if (!rezept || typeof rezept !== 'object') {
     return {
@@ -100,6 +171,7 @@ export function validateRezept(rezept) {
     if (guarded) return { ...guarded, engine: 'blanko' };
   }
 
+  /** @type {ValidatorResult} */
   let result;
   switch (typ) {
     case 'blanko':

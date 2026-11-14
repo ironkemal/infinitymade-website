@@ -10,9 +10,13 @@ import { legsFuer, abrechnungscodeAusLegs, tarifkennzeichenAusLegs } from '../co
 import assert from 'node:assert/strict';
 
 let pass = 0, fail = 0;
+/**
+ * @param {string} name
+ * @param {() => void} fn
+ */
 function test(name, fn) {
   try { fn(); console.log('  ok   ' + name); pass++; }
-  catch (e) { console.log('  FAIL ' + name + '\n       ' + e.message); fail++; }
+  catch (e) { console.log('  FAIL ' + name + '\n       ' + (e instanceof Error ? e.message : String(e))); fail++; }
 }
 
 console.log('encoding');
@@ -186,7 +190,7 @@ test('totals object', () => {
 });
 
 test('validator rejects invalid VKZ', () => {
-  assert.throws(() => buildDtaFile({
+  assert.throws(() => buildDtaFile(/** @type {Parameters<typeof buildDtaFile>[0]} */ (/** @type {unknown} */ ({
     absender: { ik: '123456789' },
     empfaenger: { ik: '987654321' },
     rechnung: { sammelRechnungsnummer: 'X', datum: '2026-05-18', datennummer: 1 },
@@ -194,10 +198,10 @@ test('validator rejects invalid VKZ', () => {
     prescriptions: [{ patient:{kvnr:'A1',belegnummer:'1'}, verordnung:{verordnungsart:'03',zuzahlungskennzeichen:'3',kostentraegerIk:'1'}, tarif:{tarifkennzeichen:'00501'}, sessions:[] }],
     vkz: '99',
     preflight: false,
-  }), /Invalid VKZ/);
+  }))), /Invalid VKZ/);
 });
 test('validator rejects non-Heilmittel Abrechnungscode', () => {
-  assert.throws(() => buildDtaFile({
+  assert.throws(() => buildDtaFile(/** @type {Parameters<typeof buildDtaFile>[0]} */ (/** @type {unknown} */ ({
     absender: { ik: '123456789' },
     empfaenger: { ik: '987654321' },
     rechnung: { sammelRechnungsnummer: 'X', datum: '2026-05-18', datennummer: 1 },
@@ -209,7 +213,7 @@ test('validator rejects non-Heilmittel Abrechnungscode', () => {
       sessions:[],
     }],
     preflight: false,
-  }), /not a Heilmittel code/);
+  }))), /not a Heilmittel code/);
 });
 test('throws when no prescriptions', () => {
   assert.throws(() => buildDtaFile({
@@ -307,6 +311,7 @@ test('REGRESSION: der aus der PLZ abgeleitete LEGS wird abgewiesen', () => {
   //
   // '08' ist ein formal gueltiger Tarifbereich (NRW). Genau deshalb kam
   // '7108000' vorher durch: geprueft wurde die Form, nicht die Kombination.
+  /** @param {string} tarifkennzeichen */
   const fall = (tarifkennzeichen) => ({
     leistungserbringer: {
       ik: '123456789', name: 'Podologie am Markt',
@@ -329,8 +334,9 @@ test('REGRESSION: der aus der PLZ abgeleitete LEGS wird abgewiesen', () => {
     }],
   });
 
+  /** @param {string} tk */
   const legsFehler = (tk) =>
-    (preflight(fall(tk)).errors || []).find((e) => e.code === 'T:01004');
+    (preflight(/** @type {Parameters<typeof preflight>[0]} */ (/** @type {unknown} */ (fall(tk)))).errors || []).find((e) => e.code === 'T:01004');
 
   assert.ok(legsFehler('08000'),
     'LEGS 7108000 steht in keinem §125-Vertrag und darf die Datei nicht verlassen.');

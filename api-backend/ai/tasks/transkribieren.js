@@ -8,6 +8,10 @@
 
 import { executeKiTask } from '../ki-gateway.js';
 
+/**
+ * @param {import('../ki-gateway.js').GatewayPayload} payload
+ * @param {import('../ki-gateway.js').GatewayContext} [context={}]
+ */
 export async function run(payload, context = {}) {
   const { output, meta } = await executeKiTask({
     task: 'transkribieren',
@@ -17,7 +21,7 @@ export async function run(payload, context = {}) {
   });
 
   return {
-    text: output.text,
+    text: /** @type {string} */ (output.text),
     _meta: meta
   };
 }

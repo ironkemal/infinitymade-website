@@ -45,9 +45,43 @@ const KALENDER_WORTE = new Set([
   'heute', 'dr', 'prof', 'familie'
 ]);
 
+/**
+ * @typedef {{ value: string, type: string }} PiiEntity
+ * @typedef {{ start: number, end: number, type: string, isExplicit?: boolean, isContextual?: boolean }} PiiSpan
+ * @typedef {{ start: number, end: number, isProtected?: boolean, trusted?: boolean }} ProtectedSpan
+ * @typedef {{ art: string, text: string, ausschnitt: string }} ResteBefund
+ * @typedef {{
+ *   ctx?: MaskingContext,
+ *   nonce?: string,
+ *   strict?: boolean,
+ *   entities?: PiiEntity[],
+ *   mandantNamen?: string[],
+ *   dictionary?: string[],
+ *   preserveAppointments?: boolean,
+ *   strengeDaten?: boolean,
+ *   ignoreProtected?: boolean
+ * }} MaskOptions
+ * @typedef {{
+ *   allocate: (type: string, original: string) => string,
+ *   map: Record<string, string>,
+ *   nonce: string,
+ *   clear: () => void,
+ *   unmask: (s: string, unmaskOpts?: { strict?: boolean }) => string,
+ *   unmaskStreng: (s: string) => string,
+ *   entities: PiiEntity[],
+ *   mandantNamen: string[],
+ *   dictionary: string[],
+ *   preserveAppointments: boolean
+ * }} MaskingContext
+ */
+
 // Invisible characters split a name for a regex but not for a reader or a model:
 // "Yil<U+200B>maz" would pass every name rule. Detection therefore runs on a copy without them.
 const UNSICHTBAR_RE = /[\u00AD\u034F\u061C\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u2069\uFEFF]/g;
+/**
+ * @param {string} text
+ * @returns {string}
+ */
 export function bereinigeUnsichtbares(text) {
   if (typeof text !== 'string' || !text) return text;
   return text.replace(UNSICHTBAR_RE, '');
@@ -55,9 +89,14 @@ export function bereinigeUnsichtbares(text) {
 
 // Detection copy plus a way back: spans found in the copy are cut out of the ORIGINAL text, so an
 // invisible character inside a name disappears into the token and unmasking restores the input exactly.
+/**
+ * @param {string} text
+ * @returns {{ sicht: string, zurueck: (span: PiiSpan) => PiiSpan }}
+ */
 function erkennungsSicht(text) {
   UNSICHTBAR_RE.lastIndex = 0;
   if (!UNSICHTBAR_RE.test(text)) return { sicht: text, zurueck: span => span };
+  /** @type {number[]} */
   const pos = [];
   let sicht = '';
   for (let i = 0; i < text.length; i++) {
@@ -70,6 +109,19 @@ function erkennungsSicht(text) {
 }
 
 // One pass for both entry points: find spans in the detection copy, replace them in the original.
+/**
+ * @param {string} text
+ * @param {{
+ *   allocate: (type: string, original: string) => string,
+ *   map: Record<string, string>,
+ *   entities: PiiEntity[],
+ *   namen: string[],
+ *   preserveAppointments: boolean,
+ *   strengeDaten: boolean,
+ *   ignoreProtected: boolean
+ * }} opts
+ * @returns {string}
+ */
 function maskiereText(text, { allocate, map, entities, namen, preserveAppointments, strengeDaten, ignoreProtected }) {
   const { sicht, zurueck } = erkennungsSicht(text);
   const protectedSpans = ignoreProtected ? [] : findProtectedSpans(sicht);
@@ -91,6 +143,14 @@ function maskiereText(text, { allocate, map, entities, namen, preserveAppointmen
 // stay readable, so it is hidden only where the words before it speak of a child or a birth
 // (kontext = true). Structured prompt pass and answer scan never pass kontext.
 const GEBURTS_KONTEXT_RE = /(?:\b(?:Kind|Kindes|Säugling|Baby|Frühchen|Junge|Mädchen|Sohn|Tochter|Enkel|Enkelin|Zwilling|Geburt|Geburtstag|geboren|geb|Alter|Jahre\s+alt|Monate\s+alt|Wochen\s+alt)\b|jährige[rns]?\b)[^.!?\n]{0,40}$/iu;
+/**
+ * @param {number} tag
+ * @param {number} monat
+ * @param {number} jahr
+ * @param {number} currentYear
+ * @param {boolean} kontext
+ * @returns {'DOB' | 'DATE' | null}
+ */
 function vergangenesDatum(tag, monat, jahr, currentYear, kontext) {
   let y = jahr;
   if (y < 100) y = (2000 + y <= currentYear + 5) ? 2000 + y : 1900 + y;
@@ -106,6 +166,10 @@ function vergangenesDatum(tag, monat, jahr, currentYear, kontext) {
 const MONATE = '(?:Januar|Februar|März|Maerz|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember)';
 
 // Umlaut transliteration (ä↔ae, ö↔oe, ü↔ue, ß↔ss)
+/**
+ * @param {string} str
+ * @returns {string[]}
+ */
 function getUmlautVariants(str) {
   const variants = new Set([str]);
   variants.add(str.replace(/ä/g, 'ae').replace(/Ä/g, 'Ae')
@@ -118,6 +182,11 @@ function getUmlautVariants(str) {
 }
 
 // Levenshtein distance for fuzzy name matching (length >= 5, max dist <= 1)
+/**
+ * @param {string} a
+ * @param {string} b
+ * @returns {number}
+ */
 function levenshteinDist(a, b) {
   if (Math.abs(a.length - b.length) > 1) return 2;
   if (a === b) return 0;
@@ -134,6 +203,10 @@ function levenshteinDist(a, b) {
   return edits;
 }
 
+/**
+ * @param {unknown} s
+ * @returns {string}
+ */
 function maskSnippet(s) {
   const str = String(s || '').trim();
   if (str.length <= 4) return '*'.repeat(str.length);
@@ -141,6 +214,10 @@ function maskSnippet(s) {
 }
 
 // Generate variants for known names (full name, parts >= 3 chars, genitive)
+/**
+ * @param {ReadonlyArray<unknown>} namesList
+ * @returns {string[]}
+ */
 function buildNameVariants(namesList) {
   const variants = [];
   for (const rawName of namesList) {
@@ -166,7 +243,12 @@ function buildNameVariants(namesList) {
 }
 
 // Protected clinical terms that must never be masked
+/**
+ * @param {string} text
+ * @returns {ProtectedSpan[]}
+ */
 function findProtectedSpans(text) {
+  /** @type {ProtectedSpan[]} */
   const spans = [];
   const protectedPatterns = [
     /\bWagner(?:-Grad|-Stadium|-Armstrong)?\s*[0-5][A-Za-z]?\b/gi,
@@ -191,14 +273,29 @@ function findProtectedSpans(text) {
 }
 
 // Find PII spans in text
+/**
+ * @param {string} text
+ * @param {PiiEntity[]} [entities=[]]
+ * @param {string[]} [mandantNamen=[]]
+ * @param {boolean} [preserveAppointments=true]
+ * @param {Record<string, string> | null} [map=null]
+ * @param {boolean} [strengeDaten=false]
+ * @returns {PiiSpan[]}
+ */
 function findPiiSpans(text, entities = [], mandantNamen = [], preserveAppointments = true, map = null, strengeDaten = false) {
+  /** @type {PiiSpan[]} */
   const spans = [];
   const currentYear = new Date().getFullYear();
 
+  /**
+   * @param {RegExp} re
+   * @param {string | null} type
+   * @param {((m: RegExpExecArray) => PiiSpan | null) | null} [fn=null]
+   */
   const add = (re, type, fn = null) => {
     let m;
     while ((m = re.exec(text)) !== null) {
-      const res = fn ? fn(m) : { start: m.index, end: m.index + m[0].length, type };
+      const res = fn ? fn(m) : { start: m.index, end: m.index + m[0].length, type: /** @type {string} */ (type) };
       if (res) spans.push(res);
     }
   };
@@ -383,8 +480,14 @@ function findPiiSpans(text, entities = [], mandantNamen = [], preserveAppointmen
   return spans;
 }
 
+/**
+ * @param {PiiSpan[]} spans
+ * @param {ProtectedSpan[]} protectedSpans
+ * @returns {PiiSpan[]}
+ */
 function resolveSpans(spans, protectedSpans) {
   // Explicit local identity wins over clinical heuristics; trusted generated tokens remain opaque.
+  /** @param {number} s @param {number} e */
   const isProtected = (s, e) => protectedSpans.some(p => Math.max(s, p.start) < Math.min(e, p.end));
 
   const valid = spans.filter(s => !protectedSpans.some(p => p.trusted && Math.max(s.start, p.start) < Math.min(s.end, p.end)) && (s.isExplicit || !isProtected(s.start, s.end)));
@@ -433,10 +536,14 @@ function resolveSpans(spans, protectedSpans) {
 /**
  * Residual scanner (scanneReste) according to v2 rules.
  * Scans masked text for unmasked sensitive fragments.
+ * @param {string} maskedText
+ * @param {string[]} [mandantNamen=[]]
+ * @returns {ResteBefund[]}
  */
 export function scanneReste(maskedText, mandantNamen = []) {
   if (!maskedText || typeof maskedText !== 'string') return [];
   maskedText = bereinigeUnsichtbares(maskedText); // "1234<U+200B>5678" is still an eight-digit run
+  /** @type {ResteBefund[]} */
   const befunde = [];
   const clean = maskedText.replace(/⟦[A-Za-z0-9_]+⟧|<<[A-Za-z0-9_]+>>/g, ' ');
 
@@ -492,15 +599,23 @@ export function scanneReste(maskedText, mandantNamen = []) {
   return befunde;
 }
 
+/**
+ * @param {string} text
+ * @param {Map<string, string> | Record<string, string>} knownMap
+ * @returns {string}
+ */
 export function unmaskStreng(text, knownMap) {
   if (typeof text !== 'string' || !text) return text;
   const isMap = knownMap instanceof Map;
+  /** @param {string} k */
   const has = (k) => isMap ? knownMap.has(k) : Object.prototype.hasOwnProperty.call(knownMap, k);
-  const get = (k) => isMap ? knownMap.get(k) : knownMap[k];
+  /** @param {string} k */
+  const get = (k) => /** @type {string} */ (isMap ? knownMap.get(k) : knownMap[k]);
 
   const matches = text.match(/⟦[A-Za-z0-9_]+⟧|<<[A-Za-z0-9_]+>>/g) || [];
   for (const m of matches) {
     if (!has(m)) {
+      /** @type {Error & { code?: string, status?: number }} */
       const err = new Error(`Unbekannter oder ungültiger Platzhalter in Modellantwort entdeckt: ${m}`);
       err.code = 'KI_UNBEKANNTER_PLATZHALTER';
       err.status = 502;
@@ -511,27 +626,42 @@ export function unmaskStreng(text, knownMap) {
   return text.replace(/⟦[A-Za-z0-9_]+⟧|<<[A-Za-z0-9_]+>>/g, (m) => has(m) ? get(m) : m);
 }
 
+/**
+ * @template T
+ * @param {T} val
+ * @param {(s: string) => string} unmaskFn
+ * @returns {T}
+ */
 export function unmaskValues(val, unmaskFn) {
   if (typeof val === 'string') {
-    return unmaskFn(val);
+    return /** @type {T} */ (/** @type {unknown} */ (unmaskFn(val)));
   }
   if (Array.isArray(val)) {
-    return val.map(item => unmaskValues(item, unmaskFn));
+    return /** @type {T} */ (/** @type {unknown} */ (val.map(item => unmaskValues(item, unmaskFn))));
   }
   if (val !== null && typeof val === 'object') {
     const out = Object.create(null);
-    for (const k of Object.keys(val)) {
-      out[k] = unmaskValues(val[k], unmaskFn);
+    const obj = /** @type {Record<string, unknown>} */ (val);
+    for (const k of Object.keys(obj)) {
+      out[k] = unmaskValues(obj[k], unmaskFn);
     }
     return out;
   }
   return val;
 }
 
+/**
+ * @param {string} text
+ * @param {Map<string, string> | Record<string, string>} [knownMap=new Map()]
+ * @param {{ dictionary?: string[] }} [opts={}]
+ * @returns {{ safe: boolean, violations: string[] }}
+ */
 export function scanOutputPII(text, knownMap = new Map(), { dictionary = [] } = {}) {
+  /** @type {string[]} */
   const violations = [];
   if (typeof text !== 'string') return { safe: true, violations };
   const entries = knownMap instanceof Map ? [...knownMap.entries()] : Object.entries(knownMap);
+  /** @param {string} key */
   const has = key => knownMap instanceof Map ? knownMap.has(key) : Object.hasOwn(knownMap, key);
   const tokens = text.match(/⟦[^⟧\r\n]*⟧|<<[^>\r\n]*>>/g) || [];
   for (const token of tokens) if (!/^⟦[A-Z_]+_[a-f0-9]{32}_[1-9][0-9]*⟧$/.test(token) || !has(token)) violations.push('Unbekannter Platzhalter');
@@ -548,12 +678,24 @@ export function scanOutputPII(text, knownMap = new Map(), { dictionary = [] } = 
 }
 
 // Unify context
+/**
+ * @param {MaskOptions} [opts={}]
+ * @returns {MaskingContext}
+ */
 export function createMaskingContext(opts = {}) {
   const nonce = opts.nonce || crypto.randomBytes(16).toString('hex');
+  /** @type {Record<string, string>} */
   const sharedMap = Object.create(null);
+  /** @type {Record<string, string>} */
   const sharedReverse = Object.create(null);
+  /** @type {Record<string, number>} */
   const counters = Object.create(null);
 
+  /**
+   * @param {string} type
+   * @param {string} original
+   * @returns {string}
+   */
   const allocate = (type, original) => {
     if (sharedReverse[original]) return sharedReverse[original];
     counters[type] = (counters[type] || 0) + 1;
@@ -569,7 +711,13 @@ export function createMaskingContext(opts = {}) {
     for (const key in counters) delete counters[key];
   };
 
+  /** @param {string} s */
   const unmaskStrengFn = (s) => unmaskStreng(s, sharedMap);
+  /**
+   * @param {string} s
+   * @param {{ strict?: boolean }} [unmaskOpts={}]
+   * @returns {string}
+   */
   const unmask = (s, unmaskOpts = {}) => {
     if (typeof s !== 'string' || !s) return s;
     if (opts.strict || unmaskOpts?.strict) {
@@ -586,11 +734,15 @@ export function createMaskingContext(opts = {}) {
   return { allocate, map: sharedMap, nonce, clear, unmask, unmaskStreng: unmaskStrengFn, entities: opts.entities || [], mandantNamen: opts.mandantNamen || [], dictionary: opts.dictionary || [], preserveAppointments: opts.preserveAppointments !== false };
 }
 
+/**
+ * @param {string} text
+ * @param {MaskOptions} [opts={}]
+ */
 export function maskPII(text, opts = {}) {
   const ctx = opts.ctx || createMaskingContext(opts);
   const { allocate, map, nonce, unmask, unmaskStreng, entities, mandantNamen, dictionary, preserveAppointments } = ctx;
   if (typeof text !== 'string' || !text) {
-    return { masked: text || '', map, unmask, unmaskStreng, nonce, befunde: [] };
+    return { masked: text || '', map, unmask, unmaskStreng, nonce, befunde: /** @type {ResteBefund[]} */ ([]) };
   }
 
   const allMandantNamen = [...mandantNamen, ...dictionary];
@@ -605,22 +757,28 @@ export function maskPII(text, opts = {}) {
   return { masked, map, unmask, unmaskStreng, nonce, befunde };
 }
 
+/**
+ * @template {Array<{ role?: string, content?: unknown }>} T
+ * @param {T} messages
+ * @param {MaskOptions} [opts={}]
+ */
 export function maskMessages(messages, opts = {}) {
   const ctx = opts.ctx || createMaskingContext(opts);
   const { allocate, map: sharedMap, nonce, unmask, unmaskStreng, entities, mandantNamen, dictionary, preserveAppointments } = ctx;
   if (!Array.isArray(messages)) {
-    return { messages, map: sharedMap, unmask, unmaskStreng, nonce, befunde: [] };
+    return { messages, map: sharedMap, unmask, unmaskStreng, nonce, befunde: /** @type {ResteBefund[]} */ ([]) };
   }
 
   const allMandantNamen = [...mandantNamen, ...dictionary];
 
+  /** @param {string} text */
   const maskOneText = (text) => {
     if (typeof text !== 'string' || !text) return text;
     // Structured prompt pass: recent past dates stay (see vergangenesDatum).
     return maskiereText(text, { allocate, map: sharedMap, entities, namen: allMandantNamen, preserveAppointments, strengeDaten: false, ignoreProtected: false });
   };
 
-  const maskedMessages = messages.map(m => {
+  const maskedMessages = /** @type {T} */ (messages.map(m => {
     if (!m || typeof m !== 'object') return m;
     if (typeof m.content === 'string') {
       return { ...m, content: maskOneText(m.content) };
@@ -628,7 +786,7 @@ export function maskMessages(messages, opts = {}) {
     if (Array.isArray(m.content)) {
       return {
         ...m,
-        content: m.content.map(part =>
+        content: m.content.map((/** @type {{ type?: string, text?: unknown }} */ part) =>
           part && part.type === 'text' && typeof part.text === 'string'
             ? { ...part, text: maskOneText(part.text) }
             : part
@@ -636,7 +794,7 @@ export function maskMessages(messages, opts = {}) {
       };
     }
     return m;
-  });
+  }));
 
   const allNames = [
     ...entities.filter(e => e && e.type === 'NAME').map(e => e.value),
@@ -650,6 +808,20 @@ export function maskMessages(messages, opts = {}) {
   return { messages: maskedMessages, map: sharedMap, unmask, unmaskStreng, nonce, befunde };
 }
 
+/**
+ * @param {Array<{
+ *   name?: string,
+ *   contact_name?: string,
+ *   first_name?: string,
+ *   last_name?: string,
+ *   email?: string,
+ *   phone?: string,
+ *   geburtsdatum?: string,
+ *   kvnr?: string,
+ *   company?: string
+ * }>} [contacts=[]]
+ * @returns {PiiEntity[]}
+ */
 export function entitiesFromContacts(contacts = []) {
   const out = [];
   for (const c of contacts || []) {

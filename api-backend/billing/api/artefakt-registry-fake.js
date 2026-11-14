@@ -3,16 +3,30 @@
 // die echte SQL-Logik ist separat gegen Postgres geprueft (siehe Migration 0060).
 import { createHash } from 'node:crypto';
 
+/** @type {Record<string, [string, string | null]>} */
 const ROLLE_PFAD = { dta: ['storage_path', 'dta_sha256'], auftrag: ['auftragsdatei_path', 'auftragsdatei_sha256'],
   begleit: ['begleitzettel_path', null], signed: ['signed_storage_path', 'signed_sha256'],
   encrypted: ['encrypted_storage_path', 'encrypted_sha256'] };
 
+/**
+ * @param {{
+ *   getRow: () => any,
+ *   setRow: (row: any) => void,
+ *   bumpUpdatedAt: () => string,
+ *   hooks?: { failRpc?: (name: string, a: any) => boolean, lenient?: boolean, failPublish?: boolean }
+ * }} opts
+ */
 export function erzeugeRegistryFake({ getRow, setRow, bumpUpdatedAt, hooks = {} }) {
   const zeilen = new Map();
+  /** @type {string[]} */
   const log = [];
   let n = 0;
   return {
     zeilen, log,
+    /**
+     * @param {string} name
+     * @param {any} a
+     */
     async rpc(name, a) {
       log.push(name);
       if (hooks.failRpc?.(name, a)) return { data: null, error: { message: 'rpc ' + name + ' fehlgeschlagen' } };
@@ -49,8 +63,10 @@ export function erzeugeRegistryFake({ getRow, setRow, bumpUpdatedAt, hooks = {} 
   };
 }
 
+/** @param {Array<{ path: string, bytes: any }>} uploads */
 export function blobAusUploads(uploads) {
   return {
+    /** @param {string} pfad */
     async download(pfad) {
       const u = [...uploads].reverse().find(x => x.path === pfad);
       if (!u) return { data: null, error: { message: 'nicht gefunden' } };
@@ -59,4 +75,5 @@ export function blobAusUploads(uploads) {
   };
 }
 
+/** @param {string | NodeJS.ArrayBufferView} b */
 export const sha = (b) => createHash('sha256').update(b).digest('hex');

@@ -19,16 +19,20 @@ const STATUS_TEXT = {
   retired: 'ausgemustert',
 };
 
-const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const esc = (/** @type {any} */ s) => String(s ?? '').replace(/[&<>"']/g, (c) => /** @type {string} */ ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] || c));
 
-function datum(iso) {
+function datum(/** @type {string | null | undefined} */ iso) {
   if (!iso) return '—';
   try {
     return new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', dateStyle: 'short', timeStyle: 'short' }).format(new Date(iso));
   } catch { return '—'; }
 }
 
-/** Reines Rendering — testbar ohne DOM. Karten statt Tabelle: kein seitliches Scrollen im schmalen Modal (Live-QA C-7). */
+/**
+ * Reines Rendering — testbar ohne DOM. Karten statt Tabelle: kein seitliches Scrollen im schmalen Modal (Live-QA C-7).
+ * @param {{ versionen?: Array<Record<string, any>> }} liste
+ * @returns {string}
+ */
 export function dateiversionenHtml(liste) {
   const v = liste?.versionen || [];
   if (!v.length) {
@@ -39,7 +43,7 @@ export function dateiversionenHtml(liste) {
       <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;">
         <strong style="font-size:13px;color:var(--text-main);">${esc(r.bezeichnung)}</strong>
         ${r.aktuell ? '<span style="font-size:11px;color:var(--success);">· aktuell</span>' : ''}
-        <span style="font-size:12px;color:var(--text-muted);">${esc(STATUS_TEXT[r.status] || r.status)} · ${esc(datum(r.erstelltAm))}</span>
+        <span style="font-size:12px;color:var(--text-muted);">${esc(STATUS_TEXT[/** @type {keyof typeof STATUS_TEXT} */ (r.status)] || r.status)} · ${esc(datum(r.erstelltAm))}</span>
       </div>
       ${r.dateiname ? `<div style="font-size:12px;color:var(--text-muted);margin-top:2px;word-break:break-all;">${esc(r.dateiname)}</div>` : ''}
       <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${esc(r.pruefung)}${r.aufbewahrung ? ' · ' + esc(r.aufbewahrung) : ''}</div>
@@ -50,12 +54,17 @@ export function dateiversionenHtml(liste) {
     <p style="margin-top:10px;font-size:12px;color:var(--text-muted);">Dateien werden nie automatisch gelöscht. Aufbewahrung (8 Jahre) beginnt mit der dokumentierten Einreichung.</p>`;
 }
 
+/** @param {any} ctx */
 async function token(ctx) {
   const { data: { session } } = await ctx.supabase.auth.getSession();
   if (!session?.access_token) throw new Error('Nicht angemeldet.');
   return session.access_token;
 }
 
+/**
+ * @param {any} ctx
+ * @param {string} abrechnungId
+ */
 async function ladeListe(ctx, abrechnungId) {
   const res = await fetch(`${ctx.apiBase}/billing/abrechnung/${encodeURIComponent(abrechnungId)}/artefakte`, {
     headers: { Authorization: 'Bearer ' + await token(ctx) },
@@ -65,6 +74,12 @@ async function ladeListe(ctx, abrechnungId) {
   return json;
 }
 
+/**
+ * @param {any} ctx
+ * @param {string} abrechnungId
+ * @param {string} versionId
+ * @param {string} [fallbackName]
+ */
 async function lade(ctx, abrechnungId, versionId, fallbackName) {
   const res = await fetch(`${ctx.apiBase}/billing/abrechnung/${encodeURIComponent(abrechnungId)}/artefakte/${encodeURIComponent(versionId)}/download`, {
     headers: { Authorization: 'Bearer ' + await token(ctx) },
@@ -85,8 +100,8 @@ async function lade(ctx, abrechnungId, versionId, fallbackName) {
 }
 
 /**
- * @param {object} ctx  supabase · apiBase · showToast · showHtmlModal
- * @param {{id:string}} ab
+ * @param {any} ctx  supabase · apiBase · showToast · showHtmlModal
+ * @param {Record<string, any>} ab
  */
 export async function zeigeDateiversionen(ctx, ab) {
   try {
@@ -99,17 +114,18 @@ export async function zeigeDateiversionen(ctx, ab) {
       afterRender: () => {
         const body = document.getElementById('abArtefakteBody');
         if (!body) return;
-        body.querySelectorAll('[data-artefakt-dl]').forEach((btn) => {
+        body.querySelectorAll('[data-artefakt-dl]').forEach((button) => {
+          const btn = /** @type {HTMLButtonElement} */ (button);
           btn.addEventListener('click', async () => {
             btn.disabled = true;
-            try { await lade(ctx, ab.id, btn.dataset.artefaktDl, btn.dataset.artefaktName); }
-            catch (e) { ctx.showToast?.('Download fehlgeschlagen: ' + e.message, 'error'); }
+            try { await lade(ctx, ab.id, btn.dataset.artefaktDl || '', btn.dataset.artefaktName); }
+            catch (/** @type {any} */ e) { ctx.showToast?.('Download fehlgeschlagen: ' + e.message, 'error'); }
             finally { btn.disabled = false; }
           });
         });
       },
     });
-  } catch (e) {
+  } catch (/** @type {any} */ e) {
     console.error('[abrechnung/artefakte]', e);
     ctx.showToast?.('Dateiversionen konnten nicht geladen werden: ' + e.message, 'error');
   }

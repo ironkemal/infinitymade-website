@@ -34,7 +34,8 @@ const base = {
 
 test('strict input baseline is accepted', () => assert.equal(preflight(base).ok, true));
 
-for (const [name, mutate, field] of [
+/** @type {Array<[string, (x: any) => void, string]>} */
+const faelle = [
   ['counter fraction', x => { x.rechnung.datennummer = 1.5; }, 'rechnung.datennummer'],
   ['counter text', x => { x.rechnung.datennummer = 'abc'; }, 'rechnung.datennummer'],
   ['missing invoice date', x => { delete x.rechnung.datum; }, 'rechnung.datum'],
@@ -50,7 +51,8 @@ for (const [name, mutate, field] of [
   ['copay above price', x => { x.prescriptions[0].sessions[0].zuzahlungProPos = 999; }, '.zuzahlungProPos'],
   ['negative copay', x => { x.prescriptions[0].sessions[0].zuzahlungProPos = -1; }, '.zuzahlungProPos'],
   ['impossible service date', x => { x.prescriptions[0].sessions[0].datumLeistung = '2026-02-30'; }, '.datumLeistung'],
-]) test(name, () => {
+];
+for (const [name, mutate, field] of faelle) test(name, () => {
   const input = structuredClone(base); mutate(input);
   const result = preflight(input);
   assert.equal(result.ok, false);

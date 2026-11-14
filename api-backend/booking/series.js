@@ -14,14 +14,23 @@
  * - Sommerzeit-/DST-sicher über Berliner Kalendertage (12:00 UTC Probe).
  */
 
+/** @type {Record<string, number>} */
 const WOCHENTAG_KURZ = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 
+/**
+ * @param {unknown} v
+ * @returns {boolean}
+ */
 export function isStrictInteger(v) {
   if (typeof v === 'number') return Number.isInteger(v);
   if (typeof v === 'string') return /^\d+$/.test(v.trim());
   return false;
 }
 
+/**
+ * @param {unknown} ds
+ * @returns {ds is string}
+ */
 export function isValidCalendarDate(ds) {
   if (typeof ds !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(ds)) return false;
   const d = new Date(ds + 'T12:00:00Z');
@@ -29,7 +38,12 @@ export function isValidCalendarDate(ds) {
   return d.toISOString().substring(0, 10) === ds;
 }
 
-/** `YYYY-MM-DD` plus n Tage, wieder als `YYYY-MM-DD`. */
+/**
+ * `YYYY-MM-DD` plus n Tage, wieder als `YYYY-MM-DD`.
+ * @param {string} ds
+ * @param {number} tage
+ * @returns {string}
+ */
 export function plusTage(ds, tage) {
   const d = new Date(ds + 'T12:00:00Z');
   d.setUTCDate(d.getUTCDate() + tage);
@@ -38,6 +52,8 @@ export function plusTage(ds, tage) {
 
 /**
  * Der Wochentag eines Datums in Berlin (0=So … 6=Sa).
+ * @param {string} ds
+ * @returns {number}
  */
 export function wochentag(ds) {
   const probe = new Date(ds + 'T12:00:00Z');
@@ -46,6 +62,17 @@ export function wochentag(ds) {
 
 /**
  * Berechnet die Termintage einer Serie deterministisch.
+ * @param {object} [opts]
+ * @param {string | null} [opts.startDatum]
+ * @param {string | null} [opts.startDate]
+ * @param {number | string | null} [opts.anzahl]
+ * @param {number | string | null} [opts.count]
+ * @param {number | string | null} [opts.intervalDays]
+ * @param {boolean} [opts.taeglich=false]
+ * @param {string | null} [opts.recurrence]
+ * @param {unknown} [opts.wochentage]
+ * @param {unknown} [opts.weekdays]
+ * @returns {string[]}
  */
 export function serienDaten({
   startDatum,
@@ -63,7 +90,7 @@ export function serienDaten({
 
   const rawCount = anzahl ?? count;
   if (!isStrictInteger(rawCount)) return [];
-  const zahl = parseInt(rawCount, 10);
+  const zahl = parseInt(/** @type {string} */ (rawCount), 10);
   if (zahl < 1) return [];
 
   const isDaily = taeglich === true || recurrence === 'daily';
@@ -72,7 +99,7 @@ export function serienDaten({
   }
 
   let schritt;
-  const parsedStep = parseInt(intervalDays, 10);
+  const parsedStep = parseInt(/** @type {string} */ (intervalDays), 10);
   if (isStrictInteger(intervalDays) && parsedStep >= 7 && parsedStep <= 84 && parsedStep % 7 === 0) {
     schritt = parsedStep;
   } else if (recurrence === 'biweekly') {

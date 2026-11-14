@@ -10,14 +10,22 @@
  * Antworten, die zu einer anderen Sitzung gehören (Nutzerwechsel während des Wartens), werden verworfen.
  */
 
-/** Rein, testbar. */
+/**
+ * Rein, testbar.
+ * @param {{ wunsch?: string | null, vorschau?: boolean, serverNeu?: boolean }} param0
+ * @returns {'neu' | 'alt'}
+ */
 export function entscheideDesign({ wunsch, vorschau, serverNeu }) {
   if (wunsch === 'alt') return 'alt';
   if (vorschau === true && wunsch === 'neu') return 'neu';
   return serverNeu === true ? 'neu' : 'alt';
 }
 
-/** Server fragen; jeder Fehler (Netz, Status, JSON, Timeout, falscher Typ) → false. */
+/**
+ * Server fragen; jeder Fehler (Netz, Status, JSON, Timeout, falscher Typ) → false.
+ * @param {{ apiBase?: string, token?: any, fetchFn?: typeof fetch, timeoutMs?: number }} param0
+ * @returns {Promise<boolean>}
+ */
 export async function frageServer({ apiBase, token, fetchFn = globalThis.fetch, timeoutMs = 5000 }) {
   const abbruch = new AbortController();
   const uhr = setTimeout(() => abbruch.abort(), timeoutMs);
@@ -33,7 +41,19 @@ export async function frageServer({ apiBase, token, fetchFn = globalThis.fetch, 
   } catch { return false; } finally { clearTimeout(uhr); }
 }
 
-/** Entscheidet und setzt/entfernt `data-design` am <html>. Gibt 'neu' | 'alt' zurück. */
+/**
+ * Entscheidet und setzt/entfernt `data-design` am <html>. Gibt 'neu' | 'alt' zurück.
+ * @param {{
+ *   wunsch?: string | null,
+ *   vorschau?: boolean,
+ *   apiBase?: string,
+ *   token?: any,
+ *   aktuell?: (() => Promise<any> | any) | null,
+ *   fetchFn?: typeof fetch,
+ *   wurzel?: HTMLElement | null
+ * }} param0
+ * @returns {Promise<'neu' | 'alt'>}
+ */
 export async function setzeDesign({ wunsch, vorschau, apiBase, token, aktuell, fetchFn, wurzel = globalThis.document?.documentElement }) {
   const uid = await aktuell?.();
   let serverNeu = false;

@@ -27,7 +27,11 @@
 
 export const AUSWAHL_KLASSE = 'termin-gewaehlt';
 
-/** Ist der Seitenbereich sichtbar? Gleiche Regel wie isBkActionOpen(). */
+/**
+ * Ist der Seitenbereich sichtbar? Gleiche Regel wie isBkActionOpen().
+ * @param {HTMLElement | null | undefined} el
+ * @returns {boolean}
+ */
 export function panelOffen(el) {
   return !!el && el.style.display !== 'none' && !el.hidden;
 }
@@ -35,6 +39,9 @@ export function panelOffen(el) {
 /**
  * Markiert genau die Blöcke des Termins `id` und nimmt die Markierung
  * überall sonst weg. Gibt die Zahl der markierten Blöcke zurück.
+ * @param {Iterable<Element & { _termin?: { id?: any } }>} bloecke
+ * @param {any} id
+ * @returns {number}
  */
 export function markiere(bloecke, id) {
   let treffer = 0;
@@ -50,17 +57,20 @@ export function markiere(bloecke, id) {
  * Einmal aufrufen, wenn die Kalenderbehälter im DOM stehen.
  * `selektor` und `behaelterIds` kommen aus kalender-kontextmenue.js, damit es
  * nur EINE Liste dessen gibt, was als Termin zählt.
+ * @param {{ selektor: string, behaelterIds: string[], panelId?: string }} param0
  */
 export function verdrahteAuswahl({ selektor, behaelterIds, panelId = 'bkActionModal' }) {
   if (typeof document === 'undefined' || !document.body) return;
   if (document.body.dataset.terminAuswahl) return;
   document.body.dataset.terminAuswahl = '1';
 
+  /** @type {any} */
   let gewaehlt = null;
-  const anwenden = () => markiere(document.querySelectorAll(selektor), gewaehlt);
+  const anwenden = () => markiere(/** @type {NodeListOf<Element & { _termin?: { id?: any } }>} */ (document.querySelectorAll(selektor)), gewaehlt);
 
   document.addEventListener('click', (ev) => {
-    const el = ev.target?.closest?.(selektor);
+    const target = /** @type {Element | null} */ (ev.target);
+    const el = /** @type {(Element & { _termin?: { id?: any } }) | null} */ (target?.closest?.(selektor) || null);
     if (!el || !el._termin) return;
     gewaehlt = el._termin.id;
     anwenden();
@@ -73,7 +83,7 @@ export function verdrahteAuswahl({ selektor, behaelterIds, panelId = 'bkActionMo
     if (behaelter) neuGezeichnet.observe(behaelter, { childList: true, subtree: true });
   }
 
-  const panel = document.getElementById(panelId);
+  const panel = /** @type {HTMLElement | null} */ (document.getElementById(panelId));
   if (panel) {
     new MutationObserver(() => {
       if (gewaehlt != null && !panelOffen(panel)) {

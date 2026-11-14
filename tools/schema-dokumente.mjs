@@ -110,7 +110,7 @@ export function formatQualifiedName(schema, name) {
 /**
  * Validates the metadata object. Throws if invalid or missing required fields.
  * Never substitutes current time or a fake migration name.
- * @param {object} meta
+ * @param {Record<string, any>} meta
  */
 export function validateMetadata(meta) {
   if (!meta || typeof meta !== 'object') {
@@ -145,7 +145,7 @@ export function validateMetadata(meta) {
 
 /**
  * Validates the input catalog payload for required groups, counts, and definitions.
- * @param {object} data
+ * @param {Record<string, any>} data
  */
 export function validateKatalog(data) {
   if (!data || typeof data !== 'object') {
@@ -258,7 +258,7 @@ export function validateKatalog(data) {
 
 /**
  * Pure function: renders catalog metadata into { schema: string, rls: string }.
- * @param {object} input
+ * @param {Record<string, any>} input
  * @returns {{ schema: string, rls: string }}
  */
 export function renderSchemaDokumente(input) {
@@ -278,6 +278,10 @@ export function renderSchemaDokumente(input) {
   const pgVersion = katalog.postgresql_version || 'PostgreSQL 17';
   const counts = katalog.counts || {};
 
+  /**
+   * @param {string} title
+   * @param {string} purpose
+   */
   function renderCommonHeader(title, purpose) {
     const lines = [
       '-- ============================================================================',
@@ -353,7 +357,7 @@ export function renderSchemaDokumente(input) {
         schemaOut += `-- [EXTENSION OWNED] Enum ${qual} (owned by extension)\n\n`;
       } else {
         const labels = Array.isArray(en.labels) ? en.labels : [];
-        const labelLines = labels.map(l => `  '${escapeSqlLiteral(l)}'`).join(',\n');
+        const labelLines = labels.map((/** @type {string} */ l) => `  '${escapeSqlLiteral(l)}'`).join(',\n');
         schemaOut += `CREATE TYPE ${qual} AS ENUM (\n${labelLines}\n);\n`;
         if (en.comment) {
           schemaOut += `COMMENT ON TYPE ${qual} IS '${escapeSqlLiteral(en.comment)}';\n`;
@@ -575,7 +579,7 @@ export function renderSchemaDokumente(input) {
       schemaOut += `-- PARTITIONED BY: ${tbl.partition_key}\n`;
     }
     if (Array.isArray(tbl.partition_parents) && tbl.partition_parents.length > 0) {
-      const parentsStr = tbl.partition_parents.map(p => formatQualifiedName('public', p)).join(', ');
+      const parentsStr = tbl.partition_parents.map((/** @type {string} */ p) => formatQualifiedName('public', p)).join(', ');
       schemaOut += `-- ${tbl.is_partition ? 'PARTITION OF' : 'INHERITS FROM'}: ${parentsStr}\n`;
     }
     if (tbl.partition_bound) {
@@ -1055,7 +1059,7 @@ function runCli() {
     console.log(`Successfully rendered SCHEMA.sql and SCHEMA-RLS.sql into ${targetDir}`);
     process.exit(0);
   } catch (err) {
-    console.error(`Error rendering schema documents: ${err.message}`);
+    console.error(`Error rendering schema documents: ${err instanceof Error ? err.message : String(err)}`);
     process.exit(1);
   }
 }

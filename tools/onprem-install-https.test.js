@@ -9,6 +9,12 @@ const end = install.indexOf('ohne_key=', start);
 assert.ok(start > 0 && end > start);
 const tlsBlock = install.slice(start, end);
 
+/**
+ * @param {import('node:test').TestContext} t
+ * @param {string} mode
+ * @param {string} tlsArg
+ * @param {boolean} [fail]
+ */
 function run(t, mode, tlsArg, fail = false) {
   const script = `
 set -euo pipefail
@@ -30,7 +36,7 @@ ${tlsBlock}
 echo TLS_ACCEPTED
 `;
   const result = spawnSync('bash', ['-c', script, '_', mode, tlsArg], { encoding: 'utf8', timeout: 20000 } /* war 2000: unter Last (Parallel-Sitzungen, direkt nach der Backend-Suite) reicht der bash-Start nicht immer; das Skript selbst braucht Millisekunden */);
-  if (result.error?.code === 'ENOENT') { t.skip('bash nicht vorhanden'); return null; }
+  if (/** @type {NodeJS.ErrnoException | undefined} */ (result.error)?.code === 'ENOENT') { t.skip('bash nicht vorhanden'); return null; }
   assert.ifError(result.error);
   return result;
 }

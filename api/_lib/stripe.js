@@ -6,6 +6,12 @@ const STRIPE_API = 'https://api.stripe.com/v1';
 
 if (!STRIPE_KEY) console.warn('[stripe] STRIPE_SECRET_KEY is not set');
 
+/**
+ * @param {Record<string, any>} obj
+ * @param {string} [prefix]
+ * @param {Record<string, string>} [out]
+ * @returns {Record<string, string>}
+ */
 function flatten(obj, prefix = '', out = {}) {
   for (const [k, v] of Object.entries(obj)) {
     if (v === null || v === undefined) continue;
@@ -24,20 +30,27 @@ function flatten(obj, prefix = '', out = {}) {
   return out;
 }
 
+/** @param {Record<string, any>} params */
 function formEncode(params) {
   const flat = flatten(params);
   return new URLSearchParams(flat).toString();
 }
 
+/**
+ * @param {string} path
+ * @param {{ method?: string, body?: Record<string, any>, query?: Record<string, any>, idempotencyKey?: string }} [options]
+ */
 export async function stripeRequest(path, { method = 'GET', body, query, idempotencyKey } = {}) {
   let url = `${STRIPE_API}${path}`;
   if (query) url += '?' + formEncode(query);
 
+  /** @type {Record<string, string>} */
   const headers = {
     Authorization: `Bearer ${STRIPE_KEY}`,
   };
   if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
 
+  /** @type {RequestInit} */
   const init = { method, headers };
   if (body) {
     headers['Content-Type'] = 'application/x-www-form-urlencoded';
@@ -57,12 +70,18 @@ export async function stripeRequest(path, { method = 'GET', body, query, idempot
  */
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
+/**
+ * @param {string | Buffer} rawBody
+ * @param {string | string[] | undefined} signatureHeader
+ * @param {string | undefined} secret
+ */
 export function verifyWebhook(rawBody, signatureHeader, secret) {
-  if (!signatureHeader) throw new Error('Missing stripe-signature header');
+  const headerStr = Array.isArray(signatureHeader) ? signatureHeader[0] : signatureHeader;
+  if (!headerStr) throw new Error('Missing stripe-signature header');
   if (!secret) throw new Error('Missing STRIPE_WEBHOOK_SECRET');
 
   const parts = Object.fromEntries(
-    signatureHeader.split(',').map(p => {
+    headerStr.split(',').map(p => {
       const [k, ...rest] = p.split('=');
       return [k, rest.join('=')];
     })
@@ -83,11 +102,16 @@ export function verifyWebhook(rawBody, signatureHeader, secret) {
   if (a.length !== b.length || !timingSafeEqual(a, b)) {
     throw new Error('Signature mismatch');
   }
-  return JSON.parse(rawBody);
+  return JSON.parse(String(rawBody));
 }
 
 // Plan slug → env var name for price ID
+/**
+ * @param {string} planSlug
+ * @param {string} interval
+ */
 export function priceIdFor(planSlug, interval) {
+  /** @type {Record<string, Record<string, string>>} */
   const map = {
     starter:      { month: 'STRIPE_PRICE_STARTER_MONTHLY',      year: 'STRIPE_PRICE_STARTER_YEARLY' },
     professional: { month: 'STRIPE_PRICE_PROFESSIONAL_MONTHLY', year: 'STRIPE_PRICE_PROFESSIONAL_YEARLY' },

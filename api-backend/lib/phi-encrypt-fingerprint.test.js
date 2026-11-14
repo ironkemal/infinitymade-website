@@ -19,7 +19,7 @@ test('keyFingerprint = HMAC-SHA256(Domain dek), erste 16 Hex-Zeichen', () => {
   try {
     const erwartet = createHmac('sha256', SCHLUESSEL).update(DOMAIN).digest('hex').slice(0, 16);
     assert.equal(keyFingerprint(), erwartet);
-    assert.match(keyFingerprint(), /^[0-9a-f]{16}$/);
+    assert.match(keyFingerprint() ?? '', /^[0-9a-f]{16}$/);
   } finally {
     if (vorher === undefined) delete process.env.DATA_ENCRYPTION_KEY;
     else process.env.DATA_ENCRYPTION_KEY = vorher;

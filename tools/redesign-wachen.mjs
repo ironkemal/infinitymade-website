@@ -32,10 +32,14 @@ export function neuCssDateien(wurzel = WURZEL) {
   return out.filter((f) => existsSync(join(wurzel, f)));
 }
 
-/** Selektorliste an Kommas der obersten Ebene trennen (nicht in `:is(a, b)` oder `[x="a,b"]`). */
+/** Selektorliste an Kommas der obersten Ebene trennen (nicht in `:is(a, b)` oder `[x="a,b"]`).
+ * @param {string} kopf
+ */
 export function trenneSelektoren(kopf) {
   const teile = [];
-  let tiefe = 0, anfang = 0, inText = null;
+  let tiefe = 0, anfang = 0;
+  /** @type {string | null} */
+  let inText = null;
   for (let i = 0; i < kopf.length; i++) {
     const c = kopf[i];
     if (inText) { if (c === inText) inText = null; continue; }
@@ -48,10 +52,15 @@ export function trenneSelektoren(kopf) {
   return teile.map((s) => s.trim()).filter(Boolean);
 }
 
-/** 1) Jeder Selektor außerhalb von @keyframes/@font-face muss `data-design="neu"` enthalten. */
+/** 1) Jeder Selektor außerhalb von @keyframes/@font-face muss `data-design="neu"` enthalten.
+ * @param {string} css
+ * @param {string} [name]
+ */
 export function pruefeScope(css, name = 'css') {
+  /** @type {string[]} */
   const fehler = [];
   const ohneKommentar = css.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
+  /** @type {string[]} */
   const stapel = []; // Art je offener Klammer: 'at-keyframes' | 'at' | 'regel'
   let start = 0;
   for (let i = 0; i < ohneKommentar.length; i++) {
@@ -81,9 +90,13 @@ export function pruefeScope(css, name = 'css') {
   return fehler;
 }
 
-/** 2) Jede Zeile mit !important braucht einen Kommentar in den 10 Zeilen davor (Gruppen-Kommentar zählt). */
+/** 2) Jede Zeile mit !important braucht einen Kommentar in den 10 Zeilen davor (Gruppen-Kommentar zählt).
+ * @param {string} css
+ * @param {string} [name]
+ */
 export function pruefeImportant(css, name = 'css') {
   const zeilen = css.split('\n');
+  /** @type {string[]} */
   const fehler = [];
   let imKommentar = false;
   zeilen.forEach((z, i) => {
@@ -99,14 +112,21 @@ export function pruefeImportant(css, name = 'css') {
   return fehler;
 }
 
-/** Lokale CSS/JS aus <link>/<script> in dashboard.html mit ?v=. */
+/** Lokale CSS/JS aus <link>/<script> in dashboard.html mit ?v=.
+ * @param {string} html
+ */
 export function lokaleAssets(html) {
   return [...html.matchAll(/(?:href|src)="\/?([^"#:?]+\.(?:css|js))(?:\?v=([^"]*))?"/g)]
     .map((m) => ({ datei: m[1], version: m[2] ?? null }));
 }
 
-/** 3) Geänderte Datei ⇒ andere ?v= als in HEAD. `geaendert(datei)` und `htmlHead` kommen von git. */
+/** 3) Geänderte Datei ⇒ andere ?v= als in HEAD. `geaendert(datei)` und `htmlHead` kommen von git.
+ * @param {string} html
+ * @param {string | null} htmlHead
+ * @param {(datei: string) => boolean} geaendert
+ */
 export function pruefeCache(html, htmlHead, geaendert) {
+  /** @type {string[]} */
   const fehler = [];
   const vorher = new Map(lokaleAssets(htmlHead ?? '').map((a) => [a.datei, a.version]));
   for (const a of lokaleAssets(html)) {
@@ -118,13 +138,22 @@ export function pruefeCache(html, htmlHead, geaendert) {
   return fehler;
 }
 
-/** 4) Jede lokale Datei aus dashboard.html steht im Kutu-Dockerfile (COPY) und im Workflow (paths). */
+/** 4) Jede lokale Datei aus dashboard.html steht im Kutu-Dockerfile (COPY) und im Workflow (paths).
+ * @param {string} html
+ * @param {string} dockerfile
+ * @param {string} workflow
+ */
 export function pruefeAuslieferung(html, dockerfile, workflow) {
+  /** @type {string[]} */
   const fehler = [];
   const kopiert = dockerfile.split('\n').filter((z) => /^COPY\s/.test(z) && !z.includes('--from='))
     .flatMap((z) => z.replace(/^COPY\s+/, '').trim().split(/\s+/).slice(0, -1));
   const pfade = [...workflow.matchAll(/^\s+-\s+'([^']+)'/gm)].map((m) => m[1]);
   // Eintrag deckt die Datei selbst oder ihren Ordner (`module`, `module/**`, `design/`).
+  /**
+   * @param {string[]} liste
+   * @param {string} datei
+   */
   const deckt = (liste, datei) => liste.some((e) => {
     const sauber = e.replace(/\/\*\*$/, '').replace(/\/$/, '');
     return e === datei || datei.startsWith(sauber + '/');
@@ -136,7 +165,11 @@ export function pruefeAuslieferung(html, dockerfile, workflow) {
   return fehler;
 }
 
-/** 5) Gemeinsame Datei auf unter 90 % ihrer HEAD-Größe geschrumpft (Zeichen). */
+/** 5) Gemeinsame Datei auf unter 90 % ihrer HEAD-Größe geschrumpft (Zeichen).
+ * @param {string} jetzt
+ * @param {string | null} head
+ * @param {string} name
+ */
 export function pruefeSchrumpf(jetzt, head, name) {
   if (head == null || head.length < 200) return [];
   return jetzt.length < head.length * 0.9 ? [`${name}: ${jetzt.length} statt ${head.length} Zeichen (−${Math.round((1 - jetzt.length / head.length) * 100)} %) — versehentlich geleert/gekürzt?`] : [];
@@ -144,10 +177,12 @@ export function pruefeSchrumpf(jetzt, head, name) {
 
 export const GEMEINSAM = ['dashboard.html', 'dashboard.js', 'dashboard.css', 'dashboard-feinschliff.css', 'praxura-design.css', 'nav-registry.js', 'redesign/STATUS.md'];
 
+/** @param {string} pfad */
 function gitShow(pfad) {
   try { return execFileSync('git', ['show', `HEAD:${pfad}`], { cwd: WURZEL, encoding: 'utf8', maxBuffer: 1 << 26, stdio: ['ignore', 'pipe', 'ignore'] }); }
   catch { return null; }
 }
+/** @param {string} pfad */
 function geaendertGegenHead(pfad) {
   try { execFileSync('git', ['diff', '--quiet', 'HEAD', '--', pfad], { cwd: WURZEL, stdio: 'ignore' }); return false; }
   catch { return true; }
@@ -155,8 +190,9 @@ function geaendertGegenHead(pfad) {
 
 const istHaupt = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
 if (istHaupt) {
-  const lies = (p) => readFileSync(join(WURZEL, p), 'utf8');
+  const lies = (/** @type {string} */ p) => readFileSync(join(WURZEL, p), 'utf8');
   const html = lies('dashboard.html');
+  /** @type {string[]} */
   const fehler = [];
   for (const f of neuCssDateien()) { const css = lies(f); fehler.push(...pruefeScope(css, f), ...pruefeImportant(css, f)); }
   fehler.push(...pruefeCache(html, gitShow('dashboard.html'), geaendertGegenHead));

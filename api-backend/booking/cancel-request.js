@@ -1,5 +1,9 @@
 // Der HMAC-Link wird vom Aufrufer geprüft. Erst die Termine absagen, danach die
 // Anfrage quittieren: ein fehlgeschlagener Termin-Update darf kein Erfolg sein.
+/**
+ * @param {{ from: (table: string) => any }} supabase
+ * @param {{ id: string, owner_id: string, booking_id?: string | null, booking_ids?: string[] | null }} request
+ */
 export async function cancelRequestBookings(supabase, request) {
   const ids = [...new Set([request.booking_id, ...(Array.isArray(request.booking_ids) ? request.booking_ids : [])].filter(Boolean))];
   if (ids.length) {

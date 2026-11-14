@@ -9,22 +9,36 @@ import { berlinTagesgrenzen } from '../../lib/berlin-tag.js';
 // PostgREST adapter. No production credentials, HTTP requests or database writes.
 const source = fs.readFileSync(new URL('./abrechnung.routes.js', import.meta.url), 'utf8');
 const routeSource = source.slice(source.indexOf("router.get('/belegliste',"), source.indexOf('// POST /api/billing/abrechnung/preflight'));
+/**
+ * @param {any[]} [initialRows]
+ * @param {{ employee?: boolean, queryError?: any, insertError?: any, ctx?: Record<string, any> }} [opts]
+ */
 function fixture(initialRows = [], { employee = false, queryError = null, insertError = null, ctx = {} } = {}) {
   const rows = structuredClone(initialRows);
+  /** @type {Record<string, any>} */
   const handlers = {};
+  /** @type {any[]} */
   const calls = [];
   const supabase = {
     auth: { getUser: async () => ({ data: { user: { id: employee ? 'employee' : 'owner' } } }) },
+    /** @param {string} table */
     from(table) {
+      /** @type {Array<(r: any) => boolean>} */
       const filters = [];
+      /** @type {any} */
       let insertion;
       const q = {
         select() { return q; },
-        eq(k, v) { filters.push(r => r[k] === v); return q; },
-        in(k, v) { filters.push(r => v.includes(r[k])); return q; },
-        gte(k, v) { calls.push(['gte', k, v]); filters.push(r => Date.parse(r[k]) >= Date.parse(v)); return q; },
-        lt(k, v) { calls.push(['lt', k, v]); filters.push(r => Date.parse(r[k]) < Date.parse(v)); return q; },
+        /** @param {string} k @param {any} v */
+        eq(k, v) { filters.push((/** @type {any} */ r) => r[k] === v); return q; },
+        /** @param {string} k @param {any[]} v */
+        in(k, v) { filters.push((/** @type {any} */ r) => v.includes(r[k])); return q; },
+        /** @param {string} k @param {string} v */
+        gte(k, v) { calls.push(['gte', k, v]); filters.push((/** @type {any} */ r) => Date.parse(r[k]) >= Date.parse(v)); return q; },
+        /** @param {string} k @param {string} v */
+        lt(k, v) { calls.push(['lt', k, v]); filters.push((/** @type {any} */ r) => Date.parse(r[k]) < Date.parse(v)); return q; },
         order() { return q; },
+        /** @param {any} v */
         insert(v) { insertion = v; return q; },
         async maybeSingle() { return { data: rows.find(r => filters.every(f => f(r))) || null, error: queryError }; },
         async single() {
@@ -34,21 +48,37 @@ function fixture(initialRows = [], { employee = false, queryError = null, insert
           rows.push(row);
           return { data: row };
         },
+        /** @param {any} resolve @param {any} [reject] */
         then(resolve, reject) { return Promise.resolve({ data: rows.filter(r => filters.every(f => f(r))), error: queryError }).then(resolve, reject); },
       };
       return q;
     },
   };
   vm.runInNewContext(routeSource, { ...ctx, supabase, validateBelegEntry, generateCsvString, berlinTagesgrenzen, Buffer, console: { error() {} }, router: {
-    get(path, fn) { handlers['GET ' + path] = fn; }, post(path, fn) { handlers['POST ' + path] = fn; },
+    /** @param {string} path @param {any} fn */
+    get(path, fn) { handlers['GET ' + path] = fn; },
+    /** @param {string} path @param {any} fn */
+    post(path, fn) { handlers['POST ' + path] = fn; },
   } });
-  return { rows, calls, async call(key, { query = {}, body = {}, token = 'synthetic' } = {}) {
-    let status = 200, output;
-    const res = { status(code) { status = code; return this; }, json(value) { output = value; return this; }, send(value) { output = value; return this; }, setHeader() {} };
-    await handlers[key]({ headers: token ? { authorization: 'Bearer ' + token } : {}, query, body }, res);
-    return { status, output };
-  } };
+  return {
+    rows,
+    calls,
+    /**
+     * @param {string} key
+     * @param {{ query?: Record<string, any>, body?: Record<string, any>, token?: string | null }} [reqOpts]
+     * @returns {Promise<{ status: number, output: any }>}
+     */
+    async call(key, { query = {}, body = {}, token = 'synthetic' } = {}) {
+      let status = 200;
+      /** @type {any} */
+      let output;
+      const res = { status(/** @type {number} */ code) { status = code; return this; }, json(/** @type {any} */ value) { output = value; return this; }, send(/** @type {any} */ value) { output = value; return this; }, setHeader() {} };
+      await handlers[key]({ headers: token ? { authorization: 'Bearer ' + token } : {}, query, body }, res);
+      return { status, output };
+    },
+  };
 }
+/** @param {Record<string, any>} [extra] */
 const payment = (extra = {}) => ({ id: 'original', owner_id: 'owner', beleg_nr: 1, type: 'zuzahlung', amount_eur: 30, zahlart: 'bar', patient_id: 'patient', prescription_id: 'rx', abrechnung_id: null, invoice_id: null, created_at: '2026-10-16T09:00:00Z', ...extra });
 
 test('Einzelstorno übernimmt Betrag, Zahlart und Bezüge vom mandantengebundenen Original', async () => {
@@ -63,13 +93,13 @@ test('Einzelstorno übernimmt Betrag, Zahlart und Bezüge vom mandantengebundene
   assert.equal(result.output.owner_id, 'owner');
   assert.equal(result.output.created_by, 'employee');
   const cash = await f.call('GET /belegliste', { query: { zahlart: 'bar' } });
-  assert.equal(cash.output.reduce((sum, r) => sum + r.amount_eur, 0), 0);
+  assert.equal(cash.output.reduce((/** @type {number} */ sum, /** @type {any} */ r) => sum + r.amount_eur, 0), 0);
   const csv = await f.call('GET /belegliste/export', { query: { zahlart: 'bar' } });
   assert.match(csv.output.toString('latin1'), /-30,00/);
 });
 
 test('Fremder Mandant, Storno, negativer und fehlender Originalbeleg bleiben unverändert', async () => {
-  for (const [row, expected] of [[payment({ owner_id: 'other' }), 404], [payment({ type: 'storno' }), 400], [payment({ amount_eur: -30 }), 400]]) {
+  for (const [row, expected] of /** @type {Array<[any, number]>} */ ([[payment({ owner_id: 'other' }), 404], [payment({ type: 'storno' }), 400], [payment({ amount_eur: -30 }), 400]])) {
     const f = fixture([row]);
     assert.equal((await f.call('POST /belegliste', { body: { type: 'storno', original_id: 'original' } })).status, expected);
     assert.equal(f.rows.length, 1);
@@ -130,13 +160,13 @@ for (const key of ['GET /belegliste', 'GET /belegliste/export']) {
     if (key.endsWith('export')) {
       const csv = result.output.toString('latin1');
       assert.match(csv, /11,00/); assert.match(csv, /22,00/); assert.doesNotMatch(csv, /33,00/);
-    } else assert.deepEqual(result.output.map(r => r.amount_eur), [11, 22]);
+    } else assert.deepEqual(result.output.map((/** @type {any} */ r) => r.amount_eur), [11, 22]);
   });
   test(key + ': DST23/25h und offene Grenzen verwenden dieselben halb offenen Intervalle', async () => {
-    for (const [day, start, end, hours] of [
+    for (const [day, start, end, hours] of /** @type {Array<[string, string, string, number]>} */ ([
       ['2026-03-29', '2026-03-28T23:00:00.000Z', '2026-03-29T22:00:00.000Z', 23],
       ['2026-10-25', '2026-10-24T22:00:00.000Z', '2026-10-25T23:00:00.000Z', 25],
-    ]) {
+    ])) {
       const f = fixture();
       assert.equal((await f.call(key, { query: { from: day, to: day } })).status, 200);
       assert.deepEqual(f.calls, [['gte', 'created_at', start], ['lt', 'created_at', end]]);
@@ -201,10 +231,10 @@ test('GET markiert bereits stornierte Originale, auch bei Filter und Altformat o
     { id: 's2', owner_id: 'owner', beleg_nr: 5, type: 'storno', amount_eur: -30, storno_von: null, reference_text: 'STORNO für Beleg-Nr: 2 (Altbestand)', created_at: '2026-10-16T09:31:00Z' },
   ]);
   const all = await f.call('GET /belegliste');
-  const flag = Object.fromEntries(all.output.map(r => [r.id, r.bereits_storniert]));
+  const flag = Object.fromEntries(all.output.map((/** @type {any} */ r) => [r.id, r.bereits_storniert]));
   assert.deepEqual(flag, { a: true, b: true, c: false, s1: false, s2: false });
   const filtered = await f.call('GET /belegliste', { query: { type: 'zuzahlung' } });
-  assert.deepEqual(filtered.output.map(r => [r.id, r.bereits_storniert]).sort(), [['a', true], ['b', true], ['c', false]]);
+  assert.deepEqual(filtered.output.map((/** @type {any} */ r) => [r.id, r.bereits_storniert]).sort(), [['a', true], ['b', true], ['c', false]]);
 });
 
 test('GET: durch Rezept-Saldo-Storno ausgeglichene Zuzahlung gilt als storniert, offene nicht', async () => {
@@ -215,7 +245,7 @@ test('GET: durch Rezept-Saldo-Storno ausgeglichene Zuzahlung gilt als storniert,
     payment({ id: 'z3', beleg_nr: 4, prescription_id: null }),
   ]);
   const out = await f.call('GET /belegliste');
-  const flag = Object.fromEntries(out.output.map(r => [r.id, r.bereits_storniert]));
+  const flag = Object.fromEntries(out.output.map((/** @type {any} */ r) => [r.id, r.bereits_storniert]));
   assert.deepEqual(flag, { z1: true, s1: false, z2: false, z3: false });
 });
 

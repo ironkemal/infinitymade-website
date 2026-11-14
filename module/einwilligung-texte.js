@@ -44,6 +44,8 @@ const AUSFALL_FALLBACK =
  * Baut den Ausfallgebuehr-Absatz aus den Praxiseinstellungen.
  * Quelle ist `profiles.ausfall_*` — NICHT `businesses` (Einzelstandort-Inhaber
  * haben keinen businesses-Datensatz, siehe db/README.md Falle 4).
+ * @param {Record<string, any> | null | undefined} profile
+ * @returns {string}
  */
 export function ausfallRegelText(profile) {
   if (!profile || !profile.ausfall_enabled) return AUSFALL_FALLBACK;
@@ -334,6 +336,11 @@ export const EINWILLIGUNG_TEXTE = {
 // Platzhalter, die leer bleiben dürfen (bedingte Sätze) — alle anderen zeigen ein leeres Feld als [key].
 const OPTIONALE_PLATZHALTER = new Set(['dsb_satz']);
 
+/**
+ * @param {string} str
+ * @param {Record<string, any>} ctx
+ * @returns {string}
+ */
 function ersetze(str, ctx) {
   return String(str).replace(/\{\{(\w+)\}\}/g, (_, key) => {
     const v = ctx[key];
@@ -347,6 +354,8 @@ function ersetze(str, ctx) {
  * `kutu` = Praxura-Box in der Praxis (Praxis ist allein verantwortlich, der Hersteller hat keine Rolle);
  * alles andere = SaaS (Praxura als Auftragsverarbeiter). Bewusst OHNE § 203-Halbsatz (erst, wenn die
  * Klausel in Praxuras eigener AVV steht) und OHNE Hosting-Ort (`Server in Deutschland` ist nicht geprüft).
+ * @param {string} [betrieb]
+ * @returns {string}
  */
 // Box + aktives KI-Modul: nur für die KI-Unterstützung ist der Hersteller Auftragsverarbeiter (LEGAL_DECISIONS Nachtrag 4 Nr. 1).
 // Ohne diesen Satz widerspräche „hat keinen Zugriff" dem KI-Absatz („Unterauftragsverarbeiter des Softwareanbieters").
@@ -354,7 +363,7 @@ const KI_AV_SATZ_KUTU = ' Nur für die optionale KI-Unterstützung (siehe unten)
   + 'als Auftragsverarbeiter der Praxis (Art. 28 DSGVO).';
 
 // Herstellername: bürgerlicher Name, nicht „InfinityMade" (legal-de 09.10.2026, v4).
-export function softwareSatz(betrieb) {
+export function softwareSatz(/** @type {any} */ betrieb) {
   if (betrieb === 'kutu') {
     return 'Die Praxis nutzt die Praxissoftware Praxura, die auf einem Rechner in den Räumen der Praxis betrieben wird. '
       + 'Ihre Daten werden dort gespeichert; der Softwarehersteller hat darauf keinen Zugriff.';
@@ -367,12 +376,15 @@ export function softwareSatz(betrieb) {
  * Rendert den Optionsblock der Datenschutz-Einwilligung als Klartext.
  * Auch NICHT gewaehlte Optionen werden aufgefuehrt — die Ablehnung ist Teil
  * des Nachweises (Art. 7 Abs. 1: was wurde genau erklaert?).
+ * @param {Record<string, any>} def
+ * @param {any[]} [gewaehlt]
+ * @returns {string}
  */
 function optionenText(def, gewaehlt) {
   if (!Array.isArray(def.optionen) || def.optionen.length === 0) return '—';
   const set = new Set(gewaehlt || []);
   return def.optionen
-    .map(o => `[${set.has(o.key) ? 'X' : ' '}] ${o.text}: ${set.has(o.key) ? 'JA' : 'NEIN'}`)
+    .map((/** @type {any} */ o) => `[${set.has(o.key) ? 'X' : ' '}] ${o.text}: ${set.has(o.key) ? 'JA' : 'NEIN'}`)
     .join('\n');
 }
 
@@ -381,16 +393,14 @@ function optionenText(def, gewaehlt) {
  * `patient_consents.text_snapshot` eingefroren wird.
  *
  * @param {string} type  Schluessel aus EINWILLIGUNG_TEXTE
- * @param {object} ctx   { praxis_name, praxis_adresse, patient_name,
- *                         patient_geburtsdatum, datum, profile, optionen: string[],
- *                         betrieb?: 'kutu'|'saas' (Standard saas), kiAktiv?: boolean (Standard false),
- *                         dsb_kontakt?: string }
+ * @param {Record<string, any>} [ctx]
  * @returns {{ version:string, titel:string, text:string, def:object }}
  */
 export function renderEinwilligungText(type, ctx = {}) {
-  const def = EINWILLIGUNG_TEXTE[type];
+  const def = (/** @type {Record<string, any>} */ (EINWILLIGUNG_TEXTE))[type];
   if (!def) throw new Error(`Unbekannter Einwilligungstyp: ${type}`);
 
+  /** @type {Record<string, any>} */
   const vollCtx = {
     ...ctx,
     ausfall_regel: ctx.ausfall_regel || ausfallRegelText(ctx.profile),
@@ -408,8 +418,8 @@ export function renderEinwilligungText(type, ctx = {}) {
   ].join('\n');
 
   const koerper = def.absaetze
-    .filter(a => a.nur !== 'ki' || ctx.kiAktiv === true)
-    .map(a => `${a.ueberschrift}\n${ersetze(a.text, vollCtx)}`)
+    .filter((/** @type {any} */ a) => a.nur !== 'ki' || ctx.kiAktiv === true)
+    .map((/** @type {any} */ a) => `${a.ueberschrift}\n${ersetze(a.text, vollCtx)}`)
     .join('\n\n');
 
   return {
@@ -424,6 +434,8 @@ export function renderEinwilligungText(type, ctx = {}) {
  * SHA-256 als Hex — Nachweis nach Art. 7 Abs. 1 DSGVO.
  * Nutzt die Web Crypto API (im Browser vorhanden, keine Abhaengigkeit).
  * Erfordert einen sicheren Kontext (https oder localhost).
+ * @param {string} text
+ * @returns {Promise<string>}
  */
 export async function sha256Hex(text) {
   const bytes = new TextEncoder().encode(text);
@@ -479,12 +491,13 @@ export const TERMIN_DATENSCHUTZ = Object.freeze({
 
 /**
  * Datenschutzhinweise der Patientenseiten als Absätze (Seite rendert mit textContent).
- * @param {object} angaben  { praxis_name, inhaber_name?, praxis_anschrift, praxis_kontakt?, dsb_kontakt?, aufsichtsbehoerde? }
+ * @param {Record<string, any>} [angaben]  { praxis_name, inhaber_name?, praxis_anschrift, praxis_kontakt?, dsb_kontakt?, aufsichtsbehoerde? }
  * @param {{betrieb?: 'kutu'|'saas'}} [opt]
  */
 export function renderTerminDatenschutz(angaben = {}, { betrieb } = {}) {
   const name = String(angaben.praxis_name || '').trim();
   const inhaber = String(angaben.inhaber_name || '').trim();
+  /** @type {Record<string, any>} */
   const ctx = {
     praxis_name: name,
     inhaber_satz: inhaber && inhaber !== name ? `, Inhaber/in ${inhaber}` : '',
@@ -494,7 +507,7 @@ export function renderTerminDatenschutz(angaben = {}, { betrieb } = {}) {
     software_satz: softwareSatz(betrieb),
     aufsichtsbehoerde: angaben.aufsichtsbehoerde || 'der für die Praxis zuständigen Datenschutzaufsichtsbehörde',
   };
-  const fuellen = (str) => String(str).replace(/\{\{(\w+)\}\}/g, (_, k) => ctx[k] ?? '');
+  const fuellen = (/** @type {any} */ str) => String(str).replace(/\{\{(\w+)\}\}/g, (_, k) => ctx[k] ?? '');
   return {
     version: TERMIN_DATENSCHUTZ.version,
     titel: TERMIN_DATENSCHUTZ.titel,

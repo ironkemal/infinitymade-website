@@ -80,7 +80,7 @@ test('isCodeExpired correctly detects past and future dates', () => {
   const exactNow = now.toISOString();
   assert.equal(isCodeExpired(exactNow, now), true);
 
-  assert.equal(isCodeExpired(null, now), true);
+  assert.equal(isCodeExpired(/** @type {any} */ (null), now), true);
   assert.equal(isCodeExpired('invalid-date', now), true);
 });
 

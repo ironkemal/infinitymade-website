@@ -27,13 +27,19 @@ const VORSCHLAG = {
   SKR04: { kasse: '1600', bank: '1800', erloes: '4100' },
 };
 
-const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
+/** @param {any} s */
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => (/** @type {Record<string, string>} */ ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-}[c]));
+})[c] ?? c));
 
-/** Formularwerte → gespeichertes Objekt (leere Felder fallen weg = Vorschlag gilt). */
+/**
+ * Formularwerte → gespeichertes Objekt (leere Felder fallen weg = Vorschlag gilt).
+ * @param {(name: string) => any} get
+ */
 export function ausFormular(get) {
+  /** @param {any} w */
   const nur = (w) => String(w ?? '').replace(/\D/g, '');
+  /** @type {{ beraternummer: string, mandantennummer: string, wj_beginn?: string, sachkontenlaenge: number, kontenrahmen: string, geldkonten: Record<string, string>, erloeskonten: Record<string, string> }} */
   const obj = {
     beraternummer: nur(get('beraternummer')),
     mandantennummer: nur(get('mandantennummer')),
@@ -48,6 +54,7 @@ export function ausFormular(get) {
   return obj;
 }
 
+/** @param {{ profile?: { role?: string } | null, ownerId: () => string, supabase: any, showToast: (msg: string, type?: string) => void }} deps */
 export async function renderDatevSettings(deps) {
   const section = document.getElementById('settingsDatevSection');
   if (!section) return;
@@ -60,13 +67,16 @@ export async function renderDatevSettings(deps) {
   const d = data?.datev_einstellungen || {};
   const skr = d.kontenrahmen === 'SKR04' ? 'SKR04' : 'SKR03';
   const v = VORSCHLAG[skr];
+  /** @param {string} name @param {string} label @param {any} wert @param {string} ph @param {string} [extra] */
   const feld = (name, label, wert, ph, extra = '') => `
     <label style="font-size:12px;color:var(--text-muted);display:block;">${esc(label)}
       <input class="form-input" data-datev="${name}" value="${esc(wert ?? '')}" placeholder="${esc(ph)}" ${extra}
              style="display:block;width:100%;margin-top:2px;">
     </label>`;
 
-  section.querySelector('.settings-section-body').innerHTML = `
+  const bodyEl = section.querySelector('.settings-section-body');
+  if (!bodyEl) return;
+  bodyEl.innerHTML = `
     <p class="form-hint" style="margin-bottom:12px;">
       Für den Export an Ihren Steuerberater (DATEV-Buchungsstapel). Berater- und Mandantennummer
       erhalten Sie von Ihrem Steuerberater. Die Konten sind <strong>Vorschläge</strong>
@@ -93,8 +103,9 @@ export async function renderDatevSettings(deps) {
     </div>
     <button class="btn-primary" type="button" data-datev-speichern>Speichern</button>`;
 
-  section.querySelector('[data-datev-speichern]').addEventListener('click', async () => {
-    const get = (n) => section.querySelector(`[data-datev="${n}"]`)?.value;
+  section.querySelector('[data-datev-speichern]')?.addEventListener('click', async () => {
+    /** @param {string} n */
+    const get = (n) => (/** @type {HTMLInputElement | HTMLSelectElement | null} */ (section.querySelector(`[data-datev="${n}"]`)))?.value;
     const wert = ausFormular(get);
     if (wert.wj_beginn && !/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(wert.wj_beginn)) {
       deps.showToast('Beginn des Wirtschaftsjahres bitte als MM-TT, z. B. 01-01.', 'error');
@@ -106,14 +117,17 @@ export async function renderDatevSettings(deps) {
   });
 }
 
-/** Knopf „DATEV-Export" im Zahlungsjournal: gleicher Zeitraum wie der Bildschirm. */
+/**
+ * Knopf „DATEV-Export" im Zahlungsjournal: gleicher Zeitraum wie der Bildschirm.
+ * @param {{ supabase: any, showToast: (msg: string, type?: string) => void }} deps
+ */
 export function verdrahteDatevExport({ supabase, showToast }) {
-  const knopf = document.getElementById('blDatevExportBtn');
+  const knopf = /** @type {HTMLButtonElement | null} */ (document.getElementById('blDatevExportBtn'));
   if (!knopf || knopf.dataset.wired) return;
   knopf.dataset.wired = '1';
   knopf.addEventListener('click', async () => {
-    const von = document.getElementById('blFilterFrom')?.value || '';
-    const bis = document.getElementById('blFilterTo')?.value || '';
+    const von = (/** @type {HTMLInputElement | null} */ (document.getElementById('blFilterFrom')))?.value || '';
+    const bis = (/** @type {HTMLInputElement | null} */ (document.getElementById('blFilterTo')))?.value || '';
     if (!von || !bis) { showToast('Bitte zuerst einen Zeitraum (von/bis) wählen.', 'error'); return; }
     const { data } = await supabase.auth.getSession();
     const token = data?.session?.access_token;

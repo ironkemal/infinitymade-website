@@ -19,7 +19,11 @@ export const BUNDESLAENDER = {
 
 const ALLE = Object.keys(BUNDESLAENDER);
 
-/** Ostersonntag (anonymer gregorianischer Algorithmus) als [monat(1-12), tag]. */
+/**
+ * Ostersonntag (anonymer gregorianischer Algorithmus) als [monat(1-12), tag].
+ * @param {number} jahr
+ * @returns {[number, number]}
+ */
 export function ostersonntag(jahr) {
   const a = jahr % 19, b = Math.floor(jahr / 100), c = jahr % 100;
   const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
@@ -31,8 +35,11 @@ export function ostersonntag(jahr) {
   return [monat, tag];
 }
 
+/** @param {Date} d */
 const iso = (d) => d.toISOString().slice(0, 10);
+/** @param {number} j @param {number} m @param {number} t */
 const utc = (j, m, t) => new Date(Date.UTC(j, m - 1, t));
+/** @param {Date} d @param {number} n */
 const plus = (d, n) => new Date(d.getTime() + n * 86400000);
 
 /**
@@ -44,7 +51,9 @@ export function feiertage(jahr, land) {
   if (!ALLE.includes(land) || !Number.isInteger(jahr)) return [];
   const [om, ot] = ostersonntag(jahr);
   const ostern = utc(jahr, om, ot);
+  /** @type {{datum:string,name:string,optional:boolean}[]} */
   const liste = [];
+  /** @param {Date} datum @param {string} name @param {string[]} [laender] @param {boolean} [optional] */
   const add = (datum, name, laender = ALLE, optional = false) => {
     if (laender.includes(land)) liste.push({ datum: iso(datum), name, optional });
   };
@@ -75,11 +84,13 @@ export function feiertage(jahr, land) {
 /**
  * Zeilen für custom_days: ganztägig, type 'holiday', nur ab `heute`, nur pflichtige Feiertage
  * plus ausdrücklich gewählte optionale (Namen in `optionaleNamen`).
+ * @param {{ ownerId: string, land: string, heute?: string, jahre?: number[], optionaleNamen?: string[] }} opts
  * @returns {{owner_id:string,date:string,type:'holiday',note:string,start_time:null,end_time:null}[]}
  */
 export function feiertageZeilen({ ownerId, land, heute, jahre, optionaleNamen = [] }) {
   const tag = String(heute || '').slice(0, 10);
   const gewaehlt = new Set(optionaleNamen);
+  /** @type {{owner_id:string,date:string,type:'holiday',note:string,start_time:null,end_time:null}[]} */
   const out = [];
   for (const j of jahre || []) {
     for (const f of feiertage(j, land)) {

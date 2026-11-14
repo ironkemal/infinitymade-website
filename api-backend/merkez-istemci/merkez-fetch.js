@@ -3,6 +3,10 @@
 import { signiereAnfrage } from './signatur.js';
 import { ladeKimlik } from './kimlik.js';
 
+/**
+ * @param {string | null | undefined} baseUrl
+ * @returns {string}
+ */
 function basisUrl(baseUrl) {
   const b = (baseUrl || process.env.MERKEZ_URL || '').replace(/\/+$/, '');
   if (!b) throw new Error('MERKEZ_URL ist nicht gesetzt');
@@ -15,7 +19,7 @@ function basisUrl(baseUrl) {
 
 /**
  * @param {string} pfad  z. B. '/v1/ip' (fester Pfad, keine Sonderzeichen)
- * @param {{method?:string, body?:object, kimlik?:object, ohneSignatur?:boolean, baseUrl?:string, fetchImpl?:Function, timeoutMs?:number, jetzt?:number}} [opt]
+ * @param {{method?:string, body?:Record<string, any>|null, kimlik?:import('./kimlik.js').KutuKimlik|null, ohneSignatur?:boolean, baseUrl?:string, fetchImpl?:Function, timeoutMs?:number, jetzt?:number}} [opt]
  * @returns {Promise<{status:number, ok:boolean, json:any, serverzeit:number|null}>}
  *   `serverzeit` nur zur Diagnose bei 401 — die Box übernimmt sie NIE als eigene Uhr.
  */
@@ -23,6 +27,7 @@ export async function merkezFetch(pfad, { method = 'POST', body, kimlik, ohneSig
   if (!pfad.startsWith('/')) throw new Error('Pfad muss mit / beginnen');
   const url = basisUrl(baseUrl) + pfad;
   const bodyText = body === undefined ? undefined : JSON.stringify(body);
+  /** @type {Record<string, string>} */
   const headers = { Accept: 'application/json' };
   if (bodyText !== undefined) headers['Content-Type'] = 'application/json';
   if (!ohneSignatur) {

@@ -14,18 +14,50 @@ import { TABELLEN } from './klassifikation.js';
 
 const BATCH = 500;
 
-/** Stichtag: jetzt minus `monate` Kalendermonate (ISO). Rein. */
+/**
+ * @typedef {object} LoeschfristConfig
+ * @property {number} monate
+ * @property {string} [feld]
+ * @property {string[]} [status]
+ * @property {{ table: string, spalte: string }} [nurOhneVerweis]
+ */
+
+/**
+ * @typedef {object} FristTabellenEintrag
+ * @property {string} table
+ * @property {string} [kategorie]
+ * @property {LoeschfristConfig} [loeschfrist]
+ */
+
+/**
+ * Stichtag: jetzt minus `monate` Kalendermonate (ISO). Rein.
+ * @param {number} monate
+ * @param {number | string | Date} [jetzt]
+ * @returns {string}
+ */
 export function grenzeIso(monate, jetzt = Date.now()) {
   const d = new Date(jetzt);
   d.setUTCMonth(d.getUTCMonth() - monate);
   return d.toISOString();
 }
 
-/** Einträge mit Löschfrist, in TABELLEN-Reihenfolge (Abhängige zuerst). */
+/**
+ * Einträge mit Löschfrist, in TABELLEN-Reihenfolge (Abhängige zuerst).
+ * @param {FristTabellenEintrag[]} [tabellen]
+ * @returns {Array<FristTabellenEintrag & { loeschfrist: LoeschfristConfig }>}
+ */
 export function fristEintraege(tabellen = TABELLEN) {
-  return tabellen.filter((t) => t.loeschfrist);
+  return /** @type {Array<FristTabellenEintrag & { loeschfrist: LoeschfristConfig }>} */ (
+    tabellen.filter((t) => t.loeschfrist)
+  );
 }
 
+/**
+ * @param {{ from: (table: string) => any }} supabase
+ * @param {FristTabellenEintrag & { loeschfrist: LoeschfristConfig }} eintrag
+ * @param {string} grenze
+ * @returns {Promise<number>}
+ */
 async function loescheEintrag(supabase, eintrag, grenze) {
   const f = eintrag.loeschfrist;
   const feld = f.feld || 'created_at';
@@ -38,12 +70,12 @@ async function loescheEintrag(supabase, eintrag, grenze) {
         .select('id').lt(feld, grenze).order('id').range(runde * BATCH, runde * BATCH + BATCH - 1);
       if (kErr) throw new Error(`${eintrag.table}: ${kErr.message}`);
       if (!kandidaten?.length) break;
-      const ids = kandidaten.map((k) => k.id);
+      const ids = kandidaten.map((/** @type {{ id: string }} */ k) => k.id);
       const { table: refTab, spalte } = f.nurOhneVerweis;
       const { data: refs, error: rErr } = await supabase.from(refTab).select(spalte).in(spalte, ids);
       if (rErr) throw new Error(`${refTab}: ${rErr.message}`);
-      const belegt = new Set((refs || []).map((r) => r[spalte]));
-      const frei = ids.filter((id) => !belegt.has(id));
+      const belegt = new Set((refs || []).map((/** @type {Record<string, string>} */ r) => r[spalte]));
+      const frei = ids.filter((/** @type {string} */ id) => !belegt.has(id));
       if (frei.length) {
         const { error: dErr, count } = await supabase.from(eintrag.table).delete({ count: 'exact' }).in('id', frei);
         if (dErr) throw new Error(`${eintrag.table}: ${dErr.message}`);
@@ -63,6 +95,8 @@ async function loescheEintrag(supabase, eintrag, grenze) {
 
 /**
  * Ein Lauf über alle Fristen. Ein Fehler in einer Tabelle stoppt die anderen nicht.
+ * @param {{ from: (table: string) => any }} supabase
+ * @param {{ tabellen?: FristTabellenEintrag[], jetzt?: number | string | Date }} [opts]
  * @returns {Promise<Array<{table:string, geloescht?:number, fehler?:string}>>}
  */
 export async function fristenSchritt(supabase, { tabellen = TABELLEN, jetzt = Date.now() } = {}) {
@@ -71,7 +105,7 @@ export async function fristenSchritt(supabase, { tabellen = TABELLEN, jetzt = Da
     try {
       ergebnis.push({ table: e.table, geloescht: await loescheEintrag(supabase, e, grenzeIso(e.loeschfrist.monate, jetzt)) });
     } catch (err) {
-      ergebnis.push({ table: e.table, fehler: err?.message || String(err) });
+      ergebnis.push({ table: e.table, fehler: /** @type {Error} */ (err)?.message || String(err) });
     }
   }
   return ergebnis;
@@ -80,6 +114,13 @@ export async function fristenSchritt(supabase, { tabellen = TABELLEN, jetzt = Da
 /**
  * Startet den täglichen Lauf (Muster: merkez-istemci/ip-abgleich.js). Einmal je Berliner Tag,
  * erster Versuch 45 s nach dem Start (holt nach, wenn die Box nachts aus war).
+ * @param {object} [opts]
+ * @param {{ from: (table: string) => any } | null} [opts.supabase]
+ * @param {Record<string, string | undefined>} [opts.env]
+ * @param {() => number | string | Date} [opts.jetzt]
+ * @param {{ setTimeout: typeof setTimeout, setInterval: typeof setInterval, clearTimeout?: typeof clearTimeout, clearInterval?: typeof clearInterval }} [opts.timer]
+ * @param {{ log: (...args: any[]) => void, warn?: (...args: any[]) => void }} [opts.log]
+ * @param {string} [opts.tz]
  */
 export function starteFristen({
   supabase,
@@ -92,6 +133,7 @@ export function starteFristen({
   if (!supabase) return null;
   if (env.NODE_APP_INSTANCE !== undefined && env.NODE_APP_INSTANCE !== null && String(env.NODE_APP_INSTANCE) !== '0') return null;
 
+  /** @type {string | null} */
   let erledigtFuer = null;
   let laeuft = false;
   const tick = async () => {
@@ -105,7 +147,7 @@ export function starteFristen({
       for (const x of r) log.log(`[fristen] ${x.table}: ${x.fehler ? 'FEHLER ' + x.fehler : `${x.geloescht} gelöscht`}`);
       if (!fehler.length) erledigtFuer = heute; // bei Fehler: nächste Minute erneut
     } catch (err) {
-      try { (log.warn || log.log)(`[fristen] Unerwarteter Fehler: ${err?.message || err}`); } catch {}
+      try { (log.warn || log.log)(`[fristen] Unerwarteter Fehler: ${/** @type {Error} */ (err)?.message || err}`); } catch {}
     } finally {
       laeuft = false;
     }

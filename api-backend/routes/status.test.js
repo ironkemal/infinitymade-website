@@ -9,7 +9,7 @@ process.env.SUPABASE_SERVICE_ROLE_KEY ||= 'test-dummy';
 const { createStatusRouter } = await import('./status.js');
 
 // Ersatz für requireAuth: Rolle aus dem Header, kein Header = 401.
-const fakeAuth = (req, res, next) => {
+const fakeAuth = (/** @type {any} */ req, /** @type {any} */ res, /** @type {any} */ next) => {
   const rolle = req.headers['x-rolle'];
   if (!rolle) return res.status(401).json({ error: 'Missing bearer token' });
   req.auth = rolle === 'owner'
@@ -33,12 +33,16 @@ function zaehlendePruefungen() {
   return { z, pruefungen };
 }
 
+/**
+ * @param {any} router
+ * @param {(base: string) => Promise<void>} fn
+ */
 async function mitServer(router, fn) {
   const app = express();
   app.use('/api', router);
   const server = http.createServer(app);
-  await new Promise((r) => server.listen(0, '127.0.0.1', r));
-  const base = `http://127.0.0.1:${server.address().port}/api`;
+  await new Promise((r) => server.listen(0, '127.0.0.1', /** @type {() => void} */ (r)));
+  const base = `http://127.0.0.1:${(/** @type {import('node:net').AddressInfo} */ (server.address())).port}/api`;
   try { await fn(base); } finally { server.close(); }
 }
 

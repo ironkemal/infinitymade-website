@@ -26,6 +26,8 @@ export const GPS_HINWEIS =
  * Ist die GPS-Prüfung für diesen Mitarbeiter (oder Owner) eingeschaltet? Liest
  * `profiles.gps_checkin_pruefen` des Owners. Jeder Fehler → false: im Zweifel wird
  * KEIN Standort erfragt (Datensparsamkeit, legal-de 30.09.2026).
+ * @param {any} supabase
+ * @param {string} userId
  * @returns {Promise<boolean>}
  */
 export async function gpsSchalterLesen(supabase, userId) {
@@ -57,7 +59,7 @@ export async function standortFuerCheckin(pruefen, holeStandort) {
 /**
  * Bericht-Spalte „GPS" (Owner-Ansicht der Anwesenheit). `check_in_valid`:
  * true = im Umkreis · false = außerhalb · NULL = nicht geprüft (Schalter aus / kein Standort).
- * @param {{check_in_valid:?boolean, check_in_at?:?string}} r
+ * @param {{check_in_valid?: boolean | null, check_in_at?: string | null} | null | undefined} r
  * @returns {{icon:string, farbe:string, titel:string}}
  */
 export function gpsAnzeige(r) {
@@ -67,7 +69,11 @@ export function gpsAnzeige(r) {
   return { icon: 'nicht geprüft', farbe: 'var(--text-muted)', titel: 'Der Standort wurde nicht geprüft' };
 }
 
-/** Anzeigetext für den Zustand; rein, für Tests. */
+/**
+ * Anzeigetext für den Zustand; rein, für Tests.
+ * @param {{ id?: string, clinic_lat?: number | null, clinic_lng?: number | null } | null | undefined} biz
+ * @param {boolean} [pruefen]
+ */
 // `pruefen` = Owner-Schalter profiles.gps_checkin_pruefen. Ohne ihn behauptete der Text
 // „werden geprüft", obwohl die Prüfung aus war (P2 canli-test 30.09.2026).
 export function standortStatusText(biz, pruefen = false) {
@@ -84,9 +90,9 @@ export function standortStatusText(biz, pruefen = false) {
 /**
  * Block „Praxisstandort" oben in die Owner-Ansicht der Anwesenheit setzen (idempotent).
  * @param {object} deps
- * @param {object} deps.supabase
- * @param {()=>?object} deps.getBusiness   aktueller `businesses`-Datensatz oder null (Einzelpraxis)
- * @param {()=>?string} [deps.getOwnerId]  `profiles.id` des Owners — Ort der Koordinate und des Schalters
+ * @param {any} deps.supabase
+ * @param {()=>any} deps.getBusiness   aktueller `businesses`-Datensatz oder null (Einzelpraxis)
+ * @param {()=>string | null | undefined} [deps.getOwnerId]  `profiles.id` des Owners — Ort der Koordinate und des Schalters
  * @param {(msg:string, typ?:string)=>void} [deps.toast]
  * @param {Document} [doc]
  */
@@ -103,20 +109,21 @@ export function mountPraxisStandort({ supabase, getBusiness, getOwnerId, toast }
       + '<label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" data-gps-pruefen style="margin-top:2px;">'
       + '<span><strong style="color:var(--text-main);">GPS-Prüfung beim Einchecken</strong> (Standard: aus)<br>' + GPS_HINWEIS + '</span></label>';
     host.prepend(box);
-    box.querySelector('[data-standort-setzen]').addEventListener('click', () => setzen());
-    box.querySelector('[data-gps-pruefen]').addEventListener('change', (e) => schalter(e.target));
+    box.querySelector('[data-standort-setzen]')?.addEventListener('click', () => setzen());
+    box.querySelector('[data-gps-pruefen]')?.addEventListener('change', (e) => schalter(/** @type {HTMLInputElement} */ (e.target)));
   }
   const text = box.querySelector('[data-standort-text]');
-  const knopf = box.querySelector('[data-standort-setzen]');
-  const haken = box.querySelector('[data-gps-pruefen]');
+  const knopf = /** @type {HTMLButtonElement | null} */ (box.querySelector('[data-standort-setzen]'));
+  const haken = /** @type {HTMLInputElement | null} */ (box.querySelector('[data-gps-pruefen]'));
   const ownerId = () => (getOwnerId ? getOwnerId() : null);
+  /** @type {any} */
   let ort = null;   // Zeile aus profiles: clinic_lat, clinic_lng, gps_checkin_pruefen
 
   const zeichne = () => {
     const biz = getBusiness();
     const hatProfil = ort && ort.clinic_lat != null && ort.clinic_lng != null;
-    text.textContent = standortStatusText(hatProfil ? ort : biz, ort?.gps_checkin_pruefen === true);
-    haken.checked = ort?.gps_checkin_pruefen === true;
+    if (text) text.textContent = standortStatusText(hatProfil ? ort : biz, ort?.gps_checkin_pruefen === true);
+    if (haken) haken.checked = ort?.gps_checkin_pruefen === true;
   };
 
   async function lade() {
@@ -127,6 +134,7 @@ export function mountPraxisStandort({ supabase, getBusiness, getOwnerId, toast }
     zeichne();
   }
 
+  /** @param {HTMLInputElement} el */
   async function schalter(el) {
     const id = ownerId();
     if (!id) return;
@@ -144,7 +152,7 @@ export function mountPraxisStandort({ supabase, getBusiness, getOwnerId, toast }
     const id = ownerId();
     if (!id) return;
     if (!navigator.geolocation) { toast?.('Dieses Gerät kann keinen Standort bestimmen.', 'warning'); return; }
-    knopf.disabled = true;
+    if (knopf) knopf.disabled = true;
     navigator.geolocation.getCurrentPosition(async (pos) => {
       const clinic_lat = pos.coords.latitude, clinic_lng = pos.coords.longitude;
       // Owner-Ebene: profiles (Einzelpraxis hat keinen businesses-Eintrag; der Server fällt dorthin zurück).
@@ -155,13 +163,13 @@ export function mountPraxisStandort({ supabase, getBusiness, getOwnerId, toast }
         const { error: e2 } = await supabase.from('businesses').update({ clinic_lat, clinic_lng }).eq('id', biz.id);
         if (!e2) { biz.clinic_lat = clinic_lat; biz.clinic_lng = clinic_lng; }
       }
-      knopf.disabled = false;
+      if (knopf) knopf.disabled = false;
       if (error) { toast?.('Standort konnte nicht gespeichert werden.', 'error'); return; }
       ort = { ...(ort || {}), clinic_lat, clinic_lng };
       toast?.('Praxisstandort gespeichert.', 'success');
       zeichne();
     }, () => {
-      knopf.disabled = false;
+      if (knopf) knopf.disabled = false;
       toast?.('Standortfreigabe verweigert oder nicht verfügbar — bitte im Browser erlauben und in der Praxis erneut versuchen.', 'warning');
     }, { enableHighAccuracy: true, timeout: 15000 });
   }

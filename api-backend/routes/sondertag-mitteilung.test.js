@@ -9,30 +9,35 @@ const { MITTEILUNG_OPTION_TEXT } = await import('../lib/sondertag-mitteilung.js'
 const T = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const JA = `Kopf\n[X] ${MITTEILUNG_OPTION_TEXT}: JA`;
 
-/** Minimaler PostgREST-Fake: Tabellen als Arrays, eq/in/gte/lte als Filter; merkt sich jede Abfrage. */
+/** Minimaler PostgREST-Fake: Tabellen als Arrays, eq/in/gte/lte als Filter; merkt sich jede Abfrage.
+ * @param {any} tabellen
+ */
 function fakeDb(tabellen) {
+  /** @type {any[]} */
   const log = [];
   return {
     log,
-    from(name) {
+    from(/** @type {string} */ name) {
+      /** @type {Array<(r: any) => boolean>} */
       const f = [];
+      /** @type {Record<string, any>} */
       const eintrag = { name, filter: f };
       log.push(eintrag);
       const b = {
         select() { return b; },
-        eq(k, v) { f.push(r => r[k] === v); eintrag[`eq:${k}`] = v; return b; },
-        in(k, v) { f.push(r => v.includes(r[k])); return b; },
-        gte(k, v) { f.push(r => String(r[k]) >= v); return b; },
-        lte(k, v) { f.push(r => String(r[k]) <= v); return b; },
-        maybeSingle() { const d = (tabellen[name] || []).filter(r => f.every(x => x(r))); return Promise.resolve({ data: d[0] || null, error: null }); },
-        then(ok, fehl) { const d = (tabellen[name] || []).filter(r => f.every(x => x(r))); return Promise.resolve({ data: d, error: null }).then(ok, fehl); },
+        eq(/** @type {string} */ k, /** @type {any} */ v) { f.push(r => r[k] === v); eintrag[`eq:${k}`] = v; return b; },
+        in(/** @type {string} */ k, /** @type {any[]} */ v) { f.push(r => v.includes(r[k])); return b; },
+        gte(/** @type {string} */ k, /** @type {any} */ v) { f.push(r => String(r[k]) >= v); return b; },
+        lte(/** @type {string} */ k, /** @type {any} */ v) { f.push(r => String(r[k]) <= v); return b; },
+        maybeSingle() { const d = (tabellen[name] || []).filter((/** @type {any} */ r) => f.every(x => x(r))); return Promise.resolve({ data: d[0] || null, error: null }); },
+        then(/** @type {any} */ ok, /** @type {any} */ fehl) { const d = (tabellen[name] || []).filter((/** @type {any} */ r) => f.every(x => x(r))); return Promise.resolve({ data: d, error: null }).then(ok, fehl); },
       };
       return b;
     },
   };
 }
 
-const basis = () => ({
+const basis = () => (/** @type {any} */ ({
   custom_days: [
     { id: 'd1', owner_id: T, date: '2026-12-24', type: 'closed', start_time: null, end_time: null, business_id: null },
     { id: 'dx', owner_id: 'fremd', date: '2026-12-24', type: 'closed', start_time: null, end_time: null, business_id: null },
@@ -51,7 +56,7 @@ const basis = () => ({
   ],
   termin_mitteilungen: [],
   profiles: [{ id: T, business_name: 'Physio Test', phone: '0221', b2b_from_email: null }],
-});
+}));
 
 const jetzt = new Date('2026-12-01T00:00:00Z');
 
@@ -64,7 +69,7 @@ test('HTTP: Auth, Mandant, Eingaben und getrennte Rate-Limits', async t => {
   const inactive = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
   const other = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
   let authCalls = 0;
-  globalThis.fetch = async (input, init) => {
+  globalThis.fetch = async (/** @type {any} */ input, /** @type {any} */ init) => {
     const url = new URL(typeof input === 'string' ? input : input.url || String(input));
     assert.equal(url.origin, 'http://127.0.0.1:9', 'Kein externer Auth-Aufruf erlaubt');
     const token = new Headers(init?.headers || input.headers).get('authorization')?.replace('Bearer ', '');
@@ -74,7 +79,7 @@ test('HTTP: Auth, Mandant, Eingaben und getrennte Rate-Limits', async t => {
       return Response.json({ id: token === 'owner' ? T : token === 'inactive' ? inactive : token === 'other' ? other : employee });
     }
     assert.equal(url.pathname, '/rest/v1/profiles');
-    const id = url.searchParams.get('id').replace('eq.', '');
+    const id = (/** @type {string} */ (url.searchParams.get('id'))).replace('eq.', '');
     return Response.json({ id, role: [T, other].includes(id) ? 'owner' : 'employee',
       owner_id: T, is_active: id !== inactive, plan_status: 'active' });
   };
@@ -85,23 +90,24 @@ test('HTTP: Auth, Mandant, Eingaben und getrennte Rate-Limits', async t => {
     tables.bookings[0].id = ID1;
     const db = schreibDb(tables);
     const tr = transport();
+    /** @type {any[]} */
     const queries = [];
     const from = db.from.bind(db);
-    db.from = name => {
+    db.from = (/** @type {string} */ name) => {
       const q = from(name); const eq = q.eq;
-      q.eq = (key, value) => { queries.push({ name, key, value }); return eq(key, value); };
+      q.eq = (/** @type {string} */ key, /** @type {any} */ value) => { queries.push({ name, key, value }); return eq(key, value); };
       return q;
     };
     const app = express(); app.use(express.json());
     app.use('/api', createSondertagMitteilungRouter({ supabase: db, transportFabrik: tr.fabrik,
       env: { SMTP_HOST: 'synthetic.invalid' }, kutu: () => true, jetzt: () => jetzt }));
     const server = createServer(app);
-    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-    t.after(() => new Promise((resolve, reject) => {
+    await new Promise(resolve => server.listen(0, '127.0.0.1', /** @type {() => void} */ (resolve)));
+    t.after(() => /** @type {Promise<void>} */ (new Promise((resolve, reject) => {
       server.close(error => error ? reject(error) : resolve()); server.closeAllConnections();
-    }));
-    return { db, tr, queries, post: async (route, body = {}, token = 'owner') => {
-      const response = await originalFetch(`http://127.0.0.1:${server.address().port}/api/sondertag/mitteilung/${route}`, {
+    })));
+    return { db, tr, queries, post: async (/** @type {string} */ route, /** @type {any} */ body = {}, /** @type {string | null} */ token = 'owner') => {
+      const response = await originalFetch(`http://127.0.0.1:${(/** @type {import('node:net').AddressInfo} */ (server.address())).port}/api/sondertag/mitteilung/${route}`, {
         method: 'POST', headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify(body),
       });
@@ -124,7 +130,7 @@ test('HTTP: Auth, Mandant, Eingaben und getrennte Rate-Limits', async t => {
   await t.test('Mitarbeiter verwendet Owner-Mandant; Body kann Mandant und Empfänger nicht ersetzen', async () => {
     const h = await harness();
     const preview = await h.post('vorschau', { ...period, tenantId: 'fremd' }, 'employee');
-    assert.equal(preview.status, 200); assert.deepEqual(preview.body.mail.map(x => x.bookingId), [ID1]);
+    assert.equal(preview.status, 200); assert.deepEqual(preview.body.mail.map((/** @type {any} */ x) => x.bookingId), [ID1]);
     const result = await h.post('senden', { ...period, bookingIds: [ID1], tenantId: 'fremd', email: 'attacker@example.invalid' }, 'employee');
     assert.equal(result.status, 200); assert.equal(result.body.gesendet, 1);
     assert.equal(h.tr.log[0].to, 'a@b.de');
@@ -168,8 +174,8 @@ test('Lage: nur eigener Mandant; v6 -> Mail, v5 -> Anrufliste; Box mit SMTP', as
   const db = fakeDb(basis());
   const lage = await ladeLage(db, T, '2026-12-24', '2026-12-24', { env: { SMTP_HOST: 'smtp.x' }, kutu: true, jetzt });
   assert.equal(lage.weg, 'smtp');
-  assert.deepEqual(lage.mail.map(x => [x.termin.id, x.email]), [['b1', 'a@b.de']]);
-  assert.deepEqual(lage.anruf.map(x => [x.termin.id, x.grund]), [['b2', 'keine_einwilligung']]);
+  assert.deepEqual(lage.mail.map((/** @type {any} */ x) => [x.termin.id, x.email]), [['b1', 'a@b.de']]);
+  assert.deepEqual(lage.anruf.map((/** @type {any} */ x) => [x.termin.id, x.grund]), [['b2', 'keine_einwilligung']]);
   for (const q of db.log.filter(q => ['custom_days', 'bookings', 'leads', 'patient_consents', 'termin_mitteilungen'].includes(q.name))) {
     assert.equal(q['eq:owner_id'], T, `${q.name} ohne Mandantenfilter`);
   }
@@ -179,7 +185,7 @@ test('Lage: SaaS ohne verbundenes Gmail -> kein Versandweg, alle auf die Anrufli
   const lage = await ladeLage(fakeDb(basis()), T, '2026-12-24', '2026-12-24', { env: {}, kutu: false, jetzt });
   assert.equal(lage.weg, null);
   assert.equal(lage.mail.length, 0);
-  assert.ok(lage.anruf.every(x => ['versand_nicht_eingerichtet', 'keine_einwilligung'].includes(x.grund)));
+  assert.ok(lage.anruf.every((/** @type {any} */ x) => ['versand_nicht_eingerichtet', 'keine_einwilligung'].includes(x.grund)));
 });
 
 test('Lage: SaaS mit Gmail -> Weg gmail', async () => {
@@ -193,12 +199,12 @@ test('Lage: bereits gesendet -> nicht erneut; fehler-Zeile -> wieder versendbar'
   const d = basis();
   d.termin_mitteilungen = [{ owner_id: T, booking_id: 'b1', anlass: 'sondertag_geschlossen', termin_beginn: '2026-12-24T09:00:00Z', status: 'gesendet' }];
   let lage = await ladeLage(fakeDb(d), T, '2026-12-24', '2026-12-24', { env: { SMTP_HOST: 'x' }, kutu: true, jetzt });
-  assert.deepEqual(lage.schon.map(x => x.termin.id), ['b1']);
+  assert.deepEqual(lage.schon.map((/** @type {any} */ x) => x.termin.id), ['b1']);
   assert.equal(lage.mail.length, 0);
   d.termin_mitteilungen[0].status = 'fehler';
   d.termin_mitteilungen[0].fehler_code = 'ECONNREFUSED';
   lage = await ladeLage(fakeDb(d), T, '2026-12-24', '2026-12-24', { env: { SMTP_HOST: 'x' }, kutu: true, jetzt });
-  assert.deepEqual(lage.mail.map(x => x.termin.id), ['b1']);
+  assert.deepEqual(lage.mail.map((/** @type {any} */ x) => x.termin.id), ['b1']);
 });
 
 test('Lage: ohne eingetragenen geschlossenen Sondertag nichts betroffen (frei gewaehltes von/bis reicht nicht)', async () => {
@@ -213,30 +219,36 @@ test('Lage: ungueltiger Zeitraum -> 400', async () => {
 
 // ── POST /senden als sendeLauf (Review 02.11.: Reservierung, Transportfehler, Dedup) ───────────────────────
 /** Fake mit Schreiben: insert (UNIQUE booking_id+anlass+termin_beginn), update(...).eq/neq.select().maybeSingle(),
- *  select count head. updateFehler: Set von Status-Werten, bei deren Update die DB einen Fehler liefert. */
+ *  select count head. updateFehler: Set von Status-Werten, bei deren Update die DB einen Fehler liefert.
+ * @param {any} tabellen
+ * @param {{ updateFehler?: Set<any> }} [opts]
+ */
 function schreibDb(tabellen, { updateFehler = new Set() } = {}) {
   let n = 0;
   return {
     tabellen,
-    from(name) {
+    from(/** @type {string} */ name) {
+      /** @type {Array<(r: any) => boolean>} */
       const f = [];
-      let op = 'select'; let wert = null; let head = false;
+      let op = 'select';
+      /** @type {any} */
+      let wert = null; let head = false;
       const rows = () => (tabellen[name] ||= []);
-      const treffer = () => rows().filter(r => f.every(x => x(r)));
+      const treffer = () => rows().filter((/** @type {any} */ r) => f.every(x => x(r)));
       const b = {
-        select(_c, opt) { if (opt?.head) head = true; return b; },
-        eq(k, v) { f.push(r => r[k] === v); return b; },
-        neq(k, v) { f.push(r => r[k] !== v); return b; },
-        in(k, v) { f.push(r => v.includes(r[k])); return b; },
-        gte(k, v) { f.push(r => String(r[k]) >= v); return b; },
-        lte(k, v) { f.push(r => String(r[k]) <= v); return b; },
-        insert(w) { op = 'insert'; wert = w; return b; },
-        update(w) { op = 'update'; wert = w; return b; },
+        select(/** @type {any} */ _c, /** @type {any} */ opt) { if (opt?.head) head = true; return b; },
+        eq(/** @type {string} */ k, /** @type {any} */ v) { f.push(r => r[k] === v); return b; },
+        neq(/** @type {string} */ k, /** @type {any} */ v) { f.push(r => r[k] !== v); return b; },
+        in(/** @type {string} */ k, /** @type {any[]} */ v) { f.push(r => v.includes(r[k])); return b; },
+        gte(/** @type {string} */ k, /** @type {any} */ v) { f.push(r => String(r[k]) >= v); return b; },
+        lte(/** @type {string} */ k, /** @type {any} */ v) { f.push(r => String(r[k]) <= v); return b; },
+        insert(/** @type {any} */ w) { op = 'insert'; wert = w; return b; },
+        update(/** @type {any} */ w) { op = 'update'; wert = w; return b; },
         maybeSingle() { return b.ausfuehren(true); },
-        then(ok, fehl) { return b.ausfuehren(false).then(ok, fehl); },
-        async ausfuehren(einzeln) {
+        then(/** @type {any} */ ok, /** @type {any} */ fehl) { return b.ausfuehren(false).then(ok, fehl); },
+        async ausfuehren(/** @type {boolean} */ einzeln) {
           if (op === 'insert') {
-            const dup = rows().some(r => r.booking_id === wert.booking_id && r.anlass === wert.anlass && new Date(r.termin_beginn).getTime() === new Date(wert.termin_beginn).getTime());
+            const dup = rows().some((/** @type {any} */ r) => r.booking_id === wert.booking_id && r.anlass === wert.anlass && new Date(r.termin_beginn).getTime() === new Date(wert.termin_beginn).getTime());
             if (dup) return { data: null, error: { code: '23505' } };
             const z = { id: `m${++n}`, created_at: '2026-12-01T00:00:00Z', ...wert };
             rows().push(z);
@@ -245,7 +257,7 @@ function schreibDb(tabellen, { updateFehler = new Set() } = {}) {
           if (op === 'update') {
             if (updateFehler.has(wert.status)) return { data: null, error: { code: 'DB_WRITE_FAILED' } };
             const t = treffer();
-            t.forEach(r => Object.assign(r, wert));
+            t.forEach((/** @type {any} */ r) => Object.assign(r, wert));
             return { data: einzeln ? (t[0] ? { id: t[0].id } : null) : t, error: null };
           }
           if (head) return { count: treffer().length, error: null };
@@ -263,12 +275,13 @@ const lageMit = (start = '2026-12-24T09:00:00Z') => ({
   weg: 'smtp', profil: { business_name: 'Physio Test', phone: '0221' },
   mail: [{ termin: { id: ID1, start_time: start }, tag: { id: 'd1' }, email: 'a@b.de' }],
 });
-const transport = (fehlerCode = null) => {
+const transport = (/** @type {string | null} */ fehlerCode = null) => {
+  /** @type {any[]} */
   const log = [];
-  return { log, fabrik: () => ({ sendMail: async (m) => { log.push(m); if (fehlerCode) { const e = new Error('x'); e.code = fehlerCode; throw e; } } }) };
+  return { log, fabrik: /** @type {any} */ (() => ({ sendMail: async (/** @type {any} */ m) => { log.push(m); if (fehlerCode) { const e = /** @type {any} */ (new Error('x')); e.code = fehlerCode; throw e; } } })) };
 };
-const still = async (fn) => { const e = console.error; console.error = () => {}; try { return await fn(); } finally { console.error = e; } };
-const lauf = (db, tr, extra = {}) => still(() => sendeLauf(db, { tenantId: T, userId: 'u1', ids: [ID1], lage: lageMit(extra.start), transportFabrik: tr.fabrik, jetzt, ...extra }));
+const still = async (/** @type {() => Promise<any>} */ fn) => { const e = console.error; console.error = () => {}; try { return await fn(); } finally { console.error = e; } };
+const lauf = (/** @type {any} */ db, /** @type {any} */ tr, /** @type {any} */ extra = {}) => still(() => sendeLauf(db, { tenantId: T, userId: 'u1', ids: [ID1], lage: lageMit(extra.start), transportFabrik: tr.fabrik, jetzt, ...extra }));
 
 test('Senden: Erfolg -> eine Mail, Zeile gesendet, Absender/Empfaenger aus Lage', async () => {
   const db = schreibDb({}); const tr = transport();
@@ -294,8 +307,8 @@ test('Senden: SMTP ECONNREFUSED + Fehler-Update scheitert -> 409, KEIN falscher 
   const d = basis(); d.termin_mitteilungen = [{ owner_id: T, booking_id: 'b1', anlass: 'sondertag_geschlossen', termin_beginn: '2026-12-24T09:00:00Z', status: 'fehler', fehler_code: 'IN_ARBEIT' }];
   const lage = await ladeLage(fakeDb(d), T, '2026-12-24', '2026-12-24', { env: { SMTP_HOST: 'x' }, kutu: true, jetzt });
   assert.equal(lage.schon.length, 0);
-  assert.deepEqual(lage.anruf.filter(x => x.termin.id === 'b1').map(x => x.grund), ['versand_unklar']);
-  assert.ok(!lage.mail.some(x => x.termin.id === 'b1'));
+  assert.deepEqual(lage.anruf.filter((/** @type {any} */ x) => x.termin.id === 'b1').map((/** @type {any} */ x) => x.grund), ['versand_unklar']);
+  assert.ok(!lage.mail.some((/** @type {any} */ x) => x.termin.id === 'b1'));
 });
 
 test('Senden: Erfolgs-Update scheitert -> unklar gezaehlt, Zeile bleibt IN_ARBEIT (nie automatisch erneut)', async () => {

@@ -36,8 +36,8 @@ test('genau am letzten Tag der Frist ist noch ok (27./28. Tag ok, 29. zu spät)'
   const r = pruefeBehandlungsbeginn({ ...basis, ersterTermin: '2026-01-30' });
   assert.equal(r.ok, false);
   assert.equal(r.frist, '2026-01-29');
-  assert.match(r.meldung, /Behandlungsbeginn verpasst/);
-  assert.match(r.meldung, /28 Tage, HeilM-RL § 15/);
+  assert.match(r.meldung || '', /Behandlungsbeginn verpasst/);
+  assert.match(r.meldung || '', /28 Tage, HeilM-RL § 15/);
 });
 
 test('dringlich: 14 Tage statt 28', () => {

@@ -4,6 +4,11 @@ import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 
 const enabled = process.env.PRAXURA_RAUM_AUTOMATIK_PG_TEST === '1';
+/**
+ * @param {string[]} args
+ * @param {string} [input]
+ * @returns {Promise<{ code: number | null, out: string, err: string }>}
+ */
 function command(args, input = '') {
   return new Promise(resolve => {
     const child = spawn('docker', args, { stdio: ['pipe', 'pipe', 'pipe'] });
@@ -14,15 +19,15 @@ function command(args, input = '') {
     child.stdin.on('error', () => {}); child.stdin.end(input);
   });
 }
-const uuid = n => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
-const q = n => `'${uuid(n)}'`;
+const uuid = (/** @type {number | string} */ n) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
+const q = (/** @type {number | string} */ n) => `'${uuid(n)}'`;
 
 test('Raumautomatik: echte PostgreSQL-Zuordnung und Parallelität', { skip: !enabled, timeout: 60000 }, async t => {
   const name = `praxura-raum-auto-test-${process.pid}`;
-  const sql = text => command(['exec', '-i', name, 'psql', '-h', '127.0.0.1', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=verbose', '-At'], text);
-  const ok = async text => { const r = await sql(text); assert.equal(r.code, 0, r.err); return r.out; };
-  const reject = async (text, match = /Kein freier Raum/) => { const r = await sql(text); assert.notEqual(r.code, 0); assert.match(r.err, match); };
-  const insert = (id, fields = '', values = '') => `INSERT INTO bookings(id,owner_id,business_id,service_id,start_time,end_time${fields}) VALUES (${q(id)},${q(1)},${q(2)},${q(3)},'2026-12-01T10:00Z','2026-12-01T10:30Z'${values});`;
+  const sql = (/** @type {string} */ text) => command(['exec', '-i', name, 'psql', '-h', '127.0.0.1', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=verbose', '-At'], text);
+  const ok = async (/** @type {string} */ text) => { const r = await sql(text); assert.equal(r.code, 0, r.err); return r.out; };
+  const reject = async (/** @type {string} */ text, match = /Kein freier Raum/) => { const r = await sql(text); assert.notEqual(r.code, 0); assert.match(r.err, match); };
+  const insert = (/** @type {number | string} */ id, fields = '', values = '') => `INSERT INTO bookings(id,owner_id,business_id,service_id,start_time,end_time${fields}) VALUES (${q(id)},${q(1)},${q(2)},${q(3)},'2026-12-01T10:00Z','2026-12-01T10:30Z'${values});`;
   const room = (id = 10, equipment = "ARRAY['Liege']", capacity = 1, site = q(2), owner = q(1)) => `INSERT INTO rooms(id,owner_id,business_id,name,plaetze,ausstattung) VALUES (${q(id)},${owner},${site},'Raum ${id}',${capacity},${equipment});`;
   const reset = () => ok('TRUNCATE booking_leistungen,bookings,rooms;');
   const started = await command(['run', '--rm', '--detach', '--name', name, '--network', 'none', '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', 'postgres:17.11']);

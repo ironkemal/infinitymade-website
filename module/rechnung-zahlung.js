@@ -52,6 +52,7 @@
 // 08.09.2026 nur in prescriptions/belegliste ergänzt), fällt deshalb auf
 // „sonstiges" — sonst stand hier `undefined`, und die Rechnung verlor ihren
 // Zahlungsweg lautlos (payment_method || null -> null).
+/** @type {Record<string, string>} */
 export const ZAHLART_ZU_PAYMENT_METHOD = {
   bar: 'bar',
   ec: 'karte',
@@ -60,15 +61,25 @@ export const ZAHLART_ZU_PAYMENT_METHOD = {
   sonstiges: 'sonstiges',
 };
 
-/** Exportiert für den Regressionstest — der stille Fall (unbekannte Zahlart -> null) ist der Fehler, der hier passiert war. */
+/**
+ * Exportiert für den Regressionstest — der stille Fall (unbekannte Zahlart -> null) ist der Fehler, der hier passiert war.
+ * @param {string | null | undefined} zahlart
+ * @returns {string | null}
+ */
 export function paymentMethodFuerZahlart(zahlart) {
-  return ZAHLART_ZU_PAYMENT_METHOD[zahlart] || null;
+  return ZAHLART_ZU_PAYMENT_METHOD[/** @type {string} */ (zahlart)] || null;
 }
 
 // onprem §7AI (iii): Fehler nicht verschlucken — seit 0075 friert `paid` die Rechnung ein;
 // ein stiller Fehlschlag liesse eine kassierte Zuzahlung neben einem offenen Entwurf stehen.
 // KHS §6 KALAN İŞ 2 (vi): Rückgabe { ok, meldung } — `meldung` ist der Datenbanktext (z. B. der Trigger
 // `invoice_snapshot_pflicht`, 0080), damit der Aufrufer ihn anzeigen kann statt eines Sammeltexts.
+/**
+ * @param {any} supabase
+ * @param {string} invoiceId
+ * @param {string | null} [method]
+ * @returns {Promise<{ ok: boolean, meldung: string | null }>}
+ */
 export async function markiereRechnungBezahlt(supabase, invoiceId, method) {
   try {
     const { error } = await supabase.from('invoices').update({
@@ -79,7 +90,7 @@ export async function markiereRechnungBezahlt(supabase, invoiceId, method) {
     }).eq('id', invoiceId);
     return error ? { ok: false, meldung: error.message || null } : { ok: true, meldung: null };
   } catch (err) {
-    return { ok: false, meldung: err?.message || null };
+    return { ok: false, meldung: /** @type {any} */ (err)?.message || null };
   }
 }
 
@@ -88,6 +99,8 @@ export async function markiereRechnungBezahlt(supabase, invoiceId, method) {
  * VOR dem Kassieren prüfen — sonst entsteht ein Kassenbeleg, und die Rechnung bleibt danach Entwurf.
  * Altbelege (status ≠ draft) sind frei (0080 prüft nur den Übergang). Lesefehler → nicht blockieren:
  * die Datenbank prüft beim Markieren ohnehin, und deren Meldung wird angezeigt.
+ * @param {any} supabase
+ * @param {string} invoiceId
  * @returns {Promise<?string>} Hinweistext, wenn blockiert; sonst null
  */
 export async function snapshotSperreVorZahlung(supabase, invoiceId) {
@@ -96,7 +109,7 @@ export async function snapshotSperreVorZahlung(supabase, invoiceId) {
       .select('status, aussteller_snapshot, empfaenger_snapshot').eq('id', invoiceId).maybeSingle();
     if (error || !data) return null;
     if ((data.status || 'draft') !== 'draft') return null;
-    const obj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+    const obj = (/** @type {any} */ v) => v !== null && typeof v === 'object' && !Array.isArray(v);
     if (obj(data.aussteller_snapshot) && obj(data.empfaenger_snapshot)) return null;
     return 'Die Rechnung kann noch nicht bezahlt werden: Praxis- oder Empfängerangaben sind nicht eingefroren. Bitte die Rechnung öffnen und erneut speichern.';
   } catch {
@@ -111,7 +124,7 @@ export async function snapshotSperreVorZahlung(supabase, invoiceId) {
  * Wenn keine ZU-Zeile existiert -> true (nichts zu tun).
  * Fehler werden nicht verschluckt (gibt false zurück).
  *
- * @param {object} supabase
+ * @param {any} supabase
  * @param {string} rxId
  * @param {string} zahlart  bar|ec|ueberweisung|paypal|sonstiges
  * @returns {Promise<boolean>}
@@ -148,12 +161,12 @@ const BEZAHLT_FEHLER = 'Rechnung konnte nicht als bezahlt markiert werden — bi
 
 /**
  * @param {string} invoiceId
- * @param {object} opts
- * @param {object} opts.supabase
+ * @param {object} [opts]
+ * @param {any} [opts.supabase]
  * @param {string|null} [opts.prescriptionId]  invoices.prescription_id
  * @param {string|null} [opts.patientId]
  * @param {string} [opts.patientName]
- * @param {Function} [opts.kassiere]  ({rxId, patientId, patientName, betragEur}) => Promise<boolean>
+ * @param {Function|null} [opts.kassiere]  ({rxId, patientId, patientName, betragEur}) => Promise<boolean>
  * @param {Function} [opts.toast]
  */
 export async function frageZahlungsstatus(invoiceId, {

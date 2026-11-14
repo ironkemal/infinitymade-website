@@ -24,32 +24,75 @@ export const HAUSBESUCH_POSITION = Object.freeze({
   tagespflege_kurzzeit_betreut: 'X9922',
 });
 
+/**
+ * @param {string} msg
+ * @param {string} code
+ * @returns {Error & { status?: number, code?: string }}
+ */
 function fehler(msg, code) {
+  /** @type {Error & { status?: number, code?: string }} */
   const e = new Error(msg);
   e.status = 422; e.code = code;
   return e;
 }
 
 /**
- * @param {object} rx        prescriptions-Zeile (heilmittel_position, ergaenzend_position,
- *                           ergaenzend_einheiten, vorrangig_einheiten, anzahl_einheiten,
- *                           doppelbehandlung, hausbesuch, hausbesuch_ort, id)
- * @param {Array}  sessions  erbrachte Sitzungen, chronologisch: { id, done_at,
- *                           ergaenzend_erbracht?, bookings?: { hausbesuch? } }
+ * @typedef {{
+ *   code?: string | null,
+ *   position?: string | null,
+ *   bezeichnung?: string | null,
+ *   einheiten?: number | string | null,
+ *   doppelbehandlung?: boolean | null,
+ * }} HeilmittelItemInput
+ */
+
+/**
+ * @typedef {{
+ *   id: string,
+ *   done_at?: string | null,
+ *   ergaenzend_erbracht?: boolean | null,
+ *   heilmittel_index?: number | null,
+ *   bookings?: { hausbesuch?: boolean | null } | null,
+ * }} PhysioSessionInput
+ */
+
+/**
+ * @typedef {{
+ *   id?: string,
+ *   heilmittel_position?: string | null,
+ *   ergaenzend_position?: string | null,
+ *   ergaenzend_einheiten?: number | string | null,
+ *   vorrangig_einheiten?: number | string | null,
+ *   anzahl_einheiten?: number | string | null,
+ *   doppelbehandlung?: boolean | null,
+ *   hausbesuch?: boolean | null,
+ *   hausbesuch_ort?: string | null,
+ *   heilmittel_items?: HeilmittelItemInput[] | null,
+ * }} PhysioRxInput
+ */
+
+/**
+ * @param {PhysioRxInput} rx prescriptions-Zeile
+ * @param {PhysioSessionInput[]} sessions erbrachte Sitzungen, chronologisch
  * @returns {Array<{ id:string, sessionId:string, done_at:string|null, code:string,
- *                   anzahl:number, art:'vorrangig'|'ergaenzend'|'hausbesuch', session:object }>}
+ *                   anzahl:number, art:'vorrangig'|'ergaenzend'|'hausbesuch', session:PhysioSessionInput }>}
  */
 export function physioLeistungszeilen(rx, sessions) {
+  /** @type {Array<{ id:string, sessionId:string, done_at:string|null, code:string, anzahl:number, art:'vorrangig'|'ergaenzend'|'hausbesuch', session:PhysioSessionInput }>} */
   const zeilen = [];
-  const hbOrt = HAUSBESUCH_POSITION[rx?.hausbesuch_ort] || HAUSBESUCH_POSITION.haeuslich;
+  const ortKey = rx?.hausbesuch_ort;
+  /** @type {Record<string, string>} */
+  const hbMap = HAUSBESUCH_POSITION;
+  const hbOrt = (ortKey && Object.hasOwn(hbMap, ortKey) && hbMap[ortKey]) || HAUSBESUCH_POSITION.haeuslich;
   let ergAnzahl = 0;
 
-  const istMulti = Array.isArray(rx?.heilmittel_items) &&
-    rx.heilmittel_items.length > 0 &&
-    rx.heilmittel_items.some(it => it && typeof it === 'object' && it.einheiten != null);
+  const itemsList = Array.isArray(rx?.heilmittel_items) ? rx.heilmittel_items : null;
+  const istMulti = !!itemsList &&
+    itemsList.length > 0 &&
+    itemsList.some(it => it && typeof it === 'object' && it.einheiten != null);
 
-  if (istMulti) {
-    const items = rx.heilmittel_items;
+  if (istMulti && itemsList) {
+    const items = itemsList;
     const verbrauchtJeItem = new Array(items.length).fill(0);
     const summeVerordnet = items.reduce((s, it) => s + (Number(it?.einheiten) || 0), 0);
     const ergMax = Number(rx?.ergaenzend_einheiten) || summeVerordnet || Infinity;

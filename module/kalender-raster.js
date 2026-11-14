@@ -21,9 +21,12 @@
  * Konsey 2026-08-13: neuer Code kommt in ein eigenes Modul.
  */
 
-const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
+/** @type {Record<string, string>} */
+const ESC_MAP = {
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-}[c]));
+};
+/** @param {any} s */
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ESC_MAP[c] || c);
 
 /** Ein Rasterfeld der Tagesansicht: 30 Minuten hoch, 56 Pixel hoch. */
 export const DV_SLOT_MIN = 30;
@@ -61,6 +64,7 @@ export const MOVE_RASTER_MIN = 5;
  * blendet `.dv-booking-block--compact` den Untertitel aus, und ausgerechnet
  * kurze Termine liegen oft nicht auf der Rasterlinie.
  *
+ * @param {{ start_time?: string | null, end_time?: string | null } | null | undefined} [booking]
  * @returns {string} HTML-Schnipsel, leer wenn kein Startzeitpunkt vorliegt
  */
 export function terminZeitLabel(booking) {
@@ -68,6 +72,7 @@ export function terminZeitLabel(booking) {
   const s = new Date(booking.start_time);
   if (Number.isNaN(s.getTime())) return '';
   const e = booking.end_time ? new Date(booking.end_time) : null;
+  /** @param {Date} d */
   const fmt = (d) => d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
   const txt = e && !Number.isNaN(e.getTime()) ? `${fmt(s)}–${fmt(e)}` : fmt(s);
   return `<span class="dv-booking-time" style="flex-shrink:0;font-variant-numeric:tabular-nums;opacity:0.85;font-weight:500;">${escapeHtml(txt)}</span>`;
@@ -80,6 +85,9 @@ export function terminZeitLabel(booking) {
  * Ohne Klickereignis (Tastatur, Aufruf von aussen) sind es 0 Minuten — also
  * der Feldanfang und damit genau das bisherige Verhalten. Raten wäre hier
  * schlechter als nichts zu tun.
+ * @param {Element | null | undefined} slotEl
+ * @param {MouseEvent | { clientY: number } | null | undefined} ev
+ * @returns {number}
  */
 export function moveVersatzMinuten(slotEl, ev) {
   if (!slotEl || !ev || typeof ev.clientY !== 'number') return 0;
@@ -96,13 +104,16 @@ export function moveVersatzMinuten(slotEl, ev) {
  * "2026-08-16T09:00" + 20 → "2026-08-16T09:20".
  * Bewusst über ein Date-Objekt, damit ein Versatz über die volle Stunde
  * hinaus richtig überläuft.
+ * @param {string} timeStr
+ * @param {number} min
+ * @returns {string}
  */
 export function zeitPlusMinuten(timeStr, min) {
   if (!min) return timeStr;
   const d = new Date(timeStr + ':00');
   if (Number.isNaN(d.getTime())) return timeStr;
   d.setMinutes(d.getMinutes() + min);
-  const p = (n) => String(n).padStart(2, '0');
+  const p = (/** @type {number} */ n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
@@ -121,6 +132,9 @@ export function zeitPlusMinuten(timeStr, min) {
  * FullCalendar) und muss zum `slotDuration` passen, das kalender.js an
  * FullCalendar übergibt.
  *
+ * @param {string | null | undefined} startISO
+ * @param {string | null | undefined} endISO
+ * @param {number} slotMinutes
  * @returns {string|null} Hinweistext, oder null wenn die Auswahl genau ein
  *   Raster (oder weniger, z.B. bei rundungsbedingt zu kurzen Werten) umfasst.
  */
@@ -141,7 +155,9 @@ export function slotSpanHinweis(startISO, endISO, slotMinutes) {
  * Raster ohne Zeitachse (canli-test 20.10.2026). Ortszeit des Browsers, wie
  * die Blockposition in `renderDayView`.
  *
- * @param {Array<{start_time:string,end_time?:string}>} termine
+ * @param {Array<{start_time:string,end_time?:string}> | null | undefined} termine
+ * @param {number} [von]
+ * @param {number} [bis]
  * @returns {{von:number, bis:number}} volle Stunden, 0 ≤ von < bis ≤ 24
  */
 export function rasterStunden(termine, von = 8, bis = 20) {

@@ -7,19 +7,49 @@ process.env.SUPABASE_SERVICE_ROLE_KEY ||= 'synthetic-test-key';
 const { erinnerungsLauf, starteTerminerinnerung } = await import('./terminerinnerung-job.js');
 
 
+/** @typedef {import('@supabase/supabase-js').SupabaseClient} SupabaseClient */
+/** @typedef {typeof import('./mail.js').createSMTPTransport} TransportFabrik */
+
+/** @returns {Record<string, Array<Record<string, any>>>} */
+const basisTabellen = () => basis();
+
+/** @param {ReturnType<typeof fakeDb>} db */
+const asClient = db => /** @type {SupabaseClient} */ (/** @type {unknown} */ (db));
+
+/**
+ * @param {{
+ *   tabellen?: Record<string, Array<Record<string, any>>>,
+ *   verifyFehler?: () => string | null,
+ *   sendFehler?: () => string | Record<string, unknown> | null,
+ *   fehlerBei?: ((name: string, eqs: Record<string, unknown>, op: string) => boolean) | null,
+ * }} [opt]
+ */
 function umgebung(opt = {}) {
-  const db = fakeDb(opt.tabellen || basis(), opt);
-  const mails = []; const logs = [];
-  const transportFabrik = () => ({
+  const db = fakeDb(opt.tabellen || basisTabellen(), opt);
+  /** @type {Array<Record<string, any>>} */
+  const mails = [];
+  /** @type {string[]} */
+  const logs = [];
+  const transportFabrik = /** @type {TransportFabrik} */ (/** @type {unknown} */ (() => ({
     async verify() { const c = opt.verifyFehler?.(); if (c) throw Object.assign(new Error('verify'), { code: c }); },
+    /** @param {Record<string, any>} m */
     async sendMail(m) {
       const f = opt.sendFehler?.();
       if (f) throw Object.assign(new Error('x'), typeof f === 'string' ? { code: f } : f);
       mails.push(m);
     },
-  });
-  const log = { log: (...a) => logs.push(a.join(' ')), error: (...a) => logs.push(a.join(' ')), warn: (...a) => logs.push(a.join(' ')) };
-  const lauf = (extra = {}) => erinnerungsLauf(db, { jetzt, env: ENV, kutu: true, transportFabrik, log, ...extra });
+  })));
+  /** @type {Pick<Console, 'log' | 'error' | 'warn'>} */
+  const log = {
+    /** @param {...unknown} a */
+    log: (...a) => logs.push(a.join(' ')),
+    /** @param {...unknown} a */
+    error: (...a) => logs.push(a.join(' ')),
+    /** @param {...unknown} a */
+    warn: (...a) => logs.push(a.join(' ')),
+  };
+  /** @param {Record<string, any>} [extra] */
+  const lauf = (extra = {}) => erinnerungsLauf(asClient(db), { jetzt, env: ENV, kutu: true, transportFabrik, log, ...extra });
   return { db, mails, logs, lauf };
 }
 
@@ -41,18 +71,18 @@ test('Lauf: genau eine Mail (Einwilligung v6 + gueltige Adresse) mit korrektem I
 });
 
 test('G-2 ohne gueltige Einwilligung / widerrufen / ohne Option: keine Mail', async () => {
-  const t = basis();
+  const t = basisTabellen();
   t.patient_consents[0].revoked_at = '2026-11-07';                       // l1 widerrufen
   const u = umgebung({ tabellen: t });
   const r = await u.lauf();
   assert.equal(r.gesendet, 0); assert.equal(u.mails.length, 0);
-  const t2 = basis(); t2.patient_consents[0].text_snapshot = 'Kopf\n[ ] Terminerinnerungen: NEIN';
+  const t2 = basisTabellen(); t2.patient_consents[0].text_snapshot = 'Kopf\n[ ] Terminerinnerungen: NEIN';
   const u2 = umgebung({ tabellen: t2 });
   assert.equal((await u2.lauf()).gesendet, 0); assert.equal(u2.mails.length, 0);
 });
 
 test('Standort wird nur bei mehreren Standorten genannt', async () => {
-  const t = basis();
+  const t = basisTabellen();
   t.businesses.push({ id: 'biz2', owner_id: T, business_name: 'Zweitstandort', street: 'Ring', house_number: '2', zip: '50668', city: 'Köln' });
   const u = umgebung({ tabellen: t });
   await u.lauf();
@@ -63,12 +93,12 @@ test('Standort wird nur bei mehreren Standorten genannt', async () => {
 
 // ── G-5 ohne SMTP / ausserhalb Fenster ───────────────────────────────────────────────────────────
 test('G-5 ohne Praxis-SMTP, in der SaaS (Gmail) und ausserhalb des Fensters: kein DB-Zugriff, keine Mail, kein Fehler', async () => {
-  for (const [opt, grund] of [
+  for (const [opt, grund] of /** @type {const} */ ([
     [{ env: {}, kutu: true }, 'kein_smtp'],
     [{ env: ENV, kutu: false }, 'kein_smtp'],
     [{ jetzt: new Date('2026-12-10T16:59:59Z') }, 'ausserhalb_fenster'],
     [{ jetzt: new Date('2026-12-10T21:00:00Z') }, 'ausserhalb_fenster'],
-  ]) {
+  ])) {
     const u = umgebung();
     const r = await u.lauf(opt);
     assert.equal(r.uebersprungen, grund); assert.equal(r.gesendet, 0);
@@ -81,13 +111,23 @@ test('G-5 ohne Praxis-SMTP, in der SaaS (Gmail) und ausserhalb des Fensters: kei
 test('Eigenes Postfach (praxis_mailversand) einer Praxis: Lauf auch ohne Box-SMTP, Zugangsdaten an den Transport', async () => {
   process.env.DATA_ENCRYPTION_KEY ||= 'a'.repeat(64);
   const { verschluesselePasswort } = await import('./mail.js');
-  const t = basis();
+  const t = basisTabellen();
   t.praxis_mailversand = [{ owner_id: T, modus: 'smtp', smtp_host: 'smtp.praxis.invalid', smtp_port: 465, smtp_sicherheit: 'ssl',
     smtp_benutzer: 'praxis@example.invalid', smtp_passwort: verschluesselePasswort('geheim'), absender_email: 'praxis@example.invalid', absender_name: 'Physio Test' }];
   const db = fakeDb(t);
-  const optionen = []; const mails = [];
-  const transportFabrik = (o) => { optionen.push(o); return { async verify() {}, async sendMail(m) { mails.push(m); } }; };
-  const r = await erinnerungsLauf(db, { jetzt, env: {}, kutu: true, transportFabrik, log: { log() {}, error() {}, warn() {} } });
+  /** @type {Array<Record<string, any>>} */
+  const optionen = [];
+  /** @type {Array<Record<string, any>>} */
+  const mails = [];
+  /** @param {Record<string, any>} m */
+  async function sendMailOpt(m) { mails.push(m); }
+  /** @param {Record<string, any>} o */
+  function fabrikOpt(o) {
+    optionen.push(o);
+    return { async verify() {}, sendMail: sendMailOpt };
+  }
+  const transportFabrik = /** @type {TransportFabrik} */ (/** @type {unknown} */ (fabrikOpt));
+  const r = await erinnerungsLauf(asClient(db), { jetzt, env: {}, kutu: true, transportFabrik, log: { log() {}, error() {}, warn() {} } });
   assert.equal(r.uebersprungen, null); assert.equal(r.gesendet, 1);
   assert.ok(optionen.every(o => o.host === 'smtp.praxis.invalid' && o.pass === 'geheim' && o.secure === true && o.requireTLS === true));
   assert.equal(mails[0].from, '"Physio Test" <praxis@example.invalid>');
@@ -105,7 +145,7 @@ test('G-1 zweiter Lauf und zwei gleichzeitige Laeufe senden nie doppelt', async 
 });
 
 test('G-1 Reservierung ohne Abschluss (Absturz): nie erneut senden, Anrufliste', async () => {
-  const t = basis();
+  const t = basisTabellen();
   t.termin_mitteilungen.push({ id: 'z', owner_id: T, booking_id: 'b1', anlass: 'erinnerung_vortag', termin_beginn: '2026-12-11T09:00:00Z', status: 'fehler', fehler_code: 'IN_ARBEIT' });
   const u = umgebung({ tabellen: t });
   const r = await u.lauf();
@@ -113,14 +153,14 @@ test('G-1 Reservierung ohne Abschluss (Absturz): nie erneut senden, Anrufliste',
 });
 
 test('G-1 Sondertag-Protokoll derselben Buchung blockiert die Erinnerung nicht (eigener Anlass)', async () => {
-  const t = basis();
+  const t = basisTabellen();
   t.termin_mitteilungen.push({ id: 'z', owner_id: T, booking_id: 'b1', anlass: 'sondertag_geschlossen', termin_beginn: '2026-12-11T09:00:00Z', status: 'gesendet', fehler_code: null });
   const u = umgebung({ tabellen: t });
   assert.equal((await u.lauf()).gesendet, 1);
 });
 
 test('Verschobener Termin (neue Startzeit) bekommt eine neue Erinnerung', async () => {
-  const t = basis();
+  const t = basisTabellen();
   t.termin_mitteilungen.push({ id: 'z', owner_id: T, booking_id: 'b1', anlass: 'erinnerung_vortag', termin_beginn: '2026-12-11T08:00:00Z', status: 'gesendet', fehler_code: null });
   const u = umgebung({ tabellen: t });
   assert.equal((await u.lauf()).gesendet, 1);
@@ -128,7 +168,7 @@ test('Verschobener Termin (neue Startzeit) bekommt eine neue Erinnerung', async 
 
 // ── Fehlerpfade ──────────────────────────────────────────────────────────────────────────────────
 test('Mailserver nicht erreichbar (verify scheitert): keine Reservierung, Abbruch, spaeter am selben Abend genau einmal', async () => {
-  const t = basis();
+  const t = basisTabellen();
   let aus = true;
   const u = umgebung({ tabellen: t, verifyFehler: () => (aus ? 'ECONNREFUSED' : null) });
   const r1 = await u.lauf();
@@ -141,7 +181,7 @@ test('Mailserver nicht erreichbar (verify scheitert): keine Reservierung, Abbruc
 });
 
 test('Timeout beim Senden (Mail evtl. schon angenommen): nie erneut senden, auch nicht beim naechsten Tick (G-1)', async () => {
-  const t = basis();
+  const t = basisTabellen();
   let n = 0;
   const u = umgebung({ tabellen: t, sendFehler: () => (++n === 1 ? { code: 'ETIMEDOUT', command: 'CONN' } : null) });
   const r1 = await u.lauf();
@@ -151,7 +191,7 @@ test('Timeout beim Senden (Mail evtl. schon angenommen): nie erneut senden, auch
 });
 
 test('Server lehnt voruebergehend ab (4xx, Greylisting): als SMTP_4XX gespeichert und am selben Abend erneut versucht', async () => {
-  const t = basis();
+  const t = basisTabellen();
   let n = 0;
   const u = umgebung({ tabellen: t, sendFehler: () => (++n === 1 ? { code: 'EENVELOPE', responseCode: 450, command: 'RCPT TO' } : null) });
   const r1 = await u.lauf();
@@ -162,7 +202,7 @@ test('Server lehnt voruebergehend ab (4xx, Greylisting): als SMTP_4XX gespeicher
 });
 
 test('Endgueltiger Fehler (Empfaenger abgelehnt): kein erneuter Versuch, Lauf geht weiter', async () => {
-  const t = basis();
+  const t = basisTabellen();
   let n = 0;
   const u = umgebung({ tabellen: t, sendFehler: () => (++n === 1 ? 'EENVELOPE' : null) });
   const r1 = await u.lauf();
@@ -172,21 +212,23 @@ test('Endgueltiger Fehler (Empfaenger abgelehnt): kein erneuter Versuch, Lauf ge
 });
 
 test('Tagesgrenze 1000 je Anlass: Erinnerung gestoppt, Sondertag-Zeilen zaehlen nicht mit', async () => {
-  const t = basis();
+  const t = basisTabellen();
   for (let i = 0; i < 1000; i++) t.termin_mitteilungen.push({ id: `e${i}`, owner_id: T, booking_id: `fremd${i}`, anlass: 'erinnerung_vortag', termin_beginn: '2026-12-10T09:00:00Z', status: 'gesendet', created_at: '2026-12-10T10:00:00.000Z' });
   const u = umgebung({ tabellen: t });
   const r = await u.lauf();
   assert.equal(r.deckel, 1); assert.equal(u.mails.length, 0);
 
-  const t2 = basis();
+  const t2 = basisTabellen();
   for (let i = 0; i < 1000; i++) t2.termin_mitteilungen.push({ id: `s${i}`, owner_id: T, booking_id: `fremd${i}`, anlass: 'sondertag_geschlossen', termin_beginn: '2026-12-10T09:00:00Z', status: 'gesendet', created_at: '2026-12-10T10:00:00.000Z' });
   const u2 = umgebung({ tabellen: t2 });
   assert.equal((await u2.lauf()).gesendet, 1);
 });
 
 test('DB-Fehler bei einem Mandanten stoppt die anderen nicht', async () => {
-  const t = basis();
-  t.profiles.find(p => p.id === T2).terminerinnerung_aktiv = true;
+  const t = basisTabellen();
+  const prof = t.profiles.find(p => p.id === T2);
+  assert.ok(prof);
+  prof.terminerinnerung_aktiv = true;
   const u = umgebung({ tabellen: t, fehlerBei: (name, eqs) => name === 'bookings' && eqs.owner_id === T });
   const r = await u.lauf();
   assert.equal(r.fehler, 1); assert.equal(r.gesendet, 1); // T scheitert, T2 versendet
@@ -195,7 +237,7 @@ test('DB-Fehler bei einem Mandanten stoppt die anderen nicht', async () => {
 
 // ── G-4 Logs ─────────────────────────────────────────────────────────────────────────────────────
 test('G-4 Logs enthalten nur Anzahlen/Codes – keine Adresse, kein Termin, kein Praxisname', async () => {
-  const t = basis();
+  const t = basisTabellen();
   let n = 0;
   const u = umgebung({ tabellen: t, sendFehler: () => (++n === 1 ? 'EENVELOPE' : null) });
   await u.lauf(); await u.lauf();
@@ -208,11 +250,17 @@ test('G-4 Logs enthalten nur Anzahlen/Codes – keine Adresse, kein Termin, kein
 
 // ── Zeitjob ──────────────────────────────────────────────────────────────────────────────────────
 test('Zeitjob: nur Worker 0; ueberlappende Ticks starten keinen zweiten Lauf; Timer sind entkoppelt', async () => {
-  const db = fakeDb(basis()); const mails = [];
+  const db = fakeDb(basisTabellen());
+  /** @type {Array<Record<string, any>>} */
+  const mails = [];
+  /** @param {Record<string, any>} m */
+  async function sendMailMock(m) { mails.push(m); }
+  /** @param {string} instance */
   const mk = (instance) => starteTerminerinnerung({
-    supabase: db, env: { ...ENV, NODE_APP_INSTANCE: instance }, jetzt: () => jetzt.getTime(), kutu: true,
-    transportFabrik: () => ({ async sendMail(m) { mails.push(m); } }), log: { log() {}, error() {}, warn() {} },
-    timer: { setTimeout: () => ({ unref() {} }), setInterval: () => ({ unref() {} }), clearTimeout() {}, clearInterval() {} },
+    supabase: asClient(db), env: { ...ENV, NODE_APP_INSTANCE: instance }, jetzt: () => jetzt.getTime(), kutu: true,
+    transportFabrik: /** @type {TransportFabrik} */ (/** @type {unknown} */ (() => ({ sendMail: sendMailMock }))),
+    log: { log() {}, error() {}, warn() {} },
+    timer: /** @type {NonNullable<Parameters<typeof starteTerminerinnerung>[0]>['timer']} */ (/** @type {unknown} */ ({ setTimeout: () => ({ unref() {} }), setInterval: () => ({ unref() {} }), clearTimeout() {}, clearInterval() {} })),
   });
   assert.equal(mk('1'), null);
   assert.equal(starteTerminerinnerung({ supabase: null }), null);
@@ -225,14 +273,21 @@ test('Zeitjob: nur Worker 0; ueberlappende Ticks starten keinen zweiten Lauf; Ti
 // ── Echte Mail (RFC 822) ─────────────────────────────────────────────────────────────────────────────
 test('G-4 echte MIME-Nachricht (nodemailer streamTransport): Header, Zeichensatz, kein Name/Grund, keine Header-Injektion', async () => {
   const { default: nodemailer } = await import('nodemailer');
-  const t = basis();
+  const t = basisTabellen();
   t.profiles[0].business_name = 'Physio Nord\r\nBcc: boese@example.invalid';
+  /** @type {string[]} */
   const roh = [];
   const stream = nodemailer.createTransport({ streamTransport: true, buffer: true, newline: 'windows' });
   const u = umgebung({ tabellen: t });
   const alt = process.env.SMTP_FROM; process.env.SMTP_FROM = 'praxis@example.invalid';
+  /** @param {Record<string, any>} m */
+  async function sendStream(m) {
+    const info = await stream.sendMail(m);
+    assert.ok(info.message);
+    roh.push(info.message.toString('utf8'));
+  }
   try {
-    await u.lauf({ transportFabrik: () => ({ async sendMail(m) { const info = await stream.sendMail(m); roh.push(info.message.toString('utf8')); } }) });
+    await u.lauf({ transportFabrik: () => ({ sendMail: sendStream }) });
   } finally { if (alt === undefined) delete process.env.SMTP_FROM; else process.env.SMTP_FROM = alt; }
   assert.equal(roh.length, 1);
   const mime = roh[0];
@@ -251,7 +306,7 @@ test('G-4 echte MIME-Nachricht (nodemailer streamTransport): Header, Zeichensatz
 });
 
 test('Grosser Mandant: IN-Listen in Bloecken <= 50 (URL-Laenge), alle 130 Termine werden erinnert', async () => {
-  const t = basis();
+  const t = basisTabellen();
   t.bookings = []; t.leads = []; t.patient_consents = [];
   for (let i = 0; i < 130; i++) {
     t.bookings.push({ id: `g${i}`, owner_id: T, start_time: `2026-12-11T${String(7 + (i % 12)).padStart(2, '0')}:${i % 2 ? '00' : '30'}:00Z`, status: 'confirmed', lead_id: `gl${i}`, created_at: '2026-12-01T08:00:00Z' });
@@ -265,7 +320,7 @@ test('Grosser Mandant: IN-Listen in Bloecken <= 50 (URL-Laenge), alle 130 Termin
 });
 
 test('Antwort an der Zeilengrenze (>= 1000 Termine): laut abbrechen statt Termine stillschweigend auszulassen', async () => {
-  const t = basis();
+  const t = basisTabellen();
   t.bookings = Array.from({ length: 1000 }, (_, i) => ({ id: `z${i}`, owner_id: T, start_time: '2026-12-11T09:00:00Z', status: 'confirmed', lead_id: null, created_at: '2026-12-01T08:00:00Z' }));
   const u = umgebung({ tabellen: t });
   const r = await u.lauf();

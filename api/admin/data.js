@@ -6,6 +6,7 @@ function startOfMonthISO() {
   const d = new Date();
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1)).toISOString();
 }
+/** @param {number} n */
 function inDaysISO(n) {
   const d = new Date();
   d.setUTCDate(d.getUTCDate() + n);
@@ -14,6 +15,7 @@ function inDaysISO(n) {
 
 // PostgREST counts via Prefer: count=exact + select=id&limit=1.
 // Returns the row count from the Content-Range header without fetching rows.
+/** @param {string} path */
 async function countRows(path) {
   const sep = path.includes('?') ? '&' : '?';
   const url = `${path}${sep}select=id&limit=1`;
@@ -28,6 +30,10 @@ async function countRows(path) {
   return 0;
 }
 
+/**
+ * @param {import('../_lib/auth.js').VercelRequest} req
+ * @param {import('../_lib/auth.js').VercelResponse} res
+ */
 async function handler(req, res) {
   if (req.method !== 'GET') return json(res, 405, { error: 'Method not allowed' });
   const { user, error: authErr } = await getAuthedUser(req);
@@ -40,6 +46,7 @@ async function handler(req, res) {
   if (type === 'stats') {
     // Owners with subscription state — used for MRR + status counts
     const owners = await adminFetch('/profiles?select=id,plan,plan_status,trial_ends_at,billing_interval&role=eq.owner');
+    /** @type {any[]} */
     const rows = owners.data || [];
 
     let mrr = 0, trial = 0, trialEndingThisWeek = 0, active = 0, pastDue = 0, canceled = 0;
@@ -54,18 +61,21 @@ async function handler(req, res) {
 
     // Month-to-date usage volumes + AI cost
     const ai = await adminFetch(`/ai_audit_log?select=tenant_id,model,prompt_tokens,completion_tokens&created_at=gte.${monthStart}`);
+    /** @type {any[]} */
     const aiRows = ai.data || [];
     let aiCost = 0;
     for (const a of aiRows) aiCost += aiCallCostEUR(a.model, a.prompt_tokens, a.completion_tokens);
 
     const emails = await adminFetch(`/email_logs?select=id&created_at=gte.${monthStart}`);
     // messages table DROPPED 2026-05-22 (WhatsApp shelved)
+    /** @type {{ data: any[] }} */
     const msgs   = { data: [] };
     const newBookings = await adminFetch(`/bookings?select=id&status=neq.cancelled&created_at=gte.${monthStart}`);
 
     // Chatbot widget usage — logged by n8n directly (not via calendar-api router).
     // owner_id is usually null until embedded widgets start passing it.
     const cb = await adminFetch(`/chatbot_usage?select=cost_eur,total_tokens&created_at=gte.${monthStart}`);
+    /** @type {any[]} */
     const cbRows = cb.data || [];
     let cbCost = 0, cbTokens = 0;
     for (const c of cbRows) { cbCost += Number(c.cost_eur || 0); cbTokens += Number(c.total_tokens || 0); }
@@ -93,6 +103,7 @@ async function handler(req, res) {
   if (type === 'customers') {
     // Pull everything once, then bucket in JS — avoids N+1 queries against tenants.
     const owners = await adminFetch('/profiles?select=id,business_name,email,sector,city,plan,plan_status,trial_ends_at,billing_interval,created_at,whatsapp_phone_number_id,b2b_setup_done,stripe_subscription_id&role=eq.owner&order=created_at.desc');
+    /** @type {any[]} */
     const ownerRows = owners.data || [];
     const ownerIds = ownerRows.map(o => o.id);
     if (ownerIds.length === 0) return json(res, 200, { items: [] });
@@ -100,6 +111,7 @@ async function handler(req, res) {
     const ai      = await adminFetch(`/ai_audit_log?select=tenant_id,model,prompt_tokens,completion_tokens&created_at=gte.${monthStart}`);
     const emails  = await adminFetch(`/email_logs?select=owner_id&created_at=gte.${monthStart}`);
     // messages table DROPPED 2026-05-22 (WhatsApp shelved). Stub kept for backward compat.
+    /** @type {{ data: any[] }} */
     const msgs    = { data: [] };
     const bk      = await adminFetch(`/bookings?select=owner_id&status=neq.cancelled&created_at=gte.${monthStart}`);
     const cal     = await adminFetch('/calendar_integrations?select=user_id');
@@ -112,6 +124,10 @@ async function handler(req, res) {
       cur.cost += aiCallCostEUR(a.model, a.prompt_tokens, a.completion_tokens);
       aiByOwner.set(a.tenant_id, cur);
     }
+    /**
+     * @param {any[] | null | undefined} arr
+     * @param {string} key
+     */
     const tally = (arr, key) => {
       const m = new Map();
       for (const r of arr || []) m.set(r[key], (m.get(r[key]) || 0) + 1);
@@ -120,7 +136,7 @@ async function handler(req, res) {
     const emailsByOwner = tally(emails.data, 'owner_id');
     const msgsByOwner   = tally(msgs.data,   'business_id');
     const bkByOwner     = tally(bk.data,     'owner_id');
-    const calConnected  = new Set((cal.data || []).map(c => c.user_id));
+    const calConnected  = new Set((/** @type {any[]} */ (cal.data || [])).map(c => c.user_id));
 
     const items = ownerRows.map(o => {
       const a = aiByOwner.get(o.id) || { calls: 0, tokens: 0, cost: 0 };
@@ -156,11 +172,15 @@ async function handler(req, res) {
     const ownerId = req.query?.owner_id;
     if (!ownerId) return json(res, 400, { error: 'owner_id required' });
     const ai = await adminFetch(`/ai_audit_log?select=task,model,prompt_tokens,completion_tokens,latency_ms,status,error,created_at&tenant_id=eq.${ownerId}&created_at=gte.${monthStart}&order=created_at.desc`);
+    /** @type {any[]} */
     const rows = ai.data || [];
 
+    /** @type {Record<string, { calls: number, prompt_tokens: number, completion_tokens: number, cost_eur: number }>} */
     const byModel = {};
+    /** @type {Record<string, { calls: number, cost_eur: number }>} */
     const byTask = {};
     let totalCost = 0;
+    /** @type {Array<{ created_at: unknown, task: unknown, model: unknown, status: unknown, error: unknown }>} */
     const errors = [];
     for (const r of rows) {
       const cost = aiCallCostEUR(r.model, r.prompt_tokens, r.completion_tokens);
@@ -173,6 +193,7 @@ async function handler(req, res) {
         errors.push({ created_at: r.created_at, task: r.task, model: r.model, status: r.status, error: r.error });
       }
     }
+    /** @param {number} n */
     const round = (n, d=4) => Number(Number(n).toFixed(d));
     for (const k of Object.keys(byModel)) byModel[k].cost_eur = round(byModel[k].cost_eur);
     for (const k of Object.keys(byTask))  byTask[k].cost_eur  = round(byTask[k].cost_eur);

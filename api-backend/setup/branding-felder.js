@@ -1,4 +1,31 @@
 /**
+ * @typedef {{
+ *   street?: string,
+ *   plz?: string,
+ *   city?: string,
+ *   phone?: string,
+ *   steuernummer?: string,
+ *   ust_id?: string,
+ *   tax_exempt_note?: string,
+ *   iban?: string,
+ *   bic?: string,
+ *   bank_name?: string,
+ *   ik_number?: string
+ * }} BrandingFelder
+ */
+
+/**
+ * @typedef {{
+ *   label: string,
+ *   max?: number,
+ *   re?: RegExp,
+ *   hinweis?: string,
+ *   upper?: boolean,
+ *   ohneLeer?: boolean
+ * }} BrandingFeldRegel
+ */
+
+/**
  * Einrichtungsassistent, Schritt „Praxisangaben für Rechnungen" (KHS M2.5): prüft den Rumpf
  * von `POST /api/setup/branding`. Reine Funktion.
  *
@@ -7,8 +34,10 @@
  * IBAN/BIC nur Form (kein Prüfziffern-Raten); die Pflichtangaben-Prüfung der Rechnung
  * (`fehlendePflichtangaben`) bleibt die eigentliche Schranke.
  *
- * @returns {{felder: object, fehler: string[]}}
+ * @param {Record<string, unknown> | null | undefined} body
+ * @returns {{felder: BrandingFelder, fehler: string[]}}
  */
+/** @type {Record<string, BrandingFeldRegel>} */
 const REGELN = {
   street:          { label: 'Straße und Hausnummer', max: 120 },
   plz:             { label: 'Postleitzahl', re: /^\d{5}$/, hinweis: 'fünf Ziffern' },
@@ -23,8 +52,15 @@ const REGELN = {
   ik_number:       { label: 'Institutionskennzeichen (IK)', re: /^\d{9}$/, hinweis: 'neun Ziffern' },
 };
 
+/**
+ * @param {Record<string, unknown> | null | undefined} body
+ * @returns {{felder: BrandingFelder, fehler: string[]}}
+ */
 export function brandingFelderPruefen(body) {
-  const felder = {}; const fehler = [];
+  /** @type {Record<string, string>} */
+  const felder = {};
+  /** @type {string[]} */
+  const fehler = [];
   for (const [schluessel, regel] of Object.entries(REGELN)) {
     const roh = body?.[schluessel];
     if (roh === undefined || roh === null || roh === '') continue;

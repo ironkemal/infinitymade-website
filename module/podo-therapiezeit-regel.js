@@ -30,6 +30,7 @@ export function therapiezeitWert(roh) {
 
 /**
  * Position aus der Therapiezeit (nur für c) gültig).
+ * @param {unknown} minuten
  * @returns {'78010'|'78020'|''}  '' bei fehlender/ungültiger Zeit
  */
 export function positionAusTherapiezeit(minuten) {
@@ -38,7 +39,12 @@ export function positionAusTherapiezeit(minuten) {
   return m > GROSS_AB_MINUTEN ? '78020' : '78010';
 }
 
-/** Ist die Zeit Pflicht? c) verordnet UND eine Behandlungsposition (78010/78020) angekreuzt. */
+/**
+ * Ist die Zeit Pflicht? c) verordnet UND eine Behandlungsposition (78010/78020) angekreuzt.
+ * @param {string|null|undefined} massnahme
+ * @param {string[]|null|undefined} checks
+ * @returns {boolean}
+ */
 export function therapiezeitPflicht(massnahme, checks) {
   return massnahme === 'c' && (checks || []).some((c) => c === '78010' || c === '78020');
 }
@@ -66,6 +72,8 @@ export function therapiezeitFehler({ massnahme, checks, minuten }) {
 
 /**
  * Was gespeichert wird: Minuten bei c), sonst NULL.
+ * @param {string|null|undefined} massnahme
+ * @param {unknown} minuten
  * @returns {?number}
  */
 export function therapiezeitFuerSpeichern(massnahme, minuten) {

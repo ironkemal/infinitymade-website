@@ -9,7 +9,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const lies = (...p) => fs.readFileSync(path.join(repoRoot, ...p), 'utf8');
+const lies = (/** @type {string[]} */ ...p) => fs.readFileSync(path.join(repoRoot, ...p), 'utf8');
 
 test('backup.sh: fail-closed ohne BACKUP_EMPFAENGER/age, kein Schalter für Klartext', () => {
   const s = lies('onprem', 'backup.sh');
@@ -57,11 +57,11 @@ test('Verhalten: restore.sh meta_alan liest Werte mit "r" vollständig und über
     '{\r\n  "backup_empfaenger": "age1rrrxyzrrr",\r\n  "sebep": "nightly"\r\n}\r\n');
   const fnDatei = path.join(dir, 'fn.sh');
   fs.writeFileSync(fnDatei, fn);
-  const posix = (p) => p.replace(/\\/g, '/');
+  const posix = (/** @type {string} */ p) => p.replace(/\\/g, '/');
   const cmd = `set -euo pipefail; YEDEK_DIR="${posix(dir)}"; source "${posix(fnDatei)}"; a="$(meta_alan backup_empfaenger)"; b="$(meta_alan sebep)"; c="$(meta_alan verschluesselung)"; printf '%s|%s|%s' "$a" "$b" "$c"`;
   const res = spawnSync('bash', ['-c', cmd], { encoding: 'utf8' });
   fs.rmSync(dir, { recursive: true, force: true });
-  if (res.error && res.error.code === 'ENOENT') { t.skip('bash nicht gefunden'); return; }
+  if (res.error && /** @type {NodeJS.ErrnoException} */ (res.error).code === 'ENOENT') { t.skip('bash nicht gefunden'); return; }
   assert.equal(res.status, 0, res.stderr);
   assert.equal(res.stdout, 'age1rrrxyzrrr|nightly|');
 });

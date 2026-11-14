@@ -37,6 +37,8 @@
  * spezifischen Einschränkungen aus dem FAK Nr. 11).
  */
 
+import { alsBerlinDatum } from './berlin-datum.js';
+
 /** [Q] § 15 Abs. 1 Satz 1 und 2 — Kalendertage ab Verordnungsdatum. */
 export const BEHANDLUNGSBEGINN_TAGE = { dringend: 14, normal: 28 };
 
@@ -45,8 +47,8 @@ export const BEHANDLUNGSBEGINN_TAGE = { dringend: 14, normal: 28 };
  * Verordnung ihre Gültigkeit (§ 15 Abs. 2) — deshalb ist dieses Datum das,
  * was in `prescriptions.gueltig_bis` gehört.
  *
- * @param {string} ausstellungsdatum  ISO-Datum "YYYY-MM-DD"
- * @param {boolean} istDringend       Feld „dringlicher Behandlungsbedarf"
+ * @param {string|null|undefined} ausstellungsdatum  ISO-Datum "YYYY-MM-DD"
+ * @param {boolean} [istDringend]       Feld „dringlicher Behandlungsbedarf"
  * @returns {string|null} ISO-Datum, oder null bei fehlender/ungültiger Eingabe
  */
 export function behandlungsbeginnFrist(ausstellungsdatum, istDringend) {
@@ -70,9 +72,9 @@ export function behandlungsbeginnFrist(ausstellungsdatum, istDringend) {
  * Tageszählung in Europe/Berlin, nicht UTC — ein Termin um 23:30 Uhr darf
  * nicht durch eine Zeitzonenverschiebung auf den Folgetag rutschen.
  *
- * @param {object} p
- * @param {Date|string} p.ersterTermin   geplantes Datum/Zeit des ersten Termins
- * @param {?string} p.ausstellungsdatum  ISO-Datum "YYYY-MM-DD"
+ * @param {object} [p]
+ * @param {Date|string} [p.ersterTermin]   geplantes Datum/Zeit des ersten Termins
+ * @param {?string} [p.ausstellungsdatum]  ISO-Datum "YYYY-MM-DD"
  * @param {boolean} [p.istDringend]
  * @param {?string} [p.behandlungsbeginn]  gesetzt = die Behandlung läuft schon
  * @returns {{ok:boolean, frist?:string, meldung?:string}}
@@ -91,14 +93,20 @@ export function pruefeBehandlungsbeginn({ ersterTermin, ausstellungsdatum, istDr
   };
 }
 
-/** Kalendertag in Europe/Berlin als "YYYY-MM-DD", oder null bei ungültiger Eingabe. */
-import { alsBerlinDatum } from './berlin-datum.js';
-
+/**
+ * Kalendertag in Europe/Berlin als "YYYY-MM-DD", oder null bei ungültiger Eingabe.
+ * @param {Date|string|null|undefined} datum
+ * @returns {string|null}
+ */
 function berlinTag(datum) {
   if (!datum) return null;
   return alsBerlinDatum(datum) || null;
 }
 
+/**
+ * @param {string|null|undefined} isoTag
+ * @returns {string}
+ */
 function deDatum(isoTag) {
   if (!isoTag) return '—';
   const [j, m, t] = isoTag.split('-');

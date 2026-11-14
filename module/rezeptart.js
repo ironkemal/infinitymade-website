@@ -15,6 +15,7 @@
 
 export const REZEPTARTEN = ['kassen', 'privat', 'selbstzahler', 'bg'];
 
+/** @type {Record<string, string>} */
 const LABEL = {
   kassen: 'Kasse (GKV)',
   privat: 'Privat (PKV/Beihilfe)',
@@ -22,9 +23,14 @@ const LABEL = {
   bg: 'BG / Unfallkasse',
 };
 
+/** @type {Record<string, string>} */
 const ALIAS = { gkv: 'kassen', kasse: 'kassen', pkv: 'privat' };
 
-/** Beliebigen Rohwert (Spalte, Maske, Altwert) auf eine der vier Arten abbilden. */
+/**
+ * Beliebigen Rohwert (Spalte, Maske, Altwert) auf eine der vier Arten abbilden.
+ * @param {any} wert
+ * @returns {'kassen' | 'privat' | 'selbstzahler' | 'bg' | string}
+ */
 export function normalisiereRezeptart(wert) {
   const w = String(wert ?? '').trim().toLowerCase();
   if (!w) return 'kassen';
@@ -32,16 +38,36 @@ export function normalisiereRezeptart(wert) {
   return ALIAS[w] || 'kassen';
 }
 
-export function rezeptartLabel(wert) { return LABEL[normalisiereRezeptart(wert)]; }
+/**
+ * @param {any} wert
+ * @returns {string}
+ */
+export function rezeptartLabel(wert) { return LABEL[normalisiereRezeptart(wert)] || ''; }
+
+/**
+ * @param {any} wert
+ * @returns {boolean}
+ */
 export function istKasse(wert) { return normalisiereRezeptart(wert) === 'kassen'; }
+
+/**
+ * @param {any} wert
+ * @returns {boolean}
+ */
 export function istBg(wert) { return normalisiereRezeptart(wert) === 'bg'; }
 
-/** Nur bei Kasse sind Krankenkasse, Diagnosegruppe & Co. Pflicht (sonst eingeklappt). */
+/**
+ * Nur bei Kasse sind Krankenkasse, Diagnosegruppe & Co. Pflicht (sonst eingeklappt).
+ * @param {any} wert
+ * @returns {boolean}
+ */
 export function brauchtGkvAngaben(wert) { return istKasse(wert); }
 
 /**
  * Vorauswahl aus `leads.insurance_type` — einseitig: nur `privat` wird
  * vorgewählt. Selbstzahler und BG nie (BG hängt am Unfall, nicht am Patienten).
+ * @param {string | null | undefined} insuranceType
+ * @returns {'privat' | 'kassen'}
  */
 export function vorauswahlAusPatient(insuranceType) {
   return String(insuranceType ?? '').trim().toLowerCase() === 'privat' ? 'privat' : 'kassen';
@@ -53,6 +79,8 @@ export function vorauswahlAusPatient(insuranceType) {
  * Bedingung 2 geht darüber hinaus: eine nicht stornierte Rechnung zur
  * Verordnung — sonst würde still doppelt abgerechnet (Patient/BG UND Kasse).
  * Das Backend erzwingt dasselbe (PATCH /api/rezept/:id).
+ * @param {{ belegnummer?: any, offeneRechnung?: boolean }} [param0]
+ * @returns {string | null}
  */
 export function umschaltSperre({ belegnummer = null, offeneRechnung = false } = {}) {
   if (belegnummer) {
@@ -64,11 +92,19 @@ export function umschaltSperre({ belegnummer = null, offeneRechnung = false } = 
   return null;
 }
 
-/** FK `verordnungen_diagnosegruppe_fkey`: leer heisst NULL, nie ''. */
+/**
+ * FK `verordnungen_diagnosegruppe_fkey`: leer heisst NULL, nie ''.
+ * @param {any} wert
+ * @returns {string | null}
+ */
 export function diagnosegruppeFuerSpeichern(wert) {
   const t = String(wert ?? '').trim();
   return t || null;
 }
 
-/** Was beim Anlegen/Ändern in die Spalte geschrieben wird — immer ausdrücklich. */
+/**
+ * Was beim Anlegen/Ändern in die Spalte geschrieben wird — immer ausdrücklich.
+ * @param {any} wert
+ * @returns {string}
+ */
 export function rezeptartFuerSpeichern(wert) { return normalisiereRezeptart(wert); }

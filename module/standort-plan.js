@@ -15,6 +15,67 @@
  */
 import { imZeitfenster, zeitInMinuten } from './standort-plan-regel.js?v=20261104zeit';
 
+/**
+ * @typedef {{
+ *   id?: string,
+ *   owner_id?: string,
+ *   employee_id: string,
+ *   business_id: string,
+ *   weekday?: number | string | null,
+ *   datum?: string | null,
+ *   gueltig_ab?: string | null,
+ *   von?: string | null,
+ *   bis?: string | null,
+ * }} PlanZeile
+ * @typedef {{ von: string, bis: string }} Zeitfenster
+ * @typedef {{
+ *   id?: string,
+ *   start_time: string,
+ *   end_time?: string | null,
+ *   customer_name?: string | null,
+ *   business_id?: string | null,
+ *   status?: string | null,
+ *   hausbesuch?: boolean,
+ *   services?: { title?: string | null } | null,
+ * }} PlanTermin
+ * @typedef {{ id: string, business_name?: string | null }} StandortInfo
+ * @typedef {{
+ *   loeschen: string[],
+ *   neu: PlanZeile[],
+ *   aendern: Array<{ id: string, von: string | null, bis: string | null }>,
+ * }} PlanAenderung
+ * @typedef {{
+ *   from: (table: string) => {
+ *     select: (cols: string) => {
+ *       eq: (col: string, val: string) => {
+ *         eq: (col: string, val: string) => Promise<{ data: PlanZeile[] | null, error: unknown }> & {
+ *           gte: (col: string, val: string) => {
+ *             lte: (col: string, val: string) => {
+ *               neq: (col: string, val: string) => {
+ *                 order: (col: string) => {
+ *                   limit: (n: number) => Promise<{ data: PlanTermin[] | null, error: unknown }>,
+ *                 },
+ *               },
+ *             },
+ *           },
+ *         },
+ *       },
+ *     },
+ *     insert: (rows: PlanZeile[]) => Promise<{ error: unknown }>,
+ *     update: (vals: { von: string | null, bis: string | null }) => {
+ *       eq: (col: string, val: string) => {
+ *         eq: (col: string, val: string) => Promise<{ error: unknown }>,
+ *       },
+ *     },
+ *     delete: () => {
+ *       eq: (col: string, val: string) => {
+ *         in: (col: string, vals: string[]) => Promise<{ error: unknown }>,
+ *       },
+ *     },
+ *   },
+ * }} StandortSupabase
+ */
+
 /** Anzeige Mo..So, gespeichert wie JS getDay (0 = Sonntag). */
 export const WOCHENTAGE = [
   { weekday: 1, kurz: 'Mo' }, { weekday: 2, kurz: 'Di' }, { weekday: 3, kurz: 'Mi' },
@@ -28,25 +89,43 @@ export const WARN_TAGE = 120;
 
 const DATUM_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+/** @param {unknown} s @returns {string} */
 function escapeHtml(s) {
-  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] || c));
 }
 
+/** @param {number | string} weekday @param {string} businessId @returns {string} */
 const musterSchluessel = (weekday, businessId) => `${weekday}|${businessId}`;
 
-/** gueltig_ab einer Wochenzeile als 'YYYY-MM-DD' oder null (= seit immer). */
+/**
+ * gueltig_ab einer Wochenzeile als 'YYYY-MM-DD' oder null (= seit immer).
+ * @param {unknown} wert
+ * @returns {string | null}
+ */
 export function gueltigAb(wert) {
   if (typeof wert !== 'string') return null;
   const tag = wert.slice(0, 10);
   return DATUM_RE.test(tag) ? tag : null;
 }
 
-const istWoche = z => z && z.datum == null && z.weekday != null && z.weekday !== '' && z.business_id;
-/** null zählt als „älter als jedes Datum". */
+/** @param {PlanZeile | null | undefined} z @returns {boolean} */
+const istWoche = z => Boolean(z && z.datum == null && z.weekday != null && z.weekday !== '' && z.business_id);
+/**
+ * null zählt als „älter als jedes Datum".
+ * @param {string | null} a
+ * @param {string | null} b
+ * @returns {boolean}
+ */
 const aelter = (a, b) => (a === null ? b !== null : b !== null && a < b);
 
-/** Heute gültige Musterversion (größtes gueltig_ab <= heute, null = seit immer); undefined = gar kein Muster. */
+/**
+ * Heute gültige Musterversion (größtes gueltig_ab <= heute, null = seit immer); undefined = gar kein Muster.
+ * @param {PlanZeile[] | null | undefined} zeilen
+ * @param {string} heute
+ * @returns {string | null | undefined}
+ */
 export function aktuelleVersion(zeilen, heute) {
+  /** @type {string | null | undefined} */
   let version;
   for (const z of Array.isArray(zeilen) ? zeilen : []) {
     if (!istWoche(z)) continue;
@@ -57,8 +136,14 @@ export function aktuelleVersion(zeilen, heute) {
   return version;
 }
 
-/** Künftige Versionen (gueltig_ab > heute), aufsteigend. */
+/**
+ * Künftige Versionen (gueltig_ab > heute), aufsteigend.
+ * @param {PlanZeile[] | null | undefined} zeilen
+ * @param {string} heute
+ * @returns {string[]}
+ */
 export function kuenftigeVersionen(zeilen, heute) {
+  /** @type {Set<string>} */
   const set = new Set();
   for (const z of Array.isArray(zeilen) ? zeilen : []) {
     const g = istWoche(z) ? gueltigAb(z.gueltig_ab) : null;
@@ -67,8 +152,14 @@ export function kuenftigeVersionen(zeilen, heute) {
   return [...set].sort();
 }
 
-/** Wochenmuster-Zeilen einer Version -> Set "weekday|business_id". Ohne Version: alle mit gueltig_ab null. */
+/**
+ * Wochenmuster-Zeilen einer Version -> Set "weekday|business_id". Ohne Version: alle mit gueltig_ab null.
+ * @param {PlanZeile[] | null | undefined} zeilen
+ * @param {string | null} [version]
+ * @returns {Set<string>}
+ */
 export function musterAusZeilen(zeilen, version = null) {
+  /** @type {Set<string>} */
   const muster = new Set();
   for (const z of Array.isArray(zeilen) ? zeilen : []) {
     if (istWoche(z) && gueltigAb(z.gueltig_ab) === (version ?? null)) muster.add(musterSchluessel(Number(z.weekday), z.business_id));
@@ -76,10 +167,17 @@ export function musterAusZeilen(zeilen, version = null) {
   return muster;
 }
 
+/** @param {unknown} wert @returns {string} */
 const hhmm = wert => (typeof wert === 'string' && /^\d{2}:\d{2}/.test(wert) ? wert.slice(0, 5) : '');
 
-/** Zeitfenster der Wochenmuster-Zeilen einer Version -> Map "weekday|business_id" -> {von, bis} ('HH:MM' oder ''). */
+/**
+ * Zeitfenster der Wochenmuster-Zeilen einer Version -> Map "weekday|business_id" -> {von, bis} ('HH:MM' oder '').
+ * @param {PlanZeile[] | null | undefined} zeilen
+ * @param {string | null} [version]
+ * @returns {Map<string, Zeitfenster>}
+ */
 export function fensterAusZeilen(zeilen, version = null) {
+  /** @type {Map<string, Zeitfenster>} */
   const fenster = new Map();
   for (const z of Array.isArray(zeilen) ? zeilen : []) {
     if (!istWoche(z) || gueltigAb(z.gueltig_ab) !== (version ?? null)) continue;
@@ -90,39 +188,62 @@ export function fensterAusZeilen(zeilen, version = null) {
   return fenster;
 }
 
-/** Fehlertext für ein ungültiges Fenster, sonst null. Beide leer = ganzer Tag. */
+/**
+ * Fehlertext für ein ungültiges Fenster, sonst null. Beide leer = ganzer Tag.
+ * @param {Map<string, Zeitfenster> | null | undefined} fenster
+ * @returns {string | null}
+ */
 export function fensterFehler(fenster) {
   for (const [, f] of fenster || []) {
     const von = f?.von || '';
     const bis = f?.bis || '';
     if (!von && !bis) continue;
     if (!von || !bis) return 'Bitte bei einem Zeitfenster Beginn und Ende angeben (oder beide leer lassen = ganzer Tag).';
-    if (zeitInMinuten(von) === null || zeitInMinuten(bis) === null || zeitInMinuten(von) >= zeitInMinuten(bis)) {
+    const vonMin = zeitInMinuten(von);
+    const bisMin = zeitInMinuten(bis);
+    if (vonMin === null || bisMin === null || vonMin >= bisMin) {
       return 'Das Zeitfenster muss vor dem Ende beginnen.';
     }
   }
   return null;
 }
 
-/** Einzeltage ab heute -> Map datum -> [business_id], nach Datum sortiert. Vergangene bleiben unangetastet. */
+/**
+ * Einzeltage ab heute -> Map datum -> [business_id], nach Datum sortiert. Vergangene bleiben unangetastet.
+ * @param {PlanZeile[] | null | undefined} zeilen
+ * @param {string} [heute]
+ * @returns {Map<string, string[]>}
+ */
 export function einzeltageAusZeilen(zeilen, heute) {
+  /** @type {Map<string, string[]>} */
   const tage = new Map();
   for (const z of Array.isArray(zeilen) ? zeilen : []) {
     if (!z || typeof z.datum !== 'string' || !z.business_id) continue;
     const tag = z.datum.slice(0, 10);
     if (heute && tag < heute) continue;
-    if (!tage.has(tag)) tage.set(tag, []);
-    if (!tage.get(tag).includes(z.business_id)) tage.get(tag).push(z.business_id);
+    let tagListe = tage.get(tag);
+    if (!tagListe) {
+      tagListe = [];
+      tage.set(tag, tagListe);
+    }
+    if (!tagListe.includes(z.business_id)) tagListe.push(z.business_id);
   }
   return new Map([...tage.entries()].sort(([a], [b]) => a.localeCompare(b)));
 }
 
-/** Alle Kalendertage von..bis einschließlich (UTC, sommerzeitfest). Ungültig oder zu lang -> null. */
+/**
+ * Alle Kalendertage von..bis einschließlich (UTC, sommerzeitfest). Ungültig oder zu lang -> null.
+ * @param {string | null | undefined} von
+ * @param {string | null | undefined} bis
+ * @param {number} [max]
+ * @returns {string[] | null}
+ */
 export function tageImZeitraum(von, bis, max = MAX_VERSETZEN_TAGE) {
   if (!DATUM_RE.test(von || '') || !DATUM_RE.test(bis || '')) return null;
   const start = new Date(`${von}T12:00:00Z`);
   const ende = new Date(`${bis}T12:00:00Z`);
   if (Number.isNaN(start.getTime()) || Number.isNaN(ende.getTime()) || ende < start) return null;
+  /** @type {string[]} */
   const tage = [];
   for (let d = start; d <= ende; d = new Date(d.getTime() + 86400000)) {
     tage.push(d.toISOString().slice(0, 10));
@@ -134,8 +255,18 @@ export function tageImZeitraum(von, bis, max = MAX_VERSETZEN_TAGE) {
 /**
  * Soll-Zustand -> Zeilen für employee_standort_plan. Wochenzeilen tragen die bearbeitete Version (gueltig_ab).
  * Vergangene Einzeltage gehören nicht zum Soll und werden von planAenderung nie gelöscht.
+ *
+ * @param {{
+ *   muster?: Set<string> | null,
+ *   einzeltage?: Map<string, string[]> | null,
+ *   fenster?: Map<string, Zeitfenster> | null,
+ * }} zustand
+ * @param {{ ownerId: string, empId: string }} ids
+ * @param {string | null} [version]
+ * @returns {PlanZeile[]}
  */
 export function sollZeilen({ muster, einzeltage, fenster }, { ownerId, empId }, version = null) {
+  /** @type {PlanZeile[]} */
   const zeilen = [];
   for (const schluessel of muster || []) {
     const [weekday, businessId] = schluessel.split('|');
@@ -150,6 +281,7 @@ export function sollZeilen({ muster, einzeltage, fenster }, { ownerId, empId }, 
   return zeilen;
 }
 
+/** @param {PlanZeile} z @returns {string} */
 const zeilenSchluessel = z => `${z.business_id}|${z.weekday ?? ''}|${z.datum ? String(z.datum).slice(0, 10) : ''}|${istWoche(z) ? gueltigAb(z.gueltig_ab) ?? '' : ''}`;
 
 /**
@@ -157,6 +289,12 @@ const zeilenSchluessel = z => `${z.business_id}|${z.weekday ?? ''}|${z.datum ? S
  * Betrachtet nur: künftige Einzeltage, die bearbeitete Version, ausdrücklich entfernte Versionen und — wenn
  * die heute gültige Version bearbeitet wird (aufraeumen) — ältere, abgelöste Versionen. Sonst würde eine leer
  * gespeicherte aktuelle Version eine alte wieder in Kraft setzen. Andere künftige Versionen bleiben unberührt.
+ *
+ * @param {PlanZeile[] | null | undefined} alteZeilen
+ * @param {PlanZeile[]} soll
+ * @param {string} heute
+ * @param {{ version?: string | null, entfernteVersionen?: string[], aufraeumen?: boolean }} [opts]
+ * @returns {PlanAenderung}
  */
 export function planAenderung(alteZeilen, soll, heute, { version = null, entfernteVersionen = [], aufraeumen = false } = {}) {
   const entfernt = new Set(entfernteVersionen);
@@ -165,10 +303,11 @@ export function planAenderung(alteZeilen, soll, heute, { version = null, entfern
     if (typeof z.datum === 'string') return !(heute && z.datum.slice(0, 10) < heute);
     if (!istWoche(z)) return false;
     const g = gueltigAb(z.gueltig_ab);
-    return g === (version ?? null) || entfernt.has(g) || (aufraeumen && aelter(g, version ?? null));
+    return g === (version ?? null) || (g !== null && entfernt.has(g)) || (aufraeumen && aelter(g, version ?? null));
   });
   const sollMap = new Map(soll.map(z => [zeilenSchluessel(z), z]));
   const altMap = new Map(relevant.map(z => [zeilenSchluessel(z), z]));
+  /** @type {Array<{ id: string, von: string | null, bis: string | null }>} */
   const aendern = [];
   for (const [k, z] of sollMap) {
     const a = altMap.get(k);
@@ -177,27 +316,43 @@ export function planAenderung(alteZeilen, soll, heute, { version = null, entfern
     }
   }
   return {
-    loeschen: relevant.filter(z => !sollMap.has(zeilenSchluessel(z))).map(z => z.id).filter(Boolean),
+    loeschen: relevant.filter(z => !sollMap.has(zeilenSchluessel(z))).map(z => z.id).filter(/** @returns {id is string} */ (id) => Boolean(id)),
     neu: soll.filter(z => !altMap.has(zeilenSchluessel(z))),
     aendern,
   };
 }
 
-/** Planzeilen nach der Änderung (für die Warnliste über alle Versionen). */
+/**
+ * Planzeilen nach der Änderung (für die Warnliste über alle Versionen).
+ * @param {PlanZeile[] | null | undefined} alteZeilen
+ * @param {PlanAenderung} aenderung
+ * @returns {PlanZeile[]}
+ */
 export function planNachher(alteZeilen, { loeschen, neu, aendern = [] }) {
   const weg = new Set(loeschen);
   const neuZeit = new Map(aendern.map(a => [a.id, a]));
-  return (Array.isArray(alteZeilen) ? alteZeilen : []).filter(z => z && !weg.has(z.id))
-    .map(z => (neuZeit.has(z.id) ? { ...z, von: neuZeit.get(z.id).von, bis: neuZeit.get(z.id).bis } : z)).concat(neu);
+  return (Array.isArray(alteZeilen) ? alteZeilen : []).filter(z => z && !(z.id && weg.has(z.id)))
+    .map(z => {
+      const a = z.id ? neuZeit.get(z.id) : undefined;
+      return a ? { ...z, von: a.von, bis: a.bis } : z;
+    }).concat(neu);
 }
 
 /**
  * Künftige Termine, die nach dem neuen Plan am falschen Standort lägen.
  * Ohne Standort (Altzeilen), Hausbesuche und abgesagte Termine zählen nicht.
  * Datum des Termins in Berliner Zeit, sonst kippt 00:30 auf den Vortag.
+ *
+ * @param {PlanTermin[] | null | undefined} termine
+ * @param {PlanZeile[]} zeilen
+ * @param {string} empId
+ * @param {string[]} alleStandortIds
+ * @returns {PlanTermin[]}
  */
 export function konflikte(termine, zeilen, empId, alleStandortIds) {
+  /** @param {string} iso */
   const tagBerlin = iso => new Date(iso).toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+  /** @param {string} iso */
   const minBerlin = iso => zeitInMinuten(new Date(iso).toLocaleTimeString('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit', hour12: false }));
   return (Array.isArray(termine) ? termine : []).filter((t) => {
     if (!t || !t.business_id || t.hausbesuch || t.status === 'cancelled') return false;
@@ -208,6 +363,7 @@ export function konflikte(termine, zeilen, empId, alleStandortIds) {
   });
 }
 
+/** @param {string} iso @returns {string} */
 function zeitText(iso) {
   const d = new Date(iso);
   const datum = d.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -215,13 +371,18 @@ function zeitText(iso) {
   return `${datum}, ${zeit}`;
 }
 
+/**
+ * @param {PlanTermin[]} liste
+ * @param {(id: string) => string} standortName
+ * @returns {string}
+ */
 export function warnlisteHtml(liste, standortName) {
   if (!liste.length) return '';
   const zeilen = liste.map(t => `
     <li><button type="button" class="sp-warn-termin" data-termin="${escapeHtml(t.id)}">
       <span>${escapeHtml(zeitText(t.start_time))}</span>
       <span>${escapeHtml(t.customer_name || 'Ohne Name')}${t.services?.title ? ` · ${escapeHtml(t.services.title)}` : ''}</span>
-      <span class="sp-warn-ort">gebucht: ${escapeHtml(standortName(t.business_id))}</span>
+      <span class="sp-warn-ort">gebucht: ${escapeHtml(standortName(t.business_id || ''))}</span>
     </button></li>`).join('');
   return `<div class="sp-warnung" role="alert">
     <p><strong>${liste.length} ${liste.length === 1 ? 'Termin liegt' : 'Termine liegen'} danach am falschen Standort.</strong>
@@ -229,15 +390,26 @@ export function warnlisteHtml(liste, standortName) {
     <ul>${zeilen}</ul></div>`;
 }
 
+/** @param {string} tag @returns {string} */
 const datumDe = tag => new Date(`${tag}T12:00:00Z`).toLocaleDateString('de-DE', { timeZone: 'UTC', weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
 
-/** Kurzbeschreibung eines Musters: "Mo Nord · Mi Süd". */
+/**
+ * Kurzbeschreibung eines Musters: "Mo Nord · Mi Süd".
+ * @param {Set<string>} muster
+ * @param {(id: string) => string} name
+ * @returns {string}
+ */
 export function musterText(muster, name) {
   return WOCHENTAGE.flatMap(w => [...muster].filter(k => k.startsWith(`${w.weekday}|`)).map(k => `${w.kurz} ${name(k.split('|')[1])}`)).join(' · ') || 'kein Muster (alle Standorte)';
 }
 
-/** Liste „Zeitfenster (optional)" je Häkchen, in Wochentagsfolge. */
+/**
+ * Liste „Zeitfenster (optional)" je Häkchen, in Wochentagsfolge.
+ * @param {{ standorte: StandortInfo[], muster: Set<string>, fenster?: Map<string, Zeitfenster> | null }} opts
+ * @returns {string}
+ */
 export function fensterListeHtml({ standorte, muster, fenster }) {
+  /** @param {string} id @returns {string} */
   const name = id => standorte.find(s => s.id === id)?.business_name || 'Standort';
   const eintraege = WOCHENTAGE.flatMap(w => standorte.filter(s => muster.has(musterSchluessel(w.weekday, s.id))).map((s) => {
     const k = musterSchluessel(w.weekday, s.id);
@@ -253,7 +425,20 @@ export function fensterListeHtml({ standorte, muster, fenster }) {
     : '<p class="form-hint">Erst Häkchen setzen, dann optional Uhrzeiten.</p>';
 }
 
+/**
+ * @param {{
+ *   standorte: StandortInfo[],
+ *   muster: Set<string>,
+ *   einzeltage: Map<string, string[]>,
+ *   heute: string,
+ *   aktuellSeit?: string | null,
+ *   versionen?: Array<{ ab: string, muster: Set<string> }>,
+ *   fenster?: Map<string, Zeitfenster>,
+ * }} opts
+ * @returns {string}
+ */
 export function standortPlanHtml({ standorte, muster, einzeltage, heute, aktuellSeit = null, versionen = [], fenster = new Map() }) {
+  /** @param {string} id @returns {string} */
   const name = id => standorte.find(s => s.id === id)?.business_name || 'Standort';
   const kopf = WOCHENTAGE.map(w => `<th scope="col">${w.kurz}</th>`).join('');
   const reihen = standorte.map(s => `<tr><th scope="row">${escapeHtml(s.business_name)}</th>${WOCHENTAGE.map(w => `
@@ -298,7 +483,11 @@ export function standortPlanHtml({ standorte, muster, einzeltage, heute, aktuell
 
 const PLAN_SPALTEN = 'id,employee_id,business_id,weekday,datum,gueltig_ab,von,bis';
 
-/** Folgetag als 'YYYY-MM-DD' (UTC-Rechnung, sommerzeitfest). */
+/**
+ * Folgetag als 'YYYY-MM-DD' (UTC-Rechnung, sommerzeitfest).
+ * @param {string | null | undefined} tag
+ * @returns {string}
+ */
 export function naechsterTag(tag) {
   if (!DATUM_RE.test(tag || '')) return '';
   return new Date(new Date(`${tag}T12:00:00Z`).getTime() + 86400000).toISOString().slice(0, 10);
@@ -306,11 +495,20 @@ export function naechsterTag(tag) {
 const TERMIN_SPALTEN = 'id,start_time,end_time,customer_name,business_id,status,hausbesuch,services(title)';
 
 /**
- * @param {HTMLElement} container
- * @param {object} deps supabase, ownerId, empId, standorte [{id,business_name}], erlaubteIds (null = alle),
- *   showToast, showConfirmModal, oeffneTermin, heute ('YYYY-MM-DD', für Tests)
+ * @param {HTMLElement | null | undefined} container
+ * @param {{
+ *   supabase: StandortSupabase,
+ *   ownerId: string,
+ *   empId: string,
+ *   standorte?: StandortInfo[],
+ *   erlaubteIds?: string[] | null,
+ *   showToast?: (msg: string, type?: string) => void,
+ *   showConfirmModal?: (opts: { title: string, message: string, confirmText: string, cancelText: string }) => Promise<boolean>,
+ *   oeffneTermin?: (id: string) => void,
+ *   heute?: string,
+ * }} deps
  */
-export async function mountStandortPlan(container, deps = {}) {
+export async function mountStandortPlan(container, deps) {
   if (!container) return;
   const { supabase, ownerId, empId, showToast = () => {}, showConfirmModal, oeffneTermin } = deps;
   const heute = deps.heute || new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
@@ -318,6 +516,7 @@ export async function mountStandortPlan(container, deps = {}) {
   const erlaubt = Array.isArray(deps.erlaubteIds) && deps.erlaubteIds.length ? new Set(deps.erlaubteIds) : null;
   const standorte = (deps.standorte || []).filter(s => !erlaubt || erlaubt.has(s.id));
   const alleIds = standorte.map(s => s.id);
+  /** @param {string} id @returns {string} */
   const name = id => (deps.standorte || []).find(s => s.id === id)?.business_name || 'anderer Standort';
 
   container.innerHTML = '<p class="form-hint">Standortplan wird geladen …</p>';
@@ -329,14 +528,22 @@ export async function mountStandortPlan(container, deps = {}) {
     return;
   }
 
-  const version = aktuelleVersion(alt, heute) ?? null;
-  const zustand = { muster: musterAusZeilen(alt, version), fenster: fensterAusZeilen(alt, version), einzeltage: einzeltageAusZeilen(alt, heute), entfernt: new Set() };
+  const altListe = alt || [];
+  const version = aktuelleVersion(altListe, heute) ?? null;
+  const zustand = {
+    muster: musterAusZeilen(altListe, version),
+    fenster: fensterAusZeilen(altListe, version),
+    einzeltage: einzeltageAusZeilen(altListe, heute),
+    /** @type {Set<string>} */
+    entfernt: new Set(),
+  };
   const zeichnen = () => {
-    const versionen = kuenftigeVersionen(alt, heute).filter(ab => !zustand.entfernt.has(ab)).map(ab => ({ ab, muster: musterAusZeilen(alt, ab) }));
+    const versionen = kuenftigeVersionen(altListe, heute).filter(ab => !zustand.entfernt.has(ab)).map(ab => ({ ab, muster: musterAusZeilen(altListe, ab) }));
     container.innerHTML = standortPlanHtml({ standorte, muster: zustand.muster, fenster: zustand.fenster, einzeltage: zustand.einzeltage, heute, aktuellSeit: version, versionen });
     verdrahten();
   };
 
+  /** @param {PlanZeile[]} nachher @returns {Promise<PlanTermin[] | null>} */
   async function warnungPruefen(nachher) {
     const bis = new Date(Date.now() + WARN_TAGE * 86400000).toISOString();
     const { data, error: e } = await supabase.from('bookings').select(TERMIN_SPALTEN)
@@ -346,42 +553,44 @@ export async function mountStandortPlan(container, deps = {}) {
     return konflikte(data, nachher, empId, alleIds);
   }
 
+  /** @param {PlanTermin[]} liste */
   function warnungZeigen(liste) {
-    const host = container.querySelector('#spWarnung');
+    const host = container?.querySelector('#spWarnung');
     if (!host) return;
     host.innerHTML = warnlisteHtml(liste, name);
-    host.querySelectorAll('.sp-warn-termin').forEach(b => b.addEventListener('click', () => oeffneTermin?.(b.dataset.termin)));
+    /** @type {NodeListOf<HTMLElement>} */ (host.querySelectorAll('.sp-warn-termin')).forEach(b => b.addEventListener('click', () => oeffneTermin?.(b.dataset.termin || '')));
   }
 
   function fensterVerdrahten() {
-    container.querySelectorAll('.sp-von, .sp-bis').forEach(inp => inp.addEventListener('change', () => {
-      const f = { ...(zustand.fenster.get(inp.dataset.key) || { von: '', bis: '' }) };
+    /** @type {NodeListOf<HTMLInputElement>} */ (container?.querySelectorAll('.sp-von, .sp-bis')).forEach(inp => inp.addEventListener('change', () => {
+      const key = inp.dataset.key || '';
+      const f = { ...(zustand.fenster.get(key) || { von: '', bis: '' }) };
       f[inp.classList.contains('sp-von') ? 'von' : 'bis'] = inp.value || '';
-      zustand.fenster.set(inp.dataset.key, f);
+      zustand.fenster.set(key, f);
     }));
   }
 
   function verdrahten() {
-    container.querySelectorAll('.sp-muster').forEach(cb => cb.addEventListener('change', () => {
-      const k = musterSchluessel(Number(cb.dataset.weekday), cb.dataset.standort);
+    /** @type {NodeListOf<HTMLInputElement>} */ (container?.querySelectorAll('.sp-muster')).forEach(cb => cb.addEventListener('change', () => {
+      const k = musterSchluessel(Number(cb.dataset.weekday), cb.dataset.standort || '');
       if (cb.checked) zustand.muster.add(k); else { zustand.muster.delete(k); zustand.fenster.delete(k); }
-      const host = container.querySelector('#spFenster');
+      const host = container?.querySelector('#spFenster');
       if (host) { host.innerHTML = fensterListeHtml({ standorte, muster: zustand.muster, fenster: zustand.fenster }); fensterVerdrahten(); }
     }));
     fensterVerdrahten();
-    container.querySelectorAll('.sp-tag-weg').forEach(b => b.addEventListener('click', () => {
-      zustand.einzeltage.delete(b.dataset.datum);
+    /** @type {NodeListOf<HTMLElement>} */ (container?.querySelectorAll('.sp-tag-weg')).forEach(b => b.addEventListener('click', () => {
+      zustand.einzeltage.delete(b.dataset.datum || '');
       zeichnen();
     }));
-    container.querySelectorAll('.sp-version-weg').forEach(b => b.addEventListener('click', () => {
-      zustand.entfernt.add(b.dataset.version);
+    /** @type {NodeListOf<HTMLElement>} */ (container?.querySelectorAll('.sp-version-weg')).forEach(b => b.addEventListener('click', () => {
+      zustand.entfernt.add(b.dataset.version || '');
       zeichnen();
       showToast('Umstellung entfernt – noch speichern.');
     }));
-    container.querySelector('#spVersetzenBtn')?.addEventListener('click', () => {
-      const von = container.querySelector('#spVon')?.value;
-      const bis = container.querySelector('#spBis')?.value || von;
-      const ziele = [...container.querySelectorAll('.sp-versetzen-ziel:checked')].map(c => c.value);
+    container?.querySelector('#spVersetzenBtn')?.addEventListener('click', () => {
+      const von = /** @type {HTMLInputElement | null} */ (container.querySelector('#spVon'))?.value;
+      const bis = /** @type {HTMLInputElement | null} */ (container.querySelector('#spBis'))?.value || von;
+      const ziele = [.../** @type {NodeListOf<HTMLInputElement>} */ (container.querySelectorAll('.sp-versetzen-ziel:checked'))].map(c => c.value);
       const tage = tageImZeitraum(von, bis);
       if (!tage) { showToast(`Bitte gültigen Zeitraum wählen (höchstens ${MAX_VERSETZEN_TAGE} Tage).`, 'error'); return; }
       if (tage[0] < heute) { showToast('Vergangene Tage lassen sich nicht planen.', 'error'); return; }
@@ -391,14 +600,14 @@ export async function mountStandortPlan(container, deps = {}) {
       zeichnen();
       showToast(`${tage.length} ${tage.length === 1 ? 'Tag' : 'Tage'} übernommen – noch speichern.`);
     });
-    container.querySelector('#spSpeichernBtn')?.addEventListener('click', speichern);
+    container?.querySelector('#spSpeichernBtn')?.addEventListener('click', speichern);
   }
 
   async function speichern() {
-    const btn = container.querySelector('#spSpeichernBtn');
+    const btn = /** @type {HTMLButtonElement | null} */ (container?.querySelector('#spSpeichernBtn'));
     if (btn) btn.disabled = true;
     try {
-      const ab = container.querySelector('#spAb')?.value || '';
+      const ab = /** @type {HTMLInputElement | null} */ (container?.querySelector('#spAb'))?.value || '';
       if (ab && (!DATUM_RE.test(ab) || ab <= heute)) { showToast('„Gilt ab" muss in der Zukunft liegen – für sofort leer lassen.', 'error'); return; }
       const ziel = ab || version;
       const fehler = fensterFehler(zustand.fenster);
@@ -406,11 +615,11 @@ export async function mountStandortPlan(container, deps = {}) {
       const soll = sollZeilen(zustand, { ownerId, empId }, ziel);
       // Mit Datum: nur die geplante Version (+ Einzeltage) ändern, das heutige Muster bleibt unberührt.
       const aenderung = ab
-        ? planAenderung(alt, soll, heute, { version: ab, entfernteVersionen: [...zustand.entfernt] })
-        : planAenderung(alt, soll, heute, { version, entfernteVersionen: [...zustand.entfernt], aufraeumen: true });
+        ? planAenderung(altListe, soll, heute, { version: ab, entfernteVersionen: [...zustand.entfernt] })
+        : planAenderung(altListe, soll, heute, { version, entfernteVersionen: [...zustand.entfernt], aufraeumen: true });
       const { loeschen, neu, aendern } = aenderung;
       if (!loeschen.length && !neu.length && !aendern.length) { showToast('Keine Änderung.'); return; }
-      const liste = await warnungPruefen(planNachher(alt, aenderung));
+      const liste = await warnungPruefen(planNachher(altListe, aenderung));
       if (liste === null) { showToast('Termine konnten nicht geprüft werden – nicht gespeichert.', 'error'); return; }
       warnungZeigen(liste);
       if (liste.length && showConfirmModal) {

@@ -22,9 +22,12 @@
  * für Sonderfälle.
  */
 
-const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
+/** @type {Record<string, string>} */
+const ESC_MAP = {
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-}[c]));
+};
+/** @param {any} s */
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ESC_MAP[c] || c);
 
 /**
  * Hängt die Farbfelder in einen Behälter und hält sie mit dem Eingabefeld
@@ -33,7 +36,7 @@ const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
  * @param {object} o
  * @param {Element} o.behaelter  Wohin die Felder kommen
  * @param {HTMLInputElement} o.eingabe  Das `type="color"`-Feld
- * @param {string[]} o.farben
+ * @param {string[]} [o.farben]
  * @returns {{setze: (farbe: string) => void}} `setze` für „Leistung bearbeiten"
  */
 export function mountFarbwahl({ behaelter, eingabe, farben = [] }) {
@@ -44,19 +47,22 @@ export function mountFarbwahl({ behaelter, eingabe, farben = [] }) {
     + ` style="background:${escapeHtml(f)}" aria-label="Farbe ${escapeHtml(f)}"></button>`
   ).join('');
 
+  /** @param {string | null | undefined} farbe */
   const markiere = (farbe) => {
     const wert = String(farbe || '').toLowerCase();
-    behaelter.querySelectorAll('.srv-farbfeld').forEach(el => {
-      const treffer = el.dataset.farbe.toLowerCase() === wert;
+    behaelter.querySelectorAll('.srv-farbfeld').forEach(node => {
+      const el = /** @type {HTMLElement} */ (node);
+      const treffer = (el.dataset.farbe || '').toLowerCase() === wert;
       el.classList.toggle('srv-farbfeld--aktiv', treffer);
       el.setAttribute('aria-pressed', treffer ? 'true' : 'false');
     });
   };
 
   behaelter.addEventListener('click', (ev) => {
-    const feld = ev.target.closest('.srv-farbfeld');
+    const target = /** @type {Element | null} */ (ev.target);
+    const feld = /** @type {HTMLElement | null} */ (target?.closest?.('.srv-farbfeld') || null);
     if (!feld) return;
-    eingabe.value = feld.dataset.farbe;
+    eingabe.value = feld.dataset.farbe || '';
     markiere(eingabe.value);
   });
 
@@ -85,6 +91,10 @@ export function mountFarbwahl({ behaelter, eingabe, farben = [] }) {
  */
 const _gebaut = new Map();
 
+/**
+ * @param {string} schluessel
+ * @param {Parameters<typeof mountFarbwahl>[0]} optionen
+ */
 export function farbwahlFuer(schluessel, optionen) {
   if (!_gebaut.has(schluessel)) _gebaut.set(schluessel, mountFarbwahl(optionen));
   return _gebaut.get(schluessel);

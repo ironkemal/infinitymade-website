@@ -29,7 +29,7 @@ function makeJetonConfig() {
 test('explicit mock: returns mock output when mock:true with mockFn', async () => {
   const res = await chat({
     mock: true,
-    mockFn: ({ messages }) => `Echo: ${messages[0].content}`,
+    mockFn: ({ messages }) => `Echo: ${messages?.[0]?.content}`,
     messages: [{ role: 'user', content: 'Hallo Welt' }]
   });
 
@@ -56,10 +56,11 @@ test('mode aus: safe German 503 error before network', async () => {
       config: cfg,
       messages: [{ role: 'user', content: 'Hallo' }]
     }),
-    (err) => {
-      assert.equal(err.code, 'AI_MODE_AUS');
-      assert.equal(err.status, 503);
-      assert.equal(err.message, 'KI-Dienst ist deaktiviert');
+    (/** @type {unknown} */ err) => {
+      const e = /** @type {{ code?: string, status?: number, message: string }} */ (err);
+      assert.equal(e.code, 'AI_MODE_AUS');
+      assert.equal(e.status, 503);
+      assert.equal(e.message, 'KI-Dienst ist deaktiviert');
       return true;
     }
   );
@@ -78,10 +79,11 @@ test('readiness gate: safe German 503 error if AI_ACTIVATION_READY is not 1', as
       config: cfg,
       messages: [{ role: 'user', content: 'Hallo' }]
     }),
-    (err) => {
-      assert.equal(err.code, 'AI_NOT_ACTIVATED');
-      assert.equal(err.status, 503);
-      assert.equal(err.message, 'KI-Dienst ist nicht betriebsbereit geschaltet');
+    (/** @type {unknown} */ err) => {
+      const e = /** @type {{ code?: string, status?: number, message: string }} */ (err);
+      assert.equal(e.code, 'AI_NOT_ACTIVATED');
+      assert.equal(e.status, 503);
+      assert.equal(e.message, 'KI-Dienst ist nicht betriebsbereit geschaltet');
       return true;
     }
   );
@@ -102,10 +104,11 @@ test('multimodal blocked: rejects image or non-string content blocks at transpor
         }
       ]
     }),
-    (err) => {
-      assert.equal(err.code, 'AI_MULTIMODAL_BLOCKED');
-      assert.equal(err.status, 400);
-      assert.match(err.message, /Multimodale Inhalte und Bilder sind am KI-Transport nicht zulässig/);
+    (/** @type {unknown} */ err) => {
+      const e = /** @type {{ code?: string, status?: number, message: string }} */ (err);
+      assert.equal(e.code, 'AI_MULTIMODAL_BLOCKED');
+      assert.equal(e.status, 400);
+      assert.match(e.message, /Multimodale Inhalte und Bilder sind am KI-Transport nicht zulässig/);
       return true;
     }
   );
@@ -120,7 +123,7 @@ test('sanitized message transport: rejects unknown extra properties or unknown r
       config: cfg,
       messages: [{ role: 'user', content: 'Hallo', covert_injection: true }]
     }),
-    (err) => err.code === 'AI_MESSAGES_INVALID'
+    (/** @type {unknown} */ err) => /** @type {{ code?: string }} */ (err).code === 'AI_MESSAGES_INVALID'
   );
 
   // Unknown role
@@ -129,7 +132,7 @@ test('sanitized message transport: rejects unknown extra properties or unknown r
       config: cfg,
       messages: [{ role: 'hacker', content: 'Hallo' }]
     }),
-    (err) => err.code === 'AI_MESSAGES_INVALID'
+    (/** @type {unknown} */ err) => /** @type {{ code?: string }} */ (err).code === 'AI_MESSAGES_INVALID'
   );
 });
 
@@ -143,7 +146,7 @@ test('payload parameter bounds: rejects invalid responseFormat, temperature, or 
       messages: [{ role: 'user', content: 'Test' }],
       responseFormat: { type: 'invalid_format' }
     }),
-    (err) => err.code === 'AI_PAYLOAD_INVALID'
+    (/** @type {unknown} */ err) => /** @type {{ code?: string }} */ (err).code === 'AI_PAYLOAD_INVALID'
   );
 
   // Negative temperature
@@ -153,7 +156,7 @@ test('payload parameter bounds: rejects invalid responseFormat, temperature, or 
       messages: [{ role: 'user', content: 'Test' }],
       temperature: -0.1
     }),
-    (err) => err.code === 'AI_PAYLOAD_INVALID'
+    (/** @type {unknown} */ err) => /** @type {{ code?: string }} */ (err).code === 'AI_PAYLOAD_INVALID'
   );
 
   // Out of bound maxTokens
@@ -163,16 +166,20 @@ test('payload parameter bounds: rejects invalid responseFormat, temperature, or 
       messages: [{ role: 'user', content: 'Test' }],
       maxTokens: 0
     }),
-    (err) => err.code === 'AI_PAYLOAD_INVALID'
+    (/** @type {unknown} */ err) => /** @type {{ code?: string }} */ (err).code === 'AI_PAYLOAD_INVALID'
   );
 });
 
 test('direct mode transport: sends api-key, store:false, redirect:error, and returns golden shape', async () => {
   const cfg = makeDirectConfig();
+  /** @type {string | null} */
   let requestedUrl = null;
+  /** @type {Record<string, string> | null} */
   let requestedHeaders = null;
+  /** @type {Record<string, unknown> | null} */
   let requestedBody = null;
 
+  /** @param {string} url @param {Record<string, any>} opts */
   const mockFetch = async (url, opts) => {
     requestedUrl = url;
     requestedHeaders = opts.headers;
@@ -205,11 +212,15 @@ test('direct mode transport: sends api-key, store:false, redirect:error, and ret
   assert.equal(res.deployment, 'gpt-4o-mini');
   assert.equal(typeof res.latency_ms, 'number');
 
-  assert.equal(requestedHeaders['api-key'], 'secret-api-key-12345');
-  assert.equal(requestedHeaders['Authorization'], undefined);
-  assert.equal(requestedBody.store, false);
-  assert.deepEqual(requestedBody.response_format, { type: 'json_object' });
-  assert.ok(requestedUrl.startsWith(`https://${FAKE_HOST}/openai/deployments/gpt-4o-mini/chat/completions?api-version=2024-10-21`));
+  const headers = /** @type {Record<string, string> | null} */ (requestedHeaders);
+  const body = /** @type {Record<string, unknown> | null} */ (requestedBody);
+  const urlSeen = /** @type {string | null} */ (requestedUrl);
+  assert.ok(headers && body && urlSeen);
+  assert.equal(headers['api-key'], 'secret-api-key-12345');
+  assert.equal(headers['Authorization'], undefined);
+  assert.equal(body.store, false);
+  assert.deepEqual(body.response_format, { type: 'json_object' });
+  assert.ok(urlSeen.startsWith(`https://${FAKE_HOST}/openai/deployments/gpt-4o-mini/chat/completions?api-version=2024-10-21`));
 });
 
 test('jeton mode transport: sends Bearer token and uses jeton endpoint', async () => {
@@ -233,7 +244,9 @@ test('jeton mode transport: sends Bearer token and uses jeton endpoint', async (
     allowedHosts: ALLOWED_HOSTS
   });
 
+  /** @type {Record<string, string> | null} */
   let requestedHeaders = null;
+  /** @param {string} url @param {Record<string, any>} opts */
   const mockFetch = async (url, opts) => {
     requestedHeaders = opts.headers;
     return {
@@ -255,8 +268,10 @@ test('jeton mode transport: sends Bearer token and uses jeton endpoint', async (
   });
 
   assert.equal(res.content, 'Antwort mit Jeton');
-  assert.equal(requestedHeaders['Authorization'], 'Bearer token-jeton-bearer-12345');
-  assert.equal(requestedHeaders['api-key'], undefined);
+  const headers = /** @type {Record<string, string> | null} */ (requestedHeaders);
+  assert.ok(headers);
+  assert.equal(headers['Authorization'], 'Bearer token-jeton-bearer-12345');
+  assert.equal(headers['api-key'], undefined);
 });
 
 test('provider response validation: rejects malformed choice or non-integer usage', async () => {
@@ -272,7 +287,7 @@ test('provider response validation: rejects malformed choice or non-integer usag
 
   await assert.rejects(
     async () => chat({ config: cfg, fetchImpl: mockNoChoices, messages: [{ role: 'user', content: 'hi' }] }),
-    (err) => err.code === 'AI_RESPONSE_MALFORMED'
+    (/** @type {unknown} */ err) => /** @type {{ code?: string }} */ (err).code === 'AI_RESPONSE_MALFORMED'
   );
 
   // Negative usage
@@ -288,12 +303,13 @@ test('provider response validation: rejects malformed choice or non-integer usag
 
   await assert.rejects(
     async () => chat({ config: cfg, fetchImpl: mockNegativeUsage, messages: [{ role: 'user', content: 'hi' }] }),
-    (err) => err.code === 'AI_RESPONSE_MALFORMED'
+    (/** @type {unknown} */ err) => /** @type {{ code?: string }} */ (err).code === 'AI_RESPONSE_MALFORMED'
   );
 });
 
 test('fast timeout seam: timeoutMs triggers safe AI_TIMEOUT quickly', async () => {
   const cfg = makeDirectConfig();
+  /** @param {string} url @param {Record<string, any>} opts */
   const hangingFetch = async (url, opts) => {
     await new Promise(r => setTimeout(r, 200));
     return { status: 200, ok: true };
@@ -306,9 +322,10 @@ test('fast timeout seam: timeoutMs triggers safe AI_TIMEOUT quickly', async () =
       timeoutMs: 25, // Explicit short timeout seam
       messages: [{ role: 'user', content: 'Timeout Test' }]
     }),
-    (err) => {
-      assert.equal(err.code, 'AI_TIMEOUT');
-      assert.equal(err.status, 503);
+    (/** @type {unknown} */ err) => {
+      const e = /** @type {{ code?: string, status?: number }} */ (err);
+      assert.equal(e.code, 'AI_TIMEOUT');
+      assert.equal(e.status, 503);
       return true;
     }
   );
@@ -340,8 +357,10 @@ test('401 jeton retry: exactly one forced refresh and retry, successful second c
   });
 
   let fetchAttempts = 0;
+  /** @type {string[]} */
   const authHeadersSeen = [];
 
+  /** @param {string} url @param {Record<string, any>} opts */
   const mockFetch = async (url, opts) => {
     fetchAttempts++;
     authHeadersSeen.push(opts.headers['Authorization']);
@@ -406,10 +425,11 @@ test('401 jeton fail: second 401 results in safe 503 unavailable', async () => {
       fetchImpl: mockFetch,
       messages: [{ role: 'user', content: 'Test' }]
     }),
-    (err) => {
-      assert.equal(err.code, 'AI_UNAVAILABLE');
-      assert.equal(err.status, 503);
-      assert.match(err.message, /Authentifizierung fehlgeschlagen/);
+    (/** @type {unknown} */ err) => {
+      const e = /** @type {{ code?: string, status?: number, message: string }} */ (err);
+      assert.equal(e.code, 'AI_UNAVAILABLE');
+      assert.equal(e.status, 503);
+      assert.match(e.message, /Authentifizierung fehlgeschlagen/);
       return true;
     }
   );
@@ -461,10 +481,11 @@ test('abort signal: cancels request and throws AI_ABORTED without leaking signal
       signal: controller.signal,
       messages: [{ role: 'user', content: 'Abbruch' }]
     }),
-    (err) => {
-      assert.equal(err.name, 'AbortError');
-      assert.equal(err.code, 'AI_ABORTED');
-      assert.ok(!err.message.includes('secret-token-12345-leak-attempt'));
+    (/** @type {unknown} */ err) => {
+      const e = /** @type {{ name?: string, code?: string, message: string }} */ (err);
+      assert.equal(e.name, 'AbortError');
+      assert.equal(e.code, 'AI_ABORTED');
+      assert.ok(!e.message.includes('secret-token-12345-leak-attempt'));
       return true;
     }
   );
@@ -482,11 +503,12 @@ test('error sanitization: does not leak secret in network failure', async () => 
       fetchImpl: failingFetch,
       messages: [{ role: 'user', content: 'Test' }]
     }),
-    (err) => {
-      assert.equal(err.code, 'AI_COMMUNICATION_ERROR');
-      assert.equal(err.status, 503);
-      assert.ok(!err.message.includes('secret-api-key-12345'));
-      assert.ok(!err.message.includes('https://secret-url.com'));
+    (/** @type {unknown} */ err) => {
+      const e = /** @type {{ code?: string, status?: number, message: string }} */ (err);
+      assert.equal(e.code, 'AI_COMMUNICATION_ERROR');
+      assert.equal(e.status, 503);
+      assert.ok(!e.message.includes('secret-api-key-12345'));
+      assert.ok(!e.message.includes('https://secret-url.com'));
       return true;
     }
   );

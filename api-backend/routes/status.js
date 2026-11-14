@@ -28,6 +28,7 @@ const CACHE_MS = 30_000;
  * @param {object}   o
  * @param {function} o.pruefungen  () => Prüfungen für statusSammeln (frisch je Lauf: liest wartung/zaehler)
  * @param {function} [o.auth]      Ersatz für requireAuth (Tests)
+ * @param {number}   [o.cacheMs]
  */
 export function createStatusRouter({ pruefungen, auth = requireAuth, cacheMs = CACHE_MS }) {
   const limiter = rateLimit({
@@ -39,10 +40,11 @@ export function createStatusRouter({ pruefungen, auth = requireAuth, cacheMs = C
   });
 
   // Ein laufender Durchgang wird geteilt: zwei Tabs gleichzeitig = eine Messung.
+  /** @type {{ bis: number, promise: Promise<unknown> } | null} */
   let cache = null; // { bis, promise }
 
   const router = Router();
-  router.get('/status', nurKutu, limiter, auth, requireOwner, async (req, res) => {
+  router.get('/status', nurKutu, limiter, auth, requireOwner, async (/** @type {unknown} */ req, /** @type {{ set: (k: string, v: string) => void, json: (b: unknown) => void, status: (c: number) => { json: (b: unknown) => void } }} */ res) => {
     try {
       const jetzt = Date.now();
       if (!cache || cache.bis < jetzt) {
@@ -54,7 +56,7 @@ export function createStatusRouter({ pruefungen, auth = requireAuth, cacheMs = C
       res.set('Cache-Control', 'no-store');
       res.json(erg);
     } catch (err) {
-      console.error('[status] Sammeln fehlgeschlagen:', err?.message || err);
+      console.error('[status] Sammeln fehlgeschlagen:', /** @type {Error} */ (err)?.message || err);
       res.status(500).json({ error: 'Status konnte nicht ermittelt werden.' });
     }
   });

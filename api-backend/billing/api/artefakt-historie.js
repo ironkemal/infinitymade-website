@@ -6,10 +6,15 @@ import { createHash } from 'node:crypto';
 
 const SPALTEN = 'id,role,kind,state,sha256,legacy,created_at,published_at,retired_at,storage_path';
 const HEADER_PFADE = ['storage_path', 'auftragsdatei_path', 'begleitzettel_path', 'signed_storage_path', 'encrypted_storage_path'];
+/** @type {Record<string, string>} */
 const ROLLEN_TEXT = { dta: 'DTA (unsigniert)', auftrag: 'Auftragsdatei', begleit: 'Begleitzettel', signed: 'Signierte Datei', encrypted: 'Verschlüsselte Datei' };
 const SIEBEN_TAGE_MS = 7 * 24 * 3600 * 1000;
 
-/** Lokaler Download-Name je Rolle — unterscheidbar und verstaendlich (Live-QA C-2). */
+/**
+ * Lokaler Download-Name je Rolle — unterscheidbar und verstaendlich (Live-QA C-2).
+ * @param {string} role
+ * @param {unknown} dateiname
+ */
 export function dateinameFuer(role, dateiname) {
   const basis = String(dateiname || 'abrechnung').replace(/[^A-Za-z0-9._-]/g, '_') || 'abrechnung';
   switch (role) {
@@ -23,12 +28,23 @@ export function dateinameFuer(role, dateiname) {
   }
 }
 
+/**
+ * @param {number} status
+ * @param {string} code
+ * @param {string} message
+ * @returns {Error & { status: number, statusCode: number, code: string }}
+ */
 function fehler(status, code, message) {
-  const e = new Error(message);
-  e.status = status; e.statusCode = status; e.code = code;
+  /** @type {Error & { status: number, statusCode: number, code: string }} */
+  const e = Object.assign(new Error(message), { status, statusCode: status, code });
   return e;
 }
 
+/**
+ * @param {any} db
+ * @param {string} ownerId
+ * @param {string} abrechnungId
+ */
 async function ladeHeader(db, ownerId, abrechnungId) {
   const { data, error } = await db.from('abrechnung')
     .select('id,owner_id,status,dateiname,created_at,' + HEADER_PFADE.join(','))
@@ -38,6 +54,7 @@ async function ladeHeader(db, ownerId, abrechnungId) {
   return data;
 }
 
+/** @param {{ db: any, ownerId: string, abrechnungId: string, jetzt?: Date }} opts */
 export async function listeArtefaktVersionen({ db, ownerId, abrechnungId, jetzt = new Date() }) {
   const hdr = await ladeHeader(db, ownerId, abrechnungId);
   const { data, error } = await db.from('abrechnung_artefakt_version')
@@ -51,7 +68,7 @@ export async function listeArtefaktVersionen({ db, ownerId, abrechnungId, jetzt 
     abrechnungId,
     eingereicht,
     versionen: data.map(r => {
-      const alterMs = jetzt - new Date(r.created_at);
+      const alterMs = jetzt.getTime() - new Date(r.created_at).getTime();
       const signiert = r.role === 'signed';
       return {
         id: r.id,
@@ -76,6 +93,7 @@ export async function listeArtefaktVersionen({ db, ownerId, abrechnungId, jetzt 
   };
 }
 
+/** @param {{ db: any, ownerId: string, abrechnungId: string, versionId: string }} opts */
 export async function ladeArtefaktVersion({ db, ownerId, abrechnungId, versionId }) {
   const hdr = await ladeHeader(db, ownerId, abrechnungId);
   const { data: reg, error } = await db.from('abrechnung_artefakt_version')

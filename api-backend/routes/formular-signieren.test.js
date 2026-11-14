@@ -176,13 +176,17 @@ test('pruefeFormularSignierenEingabe: signed_name wird auf max 200 Zeichen gekü
 // 2. HTTP-Endpunkt-Tests mit Mock-Supabase und lokalem Express-Server
 // ============================================================================
 
+/**
+ * @param {any} router
+ * @param {(baseUrl: string) => Promise<void>} fn
+ */
 async function mitServer(router, fn) {
   const app = express();
   app.use(express.json({ limit: '6mb' }));
   app.use('/api', router);
   const server = http.createServer(app);
-  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-  const port = server.address().port;
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', /** @type {() => void} */ (resolve)));
+  const port = (/** @type {import('node:net').AddressInfo} */ (server.address())).port;
   const baseUrl = `http://127.0.0.1:${port}`;
   try {
     await fn(baseUrl);
@@ -191,11 +195,18 @@ async function mitServer(router, fn) {
   }
 }
 
+/**
+ * @param {any} [konfiguration]
+ */
 function erstelleMockSupabase(konfiguration = {}) {
   const storageFiles = new Map(konfiguration.storageFiles || []);
+  /** @type {any[]} */
   const storageUploads = [];
+  /** @type {any[]} */
   const storageRemovals = [];
+  /** @type {any[]} */
   const patientDokumenteRows = [];
+  /** @type {any[]} */
   const patientConsentsRows = [];
 
   const client = {
@@ -204,13 +215,14 @@ function erstelleMockSupabase(konfiguration = {}) {
     _patientDokumenteRows: patientDokumenteRows,
     _patientConsentsRows: patientConsentsRows,
 
-    from(table) {
+    from(/** @type {string} */ table) {
+      /** @type {Record<string, any>} */
       const filters = {};
       return {
         select() {
           return this;
         },
-        eq(col, val) {
+        eq(/** @type {string} */ col, /** @type {any} */ val) {
           filters[col] = val;
           return this;
         },
@@ -234,7 +246,7 @@ function erstelleMockSupabase(konfiguration = {}) {
           }
           return { data: null, error: null };
         },
-        insert(row) {
+        insert(/** @type {any} */ row) {
           if (table === 'patient_dokumente') {
             if (konfiguration.patientDokumenteFehler) {
               return {
@@ -269,9 +281,9 @@ function erstelleMockSupabase(konfiguration = {}) {
     },
 
     storage: {
-      from(bucket) {
+      from(/** @type {string} */ bucket) {
         return {
-          download: async (pfad) => {
+          download: async (/** @type {string} */ pfad) => {
             if (konfiguration.storageDownloadFehler) {
               return { data: null, error: konfiguration.storageDownloadFehler };
             }
@@ -279,7 +291,7 @@ function erstelleMockSupabase(konfiguration = {}) {
             if (!datei) return { data: null, error: new Error('Datei nicht gefunden') };
             return { data: datei, error: null };
           },
-          upload: async (pfad, inhalt, _opts) => {
+          upload: async (/** @type {string} */ pfad, /** @type {any} */ inhalt, /** @type {any} */ _opts) => {
             if (konfiguration.storageUploadFehler) {
               return { data: null, error: konfiguration.storageUploadFehler };
             }
@@ -287,7 +299,7 @@ function erstelleMockSupabase(konfiguration = {}) {
             storageFiles.set(pfad, inhalt);
             return { data: { path: pfad }, error: null };
           },
-          remove: async (pfade) => {
+          remove: async (/** @type {string[]} */ pfade) => {
             for (const p of pfade) {
               storageRemovals.push(p);
               storageFiles.delete(p);
@@ -302,7 +314,7 @@ function erstelleMockSupabase(konfiguration = {}) {
   return client;
 }
 
-const mockAuthMiddleware = (req, _res, next) => {
+const mockAuthMiddleware = (/** @type {any} */ req, /** @type {any} */ _res, /** @type {any} */ next) => {
   req.auth = {
     userId: USER_ID,
     tenantId: TENANT_ID,

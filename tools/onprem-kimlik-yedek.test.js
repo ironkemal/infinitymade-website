@@ -17,6 +17,10 @@ const installPfad = path.join(repoRoot, 'onprem', 'install.sh');
  * oder einer Zeile ohne Einrückung. Nur innerhalb von `services:` (unter `volumes:`
  * stehen gleich eingerückte Volume-Namen), Kommentarzeilen zählen nicht.
  */
+/**
+ * @param {string} text
+ * @param {string} name
+ */
 export function dienstBlock(text, name) {
   const alle = text.split(/\r?\n/);
   const start = alle.findIndex((z) => /^services:\s*$/.test(z));
@@ -27,6 +31,7 @@ export function dienstBlock(text, name) {
   const topLevelRegex = /^[^\s#]/;
 
   let erfassen = false;
+  /** @type {string[]} */
   const block = [];
 
   for (const zeile of zeilen) {

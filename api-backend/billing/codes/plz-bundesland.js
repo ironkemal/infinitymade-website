@@ -55,6 +55,7 @@ export const BUNDESLAENDER = Object.freeze([
 
 /**
  * Alle Bundesländer, die zu einer PLZ passen.
+ * @param {unknown} plz
  * @returns {string[]} 0 = unbekannte PLZ · 1 = eindeutig · 2 = Grenzfall
  */
 export function bundeslandKandidaten(plz) {
@@ -68,6 +69,7 @@ export function bundeslandKandidaten(plz) {
 /**
  * Bundesland einer PLZ — oder null, wenn es keine eindeutige Antwort gibt.
  * Bewusst ohne Vorgabewert: der Aufrufer muss den Fall behandeln.
+ * @param {unknown} plz
  * @returns {string|null}
  */
 export function bundeslandFuerPlz(plz) {
@@ -77,6 +79,7 @@ export function bundeslandFuerPlz(plz) {
 
 /**
  * Klartext für die 422-Antwort, wenn die PLZ keine eindeutige Antwort hergibt.
+ * @param {unknown} plz
  * @returns {string|null} null, wenn alles in Ordnung ist
  */
 export function bundeslandFehlerText(plz) {

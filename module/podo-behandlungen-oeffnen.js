@@ -24,6 +24,8 @@
  * so bleibt die Datei ohne DOM/Supabase-Mock testbar.
  */
 
+import { alsBerlinDatum } from './berlin-datum.js';
+
 /**
  * Podo oder Fizyo? `bookings.verordnung_id` wird ausschliesslich von
  * `bindeTermin()` (`module/verordnung-termine.js`) geschrieben und NUR für
@@ -48,11 +50,9 @@ export function terminIstPodo(booking, sector) {
  * `module/podo-einheiten.js` und `module/podo-geplant.js` — bewusst nicht neu
  * geschrieben, nur auf `booking.start_time` angewandt.
  *
- * @param {{start_time?:string|null}} booking
+ * @param {{start_time?:string|null} | null | undefined} [booking]
  * @returns {string|undefined} `YYYY-MM-DD`, oder `undefined` ohne `start_time`
  */
-import { alsBerlinDatum } from './berlin-datum.js';
-
 export function terminDatum(booking) {
   if (!booking?.start_time) return undefined;
   return alsBerlinDatum(booking.start_time) || undefined;
@@ -71,40 +71,37 @@ export function terminInZukunft(datum, heute) {
 }
 
 /**
+ * @typedef {Object} PodoOeffnenOptionen
+ * @property {string} [vordId]
+ * @property {string} [datum]
+ * @property {boolean} [mehrdeutigFragen]
+ * @property {string} [bookingId]
+ */
+
+/**
+ * @typedef {Object} PodoOeffnenDeps
+ * @property {{ from: (table: string) => any }} [sb]
+ * @property {string} [ownerId]
+ * @property {(msg: string, typ?: string) => void} [showToast]
+ * @property {() => void} [closeBkActionPanel]
+ * @property {(id: string | null, vorwahl: any) => void} [setPodVorwahl]
+ * @property {(panel: string) => Promise<any> | any} [switchPanel]
+ * @property {(opts: any) => Promise<boolean>} [showConfirmModal]
+ */
+
+/**
  * Sprung in die Behandlungsdokumentation der Podologie.
  *
  * @param {string|null} leadId
- * @param {{vordId?:string, datum?:string, mehrdeutigFragen?:boolean}} [opt]
- *   `vordId` — schon bekannte Verordnung (z. B. vom Termin über
- *   `bookings.verordnung_id`): die Suche unten entfällt, es wird direkt
- *   geöffnet. `datum` — Termin-Tag, wird IMMER als Vorbelegung durchgereicht
- *   (`setPodVorwahl(id, { datum })`, S1.7, `module/podo-behandlungsdatum-vorwahl.js`) —
- *   auch im Suchpfad ohne `vordId` (podologischer Termin, der noch keiner
- *   Verordnung zugeordnet ist). Ohne `vordId` ändert sich nur die Suche nicht:
- *   die laufende Verordnung des Patienten wird weiterhin gesucht, nicht direkt
- *   geöffnet. Die 4 alten Aufrufer (Einheitenblock) übergeben nie `datum` noch
- *   `mehrdeutigFragen` — für sie bleibt das Verhalten unverändert (`setPodVorwahl`
- *   liest ein fehlendes `datum` ohnehin als `null`).
- *   `mehrdeutigFragen` — nur von `terminStartenPodo` gesetzt: hat der Patient
- *   MEHR ALS EINE laufende Verordnung, wird KEINE automatisch vorgewählt
- *   (Verwechslungsgefahr — die falsche Verordnung bekäme die Behandlung des
- *   Tages). Stattdessen öffnet die Liste leer (`setPodVorwahl(null, { datum })`,
- *   `podologie-abrechnung.js` zeigt dann "← Wählen Sie eine Verordnung aus der
- *   Liste." und der Patient lässt sich weiter dort anklicken) plus ein Hinweis.
- * @param {object} deps
- * @param {object} deps.sb                 Supabase-Client
- * @param {string} deps.ownerId
- * @param {Function} deps.showToast
- * @param {Function} deps.closeBkActionPanel
- * @param {Function} deps.setPodVorwahl
- * @param {Function} deps.switchPanel
+ * @param {PodoOeffnenOptionen} [opt]
+ * @param {PodoOeffnenDeps} [deps]
  */
 export async function oeffnePodoBehandlungen(leadId, opt = {}, deps = {}) {
   const { vordId, datum, mehrdeutigFragen, bookingId } = opt;
   // S3.13: Hausbesuch — Buchungs-ID mitgeben, damit die Tagesbehandlung die Fahrt beenden kann.
   // Ohne bookingId bleibt der Aufruf byteweise wie vorher.
   const vorwahl = bookingId ? { datum, bookingId } : { datum };
-  const { sb, ownerId, showToast, closeBkActionPanel, setPodVorwahl, switchPanel } = deps;
+  const { sb, ownerId, showToast = () => {}, closeBkActionPanel = () => {}, setPodVorwahl = () => {}, switchPanel = () => {} } = deps;
 
   if (!leadId) { showToast('Kein Patient zu dieser Verordnung gefunden.', 'warning'); return; }
 
@@ -119,6 +116,7 @@ export async function oeffnePodoBehandlungen(leadId, opt = {}, deps = {}) {
   // `.in()`: `aktiv` ist in der Spalte NULL, `.in()` trifft NULL nicht.
   // `limit(2)` nur wenn Mehrdeutigkeit erkannt werden soll — ein zweiter
   // Treffer reicht, um "mehr als eine" festzustellen, ohne alle zu laden.
+  if (!sb) return;
   const { data: vords } = await sb.from('prescriptions')
     .select('id, abrechnung_status, ausstellungsdatum')
     .eq('owner_id', ownerId).eq('patient_id', leadId)
@@ -157,17 +155,16 @@ export async function oeffnePodoBehandlungen(leadId, opt = {}, deps = {}) {
  *     Behandlung auf dem falschen Rezept — deshalb `mehrdeutigFragen: true`
  *     (nur hier, s. `oeffnePodoBehandlungen`).
  *
- * @param {{lead_id?:string|null, verordnung_id?:string|null, start_time?:string|null}} booking
- * @param {object} deps  s. `oeffnePodoBehandlungen`, plus:
- * @param {Function} deps.showConfirmModal  `showConfirmModal({title, message, confirmText, cancelText})` → `Promise<boolean>`
+ * @param {{id?: string, lead_id?:string|null, verordnung_id?:string|null, start_time?:string|null, hausbesuch?: boolean} | null | undefined} booking
+ * @param {PodoOeffnenDeps} deps
  */
 export async function terminStartenPodo(booking, deps) {
   let datum = terminDatum(booking);
   const heute = alsBerlinDatum(new Date());
 
-  if (terminInZukunft(datum, heute)) {
+  if (terminInZukunft(datum, heute) && datum) {
     const [j, m, t] = datum.split('-');
-    const ok = await deps.showConfirmModal({
+    const ok = await deps.showConfirmModal?.({
       title: 'Termin liegt in der Zukunft',
       message: 'Der Termin ist am ' + t + '.' + m + '.' + j + '. Trotzdem heute behandeln?',
       confirmText: 'Heute behandeln',
@@ -181,12 +178,12 @@ export async function terminStartenPodo(booking, deps) {
   // ohne Hinweis ein zweites Mal — und lud zur Doppelerfassung ein (canli-test
   // 20.10.2026). Jetzt: sagen, dass es sie gibt; geöffnet wird trotzdem
   // derselbe Tag (dort steht die vorhandene Behandlung zum Ansehen/Stornieren).
-  if (booking?.verordnung_id && deps.sb) {
+  if (booking?.verordnung_id && deps.sb && datum) {
     const { data: schon } = await deps.sb.from('podologie_behandlungen').select('id')
       .eq('owner_id', deps.ownerId).eq('verordnung_id', booking.verordnung_id)
       .eq('behandlungsdatum', datum).is('storniert_am', null).limit(1);
     if (schon?.length) {
-      const ok = await deps.showConfirmModal({
+      const ok = await deps.showConfirmModal?.({
         title: 'Heute schon dokumentiert',
         message: 'Für diese Verordnung ist am ' + datum.split('-').reverse().join('.') + ' bereits eine Behandlung dokumentiert. '
           + 'Die Tagesdokumentation öffnen, um sie anzusehen oder zu korrigieren?',

@@ -5,6 +5,23 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateTaskPayload } from './ki-schema.js';
 
+/**
+ * @param {unknown} err
+ * @returns {Error & { code?: string, status?: number }}
+ */
+function asSchemaError(err) {
+  return /** @type {Error & { code?: string, status?: number }} */ (err);
+}
+
+/**
+ * @param {unknown} err
+ * @param {string} code
+ * @returns {boolean}
+ */
+function hasCode(err, code) {
+  return typeof err === 'object' && err !== null && 'code' in err && err.code === code;
+}
+
 test('rejects unknown root property with 400 KI_SCHEMA', () => {
   const payload = {
     intent: 'Terminbestätigung',
@@ -12,7 +29,8 @@ test('rejects unknown root property with 400 KI_SCHEMA', () => {
   };
   assert.throws(
     () => validateTaskPayload('b2c-draft', payload, { mode: 'direkt', allowFreeText: true }),
-    (err) => {
+    (rawErr) => {
+      const err = asSchemaError(rawErr);
       assert.equal(err.code, 'KI_SCHEMA');
       assert.equal(err.status, 400);
       assert.ok(err.message.includes('unauthorized_extra_field'));
@@ -31,7 +49,8 @@ test('rejects unknown property in nested contacts object', () => {
   };
   assert.throws(
     () => validateTaskPayload('b2c-draft', payload, { mode: 'direkt', allowFreeText: true }),
-    (err) => {
+    (rawErr) => {
+      const err = asSchemaError(rawErr);
       assert.equal(err.code, 'KI_SCHEMA');
       assert.equal(err.status, 400);
       assert.ok(err.message.includes('attacker_payload'));
@@ -47,7 +66,8 @@ test('rejects deep nesting exceeding MAX_DEPTH', () => {
   };
   assert.throws(
     () => validateTaskPayload('b2c-draft', deepPayload, { mode: 'direkt', allowFreeText: true }),
-    (err) => {
+    (rawErr) => {
+      const err = asSchemaError(rawErr);
       assert.equal(err.code, 'KI_SCHEMA');
       assert.equal(err.status, 400);
       assert.ok(err.message.includes('Verschachtelungstiefe'));
@@ -62,7 +82,8 @@ test('rejects invalid date and time formats in slots', () => {
   };
   assert.throws(
     () => validateTaskPayload('appointment-confirm-draft', badDatePayload, { mode: 'direkt' }),
-    (err) => {
+    (rawErr) => {
+      const err = asSchemaError(rawErr);
       assert.equal(err.code, 'KI_SCHEMA');
       assert.ok(err.message.includes('YYYY-MM-DD'));
       return true;
@@ -74,7 +95,8 @@ test('rejects invalid date and time formats in slots', () => {
   };
   assert.throws(
     () => validateTaskPayload('appointment-confirm-draft', badTimePayload, { mode: 'direkt' }),
-    (err) => {
+    (rawErr) => {
+      const err = asSchemaError(rawErr);
       assert.equal(err.code, 'KI_SCHEMA');
       assert.ok(err.message.includes('HH:mm'));
       return true;
@@ -86,7 +108,8 @@ test('jeton mode without operator gate rejects freetext intent with KI_FREITEXT_
   const payload = { intent: 'Freitext Auftrag' };
   assert.throws(
     () => validateTaskPayload('b2c-draft', payload, { mode: 'jeton' }),
-    (err) => {
+    (rawErr) => {
+      const err = asSchemaError(rawErr);
       assert.equal(err.code, 'KI_FREITEXT_GESPERRT');
       assert.equal(err.status, 403);
       return true;
@@ -101,7 +124,8 @@ test('jeton mode without operator gate rejects series userFeedback and notes wit
   };
   assert.throws(
     () => validateTaskPayload('series-scheduler', payloadFeedback, { mode: 'jeton' }),
-    (err) => {
+    (rawErr) => {
+      const err = asSchemaError(rawErr);
       assert.equal(err.code, 'KI_FREITEXT_GESPERRT');
       assert.equal(err.status, 403);
       return true;
@@ -114,7 +138,8 @@ test('jeton mode without operator gate rejects series userFeedback and notes wit
   };
   assert.throws(
     () => validateTaskPayload('series-scheduler', payloadNotes, { mode: 'jeton' }),
-    (err) => {
+    (rawErr) => {
+      const err = asSchemaError(rawErr);
       assert.equal(err.code, 'KI_FREITEXT_GESPERRT');
       assert.equal(err.status, 403);
       return true;
@@ -131,7 +156,8 @@ test('jeton mode rejects rezept heilmittel_feld_text with KI_FREITEXT_GESPERRT',
   };
   assert.throws(
     () => validateTaskPayload('rezept-normalize', payload, { mode: 'jeton' }),
-    (err) => {
+    (rawErr) => {
+      const err = asSchemaError(rawErr);
       assert.equal(err.code, 'KI_FREITEXT_GESPERRT');
       assert.equal(err.status, 403);
       return true;
@@ -143,7 +169,8 @@ test('direct mode blocks freetext if allowFreeText is false', () => {
   const payload = { intent: 'Nachricht' };
   assert.throws(
     () => validateTaskPayload('b2c-draft', payload, { mode: 'direkt', allowFreeText: false }),
-    (err) => {
+    (rawErr) => {
+      const err = asSchemaError(rawErr);
       assert.equal(err.code, 'KI_FREITEXT_GESPERRT');
       assert.equal(err.status, 403);
       return true;
@@ -200,7 +227,8 @@ test('rejects arbitrary catalog label in heilmittel_positionen', () => {
   };
   assert.throws(
     () => validateTaskPayload('rezept-normalize', payload, { mode: 'direkt' }),
-    (err) => {
+    (rawErr) => {
+      const err = asSchemaError(rawErr);
       assert.equal(err.code, 'KI_SCHEMA');
       assert.ok(err.message.includes('unbekanntes Katalog-Label'));
       return true;
@@ -217,19 +245,19 @@ test('jeton mode with operator gate accepts mail freetext', () => {
 });
 
 test('invalid calendar dates, numeric coercion, nested freeText and arbitrary diagnosis fail', () => {
-  for (const payload of [{ count: '1' }, { count: 1, candidates: [{ date: '2026-02-31', time: '14:00' }] }, { count: 1, preferences: { notes: { date: 'private name' } } }, { count: 1, service: { duration: '30' } }, { count: 1, candidates: [{ date: '2026-10-15', time: '14:00', bucket: 60 }] }]) assert.throws(() => validateTaskPayload('series-scheduler', payload, { mode: 'jeton' }), e => e.code === 'KI_SCHEMA');
-  assert.throws(() => validateTaskPayload('rezept-normalize', { rezept: { diagnosegruppe: 'WS Private Patient' } }, { mode: 'jeton' }), e => e.code === 'KI_SCHEMA');
+  for (const payload of [{ count: '1' }, { count: 1, candidates: [{ date: '2026-02-31', time: '14:00' }] }, { count: 1, preferences: { notes: { date: 'private name' } } }, { count: 1, service: { duration: '30' } }, { count: 1, candidates: [{ date: '2026-10-15', time: '14:00', bucket: 60 }] }]) assert.throws(() => validateTaskPayload('series-scheduler', payload, { mode: 'jeton' }), e => hasCode(e, 'KI_SCHEMA'));
+  assert.throws(() => validateTaskPayload('rezept-normalize', { rezept: { diagnosegruppe: 'WS Private Patient' } }, { mode: 'jeton' }), e => hasCode(e, 'KI_SCHEMA'));
 });
 
 
 test('typed catalogue code cannot carry raw identity through structured A', () => {
-  assert.throws(() => validateTaskPayload('rezept-normalize', { rezept: {}, heilmittel_positionen: [{ x: 'NEUETESTPERSONQZX', label: 'Manuelle Therapie' }] }, { mode: 'jeton' }), e => e.code === 'KI_SCHEMA');
+  assert.throws(() => validateTaskPayload('rezept-normalize', { rezept: {}, heilmittel_positionen: [{ x: 'NEUETESTPERSONQZX', label: 'Manuelle Therapie' }] }, { mode: 'jeton' }), e => hasCode(e, 'KI_SCHEMA'));
   for (const x of ['X0501', '78010']) assert.equal(validateTaskPayload('rezept-normalize', { rezept: {}, heilmittel_positionen: [{ x, label: 'Manuelle Therapie' }] }, { mode: 'jeton' }), true);
 });
 
 
 test('catalogue category is fixed enum and cannot hide arbitrary private text', () => {
-  assert.throws(() => validateTaskPayload('rezept-normalize', { rezept: {}, heilmittel_positionen: [{ x: 'X0501', label: 'Manuelle Therapie', kat: 'Private Person' }] }, { mode: 'jeton' }), e => e.code === 'KI_SCHEMA');
+  assert.throws(() => validateTaskPayload('rezept-normalize', { rezept: {}, heilmittel_positionen: [{ x: 'X0501', label: 'Manuelle Therapie', kat: 'Private Person' }] }, { mode: 'jeton' }), e => hasCode(e, 'KI_SCHEMA'));
   assert.equal(validateTaskPayload('rezept-normalize', { rezept: {}, heilmittel_positionen: [{ x: 'X0501', label: 'Manuelle Therapie', kat: 'vorrangig' }] }, { mode: 'jeton' }), true);
 });
 
@@ -238,6 +266,6 @@ test('rezept-normalize akzeptiert alle aktuellen HeilM-RL-Diagnosegruppen und le
     assert.equal(validateTaskPayload('rezept-normalize', { rezept: { diagnosegruppe: dg }, heilmittel_positionen: [] }, { mode: 'jeton' }), true, dg);
   }
   for (const alt of ['WS1', 'WS2', 'EX3a', 'AT1', 'LY3', 'EN4', 'B3', 'EB1', 'SC1']) {
-    assert.throws(() => validateTaskPayload('rezept-normalize', { rezept: { diagnosegruppe: alt }, heilmittel_positionen: [] }, { mode: 'jeton' }), e => e.code === 'KI_SCHEMA', alt);
+    assert.throws(() => validateTaskPayload('rezept-normalize', { rezept: { diagnosegruppe: alt }, heilmittel_positionen: [] }, { mode: 'jeton' }), e => hasCode(e, 'KI_SCHEMA'), alt);
   }
 });

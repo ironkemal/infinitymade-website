@@ -80,9 +80,9 @@ test('ZAHLART_JE_KATEGORIE: karte mappt auf das historische ec, Rest 1:1', () =>
 test('STANDARD_KONTEN: Karte und PayPal sind Teil des Standardrahmens (Ops #271/#273)', () => {
   const karte = STANDARD_KONTEN.find(k => k.code === '1220');
   const paypal = STANDARD_KONTEN.find(k => k.code === '1250');
-  assert.equal(karte.kategorie, 'karte');
-  assert.equal(paypal.kategorie, 'paypal');
-  assert.ok(KONTO_KATEGORIEN.includes(karte.kategorie));
+  assert.equal(karte?.kategorie, 'karte');
+  assert.equal(paypal?.kategorie, 'paypal');
+  assert.ok(karte && KONTO_KATEGORIEN.includes(karte.kategorie));
 });
 
 test('normalisiereKonten: mehr als KONTEN_MAX Konten werden abgeschnitten', () => {
@@ -118,14 +118,14 @@ test('aktiveKonten: liefert nur aktive Konten fuer das Auswahlfeld', () => {
 
 test('findeKonto: findet auch deaktivierte Konten, damit alte Buchungen lesbar bleiben', () => {
   const profile = { buchungskonten: [{ code: '1210', label: 'Altes Konto', aktiv: false }] };
-  assert.equal(findeKonto(profile, '1210').label, 'Altes Konto');
-  assert.equal(findeKonto(profile, ' 1210 ').label, 'Altes Konto');
+  assert.equal(findeKonto(profile, '1210')?.label, 'Altes Konto');
+  assert.equal(findeKonto(profile, ' 1210 ')?.label, 'Altes Konto');
   assert.equal(findeKonto(profile, '9999'), null);
   assert.equal(findeKonto(profile, ''), null);
 });
 
 test('findeKonto: greift auch im Standardrahmen', () => {
-  assert.equal(findeKonto(null, '8700').label, 'Erlösschmälerung');
+  assert.equal(findeKonto(null, '8700')?.label, 'Erlösschmälerung');
 });
 
 test('kontoAnzeige: Nummer und Bezeichnung, ohne Nullwerte', () => {

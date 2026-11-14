@@ -6,21 +6,45 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { boxIdAusPublicKey, publicKeyAlsBase64url } from './signatur.js';
 
+/**
+ * @typedef {object} KutuKimlik
+ * @property {string} boxId
+ * @property {string | null} ad
+ * @property {string | null} fqdn
+ * @property {crypto.KeyObject} privateKey
+ * @property {crypto.KeyObject} publicKey
+ * @property {string} publicKeyBase64url
+ * @property {string} dir
+ * @property {boolean} neu
+ */
+
 export function kimlikVerzeichnis() {
   return process.env.KIMLIK_DIR || '/var/lib/praxura/kimlik';
 }
 
+/**
+ * @template T
+ * @param {string} dir
+ * @param {() => T} fn
+ * @returns {T}
+ */
 function wrapFsFehler(dir, fn) {
   try {
     return fn();
   } catch (e) {
-    if (e.code === 'EACCES' || e.code === 'EPERM') {
-      throw new Error(`Keine Schreibrechte in ${dir} (${e.code}). Volumes vorbereiten: install.sh erneut ausführen.`);
+    if ((/** @type {any} */ (e)).code === 'EACCES' || (/** @type {any} */ (e)).code === 'EPERM') {
+      throw new Error(`Keine Schreibrechte in ${dir} (${(/** @type {any} */ (e)).code}). Volumes vorbereiten: install.sh erneut ausführen.`);
     }
     throw e;
   }
 }
 
+/**
+ * @param {string} dir
+ * @param {string} endung
+ * @param {crypto.KeyObject} privateKey
+ * @param {crypto.KeyObject} publicKey
+ */
 function schreibeNeu(dir, endung, privateKey, publicKey) {
   const boxId = boxIdAusPublicKey(publicKey);
   wrapFsFehler(dir, () => {
@@ -41,26 +65,31 @@ function schreibeNeu(dir, endung, privateKey, publicKey) {
  * Liegt schon ein *.neu vor (früherer Versuch/Absturz), wird DIESES wiederverwendet statt neu gewürfelt —
  * so lässt sich ein abgebrochener Wechsel mit einem frischen Wiederverbindungs-Code fortsetzen.
  * Rückgabe enthält `neu: true`, wenn es das .neu-Paar ist.
+ * @param {{ dir?: string, ersetzen?: boolean }} [opts]
+ * @returns {KutuKimlik}
  */
 export function erzeugeKimlik({ dir = kimlikVerzeichnis(), ersetzen = false } = {}) {
   wrapFsFehler(dir, () => fs.mkdirSync(dir, { recursive: true, mode: 0o700 }));
   if (ersetzen) {
-    if (fs.existsSync(path.join(dir, 'box.key.neu'))) return ladeKimlik({ dir, endung: '.neu' });
+    if (fs.existsSync(path.join(dir, 'box.key.neu'))) return /** @type {KutuKimlik} */ (ladeKimlik({ dir, endung: '.neu' }));
     const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');
     schreibeNeu(dir, '.neu', privateKey, publicKey);
-    return ladeKimlik({ dir, endung: '.neu' });
+    return /** @type {KutuKimlik} */ (ladeKimlik({ dir, endung: '.neu' }));
   }
   const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');
   try {
     schreibeNeu(dir, '', privateKey, publicKey);
   } catch (e) {
-    if (e.code === 'EEXIST') throw new Error('Kimlik existiert bereits in ' + dir);
+    if ((/** @type {any} */ (e)).code === 'EEXIST') throw new Error('Kimlik existiert bereits in ' + dir);
     throw e;
   }
-  return ladeKimlik({ dir });
+  return /** @type {KutuKimlik} */ (ladeKimlik({ dir }));
 }
 
-/** *.neu → aktiv (erst NACH erfolgreicher Registrierung). Schlüssel zuletzt, damit box.json nie vor dem Schlüssel wechselt. */
+/**
+ * *.neu → aktiv (erst NACH erfolgreicher Registrierung). Schlüssel zuletzt, damit box.json nie vor dem Schlüssel wechselt.
+ * @param {{ dir?: string }} [opts]
+ */
 export function uebernehmeNeueKimlik({ dir = kimlikVerzeichnis() } = {}) {
   wrapFsFehler(dir, () => {
     for (const f of ['box.pub', 'box.json', 'box.key']) {
@@ -69,13 +98,18 @@ export function uebernehmeNeueKimlik({ dir = kimlikVerzeichnis() } = {}) {
   });
 }
 
-/** Identität laden. null, wenn keine vorhanden. */
+/**
+ * Identität laden. null, wenn keine vorhanden.
+ * @param {{ dir?: string, endung?: string }} [opts]
+ * @returns {KutuKimlik | null}
+ */
 export function ladeKimlik({ dir = kimlikVerzeichnis(), endung = '' } = {}) {
   const keyPfad = path.join(dir, 'box.key' + endung);
   if (!fs.existsSync(keyPfad)) return null;
   const privateKey = crypto.createPrivateKey(fs.readFileSync(keyPfad));
   const publicKey = crypto.createPublicKey(privateKey);
   const boxId = boxIdAusPublicKey(publicKey);
+  /** @type {{ ad?: string | null, fqdn?: string | null }} */
   let meta = {};
   try { meta = JSON.parse(fs.readFileSync(path.join(dir, 'box.json' + endung), 'utf8')); } catch { /* fehlt → ad unbekannt */ }
   return {
@@ -90,7 +124,10 @@ export function ladeKimlik({ dir = kimlikVerzeichnis(), endung = '' } = {}) {
   };
 }
 
-/** Zugeteilten Namen festhalten (nach erfolgreicher Registrierung). */
+/**
+ * Zugeteilten Namen festhalten (nach erfolgreicher Registrierung).
+ * @param {{ dir?: string, ad: string, fqdn?: string | null }} opts
+ */
 export function speichereAd({ dir = kimlikVerzeichnis(), ad, fqdn = null }) {
   const pfad = path.join(dir, 'box.json');
   const boxId = ladeKimlik({ dir })?.boxId;

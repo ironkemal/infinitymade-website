@@ -11,17 +11,30 @@
 // dieselbe, die der spätere Versand benutzt. Bewusst nicht im Frontend
 // nachgebaut: zwei Antworten auf dieselbe Frage wären der nächste stille Fehler.
 
+/**
+ * @typedef {Object} DateieinheitContext
+ * @property {string} apiBase
+ * @property {{ auth: { getSession: () => Promise<any> } }} supabase
+ */
+
+/** @type {DateieinheitContext | null} */
+let _ctx = null;
+
 // Über ctx.apiBase statt fest verdrahtetem Host — onprem-Urteil O-01/O-44
 // (08.09.2026): eine zweite Host-Konstante hätte die Onprem-Baseline über
 // 26 gehoben und die spätere Faz-1.1-Ablösung nicht mehr an einer Stelle machbar.
-const annahmestellenUrl = () => `${_ctx.apiBase}/billing/abrechnung/annahmestellen`;
+const annahmestellenUrl = () => `${_ctx?.apiBase || ''}/billing/abrechnung/annahmestellen`;
 
-let _ctx = null;
+/** @type {Map<string, any>} */
 const _cache = new Map();   // ik -> { aufloesbar, davIk, davName, kassenart, dateieinheit, … }
 
+/** @param {DateieinheitContext} ctx */
 export function initDateieinheit(ctx) { _ctx = ctx; }
 
-/** Bekannt? (ohne Netzaufruf) */
+/**
+ * Bekannt? (ohne Netzaufruf)
+ * @param {string} ik
+ */
 export function dateieinheitVon(ik) { return _cache.get(ik) || null; }
 
 /**
@@ -29,11 +42,12 @@ export function dateieinheitVon(ik) { return _cache.get(ik) || null; }
  * Fehler werden NICHT geworfen: die Abrechnung muss auch dann bedienbar
  * bleiben, wenn diese Zusatzinformation fehlt — sie ist Orientierung, kein
  * Riegel. Der Riegel sitzt im Backend (412, wenn nicht auflösbar).
+ * @param {string[]} iks
  * @returns {Promise<boolean>} true, wenn etwas Neues geladen wurde
  */
 export async function ladeDateieinheiten(iks) {
   const offen = [...new Set(iks.filter(ik => ik && !_cache.has(ik)))];
-  if (!offen.length) return false;
+  if (!offen.length || !_ctx) return false;
   try {
     const { data: { session } } = await _ctx.supabase.auth.getSession();
     const res = await fetch(annahmestellenUrl(), {
@@ -55,6 +69,7 @@ export async function ladeDateieinheiten(iks) {
 
 /**
  * Gruppiert IKs nach Dateieinheit.
+ * @param {string[]} iks
  * @returns {{ dateieinheiten: Map<string, string[]>, ungeklaert: string[], nichtAufloesbar: string[] }}
  */
 export function gruppiereNachDatei(iks) {
@@ -72,7 +87,11 @@ export function gruppiereNachDatei(iks) {
 }
 
 /** Kurzer Hinweis neben dem Kassennamen. Leer, solange nichts bekannt ist —
- *  ein Platzhalter wie „unbekannt" verunsichert mehr, als er erklärt. */
+ *  ein Platzhalter wie „unbekannt" verunsichert mehr, als er erklärt.
+ * @param {string} ik
+ * @param {(s: string) => string} escapeHtml
+ * @returns {string}
+ */
 export function dateieinheitBadge(ik, escapeHtml) {
   const info = _cache.get(ik);
   if (!info) return '';
@@ -91,6 +110,8 @@ export function dateieinheitBadge(ik, escapeHtml) {
  * Satz für die Sammelaktion — sagt in einem Satz, was der Klick auslöst.
  * Absichtlich in Dateien UND Annahmestellen gerechnet: die Zahl der Umschläge
  * ist die Zahl der Dateien, aber wohin sie gehen, entscheidet die Annahmestelle.
+ * @param {string[]} iks
+ * @returns {string}
  */
 export function auswahlHinweis(iks) {
   const { dateieinheiten, ungeklaert, nichtAufloesbar } = gruppiereNachDatei(iks);

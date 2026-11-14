@@ -21,15 +21,17 @@ test('actual POST rejects reversed bounds before insert; allows open bounds', as
   const source = fs.readFileSync(new URL('../billing/api/warteliste.routes.js', import.meta.url), 'utf8');
   const start = source.indexOf("router.post('/',");
   const end = source.indexOf("router.patch('/:id'", start);
+  /** @type {any} */
   let handler;
+  /** @type {any[]} */
   const writes = [];
-  const chain = { insert(payload) { writes.push(payload); return this; }, select() { return this; }, single() { return {data: writes.at(-1), error: null}; } };
+  const chain = { insert(/** @type {any} */ payload) { writes.push(payload); return this; }, select() { return this; }, single() { return {data: writes.at(-1), error: null}; } };
   vm.runInNewContext(source.slice(start, end), {
-    router: { post(_path, callback) { handler = callback; } },
+    router: { post(/** @type {any} */ _path, /** @type {any} */ callback) { handler = callback; } },
     resolveAuth: async () => ({tenantId: 'QA-OWNER'}),
     supabase: {from: () => chain}, wartelisteZeitfensterGueltig: valid, console,
   });
-  const res = () => ({code: 200, status(code) { this.code = code; return this; }, json(body) {this.body = body; return this;} });
+  const res = () => ({code: 200, body: /** @type {any} */ (undefined), status(/** @type {number} */ code) { this.code = code; return this; }, json(/** @type {any} */ body) {this.body = body; return this;} });
   for (const [from, to] of [['18:00', '10:00'], ['08:00', '08:00'], ['24:00', null]]) {
     const response = res();
     await handler({body: {preferred_time_from: from, preferred_time_to: to}}, response);

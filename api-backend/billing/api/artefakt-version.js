@@ -29,29 +29,36 @@ const NULLABLE_FELDER = [
 
 /**
  * Erzeugt einen generischen 409-Versionskonflikt-Fehler ohne Werte.
+ * @returns {Error & { status: number, statusCode: number, code: string }}
  */
 function createVersionConflictError() {
-  const error = new Error('Konflikt bei der Abrechnungsversion.');
-  error.status = 409;
-  error.statusCode = 409;
-  error.code = 'ABRECHNUNG_VERSION_CONFLICT';
+  /** @type {Error & { status: number, statusCode: number, code: string }} */
+  const error = Object.assign(new Error('Konflikt bei der Abrechnungsversion.'), {
+    status: 409,
+    statusCode: 409,
+    code: 'ABRECHNUNG_VERSION_CONFLICT',
+  });
   return error;
 }
 
 /**
  * Erzeugt einen generischen 500-Persistenzfehler ohne Werte.
+ * @returns {Error & { status: number, statusCode: number, code: string }}
  */
 function createPersistenceError() {
-  const error = new Error('Fehler bei der Persistierung des Artefakts.');
-  error.status = 500;
-  error.statusCode = 500;
-  error.code = 'ARTEFAKT_PERSISTENZ_FEHLER';
+  /** @type {Error & { status: number, statusCode: number, code: string }} */
+  const error = Object.assign(new Error('Fehler bei der Persistierung des Artefakts.'), {
+    status: 500,
+    statusCode: 500,
+    code: 'ARTEFAKT_PERSISTENZ_FEHLER',
+  });
   return error;
 }
 
 /**
  * Validiert einen Entwurfssnapshot vor dem Überschreiben.
  * Fail-closed: Alle Felder müssen vorhanden sein (undefined verboten).
+ * @param {any} snapshot
  */
 export function pruefeEntwurfsVersion(snapshot) {
   if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) {
@@ -138,6 +145,7 @@ export function pruefeEntwurfsVersion(snapshot) {
 /**
  * Führt ein atomares CAS-Update auf die Abrechnung durch.
  * Vergleicht alle Versionsfelder. updated_at wird nie manuell geschrieben (DB-Trigger maßgeblich).
+ * @param {{ db: any, vorher: any, patch: Record<string, any> }} opts
  */
 export async function aktualisiereArtefaktVersion({ db, vorher, patch }) {
   // Snapshot vorab validieren
@@ -152,6 +160,7 @@ export async function aktualisiereArtefaktVersion({ db, vorher, patch }) {
   }
 
   // updated_at niemals explizit schreiben; Trigger übernimmt Aktualisierung
+  /** @type {Record<string, any>} */
   const updatePayload = { ...patch };
   delete updatePayload.updated_at;
   delete updatePayload.id;
@@ -239,12 +248,14 @@ export async function aktualisiereArtefaktVersion({ db, vorher, patch }) {
 /**
  * Erzeugt einen eindeutigen Speicherpfad für einen Artefakt-Versuch.
  * Schreibt nicht ins Dateisystem oder in den Storage.
+ * @param {{ ownerId: string, abrechnungId: string, kind: 'unsigned' | 'signed' | 'encrypted' }} opts
  */
 export function artefaktVersuchPfad({ ownerId, abrechnungId, kind }) {
   if (kind !== 'unsigned' && kind !== 'signed' && kind !== 'encrypted') {
     throw new Error('Ungültiger Artefakt-Typ.');
   }
 
+  /** @param {unknown} wert */
   const istSicher = (wert) =>
     typeof wert === 'string' &&
     wert.length > 0 && wert !== '.' &&

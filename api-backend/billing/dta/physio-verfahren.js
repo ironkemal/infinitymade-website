@@ -7,10 +7,19 @@ import { lookupBlankoShoulder } from '../../ai/validators/catalog.js';
 import { verordnungsartFuer } from './zhe-kennzeichen.js';
 
 const DAY = 86400000;
+/** @param {string} day */
 const utc = day => new Date(`${day}T00:00:00Z`);
+/**
+ * @param {string} day
+ * @param {number} count
+ */
 const plusDays = (day, count) => new Date(utc(day).getTime() + count * DAY).toISOString().slice(0, 10);
 
-// Calendar months (including end-of-month clipping), never 90/180 days.
+/**
+ * Calendar months (including end-of-month clipping), never 90/180 days.
+ * @param {string} day
+ * @param {number} count
+ */
 function plusMonths(day, count) {
   const d = utc(day);
   const target = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + count, 1));
@@ -19,9 +28,13 @@ function plusMonths(day, count) {
   return target.toISOString().slice(0, 10);
 }
 
+/**
+ * @param {{ datumLeistung?: unknown, done_at?: unknown } | null | undefined} session
+ * @returns {string | null}
+ */
 function serviceDay(session) {
   const value = session?.datumLeistung ?? session?.done_at;
-  if (istStichtag(value)) return value;
+  if (typeof value === 'string' && istStichtag(value)) return value;
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}T/.test(value)
       || !istStichtag(value.slice(0, 10)) || !/(?:Z|[+-]\d{2}:\d{2})$/.test(value)) return null;
   const date = new Date(value);
@@ -29,13 +42,50 @@ function serviceDay(session) {
 }
 
 /**
+ * @typedef {object} PhysioGateIssue
+ * @property {string} code
+ * @property {string} field
+ * @property {string} message
+ */
+
+/**
+ * @typedef {object} PhysioVerordnungInput
+ * @property {string|null} [rezept_typ]
+ * @property {boolean|null} [is_blanko]
+ * @property {boolean|null} [is_lhb_bvb]
+ * @property {boolean|null} [is_dringend]
+ * @property {string|null} [ausstellungsdatum]
+ * @property {string|null} [patient_geburtsdatum]
+ * @property {boolean|null} [zuzahlung_befreit]
+ * @property {string|null} [diagnosegruppe]
+ * @property {string|null} [icd10]
+ * @property {number|string|null} [anzahl_einheiten]
+ * @property {string|null} [verordnungsart]
+ * @property {string|null} [indikation_schluessel]
+ */
+
+/**
  * Validate actual performed dates before DTA mapping.
  * No persistence or profile-release decision is hidden in this function.
  * entlassdatum and interruption evidence must come from reviewed structured data.
+ * @param {object} [opts]
+ * @param {PhysioVerordnungInput | null} [opts.rx]
+ * @param {Array<{ datumLeistung?: unknown, done_at?: unknown }>} [opts.sessions=[]]
+ * @param {boolean | null} [opts.entlassmanagement=null]
+ * @param {string | null} [opts.entlassdatum=null]
+ * @param {Array<{ von?: string, bis?: string, grund?: string, dokumentiert?: boolean }>} [opts.unterbrechungen=[]]
  */
-export function validatePhysioAbrechnung({ rx, sessions = [], entlassmanagement = null,
+export function validatePhysioAbrechnung({ rx = null, sessions = [], entlassmanagement = null,
   entlassdatum = null, unterbrechungen = [] } = {}) {
-  const errors = [], warnings = [];
+  /** @type {PhysioGateIssue[]} */
+  const errors = [];
+  /** @type {PhysioGateIssue[]} */
+  const warnings = [];
+  /**
+   * @param {string} code
+   * @param {string} field
+   * @param {string} message
+   */
   const error = (code, field, message) => errors.push({ code, field, message });
   if (!rx || typeof rx !== 'object') {
     error('PHYSIO_VERORDNUNG_FEHLT', 'verordnung', 'Verordnungsdaten fehlen.');
@@ -43,7 +93,10 @@ export function validatePhysioAbrechnung({ rx, sessions = [], entlassmanagement 
   }
   if (typeof entlassmanagement !== 'boolean') error('PHYSIO_ENTLASSMERKMAL_UNGEKLAERT', 'entlassmanagement', 'Entlassmanagement muss vor Abrechnung ausdrücklich anhand der Verordnung bestätigt oder ausgeschlossen sein.');
   // Preserve the existing mapping of stored flags to the official ZHE values.
-  const art = verordnungsartFuer(rx);
+  const art = verordnungsartFuer({
+    is_blanko: rx.is_blanko ?? undefined,
+    is_lhb_bvb: rx.is_lhb_bvb ?? undefined,
+  });
   const blanko = art === '05';
   if ((rx.rezept_typ === 'blanko' && !blanko)
       || (rx.rezept_typ === 'lhb_bvb' && art !== '04')
@@ -54,15 +107,15 @@ export function validatePhysioAbrechnung({ rx, sessions = [], entlassmanagement 
   const dates = Array.isArray(sessions) ? sessions.map(serviceDay) : [];
   if (!dates.length) error('PHYSIO_LEISTUNGEN_FEHLEN', 'sessions', 'Mindestens eine erbrachte Leistung ist erforderlich.');
   if (dates.some(day => !day)) error('PHYSIO_LEISTUNGSDATUM_UNGUELTIG', 'sessions', 'Jede erbrachte Leistung benötigt einen gültigen tatsächlichen Leistungstag.');
-  const validDates = dates.filter(Boolean).sort();
+  const validDates = dates.filter((d) => typeof d === 'string').sort();
   const first = validDates[0], last = validDates.at(-1);
   const issued = rx.ausstellungsdatum;
-  if (!istStichtag(issued)) error('PHYSIO_AUSSTELLUNGSDATUM_UNGUELTIG', 'ausstellungsdatum', 'Ein gültiges Ausstellungsdatum ist erforderlich.');
-  if (first && istStichtag(issued) && first < issued) error('PHYSIO_BEGINN_VOR_AUSSTELLUNG', 'sessions', 'Der erste Leistungstag liegt vor dem Ausstellungsdatum.');
+  if (typeof issued !== 'string' || !istStichtag(issued)) error('PHYSIO_AUSSTELLUNGSDATUM_UNGUELTIG', 'ausstellungsdatum', 'Ein gültiges Ausstellungsdatum ist erforderlich.');
+  if (first && typeof issued === 'string' && istStichtag(issued) && first < issued) error('PHYSIO_BEGINN_VOR_AUSSTELLUNG', 'sessions', 'Der erste Leistungstag liegt vor dem Ausstellungsdatum.');
   // Until dated certificates and per-service age state are loaded by the mapper,
   // do not let its last-day/global-flag shortcut silently change the copay.
   const dob = rx.patient_geburtsdatum;
-  if (first && last && istStichtag(dob)) {
+  if (first && last && typeof dob === 'string' && istStichtag(dob)) {
     const eighteenth = `${String(Number(dob.slice(0, 4)) + 18).padStart(4, '0')}${dob.slice(4)}`;
     if (first < eighteenth && last >= eighteenth) error('PHYSIO_ZUZAHLUNG_ALTERSWECHSEL_OFFEN', 'patient_geburtsdatum', 'Volljährigkeit zwischen Leistungen: leistungsbezogene Zuzahlung und Blattgebühr müssen vor Abrechnung geklärt werden.');
   }
@@ -72,31 +125,31 @@ export function validatePhysioAbrechnung({ rx, sessions = [], entlassmanagement 
 
   if (entlassmanagement) {
     if (blanko) error('PHYSIO_BLANKO_ENTLASS_UNZULAESSIG', 'rezept_typ', 'Blankoverordnung und Entlassmanagement dürfen nicht kombiniert werden.');
-    if (!istStichtag(entlassdatum)) error('PHYSIO_ENTLASSDATUM_FEHLT', 'entlassdatum', 'Für Entlassmanagement ist das tatsächliche Entlassdatum erforderlich.');
-    else if (first) {
+    if (typeof entlassdatum !== 'string' || !istStichtag(entlassdatum)) error('PHYSIO_ENTLASSDATUM_FEHLT', 'entlassdatum', 'Für Entlassmanagement ist das tatsächliche Entlassdatum erforderlich.');
+    else if (first && last) {
       if (first < entlassdatum) error('PHYSIO_BEGINN_VOR_ENTLASSUNG', 'sessions', 'Eine Leistung liegt vor der Entlassung.');
       if (first > plusDays(entlassdatum, 7)) error('PHYSIO_ENTLASS_BEGINN_FRIST', 'sessions', 'Behandlungsbeginn später als sieben Kalendertage nach Entlassung.');
       if (last > plusDays(entlassdatum, 12)) error('PHYSIO_ENTLASS_ENDE_FRIST', 'sessions', 'Leistung später als zwölf Kalendertage nach Entlassung.');
     }
-  } else if (first && istStichtag(issued)) {
+  } else if (first && typeof issued === 'string' && istStichtag(issued)) {
     const limit = plusDays(issued, rx.is_dringend === true ? 14 : 28);
     if (first > limit) error('PHYSIO_BEGINN_FRIST', 'sessions', `Behandlungsbeginn nach der maßgeblichen Frist (${limit}).`);
   }
 
   if (blanko) {
     if (rx.diagnosegruppe !== 'EX' || !lookupBlankoShoulder(rx.icd10)) error('PHYSIO_BLANKO_INDIKATION', 'icd10', 'Die hinterlegte Blanko-Schulterindikation und Diagnosegruppe EX müssen vorliegen.');
-    if (istStichtag(issued) && last && last > plusDays(issued, 16 * 7)) error('PHYSIO_BLANKO_GUELTIGKEIT', 'sessions', 'Leistung außerhalb der maximalen 16 Wochen ab Verordnungsdatum.');
+    if (typeof issued === 'string' && istStichtag(issued) && last && last > plusDays(issued, 16 * 7)) error('PHYSIO_BLANKO_GUELTIGKEIT', 'sessions', 'Leistung außerhalb der maximalen 16 Wochen ab Verordnungsdatum.');
     // No automatic use of the §125 standard prices/LEGS for §125a.
     error('PHYSIO_BLANKO_TAXIERUNG_UNGEPRUEFT', 'rezept_typ', 'Die eigenständige Blanko-Taxierung (LEGS 2200502, Vergütung und Ampel sowie Wiederaufnahme) ist noch nicht unabhängig freigegeben.');
-  } else if (!entlassmanagement && first) {
+  } else if (!entlassmanagement && first && last) {
     const count = Number(rx.anzahl_einheiten);
     if (!Number.isInteger(count) || count <= 0) error('PHYSIO_VERORDNETE_MENGE_FEHLT', 'anzahl_einheiten', 'Die tatsächlich verordnete Behandlungseinheitenzahl ist erforderlich.');
     else if (last > plusMonths(first, count <= 6 ? 3 : 6)) error('PHYSIO_VERORDNUNG_ABGELAUFEN', 'sessions', 'Leistung nach der vertraglichen Gültigkeit von drei beziehungsweise sechs Kalendermonaten.');
     for (let i = 1; i < validDates.length; i++) {
       const from = validDates[i - 1], to = validDates[i];
-      if ((utc(to) - utc(from)) / DAY <= 14) continue;
+      if ((utc(to).getTime() - utc(from).getTime()) / DAY <= 14) continue;
       const evidence = Array.isArray(unterbrechungen) && unterbrechungen.some(item => item?.von === from && item?.bis === to
-        && ['T', 'K', 'F'].includes(item.grund) && item.dokumentiert === true);
+        && ['T', 'K', 'F'].includes(item.grund || '') && item.dokumentiert === true);
       if (!evidence) error('PHYSIO_UNTERBRECHUNG_NACHWEIS_FEHLT', 'unterbrechungen', `Unterbrechung ${from} bis ${to}: dokumentierter Grund T/K/F erforderlich.`);
     }
   }

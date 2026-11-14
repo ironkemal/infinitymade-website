@@ -12,6 +12,10 @@ import { merkezFetch } from './merkez-fetch.js';
 const SECHS_STUNDEN_MS = 6 * 60 * 60 * 1000;
 const FUENF_MINUTEN_MS = 5 * 60 * 1000;
 
+/**
+ * @param {unknown} s
+ * @returns {boolean}
+ */
 export function istGueltigesIpv4(s) {
   const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(String(s ?? ''));
   if (!m) return false;
@@ -22,12 +26,27 @@ export function istGueltigesIpv4(s) {
   });
 }
 
-/** RFC1918 (10/8, 172.16/12, 192.168/16) — merkez nimmt im lan-Modus nur diese an (L1). */
+/**
+ * RFC1918 (10/8, 172.16/12, 192.168/16) — merkez nimmt im lan-Modus nur diese an (L1).
+ * @param {string} ip
+ * @returns {boolean}
+ */
 export function istRfc1918(ip) {
   const [a, b] = String(ip).split('.').map(Number);
   return a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168);
 }
 
+/**
+ * @typedef {object} IpAbgleichZustand
+ * @property {string | null} letzterWert
+ * @property {number | null} letzterErfolgZeit
+ * @property {number} naechsterVersuchErlaubt
+ * @property {boolean} warnung401Geloggt
+ */
+
+/**
+ * @returns {IpAbgleichZustand}
+ */
 export function erzeugeZustand() {
   return {
     letzterWert: null,           // z. B. '192.168.1.10' oder 'internet'
@@ -40,8 +59,8 @@ export function erzeugeZustand() {
 /**
  * Einzelschritt des IP-Abgleichs — testbare Kernfunktion ohne globale Timer.
  *
- * @param {object} zustand
- * @param {object} [optionen]
+ * @param {IpAbgleichZustand | null | undefined} zustand
+ * @param {{ env?: Record<string, string | undefined>, fetchImpl?: Function, jetzt?: (() => number) | number, log?: { log: Function, warn?: Function, error?: Function }, ipDir?: string, kimlikDir?: string }} [optionen]
  * @returns {Promise<object|undefined>}
  */
 export async function ipAbgleichSchritt(zustand, {
@@ -132,7 +151,7 @@ export async function ipAbgleichSchritt(zustand, {
   } catch (netErr) {
     zustand.naechsterVersuchErlaubt = jetztMs + FUENF_MINUTEN_MS;
     try {
-      const msg = netErr?.message || String(netErr);
+      const msg = (/** @type {any} */ (netErr))?.message || String(netErr);
       (log.warn || log.log)(`[ip-abgleich] Netzwerkfehler: ${msg}`);
     } catch {}
     return;
@@ -181,10 +200,24 @@ export async function ipAbgleichSchritt(zustand, {
 // von caddy_data meldet die Box so ihr neues Konto selbst (Selbstheilung, ≤ ~15 min).
 const LE_KONTO_RE = /^https:\/\/acme-v02\.api\.letsencrypt\.org\/acme\/acct\/[0-9]{1,20}$/;
 
+/**
+ * @typedef {object} CaaAbgleichZustand
+ * @property {string | null} letzterWert
+ * @property {number} naechsterVersuchErlaubt
+ * @property {string | null} fehlWert
+ */
+
+/**
+ * @returns {CaaAbgleichZustand}
+ */
 export function erzeugeCaaZustand() {
   return { letzterWert: null, naechsterVersuchErlaubt: 0, fehlWert: null };
 }
 
+/**
+ * @param {CaaAbgleichZustand | null | undefined} zustand
+ * @param {{ env?: Record<string, string | undefined>, fetchImpl?: Function, jetzt?: (() => number) | number, log?: { log: Function, warn?: Function, error?: Function }, ipDir?: string, kimlikDir?: string }} [optionen]
+ */
 export async function caaAbgleichSchritt(zustand, {
   env = process.env, fetchImpl, jetzt = Date.now, log = console, ipDir, kimlikDir,
 } = {}) {
@@ -208,7 +241,7 @@ export async function caaAbgleichSchritt(zustand, {
   } catch (netErr) {
     zustand.naechsterVersuchErlaubt = jetztMs + FUENF_MINUTEN_MS;
     zustand.fehlWert = url;
-    try { (log.warn || log.log)(`[caa-abgleich] Netzwerkfehler: ${netErr?.message || netErr}`); } catch {}
+    try { (log.warn || log.log)(`[caa-abgleich] Netzwerkfehler: ${(/** @type {any} */ (netErr))?.message || netErr}`); } catch {}
     return;
   }
   if (antwort.ok) {
@@ -229,7 +262,7 @@ export async function caaAbgleichSchritt(zustand, {
 /**
  * Startet den periodischen IP-Abgleich im Hintergrund.
  *
- * @param {object} [config]
+ * @param {{ env?: Record<string, string | undefined>, fetchImpl?: Function, jetzt?: (() => number) | number, timer?: { setTimeout: Function, setInterval: Function, clearTimeout?: Function, clearInterval?: Function }, log?: { log: Function, warn?: Function, error?: Function }, ipDir?: string }} [config]
  * @returns {object|null}
  */
 export function starteIpAbgleich({
@@ -261,14 +294,14 @@ export function starteIpAbgleich({
       await ipAbgleichSchritt(zustand, { env, fetchImpl, jetzt, log, ipDir: dir });
     } catch (err) {
       try {
-        const msg = err?.message || String(err);
+        const msg = (/** @type {any} */ (err))?.message || String(err);
         (log.warn || log.log)(`[ip-abgleich] Unerwarteter Fehler: ${msg}`);
       } catch {}
     }
     try {
       await caaAbgleichSchritt(caaZustand, { env, fetchImpl, jetzt, log, ipDir: dir });
     } catch (err) {
-      try { (log.warn || log.log)(`[caa-abgleich] Unerwarteter Fehler: ${err?.message || err}`); } catch {}
+      try { (log.warn || log.log)(`[caa-abgleich] Unerwarteter Fehler: ${(/** @type {any} */ (err))?.message || err}`); } catch {}
     }
     tickLaeuft = false;
   };

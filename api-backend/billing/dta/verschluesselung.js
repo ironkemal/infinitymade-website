@@ -65,7 +65,11 @@ const OID_AES256_CBC     = '2.16.840.1.101.3.4.1.42';
  * @returns {ArrayBuffer}
  */
 function toArrayBuffer(buf) {
-  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+  const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+  if (ab instanceof ArrayBuffer) return ab;
+  const copy = new ArrayBuffer(buf.byteLength);
+  new Uint8Array(copy).set(buf);
+  return copy;
 }
 
 /**
@@ -301,37 +305,37 @@ export function entschluessele({ envelopedBytes, empfaengerPrivateKeyPem }) {
     throw new Error('Ungültige ASN.1-Struktur in EnvelopedData.');
   }
 
-  const contentInfoSeq = root.result;
+  const contentInfoSeq = /** @type {asn1js.Sequence} */ (root.result);
   const contentType = contentInfoSeq.valueBlock.value[0].valueBlock.toString();
   if (contentType !== OID_ENVELOPED_DATA) {
     throw new Error(`Erwarteter ContentType ${OID_ENVELOPED_DATA}, erhalten: ${contentType}`);
   }
 
   // [0] EXPLICIT EnvelopedData
-  const envDataConstructed = contentInfoSeq.valueBlock.value[1];
-  const envData = envDataConstructed.valueBlock.value[0];
-  const envVersion = envData.valueBlock.value[0].valueBlock.valueDec;
+  const envDataConstructed = /** @type {asn1js.Constructed} */ (contentInfoSeq.valueBlock.value[1]);
+  const envData = /** @type {asn1js.Sequence} */ (envDataConstructed.valueBlock.value[0]);
+  const envVersion = /** @type {asn1js.Integer} */ (envData.valueBlock.value[0]).valueBlock.valueDec;
   if (envVersion !== 0) {
     throw new Error(`EnvelopedData Version muss 0 sein, erhalten: ${envVersion}`);
   }
 
   // recipientInfos (SET OF)
-  const recipientInfos = envData.valueBlock.value[1];
-  const ktri = recipientInfos.valueBlock.value[0];
-  const ktriVersion = ktri.valueBlock.value[0].valueBlock.valueDec;
+  const recipientInfos = /** @type {asn1js.Set} */ (envData.valueBlock.value[1]);
+  const ktri = /** @type {asn1js.Sequence} */ (recipientInfos.valueBlock.value[0]);
+  const ktriVersion = /** @type {asn1js.Integer} */ (ktri.valueBlock.value[0]).valueBlock.valueDec;
   if (ktriVersion !== 0) {
     throw new Error(`KeyTransRecipientInfo Version muss 0 sein, erhalten: ${ktriVersion}`);
   }
 
   // KeyEncryptionAlgorithm prüfen
-  const keyEncAlgSeq = ktri.valueBlock.value[2];
+  const keyEncAlgSeq = /** @type {asn1js.Sequence} */ (ktri.valueBlock.value[2]);
   const keyEncAlgOid = keyEncAlgSeq.valueBlock.value[0].valueBlock.toString();
   if (keyEncAlgOid !== OID_RSAES_OAEP) {
     throw new Error(`Erwarteter KeyEncryptionAlgorithm ${OID_RSAES_OAEP}, erhalten: ${keyEncAlgOid}`);
   }
 
   // EncryptedKey (OCTET STRING)
-  const encKeyOctet = ktri.valueBlock.value[3];
+  const encKeyOctet = /** @type {asn1js.OctetString} */ (ktri.valueBlock.value[3]);
   const encKeyBuf = Buffer.from(encKeyOctet.valueBlock.valueHexView);
 
   // AES-Schlüssel mit RSA-OAEP entschlüsseln
@@ -342,24 +346,24 @@ export function entschluessele({ envelopedBytes, empfaengerPrivateKeyPem }) {
   }, encKeyBuf);
 
   // EncryptedContentInfo
-  const encContentInfo = envData.valueBlock.value[2];
+  const encContentInfo = /** @type {asn1js.Sequence} */ (envData.valueBlock.value[2]);
   const innerContentType = encContentInfo.valueBlock.value[0].valueBlock.toString();
   if (innerContentType !== OID_DATA) {
     throw new Error(`Innerer ContentType muss id-data (${OID_DATA}) sein, erhalten: ${innerContentType}`);
   }
 
   // ContentEncryptionAlgorithm (AES-256-CBC mit IV)
-  const contentEncAlg = encContentInfo.valueBlock.value[1];
+  const contentEncAlg = /** @type {asn1js.Sequence} */ (encContentInfo.valueBlock.value[1]);
   const contentEncOid = contentEncAlg.valueBlock.value[0].valueBlock.toString();
   if (contentEncOid !== OID_AES256_CBC) {
     throw new Error(`ContentEncryptionAlgorithm muss AES-256-CBC (${OID_AES256_CBC}) sein, erhalten: ${contentEncOid}`);
   }
 
-  const ivOctet = contentEncAlg.valueBlock.value[1];
+  const ivOctet = /** @type {asn1js.OctetString} */ (contentEncAlg.valueBlock.value[1]);
   const ivBuf = Buffer.from(ivOctet.valueBlock.valueHexView);
 
   // EncryptedContent ([0] IMPLICIT OCTET STRING)
-  const encContentPrim = encContentInfo.valueBlock.value[2];
+  const encContentPrim = /** @type {asn1js.OctetString} */ (encContentInfo.valueBlock.value[2]);
   const encContentBuf = Buffer.from(encContentPrim.valueBlock.valueHexView);
 
   // Mit AES-256-CBC entschlüsseln

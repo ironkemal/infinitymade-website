@@ -2,9 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ladeStandortPlan, spaltenNachPlan, planSpalten, _planSperreZuruecksetzen } from './standort-plan-laden.js';
 
+/**
+ * @param {unknown} result
+ * @param {{ n: number }} zaehler
+ */
 function fake(result, zaehler) {
+  /** @type {any} */
   const q = { select: () => q, eq: () => q, in: () => { zaehler.n++; if (result instanceof Error) throw result; return Promise.resolve(result); } };
-  return { from: (t) => { assert.equal(t, 'employee_standort_plan'); return q; } };
+  return { from: (/** @type {string} */ t) => { assert.equal(t, 'employee_standort_plan'); return q; } };
 }
 const team = [{ id: 'e1' }, { id: 'e2' }];
 // e1: Montag B, Dienstag A (ein Wochentag ohne Eintrag hiesse "alle", nicht "frei").

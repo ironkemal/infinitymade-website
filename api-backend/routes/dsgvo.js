@@ -14,19 +14,20 @@ import { istKutu as defaultIstKutu } from '../lib/dagitim.js';
 
 /**
  * Erstellt den DSGVO-Router mit injizierbaren Abhaengigkeiten (fuer Tests).
+ * @param {{ supabase?: any, istKutu?: () => boolean, requireAuth?: any, skipRateLimit?: boolean, stripeKey?: string | null }} [options]
  */
 export function createDsgvoRouter(options = {}) {
   const router = express.Router();
 
   // Lazy: der Default-Router entsteht beim Import, vor dotenv.config() in server.js.
   let supabase = options.supabase || null;
-  const db = () => supabase || (supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+  const db = () => supabase || (supabase = createClient(/** @type {string} */ (process.env.SUPABASE_URL), /** @type {string} */ (process.env.SUPABASE_SERVICE_ROLE_KEY), {
     auth: { persistSession: false },
   }));
 
   const checkIstKutu = typeof options.istKutu === 'function' ? options.istKutu : defaultIstKutu;
   const authMiddleware = options.requireAuth || requireAuth;
-  const noopMiddleware = (req, res, next) => next();
+  const noopMiddleware = (/** @type {any} */ req, /** @type {any} */ res, /** @type {any} */ next) => next();
 
   // Rate Limiter: 3 Exporte pro Stunde je Nutzer
   const exportLimiter = options.skipRateLimit ? noopMiddleware : rateLimit({
@@ -34,7 +35,7 @@ export function createDsgvoRouter(options = {}) {
     limit: 3,
     standardHeaders: 'draft-7',
     legacyHeaders: false,
-    keyGenerator: (req) => req.auth?.userId || req.ip,
+    keyGenerator: (/** @type {any} */ req) => /** @type {string} */ (req.auth?.userId || req.ip),
     message: { error: 'Zu viele Export-Anfragen. Bitte warten Sie eine Stunde.' },
   });
 
@@ -44,12 +45,12 @@ export function createDsgvoRouter(options = {}) {
     limit: 3,
     standardHeaders: 'draft-7',
     legacyHeaders: false,
-    keyGenerator: (req) => req.auth?.userId || req.ip,
+    keyGenerator: (/** @type {any} */ req) => /** @type {string} */ (req.auth?.userId || req.ip),
     message: { error: 'Zu viele Löschanträge. Bitte warten Sie 24 Stunden.' },
   });
 
   // ── GET /dsgvo/export ───────────────────────────────────────────────────────
-  router.get('/dsgvo/export', authMiddleware, exportLimiter, async (req, res) => {
+  router.get('/dsgvo/export', authMiddleware, exportLimiter, async (/** @type {any} */ req, /** @type {any} */ res) => {
     const { userId, tenantId, role } = req.auth;
     const client = db();
 
@@ -94,7 +95,7 @@ export function createDsgvoRouter(options = {}) {
   });
 
   // ── POST /dsgvo/loeschen ────────────────────────────────────────────────────
-  router.post('/dsgvo/loeschen', authMiddleware, loeschenLimiter, async (req, res) => {
+  router.post('/dsgvo/loeschen', authMiddleware, loeschenLimiter, async (/** @type {any} */ req, /** @type {any} */ res) => {
     // 1. Box-Check: in der Box ist die Praxis Verantwortliche; kein SaaS-Vertragsende
     if (checkIstKutu()) {
       return res.status(404).json({ error: 'Not found' });
@@ -132,7 +133,7 @@ export function createDsgvoRouter(options = {}) {
         return res.status(429).json({ error: 'Ihr Konto befindet sich bereits im Löschprozess.' });
       }
     } catch (e) {
-      console.error('[dsgvo-route] Doppelantrag-Pruefung Fehler:', e.message);
+      console.error('[dsgvo-route] Doppelantrag-Pruefung Fehler:', (/** @type {any} */ (e)).message);
     }
 
     // 5. Pflicht-Export: Wurde in den letzten 24 Stunden ein Export durchgefuehrt?
@@ -153,7 +154,7 @@ export function createDsgvoRouter(options = {}) {
         });
       }
     } catch (e) {
-      console.error('[dsgvo-route] Pflicht-Export-Pruefung Fehler:', e.message);
+      console.error('[dsgvo-route] Pflicht-Export-Pruefung Fehler:', (/** @type {any} */ (e)).message);
       return res.status(409).json({
         error: 'Bitte laden Sie vor der Löschung Ihren Datenexport herunter.',
         code: 'EXPORT_FEHLT',
@@ -187,7 +188,7 @@ export function createDsgvoRouter(options = {}) {
         ownerId: userId,
         ownerEmail,
         vorgangId,
-        stripeKey,
+        stripeKey: /** @type {any} */ (stripeKey),
       });
 
       // Audit-Log mit minimalen Metadaten schreiben (keine PHI, keine Fehlertexte)
@@ -231,7 +232,7 @@ export function createDsgvoRouter(options = {}) {
         status: result.status,
         vorgang_id: vorgangId,
         gesperrt: result.gesperrt,
-        message: antworttextFallB(result.gesperrt),
+        message: antworttextFallB(/** @type {any} */ (result.gesperrt)),
       });
     } catch (err) {
       console.error('[dsgvo-route] Unerwarteter Loeschfehler:', err);

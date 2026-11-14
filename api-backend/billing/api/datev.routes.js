@@ -10,18 +10,21 @@ import { normalisiereEinstellungen, fehlendeAngaben, buchungenAus, erzeugeExtfCs
 
 const ISO_TAG = /^\d{4}-\d{2}-\d{2}$/;
 
+/** @param {{ supabase: import('@supabase/supabase-js').SupabaseClient<any> }} deps */
 export function createDatevRouter({ supabase }) {
   const router = express.Router();
 
   router.get('/datev/export', requireAuth, requireOwner, async (req, res) => {
-    const { from, to } = req.query || {};
-    if (!ISO_TAG.test(String(from || '')) || !ISO_TAG.test(String(to || '')) || from > to) {
+    const from = String(req.query?.from || '');
+    const to = String(req.query?.to || '');
+    if (!ISO_TAG.test(from) || !ISO_TAG.test(to) || from > to) {
       return res.status(400).json({ error: 'Bitte einen gültigen Zeitraum (von ≤ bis) wählen.' });
     }
     const von = berlinTagesgrenzen(from);
     const bis = berlinTagesgrenzen(to);
     if (!von || !bis) return res.status(400).json({ error: 'Ungültiger Zeitraum.' });
-    const tenantId = req.auth.tenantId;
+    const tenantId = req.auth?.tenantId;
+    if (!tenantId) return res.status(401).json({ error: 'Nicht autorisiert.' });
 
     try {
       const { data: profil, error: pErr } = await supabase.from('profiles')
@@ -44,6 +47,7 @@ export function createDatevRouter({ supabase }) {
       ]);
       if (belegR.error) throw belegR.error;
       if (gkvR.error) throw gkvR.error;
+      /** @type {any[]} */
       const belege = belegR.data || [];
 
       // Storno-Originale können vor dem Zeitraum liegen — einzeln nachladen.
@@ -72,8 +76,9 @@ export function createDatevRouter({ supabase }) {
       res.setHeader('Content-Disposition', `attachment; filename="${name}"`);
       return res.send(csv);
     } catch (err) {
-      if (err?.status === 400) return res.status(400).json({ error: err.message });
-      console.error('[datev/export]', err?.code || 'Fehler');
+      const e = /** @type {{ status?: number, message?: string, code?: string } | null} */ (err);
+      if (e?.status === 400) return res.status(400).json({ error: e.message });
+      console.error('[datev/export]', e?.code || 'Fehler');
       return res.status(500).json({ error: 'Der DATEV-Export konnte nicht erstellt werden.' });
     }
   });

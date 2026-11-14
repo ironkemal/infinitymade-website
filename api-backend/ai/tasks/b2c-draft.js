@@ -20,6 +20,7 @@ Antworte AUSSCHLIESSLICH als JSON mit den Feldern:
 }
 Keine Erklärungen, keine Code-Fences, nur das JSON-Objekt.`;
 
+/** @param {import('../ki-gateway.js').GatewayPayload} payload */
 function buildUserMessage({ intent, contacts = [], owner_info = {} }) {
   const contactsBlock = Array.isArray(contacts) && contacts.length
     ? `Verfügbare Kunden (max. 30):\n${contacts.slice(0, 30).map(c =>
@@ -45,20 +46,26 @@ ${contactsBlock}
 Wähle ggf. den passenden Kunden aus der Liste (id, name, email). Falls die Anfrage einen einzelnen Empfänger meint, gib dessen Daten zurück; sonst lasse to_name/to_email leer und entwirf eine Vorlage.`;
 }
 
+/** @param {unknown} parsed @returns {boolean} */
 function validateDraftOutput(parsed) {
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return false;
+  const rec = /** @type {Record<string, unknown>} */ (parsed);
   const allowedKeys = new Set(['to_name', 'to_email', 'subject', 'body']);
-  for (const k of Object.keys(parsed)) {
+  for (const k of Object.keys(rec)) {
     if (!allowedKeys.has(k)) return false;
   }
-  if (!('to_name' in parsed) || !('to_email' in parsed) || !('subject' in parsed) || !('body' in parsed)) return false;
-  if (parsed.to_name !== null && (typeof parsed.to_name !== 'string' || parsed.to_name.length > 200)) return false;
-  if (parsed.to_email !== null && (typeof parsed.to_email !== 'string' || parsed.to_email.length > 200)) return false;
-  if (typeof parsed.subject !== 'string' || !parsed.subject.trim() || parsed.subject.length > 200) return false;
-  if (typeof parsed.body !== 'string' || !parsed.body.trim() || parsed.body.length > 8000) return false;
+  if (!('to_name' in rec) || !('to_email' in rec) || !('subject' in rec) || !('body' in rec)) return false;
+  if (rec.to_name !== null && (typeof rec.to_name !== 'string' || rec.to_name.length > 200)) return false;
+  if (rec.to_email !== null && (typeof rec.to_email !== 'string' || rec.to_email.length > 200)) return false;
+  if (typeof rec.subject !== 'string' || !rec.subject.trim() || rec.subject.length > 200) return false;
+  if (typeof rec.body !== 'string' || !rec.body.trim() || rec.body.length > 8000) return false;
   return true;
 }
 
+/**
+ * @param {import('../ki-gateway.js').GatewayPayload} payload
+ * @param {import('../ki-gateway.js').GatewayContext} [context={}]
+ */
 export async function run(payload, context = {}) {
   const { output, meta } = await executeKiTask({
     task: 'b2c-draft',

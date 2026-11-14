@@ -24,6 +24,40 @@ export function enthaeltHpnr78040(codes) {
 }
 
 /**
+ * @typedef {object} PodoBehandlungInput
+ * @property {string} [id]
+ * @property {string|null} [owner_id]
+ * @property {string|null} [storniert_am]
+ * @property {unknown} [hpnr_codes]
+ * @property {string|null} [behandlungsdatum]
+ */
+
+/**
+ * @typedef {object} EmpfangsnachweisEvent
+ * @property {unknown} [event_seq]
+ * @property {string} [owner_id]
+ * @property {string} [behandlung_id]
+ * @property {string|null} [behandlungsdatum]
+ * @property {string|null} [hpnr_code]
+ * @property {string|null} [therapeuteninitialen]
+ * @property {string|null} [status]
+ */
+
+/**
+ * @typedef {{
+ *   from: (table: string) => {
+ *     select: (cols: string) => {
+ *       eq: (col: string, val: string) => {
+ *         in: (col: string, vals: string[]) => {
+ *           order: (col: string, opts: { ascending: boolean }) => PromiseLike<{ data: Array<EmpfangsnachweisEvent> | null, error: unknown }>
+ *         }
+ *       }
+ *     }
+ *   }
+ * }} PodoSupabaseClient
+ */
+
+/**
  * Validiert alle abrechnungsrelevanten podologischen Behandlungen gegen den Prüflog
  * `podologie_empfangsnachweise`.
  *
@@ -44,12 +78,12 @@ export function enthaeltHpnr78040(codes) {
  * - Datenbankfehler führen zu Fail-Closed mit Status 503.
  *
  * @param {object} params
- * @param {object} params.supabase Service-Role Supabase Client
+ * @param {PodoSupabaseClient} params.supabase Service-Role Supabase Client
  * @param {string} params.tenantId Owner-UUID des Praxismandanten
- * @param {Array<object>} params.behandlungen Liste von Behandlungsdatensätzen
+ * @param {Array<PodoBehandlungInput>} params.behandlungen Liste von Behandlungsdatensätzen
  * @param {string} [params.verordnungId] Optionale Verordnungs-ID
- * @param {string} [params.therapieBereich] Optionaler Therapiebereich ('podo' / 'podologie')
- * @param {string} [params.rezeptart] Optionale Rezeptart ('kassen')
+ * @param {string | null} [params.therapieBereich] Optionaler Therapiebereich ('podo' / 'podologie')
+ * @param {string | null} [params.rezeptart] Optionale Rezeptart ('kassen')
  * @returns {Promise<{ ok: boolean, status?: number, error?: string, fehlendeBehandlungIds?: string[], gepruefteIds?: string[] }>}
  */
 export async function pruefePodologieEmpfangsnachweise({
@@ -92,6 +126,7 @@ export async function pruefePodologieEmpfangsnachweise({
   }
 
   // Filter und strenge Validierung nicht-stornierter 78040-Behandlungen
+  /** @type {PodoBehandlungInput[]} */
   const relevanteBehs = [];
   for (const b of behandlungen) {
     if (!b || typeof b !== 'object' || Array.isArray(b)) {
@@ -132,11 +167,11 @@ export async function pruefePodologieEmpfangsnachweise({
       ok: false,
       status: 422,
       error: 'Empfangsnachweis-Prüfung fehlgeschlagen: Behandlungsdatensatz unvollständig (ID oder Behandlungsdatum fehlt)',
-      fehlendeBehandlungIds: unvollstaendige.map(b => b.id).filter(Boolean),
+      fehlendeBehandlungIds: unvollstaendige.map(b => b.id).filter((id) => typeof id === 'string'),
     };
   }
 
-  const behIds = [...new Set(relevanteBehs.map(b => b.id))];
+  const behIds = [...new Set(relevanteBehs.map(b => /** @type {string} */ (b.id)))];
 
   // Mandantenspezifische, streng eingegrenzte Abfrage der Prüfereignisse
   const { data: events, error: evErr } = await supabase
@@ -162,6 +197,7 @@ export async function pruefePodologieEmpfangsnachweise({
     };
   }
 
+  /** @type {Array<{ ev: EmpfangsnachweisEvent, seq: bigint }>} */
   const validEvents = [];
   for (const ev of events) {
     if (!ev || typeof ev !== 'object' || Array.isArray(ev)) {
@@ -172,6 +208,7 @@ export async function pruefePodologieEmpfangsnachweise({
       };
     }
 
+    /** @type {bigint | null} */
     let seqBigInt = null;
     try {
       if (typeof ev.event_seq === 'number') {
@@ -201,49 +238,52 @@ export async function pruefePodologieEmpfangsnachweise({
 
   // Neuestes Ereignis je Behandlung nach monotonem event_seq (BigInt descending) ermitteln
   validEvents.sort((a, b) => (b.seq > a.seq ? 1 : b.seq < a.seq ? -1 : 0));
+  /** @type {Map<string, EmpfangsnachweisEvent>} */
   const latestEventByBeh = new Map();
   for (const item of validEvents) {
-    if (!latestEventByBeh.has(item.ev.behandlung_id)) {
+    if (item.ev.behandlung_id && !latestEventByBeh.has(item.ev.behandlung_id)) {
       latestEventByBeh.set(item.ev.behandlung_id, item.ev);
     }
   }
 
+  /** @type {string[]} */
   const fehlendeIds = [];
 
   for (const b of relevanteBehs) {
-    const latest = latestEventByBeh.get(b.id);
+    const behId = /** @type {string} */ (b.id);
+    const latest = latestEventByBeh.get(behId);
     if (!latest) {
-      fehlendeIds.push(b.id);
+      fehlendeIds.push(behId);
       continue;
     }
 
     // Status muss bestätigt sein (Widerruf blockiert)
     if (latest.status !== 'bestaetigt') {
-      fehlendeIds.push(b.id);
+      fehlendeIds.push(behId);
       continue;
     }
 
     // Mandantensnapshot prüfen
     if (latest.owner_id !== tenantId || (b.owner_id && latest.owner_id !== b.owner_id)) {
-      fehlendeIds.push(b.id);
+      fehlendeIds.push(behId);
       continue;
     }
 
     // Behandlungssnapshot prüfen
-    if (latest.behandlung_id !== b.id) {
-      fehlendeIds.push(b.id);
+    if (latest.behandlung_id !== behId) {
+      fehlendeIds.push(behId);
       continue;
     }
 
     // Exakter HPNR-Snapshot 78040
     if (latest.hpnr_code !== '78040') {
-      fehlendeIds.push(b.id);
+      fehlendeIds.push(behId);
       continue;
     }
 
     // Behandlungstag-Snapshot prüfen (Pflichtabgleich, kein Fail-Open bei fehlendem Nachweisdatum)
     if (!latest.behandlungsdatum || latest.behandlungsdatum !== b.behandlungsdatum) {
-      fehlendeIds.push(b.id);
+      fehlendeIds.push(behId);
       continue;
     }
 
@@ -252,7 +292,7 @@ export async function pruefePodologieEmpfangsnachweise({
       ? latest.therapeuteninitialen.trim()
       : '';
     if (initialen.length < 1 || initialen.length > 16) {
-      fehlendeIds.push(b.id);
+      fehlendeIds.push(behId);
       continue;
     }
   }

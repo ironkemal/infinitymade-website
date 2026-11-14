@@ -23,9 +23,13 @@ const ECHT_DATEIEN = [
 ];
 
 let pass = 0, fail = 0;
+/**
+ * @param {string} name
+ * @param {() => void} fn
+ */
 function test(name, fn) {
   try { fn(); console.log('  ok   ' + name); pass++; }
-  catch (e) { console.log('  FAIL ' + name + '\n       ' + e.message); fail++; }
+  catch (e) { console.log('  FAIL ' + name + '\n       ' + (e instanceof Error ? e.message : String(e))); fail++; }
 }
 
 console.log('kostentraeger.mock');
@@ -113,6 +117,7 @@ test('toUpsertRows shape matches kostentraeger DB schema', () => {
   const rows = toUpsertRows();
   assert.ok(rows.length === KOSTENTRAEGER_MOCK.length);
   const tk = rows.find(r => r.name === 'Techniker Krankenkasse (TK)');
+  assert.ok(tk);
   assert.deepEqual(Object.keys(tk).sort(),
     ['active','das_ik','ik','name','payer_type','region','valid_from','valid_to'].sort());
 });
@@ -201,6 +206,7 @@ test('waehlePostanschrift: Hausanschrift (1) hat Vorrang vor Postfach und Grossk
     { art: '2', plz: '42100', ort: 'Wuppertal', strasse: '' },
   ];
   const a = waehlePostanschrift(anschriften);
+  assert.ok(a);
   assert.equal(a.art, '1', 'Hausanschrift muss bevorzugt werden');
   assert.equal(a.plz, '04425');
 });
@@ -211,18 +217,20 @@ test('waehlePostanschrift: Postfach (2) vor Grosskundeanschrift (3)', () => {
     { art: '2', plz: '42100', ort: 'Wuppertal', strasse: '' },
   ];
   const a = waehlePostanschrift(anschriften);
+  assert.ok(a);
   assert.equal(a.art, '2', 'Postfach muss Grosskundeanschrift schlagen');
 });
 
 test('waehlePostanschrift: nur Grosskundeanschrift → gibt sie zurueck', () => {
   const a = waehlePostanschrift([{ art: '3', plz: '04310', ort: 'Leipzig', strasse: '' }]);
+  assert.ok(a);
   assert.equal(a.art, '3');
 });
 
 test('waehlePostanschrift: leere Liste → null', () => {
   assert.equal(waehlePostanschrift([]), null);
-  assert.equal(waehlePostanschrift(null), null);
-  assert.equal(waehlePostanschrift(undefined), null);
+  assert.equal(waehlePostanschrift(/** @type {Parameters<typeof waehlePostanschrift>[0]} */ (/** @type {unknown} */ (null))), null);
+  assert.equal(waehlePostanschrift(/** @type {Parameters<typeof waehlePostanschrift>[0]} */ (/** @type {unknown} */ (undefined))), null);
 });
 
 // ── Gegen die echte Kostenträgerdatei (Ops-Kart #264, wissensbank Kart W-01) ──
@@ -237,7 +245,8 @@ test('echte Kostenträgerdatei (Stand ab 01.10.2026, 6 Dateien): 1.067 Datensät
   for (const datei of ECHT_DATEIEN) {
     const records = parseKostentraegerDatei(leseKostentraegerDatei(join(ECHT_DIR, datei)));
     for (const r of records) {
-      assert.match(r.ik, /^\d{9}$/, `${datei}: unplausible IK "${r.ik}"`);
+      assert.equal(typeof r.ik, 'string');
+      assert.match(/** @type {string} */ (r.ik), /^\d{9}$/, `${datei}: unplausible IK "${r.ik}"`);
       assert.ok(r.name, `${datei}: Datensatz ohne Name (IK ${r.ik})`);
       assert.ok(Array.isArray(r.anschriften), `${datei}: anschriften-Feld fehlt`);
       iks.add(r.ik);
@@ -270,7 +279,9 @@ test('kein U+FFFD in Kassennamen — weder Latin-1- (Q4) noch UTF-8-Dateien (Q3/
 
 test('Latin-1-Q4-Datei: Umlaute stimmen (CITY BKK/Ost KöRiA)', () => {
   const r = parseKostentraegerDatei(leseKostentraegerDatei(join(ECHT_DIR, 'BK05Q426_KE0.txt')));
-  assert.equal(r.find(x => x.ik === '101592133').name, 'CITY BKK/Ost KöRiA');
+  const city = r.find(x => x.ik === '101592133');
+  assert.ok(city);
+  assert.equal(city.name, 'CITY BKK/Ost KöRiA');
 });
 
 test('dekodiereKostentraegerDatei: UTF-8 bleibt UTF-8, Latin-1 (UNOC:3) wird latin1, Rest wirft', () => {

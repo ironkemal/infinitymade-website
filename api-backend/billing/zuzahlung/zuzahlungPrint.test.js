@@ -3,9 +3,13 @@ import { renderZuzahlungsrechnung } from '../pdf/zuzahlungsrechnung.template.js'
 import assert from 'node:assert/strict';
 
 let pass = 0, fail = 0;
+/**
+ * @param {string} name
+ * @param {() => void} fn
+ */
 function test(name, fn) {
   try { fn(); console.log('  ok   ' + name); pass++; }
-  catch (e) { console.log('  FAIL ' + name + '\n       ' + e.message); fail++; }
+  catch (e) { console.log('  FAIL ' + name + '\n       ' + (e instanceof Error ? e.message : String(e))); fail++; }
 }
 
 console.log('Zuzahlungsrechnung print generation test');

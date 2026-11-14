@@ -38,9 +38,10 @@ import { hatAbrechnungsRecht } from '../../lib/modulrecht.js';
 
 const router = express.Router();
 
+/** @type {import('@supabase/supabase-js').SupabaseClient<any>} */
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  /** @type {string} */ (process.env.SUPABASE_URL),
+  /** @type {string} */ (process.env.SUPABASE_SERVICE_ROLE_KEY),
   { auth: { persistSession: false } }
 );
 
@@ -64,6 +65,7 @@ const AUSBUCHUNGSKONTO_STANDARD = '8700';
  * 08.09.2026). Nur `karte` weicht vom eigenen Namen ab — der historische Wert
  * dafür heißt `ec` (`api-backend/billing/belegliste/helper.js:9`).
  */
+/** @type {Record<string, string>} */
 const ZAHLART_JE_KATEGORIE = {
   bar: 'bar',
   karte: 'ec',
@@ -75,6 +77,7 @@ const ZAHLART_JE_KATEGORIE = {
 /**
  * SQLSTATE → HTTP. Die Funktion wirft mit Absicht sprechende Codes, damit hier
  * kein Text geparst werden muss.
+ * @type {Record<string, number>}
  */
 const STATUS_FUER = {
   '42501': 403,           // fremder Mandant
@@ -82,8 +85,13 @@ const STATUS_FUER = {
   'P0002': 404,           // no_data_found — Rechnung weg
 };
 
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 async function resolveAuth(req, res) {
-  const hdr = req.headers.authorization || '';
+  const rawHdr = req.headers.authorization;
+  const hdr = typeof rawHdr === 'string' ? rawHdr : '';
   const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
   if (!token) { res.status(401).json({ error: 'Missing bearer token' }); return null; }
 
@@ -104,7 +112,12 @@ async function resolveAuth(req, res) {
   return { user: u.user, profile, tenantId, token };
 }
 
-/** Beide Zahlungswege prüfen dieselbe Rechnung und deren verbindlichen Standort. */
+/**
+ * Beide Zahlungswege prüfen dieselbe Rechnung und deren verbindlichen Standort.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {{ user: any, profile: any, tenantId: string, token: string }} auth
+ */
 async function rechnungFuer(req, res, auth) {
   if (!['owner', 'employee'].includes(auth.profile.role)
       || (auth.profile.role === 'employee'
@@ -152,6 +165,7 @@ async function rechnungFuer(req, res, auth) {
 /**
  * Der Kontenrahmen des Mandanten. Beim Angestellten hängt er am Inhaber, nicht
  * am eigenen Profil. Laden erst nach erfolgreicher Rechnungs- und Rechteprüfung.
+ * @param {{ tenantId: string }} auth
  */
 async function kontenFuer(auth) {
   const { data } = await supabase
@@ -159,8 +173,8 @@ async function kontenFuer(auth) {
   const roh = data?.buchungskonten;
   const eigene = Array.isArray(roh)
     ? roh
-      .filter(k => k && typeof k === 'object')
-      .map(k => ({
+      .filter((/** @type {any} */ k) => k && typeof k === 'object')
+      .map((/** @type {any} */ k) => ({
         code: String(k.code ?? '').replace(/\s+/g, ''),
         label: String(k.label ?? '').trim(),
         aktiv: k.aktiv !== false,
@@ -173,7 +187,11 @@ async function kontenFuer(auth) {
   return eigene.length ? eigene : STANDARD_KONTEN.map(k => ({ ...k, aktiv: true }));
 }
 
-/** Löst einen Kontocode in den zu speichernden Snapshot auf. */
+/**
+ * Löst einen Kontocode in den zu speichernden Snapshot auf.
+ * @param {Array<{ code: string, label: string, kategorie: string, aktiv?: boolean }>} konten
+ * @param {unknown} code
+ */
 function snapshotFuer(konten, code) {
   const gesucht = String(code ?? '').replace(/\s+/g, '');
   if (!gesucht) return null;
@@ -187,7 +205,7 @@ function snapshotFuer(konten, code) {
  * GET /api/billing/rechnungen/:id/zahlungen
  * Was wurde auf diese Rechnung schon gebucht und was ist offen?
  */
-router.get('/rechnungen/:id/zahlungen', async (req, res) => {
+router.get('/rechnungen/:id/zahlungen', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
@@ -202,7 +220,7 @@ router.get('/rechnungen/:id/zahlungen', async (req, res) => {
       .order('created_at', { ascending: true });
     if (zErr) return res.status(500).json({ error: 'rechnung_zahlungen: ' + zErr.message });
 
-    const gebucht = (zeilen || []).reduce((s, z) => s + Number(z.betrag_eur || 0), 0);
+    const gebucht = (zeilen || []).reduce((/** @type {number} */ s, /** @type {any} */ z) => s + Number(z.betrag_eur || 0), 0);
     const gesamt = Number(inv.total_patient) || 0;
 
     return res.json({
@@ -225,7 +243,7 @@ router.get('/rechnungen/:id/zahlungen', async (req, res) => {
     });
   } catch (e) {
     console.error('[rechnungen/zahlungen]', e);
-    return res.status(500).json({ error: e.message || 'Server error' });
+    return res.status(500).json({ error: (e instanceof Error ? e.message : '') || 'Server error' });
   }
 });
 
@@ -236,7 +254,7 @@ router.get('/rechnungen/:id/zahlungen', async (req, res) => {
  *       restbetrag_modus ('offen_lassen' | 'ausbuchen'),
  *       ausbuchungskonto_code (optional), bemerkung (optional)
  */
-router.post('/rechnungen/:id/zahlung', async (req, res) => {
+router.post('/rechnungen/:id/zahlung', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
@@ -302,7 +320,7 @@ router.post('/rechnungen/:id/zahlung', async (req, res) => {
     if (error) {
       // Die Funktion wirft sprechende SQLSTATEs; alles andere ist ein echter
       // Serverfehler und soll auch so aussehen.
-      const status = STATUS_FUER[error.code] || 500;
+      const status = STATUS_FUER[error.code || ''] || 500;
       if (status === 500) console.error('[rechnungen/zahlung] rpc:', error);
       return res.status(status).json({ error: error.message });
     }
@@ -310,7 +328,7 @@ router.post('/rechnungen/:id/zahlung', async (req, res) => {
     return res.status(201).json(data);
   } catch (e) {
     console.error('[rechnungen/zahlung]', e);
-    return res.status(500).json({ error: e.message || 'Server error' });
+    return res.status(500).json({ error: (e instanceof Error ? e.message : '') || 'Server error' });
   }
 });
 

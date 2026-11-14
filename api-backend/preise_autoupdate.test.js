@@ -16,9 +16,13 @@ import { versucheBereich, BEREICHE } from './preise_autoupdate.mjs';
 import { PODOLOGIE_PREISFENSTER } from './billing/codes/podologie_positions.js';
 
 let pass = 0, fail = 0;
+/**
+ * @param {string} name
+ * @param {() => void} fn
+ */
 function test(name, fn) {
   try { fn(); console.log('  ok   ' + name); pass++; }
-  catch (e) { console.log('  FAIL ' + name + '\n       ' + e.message); fail++; }
+  catch (e) { console.log('  FAIL ' + name + '\n       ' + (e instanceof Error ? e.message : String(e))); fail++; }
 }
 
 console.log('preise_autoupdate');
@@ -30,8 +34,10 @@ function tempKopie() {
   return { dir, ziel };
 }
 
-const aktuellesFenster = PODOLOGIE_PREISFENSTER.find(f => f.gueltig_bis === '9999-12-31');
-const alleCodes = aktuellesFenster.positionen.map(p => p.hpnr);
+const aktuellesFenster = /** @type {{ gueltig_ab: string, gueltig_bis: string, positionen: ReadonlyArray<Record<string, any>> }} */ (
+  PODOLOGIE_PREISFENSTER.find(f => f.gueltig_bis === '9999-12-31')
+);
+const alleCodes = aktuellesFenster.positionen.map(p => String(p.hpnr));
 
 // Bis 13.09.2026 musste Physio hier manuell bleiben: heilmittel_tarif konnte
 // den Katalogpreis übersteuern (928 unbefristete Zeilen, DB-Check 04.09.2026),
@@ -55,8 +61,8 @@ test('Physio und Podologie sind beide automatisierbar (kein DB-Override mehr)', 
   rmSync(dir, { recursive: true, force: true });
 
   test('sicherer Fall: liefert ok:true und schreibt die erwartete Positionsanzahl', () => {
-    assert.equal(ergebnis.ok, true, 'sollte ok:true liefern — ' + ergebnis.grund);
-    assert.equal(ergebnis.anzahl, alleCodes.length);
+    assert.equal(ergebnis.ok, true, 'sollte ok:true liefern — ' + (/** @type {any} */ (ergebnis)).grund);
+    assert.equal((/** @type {any} */ (ergebnis)).anzahl, alleCodes.length);
   });
   test('sicherer Fall: altes Fenster wird auf den Vortag geschlossen', () => {
     assert.ok(geschrieben.includes(`gueltig_ab: '${aktuellesFenster.gueltig_ab}', gueltig_bis: '2099-06-30'`));
@@ -87,14 +93,14 @@ test('Physio und Podologie sind beide automatisierbar (kein DB-Override mehr)', 
   assert.ok(grenzfall, 'Testvoraussetzung: 78020 muss im aktuellen Fenster existieren');
   const ergebnis = await versucheBereich('hpnr', ziel, [{ code: '78020', xmlPreis: 50.55, xmlGueltigAb: '2099-07-01' }]
       .concat(alleCodes.filter(c => c !== '78020').map(c => ({
-        code: c, xmlPreis: aktuellesFenster.positionen.find(p => p.hpnr === c).preis, xmlGueltigAb: '2099-07-01',
+        code: c, xmlPreis: (/** @type {Record<string, any>} */ (aktuellesFenster.positionen.find(p => p.hpnr === c))).preis, xmlGueltigAb: '2099-07-01',
       }))),
     aktuellesFenster, false);
   const geschrieben = readFileSync(ziel, 'utf8');
   rmSync(dir, { recursive: true, force: true });
 
   test('Rundungs-Grenzfall 50,55 € → Zuzahlung 5,06 € (nicht 5,05 €)', () => {
-    assert.equal(ergebnis.ok, true, 'sollte ok:true liefern — ' + ergebnis.grund);
+    assert.equal(ergebnis.ok, true, 'sollte ok:true liefern — ' + (/** @type {any} */ (ergebnis)).grund);
     const idx = geschrieben.lastIndexOf(`hpnr: '78020'`);
     const zeile = geschrieben.slice(idx, idx + 200);
     assert.ok(zeile.includes('zuzahlung: 5.06'), `erwartet "zuzahlung: 5.06" in: ${zeile}`);
@@ -115,7 +121,7 @@ test('Physio und Podologie sind beide automatisierbar (kein DB-Override mehr)', 
 
   test('unsicherer Fall (fehlender Code): ok:false, Grund nennt den Code', () => {
     assert.equal(ergebnis.ok, false);
-    assert.ok(ergebnis.grund.includes(alleCodes[0]));
+    assert.ok((/** @type {any} */ (ergebnis)).grund.includes(alleCodes[0]));
   });
   test('unsicherer Fall (fehlender Code): Datei bleibt unverändert', () => {
     assert.equal(nachher, vorher);
@@ -135,7 +141,7 @@ test('Physio und Podologie sind beide automatisierbar (kein DB-Override mehr)', 
 
   test('unsicherer Fall (uneinheitliche Startdaten): ok:false', () => {
     assert.equal(ergebnis.ok, false);
-    assert.ok(ergebnis.grund.includes('uneinheitliche'));
+    assert.ok((/** @type {any} */ (ergebnis)).grund.includes('uneinheitliche'));
   });
   test('unsicherer Fall (uneinheitliche Startdaten): Datei bleibt unverändert', () => {
     assert.equal(nachher, vorher);
@@ -155,7 +161,7 @@ test('Physio und Podologie sind beide automatisierbar (kein DB-Override mehr)', 
 
   test('dry-run: ok:true, aber geschrieben:false', () => {
     assert.equal(ergebnis.ok, true);
-    assert.equal(ergebnis.geschrieben, false);
+    assert.equal((/** @type {any} */ (ergebnis)).geschrieben, false);
   });
   test('dry-run: Datei bleibt unverändert', () => {
     assert.equal(nachher, vorher);
@@ -178,7 +184,7 @@ test('Physio und Podologie sind beide automatisierbar (kein DB-Override mehr)', 
 
   test('unsicherer Fall (Preissprung >15%): ok:false', () => {
     assert.equal(ergebnis.ok, false);
-    assert.ok(ergebnis.grund.includes('Preissprung'), `Grund sollte "Preissprung" nennen: ${ergebnis.grund}`);
+    assert.ok((/** @type {any} */ (ergebnis)).grund.includes('Preissprung'), `Grund sollte "Preissprung" nennen: ${(/** @type {any} */ (ergebnis)).grund}`);
   });
   test('unsicherer Fall (Preissprung >15%): Datei bleibt unverändert', () => {
     assert.equal(nachher, vorher);
@@ -200,7 +206,7 @@ test('Physio und Podologie sind beide automatisierbar (kein DB-Override mehr)', 
 
   test('unsicherer Fall (kaputtes Datumsformat): ok:false', () => {
     assert.equal(ergebnis.ok, false);
-    assert.ok(ergebnis.grund.includes('Datumsformat'), `Grund sollte "Datumsformat" nennen: ${ergebnis.grund}`);
+    assert.ok((/** @type {any} */ (ergebnis)).grund.includes('Datumsformat'), `Grund sollte "Datumsformat" nennen: ${(/** @type {any} */ (ergebnis)).grund}`);
   });
   test('unsicherer Fall (kaputtes Datumsformat): Datei bleibt unverändert', () => {
     assert.equal(nachher, vorher);

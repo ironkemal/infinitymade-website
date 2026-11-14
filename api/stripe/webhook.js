@@ -16,21 +16,27 @@ const SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 // Vercel needs the raw body for HMAC verification — disable default JSON parsing
 export const config = { api: { bodyParser: false } };
 
+/** @param {import('../_lib/auth.js').VercelRequest} req @returns {Promise<string>} */
 async function readRawBody(req) {
   return new Promise((resolve, reject) => {
     let data = '';
     req.setEncoding('utf8');
-    req.on('data', chunk => { data += chunk; });
+    req.on('data', (/** @type {string | Buffer} */ chunk) => { data += chunk; });
     req.on('end', () => resolve(data));
     req.on('error', reject);
   });
 }
 
+/** @param {Record<string, any> | null | undefined} meta */
 function planSlugFromMetadata(meta) {
   const slug = meta?.plan_slug;
   return ['starter','professional','klinik','enterprise'].includes(slug) ? slug : null;
 }
 
+/**
+ * @param {Record<string, any>} sub
+ * @param {Record<string, unknown>} [overrides]
+ */
 async function updateProfileBySubscription(sub, overrides = {}) {
   // Lookup profile by stripe_subscription_id (set during checkout.session.completed)
   const { ok: fOk, data: profiles } = await adminFetch(`/profiles?stripe_subscription_id=eq.${sub.id}&select=id`);
@@ -65,6 +71,7 @@ async function updateProfileBySubscription(sub, overrides = {}) {
   const priceId  = baseItem?.price?.id || null;
   const planSlug = planSlugFromMetadata(sub.metadata || {});
 
+  /** @type {Record<string, unknown>} */
   const patch = {
     plan_status: planStatus,
     stripe_subscription_id: sub.id,
@@ -84,6 +91,10 @@ async function updateProfileBySubscription(sub, overrides = {}) {
   return { ok, httpStatus, data };
 }
 
+/**
+ * @param {import('../_lib/auth.js').VercelRequest} req
+ * @param {import('../_lib/auth.js').VercelResponse} res
+ */
 async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
 
@@ -93,8 +104,9 @@ async function handler(req, res) {
     const sigHeader = req.headers['stripe-signature'];
     event = verifyWebhook(raw, sigHeader, SECRET);
   } catch (err) {
-    console.error('[stripe webhook] verify failed:', err.message);
-    return json(res, 400, { error: 'Webhook verification failed', message: err.message });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[stripe webhook] verify failed:', msg);
+    return json(res, 400, { error: 'Webhook verification failed', message: msg });
   }
 
   try {
@@ -121,9 +133,10 @@ async function handler(req, res) {
                 trialEnd = new Date(subData.trial_end * 1000).toISOString();
               }
             } catch (e) {
-              console.error('[webhook] could not retrieve subscription for trial_end:', e.message);
+              console.error('[webhook] could not retrieve subscription for trial_end:', e instanceof Error ? e.message : String(e));
             }
 
+            /** @type {Record<string, unknown>} */
             const patch = {
               stripe_subscription_id: subscriptionId,
               stripe_customer_id: customerId,
@@ -269,7 +282,7 @@ async function handler(req, res) {
 
         // 3. Insert services + link employee
         if (Array.isArray(od.services) && od.services.length) {
-          const svcInserts = od.services.map(s => ({
+          const svcInserts = od.services.map((/** @type {any} */ s) => ({
             user_id: userId,
             owner_id: userId,
             business_id: businessId,
@@ -281,7 +294,7 @@ async function handler(req, res) {
           }));
           const { data: inserted } = await adminFetch('/services', { method: 'POST', body: JSON.stringify(svcInserts) });
           if (inserted?.length) {
-            const empRows = inserted.map(s => ({ employee_id: userId, service_id: s.id }));
+            const empRows = inserted.map((/** @type {any} */ s) => ({ employee_id: userId, service_id: s.id }));
             await adminFetch('/employee_services', { method: 'POST', body: JSON.stringify(empRows) });
             // Spiegelschreiben nach `business_services` entfernt (28.08.2026, Konsey).
             // Niemand las diese Zeilen: `services` ist die aktive Tabelle, alle Leser haengen
@@ -299,7 +312,7 @@ async function handler(req, res) {
 
         // 4. Insert working_hours
         if (Array.isArray(od.working_hours_rows) && od.working_hours_rows.length) {
-          const whRows = od.working_hours_rows.map(r => ({
+          const whRows = od.working_hours_rows.map((/** @type {any} */ r) => ({
             user_id: userId,
             owner_id: userId,
             business_id: businessId,
@@ -353,7 +366,7 @@ async function handler(req, res) {
     return json(res, 200, { received: true, type: event.type });
   } catch (err) {
     console.error('[stripe webhook] handler error:', err);
-    return json(res, 500, { error: 'Handler error', message: err.message });
+    return json(res, 500, { error: 'Handler error', message: err instanceof Error ? err.message : String(err) });
   }
 }
 

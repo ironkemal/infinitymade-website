@@ -37,6 +37,7 @@ synthCert.sign(privKey, forge.md.sha256.create());
 const certDerBytes = forge.asn1.toDer(forge.pki.certificateToAsn1(synthCert)).getBytes();
 const certThumbprint = crypto.createHash('sha256').update(Buffer.from(certDerBytes, 'binary')).digest('hex');
 
+/** @param {Buffer} rawPayload */
 function createSignedCms(rawPayload) {
   const p7 = forge.pkcs7.createSignedData();
   p7.content = forge.util.createBuffer(rawPayload.toString('binary'));
@@ -68,6 +69,10 @@ const DTA_HASH = crypto.createHash('sha256').update(RAW_DTA).digest('hex');
 const SIGNED_CMS_BYTES = createSignedCms(RAW_DTA);
 const SIGNED_BASE64 = SIGNED_CMS_BYTES.toString('base64');
 
+/**
+ * @param {Record<string, any>} [overrides]
+ * @returns {Record<string, any>}
+ */
 function makeInitialRow(overrides = {}) {
   return {
     id: 'ab-123',
@@ -97,32 +102,41 @@ function makeInitialRow(overrides = {}) {
   };
 }
 
+/** @param {Record<string, any> | null} initialRow */
 function createFakeDb(initialRow) {
+  /** @type {any} */
   let currentRow = initialRow ? { ...initialRow } : null;
   let microCounter = 100000;
+  /** @type {any[]} */
   const storageUploads = [];
+  /** @type {any[]} */
   const certUpserts = [];
   let failDbUpdate = false;
+  /** @type {(() => Promise<void> | void) | null} */
   let beforeUpdateHook = null;
 
   const registry = erzeugeRegistryFake({
     getRow: () => currentRow,
-    setRow: r => { currentRow = r; },
+    setRow: (/** @type {any} */ r) => { currentRow = r; },
     bumpUpdatedAt: () => { microCounter++; return `2026-10-04T10:00:00.${microCounter}Z`; },
     hooks: { get failPublish() { return failDbUpdate; } },
   });
 
   const db = {
+    /** @param {string} name @param {any} args */
     rpc: (name, args) => registry.rpc(name, args),
     auth: {
+      /** @param {string} token */
       async getUser(token) {
         if (!token || token === 'invalid') return { data: null, error: { message: 'invalid' } };
         return { data: { user: { id: token === 'valid-token' ? 'owner-tenant-1' : token } }, error: null };
       },
     },
     storage: {
+      /** @param {string} bucket */
       from(bucket) {
         return {
+          /** @param {string} path @param {any} bytes @param {any} options */
           async upload(path, bytes, options) {
             storageUploads.push({ bucket, path, bytes, options });
             return { data: { path }, error: null };
@@ -131,6 +145,7 @@ function createFakeDb(initialRow) {
         };
       },
     },
+    /** @param {string} table */
     from(table) {
       if (table === 'terapeut_zertifikat') {
         return {
@@ -143,6 +158,7 @@ function createFakeDb(initialRow) {
               },
             };
           },
+          /** @param {any} record */
           async upsert(record) {
             certUpserts.push(record);
             return { data: record, error: null };
@@ -153,6 +169,7 @@ function createFakeDb(initialRow) {
         return {
           select() {
             return {
+              /** @param {string} _col @param {any} val */
               eq(_col, val) {
                 return {
                   async single() {
@@ -166,19 +183,24 @@ function createFakeDb(initialRow) {
         };
       }
 
+      /** @type {Array<(r: any) => boolean>} */
       const filters = [];
       let isUpdate = false;
+      /** @type {any} */
       let patchData = null;
 
       const builder = {
         select() { return builder; },
+        /** @param {any} patch */
         update(patch) {
           isUpdate = true;
           patchData = patch;
           return builder;
         },
-        eq(col, val) { filters.push(r => r && r[col] === val); return builder; },
-        is(col, val) { filters.push(r => r && r[col] === val); return builder; },
+        /** @param {string} col @param {any} val */
+        eq(col, val) { filters.push((/** @type {any} */ r) => r && r[col] === val); return builder; },
+        /** @param {string} col @param {any} val */
+        is(col, val) { filters.push((/** @type {any} */ r) => r && r[col] === val); return builder; },
         async maybeSingle() {
           const match = currentRow && filters.every(f => f(currentRow)) ? { ...currentRow } : null;
           return { data: match, error: null };
@@ -187,6 +209,7 @@ function createFakeDb(initialRow) {
           const match = currentRow && filters.every(f => f(currentRow)) ? { ...currentRow } : null;
           return { data: match, error: match ? null : { message: 'not found' } };
         },
+        /** @param {any} resolve @param {any} [reject] */
         then(resolve, reject) {
           const run = async () => {
             if (failDbUpdate) return { data: null, error: new Error('DB persist failure') };
@@ -215,14 +238,17 @@ function createFakeDb(initialRow) {
   return {
     db,
     getCurrentRow: () => currentRow,
-    setCurrentRow: r => { currentRow = r ? { ...r } : null; },
+    setCurrentRow: (/** @type {any} */ r) => { currentRow = r ? { ...r } : null; },
     getStorageUploads: () => storageUploads,
     getCertUpserts: () => certUpserts,
-    setFailDbUpdate: v => { failDbUpdate = v; },
-    setBeforeUpdateHook: fn => { beforeUpdateHook = fn; },
+    setFailDbUpdate: (/** @type {boolean} */ v) => { failDbUpdate = v; },
+    setBeforeUpdateHook: (/** @type {any} */ fn) => { beforeUpdateHook = fn; },
   };
 }
 
+/**
+ * @param {{ params?: Record<string, any>, body?: Record<string, any>, headers?: Record<string, any>, user?: { id: string } }} [opts]
+ */
 function createReqRes({ params = {}, body = {}, headers = {}, user = { id: 'owner-tenant-1' } } = {}) {
   const req = {
     params: { id: 'ab-123', ...params },
@@ -231,19 +257,27 @@ function createReqRes({ params = {}, body = {}, headers = {}, user = { id: 'owne
     user,
   };
   let statusCode = 200;
+  /** @type {any} */
   let resBody = null;
   const res = {
-    status(code) { statusCode = code; return res; },
-    json(data) { resBody = data; return res; },
+    status(/** @type {number} */ code) { statusCode = code; return res; },
+    json(/** @type {any} */ data) { resBody = data; return res; },
     get statusCode() { return statusCode; },
     get body() { return resBody; },
   };
   return { req, res };
 }
 
+/**
+ * @param {any} fakeDb
+ * @param {Record<string, any>} [extraInjections]
+ * @returns {Record<string, any>}
+ */
 function setupVm(fakeDb, extraInjections = {}) {
+  /** @type {Record<string, any>} */
   const handlers = {};
   const mockRouter = {
+    /** @param {string} path @param {any} fn */
     post(path, fn) { handlers[path] = fn; },
   };
 
@@ -263,11 +297,11 @@ function setupVm(fakeDb, extraInjections = {}) {
     dtaEntfernungAktiv: () => false,
     pruefeSignedDta,
     supabase: fakeDb.db,
-    nurInhaber: async req => ({ tenantId: req.user?.id || 'owner-tenant-1' }),
+    nurInhaber: async (/** @type {any} */ req) => ({ tenantId: req.user?.id || 'owner-tenant-1' }),
     bereichFuerAbrechnung: async () => ({ bereich: 'physio', eigenerAbrechnungscode: '12' }),
     pruefeEmpfaenger: async () => ({ blockiert: false, meldungen: [] }),
-    sha256Hex: buf => crypto.createHash('sha256').update(buf).digest('hex'),
-    verarbeiteVerschluesselungsSchritt: async ({ vorher }) => ({
+    sha256Hex: (/** @type {any} */ buf) => crypto.createHash('sha256').update(buf).digest('hex'),
+    verarbeiteVerschluesselungsSchritt: async (/** @type {any} */ { vorher }) => ({
       verschluesselt: true,
       encrypted_storage_path: 'mock/path.enc',
       version: vorher,
@@ -290,9 +324,10 @@ const validUploadBody = {
 describe('Abrechnung Artefakt Routes CAS & Lifecycle', () => {
   it('(1) two truly concurrent uploads same before -> one 200 one 409, immutable paths preserved, winner enc only, CAS reset', async () => {
     const fakeDb = createFakeDb(makeInitialRow());
+    /** @type {any[]} */
     const encInvocations = [];
     const handlers = setupVm(fakeDb, {
-      verarbeiteVerschluesselungsSchritt: async ({ vorher }) => {
+      verarbeiteVerschluesselungsSchritt: async (/** @type {any} */ { vorher }) => {
         encInvocations.push(vorher);
         return { verschluesselt: true, encrypted_storage_path: 'enc/p.enc', version: vorher };
       },
@@ -349,10 +384,11 @@ describe('Abrechnung Artefakt Routes CAS & Lifecycle', () => {
 
   it('(2b) M1.16a Flag AN: nach Signatur wird die DTA-Ausmusterung genau einmal mit Owner/Abrechnung angestossen', async () => {
     const fakeDb = createFakeDb(makeInitialRow());
+    /** @type {any[]} */
     const aufrufe = [];
     const handlers = setupVm(fakeDb, {
       dtaEntfernungAktiv: () => true,
-      entferneUnsignierteDta: async (a) => { aufrufe.push({ ownerId: a.ownerId, abrechnungId: a.abrechnungId, header: await a.ladeHeader() }); return { entfernt: true }; },
+      entferneUnsignierteDta: async (/** @type {any} */ a) => { aufrufe.push({ ownerId: a.ownerId, abrechnungId: a.abrechnungId, header: await a.ladeHeader() }); return { entfernt: true }; },
     });
     const { req, res } = createReqRes({ body: validUploadBody });
     await handlers['/abrechnung/:id/upload-signed'](req, res);
@@ -420,10 +456,7 @@ describe('Abrechnung Artefakt Routes CAS & Lifecycle', () => {
     const fakeDb = createFakeDb(makeInitialRow());
     const handlers = setupVm(fakeDb, {
       verarbeiteVerschluesselungsSchritt: async () => {
-        const err = new Error('CAS conflict during enc');
-        err.status = 409;
-        err.code = 'ABRECHNUNG_VERSION_CONFLICT';
-        throw err;
+        throw Object.assign(new Error('CAS conflict during enc'), { status: 409, code: 'ABRECHNUNG_VERSION_CONFLICT' });
       },
     });
 

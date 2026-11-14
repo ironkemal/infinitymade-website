@@ -86,7 +86,7 @@ export function validateBelegEntry(type, amount, zahlart) {
 /**
  * Formats a list of ledger rows into a GoBD-compliant German CSV format.
  * 
- * @param {Array<object>} rows - Array of database records
+ * @param {Array<{ created_at: string | number | Date, amount_eur: number | string, reference_text?: string | null, zahlart?: string | null, beleg_nr: number | string, type: string }>} rows - Array of database records
  * @returns {string} CSV formatted content
  */
 export function generateCsvString(rows) {
@@ -107,12 +107,14 @@ export function generateCsvString(rows) {
     });
     
     const parts = dtf.formatToParts(d);
-    const day = parts.find(p => p.type === 'day').value;
-    const month = parts.find(p => p.type === 'month').value;
-    const year = parts.find(p => p.type === 'year').value;
-    const hour = parts.find(p => p.type === 'hour').value;
-    const minute = parts.find(p => p.type === 'minute').value;
-    const second = parts.find(p => p.type === 'second').value;
+    /** @param {string} type */
+    const part = (type) => parts.find(p => p.type === type)?.value || '';
+    const day = part('day');
+    const month = part('month');
+    const year = part('year');
+    const hour = part('hour');
+    const minute = part('minute');
+    const second = part('second');
 
     const dateStr = `${day}.${month}.${year}`;
     const timeStr = `${hour}:${minute}:${second}`;
@@ -123,7 +125,7 @@ export function generateCsvString(rows) {
     // Double quote escape reference texts to protect CSV structure
     const escapedRef = (r.reference_text || '').replace(/"/g, '""');
     
-    const zahlartStr = ZAHLART_LABELS[r.zahlart] || '';
+    const zahlartStr = /** @type {Record<string, string>} */ (ZAHLART_LABELS)[r.zahlart || ''] || '';
 
     csv += `"${String(r.beleg_nr).padStart(6, '0')}";"${dateStr}";"${timeStr}";"${r.type}";"${zahlartStr}";"${amountStr}";"${escapedRef}"\r\n`;
   }

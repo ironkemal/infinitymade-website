@@ -38,12 +38,13 @@ async function getAccessToken() {
   const r = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ client_id: id, client_secret: secret, refresh_token: rt, grant_type: 'refresh_token' }),
+    body: new URLSearchParams(/** @type {Record<string, string>} */ ({ client_id: id, client_secret: secret, refresh_token: rt, grant_type: 'refresh_token' })),
   });
   const { access_token } = await r.json();
   return access_token || null;
 }
 
+/** @param {Record<string, any>} booking */
 async function createCalendarEvent(booking) {
   const access_token = await getAccessToken();
   if (!access_token) return null;
@@ -67,9 +68,13 @@ async function createCalendarEvent(booking) {
     { method: 'POST', headers: { Authorization: `Bearer ${access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(event) }
   );
   const d = await r.json();
-  return { event_id: d.id || null, meet_link: d.conferenceData?.entryPoints?.find(e => e.entryPointType === 'video')?.uri || null };
+  return { event_id: d.id || null, meet_link: d.conferenceData?.entryPoints?.find((/** @type {any} */ e) => e.entryPointType === 'video')?.uri || null };
 }
 
+/**
+ * @param {string | null | undefined} eventId
+ * @param {Record<string, any>} booking
+ */
 async function updateCalendarEvent(eventId, booking) {
   const access_token = await getAccessToken();
   if (!access_token || !eventId) return null;
@@ -91,11 +96,15 @@ async function updateCalendarEvent(eventId, booking) {
     }
   );
   const d = await r.json();
-  return d.conferenceData?.entryPoints?.find(e => e.entryPointType === 'video')?.uri || null;
+  return d.conferenceData?.entryPoints?.find((/** @type {any} */ e) => e.entryPointType === 'video')?.uri || null;
 }
 
 // ─── ICS ─────────────────────────────────────────────────────────────────────
 
+/**
+ * @param {Record<string, any>} booking
+ * @param {string | null} meetLink
+ */
 function buildICS(booking, meetLink) {
   // Compute Berlin UTC offset for the event date (DST-aware)
   const berlinOffsetMin = (() => {
@@ -109,6 +118,10 @@ function buildICS(booking, meetLink) {
     return (m[1] === '+' ? 1 : -1) * (parseInt(m[2]) * 60 + parseInt(m[3] || '0'));
   })();
 
+  /**
+   * @param {string} dateStr
+   * @param {string} timeStr
+   */
   const toUTC = (dateStr, timeStr) => {
     const [y, mo, d] = dateStr.split('-').map(Number);
     const [h, mi]    = timeStr.split(':').map(Number);
@@ -149,14 +162,21 @@ function buildICS(booking, meetLink) {
 
 // ─── Email ───────────────────────────────────────────────────────────────────
 
+/** @param {string} dateStr */
 function fmtDE(dateStr) {
   return new Date(dateStr + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 }
 
+/** @param {string} inner */
 function cardHtml(inner) {
   return `<div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:520px;margin:0 auto;background:#FFFEFB;padding:32px;border-radius:12px;border:1px solid #e8e0d0">${inner}<hr style="border:none;border-top:1px solid #e8e0d0;margin:24px 0"><p style="font-size:12px;color:#6E6458">Praxura · praxura.de · Bei Fragen: kontakt@praxura.de</p></div>`;
 }
 
+/**
+ * @param {Record<string, any>} booking
+ * @param {string | null} meetLink
+ * @param {string} rescheduleToken
+ */
 async function sendConfirmationEmails(booking, meetLink, rescheduleToken) {
   if (!process.env.SMTP_HOST) return;
   const dateStr = fmtDE(booking.booking_date);
@@ -195,6 +215,10 @@ async function sendConfirmationEmails(booking, meetLink, rescheduleToken) {
   ]);
 }
 
+/**
+ * @param {Record<string, any>} booking
+ * @param {string | null} meetLink
+ */
 async function sendRescheduleEmails(booking, meetLink) {
   if (!process.env.SMTP_HOST) return;
   const dateStr = fmtDE(booking.booking_date);
@@ -231,15 +255,23 @@ async function sendRescheduleEmails(booking, meetLink) {
 
 // ─── Action handlers ─────────────────────────────────────────────────────────
 
+/**
+ * @param {import('./_lib/auth.js').VercelRequest} req
+ * @param {import('./_lib/auth.js').VercelResponse} res
+ */
 async function handleAvailability(req, res) {
-  const { date } = req.query;
+  const { date } = /** @type {Record<string, any>} */ (req.query);
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return json(res, 400, { error: 'Invalid date' });
   try {
     const { ok, data } = await adminFetch(`/demo_bookings?select=booking_time&booking_date=eq.${date}&status=eq.confirmed`);
-    return json(res, 200, { bookedTimes: ok && Array.isArray(data) ? data.map(r => r.booking_time) : [] });
+    return json(res, 200, { bookedTimes: ok && Array.isArray(data) ? data.map((/** @type {any} */ r) => r.booking_time) : [] });
   } catch { return json(res, 200, { bookedTimes: [] }); }
 }
 
+/**
+ * @param {import('./_lib/auth.js').VercelRequest} req
+ * @param {import('./_lib/auth.js').VercelResponse} res
+ */
 async function handleCreate(req, res) {
   let body;
   try { body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body; }
@@ -282,6 +314,10 @@ async function handleCreate(req, res) {
   return json(res, 200, { ok: true, meet_link: meetLink, reschedule_token: booking.reschedule_token });
 }
 
+/**
+ * @param {import('./_lib/auth.js').VercelRequest} req
+ * @param {import('./_lib/auth.js').VercelResponse} res
+ */
 async function handleReschedule(req, res) {
   let body;
   try { body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body; }
@@ -322,34 +358,42 @@ async function handleReschedule(req, res) {
   return json(res, 200, { ok: true, meet_link: meetLink });
 }
 
+/**
+ * @param {import('./_lib/auth.js').VercelRequest} req
+ * @param {import('./_lib/auth.js').VercelResponse} res
+ */
 function handleSetupCalendar(req, res) {
-  if (!process.env.SETUP_SECRET || req.query.secret !== process.env.SETUP_SECRET) return json(res, 403, { error: 'Forbidden' });
-  const params = new URLSearchParams({
+  if (!process.env.SETUP_SECRET || req.query?.secret !== process.env.SETUP_SECRET) return json(res, 403, { error: 'Forbidden' });
+  const params = new URLSearchParams(/** @type {Record<string, string>} */ ({
     client_id: process.env.GOOGLE_CLIENT_ID,
     redirect_uri: CAL_REDIRECT,
     response_type: 'code',
     scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
     access_type: 'offline',
     prompt: 'consent',
-  });
+  }));
   res.writeHead(302, { Location: `https://accounts.google.com/o/oauth2/v2/auth?${params}` });
   res.end();
 }
 
+/**
+ * @param {import('./_lib/auth.js').VercelRequest} req
+ * @param {import('./_lib/auth.js').VercelResponse} res
+ */
 async function handleCalendarCallback(req, res) {
-  const { code } = req.query;
+  const { code } = /** @type {Record<string, any>} */ (req.query);
   if (!code) return json(res, 400, { error: 'No code' });
 
   const r = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
+    body: new URLSearchParams(/** @type {Record<string, string>} */ ({
       code,
       client_id: process.env.GOOGLE_CLIENT_ID,
       client_secret: process.env.GOOGLE_CLIENT_SECRET,
       redirect_uri: CAL_REDIRECT,
       grant_type: 'authorization_code',
-    }),
+    })),
   });
   const tokens = await r.json();
 
@@ -365,8 +409,12 @@ async function handleCalendarCallback(req, res) {
 
 // ─── Router ──────────────────────────────────────────────────────────────────
 
+/**
+ * @param {import('./_lib/auth.js').VercelRequest} req
+ * @param {import('./_lib/auth.js').VercelResponse} res
+ */
 async function handler(req, res) {
-  const { action } = req.query;
+  const { action } = /** @type {Record<string, any>} */ (req.query);
   if (req.method === 'POST' && (action === 'create' || action === 'reschedule')) {
     if (!allowMailRequest(req, res, `demo-${action}`)) return;
   }

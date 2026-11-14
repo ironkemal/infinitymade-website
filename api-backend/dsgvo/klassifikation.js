@@ -8,6 +8,7 @@
 
 /**
  * Gesetzliche Aufbewahrungskategorien mit Fristen und Rechtsgrundlagen.
+ * @type {Record<string, { jahre: number, grundlage: string, label: string }>}
  */
 export const KATEGORIEN = {
   behandlung: {

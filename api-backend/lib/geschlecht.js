@@ -19,6 +19,7 @@
  * Buchstabe darf nicht die ganze Patientenanlage kippen.
  */
 
+/** @type {Record<string, 'm' | 'f' | 'd'>} */
 const ALIASE = {
   m: 'm', maennlich: 'm', 'männlich': 'm', mann: 'm', male: 'm', herr: 'm', '1': 'm',
   f: 'f', w: 'f', weiblich: 'f', frau: 'f', female: 'f', '2': 'f',
@@ -33,6 +34,9 @@ const ALIASE = {
  * Angabe als ein Wert, der den INSERT sprengt.
  *
  * Jeder Schreibpfad auf `leads.geschlecht` muss hier durch.
+ *
+ * @param {unknown} wert
+ * @returns {'m' | 'f' | 'd' | null}
  */
 export function normalisiereGeschlecht(wert) {
   if (wert == null) return null;

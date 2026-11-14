@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 process.env.SUPABASE_URL = 'http://mahnwesen.test';
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'synthetic-test-key';
 const originalFetch = globalThis.fetch;
+/** @type {any} */
 let scenario;
 globalThis.fetch = async (input, options = {}) => {
   const url = new URL(String(input));
@@ -27,7 +28,7 @@ globalThis.fetch = async (input, options = {}) => {
     data = scenario.belege;
   } else if (table === 'ausfallrechnungen') data = scenario.ausfall;
   else if (table === 'mahnungen' && options.method === 'POST') {
-    scenario.inserts.push(JSON.parse(options.body));
+    scenario.inserts.push(JSON.parse(String(options.body)));
     data = { id: 'mahnung-test', mahnung_nr: 1 };
   } else if (table === 'mahnungen') {
     if (scenario.historyError) return responseError('history unavailable');
@@ -35,6 +36,7 @@ globalThis.fetch = async (input, options = {}) => {
   } else throw new Error('Unerwartete Testabfrage: ' + url);
   return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json' } });
 };
+/** @param {string} message */
 function responseError(message) {
   return new Response(JSON.stringify({ message, code: 'TEST_ERROR' }), {
     status: 500, headers: { 'Content-Type': 'application/json' },
@@ -42,9 +44,14 @@ function responseError(message) {
 }
 after(() => { globalThis.fetch = originalFetch; });
 const { default: router } = await import('./mahnwesen.routes.js');
-const handler = router.stack.find(layer => layer.route?.path === '/mahnwesen/create').route.stack[0].handle;
-const listHandler = router.stack.find(layer => layer.route?.path === '/mahnwesen/offene').route.stack[0].handle;
+const handler = (/** @type {any} */ (router)).stack.find((/** @type {any} */ layer) => layer.route?.path === '/mahnwesen/create').route.stack[0].handle;
+const listHandler = (/** @type {any} */ (router)).stack.find((/** @type {any} */ layer) => layer.route?.path === '/mahnwesen/offene').route.stack[0].handle;
 
+/**
+ * @param {Record<string, any>} [overrides]
+ * @param {Record<string, any>} [body]
+ * @returns {Promise<any>}
+ */
 async function create(overrides = {}, body = { prescriptionId: '12345678-rx-test', level: 1 }) {
   scenario = {
     requests: [], inserts: [], rxReads: 0, belege: [],
@@ -54,16 +61,19 @@ async function create(overrides = {}, body = { prescriptionId: '12345678-rx-test
       leads: { first_name: 'Test', last_name: 'Patient' } },
     ...overrides,
   };
+  /** @type {{ status: number, body?: any }} */
   const result = { status: 200 };
+  /** @type {any} */
   const res = {
-    status(code) { result.status = code; return this; },
-    json(value) { result.body = value; return this; },
+    status(/** @type {number} */ code) { result.status = code; return this; },
+    json(/** @type {any} */ value) { result.body = value; return this; },
     set() { return this; },
-    send(value) { result.body = value; return this; },
+    send(/** @type {any} */ value) { result.body = value; return this; },
   };
   await (overrides.list ? listHandler : handler)({ headers: { authorization: 'Bearer synthetic-token' }, body }, res);
   return { ...result, ...scenario };
 }
+/** @param {number} amount_eur */
 const beleg = amount_eur => ({ prescription_id: '12345678-rx-test', amount_eur });
 
 test('Teilzahlung: Mahnung und Brief fordern nur 10 statt 30 Euro', async () => {
@@ -135,7 +145,7 @@ test('Ausfallrechnung behält Betrag und Forderungsart ohne Zuzahlungsabfrage', 
   assert.equal(result.inserts[0].amount_eur, 45);
   assert.equal(result.inserts[0].prescription_id, null);
   assert.equal(result.inserts[0].ausfallrechnung_id, 'ausfall-test');
-  assert.equal(result.requests.some(req => req.table === 'belegliste'), false);
+  assert.equal(result.requests.some((/** @type {any} */ req) => req.table === 'belegliste'), false);
 });
 
 test('Ausfallmahnung: ursprüngliches gespeichertes Zahlungsziel statt pauschaler14Tage', async () => {
@@ -144,7 +154,7 @@ test('Ausfallmahnung: ursprüngliches gespeichertes Zahlungsziel statt pauschale
   assert.equal(result.inserts[0].original_faelligkeit.slice(0, 10), '2026-02-01');
 });
 test('Altbeleg ohne nachgewiesene Fälligkeit und noch nicht überfällige AF werden nicht gemahnt', async () => {
-  for (const [faellig_am, expected] of [[null, 409], ['9999-01-01', 400]]) {
+  for (const [faellig_am, expected] of /** @type {Array<[string | null, number]>} */ ([[null, 409], ['9999-01-01', 400]])) {
     const result = await create({ ausfall: { id: 'ausfall-test', owner_id: 'owner-test', amount_eur: 45, status: 'offen', created_at: '2026-01-01', faellig_am, rechnung_nr: 7 } }, { ausfallrechnungId: 'ausfall-test', level: 1 });
     assert.equal(result.status, expected);
     assert.equal(result.inserts.length, 0);
@@ -158,5 +168,5 @@ test('Offene-Liste nutzt gespeicherte Fälligkeit und schließt Altbeleg/noch ni
     { id: 'overdue', created_at: '2020-01-01', faellig_am: '2020-02-01', amount_eur: 45, rechnung_nr: 7 },
   ] });
   assert.equal(result.status, 200);
-  assert.deepEqual(result.body.map(row => row.id), ['overdue']);
+  assert.deepEqual(result.body.map((/** @type {any} */ row) => row.id), ['overdue']);
 });

@@ -39,7 +39,7 @@ let bericht;
 try {
   bericht = JSON.parse(jsonZeile);
 } catch (e) {
-  console.error('JSON-Zeile nicht lesbar:', e.message, '\nZeile war:', jsonZeile);
+  console.error('JSON-Zeile nicht lesbar:', e instanceof Error ? e.message : String(e), '\nZeile war:', jsonZeile);
   process.exit(1);
 }
 

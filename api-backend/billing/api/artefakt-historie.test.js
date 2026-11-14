@@ -3,14 +3,25 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { listeArtefaktVersionen, ladeArtefaktVersion, dateinameFuer } from './artefakt-historie.js';
 
+/** @param {string | NodeJS.ArrayBufferView} b */
 const sha = b => createHash('sha256').update(b).digest('hex');
 const O = 'o1', A = 'ab1';
 
+/**
+ * @param {{ header: any, rows: any[], files?: Record<string, string>, listError?: boolean }} p
+ */
 function db({ header, rows, files = {}, listError = false }) {
+  /** @param {string} table */
   const q = (table) => {
+    /** @type {Array<[string, any]>} */
     const f = [];
+    /** @type {any} */
     const b = {
       select() { return b; },
+      /**
+       * @param {string} c
+       * @param {any} v
+       */
       eq(c, v) { f.push([c, v]); return b; },
       order() { return b; },
       async maybeSingle() {
@@ -18,13 +29,28 @@ function db({ header, rows, files = {}, listError = false }) {
         const m = src.filter(r => f.every(([c, v]) => r[c] === undefined || r[c] === v || (c === 'abrechnung_id' && true)));
         return { data: m[0] || null, error: null };
       },
+      /** @param {any} res */
       then(res) { return Promise.resolve(listError ? { data: null, error: { message: 'x' } } : { data: rows.filter(r => f.every(([c, v]) => r[c] === undefined || r[c] === v)), error: null }).then(res); },
     };
     return b;
   };
-  return { from: q, storage: { from: () => ({ async download(p) { return files[p] ? { data: { async arrayBuffer() { const b = Buffer.from(files[p]); return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength); } }, error: null } : { data: null, error: { message: 'nf' } }; } }) } };
+  return {
+    from: q,
+    storage: {
+      from: () => ({
+        /** @param {string} p */
+        async download(p) {
+          return files[p]
+            ? { data: { async arrayBuffer() { const b = Buffer.from(files[p]); return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength); } }, error: null }
+            : { data: null, error: { message: 'nf' } };
+        },
+      }),
+    },
+  };
 }
+/** @param {Record<string, any>} [o] */
 const hdr = (o = {}) => ({ id: A, owner_id: O, status: 'erstellt', dateiname: 'SL/AB 1.dta', created_at: '2026-10-01T00:00:00Z', storage_path: 'o1/ab1/d', signed_storage_path: 'o1/ab1/s', ...o });
+/** @param {Record<string, any>} [o] */
 const reg = (o = {}) => ({ id: 'r1', owner_id: O, abrechnung_id: A, role: 'signed', kind: 'signed', state: 'published', sha256: sha('inhalt'), legacy: false, created_at: '2026-10-01T00:00:00Z', published_at: '2026-10-01T00:00:01Z', retired_at: null, storage_path: 'o1/ab1/s', ...o });
 
 test('Liste: keine Pfade nach aussen, aktuell-Markierung, Aufbewahrungstext, Wiedervorlage nach 7 Tagen ohne Einreichung', async () => {
@@ -32,11 +58,11 @@ test('Liste: keine Pfade nach aussen, aktuell-Markierung, Aufbewahrungstext, Wie
   const erg = await listeArtefaktVersionen({ db: d, ownerId: O, abrechnungId: A, jetzt: new Date('2026-10-20T00:00:00Z') });
   assert.equal(erg.versionen.length, 2);
   assert.ok(!JSON.stringify(erg).includes('o1/ab1'), 'Pfade duerfen nicht in der Antwort stehen');
-  const s = erg.versionen.find(v => v.rolle === 'signed');
+  const s = /** @type {any} */ (erg.versionen.find(v => v.rolle === 'signed'));
   assert.equal(s.aktuell, true);
   assert.equal(s.aufbewahrung, 'Noch nicht eingereicht');
   assert.equal(s.wiedervorlage, true);
-  const dta = erg.versionen.find(v => v.rolle === 'dta');
+  const dta = /** @type {any} */ (erg.versionen.find(v => v.rolle === 'dta'));
   assert.equal(dta.aktuell, false);
   assert.equal(dta.pruefung, 'Bestandsdatei ohne Hash');
 });
@@ -49,8 +75,8 @@ test('Liste: nach Einreichung 8 Jahre ab Einreichung, keine Wiedervorlage', asyn
 });
 
 test('Fremder Owner: 403, unbekannte Abrechnung: 404', async () => {
-  await assert.rejects(listeArtefaktVersionen({ db: db({ header: hdr({ owner_id: 'o2' }), rows: [] }), ownerId: O, abrechnungId: A }), e => e.status === 403);
-  await assert.rejects(listeArtefaktVersionen({ db: db({ header: null, rows: [] }), ownerId: O, abrechnungId: A }), e => e.status === 404);
+  await assert.rejects(listeArtefaktVersionen({ db: db({ header: hdr({ owner_id: 'o2' }), rows: [] }), ownerId: O, abrechnungId: A }), (/** @type {any} */ e) => e.status === 403);
+  await assert.rejects(listeArtefaktVersionen({ db: db({ header: null, rows: [] }), ownerId: O, abrechnungId: A }), (/** @type {any} */ e) => e.status === 404);
 });
 
 test('Dateinamen je Rolle: unterscheidbar, SECON-konform (verschluesselt ohne Endung), sicher', () => {
@@ -79,20 +105,20 @@ test('Download: published mit passendem Hash liefert Bytes und sicheren Dateinam
 test('Download: reserved/retired nicht verfuegbar (409), unbekannt 404', async () => {
   for (const state of ['reserved', 'retired']) {
     const d = db({ header: hdr(), rows: [reg({ state })], files: { 'o1/ab1/s': 'inhalt' } });
-    await assert.rejects(ladeArtefaktVersion({ db: d, ownerId: O, abrechnungId: A, versionId: 'r1' }), e => e.status === 409);
+    await assert.rejects(ladeArtefaktVersion({ db: d, ownerId: O, abrechnungId: A, versionId: 'r1' }), (/** @type {any} */ e) => e.status === 409);
   }
-  await assert.rejects(ladeArtefaktVersion({ db: db({ header: hdr(), rows: [reg()] }), ownerId: O, abrechnungId: A, versionId: 'zzz' }), e => e.status === 404);
+  await assert.rejects(ladeArtefaktVersion({ db: db({ header: hdr(), rows: [reg()] }), ownerId: O, abrechnungId: A, versionId: 'zzz' }), (/** @type {any} */ e) => e.status === 404);
 });
 
 test('Download: Hashabweichung wird NICHT ausgeliefert (500)', async () => {
   const d = db({ header: hdr(), rows: [reg()], files: { 'o1/ab1/s': 'manipuliert' } });
-  await assert.rejects(ladeArtefaktVersion({ db: d, ownerId: O, abrechnungId: A, versionId: 'r1' }), e => e.code === 'HASH_ABWEICHUNG');
+  await assert.rejects(ladeArtefaktVersion({ db: d, ownerId: O, abrechnungId: A, versionId: 'r1' }), (/** @type {any} */ e) => e.code === 'HASH_ABWEICHUNG');
 });
 
 test('Download: Fremd-Owner 403, Pfad ausserhalb des Owner-Ordners 403', async () => {
-  await assert.rejects(ladeArtefaktVersion({ db: db({ header: hdr({ owner_id: 'o2' }), rows: [reg()] }), ownerId: O, abrechnungId: A, versionId: 'r1' }), e => e.status === 403);
+  await assert.rejects(ladeArtefaktVersion({ db: db({ header: hdr({ owner_id: 'o2' }), rows: [reg()] }), ownerId: O, abrechnungId: A, versionId: 'r1' }), (/** @type {any} */ e) => e.status === 403);
   const d = db({ header: hdr(), rows: [reg({ storage_path: 'o2/ab1/s' })], files: { 'o2/ab1/s': 'inhalt' } });
-  await assert.rejects(ladeArtefaktVersion({ db: d, ownerId: O, abrechnungId: A, versionId: 'r1' }), e => e.status === 403);
+  await assert.rejects(ladeArtefaktVersion({ db: d, ownerId: O, abrechnungId: A, versionId: 'r1' }), (/** @type {any} */ e) => e.status === 403);
 });
 
 test('Download: Bestandsdatei ohne Hash wird ausgeliefert', async () => {

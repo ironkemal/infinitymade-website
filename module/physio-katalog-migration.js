@@ -20,18 +20,19 @@ export const ALT_SAAT = { code: 'X0102', title: 'Massage Einzel' };
 
 /**
  * Welche Leistungen sind falsche Saat-Karten, und was wird aus ihnen?
- * @param {Array} services   servicesCache
- * @param {object} kmt       Katalogeintrag X0106 aus GKV_LEISTUNGSKATALOG
- * @returns {Array<{id:string, patch:object}>}
+ * @param {any[] | null | undefined} services   servicesCache
+ * @param {any} kmt       Katalogeintrag X0106 aus GKV_LEISTUNGSKATALOG
+ * @returns {Array<{id:string, patch:Record<string, any>}>}
  */
 export function physioAltlastPatches(services, kmt) {
   if (!kmt) return [];
-  const alt = (services || []).filter(s =>
+  const list = services || [];
+  const alt = list.filter(s =>
     s.gkv_position_nr === ALT_SAAT.code && String(s.title || '').trim() === ALT_SAAT.title);
   return alt.map(s => {
     // X0106 ist schon eingerichtet → die alte Karte wäre eine Dublette. Sie
     // verliert nur den GKV-Bezug und bleibt als Privatposten stehen.
-    const schonDa = services.some(x => x.gkv_position_nr === kmt.code && x.id !== s.id);
+    const schonDa = list.some(x => x.gkv_position_nr === kmt.code && x.id !== s.id);
     return {
       id: s.id,
       patch: schonDa
@@ -53,6 +54,7 @@ export function physioAltlastPatches(services, kmt) {
  * Anlage 7 Fassung 21.07.2021 Nr. 3-7; gkv-302 30.10.2026). X0720/X0728 (Tele)
  * folgen Bobath wie X1221 der MT. KG-Muko X0702 ist keine Zertifikatsposition.
  */
+/** @type {Record<string, string>} */
 export const ZERTIFIKAT_PFLICHT = {
   X1201: 'MT', X1221: 'MT',
   X0201: 'MLD', X0202: 'MLD', X0204: 'MLD', X0205: 'MLD',
@@ -64,30 +66,43 @@ export const ZERTIFIKAT_PFLICHT = {
   X0709: 'ZNS-K-VOJTA',
 };
 
-/** Kinder-Zertifikat deckt Erwachsene derselben Methode ab (Anlage 7 Nr. 3/4), nie umgekehrt. */
+/**
+ * Kinder-Zertifikat deckt Erwachsene derselben Methode ab (Anlage 7 Nr. 3/4), nie umgekehrt.
+ * @type {Record<string, string>}
+ */
 const ZNS_KINDER_DECKT = { 'ZNS-K-BOBATH': 'ZNS-BOBATH', 'ZNS-K-VOJTA': 'ZNS-VOJTA' };
 
-/** Die Prüfung ist Gleichheit: die mitgedeckte Stufe wird als eigene Zeile gespeichert. */
+/**
+ * Die Prüfung ist Gleichheit: die mitgedeckte Stufe wird als eigene Zeile gespeichert.
+ * @param {string[] | null | undefined} zertifikate
+ */
 export function zertifikateMitDeckung(zertifikate) {
   const alle = new Set(zertifikate || []);
   for (const z of [...alle]) if (ZNS_KINDER_DECKT[z]) alle.add(ZNS_KINDER_DECKT[z]);
   return [...alle];
 }
 
-/** Leistungen mit Zertifikatsposition, denen das Pflichtzertifikat fehlt. */
+/**
+ * Leistungen mit Zertifikatsposition, denen das Pflichtzertifikat fehlt.
+ * @param {any[] | null | undefined} services
+ */
 export function zertifikatPatches(services) {
   return (services || [])
     .filter(s => ZERTIFIKAT_PFLICHT[s.gkv_position_nr] && !s.required_certificate)
     .map(s => ({ id: s.id, patch: { required_certificate: ZERTIFIKAT_PFLICHT[s.gkv_position_nr] } }));
 }
 
-/** Wendet die Patches an und hält servicesCache synchron. */
+/**
+ * Wendet die Patches an und hält servicesCache synchron.
+ * @param {{ supabase: any, services: any[], katalog: any[] }} opts
+ */
 export async function migrierePhysioAltlast({ supabase, services, katalog }) {
   const kmt = (katalog || []).find(e => e.code === 'X0106');
   for (const { id, patch } of [...physioAltlastPatches(services, kmt), ...zertifikatPatches(services)]) {
     const { error } = await supabase.from('services').update(patch).eq('id', id);
     if (error) { console.warn('Physio-Katalogkorrektur fehlgeschlagen für', id, error.message); continue; }
-    Object.assign(services.find(s => s.id === id), patch);
+    const target = services.find(s => s.id === id);
+    if (target) Object.assign(target, patch);
   }
 }
 

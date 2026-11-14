@@ -38,6 +38,7 @@ test('lizenzAusdruck liest alte Feldformen', () => {
   assert.equal(lizenzAusdruck({}), '');
 });
 
+/** @param {Array<[string, Record<string, unknown>, string?]>} pakete */
 function baum(pakete) {
   const w = fs.mkdtempSync(path.join(os.tmpdir(), 'lizenz-'));
   for (const [rel, pkg, lizenzText] of pakete) {

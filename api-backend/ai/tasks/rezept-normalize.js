@@ -33,8 +33,17 @@ Antwortschema:
   "ergaenzendes_heilmittel": { "value": string|null, "label": string|null, "match": "exact"|"fuzzy"|"none", "confidence": number, "note": string|null }
 }`;
 
+/**
+ * @typedef {{ x: string, label: string, kat?: string | null }} HeilmittelPosition
+ */
+
 const EMPTY = { value: null, match: 'none', confidence: 0, note: null };
 
+/**
+ * @param {Record<string, unknown>} rez
+ * @param {HeilmittelPosition[]} positionen
+ * @returns {string}
+ */
 function buildUserPrompt(rez, positionen) {
   const hmListe = positionen
     .map(p => `${p.x} = ${p.label}${p.kat ? ` [${p.kat}]` : ''}`)
@@ -60,10 +69,16 @@ ${hmListe}
 Ordne jeden Rohwert genau einer erlaubten Option zu. Antworte nur mit dem JSON-Objekt.`;
 }
 
+/**
+ * @param {unknown} raw
+ * @param {readonly string[]} allowed
+ * @param {((code: string) => string | null | undefined) | null} labelLookup
+ */
 function sanitizeField(raw, allowed, labelLookup) {
   if (!raw || typeof raw !== 'object') return { ...EMPTY };
+  const rec = /** @type {Record<string, unknown>} */ (raw);
 
-  const value = raw.value == null ? null : String(raw.value).trim();
+  const value = rec.value == null ? null : String(rec.value).trim();
   const inList = value && allowed.some(a => a.toLowerCase() === value.toLowerCase());
   if (!value || !inList) {
     return {
@@ -71,14 +86,14 @@ function sanitizeField(raw, allowed, labelLookup) {
       label: null,
       match: 'none',
       confidence: 0,
-      note: raw.note ? String(raw.note).slice(0, 160) : null
+      note: rec.note ? String(rec.note).slice(0, 160) : null
     };
   }
 
-  const canonical = allowed.find(a => a.toLowerCase() === value.toLowerCase());
-  const match = ['exact', 'fuzzy'].includes(raw.match) ? raw.match : 'fuzzy';
-  const confidence = typeof raw.confidence === 'number'
-    ? Math.max(0, Math.min(1, raw.confidence))
+  const canonical = /** @type {string} */ (allowed.find(a => a.toLowerCase() === value.toLowerCase()));
+  const match = typeof rec.match === 'string' && ['exact', 'fuzzy'].includes(rec.match) ? rec.match : 'fuzzy';
+  const confidence = typeof rec.confidence === 'number'
+    ? Math.max(0, Math.min(1, rec.confidence))
     : null;
 
   return {
@@ -86,26 +101,38 @@ function sanitizeField(raw, allowed, labelLookup) {
     label: labelLookup ? (labelLookup(canonical) || null) : null,
     match,
     confidence,
-    note: match === 'exact' ? null : (raw.note ? String(raw.note).slice(0, 160) : null)
+    note: match === 'exact' ? null : (rec.note ? String(rec.note).slice(0, 160) : null)
   };
 }
 
+/**
+ * @param {unknown} parsed
+ * @param {HeilmittelPosition[]} positionen
+ * @returns {boolean}
+ */
 function validateNormalizeOutput(parsed, positionen) {
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || Object.keys(parsed).sort().join(',') !== 'diagnosegruppe,ergaenzendes_heilmittel,frequenz,heilmittel') return false;
+  const rec = /** @type {Record<string, unknown>} */ (parsed);
   for (const key of ['frequenz','diagnosegruppe','heilmittel','ergaenzendes_heilmittel']) {
-    const field = parsed[key]; const heilmittel = key.includes('heilmittel');
+    const rawField = rec[key]; const heilmittel = key.includes('heilmittel');
     const keys = heilmittel ? 'confidence,label,match,note,value' : 'confidence,match,note,value';
-    if (!field || typeof field !== 'object' || Array.isArray(field) || Object.keys(field).sort().join(',') !== keys) return false;
-    if (!['exact','fuzzy','none'].includes(field.match) || typeof field.confidence !== 'number' || !Number.isFinite(field.confidence) || field.confidence < 0 || field.confidence > 1) return false;
+    if (!rawField || typeof rawField !== 'object' || Array.isArray(rawField) || Object.keys(rawField).sort().join(',') !== keys) return false;
+    const field = /** @type {Record<string, unknown>} */ (rawField);
+    if (typeof field.match !== 'string' || !['exact','fuzzy','none'].includes(field.match) || typeof field.confidence !== 'number' || !Number.isFinite(field.confidence) || field.confidence < 0 || field.confidence > 1) return false;
     if (field.note !== null && (typeof field.note !== 'string' || field.note.length > 160)) return false;
-    if (field.value === null) { if (field.match !== 'none' || heilmittel && field.label !== null) return false; continue; }
+    if (field.value === null) { if (field.match !== 'none' || (heilmittel && field.label !== null)) return false; continue; }
     const allowed = key === 'frequenz' ? FREQUENZ_OPTIONEN : key === 'diagnosegruppe' ? DIAGNOSEGRUPPEN : positionen.map(p => p.x);
     if (typeof field.value !== 'string' || !allowed.includes(field.value) || field.match === 'none') return false;
-    if (heilmittel && field.label !== positionen.find(p => p.x === field.value)?.label) return false;
+    const val = field.value;
+    if (heilmittel && field.label !== positionen.find(p => p.x === val)?.label) return false;
   }
   return true;
 }
 
+/**
+ * @param {import('../ki-gateway.js').GatewayPayload} payload
+ * @param {import('../ki-gateway.js').GatewayContext} [context={}]
+ */
 export async function run(payload, context = {}) {
   const rez = (payload && payload.rezept) || {};
   const positionen = (payload && payload.heilmittel_positionen) || [];
@@ -142,7 +169,8 @@ export async function run(payload, context = {}) {
   });
 
   const hmCodes = positionen.map(p => p.x);
-  const hmLabel = code => (positionen.find(p => p.x === code) || {}).label;
+  /** @param {string} code @returns {string | undefined} */
+  const hmLabel = code => (positionen.find(p => p.x === code) || { label: undefined }).label;
 
   return {
     normalized: {

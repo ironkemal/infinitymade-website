@@ -22,6 +22,8 @@ test('je Tag: 78010 + 78020 am selben Tag = 2 Behandlungen, 78610 getrennt gezä
   ], x => x.d, x => x.p, x => x.a);
   const b = r.find(x => x.gruppe === 'behandlung');
   const n = r.find(x => x.gruppe === 'nagelspange');
+  assert.ok(b);
+  assert.ok(n);
   assert.equal(b.anzahl, 2);
   assert.ok(b.anzahl > TAGESHOECHSTZAHL.behandlung);
   assert.equal(n.anzahl, 2);

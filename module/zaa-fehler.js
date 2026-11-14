@@ -15,7 +15,15 @@
 // api-backend/billing/zaa/anwenden.js). Ohne Zuordnung: Rohnummer der Kasse aus
 // `zaa_fehler.belegnummer_kasse` (Migration 0111, gkv-302 06.11.2026).
 
-/** Gespeicherte Zeilen (zaa_fehler + prescriptions(belegnummer)) → Tabellenzeilen. */
+/**
+ * @typedef {{ code: string, beleg: string | null, status: string, fehler: string, loesung: string, rxId: string | null }} ZaaZeile
+ */
+
+/**
+ * Gespeicherte Zeilen (zaa_fehler + prescriptions(belegnummer)) → Tabellenzeilen.
+ * @param {any[] | null | undefined} data
+ * @returns {ZaaZeile[]}
+ */
 export function zaaZeilenAusDb(data) {
   return (data || []).map(e => ({
     code: e.fehler_code,
@@ -32,8 +40,12 @@ export function zaaZeilenAusDb(data) {
  * Belegnummer zugeordnet wurde, Verordnung und Status nach — damit „Beheben" auch
  * direkt nach dem Upload funktioniert. Ohne Treffer bleibt die Rohnummer der Kasse
  * sichtbar (genau die Zeilen, die die Praxis von Hand prüfen muss).
+ * @param {any[] | null | undefined} errors
+ * @param {ZaaZeile[]} [dbZeilen]
+ * @returns {ZaaZeile[]}
  */
 export function zaaZeilenAusUpload(errors, dbZeilen = []) {
+  /** @type {Map<string, ZaaZeile>} */
   const proBeleg = new Map();
   for (const z of dbZeilen) if (z.beleg && z.rxId && !proBeleg.has(z.beleg)) proBeleg.set(z.beleg, z);
   return (errors || []).map(e => {
@@ -49,8 +61,12 @@ export function zaaZeilenAusUpload(errors, dbZeilen = []) {
   });
 }
 
-/** Tabelle als HTML. Leere Liste → ''. */
-export function renderZaaFehlerTabelle(zeilen, { escapeHtml = (s) => String(s ?? '') } = {}) {
+/**
+ * Tabelle als HTML. Leere Liste → ''.
+ * @param {ZaaZeile[] | null | undefined} zeilen
+ * @param {{ escapeHtml?: (s: any) => string }} [opts]
+ */
+export function renderZaaFehlerTabelle(zeilen, { escapeHtml = (/** @type {any} */ s) => String(s ?? '') } = {}) {
   if (!zeilen?.length) return '';
   const esc = escapeHtml;
   const rows = zeilen.map(z => {
@@ -69,7 +85,11 @@ export function renderZaaFehlerTabelle(zeilen, { escapeHtml = (s) => String(s ??
   return `<table class="data-table"><thead><tr><th>Code</th><th>Beleg</th><th>Status</th><th>Fehler</th><th>Lösung</th><th>Aktion</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
-/** Ergebnis nach dem Upload: Zusammenfassung + Warnung + gemeinsame Tabelle. */
+/**
+ * Ergebnis nach dem Upload: Zusammenfassung + Warnung + gemeinsame Tabelle.
+ * @param {any} json
+ * @param {{ escapeHtml?: (s: any) => string, dbZeilen?: ZaaZeile[] }} [opts]
+ */
 export function renderZaaUploadResult(json, { escapeHtml, dbZeilen = [] } = {}) {
   const summary = json?.errorCount
     ? `<div style="padding:10px;background:var(--danger-dim, rgba(239,68,68,0.12));border:1px solid var(--danger, #ef4444);border-radius:6px;margin-bottom:10px;color:var(--danger, #ef4444);">
@@ -86,7 +106,11 @@ export function renderZaaUploadResult(json, { escapeHtml, dbZeilen = [] } = {}) 
   return summary + warnung + renderZaaFehlerTabelle(zaaZeilenAusUpload(json?.errors, dbZeilen), { escapeHtml });
 }
 
-/** Gespeicherte Fehler einer Abrechnung laden (mit Belegnummer per Join). */
+/**
+ * Gespeicherte Fehler einer Abrechnung laden (mit Belegnummer per Join).
+ * @param {any} supabase
+ * @param {string} abrechnungId
+ */
 export async function ladeZaaZeilen(supabase, abrechnungId) {
   const { data, error } = await supabase
     .from('zaa_fehler')
@@ -97,12 +121,16 @@ export async function ladeZaaZeilen(supabase, abrechnungId) {
   return zaaZeilenAusDb(data);
 }
 
-/** „Beheben"-Links im Container verdrahten. onBeheben(rxId) öffnet die Verordnung. */
+/**
+ * „Beheben"-Links im Container verdrahten. onBeheben(rxId) öffnet die Verordnung.
+ * @param {ParentNode} container
+ * @param {(rxId: string | undefined) => void} onBeheben
+ */
 export function verdrahteZaaBeheben(container, onBeheben) {
   container.querySelectorAll('.zaa-fix-link').forEach(link => {
     link.addEventListener('click', (evt) => {
       evt.preventDefault();
-      onBeheben(link.dataset.rx);
+      onBeheben((/** @type {HTMLElement} */ (link)).dataset.rx);
     });
   });
 }

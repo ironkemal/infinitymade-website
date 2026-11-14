@@ -23,6 +23,13 @@ const FIELD_SEP = '+';
 // Stelle und eine Absetzung ging verloren oder landete auf dem falschen Beleg.
 // Das `\r`-Strippen und das Trimmen bleiben hier, weil Antwortdateien mit
 // CRLF und Zeilenumbrüchen zwischen den Segmenten ankommen.
+/** @typedef {{ code: string, belegnummer: string | null, text: string }} RawZaaError */
+/** @typedef {{ code: string, belegnummer: string | null, text: string, uebersetzung: string | null, loesung: string | null }} ZaaError */
+
+/**
+ * @param {string} content
+ * @returns {string[]}
+ */
 function splitSegments(content) {
   return segmenteTrennen(String(content || '').replace(/\r/g, ''))
     .map(s => s.trim())
@@ -31,6 +38,10 @@ function splitSegments(content) {
 
 const CODE_REGEX = /^\d{1,3}$/;
 
+/**
+ * @param {string} str
+ * @returns {boolean}
+ */
 function hasTerminalApostrophe(str) {
   const trimmed = String(str || '').trim();
   if (!trimmed.endsWith("'")) return false;
@@ -41,7 +52,12 @@ function hasTerminalApostrophe(str) {
   return qCount % 2 === 0;
 }
 
+/**
+ * @param {string} content
+ * @returns {{ hasFehl: boolean, hasEdifact: boolean, isMalformed: boolean, errs: RawZaaError[] }}
+ */
 function parseEdifactFehl(content) {
+  /** @type {RawZaaError[]} */
   const errs = [];
   const segs = splitSegments(content);
   let hasFehl = false;
@@ -127,7 +143,12 @@ const PLAIN_PATTERNS = [
   /Code[:\s]*(\d{1,3})[^\n]*?Beleg[:\s]*([A-Za-z0-9\-]+)\s+(.+)/i,
 ];
 
+/**
+ * @param {string} content
+ * @returns {{ errs: RawZaaError[], isMalformed: boolean }}
+ */
 function parsePlainText(content) {
+  /** @type {RawZaaError[]} */
   const errs = [];
   let isMalformed = false;
   const lines = content.split(/\n+/);
@@ -165,7 +186,7 @@ function parsePlainText(content) {
  * German translation + fix hint via the error-translations dictionary.
  *
  * @param {string|Buffer} input  Raw file content (latin1 string or Buffer).
- * @returns {{ valid: boolean, reason: null|'empty'|'unknown'|'invalid', format: 'edifact'|'plain'|'empty', errors: Array<{code,belegnummer,text,uebersetzung,loesung}> }}
+ * @returns {{ valid: boolean, reason: null|'empty'|'unknown'|'invalid', format: 'edifact'|'plain'|'empty', errors: Array<ZaaError> }}
  */
 export function parseZaaFile(input) {
   if (input === null || input === undefined) {
@@ -182,7 +203,9 @@ export function parseZaaFile(input) {
     return { valid: false, reason: 'empty', format: 'empty', errors: [] };
   }
 
+  /** @type {'edifact'|'plain'|'empty'} */
   let format = 'empty';
+  /** @type {RawZaaError[]} */
   let rows = [];
 
   const ediResult = parseEdifactFehl(content);

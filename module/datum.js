@@ -71,7 +71,7 @@ export function alsISODatum(d) {
  * echter Moment und wird über `alsISODatum` als der Tag gelesen, den der
  * Nutzer auf seiner Uhr sieht.
  *
- * @param {Date|string|number} wert
+ * @param {Date|string|number|null|undefined} [wert]
  * @param {string} [leer='']  Anzeige bei leerem/ungültigem Wert (z. B. '—')
  * @returns {string}
  */

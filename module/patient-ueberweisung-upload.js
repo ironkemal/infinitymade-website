@@ -1,7 +1,23 @@
-/** File selection belongs to its original patient; leaving that context cancels it. */
+/**
+ * @typedef {Object} UeberweisungUploadOptionen
+ * @property {{ from: (table: string) => any }} supabase
+ * @property {() => string | null | undefined} getPatientId
+ * @property {() => string | null | undefined} getOwnerId
+ * @property {(msg: string, typ?: string) => void} showToast
+ * @property {(patientId: string) => Promise<any> | any} reload
+ * @property {typeof FileReader} [FileReader]
+ */
+
+/**
+ * File selection belongs to its original patient; leaving that context cancels it.
+ * @param {UeberweisungUploadOptionen} param0
+ */
 export function erstelleUeberweisungUpload({ supabase, getPatientId, getOwnerId, showToast, reload, FileReader = globalThis.FileReader }) {
   let generation = 0;
   function invalidate() { generation++; }
+  /**
+   * @param {File | Blob} [file]
+   */
   async function upload(file) {
     const patientId = getPatientId(), ownerId = getOwnerId(), token = generation;
     const current = () => token === generation && getPatientId() === patientId && getOwnerId() === ownerId;
@@ -22,7 +38,7 @@ export function erstelleUeberweisungUpload({ supabase, getPatientId, getOwnerId,
       if (error) throw error;
       showToast('Überweisung gespeichert ✓'); await reload(patientId); return true;
     } catch (error) {
-      if (current()) showToast('Fehler: ' + error.message, 'error');
+      if (current()) showToast('Fehler: ' + (error instanceof Error ? error.message : String(error)), 'error');
       return false;
     }
   }

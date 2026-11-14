@@ -12,6 +12,156 @@
 
 import { ausstellerSnapshot } from '../../lib/rechnung-snapshot.js';
 
+/**
+ * @typedef {{
+ *   name?: string | null,
+ *   business_name?: string | null,
+ *   strasse?: string | null,
+ *   street?: string | null,
+ *   house_number?: string | null,
+ *   ort?: string | null,
+ *   city?: string | null,
+ *   plz?: string | null,
+ *   zip?: string | null,
+ *   plz_ort?: string | null,
+ *   telefon?: string | null,
+ *   phone?: string | null,
+ *   email?: string | null,
+ *   ik?: string | null,
+ *   ik_number?: string | null,
+ *   steuernummer?: string | null,
+ *   ust_id?: string | null,
+ *   praxis_inhaber?: string | null,
+ *   owner_first_name?: string | null,
+ *   owner_last_name?: string | null,
+ *   bank_name?: string | null,
+ *   iban?: string | null,
+ *   bic?: string | null,
+ * }} ZuPraxisDruckInput
+ *
+ * @typedef {{
+ *   vorname?: string | null,
+ *   nachname?: string | null,
+ *   strasse?: string | null,
+ *   plz?: string | null,
+ *   ort?: string | null,
+ *   geburtsdatum?: string | null,
+ *   kvnr?: string | null,
+ * }} ZuPatientDruckInput
+ *
+ * @typedef {{
+ *   id?: string | null,
+ *   session_id?: string | null,
+ *   datum?: string | null,
+ *   position?: string | null,
+ *   bezeichnung?: string | null,
+ *   title?: string | null,
+ *   brutto?: number | string | null,
+ *   unit_price?: number | string | null,
+ *   price?: number | string | null,
+ *   zuzahlung?: number | string | null,
+ * }} ZuSessionItemInput
+ *
+ * @typedef {{
+ *   id?: string | null,
+ *   patient_id?: string | null,
+ *   business_id?: string | null,
+ *   patient_name?: string | null,
+ *   heilmittel?: string | null,
+ *   zuzahlung_kassiert_am?: string | null,
+ *   zuzahlung_zahlart?: string | null,
+ *   leads?: {
+ *     first_name?: string | null,
+ *     last_name?: string | null,
+ *     street?: string | null,
+ *     plz?: string | null,
+ *     city?: string | null,
+ *     geburtsdatum?: string | null,
+ *   } | null,
+ * }} ZuRxInput
+ *
+ * @typedef {{
+ *   v?: number,
+ *   name?: string | null,
+ *   inhaber?: string | null,
+ *   strasse?: string | null,
+ *   plzOrt?: string | null,
+ *   telefon?: string | null,
+ *   email?: string | null,
+ *   ik?: string | null,
+ *   bank?: { name?: string | null, iban?: string | null, bic?: string | null } | null,
+ *   zu?: {
+ *     praxis?: ZuPraxisDruckInput | null,
+ *     bankverbindung?: string,
+ *     logoUrl?: string,
+ *     invoiceFooterText?: string,
+ *     hinweisText?: string | null,
+ *     zahlungszielTage?: number | string,
+ *   },
+ * }} ZuAusstellerSnapshot
+ *
+ * @typedef {{
+ *   v?: number,
+ *   art?: string,
+ *   name?: string | null,
+ *   strasse?: string | null,
+ *   plzOrt?: string | null,
+ *   geburtsdatum?: string | null,
+ *   versichertennummer?: string | null,
+ *   zu?: {
+ *     patient?: ZuPatientDruckInput | null,
+ *     verordnung?: Record<string, unknown>,
+ *     sessions?: ZuSessionItemInput[],
+ *     totals?: { gesZuzahlung?: number | string | null },
+ *   },
+ * }} ZuEmpfaengerSnapshot
+ *
+ * @typedef {{
+ *   id?: string | null,
+ *   owner_id: string,
+ *   patient_id: string | null | undefined,
+ *   prescription_id: string | null | undefined,
+ *   verordnung_id: null,
+ *   business_id?: string | null,
+ *   patient_name: string,
+ *   invoice_type: string,
+ *   status: string,
+ *   payment_status: string,
+ *   paid_at?: string | null,
+ *   payment_method?: string | null,
+ *   invoice_number?: string,
+ *   rechnung_nr?: string,
+ *   issued_at?: string,
+ *   storno_von?: string | null,
+ *   notes?: string,
+ *   steuernummer_snapshot?: string | null,
+ *   ust_id_snapshot?: string | null,
+ *   line_items: Array<{
+ *     title: string,
+ *     quantity?: number,
+ *     unit_price: number,
+ *     price: number,
+ *     session_id: string | null,
+ *     datum: string | null,
+ *     position: string,
+ *     brutto: number,
+ *     zuzahlung: number,
+ *   }>,
+ *   subtotal: number,
+ *   kassenzuzahlung: number,
+ *   total_patient: number,
+ *   leistung_von: string | null,
+ *   leistung_bis: string | null,
+ *   aussteller_snapshot: ZuAusstellerSnapshot | null,
+ *   empfaenger_snapshot: ZuEmpfaengerSnapshot | null,
+ * }} ZuBelegRow
+ */
+
+/**
+ * @param {Date | string | null | undefined} isoOrDate
+ * @param {number | string} [days]
+ * @returns {Date | null}
+ */
 function addDays(isoOrDate, days) {
   if (!isoOrDate) return null;
   let d;
@@ -31,6 +181,22 @@ function addDays(isoOrDate, days) {
  * Wichtig: invoice_number, rechnung_nr und issued_at werden NICHT mitgegeben;
  * der DB-Trigger set_invoice_nummer() vergibt ZU-JJJJ-nnnn und issued_at
  * in Europe/Berlin (Migration 0078).
+ *
+ * @param {{
+ *   tenantId: string,
+ *   rx: ZuRxInput,
+ *   praxisDruck?: ZuPraxisDruckInput,
+ *   patientDruck?: ZuPatientDruckInput,
+ *   verordnungDruck?: Record<string, unknown>,
+ *   printSessions?: ZuSessionItemInput[],
+ *   totals?: { gesZuzahlung?: number | string | null },
+ *   zahlungszielTage?: number | string,
+ *   hinweisText?: string | null,
+ *   invoiceFooterText?: string,
+ *   logoUrl?: string,
+ *   bankverbindung?: string,
+ * }} opts
+ * @returns {ZuBelegRow}
  */
 export function baueZuBelegZeile({
   tenantId,
@@ -46,7 +212,7 @@ export function baueZuBelegZeile({
   logoUrl = '',
   bankverbindung = '',
 }) {
-  const zielTage = parseInt(zahlungszielTage, 10) || 14;
+  const zielTage = parseInt(String(zahlungszielTage), 10) || 14;
 
   // Normalisierter Aussteller-Snapshot mit Praxisdaten
   const pInput = {
@@ -120,7 +286,7 @@ export function baueZuBelegZeile({
 
   const daten = (printSessions || [])
     .map((s) => (s.datum ? String(s.datum).slice(0, 10) : null))
-    .filter(Boolean)
+    .filter(/** @returns {d is string} */ (d) => Boolean(d))
     .sort();
   const leistung_von = daten.length > 0 ? daten[0] : null;
   const leistung_bis = daten.length > 0 ? daten[daten.length - 1] : null;
@@ -128,6 +294,7 @@ export function baueZuBelegZeile({
   const subtotal = Math.round((printSessions || []).reduce((acc, s) => acc + Number(s.brutto || 0), 0) * 100) / 100;
   const gesZuzahlung = Math.round(Number(totals?.gesZuzahlung || 0) * 100) / 100;
 
+  /** @type {ZuBelegRow} */
   const row = {
     owner_id: tenantId,
     patient_id: rx.patient_id,
@@ -157,7 +324,7 @@ export function baueZuBelegZeile({
     row.status = 'paid';
     row.payment_status = 'paid';
     row.paid_at = rx.zuzahlung_kassiert_am;
-    row.payment_method = ZAHLART_ZU_PAYMENT_METHOD[rx.zuzahlung_zahlart] || null;
+    row.payment_method = (rx.zuzahlung_zahlart && ZAHLART_ZU_PAYMENT_METHOD[rx.zuzahlung_zahlart]) || null;
   }
 
   return row;
@@ -165,17 +332,20 @@ export function baueZuBelegZeile({
 
 // Spiegel von module/rechnung-zahlung.js ZAHLART_ZU_PAYMENT_METHOD (prescriptions.zuzahlung_zahlart →
 // invoices.payment_method); api-backend kann nichts oberhalb seines Verzeichnisses importieren.
+/** @type {Record<string, string>} */
 export const ZAHLART_ZU_PAYMENT_METHOD = { bar: 'bar', ec: 'karte', ueberweisung: 'ueberweisung', paypal: 'sonstiges', sonstiges: 'sonstiges' };
 
 /**
  * Wandelt eine gespeicherte invoices-Zeile in genau die Argumente um,
  * die `renderZuzahlungsrechnung(...)` erwartet.
+ *
+ * @param {Partial<ZuBelegRow>} row
  */
 export function zuDruckDaten(row) {
   const ausZu = row.aussteller_snapshot?.zu || {};
   const empZu = row.empfaenger_snapshot?.zu || {};
 
-  const zahlungszielTage = parseInt(ausZu.zahlungszielTage, 10) || 14;
+  const zahlungszielTage = parseInt(String(ausZu.zahlungszielTage), 10) || 14;
   const datum = row.issued_at ? String(row.issued_at).slice(0, 10) : null;
   const faelligkeit = datum ? addDays(datum, zahlungszielTage) : new Date(Date.now() + zahlungszielTage * 24 * 60 * 60 * 1000);
 
@@ -205,7 +375,7 @@ export function zuDruckDaten(row) {
       datum: datum || new Date(),
       faelligkeit,
     },
-    sessions: empZu.sessions || (row.line_items || []).map((l) => ({
+    sessions: empZu.sessions || (row.line_items || []).map((/** @type {ZuSessionItemInput} */ l) => ({
       datum: l.datum,
       position: l.position,
       bezeichnung: l.title || l.bezeichnung,
@@ -227,6 +397,10 @@ export function zuDruckDaten(row) {
  * Prüft, ob ein gespeicherter ZU-Beleg veraltet ist:
  * true, wenn die gespeicherte Sitzungsmenge (session_id-Menge) oder `gesZuzahlung`
  * von der aktuellen Berechnung abweicht.
+ *
+ * @param {Partial<ZuBelegRow> | null | undefined} row
+ * @param {{ printSessions?: ZuSessionItemInput[], totals?: { gesZuzahlung?: number | string | null } }} [opts]
+ * @returns {boolean}
  */
 export function zuBelegVeraltet(row, { printSessions = [], totals = {} } = {}) {
   if (!row) return true;
@@ -282,6 +456,9 @@ export function zuBelegVeraltet(row, { printSessions = [], totals = {} } = {}) {
 /**
  * Liest den aktiven ZU-Beleg einer Verordnung: kein Gegenbeleg (storno_von IS NULL), nicht storniert.
  * Ergebnis wie supabase: { data, error }.
+ *
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {{ prescriptionId: string, tenantId: string }} opts
  */
 export function ladeAktivenZuBeleg(supabase, { prescriptionId, tenantId }) {
   return supabase
@@ -300,6 +477,10 @@ export function ladeAktivenZuBeleg(supabase, { prescriptionId, tenantId }) {
  * ZU-Beleg dieser Verordnung sein — eine stornierte oder fremde Nummer ist ein ungültiger Urbeleg.
  * Freitext ohne ZU-Muster und Verordnungen ohne ZU-Beleg (vor 0078, oder Mahnung/Formular als Urbeleg)
  * bleiben zulässig. Gibt die nicht passenden Nummern zurück (leer = ok).
+ *
+ * @param {unknown} referenz
+ * @param {{ total_patient?: number | string | null, invoice_number?: string | null } | null | undefined} aktiverZu
+ * @returns {string[]}
  */
 export function fremdeZuNummern(referenz, aktiverZu) {
   const genannt = String(referenz || '').match(/ZU-\d{4}-\d+/gi) || [];
@@ -313,26 +494,35 @@ export function fremdeZuNummern(referenz, aktiverZu) {
  * Erzeugt das INSERT-Objekt für den Storno-Gegenbeleg zu einem ZU-Original.
  *
  * Storno = Gegenbeleg mit eigener Nummer + Verweis auf storno_von, alle Beträge negiert.
+ *
+ * @param {Partial<ZuBelegRow> | null | undefined} orig
+ * @returns {ZuBelegRow}
  */
 export function baueGegenbeleg(orig) {
   if (!orig) throw new Error('Original-Beleg erforderlich für Gegenbeleg');
 
+  /** @param {unknown} v */
   const neg = (v) => -Math.abs(Number(v || 0));
 
-  const negLineItems = (orig.line_items || []).map((l) => ({
+  const negLineItems = (orig.line_items || []).map((/** @type {ZuSessionItemInput & { title?: string, quantity?: number }} */ l) => ({
     ...l,
+    title: l.title || '',
+    session_id: l.session_id ?? null,
+    datum: l.datum ?? null,
+    position: l.position || '',
     unit_price: neg(l.unit_price ?? l.price),
     price: neg(l.price ?? l.unit_price),
     brutto: neg(l.brutto ?? l.unit_price ?? l.price),
     zuzahlung: neg(l.zuzahlung),
   }));
 
+  /** @type {ZuBelegRow} */
   const gegen = {
-    owner_id: orig.owner_id,
+    owner_id: orig.owner_id || '',
     patient_id: orig.patient_id,
     prescription_id: orig.prescription_id,
     verordnung_id: null,
-    patient_name: orig.patient_name,
+    patient_name: orig.patient_name || '',
     invoice_type: 'zuzahlung',
     status: 'sent',
     payment_status: 'pending',

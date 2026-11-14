@@ -10,13 +10,24 @@ const id='22222222-2222-4222-8222-222222222222';
 const owner={role:'owner',userId:id,tenantId:id};
 const employee={role:'employee',userId:'33333333-3333-4333-8333-333333333333',tenantId:id};
 const client={from:()=>({insert:async()=>({error:null})})};
+/** @type {Record<string, unknown>} */
 const active={mode:'direkt',valid:true,activationReady:true,mailReady:true,allowFreeText:true};
+/** @param {any} req @param {any} res @param {any} next */
 const authMiddleware=(req,res,next)=>req.auth?next():res.status(401).json({success:false,error:'Authentifizierung erforderlich'});
-function router(options={}) {return createAiRouter({store:createFakeOwnerDecisionStore({defaultEnabled:true}),configProvider:()=>active,authMiddleware,supabase:client,...options});}
+/** @param {Record<string, any>} [options] */
+function router(options={}) {return createAiRouter({store:createFakeOwnerDecisionStore({defaultEnabled:true}),configProvider:()=>active,authMiddleware,supabase:/** @type {any} */ (client),...options});}
+/** @param {import('express').Router} r @param {{ method?: string, path?: string, body?: unknown, auth?: { role: string, userId: string, tenantId: string } | null }} [opts] */
 async function request(r,{method='GET',path='/_config',body,auth=owner}={}) {
- const app=express();app.use(express.json());app.use((req,_res,next)=>{req.auth=auth;next();});app.use('/api/ai',r);
+ const app=express();app.use(express.json());
+ app.use((/** @type {any} */ req,/** @type {any} */ _res,/** @type {any} */ next)=>{req.auth=auth;next();});
+ app.use('/api/ai',r);
  const server=app.listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));
- try {const res=await fetch(`http://127.0.0.1:${server.address().port}/api/ai${path}`,{method,headers:{'content-type':'application/json'},...(body===undefined?{}:{body:JSON.stringify(body)})});return {status:res.status,body:await res.json()};}
+ try {
+  const addr = server.address();
+  const port = typeof addr === 'object' && addr ? addr.port : 0;
+  const res=await fetch(`http://127.0.0.1:${port}/api/ai${path}`,{method,headers:{'content-type':'application/json'},...(body===undefined?{}:{body:JSON.stringify(body)})});
+  return {status:res.status,body:await res.json()};
+ }
  finally {server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
 }
 test('Authenticated health and owner-only configuration',async()=>{
@@ -40,18 +51,24 @@ test('Employee state exposes only effective capabilities, mail gate and freeText
  }
 });
 test('Owner opt-in exact payload and revocation invalidate actual tenant cache hook',async()=>{
- let invalidated=null;const r=router({store:createFakeOwnerDecisionStore({defaultEnabled:false}),invalidateJeton:tenant=>{invalidated=tenant;}});
+ /** @type {string | null} */
+ let invalidated=null;const r=router({store:createFakeOwnerDecisionStore({defaultEnabled:false}),invalidateJeton:(/** @type {string} */ tenant)=>{invalidated=tenant;}});
  assert.equal((await request(r,{method:'PATCH',auth:employee,body:{enabled:true}})).status,403);
  for(const body of [{enabled:'false'},{enabled:true,activationReady:true},{enabled:true,tenantId:id}]) assert.equal((await request(r,{method:'PATCH',body})).status,400);
  const enabled=await request(r,{method:'PATCH',body:{enabled:true,informationVersion:CURRENT_EINWILLIGUNG_VERSION}});assert.equal(enabled.status,200);assert.equal(enabled.body.optIn.enabled,true);
  const revoked=await request(r,{method:'PATCH',body:{enabled:false}});assert.equal(revoked.status,200);assert.equal(revoked.body.optIn.enabled,false);assert.equal(invalidated,id);
 });
 test('Server dependencies cannot be replaced through client payload; usage reaches audit',async()=>{
- let received;let row;const db={from:table=>{assert.equal(table,'ai_audit_log');return {insert:async value=>{row=value;return {error:null};}};}};
- const r=router({supabase:db,tasks:{fixture:async(payload,context)=>{received=context;assert.equal(payload.dependencies.supabase,'attacker');return {draft:{subject:'Hallo'},_meta:{usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}};}}});
+ /** @type {any} */
+ let received;
+ /** @type {any} */
+ let row;
+ const db={from:(/** @type {string} */ table)=>{assert.equal(table,'ai_audit_log');return {insert:async (/** @type {unknown} */ value)=>{row=value;return {error:null};}};}};
+ const r=router({supabase:db,tasks:{fixture:async(/** @type {any} */ payload,/** @type {any} */ context)=>{received=context;assert.equal(payload.dependencies.supabase,'attacker');return {draft:{subject:'Hallo'},_meta:{usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}};}}});
  const res=await request(r,{method:'POST',path:'/fixture',body:{dependencies:{supabase:'attacker'}}});assert.equal(res.status,200);assert.equal(received.dependencies.supabase,db);assert.equal(res.body._meta,undefined);assert.equal(row.total_tokens,5);
 });
 test('Task failures and unknown paths never reflect internal sentinel',async()=>{
+ /** @type {Error & { code?: string }} */
  const err=new Error('PATIENT_SENTINEL endpoint SECRET');err.code='AI_TIMEOUT';
  const r=router({tasks:{failure:async()=>{throw err;}}});
  const failed=await request(r,{method:'POST',path:'/failure',body:{}});assert.equal(failed.status,503);assert.equal(failed.body.code,'AI_TIMEOUT');assert.ok(!JSON.stringify(failed.body).includes('SENTINEL'));

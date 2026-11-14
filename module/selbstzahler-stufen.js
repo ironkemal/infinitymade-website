@@ -59,9 +59,19 @@ const NAME_MAX = 40;
  * Verworfen wird nur, was unbrauchbar ist: kein Name oder kein positiver
  * Betrag. Eine Stufe mit 0 € wäre kein Eingabehelfer, sondern eine Falle.
  */
+/**
+ * @typedef {{ id: string, name: string, betrag_eur: number }} Preisstufe
+ * @typedef {{ id: string, name: string, betrag_eur: number | null }} PreisstufeDraft
+ */
+
+/**
+ * @param {any} roh
+ * @returns {Preisstufe[]}
+ */
 export function normalisiereStufen(roh) {
   if (!Array.isArray(roh)) return [];
   const gesehen = new Set();
+  /** @type {Preisstufe[]} */
   const raus = [];
   for (const e of roh) {
     if (!e || typeof e !== 'object') continue;
@@ -87,6 +97,10 @@ export function neueStufenId(index = 0) {
 }
 
 /** Die gepflegten Stufen eines Profils, in der Form, die die Oberfläche braucht. */
+/**
+ * @param {any} profile
+ * @returns {Preisstufe[]}
+ */
 export function stufenAusProfil(profile) {
   return normalisiereStufen(profile?.selbstzahler_stufen);
 }
@@ -112,6 +126,11 @@ export function stufenAusProfil(profile) {
  * Ein Median würde hier ausserdem die Falle aus `termin-dauer.js` öffnen — das
  * System würde seinen eigenen Vorschlag wieder einlesen und bestätigen.
  */
+/**
+ * @param {any} supabase
+ * @param {string} patientId
+ * @param {{ maxEintraege?: number }} [opts]
+ */
 export async function ladeLetztePreise(supabase, patientId, opts = {}) {
   const maxEintraege = opts.maxEintraege || 3;
   if (!supabase || !patientId) return [];
@@ -133,6 +152,10 @@ export async function ladeLetztePreise(supabase, patientId, opts = {}) {
 /**
  * Der reine Teil von `ladeLetztePreise` — ohne Datenbank, damit er prüfbar ist.
  * Erwartet die Rechnungen bereits absteigend sortiert.
+ */
+/**
+ * @param {any} rechnungen
+ * @param {number} [maxEintraege]
  */
 export function letztePreiseAusRechnungen(rechnungen, maxEintraege = 3) {
   const jeTitel = new Map();
@@ -157,11 +180,13 @@ export function letztePreiseAusRechnungen(rechnungen, maxEintraege = 3) {
 // Speichern übernehmen". Zwei benachbarte Listen in denselben Einstellungen
 // sollen sich nicht unterschiedlich bedienen lassen.
 
+/** @type {PreisstufeDraft[]} */
 let stufenEntwurf = [];
 
 /**
  * Der Entwurf ist eine Kopie. Solange nicht gespeichert wurde, darf eine offene
  * Rechnung nichts von der Bearbeitung mitbekommen.
+ * @param {any} deps
  */
 export async function renderPreisstufenSettings(deps) {
   const section = document.getElementById('settingsPreisstufenSection');
@@ -195,12 +220,13 @@ export async function renderPreisstufenSettings(deps) {
     // `:last-of-type` im Selektor traefe deshalb das Betragsfeld — hier zaehlt
     // die letzte Namenszeile.
     const namen = document.querySelectorAll('#setStufenList .stufe-name');
-    namen[namen.length - 1]?.focus();
+    (/** @type {HTMLElement | undefined} */ (namen[namen.length - 1]))?.focus();
   });
 
   document.getElementById('setStufenSaveBtn')?.addEventListener('click', () => speichereStufen(deps));
 }
 
+/** @param {any} deps */
 function zeichneStufenListe(deps) {
   const wrap = document.getElementById('setStufenList');
   if (!wrap) return;
@@ -233,7 +259,7 @@ function zeichneStufenListe(deps) {
     betrag.placeholder = '0,00';
     betrag.step = '0.01';
     betrag.min = '0';
-    betrag.value = stufe.betrag_eur ?? '';
+    betrag.value = stufe.betrag_eur != null ? String(stufe.betrag_eur) : '';
     betrag.style.width = '110px';
     betrag.addEventListener('input', () => {
       const v = parseFloat(betrag.value);
@@ -257,8 +283,9 @@ function zeichneStufenListe(deps) {
   });
 }
 
+/** @param {any} deps */
 async function speichereStufen(deps) {
-  const btn = document.getElementById('setStufenSaveBtn');
+  const btn = /** @type {HTMLButtonElement | null} */ (document.getElementById('setStufenSaveBtn'));
   const sauber = normalisiereStufen(stufenEntwurf);
 
   // Halb ausgefüllte Zeilen still zu verschlucken wäre schlimmer als eine

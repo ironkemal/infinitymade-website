@@ -7,9 +7,13 @@ import { resolvePreis } from './resolver.js';
 import assert from 'node:assert/strict';
 
 let pass = 0, fail = 0;
+/**
+ * @param {string} name
+ * @param {() => void} fn
+ */
 function test(name, fn) {
   try { fn(); console.log('  ok   ' + name); pass++; }
-  catch (e) { console.log('  FAIL ' + name + '\n       ' + e.message); fail++; }
+  catch (e) { console.log('  FAIL ' + name + '\n       ' + (e instanceof Error ? e.message : String(e))); fail++; }
 }
 
 console.log('preise/resolver');
@@ -63,7 +67,7 @@ test('Physio X0708 KG-ZNS Kinder ist zuzahlungsfrei', () => {
 
 test('Physio: ein übergebenes tariffs-Argument wird ignoriert (O-96)', () => {
   const tariffs = [{ position_nr: '20501', preis_eur: 40.00, gueltig_ab: '2026-01-01', gueltig_bis: null }];
-  const r = resolvePreis({ bereich: 'physiotherapie', code: 'X0501', datum: '2026-08-10', tariffs });
+  const r = resolvePreis(/** @type {Parameters<typeof resolvePreis>[0]} */ (/** @type {unknown} */ ({ bereich: 'physiotherapie', code: 'X0501', datum: '2026-08-10', tariffs })));
   assert.equal(r.preis_eur, 29.63, 'Katalog bleibt Quelle, egal was aufgerufen wird');
   assert.equal(r.quelle, 'katalog');
 });

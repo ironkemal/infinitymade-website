@@ -4,9 +4,13 @@ import { renderAusfallrechnung } from './ausfallrechnung.template.js';
 import assert from 'node:assert/strict';
 
 let pass = 0, fail = 0;
+/**
+ * @param {string} name
+ * @param {() => void} fn
+ */
 function test(name, fn) {
   try { fn(); console.log('  ok   ' + name); pass++; }
-  catch (e) { console.log('  FAIL ' + name + '\n       ' + e.message); fail++; }
+  catch (e) { console.log('  FAIL ' + name + '\n       ' + (e instanceof Error ? e.message : String(e))); fail++; }
 }
 
 console.log('ausfallrechnung template');
@@ -118,7 +122,9 @@ test('vorlage.fusszeile ueberschreibt den Footer', () => {
 });
 
 test('plz-Fallback (praxisProfile ohne zip aber mit plz)', () => {
+  /** @type {{ zip?: string, plz?: string, city: string }} */
   const praxisProfile1 = { zip: '40213', city: 'Düsseldorf' };
+  /** @type {{ zip?: string, plz?: string, city: string }} */
   const praxisProfile2 = { plz: '40213', city: 'Düsseldorf' };
   
   const plz_ort1 = [praxisProfile1.zip || praxisProfile1.plz, praxisProfile1.city].filter(Boolean).join(' ').trim();

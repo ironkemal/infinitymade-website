@@ -19,7 +19,10 @@ import {
 
 import { pruefeEmpfaengerZertifikat } from './empfaenger-zertifikat-pruefung.js';
 
-// Hilfsfunktion: Konvertiert Forge-Zertifikat in DER-Buffer
+/**
+ * Hilfsfunktion: Konvertiert Forge-Zertifikat in DER-Buffer
+ * @param {Parameters<typeof forge.pki.certificateToAsn1>[0]} forgeCert
+ */
 function forgeCertToDer(forgeCert) {
   const asn1 = forge.pki.certificateToAsn1(forgeCert);
   const derHex = forge.asn1.toDer(asn1).toHex();
@@ -107,13 +110,13 @@ test('Test 2: schreibeItsgTrustAnchors -> ladeItsgTrustAnchors Round-Trip in Tem
       }
     ];
 
-    const metaGeschrieben = schreibeItsgTrustAnchors({
+    const metaGeschrieben = /** @type {{ ankerAnzahl?: number, quelleDatum?: string, onaylayan?: string }} */ (schreibeItsgTrustAnchors({
       certs: testCerts,
       verzeichnis: tempDir,
       quelle: 'https://trustcenter-data.itsg.de/dale/annahme-rsa4096.key',
       quelleDatum: '2026-09-21',
       onaylayan: 'CI-Bot'
-    });
+    }));
 
     assert.equal(metaGeschrieben.ankerAnzahl, 2);
     assert.equal(metaGeschrieben.quelleDatum, '2026-09-21');
@@ -126,17 +129,18 @@ test('Test 2: schreibeItsgTrustAnchors -> ladeItsgTrustAnchors Round-Trip in Tem
 
     // Wieder einladen
     const geladen = ladeItsgTrustAnchors({ verzeichnis: tempDir });
-    assert.ok(geladen.meta, 'Metadaten müssen geladen werden');
+    const meta = /** @type {{ quelle?: string, zertifikate?: Array<{ sha256?: string }> } | null} */ (geladen.meta);
+    assert.ok(meta, 'Metadaten müssen geladen werden');
     assert.equal(geladen.anchors.length, 2, 'Genau 2 Anker müssen geladen werden');
 
     // Byte-Identität prüfen (Buffer.compare === 0)
     assert.equal(Buffer.compare(geladen.anchors[0], certDer1), 0, 'Anker 1 DER-Bytes sind byte-identisch');
     assert.equal(Buffer.compare(geladen.anchors[1], certDer2), 0, 'Anker 2 DER-Bytes sind byte-identisch');
 
-    assert.equal(geladen.meta.quelle, 'https://trustcenter-data.itsg.de/dale/annahme-rsa4096.key');
-    assert.equal(geladen.meta.zertifikate.length, 2);
-    assert.equal(geladen.meta.zertifikate[0].sha256, sha1);
-    assert.equal(geladen.meta.zertifikate[1].sha256, sha2);
+    assert.equal(meta.quelle, 'https://trustcenter-data.itsg.de/dale/annahme-rsa4096.key');
+    assert.equal(meta.zertifikate?.length, 2);
+    assert.equal(meta.zertifikate?.[0].sha256, sha1);
+    assert.equal(meta.zertifikate?.[1].sha256, sha2);
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
@@ -323,7 +327,7 @@ test('Test 5: parseAnnahmeliste parst Base64-Blöcke (ITSG-Format annahme-rsa409
 
 test('Test 6: Fehlerbehandlung bei ungültigen Eingaben', () => {
   // Leere/ungültige Eingaben bei parseAnnahmeliste
-  assert.throws(() => parseAnnahmeliste(null), /Annahmeliste-Daten fehlen oder sind leer/);
+  assert.throws(() => parseAnnahmeliste(/** @type {Buffer} */ (/** @type {unknown} */ (null))), /Annahmeliste-Daten fehlen oder sind leer/);
   assert.throws(() => parseAnnahmeliste(Buffer.alloc(0)), /Annahmeliste-Daten fehlen oder sind leer/);
   assert.throws(() => parseAnnahmeliste(Buffer.from('beschädigte ungültige daten')), /Annahmeliste enthält keine gültigen X.509-Zertifikate/);
 

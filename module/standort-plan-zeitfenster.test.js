@@ -12,9 +12,16 @@ const plan = [
   { employee_id: 'e1', business_id: 'B', weekday: null, datum: '2026-11-16' }, // Einzeltag Montag: ganztags B
 ];
 const MO = '2026-11-09';
+/**
+ * @param {number} std
+ * @param {number} [min]
+ * @returns {number}
+ */
 const h = (std, min = 0) => std * 60 + min;
 
-for (const [name, r] of [['Browser', browser], ['Backend', backend]]) {
+/** @type {Array<[string, typeof browser]>} */
+const ziele = [['Browser', browser], ['Backend', backend]];
+for (const [name, r] of ziele) {
   test(`${name}: Mo 8–12 A, 14–18 B`, () => {
     assert.equal(r.imZeitfenster(plan, 'e1', MO, 'A', h(9), h(9, 30), ['A', 'B']), true);
     assert.equal(r.imZeitfenster(plan, 'e1', MO, 'A', h(11, 40), h(12, 10), ['A', 'B']), false, 'über das Ende');
@@ -47,6 +54,7 @@ test('Backend planErlaubt: Slot-Zeit und Minuten, ohne Zeit nur Tag', () => {
 });
 
 test('Beide Regelkopien sind ab Zeile 12 textgleich (nur der Kopf darf abweichen)', () => {
+  /** @param {string} pfad */
   const rumpf = pfad => readFileSync(new URL(pfad, import.meta.url), 'utf8').split('\n').slice(11).join('\n');
   assert.equal(rumpf('../api-backend/lib/standort-plan.js'), rumpf('./standort-plan-regel.js'));
 });

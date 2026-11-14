@@ -22,33 +22,56 @@ const HIER = dirname(fileURLToPath(import.meta.url));
 
 // --- Hilfen ---------------------------------------------------------------
 
+/** @param {unknown} dta @returns {import('./preflight.js').DtaInput} */
+const asDta = (dta) => /** @type {import('./preflight.js').DtaInput} */ (dta);
+
+/** @param {string} inhalt */
 const segmente = (inhalt) => inhalt.split("'").slice(0, -1).map(s => s.trim()).filter(Boolean);
 
-// Zerlegt den Datenstrom in Nachrichten: [{ art, segmente[] }]
+/**
+ * Zerlegt den Datenstrom in Nachrichten: [{ art, segmente[] }]
+ * @param {string} inhalt
+ * @returns {Array<{ art: string, segmente: string[] }>}
+ */
 function nachrichten(inhalt) {
+  /** @type {Array<{ art: string, segmente: string[] }>} */
   const out = [];
+  /** @type {{ art: string, segmente: string[] } | null} */
   let aktuell = null;
   for (const seg of segmente(inhalt)) {
     if (seg.startsWith('UNH+')) {
       aktuell = { art: seg.split('+')[2].split(':')[0], segmente: [] };
       continue;
     }
-    if (seg.startsWith('UNT+')) { out.push(aktuell); aktuell = null; continue; }
+    if (seg.startsWith('UNT+')) { if (aktuell) out.push(aktuell); aktuell = null; continue; }
     if (aktuell) aktuell.segmente.push(seg);
   }
   return out;
 }
 
+/** @param {string} seg */
 const felder = (seg) => seg.split('+');
+/** @param {{ segmente: string[] }} nachricht */
 const gesZeilen = (nachricht) => nachricht.segmente.filter(s => s.startsWith('GES+')).map(felder);
-const fktVon    = (nachricht) => felder(nachricht.segmente.find(s => s.startsWith('FKT+')));
-const recVon    = (nachricht) => felder(nachricht.segmente.find(s => s.startsWith('REC+')));
+/** @param {{ segmente: string[] }} nachricht */
+const fktVon    = (nachricht) => {
+  const seg = nachricht.segmente.find(s => s.startsWith('FKT+'));
+  assert.ok(seg);
+  return felder(seg);
+};
+/** @param {{ segmente: string[] }} nachricht */
+const recVon    = (nachricht) => {
+  const seg = nachricht.segmente.find(s => s.startsWith('REC+'));
+  assert.ok(seg);
+  return felder(seg);
+};
 
 // Zwei Rezepte, EIN Kostenträger, ZWEI Karten-IK. Unterschiedliche Betraege,
 // damit eine Vermischung der Summen sofort sichtbar wird (100,00 vs. 40,00 —
 // waere der alte Fehler noch da, stuende in beiden GES 140,00).
+/** @returns {import('./preflight.js').DtaInput} */
 function zweiKartenIk() {
-  const basis = structuredClone(podoFixture);
+  const basis = structuredClone(asDta(podoFixture));
   const rezept = basis.prescriptions[0];
 
   const a = structuredClone(rezept);
@@ -72,9 +95,9 @@ function zweiKartenIk() {
 //         dem Commit VOR dem Umbau und werden nicht neu erzeugt.
 // -------------------------------------------------------------------------
 
-for (const [name, fixture] of [['physio', physioFixture], ['podo', podoFixture]]) {
+for (const [name, fixture] of /** @type {const} */ ([['physio', physioFixture], ['podo', podoFixture]])) {
   test(`T8 ${name}: Ein-Kassen-Fall bleibt zeichengleich zum Stand vor dem Umbau`, () => {
-    const r = buildDtaFile(structuredClone(fixture));
+    const r = buildDtaFile(structuredClone(asDta(fixture)));
     const goldEdi  = readFileSync(join(HIER, '__golden__', `${name}.edi`), 'latin1');
     const goldMeta = JSON.parse(readFileSync(join(HIER, '__golden__', `${name}.json`), 'utf8'));
 
@@ -88,7 +111,7 @@ for (const [name, fixture] of [['physio', physioFixture], ['podo', podoFixture]]
 }
 
 test('T8b: der Ein-Kassen-Fall meldet genau eine Gesamtrechnung', () => {
-  const r = buildDtaFile(structuredClone(podoFixture));
+  const r = buildDtaFile(structuredClone(asDta(podoFixture)));
   assert.equal(r.gruppen.length, 1);
   assert.equal(r.gruppen[0].kartenIk, '101000000');
   assert.equal(r.gruppen[0].prescriptionCount, 1);
@@ -118,6 +141,8 @@ test('T1: zwei Karten-IK ergeben zwei SLGA + zwei SLLA, jede GES nur ihre eigene
   // GES+<Status>+<Rechnungsbetrag>+<Brutto>+<Zuzahlung>
   const gesA = gesZeilen(slgaA).find(f => f[1] === '00');
   const gesB = gesZeilen(slgaB).find(f => f[1] === '00');
+  assert.ok(gesA);
+  assert.ok(gesB);
   assert.equal(gesA[3], '100,00', 'Gruppe A darf nur ihre eigenen 100,00 melden');
   assert.equal(gesB[3], '40,00',  'Gruppe B darf nur ihre eigenen 40,00 melden');
   // Rechnungsbetrag (Netto) = Brutto - Zuzahlung. Die Sessions hier tragen kein
@@ -185,10 +210,16 @@ test('T2: Sammelrechnung — Sammel-SLGA ohne UST, FKT Feld2=J und Feld5 leer, E
 test('T6: die GES der Sammel-SLGA ist die Summe der GES ihrer Gesamtrechnungen', () => {
   const r = buildDtaFile({ ...zweiKartenIk(), sammelrechnung: true });
   const msgs = nachrichten(r.content);
+  /** @param {string} s */
   const betrag = (s) => Number(s.replace('.', '').replace(',', '.'));
 
   const sammelGes = gesZeilen(msgs[0]).find(f => f[1] === '00');
-  const teilGes   = [msgs[1], msgs[3]].map(m => gesZeilen(m).find(f => f[1] === '00'));
+  assert.ok(sammelGes);
+  const teilGes = [msgs[1], msgs[3]].map(m => {
+    const g = gesZeilen(m).find(f => f[1] === '00');
+    assert.ok(g);
+    return g;
+  });
 
   for (const feld of [2, 3]) {   // Rechnungsbetrag, Bruttobetrag
     assert.equal(
@@ -220,7 +251,7 @@ test('T4: Gesamtrechnungs-SLGA ohne Krankenkassen-IK wird abgewiesen', () => {
 
 test('T4b: ein anderer Wert als "" oder "J" wird abgewiesen', () => {
   assert.throws(() => buildSLGA_FKT({
-    vkz: '01', sammelrechnung: 'N',
+    vkz: '01', sammelrechnung: /** @type {''} */ (/** @type {unknown} */ ('N')),
     ikLeistungserbringer: '123456789', ikKostentraeger: '101000000',
     ikKrankenkasse: '101000001', ikAbsenderDatei: '123456789',
   }), /ungültig/);
@@ -293,26 +324,26 @@ test('T7b: Rezepte derselben Karten-IK bleiben in Eingabereihenfolge in einer Gr
 // --- Karten-IK vs. Kostenträger-IK Pflicht & Trennung (gkv-302, 30.09.2026) ---
 
 test('krankenkasseIk fehlt -> buildDtaFile wirft 422 Error (/Versichertenkarte/), auch wenn kostentraegerIk gefüllt ist', () => {
-  const f = structuredClone(podoFixture);
+  const f = structuredClone(asDta(podoFixture));
   f.prescriptions[0].verordnung.kostentraegerIk = '101000000';
   f.prescriptions[0].verordnung.krankenkasseIk = '';
 
   assert.throws(
     () => buildDtaFile(f),
-    (err) => {
+    (/** @type {Error & { status?: number }} */ err) => {
       assert.equal(err.status, 422);
       assert.match(err.message, /Versichertenkarte/);
       return true;
     }
   );
 
-  const f2 = structuredClone(podoFixture);
+  const f2 = structuredClone(asDta(podoFixture));
   f2.prescriptions[0].verordnung.kostentraegerIk = '101000000';
   delete f2.prescriptions[0].verordnung.krankenkasseIk;
 
   assert.throws(
     () => buildDtaFile(f2),
-    (err) => {
+    (/** @type {Error & { status?: number }} */ err) => {
       assert.equal(err.status, 422);
       assert.match(err.message, /Versichertenkarte/);
       return true;
@@ -321,7 +352,7 @@ test('krankenkasseIk fehlt -> buildDtaFile wirft 422 Error (/Versichertenkarte/)
 });
 
 test('krankenkasseIk != kostentraegerIk: SLGA und SLLA FKT tragen Karten-IK und Kostenträger-IK in getrennten Feldern', () => {
-  const f = structuredClone(podoFixture);
+  const f = structuredClone(asDta(podoFixture));
   const ktIk = '104212505';      // Kostenträger-IK
   const kartenIk = '101575519';  // Karten-IK (weicht von Kostenträger-IK ab)
   f.prescriptions[0].verordnung.kostentraegerIk = ktIk;

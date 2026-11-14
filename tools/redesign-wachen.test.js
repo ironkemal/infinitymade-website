@@ -26,7 +26,7 @@ test('!important braucht Kommentar in der Nähe', () => {
 test('Cache: geänderte Datei braucht neue Nummer', () => {
   const head = '<link href="a.css?v=1"><script src="b.js?v=1"></script>';
   const jetzt = '<link href="a.css?v=1"><script src="b.js?v=2"></script>';
-  const f = pruefeCache(jetzt, head, (d) => d === 'a.css' || d === 'b.js');
+  const f = pruefeCache(jetzt, head, (/** @type {string} */ d) => d === 'a.css' || d === 'b.js');
   assert.equal(f.length, 1);
   assert.match(f[0], /a\.css/);
   assert.deepEqual(pruefeCache(jetzt, head, () => false), []);
@@ -50,7 +50,7 @@ test('Schrumpf: Verlust über 10 % wird gemeldet', () => {
 
 // Gegen die echten Dateien: Auslieferung und Scope gelten immer, nicht nur, wenn jemand T1 aufruft.
 test('echte Dateien: jede in dashboard.html geladene Datei wird ausgeliefert (Kutu + Workflow)', () => {
-  const lies = (p) => readFileSync(join(WURZEL, p), 'utf8');
+  const lies = (/** @type {string} */ p) => readFileSync(join(WURZEL, p), 'utf8');
   assert.deepEqual(pruefeAuslieferung(lies('dashboard.html'), lies('onprem/frontend.Dockerfile'), lies('.github/workflows/publish-frontend.yml')), []);
 });
 

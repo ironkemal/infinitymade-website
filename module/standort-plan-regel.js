@@ -12,6 +12,18 @@
 
 const DATUM_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+/**
+ * @typedef {object} StandortPlanZeile
+ * @property {string} employee_id
+ * @property {string} business_id
+ * @property {number|string|null} [weekday]
+ * @property {string|null} [datum]
+ * @property {string|null} [gueltig_ab]
+ * @property {string|null} [von]
+ * @property {string|null} [bis]
+ */
+
+/** @param {unknown} datum */
 function wochentagVon(datum) {
   if (typeof datum !== 'string') return null;
   const tag = datum.slice(0, 10);
@@ -21,13 +33,19 @@ function wochentagVon(datum) {
   return { tag, wochentag: d.getUTCDay() };
 }
 
+/** @param {unknown} wert */
 function gueltigAb(wert) {
   if (typeof wert !== 'string') return null;
   const tag = wert.slice(0, 10);
   return DATUM_RE.test(tag) ? tag : null;
 }
 
+/**
+ * @param {StandortPlanZeile[]} zeilen
+ * @returns {string[]}
+ */
 function eindeutig(zeilen) {
+  /** @type {string[]} */
   const aus = [];
   for (const z of zeilen) if (z.business_id != null && !aus.includes(z.business_id)) aus.push(z.business_id);
   return aus;
@@ -35,6 +53,12 @@ function eindeutig(zeilen) {
 
 // Zeilen, die fuer (Mitarbeiter, Tag) gelten: Einzeltag-Zeilen, sonst Wochenmuster der geltenden Version.
 // null = kein Eintrag -> alle Standorte, ganzer Tag (altes Verhalten).
+/**
+ * @param {StandortPlanZeile[] | null | undefined} zeilen
+ * @param {string | null | undefined} employeeId
+ * @param {string | null | undefined} datum
+ * @returns {StandortPlanZeile[] | null}
+ */
 function geltendeZeilen(zeilen, employeeId, datum) {
   const t = wochentagVon(datum);
   if (!Array.isArray(zeilen) || employeeId == null || !t) return null;
@@ -47,6 +71,7 @@ function geltendeZeilen(zeilen, employeeId, datum) {
   // Wochenmuster in Versionen (gueltig_ab, 0098): je Mitarbeiter gilt die Version mit dem groessten
   // gueltig_ab <= Tag, NULL = seit immer. Eine neue Version erbt keine Wochentage der alten.
   const muster = eigene.filter((z) => z.datum == null && z.weekday != null && z.weekday !== '');
+  /** @type {string | null} */
   let version = null;
   let gefunden = false;
   for (const z of muster) {
@@ -59,12 +84,27 @@ function geltendeZeilen(zeilen, employeeId, datum) {
   return woche.length ? woche : null;
 }
 
+/**
+ * @param {StandortPlanZeile[] | null | undefined} zeilen
+ * @param {string | null | undefined} employeeId
+ * @param {string | null | undefined} datum
+ * @param {string[] | null | undefined} alleStandortIds
+ * @returns {string[]}
+ */
 export function standorteFuerTag(zeilen, employeeId, datum, alleStandortIds) {
   const alle = Array.isArray(alleStandortIds) ? alleStandortIds.slice() : [];
   const gelten = geltendeZeilen(zeilen, employeeId, datum);
   return gelten ? eindeutig(gelten) : alle;
 }
 
+/**
+ * @param {StandortPlanZeile[] | null | undefined} zeilen
+ * @param {string | null | undefined} employeeId
+ * @param {string | null | undefined} datum
+ * @param {string} standortId
+ * @param {string[] | null | undefined} alleStandortIds
+ * @returns {boolean}
+ */
 export function istAmStandort(zeilen, employeeId, datum, standortId, alleStandortIds) {
   return standorteFuerTag(zeilen, employeeId, datum, alleStandortIds).includes(standortId);
 }
@@ -74,7 +114,11 @@ export function istAmStandort(zeilen, employeeId, datum, standortId, alleStandor
 // working_hours — die Fenster schraenken nur ein (Schnittmenge).
 const ZEIT_RE = /^([01]\d|2[0-3]):[0-5]\d/;
 
-/** 'HH:MM[:SS]' -> Minuten seit Mitternacht, sonst null. */
+/**
+ * 'HH:MM[:SS]' -> Minuten seit Mitternacht, sonst null.
+ * @param {unknown} wert
+ * @returns {number | null}
+ */
 export function zeitInMinuten(wert) {
   if (typeof wert !== 'string' || !ZEIT_RE.test(wert)) return null;
   return Number(wert.slice(0, 2)) * 60 + Number(wert.slice(3, 5));
@@ -83,13 +127,21 @@ export function zeitInMinuten(wert) {
 /**
  * true = der Termin [vonMin, bisMin) (Minuten, Berliner Ortszeit) passt in den Plan dieses Standorts.
  * Kein Eintrag fuer den Tag -> wie istAmStandort (alle Standorte, ganzer Tag). Ohne Zeitangabe nur Tagespruefung.
+ * @param {StandortPlanZeile[] | null | undefined} zeilen
+ * @param {string | null | undefined} employeeId
+ * @param {string | null | undefined} datum
+ * @param {string} standortId
+ * @param {number | null | undefined} vonMin
+ * @param {number | null | undefined} bisMin
+ * @param {string[] | null | undefined} alleStandortIds
+ * @returns {boolean}
  */
 export function imZeitfenster(zeilen, employeeId, datum, standortId, vonMin, bisMin, alleStandortIds) {
   const gelten = geltendeZeilen(zeilen, employeeId, datum);
   if (!gelten) return (Array.isArray(alleStandortIds) ? alleStandortIds : []).includes(standortId);
   const amOrt = gelten.filter((z) => z.business_id === standortId);
   if (!amOrt.length) return false;
-  if (!Number.isFinite(vonMin) || !Number.isFinite(bisMin)) return true;
+  if (typeof vonMin !== 'number' || typeof bisMin !== 'number' || !Number.isFinite(vonMin) || !Number.isFinite(bisMin)) return true;
   return amOrt.some((z) => {
     const v = zeitInMinuten(z.von);
     const b = zeitInMinuten(z.bis);

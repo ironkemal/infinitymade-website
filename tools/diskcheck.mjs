@@ -5,8 +5,19 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { pathToFileURL } from 'node:url';
 
+/**
+ * @typedef {(file: string, args: readonly string[], options?: import('node:child_process').ExecFileOptions) => Promise<{ stdout: string }>} DiskRunner
+ * @typedef {{ path?: string, warning?: number, critical?: number, run?: DiskRunner }} DiskCheckOptions
+ * @typedef {{ exitCode: number, help?: string, status?: string, error?: string, path?: string, blocks?: { total: number, used: number, free: number, percent: number }, inodes?: { total: number, used: number, free: number, percent: number } }} DiskCheckResult
+ */
+
+/** @type {DiskRunner} */
 const exec = promisify(execFile);
 
+/**
+ * @param {string} text
+ * @param {'blocks' | 'inodes'} [kind]
+ */
 export function parseDf(text, kind = 'blocks') {
   if (!['blocks', 'inodes'].includes(kind)) throw new Error('Unbekannte Messart');
   const lines = String(text).trim().split(/\r?\n/);
@@ -29,6 +40,10 @@ export function parseDf(text, kind = 'blocks') {
   return { total, used, free, percent };
 }
 
+/**
+ * @param {DiskCheckOptions} [opts]
+ * @returns {Promise<DiskCheckResult>}
+ */
 export async function checkDisk({ path = '/', warning = 80, critical = 90, run = exec } = {}) {
   try {
     if (typeof path !== 'string' || !path.startsWith('/') || path.includes('\0')) throw new Error('Absoluter Pfad erforderlich');
@@ -47,19 +62,28 @@ export async function checkDisk({ path = '/', warning = 80, critical = 90, run =
   }
 }
 
+/**
+ * @param {string[]} args
+ * @param {DiskRunner} [run]
+ * @returns {Promise<DiskCheckResult>}
+ */
 export async function diskcheckCli(args, run = exec) {
   if (args.length === 1 && args[0] === '--help') {
     return { exitCode: 0, help: 'node tools/diskcheck.mjs [--path /] [--warning 80] [--critical 90]\nExit: 0 OK, 1 WARNING, 2 CRITICAL, 3 UNKNOWN. Keine Alarmierung. WSL: nur Gast-Dateisystem.' };
   }
+  /** @type {DiskCheckOptions} */
   const options = { run };
+  /** @type {Record<string, 'path' | 'warning' | 'critical'>} */
+  const argMap = { '--path': 'path', '--warning': 'warning', '--critical': 'critical' };
   const seen = new Set();
   for (let i = 0; i < args.length; i += 2) {
-    const key = { '--path': 'path', '--warning': 'warning', '--critical': 'critical' }[args[i]];
+    const key = argMap[args[i]];
     if (!key || seen.has(key) || args[i + 1] === undefined) return { status: 'UNKNOWN', exitCode: 3, error: 'Ungültige Argumente; --help verwenden.' };
     seen.add(key);
     const value = args[i + 1];
     if (key !== 'path' && !/^\d+$/.test(value)) return { status: 'UNKNOWN', exitCode: 3, error: 'Ungültige Schwelle.' };
-    options[key] = key === 'path' ? value : Number(value);
+    if (key === 'path') options.path = value;
+    else options[key] = Number(value);
   }
   return checkDisk(options);
 }

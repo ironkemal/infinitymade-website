@@ -19,7 +19,11 @@ export const FESTGESCHRIEBENE_SPALTEN = Object.freeze([
   'aussteller_snapshot', 'empfaenger_snapshot', 'invoice_number', 'rechnung_nr',
 ]);
 
-/** @param {object} payload  Nutzlast aus saveInvoice()   @param {?string} status  Status der bestehenden Rechnung */
+/**
+ * @param {Record<string, any>} payload  Nutzlast aus saveInvoice()
+ * @param {string | null | undefined} [status]  Status der bestehenden Rechnung
+ * @returns {Record<string, any>}
+ */
 export function payloadFuerUpdate(payload, status) {
   if (!status || status === 'draft') return payload;
   const r = { ...payload };

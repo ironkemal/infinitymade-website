@@ -19,6 +19,10 @@ const ps1Pfad = path.join(repoRoot, 'installieren', 'install.ps1');
  * Hilfsfunktion: extrahiert den Compose-Dienstblock ab `^  name:$`
  * bis zum nächsten Dienstblock oder Top-Level-Abschnitt.
  */
+/**
+ * @param {string} text
+ * @param {string} name
+ */
 function dienstBlock(text, name) {
   const alle = text.split(/\r?\n/);
   const start = alle.findIndex((z) => /^services:\s*$/.test(z));
@@ -29,6 +33,7 @@ function dienstBlock(text, name) {
   const topLevelRegex = /^[^\s#]/;
 
   let erfassen = false;
+  /** @type {string[]} */
   const block = [];
 
   for (const zeile of zeilen) {
@@ -202,7 +207,7 @@ test('O-172: kein HSTS 2 Jahre mehr; update.sh senkt den Altwert und prüft den 
 });
 
 test('K2b.19 (O-177, S-53): namensbeschränkte lokale CA, Root-Schlüssel gelöscht, gesichert, nur bei internal', () => {
-  const lies = (...p) => fs.readFileSync(path.join(repoRoot, ...p), 'utf8');
+  const lies = (/** @type {string[]} */ ...p) => fs.readFileSync(path.join(repoRoot, ...p), 'utf8');
   const inst = lies('onprem', 'install.sh');
   const caddy = lies('onprem', 'Caddyfile');
   assert.match(caddy, /^\{\n\timport \/etc\/praxura\/ca\/\*\.caddy\n\}/m, 'globaler Import der pki-Datei');

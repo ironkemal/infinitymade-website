@@ -28,6 +28,7 @@ const MIN_RETRY_AFTER_MS = 500;
 const DEFAULT_TIMEOUT_MS = 45_000;
 
 let active429Waiters = 0;
+/** @type {ReturnType<typeof createJetonClient> | null} */
 let globalJetonClient = null;
 
 function getGlobalJetonClient() {
@@ -39,31 +40,88 @@ function getGlobalJetonClient() {
   return globalJetonClient;
 }
 
+/**
+ * @typedef {Error & { code?: string, status?: number }} AzureClientError
+ * @typedef {{
+ *   getToken: (opts?: { forceRefresh?: boolean, rejectedToken?: string, signal?: AbortSignal }) => Promise<Record<string, any>>,
+ *   invalidate: (rejectedToken?: string) => void
+ * }} JetonClientLike
+ * @typedef {Awaited<ReturnType<ReturnType<typeof createJetonClient>['getToken']>>} JetonAuthToken
+ * @typedef {{
+ *   messages?: Array<Record<string, unknown>>,
+ *   responseFormat?: Record<string, unknown> | null,
+ *   temperature?: number,
+ *   maxTokens?: number,
+ *   deployment?: string,
+ *   mock?: boolean,
+ *   mockFn?: (opts: { messages?: Array<Record<string, unknown>>, responseFormat?: Record<string, unknown> | null }) => unknown,
+ *   config?: Record<string, any>,
+ *   configProvider?: () => Record<string, any>,
+ *   fetchImpl?: (url: string, init: Record<string, any>) => Promise<any>,
+ *   jetonClient?: JetonClientLike,
+ *   beforeSend?: () => boolean | Promise<boolean>,
+ *   signal?: AbortSignal,
+ *   timeoutMs?: number
+ * }} ChatOptions
+ * @typedef {{
+ *   audioBuffer?: Buffer | Uint8Array,
+ *   mimeType?: string,
+ *   deployment?: string,
+ *   mock?: boolean,
+ *   mockFn?: (opts: { audioBuffer?: Buffer | Uint8Array, mimeType?: string }) => unknown,
+ *   config?: Record<string, any>,
+ *   configProvider?: () => Record<string, any>,
+ *   fetchImpl?: (url: string, init: Record<string, any>) => Promise<any>,
+ *   jetonClient?: JetonClientLike,
+ *   beforeSend?: () => boolean | Promise<boolean>,
+ *   signal?: AbortSignal,
+ *   timeoutMs?: number
+ * }} TranscribeOptions
+ * @typedef {{
+ *   endpoint: string,
+ *   deployment: string,
+ *   apiVersion: string,
+ *   headers: Record<string, string>
+ * }} ResolvedTarget
+ */
 
+/**
+ * @param {string} message
+ * @param {string} code
+ * @param {number} [status]
+ * @param {string} [name]
+ * @returns {AzureClientError}
+ */
+function makeClientError(message, code, status, name) {
+  /** @type {AzureClientError} */
+  const err = new Error(message);
+  err.code = code;
+  if (status !== undefined) err.status = status;
+  if (name) err.name = name;
+  return err;
+}
 
 /**
  * Races a promise against an AbortSignal, removing listeners in finally block.
  * Guarantees that arbitrary secrets in signal.reason are never reflected.
+ *
+ * @template T
+ * @param {Promise<T>} promise
+ * @param {AbortSignal | undefined} signal
+ * @param {string} [defaultErrMsg]
+ * @returns {Promise<T>}
  */
 function raceSignal(promise, signal, defaultErrMsg = 'KI-Anfrage abgebrochen') {
   if (!signal) return promise;
   if (signal.aborted) {
-    const err = new Error(defaultErrMsg);
-    err.name = 'AbortError';
-    err.code = 'AI_ABORTED';
-    err.status = 499;
-    return Promise.reject(err);
+    return Promise.reject(makeClientError(defaultErrMsg, 'AI_ABORTED', 499, 'AbortError'));
   }
   return new Promise((resolve, reject) => {
     let settled = false;
     const onAbort = () => {
       if (!settled) {
         settled = true;
-        const err = new Error(defaultErrMsg);
-        err.name = 'AbortError';
-        err.code = 'AI_ABORTED';
-        err.status = 499;
-        reject(err);
+        reject(makeClientError(defaultErrMsg, 'AI_ABORTED', 499, 'AbortError'));
       }
     };
     signal.addEventListener('abort', onAbort, { once: true });
@@ -86,6 +144,10 @@ function raceSignal(promise, signal, defaultErrMsg = 'KI-Anfrage abgebrochen') {
   });
 }
 
+/**
+ * @param {number} ms
+ * @param {AbortSignal | undefined} signal
+ */
 function sleepWithSignal(ms, signal) {
   return raceSignal(
     new Promise((resolve) => setTimeout(resolve, ms)),
@@ -97,20 +159,7 @@ function sleepWithSignal(ms, signal) {
 /**
  * Call Azure OpenAI / KI Chat Completions.
  *
- * @param {Object} opts
- * @param {Array}  opts.messages          OpenAI-format messages array (text only)
- * @param {Object} [opts.responseFormat]  e.g. { type: 'json_object' }
- * @param {number} [opts.temperature=0.4]
- * @param {number} [opts.maxTokens=1200]
- * @param {string} [opts.deployment]      deployment override
- * @param {boolean} [opts.mock]           explicit mock flag (requires mockFn)
- * @param {Function} [opts.mockFn]        mock producer function
- * @param {Object} [opts.config]          injected AI config object
- * @param {Function} [opts.configProvider] injected config provider function
- * @param {Function} [opts.fetchImpl]     fetch implementation (defaults to globalThis.fetch)
- * @param {Object} [opts.jetonClient]     injected jeton client instance
- * @param {AbortSignal} [opts.signal]     external abort signal
- * @param {number} [opts.timeoutMs]       test timeout seam (defaults to 45000)
+ * @param {ChatOptions} [opts]
  * @returns {Promise<{content:string, usage:{prompt_tokens:number,completion_tokens:number,total_tokens:number}, model:string, deployment:string, dry_run:boolean, latency_ms:number}>}
  */
 export async function chat(opts = {}) {
@@ -136,10 +185,7 @@ export async function chat(opts = {}) {
   // 1. Explicit mock handling
   if (mock) {
     if (typeof mockFn !== 'function') {
-      const err = new Error('Expliziter Mock erfordert eine mockFn-Funktion');
-      err.code = 'AI_MOCK_FN_REQUIRED';
-      err.status = 500;
-      throw err;
+      throw makeClientError('Expliziter Mock erfordert eine mockFn-Funktion', 'AI_MOCK_FN_REQUIRED', 500);
     }
     const content = mockFn({ messages, responseFormat });
     const contentStr = typeof content === 'string' ? content : JSON.stringify(content ?? '');
@@ -158,64 +204,41 @@ export async function chat(opts = {}) {
 
   // 3. Mode 'aus' gate: safe German 503 before any network
   if (cfg.mode === 'aus') {
-    const err = new Error('KI-Dienst ist deaktiviert');
-    err.code = 'AI_MODE_AUS';
-    err.status = 503;
-    throw err;
+    throw makeClientError('KI-Dienst ist deaktiviert', 'AI_MODE_AUS', 503);
   }
 
   // 4. Operator readiness gate: AI_ACTIVATION_READY=1 required
   if (!cfg.activationReady) {
-    const err = new Error('KI-Dienst ist nicht betriebsbereit geschaltet');
-    err.code = 'AI_NOT_ACTIVATED';
-    err.status = 503;
-    throw err;
+    throw makeClientError('KI-Dienst ist nicht betriebsbereit geschaltet', 'AI_NOT_ACTIVATED', 503);
   }
 
   // 5. Config validity check
   if (!cfg.valid) {
-    const err = new Error('KI-Konfiguration ist ungültig');
-    err.code = cfg.code || 'AI_CONFIG_INVALID';
-    err.status = 503;
-    throw err;
+    throw makeClientError('KI-Konfiguration ist ungültig', cfg.code || 'AI_CONFIG_INVALID', 503);
   }
 
   // 6. Sanitized message transport validation
   if (!Array.isArray(messages) || messages.length === 0) {
-    const err = new Error('Ungültige oder leere Nachrichtenliste');
-    err.code = 'AI_MESSAGES_INVALID';
-    err.status = 400;
-    throw err;
+    throw makeClientError('Ungültige oder leere Nachrichtenliste', 'AI_MESSAGES_INVALID', 400);
   }
 
+  /** @type {Array<{ role: string, content: string, name?: string }>} */
   const sanitizedMessages = [];
   for (const m of messages) {
     if (!m || typeof m !== 'object') {
-      const err = new Error('Ungültiges Nachrichtenobjekt');
-      err.code = 'AI_MESSAGES_INVALID';
-      err.status = 400;
-      throw err;
+      throw makeClientError('Ungültiges Nachrichtenobjekt', 'AI_MESSAGES_INVALID', 400);
     }
     const keys = Object.keys(m);
     for (const k of keys) {
       if (k !== 'role' && k !== 'content' && k !== 'name') {
-        const err = new Error('Unerwartete Eigenschaft in Nachrichtenobjekt');
-        err.code = 'AI_MESSAGES_INVALID';
-        err.status = 400;
-        throw err;
+        throw makeClientError('Unerwartete Eigenschaft in Nachrichtenobjekt', 'AI_MESSAGES_INVALID', 400);
       }
     }
-    if (!ALLOWED_ROLES.has(m.role)) {
-      const err = new Error('Ungültige Rolle in Nachrichtenobjekt');
-      err.code = 'AI_MESSAGES_INVALID';
-      err.status = 400;
-      throw err;
+    if (typeof m.role !== 'string' || !ALLOWED_ROLES.has(m.role)) {
+      throw makeClientError('Ungültige Rolle in Nachrichtenobjekt', 'AI_MESSAGES_INVALID', 400);
     }
     if (typeof m.content !== 'string') {
-      const err = new Error('Multimodale Inhalte und Bilder sind am KI-Transport nicht zulässig');
-      err.code = 'AI_MULTIMODAL_BLOCKED';
-      err.status = 400;
-      throw err;
+      throw makeClientError('Multimodale Inhalte und Bilder sind am KI-Transport nicht zulässig', 'AI_MULTIMODAL_BLOCKED', 400);
     }
     sanitizedMessages.push({
       role: m.role,
@@ -225,13 +248,11 @@ export async function chat(opts = {}) {
   }
 
   // 7. responseFormat validation
+  /** @type {{ type: 'json_object' | 'text' } | undefined} */
   let sanitizedResponseFormat = undefined;
   if (responseFormat) {
     if (typeof responseFormat !== 'object' || responseFormat === null) {
-      const err = new Error('Ungültiges responseFormat');
-      err.code = 'AI_PAYLOAD_INVALID';
-      err.status = 400;
-      throw err;
+      throw makeClientError('Ungültiges responseFormat', 'AI_PAYLOAD_INVALID', 400);
     }
     const keys = Object.keys(responseFormat);
     if (
@@ -239,10 +260,7 @@ export async function chat(opts = {}) {
       keys[0] !== 'type' ||
       (responseFormat.type !== 'json_object' && responseFormat.type !== 'text')
     ) {
-      const err = new Error('Unzulässiger responseFormat-Deskriptor');
-      err.code = 'AI_PAYLOAD_INVALID';
-      err.status = 400;
-      throw err;
+      throw makeClientError('Unzulässiger responseFormat-Deskriptor', 'AI_PAYLOAD_INVALID', 400);
     }
     sanitizedResponseFormat = { type: responseFormat.type };
   }
@@ -250,18 +268,12 @@ export async function chat(opts = {}) {
   // 8. Numeric temperature and maxTokens bounds
   const numTemp = Number(temperature);
   if (!Number.isFinite(numTemp) || numTemp < 0 || numTemp > 2) {
-    const err = new Error('Ungültige Temperatur');
-    err.code = 'AI_PAYLOAD_INVALID';
-    err.status = 400;
-    throw err;
+    throw makeClientError('Ungültige Temperatur', 'AI_PAYLOAD_INVALID', 400);
   }
 
   const numTokens = Number(maxTokens);
   if (!Number.isInteger(numTokens) || numTokens < 1 || numTokens > 16384) {
-    const err = new Error('Ungültige maxTokens');
-    err.code = 'AI_PAYLOAD_INVALID';
-    err.status = 400;
-    throw err;
+    throw makeClientError('Ungültige maxTokens', 'AI_PAYLOAD_INVALID', 400);
   }
 
   // 9. Combined timeout budget (explicit timeoutMs seam)
@@ -270,18 +282,16 @@ export async function chat(opts = {}) {
     timeoutController.abort(new DOMException('KI-Anfrage Zeitüberschreitung', 'TimeoutError'));
   }, timeoutMs);
 
+  /** @type {AbortSignal} */
   let combinedSignal;
+  /** @type {(() => void) | null} */
   let combinedCleanup = null;
   if (typeof AbortSignal.any === 'function' && externalSignal) {
     combinedSignal = AbortSignal.any([externalSignal, timeoutController.signal]);
   } else if (externalSignal) {
     if (externalSignal.aborted) {
       clearTimeout(timeoutId);
-      const abortErr = new Error('KI-Anfrage abgebrochen');
-      abortErr.name = 'AbortError';
-      abortErr.code = 'AI_ABORTED';
-      abortErr.status = 499;
-      throw abortErr;
+      throw makeClientError('KI-Anfrage abgebrochen', 'AI_ABORTED', 499, 'AbortError');
     }
     const combinedController = new AbortController();
     const forwardAbort = () => combinedController.abort(new DOMException('KI-Anfrage abgebrochen', 'AbortError'));
@@ -318,18 +328,15 @@ export async function chat(opts = {}) {
       t0
     });
   } catch (err) {
-    if (err.name === 'TimeoutError' || combinedSignal.aborted && combinedSignal.reason?.name === 'TimeoutError') {
-      const timeoutErr = new Error('KI-Anfrage Zeitüberschreitung');
-      timeoutErr.code = 'AI_TIMEOUT';
-      timeoutErr.status = 503;
-      throw timeoutErr;
+    const errName = err && typeof err === 'object' && 'name' in err ? err.name : undefined;
+    const reasonName = combinedSignal.reason && typeof combinedSignal.reason === 'object' && 'name' in combinedSignal.reason
+      ? combinedSignal.reason.name
+      : undefined;
+    if (errName === 'TimeoutError' || (combinedSignal.aborted && reasonName === 'TimeoutError')) {
+      throw makeClientError('KI-Anfrage Zeitüberschreitung', 'AI_TIMEOUT', 503);
     }
-    if (err.name === 'AbortError' || combinedSignal.aborted) {
-      const abortErr = new Error('KI-Anfrage abgebrochen');
-      abortErr.name = 'AbortError';
-      abortErr.code = 'AI_ABORTED';
-      abortErr.status = 499;
-      throw abortErr;
+    if (errName === 'AbortError' || combinedSignal.aborted) {
+      throw makeClientError('KI-Anfrage abgebrochen', 'AI_ABORTED', 499, 'AbortError');
     }
     throw err;
   } finally {
@@ -338,6 +345,21 @@ export async function chat(opts = {}) {
   }
 }
 
+/**
+ * @param {{
+ *   cfg: Record<string, any>,
+ *   messages: Array<{ role: string, content: string, name?: string }>,
+ *   responseFormat: { type: 'json_object' | 'text' } | undefined,
+ *   temperature: number,
+ *   maxTokens: number,
+ *   deploymentOverride: string | undefined,
+ *   fetchImpl: (url: string, init: Record<string, any>) => Promise<any>,
+ *   jetonClient: JetonClientLike | null,
+ *   beforeSend: (() => boolean | Promise<boolean>) | undefined,
+ *   signal: AbortSignal,
+ *   t0: number
+ * }} params
+ */
 async function executeTransport({
   cfg,
   messages,
@@ -351,60 +373,53 @@ async function executeTransport({
   signal,
   t0
 }) {
+  /** @type {JetonAuthToken | null} */
   let jetonAuth = null;
   let hasRefreshedJeton401 = false;
 
+  /**
+   * @param {{ forceRefresh?: boolean, rejectedToken?: string }} [opts]
+   * @returns {Promise<ResolvedTarget>}
+   */
   async function resolveTarget(opts = {}) {
     if (cfg.mode === 'jeton') {
       if (!jetonClient) {
-        const err = new Error('Jeton-Client nicht initialisiert');
-        err.code = 'AI_JETON_UNAVAILABLE';
-        err.status = 503;
-        throw err;
+        throw makeClientError('Jeton-Client nicht initialisiert', 'AI_JETON_UNAVAILABLE', 503);
       }
-      jetonAuth = await raceSignal(jetonClient.getToken({ signal, ...opts }), signal);
+      jetonAuth = /** @type {JetonAuthToken} */ (await raceSignal(jetonClient.getToken({ signal, ...opts }), signal));
 
       if (!jetonAuth || typeof jetonAuth !== 'object' || typeof jetonAuth.token !== 'string' || jetonAuth.token.length < 10 || jetonAuth.token.length > 4096 || RE_CONTROL_CHARS.test(jetonAuth.token)) {
-        const err = new Error('Token ungültig'); err.code = 'AI_AUTH_INVALID'; err.status = 503; throw err;
+        throw makeClientError('Token ungültig', 'AI_AUTH_INVALID', 503);
       }
       if (!Number.isInteger(jetonAuth.exp)) {
-         const err = new Error('Token-Ablauf ungültig'); err.code = 'AI_AUTH_INVALID'; err.status = 503; throw err;
+        throw makeClientError('Token-Ablauf ungültig', 'AI_AUTH_INVALID', 503);
       }
       const currentSec = Math.floor(Date.now()/1000);
       const ttl = jetonAuth.exp - currentSec;
       if (ttl <= 0 || ttl > 3600) {
-         const err = new Error('Token abgelaufen oder zu lang'); err.code = 'AI_AUTH_INVALID'; err.status = 503; throw err;
+        throw makeClientError('Token abgelaufen oder zu lang', 'AI_AUTH_INVALID', 503);
       }
 
       // Validate returned token target every send
       const epVal = validateEndpointUrl(jetonAuth.endpoint, cfg.allowedHosts);
-      if (!epVal.ok) {
-        const err = new Error('Jeton-Endpunkt unzulässig');
-        err.code = 'AI_HOST_NOT_ALLOWED';
-        err.status = 503;
-        throw err;
+      if (!epVal.ok || !epVal.cleanEndpoint) {
+        throw makeClientError('Jeton-Endpunkt unzulässig', 'AI_HOST_NOT_ALLOWED', 503);
       }
 
-      if (typeof jetonAuth.region !== 'string' || !EU_DATA_BOUNDARY_REGIONS.includes(jetonAuth.region.toLowerCase())) {
-        const err = new Error('Region ungültig'); err.code = 'AI_INVALID_REGION'; err.status = 503; throw err;
+      if (typeof jetonAuth.region !== 'string' || !(/** @type {readonly string[]} */ (EU_DATA_BOUNDARY_REGIONS)).includes(jetonAuth.region.toLowerCase())) {
+        throw makeClientError('Region ungültig', 'AI_INVALID_REGION', 503);
       }
       if (typeof jetonAuth.apiVersion !== 'string' || !RE_API_VERSION.test(jetonAuth.apiVersion)) {
-        const err = new Error('API-Version ungültig'); err.code = 'AI_API_VERSION_INVALID'; err.status = 503; throw err;
+        throw makeClientError('API-Version ungültig', 'AI_API_VERSION_INVALID', 503);
       }
 
       const targetDeployment = jetonAuth.deployment; // Jeton bleibt an das vom Aussteller freigegebene Deployment gebunden.
       if (!RE_SAFE_SEGMENT.test(targetDeployment)) {
-        const err = new Error('Deploymentname ist ungültig');
-        err.code = 'AI_DEPLOYMENT_INVALID';
-        err.status = 503;
-        throw err;
+        throw makeClientError('Deploymentname ist ungültig', 'AI_DEPLOYMENT_INVALID', 503);
       }
 
       if (deploymentOverride && deploymentOverride !== targetDeployment) {
-        const err = new Error('Deploymentkonflikt in Jeton-Modus');
-        err.code = 'AI_DEPLOYMENT_MISMATCH';
-        err.status = 400;
-        throw err;
+        throw makeClientError('Deploymentkonflikt in Jeton-Modus', 'AI_DEPLOYMENT_MISMATCH', 400);
       }
 
       return {
@@ -419,26 +434,17 @@ async function executeTransport({
 
     // Direct mode
     const epVal = validateEndpointUrl(cfg.endpoint, cfg.allowedHosts);
-    if (!epVal.ok) {
-      const err = new Error('Endpunkt unzulässig');
-      err.code = epVal.code || 'AI_HOST_NOT_ALLOWED';
-      err.status = 503;
-      throw err;
+    if (!epVal.ok || !epVal.cleanEndpoint) {
+      throw makeClientError('Endpunkt unzulässig', epVal.code || 'AI_HOST_NOT_ALLOWED', 503);
     }
 
     const targetDeployment = deploymentOverride || cfg.deployment;
     if (!RE_SAFE_SEGMENT.test(targetDeployment)) {
-      const err = new Error('Deploymentname ist ungültig');
-      err.code = 'AI_DEPLOYMENT_INVALID';
-      err.status = 503;
-      throw err;
+      throw makeClientError('Deploymentname ist ungültig', 'AI_DEPLOYMENT_INVALID', 503);
     }
 
     if (RE_CONTROL_CHARS.test(cfg.apiKey)) {
-      const err = new Error('API-Key enthält unzulässige Steuerzeichen');
-      err.code = 'AI_AUTH_INVALID';
-      err.status = 503;
-      throw err;
+      throw makeClientError('API-Key enthält unzulässige Steuerzeichen', 'AI_AUTH_INVALID', 503);
     }
 
     return {
@@ -456,11 +462,7 @@ async function executeTransport({
 
   while (true) {
     if (signal.aborted) {
-      const abortErr = new Error('KI-Anfrage abgebrochen');
-      abortErr.name = 'AbortError';
-      abortErr.code = 'AI_ABORTED';
-      abortErr.status = 499;
-      throw abortErr;
+      throw makeClientError('KI-Anfrage abgebrochen', 'AI_ABORTED', 499, 'AbortError');
     }
 
     const url = `${target.endpoint.replace(/\/+$/, '')}/openai/deployments/${encodeURIComponent(target.deployment)}/chat/completions?api-version=${target.apiVersion}`;
@@ -477,12 +479,10 @@ async function executeTransport({
     if (typeof beforeSend === 'function') {
       const permitted = await raceSignal(Promise.resolve().then(beforeSend), signal);
       if (permitted !== true) {
-        const err = new Error('KI-Freigabe nicht verfügbar');
-        err.code = 'AI_OWNER_DISABLED';
-        err.status = 503;
-        throw err;
+        throw makeClientError('KI-Freigabe nicht verfügbar', 'AI_OWNER_DISABLED', 503);
       }
     }
+    /** @type {any} */
     let res;
     try {
       const fetchPromise = fetchImpl(url, {
@@ -497,45 +497,34 @@ async function executeTransport({
       });
       res = await raceSignal(fetchPromise, signal, 'KI-Anfrage abgebrochen');
     } catch (fetchErr) {
-      if (fetchErr.name === 'AbortError' || signal.aborted) {
+      const fetchErrName = fetchErr && typeof fetchErr === 'object' && 'name' in fetchErr ? fetchErr.name : undefined;
+      if (fetchErrName === 'AbortError' || signal.aborted) {
         throw fetchErr;
       }
-      const err = new Error('KI-Dienst Kommunikationsfehler');
-      err.code = 'AI_COMMUNICATION_ERROR';
-      err.status = 503;
-      throw err;
+      throw makeClientError('KI-Dienst Kommunikationsfehler', 'AI_COMMUNICATION_ERROR', 503);
     }
 
     // Handle 401 in Jeton mode: isolated per caller, respects parallel refresh
-    if (res.status === 401 && cfg.mode === 'jeton' && !hasRefreshedJeton401) {
+    if (res.status === 401 && cfg.mode === 'jeton' && !hasRefreshedJeton401 && jetonClient) {
       hasRefreshedJeton401 = true;
-      const rejectedToken = jetonAuth?.token;
+      const rejectedToken = (/** @type {JetonAuthToken | null} */ (jetonAuth))?.token;
       jetonClient.invalidate(rejectedToken);
       target = await resolveTarget({ forceRefresh: true, rejectedToken });
       continue;
     }
 
     if (res.status === 401) {
-      const err = new Error('KI-Dienst nicht verfügbar (Authentifizierung fehlgeschlagen)');
-      err.code = 'AI_UNAVAILABLE';
-      err.status = 503;
-      throw err;
+      throw makeClientError('KI-Dienst nicht verfügbar (Authentifizierung fehlgeschlagen)', 'AI_UNAVAILABLE', 503);
     }
 
     // Handle 429 Rate Limit / Backpressure
     if (res.status === 429) {
       if (attempts429 >= MAX_429_RETRIES) {
-        const err = new Error('KI-Dienst überlastet (Ratenbegrenzung)');
-        err.code = 'AI_RATE_LIMIT_EXCEEDED';
-        err.status = 503;
-        throw err;
+        throw makeClientError('KI-Dienst überlastet (Ratenbegrenzung)', 'AI_RATE_LIMIT_EXCEEDED', 503);
       }
 
       if (active429Waiters >= MAX_429_QUEUE) {
-        const err = new Error('KI-Dienst überlastet (Warteschlange voll)');
-        err.code = 'AI_QUEUE_FULL';
-        err.status = 503;
-        throw err;
+        throw makeClientError('KI-Dienst überlastet (Warteschlange voll)', 'AI_QUEUE_FULL', 503);
       }
 
       const retryAfterHeader = res.headers?.get ? res.headers.get('retry-after') : null;
@@ -568,47 +557,34 @@ async function executeTransport({
 
     if (!res.ok) {
       // Consume body safely raced with signal
-      await raceSignal(res.text().catch(() => ''), signal, 'KI-Anfrage abgebrochen').catch(() => '');
-      const err = new Error('KI-Dienst nicht verfügbar');
-      err.code = res.status === 403 ? 'AI_FORBIDDEN' : 'AI_UNAVAILABLE';
-      err.status = 503;
-      throw err;
+      await raceSignal(Promise.resolve(res.text()).catch(() => ''), signal, 'KI-Anfrage abgebrochen').catch(() => '');
+      throw makeClientError('KI-Dienst nicht verfügbar', res.status === 403 ? 'AI_FORBIDDEN' : 'AI_UNAVAILABLE', 503);
     }
 
+    /** @type {any} */
     let json;
     try {
-      json = await raceSignal(res.json(), signal, 'KI-Anfrage abgebrochen');
+      json = await raceSignal(Promise.resolve(res.json()), signal, 'KI-Anfrage abgebrochen');
     } catch (parseErr) {
-      if (parseErr.name === 'AbortError' || signal.aborted) throw parseErr;
-      const err = new Error('KI-Antwort konnte nicht verarbeitet werden');
-      err.code = 'AI_RESPONSE_MALFORMED';
-      err.status = 503;
-      throw err;
+      const parseErrName = parseErr && typeof parseErr === 'object' && 'name' in parseErr ? parseErr.name : undefined;
+      if (parseErrName === 'AbortError' || signal.aborted) throw parseErr;
+      throw makeClientError('KI-Antwort konnte nicht verarbeitet werden', 'AI_RESPONSE_MALFORMED', 503);
     }
 
     const choices = json?.choices;
     if (!Array.isArray(choices) || choices.length === 0) {
-      const err = new Error('KI-Antwort konnte nicht verarbeitet werden');
-      err.code = 'AI_RESPONSE_MALFORMED';
-      err.status = 503;
-      throw err;
+      throw makeClientError('KI-Antwort konnte nicht verarbeitet werden', 'AI_RESPONSE_MALFORMED', 503);
     }
 
     const choice = choices[0];
     if (typeof choice?.message?.content !== 'string') {
-      const err = new Error('KI-Antwort konnte nicht verarbeitet werden');
-      err.code = 'AI_RESPONSE_MALFORMED';
-      err.status = 503;
-      throw err;
+      throw makeClientError('KI-Antwort konnte nicht verarbeitet werden', 'AI_RESPONSE_MALFORMED', 503);
     }
     const content = choice.message.content;
 
     const rawUsage = json?.usage;
     if (!rawUsage || typeof rawUsage !== 'object') {
-      const err = new Error('KI-Antwort enthält ungültige Nutzungsdaten');
-      err.code = 'AI_RESPONSE_MALFORMED';
-      err.status = 503;
-      throw err;
+      throw makeClientError('KI-Antwort enthält ungültige Nutzungsdaten', 'AI_RESPONSE_MALFORMED', 503);
     }
 
     const pt = Number(rawUsage.prompt_tokens);
@@ -620,10 +596,7 @@ async function executeTransport({
       !Number.isInteger(ct) || ct < 0 ||
       !Number.isInteger(tt) || tt < 0
     ) {
-      const err = new Error('KI-Antwort enthält ungültige Nutzungsdaten');
-      err.code = 'AI_RESPONSE_MALFORMED';
-      err.status = 503;
-      throw err;
+      throw makeClientError('KI-Antwort enthält ungültige Nutzungsdaten', 'AI_RESPONSE_MALFORMED', 503);
     }
 
     const usage = {
@@ -633,7 +606,7 @@ async function executeTransport({
     };
 
     let safeModel = target.deployment;
-    if (['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini'].includes(json?.model)) {
+    if (typeof json?.model === 'string' && ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini'].includes(json.model)) {
       safeModel = json.model;
     }
 
@@ -652,7 +625,7 @@ async function executeTransport({
  * Returns safe summary of the AI configuration.
  * Metadata whitelisted for type, length, control characters.
  *
- * @param {Object} [customConfig] optional config override for testing
+ * @param {Record<string, any>} [customConfig] optional config override for testing
  * @returns {{
  *   endpoint: string,
  *   deployment: string,
@@ -719,19 +692,7 @@ export function configSummary(customConfig) {
 /**
  * Call Azure OpenAI audio transcription service.
  *
- * @param {Object} opts
- * @param {Buffer|Uint8Array} opts.audioBuffer Audio data
- * @param {string} [opts.mimeType='audio/webm']
- * @param {string} [opts.deployment] deployment override
- * @param {boolean} [opts.mock=false]
- * @param {Function} [opts.mockFn]
- * @param {Object} [opts.config]
- * @param {Function} [opts.configProvider]
- * @param {Function} [opts.fetchImpl=globalThis.fetch]
- * @param {Object} [opts.jetonClient]
- * @param {Function} [opts.beforeSend]
- * @param {AbortSignal} [opts.signal]
- * @param {number} [opts.timeoutMs=DEFAULT_TIMEOUT_MS]
+ * @param {TranscribeOptions} [opts]
  * @returns {Promise<{text: string, usage: {prompt_tokens: number, completion_tokens: number, total_tokens: number}, model: string, deployment: string, dry_run: boolean, latency_ms: number}>}
  */
 export async function transcribe(opts = {}) {
@@ -755,12 +716,9 @@ export async function transcribe(opts = {}) {
   // 1. Explicit mock handling
   if (mock) {
     if (typeof mockFn !== 'function') {
-      const err = new Error('Expliziter Mock erfordert eine mockFn-Funktion');
-      err.code = 'AI_MOCK_FN_REQUIRED';
-      err.status = 500;
-      throw err;
+      throw makeClientError('Expliziter Mock erfordert eine mockFn-Funktion', 'AI_MOCK_FN_REQUIRED', 500);
     }
-    const res = mockFn({ audioBuffer, mimeType });
+    const res = /** @type {any} */ (mockFn({ audioBuffer, mimeType }));
     const textStr = typeof res === 'string' ? res : (typeof res?.text === 'string' ? res.text : '');
     return {
       text: textStr,
@@ -777,41 +735,26 @@ export async function transcribe(opts = {}) {
 
   // 3. Mode 'aus' gate
   if (cfg.mode === 'aus') {
-    const err = new Error('KI-Dienst ist deaktiviert');
-    err.code = 'AI_MODE_AUS';
-    err.status = 503;
-    throw err;
+    throw makeClientError('KI-Dienst ist deaktiviert', 'AI_MODE_AUS', 503);
   }
 
   // 4. Operator readiness gate
   if (!cfg.activationReady) {
-    const err = new Error('KI-Dienst ist nicht betriebsbereit geschaltet');
-    err.code = 'AI_NOT_ACTIVATED';
-    err.status = 503;
-    throw err;
+    throw makeClientError('KI-Dienst ist nicht betriebsbereit geschaltet', 'AI_NOT_ACTIVATED', 503);
   }
 
   // 5. Config validity check
   if (!cfg.valid) {
-    const err = new Error('KI-Konfiguration ist ungültig');
-    err.code = cfg.code || 'AI_CONFIG_INVALID';
-    err.status = 503;
-    throw err;
+    throw makeClientError('KI-Konfiguration ist ungültig', cfg.code || 'AI_CONFIG_INVALID', 503);
   }
 
   // 6. Audio validation
   if (!audioBuffer || (!Buffer.isBuffer(audioBuffer) && !(audioBuffer instanceof Uint8Array))) {
-    const err = new Error('Ungültige Audiodaten');
-    err.code = 'AI_PAYLOAD_INVALID';
-    err.status = 400;
-    throw err;
+    throw makeClientError('Ungültige Audiodaten', 'AI_PAYLOAD_INVALID', 400);
   }
 
   if (audioBuffer.length > 10 * 1024 * 1024) {
-    const err = new Error('Audiodatei überschreitet das Limit von 10 MB');
-    err.code = 'AI_PAYLOAD_TOO_LARGE';
-    err.status = 413;
-    throw err;
+    throw makeClientError('Audiodatei überschreitet das Limit von 10 MB', 'AI_PAYLOAD_TOO_LARGE', 413);
   }
 
   // 7. Timeout handling
@@ -820,18 +763,16 @@ export async function transcribe(opts = {}) {
     timeoutController.abort(new DOMException('KI-Anfrage Zeitüberschreitung', 'TimeoutError'));
   }, timeoutMs);
 
+  /** @type {AbortSignal} */
   let combinedSignal;
+  /** @type {(() => void) | null} */
   let combinedCleanup = null;
   if (typeof AbortSignal.any === 'function' && externalSignal) {
     combinedSignal = AbortSignal.any([externalSignal, timeoutController.signal]);
   } else if (externalSignal) {
     if (externalSignal.aborted) {
       clearTimeout(timeoutId);
-      const abortErr = new Error('KI-Anfrage abgebrochen');
-      abortErr.name = 'AbortError';
-      abortErr.code = 'AI_ABORTED';
-      abortErr.status = 499;
-      throw abortErr;
+      throw makeClientError('KI-Anfrage abgebrochen', 'AI_ABORTED', 499, 'AbortError');
     }
     const combinedController = new AbortController();
     const forwardAbort = () => combinedController.abort(new DOMException('KI-Anfrage abgebrochen', 'AbortError'));
@@ -866,18 +807,15 @@ export async function transcribe(opts = {}) {
       t0
     });
   } catch (err) {
-    if (err.name === 'TimeoutError' || (combinedSignal.aborted && combinedSignal.reason?.name === 'TimeoutError')) {
-      const timeoutErr = new Error('KI-Anfrage Zeitüberschreitung');
-      timeoutErr.code = 'AI_TIMEOUT';
-      timeoutErr.status = 503;
-      throw timeoutErr;
+    const errName = err && typeof err === 'object' && 'name' in err ? err.name : undefined;
+    const reasonName = combinedSignal.reason && typeof combinedSignal.reason === 'object' && 'name' in combinedSignal.reason
+      ? combinedSignal.reason.name
+      : undefined;
+    if (errName === 'TimeoutError' || (combinedSignal.aborted && reasonName === 'TimeoutError')) {
+      throw makeClientError('KI-Anfrage Zeitüberschreitung', 'AI_TIMEOUT', 503);
     }
-    if (err.name === 'AbortError' || combinedSignal.aborted) {
-      const abortErr = new Error('KI-Anfrage abgebrochen');
-      abortErr.name = 'AbortError';
-      abortErr.code = 'AI_ABORTED';
-      abortErr.status = 499;
-      throw abortErr;
+    if (errName === 'AbortError' || combinedSignal.aborted) {
+      throw makeClientError('KI-Anfrage abgebrochen', 'AI_ABORTED', 499, 'AbortError');
     }
     throw err;
   } finally {
@@ -886,6 +824,19 @@ export async function transcribe(opts = {}) {
   }
 }
 
+/**
+ * @param {{
+ *   cfg: Record<string, any>,
+ *   audioBuffer: Buffer | Uint8Array,
+ *   mimeType: string,
+ *   deploymentOverride: string | undefined,
+ *   fetchImpl: (url: string, init: Record<string, any>) => Promise<any>,
+ *   jetonClient: JetonClientLike | null,
+ *   beforeSend: (() => boolean | Promise<boolean>) | undefined,
+ *   signal: AbortSignal,
+ *   t0: number
+ * }} params
+ */
 async function executeTranscribeTransport({
   cfg,
   audioBuffer,
@@ -897,50 +848,40 @@ async function executeTranscribeTransport({
   signal,
   t0
 }) {
+  /** @type {JetonAuthToken | null} */
   let jetonAuth = null;
   let hasRefreshedJeton401 = false;
 
+  /**
+   * @param {{ forceRefresh?: boolean, rejectedToken?: string }} [opts]
+   * @returns {Promise<ResolvedTarget>}
+   */
   async function resolveTranscribeTarget(opts = {}) {
     if (cfg.mode === 'jeton') {
       if (!jetonClient) {
-        const err = new Error('Jeton-Client nicht initialisiert');
-        err.code = 'AI_JETON_UNAVAILABLE';
-        err.status = 503;
-        throw err;
+        throw makeClientError('Jeton-Client nicht initialisiert', 'AI_JETON_UNAVAILABLE', 503);
       }
-      jetonAuth = await raceSignal(jetonClient.getToken({ signal, ...opts }), signal);
+      jetonAuth = /** @type {JetonAuthToken} */ (await raceSignal(jetonClient.getToken({ signal, ...opts }), signal));
 
       if (!jetonAuth || typeof jetonAuth !== 'object' || typeof jetonAuth.token !== 'string' || jetonAuth.token.length < 10 || jetonAuth.token.length > 4096 || RE_CONTROL_CHARS.test(jetonAuth.token)) {
-        const err = new Error('Token ungültig'); err.code = 'AI_AUTH_INVALID'; err.status = 503; throw err;
+        throw makeClientError('Token ungültig', 'AI_AUTH_INVALID', 503);
       }
 
       const epVal = validateEndpointUrl(jetonAuth.endpoint, cfg.allowedHosts);
-      if (!epVal.ok) {
-        const err = new Error('Jeton-Endpunkt unzulässig');
-        err.code = 'AI_HOST_NOT_ALLOWED';
-        err.status = 503;
-        throw err;
+      if (!epVal.ok || !epVal.cleanEndpoint) {
+        throw makeClientError('Jeton-Endpunkt unzulässig', 'AI_HOST_NOT_ALLOWED', 503);
       }
 
       const targetDeployment = jetonAuth.deploymentTranscribe;
       if (!targetDeployment) {
-        const err = new Error('Transkription ist nicht eingerichtet');
-        err.code = 'AI_TRANSKRIPTION_NICHT_EINGERICHTET';
-        err.status = 503;
-        throw err;
+        throw makeClientError('Transkription ist nicht eingerichtet', 'AI_TRANSKRIPTION_NICHT_EINGERICHTET', 503);
       }
       if (!RE_SAFE_SEGMENT.test(targetDeployment)) {
-        const err = new Error('Deploymentname ist ungültig');
-        err.code = 'AI_DEPLOYMENT_INVALID';
-        err.status = 503;
-        throw err;
+        throw makeClientError('Deploymentname ist ungültig', 'AI_DEPLOYMENT_INVALID', 503);
       }
 
       if (deploymentOverride && deploymentOverride !== targetDeployment) {
-        const err = new Error('Deploymentkonflikt in Jeton-Modus');
-        err.code = 'AI_DEPLOYMENT_MISMATCH';
-        err.status = 400;
-        throw err;
+        throw makeClientError('Deploymentkonflikt in Jeton-Modus', 'AI_DEPLOYMENT_MISMATCH', 400);
       }
 
       return {
@@ -955,32 +896,20 @@ async function executeTranscribeTransport({
 
     // Direct mode
     const epVal = validateEndpointUrl(cfg.endpoint, cfg.allowedHosts);
-    if (!epVal.ok) {
-      const err = new Error('Endpunkt unzulässig');
-      err.code = epVal.code || 'AI_HOST_NOT_ALLOWED';
-      err.status = 503;
-      throw err;
+    if (!epVal.ok || !epVal.cleanEndpoint) {
+      throw makeClientError('Endpunkt unzulässig', epVal.code || 'AI_HOST_NOT_ALLOWED', 503);
     }
 
     const targetDeployment = deploymentOverride || cfg.transcribeDeployment;
     if (!targetDeployment) {
-      const err = new Error('Transkription ist nicht eingerichtet');
-      err.code = 'AI_TRANSKRIPTION_NICHT_EINGERICHTET';
-      err.status = 503;
-      throw err;
+      throw makeClientError('Transkription ist nicht eingerichtet', 'AI_TRANSKRIPTION_NICHT_EINGERICHTET', 503);
     }
     if (!RE_SAFE_SEGMENT.test(targetDeployment)) {
-      const err = new Error('Deploymentname ist ungültig');
-      err.code = 'AI_DEPLOYMENT_INVALID';
-      err.status = 503;
-      throw err;
+      throw makeClientError('Deploymentname ist ungültig', 'AI_DEPLOYMENT_INVALID', 503);
     }
 
     if (RE_CONTROL_CHARS.test(cfg.apiKey)) {
-      const err = new Error('API-Key enthält unzulässige Steuerzeichen');
-      err.code = 'AI_AUTH_INVALID';
-      err.status = 503;
-      throw err;
+      throw makeClientError('API-Key enthält unzulässige Steuerzeichen', 'AI_AUTH_INVALID', 503);
     }
 
     return {
@@ -998,11 +927,7 @@ async function executeTranscribeTransport({
 
   while (true) {
     if (signal.aborted) {
-      const abortErr = new Error('KI-Anfrage abgebrochen');
-      abortErr.name = 'AbortError';
-      abortErr.code = 'AI_ABORTED';
-      abortErr.status = 499;
-      throw abortErr;
+      throw makeClientError('KI-Anfrage abgebrochen', 'AI_ABORTED', 499, 'AbortError');
     }
 
     const url = `${target.endpoint.replace(/\/+$/, '')}/openai/deployments/${encodeURIComponent(target.deployment)}/audio/transcriptions?api-version=${target.apiVersion}`;
@@ -1010,18 +935,16 @@ async function executeTranscribeTransport({
     if (typeof beforeSend === 'function') {
       const permitted = await raceSignal(Promise.resolve().then(beforeSend), signal);
       if (permitted !== true) {
-        const err = new Error('KI-Freigabe nicht verfügbar');
-        err.code = 'AI_OWNER_DISABLED';
-        err.status = 503;
-        throw err;
+        throw makeClientError('KI-Freigabe nicht verfügbar', 'AI_OWNER_DISABLED', 503);
       }
     }
 
     const formData = new FormData();
     const filename = mimeType && mimeType.includes('ogg') ? 'audio.ogg' : (mimeType && mimeType.includes('mp4') ? 'audio.mp4' : 'audio.webm');
-    formData.append('file', new Blob([audioBuffer], { type: mimeType || 'audio/webm' }), filename);
+    formData.append('file', new Blob([/** @type {BlobPart} */ (/** @type {unknown} */ (audioBuffer))], { type: mimeType || 'audio/webm' }), filename);
     formData.append('language', 'de');
 
+    /** @type {any} */
     let res;
     try {
       const fetchPromise = fetchImpl(url, {
@@ -1035,37 +958,29 @@ async function executeTranscribeTransport({
       });
       res = await raceSignal(fetchPromise, signal, 'KI-Anfrage abgebrochen');
     } catch (fetchErr) {
-      if (fetchErr.name === 'AbortError' || signal.aborted) {
+      const fetchErrName = fetchErr && typeof fetchErr === 'object' && 'name' in fetchErr ? fetchErr.name : undefined;
+      if (fetchErrName === 'AbortError' || signal.aborted) {
         throw fetchErr;
       }
-      const err = new Error('KI-Dienst Kommunikationsfehler');
-      err.code = 'AI_COMMUNICATION_ERROR';
-      err.status = 503;
-      throw err;
+      throw makeClientError('KI-Dienst Kommunikationsfehler', 'AI_COMMUNICATION_ERROR', 503);
     }
 
     // Handle 401 in Jeton mode: retry once
-    if (res.status === 401 && cfg.mode === 'jeton' && !hasRefreshedJeton401) {
+    if (res.status === 401 && cfg.mode === 'jeton' && !hasRefreshedJeton401 && jetonClient) {
       hasRefreshedJeton401 = true;
-      const rejectedToken = jetonAuth?.token;
+      const rejectedToken = (/** @type {JetonAuthToken | null} */ (jetonAuth))?.token;
       jetonClient.invalidate(rejectedToken);
       target = await resolveTranscribeTarget({ forceRefresh: true, rejectedToken });
       continue;
     }
 
     if (res.status === 401) {
-      const err = new Error('KI-Dienst nicht verfügbar (Authentifizierung fehlgeschlagen)');
-      err.code = 'AI_UNAVAILABLE';
-      err.status = 503;
-      throw err;
+      throw makeClientError('KI-Dienst nicht verfügbar (Authentifizierung fehlgeschlagen)', 'AI_UNAVAILABLE', 503);
     }
 
     if (res.status === 429) {
       if (attempts429 >= MAX_429_RETRIES) {
-        const err = new Error('KI-Dienst überlastet (Ratenbegrenzung)');
-        err.code = 'AI_RATE_LIMIT_EXCEEDED';
-        err.status = 503;
-        throw err;
+        throw makeClientError('KI-Dienst überlastet (Ratenbegrenzung)', 'AI_RATE_LIMIT_EXCEEDED', 503);
       }
       attempts429++;
       let delayMs = 1000;
@@ -1080,21 +995,16 @@ async function executeTranscribeTransport({
     }
 
     if (!res.ok) {
-      const err = new Error('KI-Dienst nicht verfügbar');
-      err.code = 'AI_UNAVAILABLE';
-      err.status = 503;
-      throw err;
+      throw makeClientError('KI-Dienst nicht verfügbar', 'AI_UNAVAILABLE', 503);
     }
 
     let rawText = '';
     try {
-      rawText = await raceSignal(res.text(), signal, 'KI-Anfrage abgebrochen');
+      rawText = await raceSignal(Promise.resolve(res.text()), signal, 'KI-Anfrage abgebrochen');
     } catch (bodyErr) {
-      if (bodyErr.name === 'AbortError' || signal.aborted) throw bodyErr;
-      const err = new Error('KI-Antwort konnte nicht empfangen werden');
-      err.code = 'AI_COMMUNICATION_ERROR';
-      err.status = 503;
-      throw err;
+      const bodyErrName = bodyErr && typeof bodyErr === 'object' && 'name' in bodyErr ? bodyErr.name : undefined;
+      if (bodyErrName === 'AbortError' || signal.aborted) throw bodyErr;
+      throw makeClientError('KI-Antwort konnte nicht empfangen werden', 'AI_COMMUNICATION_ERROR', 503);
     }
 
     let parsedText = '';

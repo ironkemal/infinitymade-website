@@ -18,15 +18,22 @@ const DATUM = /^\d{4}-\d{2}-\d{2}$/;
 export const NAEGEL = ['U1 links', 'U2 links', 'U3 links', 'U4 links', 'U5 links',
   'U1 rechts', 'U2 rechts', 'U3 rechts', 'U4 rechts', 'U5 rechts'];   // Spiegel von prescriptions_nagel_check
 
+/** @param {any} d */
 const tag = (d) => (DATUM.test(String(d || '').slice(0, 10)) ? String(d).slice(0, 10) : null);
 
 /**
- * @param {object} lead  Zeile aus `leads` mit den podo_vorgeschichte_*-Spalten
- * @returns {Array<{behandlungsdatum:string, hpnr_codes:string[], nagel:?string, vorgeschichte:true}>}
+ * @typedef {{behandlungsdatum:string, hpnr_codes:string[], nagel:string|null, vorgeschichte:true}} VorgeschichteBehandlung
+ */
+
+/**
+ * @param {any} lead  Zeile aus `leads` mit den podo_vorgeschichte_*-Spalten
+ * @returns {VorgeschichteBehandlung[]}
  */
 export function vorgeschichteAlsBehandlungen(lead) {
   if (!lead) return [];
+  /** @type {VorgeschichteBehandlung[]} */
   const out = [];
+  /** @param {any} am @param {string[]} codes @param {string|null} [nagel] */
   const add = (am, codes, nagel = null) => { const d = tag(am); if (d) out.push({ behandlungsdatum: d, hpnr_codes: codes, nagel, vorgeschichte: true }); };
   // Erste Behandlung: zählt für „nicht die erste Behandlung" (78040-Anspruch), ohne Code.
   add(lead.podo_vorgeschichte_erste_beh_am, []);
@@ -47,7 +54,9 @@ export function vorgeschichteAlsBehandlungen(lead) {
  * Eine Abfrage für alle vier Historien-Lader (Abrechnung, Rezeptmaske, Termin-Einheiten,
  * Befundungsvorschlag) — fonksiyon-ustasi 21.10.2026: nur einer sah die Vorgeschichte,
  * die anderen boten dem Altsystem-Patienten weiter 78040 an.
- * @returns {Promise<Array>} [] ohne Patient/Treffer
+ * @param {any} sb
+ * @param {{ ownerId?: string | null, leadId?: string | null }} opts
+ * @returns {Promise<VorgeschichteBehandlung[]>} [] ohne Patient/Treffer
  */
 export async function ladeVorgeschichte(sb, { ownerId, leadId }) {
   if (!sb || !ownerId || !leadId) return [];
@@ -59,10 +68,14 @@ export async function ladeVorgeschichte(sb, { ownerId, leadId }) {
 
 /**
  * Prüft und normalisiert Eingaben für die Vorgeschichte (Import, Formular).
- * @returns {{werte: object, fehler: string[]}}  `werte` nur mit gültigen Feldern
+ * @param {{ ersteBeh?: any, am78040?: any, am78100?: any, naegel?: Record<string, any> }} [opts]
+ * @param {string} [heute]
+ * @returns {{werte: Record<string, any>, fehler: string[]}}  `werte` nur mit gültigen Feldern
  */
 export function pruefeVorgeschichte({ ersteBeh, am78040, am78100, naegel } = {}, heute = new Date().toISOString().slice(0, 10)) {
+  /** @type {string[]} */
   const fehler = [];
+  /** @param {any} roh @param {string} name */
   const d = (roh, name) => {
     if (roh == null || roh === '') return null;
     const t = tag(roh);
@@ -70,17 +83,20 @@ export function pruefeVorgeschichte({ ersteBeh, am78040, am78100, naegel } = {},
     if (t > heute) { fehler.push(`${name}: liegt in der Zukunft`); return null; }
     return t;
   };
+  /** @type {Record<string, any>} */
   const werte = {};
   const e = d(ersteBeh, 'Erste Behandlung'); if (e) werte.podo_vorgeschichte_erste_beh_am = e;
   const a = d(am78040, '78040'); if (a) werte.podo_vorgeschichte_78040_am = a;
   const b = d(am78100, 'Letzte 78100'); if (b) werte.podo_vorgeschichte_78100_am = b;
   if (e && a && a < e) fehler.push('78040 liegt vor der ersten Behandlung');
+  /** @type {Record<string, any>} */
   const n = {};
   for (const [nagel, v] of Object.entries(naegel || {})) {
     if (!NAEGEL.includes(nagel)) { fehler.push(`Nagel „${nagel}" unbekannt`); continue; }
     const eb = v?.erstbefundung?.code ? { code: String(v.erstbefundung.code), am: d(v.erstbefundung.am, `${nagel} Erstbefundung`) } : null;
     if (eb && !['78100', '78110'].includes(eb.code)) { fehler.push(`${nagel}: Erstbefundung muss 78100 oder 78110 sein`); continue; }
     const ab = d(v?.abschluss_78520_am, `${nagel} Abschluss 78520`);
+    /** @type {Record<string, any>} */
     const eintrag = {};
     if (eb?.am) eintrag.erstbefundung = eb;
     if (ab) eintrag.abschluss_78520_am = ab;

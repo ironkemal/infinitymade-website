@@ -75,8 +75,8 @@ test('entscheideFaxVersand: SaaS, kein SMTP, kein Muster, keine Faxnummer, erfol
 test('Rechnung per Mail: Inhaber ja; Mitarbeiter nur mit Modulrecht abrechnung der Praxis (fail closed)', async () => {
   const inv = { owner_id: 'o1', business_id: 'b1' };
   const owner = { userId: 'o1', role: 'owner' }; const emp = { userId: 'e1', role: 'employee' };
-  const mit = (module, has_access = true) => async () => ({ data: [{ module, has_access }, { module: 'calendar', has_access: true }], error: null });
-  let aufrufe = 0; const zaehle = (f) => async (...a) => { aufrufe += 1; return f(...a); };
+  const mit = (/** @type {string} */ module, has_access = true) => async () => ({ data: [{ module, has_access }, { module: 'calendar', has_access: true }], error: null });
+  let aufrufe = 0; const zaehle = (/** @type {any} */ f) => async (/** @type {any[]} */ ...a) => { aufrufe += 1; return f(...a); };
   assert.equal(await abrechnungRechtFuerRechnung(owner, inv, null, zaehle(mit('abrechnung'))), true, 'Inhaber ohne Rechteabfrage');
   assert.equal(aufrufe, 0, 'Inhaber braucht keine Abfrage');
   assert.equal(await abrechnungRechtFuerRechnung(emp, inv, 'tok', mit('abrechnung')), true, 'Mitarbeiter mit Recht');

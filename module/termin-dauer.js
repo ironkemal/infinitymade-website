@@ -67,8 +67,8 @@ export function mountTerminDauer() {
 
 /** Aktueller Wert des Dauer-Felds, in Minuten (0, wenn leer/ungueltig). */
 export function leseDauer() {
-  const el = document.getElementById('bkDurationValue');
-  const n = parseInt(el?.value, 10);
+  const el = /** @type {HTMLInputElement | null} */ (document.getElementById('bkDurationValue'));
+  const n = parseInt(/** @type {string} */ (el?.value), 10);
   return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
@@ -81,7 +81,7 @@ export function leseDauer() {
  * @param {string} [hinweis]  z.B. „aus 5 bisherigen Terminen" — steht klein unter dem Feld.
  */
 export function setzeDauer(minuten, hinweis = '') {
-  const el = document.getElementById('bkDurationValue');
+  const el = /** @type {HTMLInputElement | null} */ (document.getElementById('bkDurationValue'));
   const gruppe = document.getElementById('bkDurationGroup');
   if (!el) return;
   el.value = minuten > 0 ? String(minuten) : '';
@@ -117,6 +117,7 @@ export function dauerQuelle() {
   return _beruehrt ? 'manuell' : 'vorschlag';
 }
 
+/** @param {number[]} werte */
 function median(werte) {
   const sortiert = [...werte].sort((a, b) => a - b);
   const mitte = Math.floor(sortiert.length / 2);
@@ -129,7 +130,7 @@ function median(werte) {
  * Median der letzten TATSAECHLICH von Hand eingegebenen Dauern fuer genau
  * diese Leistung — oder `null`, wenn (noch) nicht genug davon da sind.
  *
- * @param {{supabase:object, ownerId:string, serviceId:string}} deps
+ * @param {{supabase:any, ownerId:string, serviceId:string}} deps
  * @returns {Promise<?{minuten:number, anzahl:number}>}
  */
 export async function gelernteDauer({ supabase, ownerId, serviceId }) {
@@ -152,25 +153,26 @@ export async function gelernteDauer({ supabase, ownerId, serviceId }) {
     .limit(HISTORIE_LIMIT * 2);
   if (!buchungen?.length) return null;
 
-  const ids = buchungen.map(b => b.id);
+  const ids = buchungen.map((/** @type {any} */ b) => b.id);
   const { data: zeilen } = await supabase.from('booking_leistungen')
     .select('booking_id')
     .in('booking_id', ids);
+  /** @type {Record<string, number>} */
   const anzahlProTermin = {};
-  (zeilen || []).forEach(z => {
+  (zeilen || []).forEach((/** @type {any} */ z) => {
     anzahlProTermin[z.booking_id] = (anzahlProTermin[z.booking_id] || 0) + 1;
   });
   // Termine ohne eigene booking_leistungen-Zeile sind aeltere Einzeltermine
   // (Tabelle seit 03.09.2026) — zaehlen als eine Leistung, nicht als Kombi.
 
   const einzeln = buchungen
-    .filter(b => (anzahlProTermin[b.id] || 1) <= 1)
+    .filter((/** @type {any} */ b) => (anzahlProTermin[b.id] || 1) <= 1)
     .slice(0, HISTORIE_LIMIT);
   if (einzeln.length < MINDEST_STICHPROBE) return null;
 
   const dauern = einzeln
-    .map(b => Math.round((new Date(b.end_time) - new Date(b.start_time)) / 60000))
-    .filter(d => d > 0 && d < 600); // >10h ist ein Datenfehler, kein Termin
+    .map((/** @type {any} */ b) => Math.round((/** @type {any} */ (new Date(b.end_time)) - /** @type {any} */ (new Date(b.start_time))) / 60000))
+    .filter((/** @type {number} */ d) => d > 0 && d < 600); // >10h ist ein Datenfehler, kein Termin
   if (dauern.length < MINDEST_STICHPROBE) return null;
 
   return { minuten: median(dauern), anzahl: dauern.length };

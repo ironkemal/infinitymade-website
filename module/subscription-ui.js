@@ -11,6 +11,11 @@
  * verbietet das ausserhalb weniger geprüfter Ausnahmen). Lösung: Buttons weg,
  * Kontakthinweis statt.
  */
+/**
+ * @param {object} params
+ * @param {boolean} params.istKutu
+ * @param {EventListener} params.portalRedirect
+ */
 export function wireAboButtons({ istKutu, portalRedirect }) {
   if (istKutu) {
     document.getElementById('subPortalBtn')?.remove();
@@ -18,6 +23,6 @@ export function wireAboButtons({ istKutu, portalRedirect }) {
     if (up) up.outerHTML = '<span style="font-size:13px;color:var(--text-muted)">Lizenz &amp; Vertrag: läuft direkt über Praxura · kontakt@praxura.de</span>';
     return;
   }
-  document.getElementById('subPortalBtn').addEventListener('click', portalRedirect);
-  document.getElementById('subUpgradeBtn').addEventListener('click', () => { window.location.href = '/onboarding.html?step=plan'; });
+  document.getElementById('subPortalBtn')?.addEventListener('click', portalRedirect);
+  document.getElementById('subUpgradeBtn')?.addEventListener('click', () => { window.location.href = '/onboarding.html?step=plan'; });
 }

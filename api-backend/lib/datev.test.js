@@ -41,6 +41,7 @@ test('Buchungen: Belegliste + GKV, Storno als Haben auf dem Konto des Originals,
   assert.equal(b[0].datum, '2026-04-01', 'Berliner Tag, nicht UTC');
   assert.equal(b[0].konto, '1000');
   const storno = b.find(x => x.belegfeld1 === '9');
+  assert.ok(storno);
   assert.equal(storno.sh, 'H');
   assert.equal(storno.betrag, 80);
   assert.equal(storno.gegenkonto, '8101');
@@ -71,7 +72,7 @@ test('EXTF: Kopf 31 Felder, 125 Spalten je Zeile, CRLF, Latin-1, Komma, TTMM', (
 });
 
 test('EXTF: Zeitraum über das Wirtschaftsjahr wird abgelehnt', () => {
-  assert.throws(() => erzeugeExtfCsv([], { einstellungen: E, von: '2026-12-01', bis: '2027-01-31' }), e => e.status === 400);
+  assert.throws(() => erzeugeExtfCsv([], { einstellungen: E, von: '2026-12-01', bis: '2027-01-31' }), (/** @param {unknown} e */ e) => (/** @type {{ status?: number }} */ (e))?.status === 400);
 });
 
 test('Spaltenüberschriften = Zeile 2 der offiziellen DATEV-Musterdatei (falls lokal vorhanden)', (t) => {

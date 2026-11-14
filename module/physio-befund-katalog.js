@@ -60,6 +60,7 @@ export const PALPATION = [
   { id: 'unauffaellig', label: 'unauffällig', exklusiv: true },
 ];
 
+/** @type {Record<string, Array<{ id: string, label: string, seitig: boolean, richtwert: string }>>} */
 export const ROM_BEWEGUNGEN = {
   HWS: [
     { id: 'flexion', label: 'Flexion', seitig: false, richtwert: '45°' },
@@ -102,6 +103,7 @@ export const ROM_BEWEGUNGEN = {
 };
 ROM_BEWEGUNGEN.Huefte = ROM_BEWEGUNGEN.Hüfte;
 
+/** @type {Record<string, Array<{ id: string, label: string, seitig: boolean }>>} */
 export const KRAFT_GRUPPEN = {
   HWS: [
     { id: 'flexoren', label: 'Flexoren', seitig: false },
@@ -133,6 +135,7 @@ export const KRAFT_GRUPPEN = {
 };
 KRAFT_GRUPPEN.Huefte = KRAFT_GRUPPEN.Hüfte;
 
+/** @type {Record<string, Array<{ id: string, label: string, seitig: boolean }>>} */
 export const TESTS = {
   HWS: [
     { id: 'spurling', label: 'Spurling', seitig: true },
@@ -196,6 +199,7 @@ export const ADL = [
   { id: 'ueberkopf', label: 'Überkopf' },
 ];
 
+/** @type {Record<string, string[]>} */
 export const ZIEL_VORSCHLAEGE = {
   HWS: [
     'Schmerzfreie Kopfrotation im Alltag (z. B. Schulterblick)',

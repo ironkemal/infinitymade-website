@@ -19,6 +19,7 @@ function getExtractedRouteRegion() {
     new URL('../../routes/abrechnung.routes.js', import.meta.url),
     new URL('../../src/routes/abrechnung.routes.js', import.meta.url),
   ];
+  /** @type {string | null} */
   let fullSource = null;
   for (const u of candidateUrls) {
     try {
@@ -56,20 +57,22 @@ const quietConsole = {
   error: () => {},
 };
 
+/** @param {Buffer | string} buf */
 function sha256Hex(buf) {
   return createHash('sha256').update(buf).digest('hex');
 }
 
 function createMockRes() {
+  /** @type {{ statusCode: number, body: any, _calledWith: any, status: (code: number) => any, json: (data: any) => any }} */
   const res = {
     statusCode: 200,
     body: null,
     _calledWith: null,
-    status(code) {
+    status(/** @type {number} */ code) {
       res.statusCode = code;
       return res;
     },
-    json(data) {
+    json(/** @type {any} */ data) {
       res.body = data;
       res._calledWith = { status: res.statusCode, body: data };
       return res;
@@ -79,14 +82,24 @@ function createMockRes() {
 }
 
 class RouteMockSupabase {
+  /** @param {{ abrechnungen?: any[], prescriptions?: any[] }} [opts] */
   constructor({ abrechnungen = [], prescriptions = [] } = {}) {
+    /** @type {Map<string, any>} */
     this.abrechnungen = new Map(abrechnungen.map((a) => [a.id, { ...a }]));
+    /** @type {Map<string, any>} */
     this.prescriptions = new Map(prescriptions.map((p) => [p.id, { status: 'confirmed', ...p }]));
+    /** @type {any[]} */
     this.prescriptionValidations = [];
+    /** @type {Map<string, any>} */
     this.storageFiles = new Map();
+    /** @type {any[]} */
     this.storageUploads = [];
+    /** @type {any[]} */
     this.storageRemoves = [];
+    /** @type {any[] | undefined} */
+    this.registrierungen = undefined;
     this.tick = 1;
+    /** @type {Record<string, boolean>} */
     this.mockConfig = {
       failDtaUpload: false,
       failAuftragUpload: false,
@@ -103,14 +116,17 @@ class RouteMockSupabase {
       claimPhysicallyAssignsThenThrows: false,
       claimPartialListWithHiddenAssigned: false,
       publicationCommitsThenReturnsError: false,
+      transferClaimBeforeRollback: false,
     };
   }
 
   get storage() {
     const self = this;
     return {
+      /** @param {string} bucket */
       from(bucket) {
         return {
+          /** @param {string} path @param {any} buffer @param {any} opts */
           upload: async (path, buffer, opts) => {
             self.storageUploads.push({ bucket, path, buffer, opts });
             if (self.mockConfig.failDtaUpload && path.endsWith('.dta')) {
@@ -125,6 +141,7 @@ class RouteMockSupabase {
             self.storageFiles.set(path, buffer);
             return { data: { path }, error: null };
           },
+          /** @param {string[]} paths */
           remove: async (paths) => {
             self.storageRemoves.push({ bucket, paths: [...paths] });
             if (self.mockConfig.failStorageRemove) {
@@ -140,11 +157,13 @@ class RouteMockSupabase {
     };
   }
 
+  /** @param {string} table */
   from(table) {
     const self = this;
 
     if (table === 'prescription_validations') {
       return {
+        /** @param {any[]} rows */
         insert: async (rows) => {
           self.prescriptionValidations.push(...rows);
           return { error: null };
@@ -154,8 +173,10 @@ class RouteMockSupabase {
 
     if (table === 'abrechnung') {
       return {
+        /** @param {Record<string, any>} insertPayload */
         insert(insertPayload) {
           return {
+            /** @param {string} fields */
             select(fields) {
               return {
                 single: async () => {
@@ -166,6 +187,7 @@ class RouteMockSupabase {
                   const nowStr = `2026-10-04 10:49:19.${String(self.tick++).padStart(6, '0')}`;
                   const versionFields = ABRECHNUNG_VERSION_FELDER.split(',').map((f) => f.trim());
                   const base = Object.fromEntries(versionFields.map((f) => [f, null]));
+                  /** @type {Record<string, any>} */
                   const row = {
                     ...base,
                     business_id: 'biz-test-1',
@@ -184,22 +206,29 @@ class RouteMockSupabase {
             },
           };
         },
+        /** @param {Record<string, any>} patch */
         update(patch) {
+          /** @type {Array<{ type: string, col: string, val: any }>} */
           const filters = [];
+          /** @type {string | null} */
           let selectedFields = null;
           const builder = {
+            /** @param {string} col @param {any} val */
             eq(col, val) {
               filters.push({ type: 'eq', col, val });
               return builder;
             },
+            /** @param {string} col @param {any} val */
             is(col, val) {
               filters.push({ type: 'is', col, val });
               return builder;
             },
+            /** @param {string} fields */
             select(fields) {
               selectedFields = fields;
               return builder;
             },
+            /** @param {any} onFulfilled @param {any} [onRejected] */
             then(onFulfilled, onRejected) {
               const promise = (async () => {
                 await Promise.resolve();
@@ -248,34 +277,46 @@ class RouteMockSupabase {
 
     if (table === 'prescriptions') {
       return {
+        /** @param {Record<string, any>} patch */
         update(patch) {
+          /** @type {Array<{ col: string, vals: any[] }>} */
           const inFilters = [];
+          /** @type {Array<{ col: string, val: any }>} */
           const eqFilters = [];
+          /** @type {Array<{ col: string, val: any }>} */
           const neqFilters = [];
+          /** @type {string | null} */
           let orFilter = null;
+          /** @type {string | null} */
           let selectFields = null;
 
           const builder = {
+            /** @param {string} col @param {any[]} vals */
             in(col, vals) {
               inFilters.push({ col, vals: [...vals] });
               return builder;
             },
+            /** @param {string} col @param {any} val */
             eq(col, val) {
               eqFilters.push({ col, val });
               return builder;
             },
+            /** @param {string} col @param {any} val */
             neq(col, val) {
               neqFilters.push({ col, val });
               return builder;
             },
+            /** @param {string} filterStr */
             or(filterStr) {
               orFilter = filterStr;
               return builder;
             },
+            /** @param {string} fields */
             select(fields) {
               selectFields = fields;
               return builder;
             },
+            /** @param {any} onFulfilled @param {any} [onRejected] */
             then(onFulfilled, onRejected) {
               const promise = (async () => {
                 await Promise.resolve();
@@ -315,6 +356,7 @@ class RouteMockSupabase {
                   }
 
                   if (self.mockConfig.claimPartialListWithHiddenAssigned) {
+                    /** @type {any[]} */
                     const matched = [];
                     for (const [id, row] of self.prescriptions.entries()) {
                       let match = true;
@@ -336,6 +378,7 @@ class RouteMockSupabase {
                   }
                 }
 
+                /** @type {any[]} */
                 const matched = [];
                 for (const [id, row] of self.prescriptions.entries()) {
                   let match = true;
@@ -383,8 +426,12 @@ class RouteMockSupabase {
   }
 }
 
+/**
+ * @param {RouteMockSupabase} supabase
+ * @param {(buf: Buffer | string) => string} sha256HexFn
+ */
 function createSpeichereAuftragsdatei(supabase, sha256HexFn) {
-  return async function speichereAuftragsdatei({ dta, verzeichnis, upsert = true }) {
+  return async function speichereAuftragsdatei(/** @type {{ dta: any, verzeichnis: string, upsert?: boolean }} */ { dta, verzeichnis, upsert = true }) {
     if (!dta?.auftragsdatei) return { pfad: null, groesse: null, sha256: null, fehler: 'nicht erzeugt' };
     const puffer = Buffer.from(dta.auftragsdatei, 'latin1');
     const pfad = `${verzeichnis}/${dta.filename}.auf`;
@@ -398,6 +445,11 @@ function createSpeichereAuftragsdatei(supabase, sha256HexFn) {
   };
 }
 
+/**
+ * @param {RouteMockSupabase} supabase
+ * @param {Record<string, any>} [overrides]
+ * @returns {Record<string, any>}
+ */
 function buildTestContext(supabase, overrides = {}) {
   const tenantId = 'tenant-test-001';
   const kostentraegerIk = '109999999';
@@ -480,7 +532,7 @@ function buildTestContext(supabase, overrides = {}) {
     cert: { ik_nummer: '123456789' },
     nameParts: () => ({ vorname: 'Max', nachname: 'Mustermann' }),
     verordnungFestschreiben: () => true,
-    abrechnungStatusAusStatus: (s) => (s === 'abgerechnet' ? 'abgerechnet' : (s || 'abrechenbar')),
+    abrechnungStatusAusStatus: (/** @type {any} */ s) => (s === 'abgerechnet' ? 'abgerechnet' : (s || 'abrechenbar')),
     einreichbarFilterAbrechnungStatus: () => 'abrechnung_status.is.null,abrechnung_status.eq.abrechenbar',
     sha256Hex,
     randomUUID,
@@ -490,7 +542,7 @@ function buildTestContext(supabase, overrides = {}) {
     pruefeEntwurfsVersion,
     aktualisiereArtefaktVersion,
     bereinigeUnveroeffentlichtenEntwurf,
-    registriereVeroeffentlicht: async (a) => { (supabase.registrierungen ||= []).push(a); return { ok: true, angelegt: a.dateien.length }; },
+    registriereVeroeffentlicht: async (/** @type {any} */ a) => { (supabase.registrierungen ||= []).push(a); return { ok: true, angelegt: a.dateien.length }; },
     speichereAuftragsdatei,
     baueBegleitzettel,
     ...overrides,
@@ -499,6 +551,11 @@ function buildTestContext(supabase, overrides = {}) {
   return context;
 }
 
+/**
+ * @param {string} regionCode
+ * @param {Record<string, any>} context
+ * @returns {Promise<any>}
+ */
 async function executeRouteSnippet(regionCode, context) {
   const keys = Object.keys(context);
   const values = Object.values(context);
@@ -536,9 +593,10 @@ test('happyfullpublicationONLYafterclaims, filesupsertfalse unique', async () =>
 
   assert.equal(supabase.storageUploads.length, 3, 'Genau 3 Dateien muessen hochgeladen werden');
   // M1.16: nach der Veroeffentlichung werden genau die drei Dateien der Registry gemeldet.
-  assert.equal(supabase.registrierungen?.length, 1, 'Nachregistrierung genau einmal');
-  assert.deepEqual(supabase.registrierungen[0].dateien.map(d => d.role).sort(), ['auftrag', 'begleit', 'dta']);
-  assert.ok(supabase.registrierungen[0].dateien.every(d => typeof d.pfad === 'string' && d.pfad.length > 0));
+  assert.ok(supabase.registrierungen);
+  assert.equal(supabase.registrierungen.length, 1, 'Nachregistrierung genau einmal');
+  assert.deepEqual(supabase.registrierungen[0].dateien.map((/** @type {any} */ d) => d.role).sort(), ['auftrag', 'begleit', 'dta']);
+  assert.ok(supabase.registrierungen[0].dateien.every((/** @type {any} */ d) => typeof d.pfad === 'string' && d.pfad.length > 0));
   for (const up of supabase.storageUploads) {
     assert.equal(up.opts.upsert, false, 'Jeder Upload muss strikt mit upsert: false erfolgen');
   }
@@ -736,7 +794,7 @@ test('snapshotmustfull', async () => {
     async () => {
       await executeRouteSnippet(EXTRACTED_REGION, ctx);
     },
-    (err) => {
+    (/** @type {any} */ err) => {
       assert.equal(err.status || err.statusCode, 409);
       assert.equal(err.code, 'ABRECHNUNG_VERSION_CONFLICT');
       return true;

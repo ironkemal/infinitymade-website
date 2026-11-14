@@ -28,22 +28,22 @@ test('Terminal-Pflicht bleibt ohne --fenster bestehen', () => {
 });
 
 test('frage() liest im Fenster-Modus nur von fd 3 und bricht bei EOF ab', () => {
-  const f = sh.match(/\nfrage\(\) \{[\s\S]*?\n\}\n/)[0];
+  const f = sh.match(/\nfrage\(\) \{[\s\S]*?\n\}\n/)?.[0] ?? '';
   assert.match(f, /read -r "\$1" <&3/);
   assert.match(f, /fail "Einrichtung abgebrochen"/);
 });
 
 test('reveal_once schreibt nie ins Log, im Fenster-Modus als GEHEIM-Zeile', () => {
-  const r = sh.match(/\nreveal_once\(\) \{[\s\S]*?\n\}\n/)[0];
+  const r = sh.match(/\nreveal_once\(\) \{[\s\S]*?\n\}\n/)?.[0] ?? '';
   assert.ok(!/\btee\b|LOG_FILE/.test(r.replace(/#.*$/gm, '')));
   assert.match(r, /@@PRAXURA GEHEIM/);
 });
 
 test('install.ps1: GEHEIM-Zeilen nur in den Schlüssel-Dialog, Antworten nur über stdin', () => {
-  const box = ps.match(/function BoxImFenster \{[\s\S]*?\n\}\n/)[0];
+  const box = ps.match(/function BoxImFenster \{[\s\S]*?\n\}\n/)?.[0] ?? '';
   assert.match(box, /StartsWith\('@@PRAXURA GEHEIM/);
   assert.ok(!/GEHEIM[^\n]*(Log |Enqueue)/.test(box), 'GEHEIM darf nicht ins Protokoll');
-  const args = box.match(/\$psi\.Arguments = (.*)/)[1];
+  const args = box.match(/\$psi\.Arguments = (.*)/)?.[1] ?? '';
   assert.ok(!/\$antwort|\$code|\$geheim/i.test(args), 'keine Antwort in der Kommandozeile');
   assert.match(box, /RedirectStandardInput = \$true/);
   assert.match(ps, /'gesichert'[\s\S]*?-abbrechbar \$false[\s\S]*?-eq 'GESICHERT'/);

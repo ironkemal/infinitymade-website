@@ -13,16 +13,21 @@ import { pruefeStufe, LEVEL_DAYS } from '../mahnwesen/stufe.js';
 import { gespeicherteAusfallFaelligkeit, ausfallIstFaellig } from '../ausfall/faelligkeit.js';
 
 const router = express.Router();
+/** @type {import('@supabase/supabase-js').SupabaseClient<any>} */
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  /** @type {string} */ (process.env.SUPABASE_URL),
+  /** @type {string} */ (process.env.SUPABASE_SERVICE_ROLE_KEY),
   { auth: { persistSession: false } }
 );
 
 // ---------- shared auth helper ----------
 
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 async function resolveAuth(req, res) {
-  const token = req.headers.authorization?.slice(7);
+  const token = typeof req.headers.authorization === 'string' ? req.headers.authorization.slice(7) : '';
   if (!token) { res.status(401).json({ error: 'Missing bearer token' }); return null; }
 
   const { data: u, error: uErr } = await supabase.auth.getUser(token);
@@ -44,6 +49,10 @@ async function resolveAuth(req, res) {
 
 // ---------- neue_faelligkeit helper ----------
 
+/**
+ * @param {string | number | Date} date
+ * @param {number} days
+ */
 function addDays(date, days) {
   const d = new Date(date);
   d.setUTCDate(d.getUTCDate() + days);
@@ -57,7 +66,7 @@ function addDays(date, days) {
 // überschritten ist. Beide Forderungsarten in einer Liste, unterschieden durch
 // das Feld `art`.
 // ============================================================================
-router.get('/mahnwesen/offene', async (req, res) => {
+router.get('/mahnwesen/offene', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
@@ -88,6 +97,7 @@ router.get('/mahnwesen/offene', async (req, res) => {
     //    Ein Fehler bei dieser Abfrage darf NICHT durchrutschen: ohne Belege
     //    saehe jedes Rezept unbezahlt aus und alle Patienten bekaemen eine
     //    Mahnung.
+    /** @type {any[]} */
     let paidEntries = [];
     if (rxIds.length > 0) {
       const { data, error: belegErr } = await supabase
@@ -128,6 +138,7 @@ router.get('/mahnwesen/offene', async (req, res) => {
 
     // 4. Bisherige Mahnungen zu beiden Forderungsarten
     const afIds = afFaellig.map(a => a.id);
+    /** @type {any[]} */
     let mahnungen = [];
     if (rxIds.length > 0 || afIds.length > 0) {
       const filter = [
@@ -164,7 +175,8 @@ router.get('/mahnwesen/offene', async (req, res) => {
     }
 
     // 5. Build response — exclude paid prescriptions
-    const result = (rxRows || [])
+    /** @type {any[]} */
+    const result = (/** @type {any[]} */ (rxRows || []))
       .filter(rx => !paidRxIds.has(rx.id))
       .map(rx => ({
         art: 'zuzahlung',
@@ -184,7 +196,7 @@ router.get('/mahnwesen/offene', async (req, res) => {
         latest_mahnung:   latestMahnung.get(rx.id) || null,
       }));
 
-    for (const af of afFaellig) {
+    for (const af of /** @type {any[]} */ (afFaellig)) {
       result.push({
         art: 'ausfall',
         id: af.id,
@@ -208,7 +220,7 @@ router.get('/mahnwesen/offene', async (req, res) => {
     return res.json(result);
   } catch (e) {
     console.error('[mahnwesen/offene]', e);
-    return res.status(500).json({ error: e.message || 'Server error' });
+    return res.status(500).json({ error: (e instanceof Error ? e.message : '') || 'Server error' });
   }
 });
 
@@ -217,7 +229,7 @@ router.get('/mahnwesen/offene', async (req, res) => {
 // Body: { prescriptionId, level } ODER { ausfallrechnungId, level }
 // Genau eine der beiden Quellen. Returns text/html Mahnung letter.
 // ============================================================================
-router.post('/mahnwesen/create', async (req, res) => {
+router.post('/mahnwesen/create', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
@@ -236,7 +248,14 @@ router.post('/mahnwesen/create', async (req, res) => {
     const istAusfall = !!ausfallrechnungId;
 
     // 1. Forderung laden und prüfen
-    let rx = null, af = null, patientRow = null, quelleId = null;
+    /** @type {any} */
+    let rx = null;
+    /** @type {any} */
+    let af = null;
+    /** @type {any} */
+    let patientRow = null;
+    /** @type {string | null} */
+    let quelleId = null;
 
     if (istAusfall) {
       const { data, error } = await supabase
@@ -289,9 +308,10 @@ router.post('/mahnwesen/create', async (req, res) => {
 
     const stufenPruefung = pruefeStufe(level, bisherige || []);
     if (!stufenPruefung.ok) return res.status(400).json({ error: stufenPruefung.fehler });
-    const lvl = stufenPruefung.stufe;
+    const lvl = /** @type {number} */ (stufenPruefung.stufe);
 
     // 2. Fetch owner profile for praxis details (may differ from logged-in employee)
+    /** @type {any} */
     let praxisProfile = profile;
     if (profile.role === 'employee' && profile.owner_id) {
       const { data: ownerProf } = await supabase
@@ -304,14 +324,14 @@ router.post('/mahnwesen/create', async (req, res) => {
 
     // 3. Compute neue_faelligkeit
     const now = new Date();
-    const daysToAdd = LEVEL_DAYS[lvl] ?? 14;
+    const daysToAdd = /** @type {Record<number, number>} */ (LEVEL_DAYS)[lvl] ?? 14;
     const neue_faelligkeit = addDays(now, daysToAdd);
 
     // Ursprüngliche Fälligkeit und Rechnungsnummer je Forderungsart.
     // Zuzahlung: Ausstellungsdatum + 14 Tage. Ausfall: ausschließlich die
     // bei Ausstellung gespeicherte Fälligkeit, unabhängig von aktuellen Vorlagen.
     const original_faelligkeit = istAusfall
-      ? gespeicherteAusfallFaelligkeit(af)
+      ? /** @type {Date} */ (gespeicherteAusfallFaelligkeit(af))
       : (rx.ausstellungsdatum ? addDays(new Date(rx.ausstellungsdatum), 14) : now);
 
     const original_rechnung_nr = istAusfall
@@ -382,7 +402,7 @@ router.post('/mahnwesen/create', async (req, res) => {
 
     const html = renderMahnung({
       // Ersatz-E-Mail nur für den druckenden Inhaber, nie die eines Mitarbeiters (KHS §4 Snapshot (v)).
-      praxis: praxisKopf(praxisProfile, { ersatzEmail: praxisProfile.id === user.id ? user.email : '' }),
+      praxis: praxisKopf(praxisProfile, { ersatzEmail: praxisProfile.id === user.id ? (user.email || '') : '' }),
       patient: {
         vorname:  patientRow?.first_name || '',
         nachname: patientRow?.last_name  || '',
@@ -405,7 +425,7 @@ router.post('/mahnwesen/create', async (req, res) => {
     return res.send(html);
   } catch (e) {
     console.error('[mahnwesen/create]', e);
-    return res.status(500).json({ error: e.message || 'Server error' });
+    return res.status(500).json({ error: (e instanceof Error ? e.message : '') || 'Server error' });
   }
 });
 
@@ -418,7 +438,7 @@ router.post('/mahnwesen/create', async (req, res) => {
 // PATCH /billing/ausfall/:id/status gebucht — nur dort entsteht der
 // GoBD-Beleglisteneintrag. Würde hier mitgezogen, fehlte der Beleg.
 // ============================================================================
-router.patch('/mahnwesen/:id/status', async (req, res) => {
+router.patch('/mahnwesen/:id/status', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
@@ -452,7 +472,7 @@ router.patch('/mahnwesen/:id/status', async (req, res) => {
     return res.json({ ok: true });
   } catch (e) {
     console.error('[mahnwesen/status]', e);
-    return res.status(500).json({ error: e.message || 'Server error' });
+    return res.status(500).json({ error: (e instanceof Error ? e.message : '') || 'Server error' });
   }
 });
 

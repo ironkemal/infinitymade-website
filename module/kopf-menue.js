@@ -9,7 +9,13 @@
  * Escape schließt mit Fokus zurück, Klick außerhalb oder Fokus raus schließt.
  */
 
-/** Reine Hilfe (testbar): nächster Index beim Wandern mit Pfeiltasten (rundum). */
+/**
+ * Reine Hilfe (testbar): nächster Index beim Wandern mit Pfeiltasten (rundum).
+ * @param {number} jetzt
+ * @param {number} schritt
+ * @param {number} anzahl
+ * @returns {number}
+ */
 export function naechsterIndex(jetzt, schritt, anzahl) {
   if (!anzahl) return -1;
   if (jetzt < 0) return schritt > 0 ? 0 : anzahl - 1;
@@ -20,7 +26,8 @@ export function naechsterIndex(jetzt, schritt, anzahl) {
  * @param {object} o
  * @param {string} o.klasse        Grundklasse, z. B. 'px-profil' → Hülle `${klasse}-wrap`, Feld `${klasse}-menue`, Einträge `${klasse}-eintrag`
  * @param {string} o.id            id des Feldes (für aria-controls)
- * @param {(api) => void} o.fuellen  baut den Inhalt; api.eintrag(text, symbolHtml, handeln, href?) liefert einen Eintrag
+ * @param {(api: { menue: HTMLElement, eintrag: (text: string, symbol?: string, handeln?: ((e: Event) => void) | null, href?: string) => HTMLElement }) => void} o.fuellen  baut den Inhalt; api.eintrag(text, symbolHtml, handeln, href?) liefert einen Eintrag
+ * @param {() => boolean} [o.aktiv]
  * @returns {{ wrap: HTMLElement, knopf: HTMLButtonElement, menue: HTMLElement, schliesse: Function }}
  */
 export function kopfMenue({ klasse, id, fuellen, aktiv = () => true }) {
@@ -41,7 +48,7 @@ export function kopfMenue({ klasse, id, fuellen, aktiv = () => true }) {
 
   const eintraege = () => [...menue.querySelectorAll(`.${klasse}-eintrag`)];
   // R-22 (Codex, V2.08): Fokus ohne die App zu verschieben, im (scrollenden) Feld sichtbar machen.
-  const zeige = (el) => { if (!el) return; el.focus({ preventScroll: true }); el.scrollIntoView?.({ block: 'nearest' }); };
+  const zeige = (/** @type {Element | null | undefined} */ el) => { if (!el) return; /** @type {HTMLElement} */ (el).focus({ preventScroll: true }); el.scrollIntoView?.({ block: 'nearest' }); };
 
   function schliesse({ fokusZurueck = false } = {}) {
     if (menue.hidden) return;
@@ -50,11 +57,19 @@ export function kopfMenue({ klasse, id, fuellen, aktiv = () => true }) {
     if (fokusZurueck) knopf.focus({ preventScroll: true });
   }
 
+  /**
+   * @param {string} text
+   * @param {string} [symbol]
+   * @param {((e: Event) => void) | null} [handeln]
+   * @param {string} [href]
+   * @returns {HTMLElement}
+   */
   function eintrag(text, symbol, handeln, href) {
-    const el = document.createElement(href ? 'a' : 'button');
+    const el = href ? document.createElement('a') : document.createElement('button');
     el.className = `${klasse}-eintrag`;
     el.setAttribute('role', 'menuitem');
-    if (href) el.href = href; else el.type = 'button';
+    if (href && el instanceof HTMLAnchorElement) el.href = href;
+    else if (el instanceof HTMLButtonElement) el.type = 'button';
     el.innerHTML = symbol || '';
     const s = document.createElement('span');
     s.textContent = text;
@@ -76,7 +91,7 @@ export function kopfMenue({ klasse, id, fuellen, aktiv = () => true }) {
   document.addEventListener('keydown', (e) => {
     if (menue.hidden) return;
     const liste = eintraege();
-    const i = liste.indexOf(document.activeElement);
+    const i = document.activeElement ? liste.indexOf(document.activeElement) : -1;
     let ziel = -2;
     if (e.key === 'Escape') { e.preventDefault(); schliesse({ fokusZurueck: true }); return; }
     if (e.key === 'ArrowDown') ziel = naechsterIndex(i, 1, liste.length);
@@ -87,8 +102,8 @@ export function kopfMenue({ klasse, id, fuellen, aktiv = () => true }) {
     e.preventDefault();
     zeige(liste[ziel]);
   });
-  document.addEventListener('pointerdown', (e) => { if (!wrap.contains(e.target)) schliesse(); }, true);
-  document.addEventListener('focusin', (e) => { if (!wrap.contains(e.target)) schliesse(); });
+  document.addEventListener('pointerdown', (e) => { if (e.target instanceof Node && !wrap.contains(e.target)) schliesse(); }, true);
+  document.addEventListener('focusin', (e) => { if (e.target instanceof Node && !wrap.contains(e.target)) schliesse(); });
 
   return { wrap, knopf, menue, schliesse };
 }

@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import pg from 'pg';
 
+/** @param {any} config */
 export async function proveConcurrentWrites(config) {
   const a = new pg.Client(config), b = new pg.Client(config);
   await a.connect(); await b.connect();
@@ -21,7 +22,7 @@ export async function proveConcurrentWrites(config) {
     await new Promise(resolve => setTimeout(resolve, 100));
     assert.equal(done, false, 'second payment must wait for row lock');
     await a.query('COMMIT');
-    assert.equal((await secondPay).code, '23514');
+    assert.equal((/** @type {any} */ (await secondPay)).code, '23514');
     assert.equal((await a.query("SELECT count(*)::int n FROM belegliste WHERE owner_id=$1 AND type='ausfall'", [owner])).rows[0].n, 1);
     assert.equal((await a.query('SELECT status FROM ausfallrechnungen WHERE id=$1', [af])).rows[0].status, 'bezahlt');
 
@@ -35,7 +36,7 @@ export async function proveConcurrentWrites(config) {
     await new Promise(resolve => setTimeout(resolve,100));
     assert.equal(done,false,'second approval must wait for request lock');
     await a.query('COMMIT');
-    assert.equal((await secondApproval).code,'40001');
+    assert.equal((/** @type {any} */ (await secondApproval)).code,'40001');
     assert.equal((await a.query('SELECT count(*)::int n FROM bookings WHERE owner_id=$1',[owner])).rows[0].n,1);
     assert.equal((await a.query('SELECT status FROM booking_requests WHERE id=$1',[request])).rows[0].status,'approved');
     console.log('PASS parallel payment: one journal; parallel approval: one booking; second writers blocked then rejected');

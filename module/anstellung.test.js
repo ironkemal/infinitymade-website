@@ -89,7 +89,7 @@ test('F. ladeArbeitstage und ladeAnstellung werfen bei Datenbankfehler nicht und
       select: () => ({
         eq: () => ({
           maybeSingle: async () => ({ data: null, error: new Error('DB nicht erreichbar') }),
-          then: (resolve) => resolve({ data: null, error: new Error('DB nicht erreichbar') }),
+          then: (/** @type {any} */ resolve) => resolve({ data: null, error: new Error('DB nicht erreichbar') }),
         }),
       }),
     }),
@@ -127,10 +127,10 @@ test('F. ladeArbeitstage und ladeAnstellung werfen bei Datenbankfehler nicht und
   });
 
   // Ohne Supabase / empId
-  const tageLeer = await ladeArbeitstage({});
+  const tageLeer = await ladeArbeitstage(/** @type {any} */ ({}));
   assert.deepEqual(tageLeer, new Set([1, 2, 3, 4, 5]));
 
-  const anstellungLeer = await ladeAnstellung({});
+  const anstellungLeer = await ladeAnstellung(/** @type {any} */ ({}));
   assert.deepEqual(anstellungLeer, {
     beschaeftigung: 'vollzeit',
     wochenstunden: null,
@@ -163,7 +163,7 @@ test('G. pruefeAnstellung: 19,5 wird 19.5, leere Stunden null, 81 Stunden und 61
   // 81 Stunden abgewiesen
   const res81 = pruefeAnstellung({ beschaeftigung: 'vollzeit', wochenstunden: 81, urlaubJahrestage: 30 });
   assert.equal(res81.ok, false);
-  assert.match(res81.meldung, /Wochenstunden/);
+  assert.match(res81.meldung || '', /Wochenstunden/);
 
   const resMinusStd = pruefeAnstellung({ beschaeftigung: 'vollzeit', wochenstunden: -1, urlaubJahrestage: 30 });
   assert.equal(resMinusStd.ok, false);
@@ -171,7 +171,7 @@ test('G. pruefeAnstellung: 19,5 wird 19.5, leere Stunden null, 81 Stunden und 61
   // 61 Tage abgewiesen
   const res61 = pruefeAnstellung({ beschaeftigung: 'vollzeit', wochenstunden: 40, urlaubJahrestage: 61 });
   assert.equal(res61.ok, false);
-  assert.match(res61.meldung, /Urlaubsanspruch/);
+  assert.match(res61.meldung || '', /Urlaubsanspruch/);
 
   const resMinusTage = pruefeAnstellung({ beschaeftigung: 'vollzeit', wochenstunden: 40, urlaubJahrestage: -1 });
   assert.equal(resMinusTage.ok, false);
@@ -179,7 +179,7 @@ test('G. pruefeAnstellung: 19,5 wird 19.5, leere Stunden null, 81 Stunden und 61
   // unbekannte Beschäftigung abgewiesen
   const resUnbekannt = pruefeAnstellung({ beschaeftigung: 'freiberufler', wochenstunden: 40, urlaubJahrestage: 30 });
   assert.equal(resUnbekannt.ok, false);
-  assert.match(resUnbekannt.meldung, /Vollzeit oder Teilzeit/);
+  assert.match(resUnbekannt.meldung || '', /Vollzeit oder Teilzeit/);
 
   const resLeerBeschaeftigung = pruefeAnstellung({ beschaeftigung: '', wochenstunden: 40, urlaubJahrestage: 30 });
   assert.equal(resLeerBeschaeftigung.ok, false);
@@ -187,14 +187,15 @@ test('G. pruefeAnstellung: 19,5 wird 19.5, leere Stunden null, 81 Stunden und 61
 
 test('H. speichereAnstellung schickt employee_id, owner_id und nutzt onConflict employee_id', async () => {
   let capturedTable = null;
+  /** @type {any} */
   let capturedPayload = null;
   let capturedOptions = null;
 
   const mockSupabase = {
-    from: (table) => {
+    from: (/** @type {any} */ table) => {
       capturedTable = table;
       return {
-        upsert: async (payload, options) => {
+        upsert: async (/** @type {any} */ payload, /** @type {any} */ options) => {
           capturedPayload = payload;
           capturedOptions = options;
           return { data: payload, error: null };
@@ -214,11 +215,11 @@ test('H. speichereAnstellung schickt employee_id, owner_id und nutzt onConflict 
 
   assert.equal(res.ok, true);
   assert.equal(capturedTable, 'mitarbeiter_anstellung');
-  assert.equal(capturedPayload.owner_id, 'owner-uuid-1');
-  assert.equal(capturedPayload.employee_id, 'emp-uuid-2');
-  assert.equal(capturedPayload.beschaeftigung, 'teilzeit');
-  assert.equal(capturedPayload.wochenstunden, 19.5);
-  assert.equal(capturedPayload.urlaub_jahrestage, 28);
+  assert.equal(capturedPayload?.owner_id, 'owner-uuid-1');
+  assert.equal(capturedPayload?.employee_id, 'emp-uuid-2');
+  assert.equal(capturedPayload?.beschaeftigung, 'teilzeit');
+  assert.equal(capturedPayload?.wochenstunden, 19.5);
+  assert.equal(capturedPayload?.urlaub_jahrestage, 28);
   assert.deepEqual(capturedOptions, { onConflict: 'employee_id' });
 
   // Fehlerfall in Datenbank: liefert standardisierte Meldung
@@ -304,7 +305,7 @@ test('Lesefehler ist nicht „keine Zeile": das Formular darf echte Werte nicht 
 test('F7: IDs je Mitarbeiter eindeutig, Labels zeigen auf die eigene Karte', () => {
   const a = anstellungHtml({}, { istInhaber: true, idSuffix: 'emp-1' });
   const b = anstellungHtml({}, { istInhaber: true, idSuffix: 'emp-2' });
-  const ids = html => [...html.matchAll(/ id="([^"]+)"/g)].map(m => m[1]);
+  const ids = (/** @type {string} */ html) => [...html.matchAll(/ id="([^"]+)"/g)].map(m => m[1]);
   assert.equal(ids(a).filter(i => ids(b).includes(i)).length, 0);
   for (const i of ids(a).filter(i => !i.includes('Speichern'))) assert.ok(a.includes(`for="${i}"`), i);
   assert.ok(!anstellungHtml({}, { istInhaber: true, idSuffix: '"><x' }).includes('"><x'));
@@ -336,14 +337,14 @@ test('Urlaub ignoriert ungültige Datumsintervalle statt normalisierte Kalendert
 });
 
 test('Arbeitszeit-Status unterscheidet Fehler, fehlende Tage und verifizierte Tage', async () => {
-  const sb = result => ({ from: () => ({ select: () => ({ eq: async () => result }) }) });
-  const fehler = await ladeArbeitstage({supabase:sb({error:{message:'offline'}}),empId:'e',mitStatus:true});
+  const sb = (/** @type {any} */ result) => ({ from: () => ({ select: () => ({ eq: async () => result }) }) });
+  const fehler = /** @type {{ fehler: boolean, vorhanden: boolean, arbeitstage: Set<number> }} */ (await ladeArbeitstage({supabase:sb({error:{message:'offline'}}),empId:'e',mitStatus:true}));
   assert.equal(fehler.fehler,true); assert.equal(fehler.vorhanden,false); assert.equal(fehler.arbeitstage.size,0);
   for (const data of [[],[{day_of_week:1,is_active:false}]]) {
-    const leer = await ladeArbeitstage({supabase:sb({data}),empId:'e',mitStatus:true});
+    const leer = /** @type {{ fehler: boolean, vorhanden: boolean, arbeitstage: Set<number> }} */ (await ladeArbeitstage({supabase:sb({data}),empId:'e',mitStatus:true}));
     assert.equal(leer.fehler,false); assert.equal(leer.vorhanden,false); assert.equal(leer.arbeitstage.size,0);
   }
-  const gut = await ladeArbeitstage({supabase:sb({data:[{day_of_week:2,is_active:true}]}),empId:'e',mitStatus:true});
+  const gut = /** @type {{ fehler: boolean, vorhanden: boolean, arbeitstage: Set<number> }} */ (await ladeArbeitstage({supabase:sb({data:[{day_of_week:2,is_active:true}]}),empId:'e',mitStatus:true}));
   assert.equal(gut.vorhanden,true); assert.deepEqual(gut.arbeitstage,new Set([2]));
 });
 

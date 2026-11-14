@@ -95,13 +95,13 @@ test('ladeLetztePreise: filtert ZU-Zeilen über or-Filter aus', async () => {
   let capturedNeq = '';
   let capturedOr = '';
   const fakeSb = {
-    from(t) {
+    from(/** @type {string} */ t) {
       capturedTable = t;
       return {
         select() { return this; },
-        eq(col, val) { capturedEq = `${col}=${val}`; return this; },
-        neq(col, val) { capturedNeq = `${col}=${val}`; return this; },
-        or(filter) { capturedOr = filter; return this; },
+        eq(/** @type {string} */ col, /** @type {any} */ val) { capturedEq = `${col}=${val}`; return this; },
+        neq(/** @type {string} */ col, /** @type {any} */ val) { capturedNeq = `${col}=${val}`; return this; },
+        or(/** @type {string} */ filter) { capturedOr = filter; return this; },
         order() { return this; },
         limit() {
           return Promise.resolve({

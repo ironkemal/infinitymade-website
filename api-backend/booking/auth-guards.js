@@ -9,6 +9,10 @@ export { getCanonicalOwnerId, validateTherapist };
  * - is_internal === true ist ERLAUBT (interne Praxis-Leistungen können im Dashboard gebucht werden)
  * - Prüft kanonische Eigentümerschaft: service.owner_id ?? service.user_id
  * - Gibt { ok: true, service: row, canonicalOwnerId } zurück
+ *
+ * @param {{ from: (table: string) => any }} supabase
+ * @param {string | null | undefined} serviceId
+ * @param {string | null} [expectedTenantId=null]
  */
 export async function validateAuthenticatedService(supabase, serviceId, expectedTenantId = null) {
   if (!serviceId) return { ok: false, status: 400, error: 'Service not found' };
@@ -36,6 +40,10 @@ export async function validateAuthenticatedService(supabase, serviceId, expected
  * Fremde Therapeuten (auch inaktive) werden strikt abgewiesen.
  * Eigene, inzwischen inaktive Mitarbeiter sind ERLAUBT, damit historische Buchungen
  * storniert (cancelled) oder abgeschlossen (completed) werden können.
+ *
+ * @param {{ from: (table: string) => any }} supabase
+ * @param {string | null | undefined} therapistId
+ * @param {string | null | undefined} canonicalOwnerId
  */
 export async function validateExistingBookingTherapist(supabase, therapistId, canonicalOwnerId) {
   if (!therapistId) return { ok: true };

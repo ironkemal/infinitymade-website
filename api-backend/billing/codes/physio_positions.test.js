@@ -8,9 +8,13 @@ import {
 import assert from 'node:assert/strict';
 
 let pass = 0, fail = 0;
+/**
+ * @param {string} name
+ * @param {() => void} fn
+ */
 function test(name, fn) {
   try { fn(); console.log('  ok   ' + name); pass++; }
-  catch (e) { console.log('  FAIL ' + name + '\n       ' + e.message); fail++; }
+  catch (e) { console.log('  FAIL ' + name + '\n       ' + (e instanceof Error ? e.message : String(e))); fail++; }
 }
 
 console.log('physio_positions');
@@ -49,6 +53,7 @@ test('invalid format throws', () => {
 
 test('findPosition by template', () => {
   const p = findPosition('X0501', '22');
+  assert.ok(p);
   assert.equal(p.label, 'Allgemeine Krankengymnastik (KG) Einzel');
   assert.equal(p.preis, 29.63);
   assert.equal(p.positionsnummer, '20501');
@@ -56,12 +61,14 @@ test('findPosition by template', () => {
 
 test('findPosition by resolved code', () => {
   const p = findPosition('20702', '22');
+  assert.ok(p);
   assert.equal(p.label, 'KG-Muko Einzel');
   assert.equal(p.preis, 88.94);
 });
 
 test('findPosition KG-ZNS-Kinder has no Zuzahlung', () => {
   const p = findPosition('X0708', '22');
+  assert.ok(p);
   assert.equal(p.zuzahlung, null);
 });
 
@@ -75,6 +82,7 @@ test('all positions have valid X-template or numeric', () => {
 test('Hausbesuch flag set on X9922/X9950/X9951', () => {
   for (const code of ['X9922', 'X9950', 'X9951']) {
     const p = findPosition(code, '22');
+    assert.ok(p);
     assert.equal(p.hausbesuch, true, `${code} should be hausbesuch=true`);
   }
 });

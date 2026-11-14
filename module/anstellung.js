@@ -13,13 +13,13 @@ const STANDARD_ARBEITSTAGE = new Set([1, 2, 3, 4, 5]);
  * @returns {string}
  */
 function escapeHtml(s) {
-  return String(s ?? '').replace(/[&<>"']/g, c => ({
+  return String(s ?? '').replace(/[&<>"']/g, c => /** @type {string} */ (({
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
     '"': '&quot;',
     "'": '&#39;',
-  }[c]));
+  })[c]));
 }
 
 /**
@@ -78,10 +78,14 @@ export function arbeitstageImZeitraum(von, bis, arbeitstage) {
  * Keine Zeilen oder Fehler: Montag bis Freitag. Wirft nie.
  *
  * Mit mitStatus=true keine erfundene Mo–Fr-Vorgabe: { arbeitstage, fehler, vorhanden }.
- * @param {{ supabase: object, empId: string, mitStatus?: boolean }} params
+ * @param {{ supabase: any, empId: string, mitStatus?: boolean }} params
  * @returns {Promise<Set<number>|{arbeitstage:Set<number>,fehler:boolean,vorhanden:boolean}>}
  */
 export async function ladeArbeitstage({ supabase, empId, mitStatus = false }) {
+  /**
+   * @param {Set<number>} arbeitstage
+   * @param {boolean} [fehler]
+   */
   const ergebnis = (arbeitstage, fehler = false) => mitStatus
     ? { arbeitstage, fehler, vorhanden: !fehler && arbeitstage.size > 0 }
     : arbeitstage;
@@ -106,7 +110,7 @@ export async function ladeArbeitstage({ supabase, empId, mitStatus = false }) {
  * Liefert { anspruch, verbraucht, rest }, rest nie negativ.
  *
  * Optional jahr begrenzt auf das Kalenderjahr; jeder Arbeitstag zählt höchstens einmal.
- * @param {{ abwesenheiten?: Array<object>, anspruch?: number, arbeitstage?: Set<number>, jahr?: number }} params
+ * @param {{ abwesenheiten?: Array<{ type?: string, start_date?: string, end_date?: string } | any>, anspruch?: number, arbeitstage?: Set<number> | number[], jahr?: number }} [params]
  * @returns {{ anspruch: number, verbraucht: number, rest: number }}
  */
 export function urlaubsKennzahlen({ abwesenheiten, anspruch, arbeitstage, jahr } = {}) {
@@ -123,7 +127,7 @@ export function urlaubsKennzahlen({ abwesenheiten, anspruch, arbeitstage, jahr }
   const verbrauchteTage = new Set();
   const tage = arbeitstage instanceof Set && arbeitstage.size ? arbeitstage
     : Array.isArray(arbeitstage) && arbeitstage.length ? new Set(arbeitstage) : STANDARD_ARBEITSTAGE;
-  const begrenzt = Number.isInteger(jahr) && jahr >= 1000 && jahr <= 9999;
+  const begrenzt = typeof jahr === 'number' && Number.isInteger(jahr) && jahr >= 1000 && jahr <= 9999;
   const jahresVon = `${jahr}-01-01`, jahresBis = `${jahr}-12-31`;
   for (const eintrag of urlaubListe) {
     // Vor dem Clipping validieren, damit ungültige Grenzdaten nicht gültig werden.
@@ -157,8 +161,8 @@ export function urlaubsKennzahlen({ abwesenheiten, anspruch, arbeitstage, jahr }
  * Fehler oder keine Zeile: { beschaeftigung: 'vollzeit', wochenstunden: null, urlaub_jahrestage: 30, vorhanden: false }.
  * Sonst Zeile plus vorhanden: true. Wirft nie.
  *
- * @param {{ supabase: object, empId: string }} params
- * @returns {Promise<object>}
+ * @param {{ supabase: any, empId: string }} params
+ * @returns {Promise<any>}
  */
 export async function ladeAnstellung({ supabase, empId }) {
   const VORGABE = {
@@ -200,8 +204,8 @@ export async function ladeAnstellung({ supabase, empId }) {
  * Leere Wochenstunden werden null. Komma als Dezimaltrennzeichen wie '19,5' ist erlaubt.
  * Meldungen auf Deutsch.
  *
- * @param {{ beschaeftigung?: string, wochenstunden?: any, urlaubJahrestage?: any }} params
- * @returns {{ ok: boolean, werte?: object, meldung?: string }}
+ * @param {{ beschaeftigung?: string, wochenstunden?: any, urlaubJahrestage?: any }} [params]
+ * @returns {{ ok: boolean, werte?: any, meldung?: string }}
  */
 export function pruefeAnstellung({ beschaeftigung, wochenstunden, urlaubJahrestage } = {}) {
   const b = typeof beschaeftigung === 'string' ? beschaeftigung.trim() : '';
@@ -248,7 +252,7 @@ export function pruefeAnstellung({ beschaeftigung, wochenstunden, urlaubJahresta
  * Rückgabe { ok: true } oder { ok: false, meldung }.
  * Datenbankfehler: 'Anstellung konnte nicht gespeichert werden.' Wirft nie.
  *
- * @param {{ supabase: object, ownerId: string, employeeId: string, beschaeftigung: string, wochenstunden: any, urlaubJahrestage: any }} params
+ * @param {{ supabase: any, ownerId: string, employeeId: string, beschaeftigung: string, wochenstunden: any, urlaubJahrestage: any }} params
  * @returns {Promise<{ ok: boolean, meldung?: string }>}
  */
 export async function speichereAnstellung({
@@ -296,14 +300,14 @@ export async function speichereAnstellung({
  * Rein. Inhaber: Auswahl Beschäftigung (Vollzeit, Teilzeit), Feld Wochenstunden, Feld Urlaubsanspruch in Tagen, Knopf 'Speichern'.
  * Sonst nur lesbarer Text ohne Eingaben.
  *
- * @param {object} anstellung
- * @param {{ istInhaber?: boolean }} optionen
+ * @param {any} [anstellung]
+ * @param {{ istInhaber?: boolean, idSuffix?: string }} [optionen]
  * @returns {string} HTML
  */
 export function anstellungHtml(anstellung = {}, { istInhaber = false, idSuffix = '' } = {}) {
   // IDs je Mitarbeiter eindeutig: mehrere offene Karten duerfen sich nicht ueberdecken (Live-Test F7).
   const sfx = String(idSuffix || '').replace(/[^A-Za-z0-9_-]/g, '');
-  const id = name => `anstellung${name}${sfx ? `-${sfx}` : ''}`;
+  const id = (/** @type {string} */ name) => `anstellung${name}${sfx ? `-${sfx}` : ''}`;
   const beschaeftigung = anstellung?.beschaeftigung === 'teilzeit' ? 'teilzeit' : 'vollzeit';
   const beschaeftigungLabel = beschaeftigung === 'teilzeit' ? 'Teilzeit' : 'Vollzeit';
   const stundenText = anstellung?.wochenstunden != null
@@ -368,11 +372,11 @@ export function anstellungHtml(anstellung = {}, { istInhaber = false, idSuffix =
  * Baut die Oberfläche, lädt, speichert, ruft nach Erfolg nachSpeichern() auf.
  * Fehler stören den Rest der Seite nicht.
  *
- * @param {HTMLElement|object} container
- * @param {object} deps
- * @param {object} deps.supabase
- * @param {string} deps.ownerId
- * @param {string} deps.empId
+ * @param {HTMLElement|any} container
+ * @param {object} [deps]
+ * @param {any} [deps.supabase]
+ * @param {string} [deps.ownerId]
+ * @param {string} [deps.empId]
  * @param {boolean} [deps.istInhaber]
  * @param {(msg: string, typ?: string) => void} [deps.showToast]
  * @param {() => Promise<void>|void} [deps.nachSpeichern]
@@ -389,7 +393,7 @@ export async function mountAnstellung(container, deps = {}) {
   } = deps;
 
   try {
-    const anstellung = await ladeAnstellung({ supabase, empId });
+    const anstellung = await ladeAnstellung({ supabase, empId: /** @type {string} */ (empId) });
     if (anstellung.fehler) {
       container.innerHTML = '<p class="form-hint">Anstellung ist gerade nicht verfügbar.</p>';
       return;
@@ -417,15 +421,15 @@ export async function mountAnstellung(container, deps = {}) {
         try {
           const res = await speichereAnstellung({
             supabase,
-            ownerId,
-            employeeId: empId,
+            ownerId: /** @type {string} */ (ownerId),
+            employeeId: /** @type {string} */ (empId),
             beschaeftigung: beschaeftigungEl.value,
             wochenstunden: stundenEl.value,
             urlaubJahrestage: urlaubEl.value,
           });
 
           if (!res.ok) {
-            showToast(res.meldung, 'error');
+            showToast(res.meldung || 'Fehler beim Speichern', 'error');
             return;
           }
 

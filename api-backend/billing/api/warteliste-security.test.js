@@ -16,8 +16,15 @@ const source = fs.readFileSync(routeUrl, 'utf8')
   .replace('{ auth: { persistSession: false } }',
     '{ auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: globalThis.__wartelisteSyntheticFetch } }');
 
+/**
+ * @param {{ employee?: boolean, dbError?: string | null, largeList?: boolean }} [opts]
+ */
 async function setup({ employee = false, dbError = null, largeList = false } = {}) {
-  const writes = [], reads = [];
+  /** @type {any[]} */
+  const writes = [];
+  /** @type {any[]} */
+  const reads = [];
+  /** @type {Record<string, any[]>} */
   const tables = {
     profiles: [{id: 'owner-a', role: 'owner'}, {id: 'team-a', role: 'employee', owner_id: 'owner-a'}],
     leads: [{id:'lead-a', owner_id:'owner-a', first_name:'Own', phone:'own-phone'}, {id:'lead-b', owner_id:'owner-b', first_name:'SECRET', phone:'SECRET'}],
@@ -42,10 +49,11 @@ async function setup({ employee = false, dbError = null, largeList = false } = {
     }));
     tables.warteliste = tables.leads.map((lead, i) => ({ id: 'entry-' + i, owner_id: 'owner-a', lead_id: lead.id, status: 'waiting' }));
   }
+  /** @param {any} data @param {number} [status] */
   const response = (data, status = 200) => new Response(JSON.stringify(data), {
     status, headers: {'Content-Type':'application/json'},
   });
-  globalThis.__wartelisteSyntheticFetch = async (input, options = {}) => {
+  (/** @type {any} */ (globalThis)).__wartelisteSyntheticFetch = async (/** @type {any} */ input, /** @type {RequestInit} */ options = {}) => {
     const url = new URL(String(input));
     assert.equal(url.hostname, 'warteliste.synthetic.invalid', 'No real network allowed');
     assert.ok(String(input).length < 8000, 'IN-Abfragen müssen unter üblichen HTTP-URL-Limits bleiben');
@@ -56,7 +64,7 @@ async function setup({ employee = false, dbError = null, largeList = false } = {
         : response({message:'invalid token'}, 401);
     }
     assert.ok(url.pathname.startsWith('/rest/v1/'));
-    const table = url.pathname.split('/').at(-1);
+    const table = url.pathname.split('/').at(-1) || '';
     const method = options.method || 'GET';
     const projection = url.searchParams.get('select') || '*';
     reads.push({table, method, projection, url});
@@ -69,7 +77,7 @@ async function setup({ employee = false, dbError = null, largeList = false } = {
       assert.fail(`Unhandled SDK filter ${key}=${filter}`);
     }));
     if (method !== 'GET') {
-      const mutation = options.body ? JSON.parse(options.body) : {};
+      const mutation = options.body ? JSON.parse(String(options.body)) : {};
       writes.push({table, method, mutation, url});
       if (method === 'POST') rows = [{id:'new', ...mutation}];
       else if (method === 'PATCH') rows = rows.map(row => ({...row, ...mutation}));
@@ -77,6 +85,7 @@ async function setup({ employee = false, dbError = null, largeList = false } = {
     }
     rows = rows.map(row => {
       if (projection === '*') return {...row};
+      /** @type {Record<string, any>} */
       const projected = Object.fromEntries(projection.split(',').map(k => k.trim()).filter(k => Object.hasOwn(row, k)).map(k => [k, row[k]]));
       // Reproduce privileged embedded-join behavior if the regression returns.
       if (projection.includes('leads:lead_id')) projected.leads = tables.leads.find(l => l.id === row.lead_id) || null;
@@ -88,19 +97,29 @@ async function setup({ employee = false, dbError = null, largeList = false } = {
     }
     return response(rows);
   };
+  /** @type {any} */
   let router;
   try {
     ({default: router} = await import('data:text/javascript;base64,' + Buffer.from(source + `\n// setup ${importSequence++}`).toString('base64')));
   } finally {
-    delete globalThis.__wartelisteSyntheticFetch;
+    delete (/** @type {any} */ (globalThis)).__wartelisteSyntheticFetch;
   }
+  /**
+   * @param {string} method
+   * @param {string} path
+   * @param {Record<string, any>} [body]
+   * @param {string} [token]
+   * @param {string} [id]
+   * @returns {Promise<any>}
+   */
   async function call(method, path, body = {}, token = 'valid', id = 'entry-a') {
-    const res = {statusCode:200, status(n) {this.statusCode=n;return this;}, json(value) {this.body=value;return this;}};
+    /** @type {any} */
+    const res = {statusCode:200, status(/** @type {number} */ n) {this.statusCode=n;return this;}, json(/** @type {any} */ value) {this.body=value;return this;}};
     const req = {method:method.toUpperCase(),url:path.replace('/:id','/'+id),headers:{authorization:token ? 'Bearer '+token : undefined},body,query:{}};
-    await new Promise((resolve, reject) => {
+    await new Promise((/** @type {(value?: void) => void} */ resolve, reject) => {
       const json = res.json;
-      res.json = function(value) {json.call(this,value);resolve();return this;};
-      router.handle(req,res,error => error ? reject(error) : reject(new Error('Route did not respond')));
+      res.json = function(/** @type {any} */ value) {json.call(this,value);resolve();return this;};
+      router.handle(req,res,(/** @type {any} */ error) => error ? reject(error) : reject(new Error('Route did not respond')));
     });
     return res;
   }
@@ -118,9 +137,9 @@ for (const route of ['list','match']) test(`${route} never exposes forged lead/s
   const {call}=await setup();const r=await call(route==='list'?'get':'post',route==='list'?'/':'/match',{booking_id:'booking-a'});
   assert.equal(r.statusCode,200);assert.ok(!JSON.stringify(r.body).includes('SECRET'));
   const rows=route==='list'?r.body:r.body.candidates;
-  assert.equal(rows.find(r=>r.id==='forged').leads,null);
-  assert.equal(rows.find(r=>r.id==='entry-a').leads.first_name,'Own');
-  if(route==='list')assert.equal(rows.find(r=>r.id==='forged').services,null);
+  assert.equal(rows.find((/** @type {any} */ r)=>r.id==='forged').leads,null);
+  assert.equal(rows.find((/** @type {any} */ r)=>r.id==='entry-a').leads.first_name,'Own');
+  if(route==='list')assert.equal(rows.find((/** @type {any} */ r)=>r.id==='forged').services,null);
 });
 for(const employee of [false,true])for(const service of ['service-a','legacy-a'])test(`own refs allowed employee=${employee} service=${service}`,async()=>{
   const {call,writes}=await setup({employee});const r=await call('post','/',{lead_id:'lead-a',service_id:service});
@@ -154,12 +173,12 @@ for (const employee of [false, true]) test(`GET/match preserve own contacts and 
     const result = await call(method, path, {booking_id:'booking-a'});
     assert.equal(result.statusCode, 200);
     const rows = path === '/' ? result.body : result.body.candidates;
-    assert.ok(!rows.some(row => row.id === 'entry-b'));
-    assert.equal(rows.find(row => row.id === 'entry-a').leads.phone, 'own-phone');
+    assert.ok(!rows.some((/** @type {any} */ row) => row.id === 'entry-b'));
+    assert.equal(rows.find((/** @type {any} */ row) => row.id === 'entry-a').leads.phone, 'own-phone');
     if (path === '/') {
-      assert.deepEqual(rows.find(row => row.id === 'entry-a').services, {title:'Own',duration_minutes:30});
-      assert.deepEqual(rows.find(row => row.id === 'legacy').services, {title:'Legacy',duration_minutes:45});
-      assert.equal(rows.find(row => row.id === 'conflicting').services, null);
+      assert.deepEqual(rows.find((/** @type {any} */ row) => row.id === 'entry-a').services, {title:'Own',duration_minutes:30});
+      assert.deepEqual(rows.find((/** @type {any} */ row) => row.id === 'legacy').services, {title:'Legacy',duration_minutes:45});
+      assert.equal(rows.find((/** @type {any} */ row) => row.id === 'conflicting').services, null);
     }
   }
   for (const read of reads.filter(read => ['leads','services'].includes(read.table))) {
@@ -230,7 +249,7 @@ test('große Warteliste lädt Kontakte in begrenzten Mandantenabfragen', async (
   const result = await call('get', '/');
   assert.equal(result.statusCode, 200);
   assert.equal(result.body.length, 210);
-  assert.ok(result.body.every(row => row.leads?.first_name === 'Synthetic'));
+  assert.ok(result.body.every((/** @type {any} */ row) => row.leads?.first_name === 'Synthetic'));
   assert.equal(reads.filter(read => read.table === 'leads').length, 3);
 });
 test('PATCH erhält eigene Legacy-Termine und bevorzugt owner_id vor user_id', async () => {

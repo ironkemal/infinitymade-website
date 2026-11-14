@@ -51,10 +51,11 @@ function _heute() {
   // Lokales Datum, nicht `toISOString()`: das rechnet nach UTC und ergibt in
   // Berlin um Mitternacht den Vortag (Projektstandard, siehe CLAUDE.md).
   const d = new Date();
-  const p = (n) => String(n).padStart(2, '0');
+  const p = (/** @type {number} */ n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
+/** @param {string | null | undefined} [datum] */
 function _tag(datum) {
   if (!datum) return _heute();
   const s = String(datum).slice(0, 10);
@@ -64,7 +65,7 @@ function _tag(datum) {
 /**
  * Positionen laden, die an einem Tag gültig sind.
  *
- * @param {object} supabase  Client — nur für das Zugriffstoken.
+ * @param {{ auth: { getSession: () => Promise<any> } }} supabase  Client — nur für das Zugriffstoken.
  * @param {string} [datum]   YYYY-MM-DD, Vorgabe heute.
  * @returns {Promise<Map<string, object>>} HPNR-Code → { preis, zuzahlung, label … }
  */
@@ -106,13 +107,14 @@ export function ladePodoPositionen(supabase, datum) {
         });
       }
       return map;
-    } catch (e) {
-      console.warn('[podologie-positionen]', e.name === 'AbortError' ? 'Zeitüberschreitung (8s)' : e.message);
+    } catch (err) {
+      const e = /** @type {any} */ (err);
+      console.warn('[podologie-positionen]', e?.name === 'AbortError' ? 'Zeitüberschreitung (8s)' : (e?.message || String(e)));
       // Rückgabetyp bleibt Map; Ladefehler ist keine fachliche Kataloglücke.
       _katalog.delete(tag);   // nur ein späterer bewusster Aufruf versucht erneut
       return Object.assign(new Map(), { ladefehler: {
-        status: e.status || 0, code: e.code || null,
-        message: e.status ? e.message : 'Preiskatalog konnte nicht geladen werden. Bitte später erneut versuchen.',
+        status: e?.status || 0, code: e?.code || null,
+        message: e?.status ? e.message : 'Preiskatalog konnte nicht geladen werden. Bitte später erneut versuchen.',
       } });
     } finally {
       clearTimeout(uhr);
@@ -126,8 +128,8 @@ export function ladePodoPositionen(supabase, datum) {
 /**
  * Katalog für alle Behandlungstage einer Verordnung, als eine Nachschlagefunktion.
  *
- * @param {object} supabase
- * @param {Array<{behandlungsdatum?:string}>} behandlungen
+ * @param {{ auth: { getSession: () => Promise<any> } }} supabase
+ * @param {Array<{behandlungsdatum?:string}>} [behandlungen]
  * @returns {Promise<(code:string, datum:string) => object|null>}
  *          Die Rückgabe passt auf `zuzahlungFuerPodoVerordnung(…, findePosition)`.
  */
@@ -138,7 +140,7 @@ export async function podoPositionsFinder(supabase, behandlungen) {
   const karten = new Map();
   await Promise.all(tage.map(async t => karten.set(t, await ladePodoPositionen(supabase, t))));
 
-  return Object.assign((code, datum) => karten.get(_tag(datum))?.get(String(code)) || null, {
+  return Object.assign((/** @type {string} */ code, /** @type {string} */ datum) => karten.get(_tag(datum))?.get(String(code)) || null, {
     ladefehler: [...karten.values()].find(k => k.ladefehler)?.ladefehler,
   });
 }

@@ -18,21 +18,30 @@ const quietConsole = {
 };
 
 class FakeDB {
+  /** @param {any} [initialRow] */
   constructor(initialRow) {
+    /** @type {any} */
     this.currentRow = initialRow ? { ...initialRow } : null;
+    /** @type {any[]} */
     this.calls = [];
+    /** @type {any[]} */
     this.storageCalls = [];
+    /** @type {any} */
     this.error = null;
+    /** @type {any} */
     this.forcedResult = null;
     this.versionTick = 1;
+    /** @type {{ data: any, error: any }} */
     this.storageRemoveResult = { data: [], error: null };
     this.storageRemoveThrows = false;
 
     const self = this;
     this.storage = {
+      /** @param {string} bucket */
       from(bucket) {
         self.calls.push({ method: 'storage.from', bucket });
         return {
+          /** @param {string[]} pfade */
           remove(pfade) {
             assert.equal(self.currentRow.status, 'verworfen', 'Committed discard precedes deletion');
             self.calls.push({ method: 'storage.remove', pfade: [...pfade] });
@@ -50,34 +59,53 @@ class FakeDB {
     };
   }
 
+  /** @param {string} table */
   from(table) {
     this.calls.push({ method: 'from', table });
     const self = this;
+    /** @type {any} */
     let updatePatch = null;
+    /** @type {Array<{ type: string, col: string, val: any }>} */
     const filters = [];
+    /** @type {any} */
     let selectFields = null;
 
+    /** @type {any} */
     const builder = {
+      /** @param {any} patch */
       update(patch) {
         self.calls.push({ method: 'update', patch });
         updatePatch = patch;
         return builder;
       },
+      /**
+       * @param {string} col
+       * @param {any} val
+       */
       eq(col, val) {
         self.calls.push({ method: 'eq', col, val });
         filters.push({ type: 'eq', col, val });
         return builder;
       },
+      /**
+       * @param {string} col
+       * @param {any} val
+       */
       is(col, val) {
         self.calls.push({ method: 'is', col, val });
         filters.push({ type: 'is', col, val });
         return builder;
       },
+      /** @param {any} fields */
       select(fields) {
         self.calls.push({ method: 'select', fields });
         selectFields = fields;
         return builder;
       },
+      /**
+       * @param {any} onFulfilled
+       * @param {any} [onRejected]
+       */
       then(onFulfilled, onRejected) {
         const promise = (async () => {
           await Promise.resolve();
@@ -104,6 +132,10 @@ class FakeDB {
   }
 }
 
+/**
+ * @param {Record<string, any>} [overrides]
+ * @returns {Record<string, any>}
+ */
 function createSnapshot(overrides = {}) {
   const fields = ABRECHNUNG_VERSION_FELDER.split(',').map((f) => f.trim());
   const base = Object.fromEntries(fields.map((f) => [f, null]));
@@ -181,7 +213,7 @@ test('exacttimestamp stale409/noRemove', async () => {
         verzeichnis,
       });
     },
-    (err) => {
+    (/** @type {any} */ err) => {
       assert.equal(err.status || err.statusCode, 409);
       return true;
     }
@@ -226,7 +258,7 @@ test('signed/published/paid/terminalrejectbeforeDB', async () => {
           verzeichnis,
         });
       },
-      (err) => {
+      (/** @type {any} */ err) => {
         assert.equal(err.status || err.statusCode, 409);
         return true;
       }
@@ -275,7 +307,7 @@ test('wrongowner/headerid/nested/duplicate/4files/traversal/.p7m/.enc/undefinedf
           ...params,
         });
       },
-      (err) => {
+      (/** @type {any} */ err) => {
         assert.equal(err.status || err.statusCode, 409);
         return true;
       }
@@ -295,7 +327,7 @@ test('wrongowner/headerid/nested/duplicate/4files/traversal/.p7m/.enc/undefinedf
         verzeichnis: validDir,
       });
     },
-    (err) => {
+    (/** @type {any} */ err) => {
       assert.equal(err.status || err.statusCode, 409);
       return true;
     }
@@ -399,7 +431,7 @@ test('DBfailurebeforeRemove', async () => {
         verzeichnis,
       });
     },
-    (err) => {
+    (/** @type {any} */ err) => {
       assert.equal(err.code, 'ARTEFAKT_PERSISTENZ_FEHLER');
       return true;
     }

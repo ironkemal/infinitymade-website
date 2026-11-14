@@ -45,8 +45,10 @@
  */
 
 /** Die einzigen erlaubten Werte in `leads.geschlecht`. NULL heisst „keine Angabe". */
+/** @type {Array<'m'|'f'|'d'>} */
 export const GESCHLECHT_CODES = ['m', 'f', 'd'];
 
+/** @type {Record<'m'|'f'|'d', string>} */
 export const GESCHLECHT_LABELS = {
   m: 'männlich',
   f: 'weiblich',
@@ -56,6 +58,7 @@ export const GESCHLECHT_LABELS = {
 // Was aus der Welt hereinkommt, auf den Bestand abgebildet. Grosszügig, weil
 // die Quellen sich nicht abstimmen: die OCR denkt deutsch („w"), Altformulare
 // schrieben aus, Fremdsysteme liefern englisch.
+/** @type {Record<string, 'm'|'f'|'d'>} */
 const ALIASE = {
   m: 'm', maennlich: 'm', männlich: 'm', mann: 'm', male: 'm', herr: 'm', '1': 'm',
   f: 'f', w: 'f', weiblich: 'f', frau: 'f', female: 'f', '2': 'f',
@@ -71,6 +74,8 @@ const ALIASE = {
  * zurückgibt, überlebt den CHECK garantiert.
  *
  * **Jeder Schreibpfad auf `leads.geschlecht` muss hier durch.**
+ * @param {unknown} wert
+ * @returns {'m'|'f'|'d'|null}
  */
 export function normalisiereGeschlecht(wert) {
   if (wert == null) return null;
@@ -79,7 +84,12 @@ export function normalisiereGeschlecht(wert) {
   return ALIASE[k] || null;
 }
 
-/** Anzeigetext für die Oberfläche. Ohne Angabe ein Gedankenstrich. */
+/**
+ * Anzeigetext für die Oberfläche. Ohne Angabe ein Gedankenstrich.
+ * @param {unknown} wert
+ * @param {string} [leer]
+ * @returns {string}
+ */
 export function geschlechtLabel(wert, leer = '—') {
   const code = normalisiereGeschlecht(wert);
   return code ? GESCHLECHT_LABELS[code] : leer;
@@ -91,6 +101,8 @@ export function geschlechtLabel(wert, leer = '—') {
  * Bei `d` und bei fehlender Angabe bewusst KEINE Anrede: der Aufrufer weicht
  * dann auf eine neutrale Begrüssung aus. Jemanden falsch anzureden ist der
  * schlechtere Fehler, und für „divers" gibt es keine etablierte Briefanrede.
+ * @param {unknown} wert
+ * @returns {string}
  */
 export function anredeFuerGeschlecht(wert) {
   const code = normalisiereGeschlecht(wert);
@@ -104,6 +116,9 @@ export function anredeFuerGeschlecht(wert) {
  * (Patientenakte, Schnellanlage) werden hieraus gefüllt — vorher hatte jedes
  * seine eigene, handgeschriebene Liste, und genau da lief die Kodierung
  * auseinander.
+ * @param {unknown} [gewaehlt]
+ * @param {string} [leerLabel]
+ * @returns {string}
  */
 export function geschlechtOptionenHtml(gewaehlt = '', leerLabel = '— bitte wählen —') {
   const code = normalisiereGeschlecht(gewaehlt);
@@ -116,10 +131,11 @@ export function geschlechtOptionenHtml(gewaehlt = '', leerLabel = '— bitte wä
 /**
  * Füllt alle bekannten Geschlechts-Auswahlfelder aus derselben Quelle.
  * Einmal beim Start aufrufen; die Felder stehen in `dashboard.html`.
+ * @param {string[]} [ids]
  */
 export function fuelleGeschlechtSelects(ids = ['lead-geschlecht', 'sfGeschlecht']) {
   ids.forEach(id => {
-    const el = document.getElementById(id);
+    const el = /** @type {HTMLSelectElement|null} */ (document.getElementById(id));
     if (!el || el.tagName !== 'SELECT') return;
     const vorher = el.value;
     el.innerHTML = geschlechtOptionenHtml(vorher, id === 'sfGeschlecht' ? '— unbekannt —' : '— bitte wählen —');

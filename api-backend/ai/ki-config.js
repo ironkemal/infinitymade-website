@@ -46,10 +46,22 @@ export const RE_SAFE_SEGMENT = /^(?!.*\.\.)[a-zA-Z0-9_-][a-zA-Z0-9._-]{0,63}$/;
 const RE_API_VERSION = /^\d{4}-\d{2}-\d{2}(-preview)?$/;
 const RE_CONTROL_CHARS = /[\r\n\x00-\x1f\x7f]/;
 
+/**
+ * @param {object} obj
+ * @param {string} key
+ * @returns {boolean}
+ */
 function hasOwn(obj, key) {
   return Object.prototype.hasOwnProperty.call(obj, key);
 }
 
+/**
+ * @param {Record<string, string | undefined>} env
+ * @param {string} aiKey
+ * @param {string | null} legacyKey
+ * @param {string} [fallback='']
+ * @returns {string}
+ */
 function getEnvOverride(env, aiKey, legacyKey, fallback = '') {
   if (hasOwn(env, aiKey)) {
     return env[aiKey] !== undefined ? String(env[aiKey]) : '';
@@ -127,25 +139,35 @@ export function validateEndpointUrl(endpoint, allowedHosts = []) {
 }
 
 /**
- * Creates and validates the AI configuration.
- *
- * @param {Record<string, string|undefined>} [env=process.env]
- * @param {{allowedHosts?: ReadonlyArray<string>}} [options]
- * @returns {{
+ * @typedef {'aus' | 'direkt' | 'jeton'} AiMode
+ */
+
+/**
+ * @typedef {{
  *   valid: boolean,
  *   code: string,
- *   mode: 'aus'|'direkt'|'jeton',
+ *   mode: AiMode | (string & {}),
  *   provider: string,
  *   endpoint: string,
  *   apiKey: string,
  *   deployment: string,
  *   visionDeployment: string,
+ *   transcribeDeployment: string,
  *   apiVersion: string,
  *   region: string,
  *   activationReady: boolean,
  *   mailReady: boolean,
+ *   allowFreeText: boolean,
  *   allowedHosts: ReadonlyArray<string>
- * }}
+ * }} AiConfig
+ */
+
+/**
+ * Creates and validates the AI configuration.
+ *
+ * @param {Record<string, string|undefined>} [env=process.env]
+ * @param {{allowedHosts?: ReadonlyArray<string>}} [options]
+ * @returns {AiConfig}
  */
 export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZURE_HOSTS } = {}) {
   const safeEnv = env || {};
@@ -175,6 +197,7 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
   let region = getEnvOverride(safeEnv, 'AI_REGION', 'AZURE_OPENAI_REGION', '').trim().toLowerCase();
 
   // Mode resolution
+  /** @type {AiMode} */
   let mode;
   if (hasOwn(safeEnv, 'AI_MODE')) {
     const rawMode = String(safeEnv.AI_MODE || '').trim().toLowerCase();
@@ -197,7 +220,7 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
         allowedHosts: normalizedHosts
       };
     }
-    mode = rawMode;
+    mode = /** @type {AiMode} */ (rawMode);
   } else {
     // Missing AI_MODE: check if complete legacy AZURE_* config is available
     const legacyEndpoint = safeEnv.AZURE_OPENAI_ENDPOINT;
@@ -404,7 +427,7 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
   if (!endpointVal.ok) {
     return {
       valid: false,
-      code: endpointVal.code,
+      code: /** @type {string} */ (endpointVal.code),
       mode,
       provider,
       endpoint,
@@ -438,7 +461,7 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
       code: 'AI_INVALID_REGION',
       mode,
       provider,
-      endpoint: endpointVal.cleanEndpoint,
+      endpoint: /** @type {string} */ (endpointVal.cleanEndpoint),
       apiKey,
       deployment,
       visionDeployment,
@@ -457,7 +480,7 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
     code: 'OK',
     mode: 'direkt',
     provider,
-    endpoint: endpointVal.cleanEndpoint,
+    endpoint: /** @type {string} */ (endpointVal.cleanEndpoint),
     apiKey,
     deployment,
     visionDeployment,
@@ -470,6 +493,18 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
     allowedHosts: normalizedHosts
   };
 }
+/**
+ * @param {AiConfig} [customConfig]
+ * @returns {{
+ *   valid: boolean,
+ *   mode: string,
+ *   code: string,
+ *   provider: string,
+ *   activationReady: boolean,
+ *   mailReady: boolean,
+ *   transcribeReady: boolean
+ * }}
+ */
 export function healthSummary(customConfig) {
   const cfg = customConfig || createAiConfig();
   return {

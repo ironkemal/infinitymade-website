@@ -16,11 +16,29 @@ import {
 } from './terminerinnerung.js';
 import { sendeLauf, SMTP_ABBRUCH } from '../routes/sondertag-mitteilung.js';
 
+/**
+ * @typedef {import('@supabase/supabase-js').SupabaseClient} SupabaseClient
+ * @typedef {import('./terminerinnerung.js').ErinnerungsTermin & { lead_id?: string | null, business_id?: string | null }} JobTermin
+ * @typedef {{ id: string, business_name?: string | null, phone?: string | null }} JobProfil
+ * @typedef {{ mandanten: number, gesendet: number, fehler: number, doppelt: number, unklar: number, abgelehnt: number, anruf: number, deckel: number, abgebrochen: boolean, uebersprungen: string | null }} LaufSumme
+ */
+
+/** @returns {LaufSumme} */
 const leer = () => ({ mandanten: 0, gesendet: 0, fehler: 0, doppelt: 0, unklar: 0, abgelehnt: 0, anruf: 0, deckel: 0, abgebrochen: false, uebersprungen: null });
+
+/** @param {unknown} err */
+const fehlerCode = err => (err && typeof err === 'object' && 'code' in err ? /** @type {{ code?: unknown }} */ (err).code : undefined);
 
 /** Grosse IN-Listen in Bloecke teilen: eine URL mit hunderten UUIDs ueberschreitet die Header-Grenze von Kong/PostgREST. */
 const BLOCK = 50;
+/**
+ * @template T
+ * @param {string[]} ids
+ * @param {(chunk: string[]) => PromiseLike<{ data: T[] | null, error: unknown }>} abfrage
+ * @returns {Promise<{ data: T[] | null, error: unknown }>}
+ */
 async function ladeInBloecken(ids, abfrage) {
+  /** @type {T[]} */
   const daten = [];
   for (let i = 0; i < ids.length; i += BLOCK) {
     const r = await abfrage(ids.slice(i, i + BLOCK));
@@ -32,10 +50,23 @@ async function ladeInBloecken(ids, abfrage) {
 /** PostgREST kappt Antworten stillschweigend (Standard 1000 Zeilen) – lieber laut scheitern als Termine auslassen. */
 const ZEILENGRENZE = 1000;
 
+/** @param {{ business_name?: string | null, street?: string | null, house_number?: string | null, zip?: string | null, city?: string | null }} b */
 const adresse = b => [b.business_name, [b.street, b.house_number].filter(Boolean).join(' '), [b.zip, b.city].filter(Boolean).join(' ')]
   .map(x => String(x || '').trim()).filter(Boolean).join(', ');
 
-/** Ein Mandant: Termine von morgen laden, einteilen, senden. Wirft bei DB-Fehlern (Aufrufer isoliert je Mandant). */
+/**
+ * Ein Mandant: Termine von morgen laden, einteilen, senden. Wirft bei DB-Fehlern (Aufrufer isoliert je Mandant).
+ * @param {SupabaseClient} supabase
+ * @param {JobProfil} profil
+ * @param {{
+ *   jetzt: Date,
+ *   morgen: string,
+ *   grenzen: { von: string, bisExklusiv: string },
+ *   transportFabrik: (opts?: Parameters<typeof createSMTPTransport>[0]) => ReturnType<typeof createSMTPTransport>,
+ *   kanal?: import('./mail.js').MailKanalResult | null,
+ * }} opts
+ * @returns {Promise<{ ergebnis: LaufSumme, abbruch?: boolean, serverCode?: string }>}
+ */
 export async function mandantLauf(supabase, profil, { jetzt, morgen, grenzen, transportFabrik, kanal = null }) {
   const tenantId = profil.id;
   const { data: termine, error: e1 } = await supabase.from('bookings')
@@ -43,11 +74,11 @@ export async function mandantLauf(supabase, profil, { jetzt, morgen, grenzen, tr
     .eq('owner_id', tenantId).gte('start_time', grenzen.von).lt('start_time', grenzen.bisExklusiv);
   if (e1) throw e1;
   if ((termine || []).length >= ZEILENGRENZE) throw Object.assign(new Error('Zeilengrenze'), { code: 'ZEILENGRENZE' });
-  const liste = zuErinnern(termine, { jetzt, morgen });
+  const liste = /** @type {Array<{ termin: JobTermin, tag: null }>} */ (zuErinnern(termine || [], { jetzt, morgen }));
   if (!liste.length) return { ergebnis: leer() };
 
-  const leadIds = [...new Set(liste.map(x => x.termin.lead_id).filter(Boolean))];
-  const bookingIds = liste.map(x => x.termin.id);
+  const leadIds = /** @type {string[]} */ ([...new Set(liste.map(x => x.termin.lead_id).filter(Boolean))]);
+  const bookingIds = /** @type {string[]} */ (liste.map(x => x.termin.id).filter(Boolean));
   const [leadsR, einwR, protR, bizR] = await Promise.all([
     ladeInBloecken(leadIds, ids => supabase.from('leads').select('id,email').eq('owner_id', tenantId).in('id', ids)),
     ladeInBloecken(leadIds, ids => supabase.from('patient_consents').select('patient_id,consent_type,text_version,text_snapshot,consented_at,revoked_at')
@@ -62,10 +93,14 @@ export async function mandantLauf(supabase, profil, { jetzt, morgen, grenzen, tr
   for (const e of einwR.data || []) { if (!einw.has(e.patient_id)) einw.set(e.patient_id, []); einw.get(e.patient_id).push(e); }
   // Standort nur nennen, wenn die Praxis mehrere hat (sonst ueberfluessig).
   const standort = new Map();
-  if ((bizR.data || []).length > 1) for (const b of bizR.data) standort.set(b.id, adresse(b));
+  if ((bizR.data || []).length > 1) for (const b of bizR.data || []) standort.set(b.id, adresse(b));
 
   const teile = einteilen(liste, leads, einw,
-    protokollZustandErinnerung(protR.data, protokollSchluessel, IN_ARBEIT), true);
+    protokollZustandErinnerung(
+      protR.data || [],
+      /** @type {(bookingId: string, terminBeginn: string | undefined) => string} */ (protokollSchluessel),
+      IN_ARBEIT,
+    ), true);
   const ergebnis = leer();
   ergebnis.anruf = teile.anruf.length;
   if (!teile.mail.length) return { ergebnis };
@@ -75,19 +110,21 @@ export async function mandantLauf(supabase, profil, { jetzt, morgen, grenzen, tr
   try {
     await transportFabrik({ requireTLS: true }).verify?.();
   } catch (err) {
-    await meldeVerbindungsfehler(supabase, tenantId, kanal, err);
+    await meldeVerbindungsfehler(supabase, tenantId, kanal, err && typeof err === 'object' ? /** @type {{ code?: unknown }} */ (err) : null);
     ergebnis.abgebrochen = true;
-    return { ergebnis, abbruch: true, serverCode: String(err?.code || 'VERIFY_FEHLER').slice(0, 64) };
+    return { ergebnis, abbruch: true, serverCode: String(fehlerCode(err) || 'VERIFY_FEHLER').slice(0, 64) };
   }
 
   const lage = { weg: 'smtp', kanal, mail: teile.mail, profil: { business_name: profil.business_name, phone: profil.phone }, standort };
   const r = await sendeLauf(supabase, {
-    tenantId, userId: null, ids: teile.mail.map(x => x.termin.id), lage, transportFabrik, jetzt,
+    tenantId, userId: /** @type {string} */ (/** @type {unknown} */ (null)),
+    ids: /** @type {string[]} */ (teile.mail.map(x => x.termin.id)), lage, transportFabrik, jetzt,
     anlass: ANLASS_ERINNERUNG, textFn: erinnerungsText, deckel: DECKEL_ERINNERUNG, tag: 'terminerinnerung',
   });
-  for (const k of ['gesendet', 'fehler', 'doppelt', 'unklar', 'abgelehnt']) ergebnis[k] = r.body?.[k] || 0;
+  const body = /** @type {Record<string, unknown> | undefined} */ (r.body);
+  for (const k of /** @type {const} */ (['gesendet', 'fehler', 'doppelt', 'unklar', 'abgelehnt'])) ergebnis[k] = Number(body?.[k]) || 0;
   if (r.status === 429) ergebnis.deckel = 1;
-  const abbruch = r.status === 409 && SMTP_ABBRUCH.has(r.body?.code);
+  const abbruch = r.status === 409 && SMTP_ABBRUCH.has(String(body?.code || ''));
   return { ergebnis, abbruch };
 }
 
@@ -95,6 +132,7 @@ export async function mandantLauf(supabase, profil, { jetzt, morgen, grenzen, tr
  * Ein Durchlauf (ohne Timer, testbar). Ausserhalb des Versandfensters oder ohne Praxis-SMTP passiert nichts.
  * Bricht beim ersten SMTP-Transportfehler des Box-SMTP (SMTP_*) ab: der ist fuer alle Mandanten derselbe.
  * Ein eigenes Postfach (Einstellung) betrifft nur seinen Mandanten — dort geht es mit dem naechsten weiter.
+ * @param {SupabaseClient} supabase
  */
 async function irgendeinPraxisPostfach(supabase) {
   try {
@@ -103,6 +141,17 @@ async function irgendeinPraxisPostfach(supabase) {
   } catch { return false; }
 }
 
+/**
+ * @param {SupabaseClient} supabase
+ * @param {{
+ *   jetzt?: Date,
+ *   env?: NodeJS.ProcessEnv | Record<string, string | undefined>,
+ *   kutu?: boolean,
+ *   transportFabrik?: typeof createSMTPTransport,
+ *   log?: Pick<Console, 'log' | 'error' | 'warn'>,
+ * }} [opts]
+ * @returns {Promise<LaufSumme>}
+ */
 export async function erinnerungsLauf(supabase, {
   jetzt = new Date(), env = process.env, kutu = istKutu(), transportFabrik = createSMTPTransport, log = console,
 } = {}) {
@@ -112,7 +161,8 @@ export async function erinnerungsLauf(supabase, {
   if (!boxSmtp && !(await irgendeinPraxisPostfach(supabase))) return { ...summe, uebersprungen: 'kein_smtp' };
   const morgen = morgenBerlin(jetzt);
   const grenzen = berlinTagesgrenzen(morgen);
-  if (!grenzen) return { ...summe, uebersprungen: 'ungueltiger_tag' };
+  if (!grenzen || !grenzen.von || !grenzen.bisExklusiv) return { ...summe, uebersprungen: 'ungueltiger_tag' };
+  const tagesgrenzen = { von: grenzen.von, bisExklusiv: grenzen.bisExklusiv };
 
   const { data: profile, error } = await supabase.from('profiles')
     .select('id,business_name,phone').eq('terminerinnerung_aktiv', true).eq('role', 'owner');
@@ -124,9 +174,10 @@ export async function erinnerungsLauf(supabase, {
       if (kanal.weg !== 'smtp') continue;
       summe.mandanten += 1;
       const { ergebnis, abbruch, serverCode } = await mandantLauf(supabase, profil, {
-        jetzt, morgen, grenzen, kanal, transportFabrik: transportFabrikFuer(kanal, transportFabrik),
+        jetzt, morgen, grenzen: tagesgrenzen, kanal,
+        transportFabrik: transportFabrikFuer(/** @type {Parameters<typeof transportFabrikFuer>[0]} */ (/** @type {unknown} */ (kanal)), transportFabrik),
       });
-      for (const k of ['gesendet', 'fehler', 'doppelt', 'unklar', 'abgelehnt', 'anruf', 'deckel']) summe[k] += ergebnis[k];
+      for (const k of /** @type {const} */ (['gesendet', 'fehler', 'doppelt', 'unklar', 'abgelehnt', 'anruf', 'deckel'])) summe[k] += ergebnis[k];
       if (abbruch) {
         summe.abgebrochen = true;
         log.error?.(`[terminerinnerung] Mailserver nicht nutzbar: ${serverCode || 'SMTP'}`);
@@ -134,7 +185,7 @@ export async function erinnerungsLauf(supabase, {
       }
     } catch (err) {
       summe.fehler += 1;
-      log.error?.(`[terminerinnerung] Mandantenlauf fehlgeschlagen: ${String(err?.code || 'FEHLER').slice(0, 64)}`);
+      log.error?.(`[terminerinnerung] Mandantenlauf fehlgeschlagen: ${String(fehlerCode(err) || 'FEHLER').slice(0, 64)}`);
     }
   }
   if (summe.gesendet || summe.fehler || summe.unklar || summe.abgebrochen || summe.deckel || summe.anruf) log.log?.('[terminerinnerung]', JSON.stringify(summe));
@@ -144,6 +195,20 @@ export async function erinnerungsLauf(supabase, {
 /**
  * Startet den Zeitjob (Muster: dsgvo/fristen.js): nur Worker 0, alle 15 Minuten, erster Lauf 60 s nach dem Start.
  * Innerhalb des Fensters (Berliner Zeit) holt jeder Lauf nach, was fehlt; Doppelversand verhindert die Datenbank.
+ * @param {{
+ *   supabase?: SupabaseClient | null,
+ *   env?: NodeJS.ProcessEnv | Record<string, string | undefined>,
+ *   jetzt?: () => number,
+ *   timer?: {
+ *     setTimeout: typeof setTimeout,
+ *     setInterval: typeof setInterval,
+ *     clearTimeout?: typeof clearTimeout,
+ *     clearInterval?: typeof clearInterval,
+ *   },
+ *   log?: Pick<Console, 'log' | 'warn' | 'error'>,
+ *   kutu?: boolean,
+ *   transportFabrik?: typeof createSMTPTransport,
+ * }} [opts]
  */
 export function starteTerminerinnerung({
   supabase, env = process.env, jetzt = Date.now, timer = { setTimeout, setInterval }, log = console, kutu = istKutu(),
@@ -158,7 +223,7 @@ export function starteTerminerinnerung({
     try {
       await erinnerungsLauf(supabase, { jetzt: new Date(jetzt()), env, kutu, transportFabrik, log });
     } catch (err) {
-      try { (log.warn || log.log)(`[terminerinnerung] Unerwarteter Fehler: ${String(err?.code || 'FEHLER').slice(0, 64)}`); } catch {}
+      try { (log.warn || log.log)(`[terminerinnerung] Unerwarteter Fehler: ${String(fehlerCode(err) || 'FEHLER').slice(0, 64)}`); } catch {}
     } finally {
       laeuft = false;
     }

@@ -42,7 +42,8 @@ export function verschluesselungsTest() {
  * @param {import('@supabase/supabase-js').SupabaseClient} opt.adminClient  service_role
  * @param {string} opt.supabaseUrl   internes SUPABASE_URL (zeigt auf Kong im Docker-Netz)
  * @param {string} [opt.anonKey]     SUPABASE_ANON_KEY — fehlt sie, wird "atlandi" gemeldet
- * @param {string} [opt.ownerUserId] praxura_setup.owner_user_id
+ * @param {string | null} [opt.ownerUserId] praxura_setup.owner_user_id
+ * @returns {Promise<{ status: 'ok' | 'kirmizi' | 'atlandi', neden?: string }>}
  */
 export async function rlsNegativTest({ adminClient, supabaseUrl, anonKey, ownerUserId }) {
   if (!anonKey) return { status: 'atlandi', neden: 'SUPABASE_ANON_KEY nicht gesetzt' };
@@ -56,6 +57,7 @@ export async function rlsNegativTest({ adminClient, supabaseUrl, anonKey, ownerU
   const testEmail = `praxura-rls-selbstcheck-${Date.now()}@setup.invalid`;
   const testPassword = crypto.randomBytes(24).toString('hex');
   let testUserId = null;
+  /** @type {{ status: 'ok' | 'kirmizi' | 'atlandi', neden?: string }} */
   let ergebnis;
 
   try {
@@ -95,7 +97,7 @@ export async function rlsNegativTest({ adminClient, supabaseUrl, anonKey, ownerU
       }
     }
   } catch (err) {
-    ergebnis = { status: 'kirmizi', neden: err.message };
+    ergebnis = { status: 'kirmizi', neden: err instanceof Error ? err.message : String(err) };
   }
 
   if (testUserId) {

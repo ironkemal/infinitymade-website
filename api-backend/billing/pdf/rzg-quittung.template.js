@@ -3,30 +3,33 @@
 // Confirms receipt of Zuzahlung for a single Rezept.
 // Rendered as A4 but content fits upper ~A5 half so it can be cut and handed to patient.
 
-const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
-  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-}[c]));
+/** @type {Record<string, string>} */
+const HTML_ENTITIES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+/** @param {unknown} s */
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => HTML_ENTITIES[c] || c);
 
+/** @param {unknown} n */
 const fmtEur = (n) => (n == null ? '' : Number(n).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })) + ' €';
+/** @param {unknown} d */
 const fmtDate = (d) => {
   if (!d) return '';
-  const dt = d instanceof Date ? d : new Date(d);
+  const dt = d instanceof Date ? d : new Date(String(d));
   if (Number.isNaN(dt.getTime())) return '';
   return dt.toLocaleDateString('de-DE');
 };
 
 /**
  * @param {object} opts
- * @param {object} opts.praxis          { name, strasse, plz_ort, telefon, ik, steuernummer, email }
- * @param {object} opts.patient         { nachname, vorname, kvnr }
- * @param {object} opts.verordnung      { ausstellungsdatum, krankenkasse }
- * @param {object} opts.rechnung        { nummer, datum }
- * @param {Array}  opts.sessions        [{ datum, position, bezeichnung, zuzahlung }]
- * @param {object} opts.totals          { gesZuzahlung }
- * @param {string} opts.logoUrl
- * @param {string} opts.invoiceFooterText
- * @param {string} opts.unterschriftLabel   From vorlage content_json.unterschrift_label
- * @param {string} opts.fusszeile           From vorlage content_json.fusszeile
+ * @param {{ name?: string|null, strasse?: string|null, plz_ort?: string|null, telefon?: string|null, ik?: string|null, steuernummer?: string|null, email?: string|null }} [opts.praxis]
+ * @param {{ nachname?: string|null, vorname?: string|null, kvnr?: string|null }} [opts.patient]
+ * @param {{ ausstellungsdatum?: string|Date|null, krankenkasse?: string|null }} [opts.verordnung]
+ * @param {{ nummer?: string|null, datum?: string|Date|null }} [opts.rechnung]
+ * @param {Array<{ datum?: string|Date|null, position?: string|null, bezeichnung?: string|null, zuzahlung?: number|null }>} [opts.sessions]
+ * @param {{ gesZuzahlung?: number|string|null }} [opts.totals]
+ * @param {string|null} [opts.logoUrl]
+ * @param {string|null} [opts.invoiceFooterText]
+ * @param {string|null} [opts.unterschriftLabel]   From vorlage content_json.unterschrift_label
+ * @param {string|null} [opts.fusszeile]           From vorlage content_json.fusszeile
  */
 export function renderRzgQuittung(opts) {
   const {

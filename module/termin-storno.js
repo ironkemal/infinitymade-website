@@ -1,5 +1,14 @@
 // Absagen gehen über den bestehenden Backend-Endpunkt. Die Migration erledigt
 // Sitzungsfreigabe und Gruppenabsage in derselben Transaktion wie den Status.
+/**
+ * @param {object} params
+ * @param {string} params.apiBase
+ * @param {string} params.token
+ * @param {string} params.bookingId
+ * @param {string} [params.reason]
+ * @param {typeof fetch} [params.fetchImpl]
+ * @returns {Promise<any>}
+ */
 export async function storniereTermin({ apiBase, token, bookingId, reason = '', fetchImpl = fetch }) {
   if (!token) throw new Error('Bitte erneut anmelden.');
   if (!bookingId) throw new Error('Termin fehlt.');

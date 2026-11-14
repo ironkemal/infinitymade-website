@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { gpsCheckinErgebnisRein as f } from './gps-checkin.js';
 
+/** @param {number} a @param {number} b @param {number} c @param {number} d */
 const distanz = (a, b, c, d) => Math.hypot(a - c, b - d) * 111000; // grob, reicht für den Test
 const basis = { pruefen: true, lat: 50.8, lng: 7.2, praxisLat: 50.8, praxisLng: 7.2, radiusM: 150, distanz };
 

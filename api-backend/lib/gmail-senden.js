@@ -8,22 +8,25 @@
 
 const CRLF = '\r\n';
 
+/** @param {unknown} s */
 function ohneZeilenumbruch(s) {
   return String(s || '').replace(/[\r\n]+/g, ' ').trim();
 }
 
+/** @param {unknown} s */
 function b64Wort(s) {
   return `=?UTF-8?B?${Buffer.from(ohneZeilenumbruch(s)).toString('base64')}?=`;
 }
 
+/** @param {Buffer} buf */
 function b64Zeilen(buf) {
   return buf.toString('base64').replace(/.{1,76}/g, (z) => z + CRLF).trimEnd();
 }
 
 /**
  * RFC-2822-Nachricht, mit Anhängen als multipart/mixed.
- * @param {{from:string,to:string,subject:string,text:string,replyTo?:string,
- *          attachments?:Array<{filename:string,content:Buffer,contentType?:string}>}} m
+ * @param {{from:string,to:string,subject:string,text:string,html?:string|null,replyTo?:string|null,
+ *          attachments?:Array<{filename:string,content:Buffer|Uint8Array|string,contentType?:string}>}} m
  */
 export function baueMimeNachricht({ from, to, subject, text, html, replyTo, attachments = [] }) {
   const kopf = [
@@ -53,8 +56,15 @@ export function baueMimeNachricht({ from, to, subject, text, html, replyTo, atta
   return [...kopf, `Content-Type: multipart/mixed; boundary="${grenze}"`, '', ...teile, `--${grenze}--`, ''].join(CRLF);
 }
 
-/** Fehler mit Code, den Aufrufer an die Oberfläche weitergeben. */
+/**
+ * Fehler mit Code, den Aufrufer an die Oberfläche weitergeben.
+ * @param {string} code
+ * @param {number} status
+ * @param {string} text
+ * @returns {Error & { code?: string, status?: number }}
+ */
 function fehler(code, status, text) {
+  /** @type {Error & { code?: string, status?: number }} */
   const e = new Error(text);
   e.code = code; e.status = status;
   return e;
@@ -65,6 +75,19 @@ function fehler(code, status, text) {
  *   GMAIL_NICHT_VERBUNDEN — kein Token / keine Absenderadresse hinterlegt
  *   gmail_reauth_required — Token tot (wird gelöscht, Dashboard fordert Neuverbindung)
  *   GMAIL_FEHLER          — Gmail-API hat abgelehnt
+ * @param {{
+ *   supabase: import('@supabase/supabase-js').SupabaseClient,
+ *   newOAuthClient: () => { setCredentials: (c: { refresh_token: unknown }) => void, refreshAccessToken: () => Promise<{ credentials: { access_token?: string } }> },
+ *   fetchWithTimeout: (url: string, init: RequestInit, timeoutMs?: number) => Promise<Response>,
+ *   userId: string,
+ *   to: string,
+ *   subject: string,
+ *   text: string,
+ *   html?: string | null,
+ *   attachments?: Array<{ filename: string, content: Buffer | Uint8Array | string, contentType?: string }>,
+ *   senderName?: string | null,
+ *   replyTo?: string | null,
+ * }} opts
  */
 export async function sendeUeberGmail({ supabase, newOAuthClient, fetchWithTimeout, userId, to, subject, text, html, attachments = [], senderName, replyTo }) {
   const [{ data: profile, error: pErr }, { data: gmailToken }] = await Promise.all([
@@ -83,7 +106,7 @@ export async function sendeUeberGmail({ supabase, newOAuthClient, fetchWithTimeo
   } catch (refreshErr) {
     // Refresh token dead (invalid_grant): it can never recover — clear it so the
     // dashboard stops showing "connected" and prompts a reconnect.
-    console.error('[gmail] refresh failed, clearing dead token:', refreshErr?.message || '');
+    console.error('[gmail] refresh failed, clearing dead token:', refreshErr instanceof Error ? refreshErr.message : '');
     await supabase.rpc('clear_gmail_token', { p_user_id: userId });
     throw fehler('gmail_reauth_required', 401, 'Gmail token expired — please reconnect Gmail in B2B setup');
   }
@@ -95,7 +118,7 @@ export async function sendeUeberGmail({ supabase, newOAuthClient, fetchWithTimeo
     headers: { Authorization: 'Bearer ' + credentials.access_token, 'Content-Type': 'application/json' },
     body: JSON.stringify({ raw: encoded }),
   }, 20000);
-  const json = await res.json().catch(() => ({}));
+  const json = /** @type {{ id?: string, error?: { message?: string } }} */ (await res.json().catch(() => ({})));
   if (!res.ok) throw fehler('GMAIL_FEHLER', 502, json.error?.message || 'Gmail API error');
   return { messageId: json.id };
 }

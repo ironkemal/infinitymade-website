@@ -33,6 +33,7 @@ test('Snapshot Podologie: Behandlungen sortiert, HPNR als Klartext, Befund erste
   assert.equal(s.patient.name, 'Erika Muster');
   assert.deepEqual(s.behandlungen.map(b => b.datum), ['2026-09-06', '2026-09-20']);
   assert.ok(s.behandlungen[0].massnahmen.includes('Eingangsbefundung'));
+  assert.ok(s.befund && 'erster' in s.befund && s.befund.erster && s.befund.letzter);
   assert.equal(s.befund.erster.wagner_grad, 1);
   assert.equal(s.befund.letzter.notiz, 'reizlos');
   assert.ok(!JSON.stringify(s).includes('preis'));
@@ -58,7 +59,7 @@ test('Snapshot Physio: mit Befunden und Messreihen', () => {
           positive_tests: [{ region: 'HWS', test: 'Spurling', seite: 'rechts' }],
           adl: ['Sitzen'],
           massnahmen: ['Krankengymnastik'],
-          ziele: [{ text: 'Schmerzfreiheit', erreicht: null }],
+          ziele: [{ text: 'Schmerzfreiheit', erreicht: /** @type {string | undefined} */ (/** @type {unknown} */ (null)) }],
           empfehlung: { folge_vo: 'ja', eigentraining: true },
         },
       },
@@ -95,8 +96,7 @@ test('Snapshot Physio: mit Befunden und Messreihen', () => {
     physioMessungen,
   });
 
-  assert.ok(s.befund);
-  assert.ok(s.befund.erst);
+  assert.ok(s.befund && 'erst' in s.befund && s.befund.erst);
   assert.equal(s.befund.erst.datum, '2026-09-01');
   assert.equal(s.befund.erst.nrs.HWS, 8);
   assert.ok(s.befund.aktuell);
@@ -136,7 +136,7 @@ test('Snapshot Physio: bevorzugte VO-Zuordnung (prescription_id === rx.id)', () 
     physioBefunde: [bVo1, bFremd],
   });
 
-  assert.ok(s.befund);
+  assert.ok(s.befund && 'erst' in s.befund);
   assert.deepEqual(s.befund.erst.regionen, ['HWS']);
 });
 
@@ -169,7 +169,7 @@ test('PDF-Smoke-Test: erzeugeBerichtPdf fuer Physio mit Befund erzeugt valides P
     ],
   });
 
-  assert.ok(snapshot.befund?.erst);
+  assert.ok(snapshot.befund && 'erst' in snapshot.befund && snapshot.befund.erst);
   const pdfBuffer = await erzeugeBerichtPdf({ snapshot, verlauf: 'Patient macht gute Fortschritte' });
   assert.ok(Buffer.isBuffer(pdfBuffer));
   assert.ok(pdfBuffer.length > 0);
@@ -211,7 +211,8 @@ test('PDF mit faxDeckblatt: erzeugt offenes PDF mit TELEFAX auf Seite 1', async 
   assert.ok(!/\/Encrypt/.test(mitDeckblatt));
   // Seiteninhalt ist komprimiert: das Deckblatt zeigt sich als zusätzliche Seite.
   const ohne = (await erzeugeBerichtPdf({ snapshot })).toString('latin1');
-  const seiten = (t) => Number(/\/Count (\d+)/.exec(t)[1]);
+  /** @param {string} t */
+  const seiten = (t) => Number(/\/Count (\d+)/.exec(t)?.[1] ?? 0);
   assert.equal(seiten(mitDeckblatt), seiten(ohne) + 1);
 });
 
@@ -232,7 +233,12 @@ test('ladeSnapshot: Fehlertoleranz bei Postgres 42703 und PostgREST PGRST204 (ke
     therapie_bereich: 'physio',
   };
 
-  const erstelleMock = (errorCode) => ({
+  /**
+   * @param {string} errorCode
+   * @returns {Parameters<typeof ladeSnapshot>[0]}
+   */
+  const erstelleMock = (errorCode) => /** @type {Parameters<typeof ladeSnapshot>[0]} */ (/** @type {unknown} */ ({
+    /** @param {string} table */
     from(table) {
       return {
         select() { return this; },
@@ -245,6 +251,7 @@ test('ladeSnapshot: Fehlertoleranz bei Postgres 42703 und PostgREST PGRST204 (ke
           if (table === 'leads') return { data: { first_name: 'Max', last_name: 'Mustermann' }, error: null };
           return { data: null, error: null };
         },
+        /** @param {(val: unknown) => unknown} resolve */
         then(resolve) {
           if (table === 'physio_befunde') {
             return resolve({ data: null, error: { code: errorCode, message: 'schema error' } });
@@ -257,7 +264,7 @@ test('ladeSnapshot: Fehlertoleranz bei Postgres 42703 und PostgREST PGRST204 (ke
         catch() { return this; },
       };
     },
-  });
+  }));
 
   const res1 = await ladeSnapshot(erstelleMock('42703'), 'tenant-1', 'rx-1');
   assert.ok(res1.snapshot);

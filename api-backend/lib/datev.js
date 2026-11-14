@@ -29,18 +29,66 @@ export const KONTENRAHMEN = Object.freeze({
            erloeskonten: { gkv: '4100', zuzahlung: '4100', privat: '4100', selbstzahler: '4100', bg: '4100', ausfall: '4100', verkauf: '4100' } },
 });
 
+/**
+ * @typedef {{
+ *   beraternummer: string,
+ *   mandantennummer: string,
+ *   wj_beginn: string,
+ *   sachkontenlaenge: number,
+ *   kontenrahmen: 'SKR03' | 'SKR04',
+ *   geldkonten: { kasse: string, bank: string },
+ *   erloeskonten: Record<string, string>,
+ * }} DatevEinstellungen
+ *
+ * @typedef {{
+ *   id?: string,
+ *   beleg_nr: string | number,
+ *   type: string,
+ *   zahlart?: string | null,
+ *   amount_eur: number | string,
+ *   created_at: string | number | Date,
+ *   invoice_id?: string | null,
+ *   storno_von?: string | null,
+ *   prescription_id?: string | null,
+ * }} DatevBelegInput
+ *
+ * @typedef {{
+ *   art: string,
+ *   betrag_eur: number | string,
+ *   datum: string,
+ *   einzel_rechnungsnummer?: string | null,
+ * }} DatevGkvInput
+ *
+ * @typedef {{
+ *   betrag: number,
+ *   sh: 'S' | 'H',
+ *   konto: string,
+ *   gegenkonto: string,
+ *   datum: string,
+ *   belegfeld1: string,
+ *   text: string,
+ * }} DatevBuchung
+ */
+
+/** @param {unknown} w @param {number} max */
 const ziffern = (w, max) => { const s = String(w ?? '').replace(/\D/g, ''); return s.length && s.length <= max ? s : ''; };
 
-/** profiles.datev_einstellungen → vollständiges Objekt mit Vorschlagswerten. */
+/**
+ * profiles.datev_einstellungen → vollständiges Objekt mit Vorschlagswerten.
+ * @param {unknown} raw
+ * @returns {DatevEinstellungen}
+ */
 export function normalisiereEinstellungen(raw) {
-  const r = raw && typeof raw === 'object' ? raw : {};
+  const r = /** @type {Record<string, unknown>} */ (raw && typeof raw === 'object' ? raw : {});
   const kontenrahmen = r.kontenrahmen === 'SKR04' ? 'SKR04' : 'SKR03';
   const basis = KONTENRAHMEN[kontenrahmen];
   const sachkontenlaenge = [4, 5, 6, 7, 8].includes(Number(r.sachkontenlaenge)) ? Number(r.sachkontenlaenge) : 4;
+  /** @param {unknown} w @param {string} standard */
   const konto = (w, standard) => ziffern(w, sachkontenlaenge) || standard;
-  const e = r.erloeskonten || {};
-  const g = r.geldkonten || {};
-  const wj = /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(String(r.wj_beginn || '')) ? r.wj_beginn : '01-01';
+  const e = /** @type {Record<string, unknown>} */ (r.erloeskonten && typeof r.erloeskonten === 'object' ? r.erloeskonten : {});
+  const g = /** @type {Record<string, unknown>} */ (r.geldkonten && typeof r.geldkonten === 'object' ? r.geldkonten : {});
+  const wjStr = String(r.wj_beginn || '');
+  const wj = /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(wjStr) ? wjStr : '01-01';
   return {
     beraternummer: ziffern(r.beraternummer, 7),
     mandantennummer: ziffern(r.mandantennummer, 5),
@@ -52,25 +100,37 @@ export function normalisiereEinstellungen(raw) {
   };
 }
 
-/** Was fehlt, damit DATEV die Datei annimmt? Leeres Array = exportfähig. */
+/**
+ * Was fehlt, damit DATEV die Datei annimmt? Leeres Array = exportfähig.
+ * @param {DatevEinstellungen} e
+ * @returns {string[]}
+ */
 export function fehlendeAngaben(e) {
+  /** @type {string[]} */
   const f = [];
   if (!e.beraternummer || Number(e.beraternummer) < 1001) f.push('Beraternummer (vom Steuerberater, 4–7 Ziffern)');
   if (!e.mandantennummer || Number(e.mandantennummer) < 1) f.push('Mandantennummer (vom Steuerberater, 1–5 Ziffern)');
   return f;
 }
 
+/** @type {Record<string, string>} */
 const BELEG_ART = { zuzahlung: 'Zuzahlung', rechnung: 'Rechnung', ausfall: 'Ausfallhonorar', barverkauf: 'Verkauf', storno: 'Storno' };
 
-/** Belegliste-Typ (+ Rechnungsart) → Erlöskonto-Schlüssel. */
+/**
+ * Belegliste-Typ (+ Rechnungsart) → Erlöskonto-Schlüssel.
+ * @param {string} type
+ * @param {string | null | undefined} [invoiceType]
+ * @returns {string}
+ */
 export function erloesSchluessel(type, invoiceType) {
   if (type === 'zuzahlung') return 'zuzahlung';
   if (type === 'ausfall') return 'ausfall';
   if (type === 'barverkauf') return 'verkauf';
-  if (type === 'rechnung') return ['privat', 'selbstzahler', 'bg'].includes(invoiceType) ? invoiceType : 'privat';
+  if (type === 'rechnung') return invoiceType && ['privat', 'selbstzahler', 'bg'].includes(invoiceType) ? invoiceType : 'privat';
   return 'privat';
 }
 
+/** @param {string | number | Date} iso */
 const datumBerlin = (iso) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(iso));
 
 /**
@@ -79,15 +139,18 @@ const datumBerlin = (iso) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europ
  * ein negativer Betrag (Storno, Rücklastschrift) wird zur Haben-Buchung.
  *
  * @param {object} q
- * @param {Array} q.belege        belegliste-Zeilen (id, beleg_nr, type, zahlart, amount_eur, created_at, invoice_id, storno_von)
- * @param {Map}   q.invoiceTypen  invoice_id → invoice_type
- * @param {Map}   q.invoiceNr     invoice_id → invoice_number
- * @param {Map}   q.originale     belegliste.id → {type, invoice_id} (für Storno-Zeilen)
- * @param {Array} q.gkv           abrechnung_zahlung-Zeilen (art, betrag_eur, datum, einzel_rechnungsnummer)
- * @param {object} e              normalisierte Einstellungen
+ * @param {DatevBelegInput[]} [q.belege]        belegliste-Zeilen (id, beleg_nr, type, zahlart, amount_eur, created_at, invoice_id, storno_von)
+ * @param {Map<string, string>} [q.invoiceTypen]  invoice_id → invoice_type
+ * @param {Map<string, string>} [q.invoiceNr]     invoice_id → invoice_number
+ * @param {Map<string, { type?: string, invoice_id?: string | null }>} [q.originale]     belegliste.id → {type, invoice_id} (für Storno-Zeilen)
+ * @param {DatevGkvInput[]} [q.gkv]           abrechnung_zahlung-Zeilen (art, betrag_eur, datum, einzel_rechnungsnummer)
+ * @param {DatevEinstellungen} e              normalisierte Einstellungen
+ * @returns {DatevBuchung[]}
  */
 export function buchungenAus({ belege = [], invoiceTypen = new Map(), invoiceNr = new Map(), originale = new Map(), gkv = [] }, e) {
+  /** @type {DatevBuchung[]} */
   const out = [];
+  /** @param {number | string} betrag @param {string} konto @param {string} gegenkonto @param {string} datum @param {string} belegfeld1 @param {string} text */
   const push = (betrag, konto, gegenkonto, datum, belegfeld1, text) => {
     const cent = Math.round(Number(betrag) * 100);
     if (!cent) return;
@@ -110,9 +173,11 @@ export function buchungenAus({ belege = [], invoiceTypen = new Map(), invoiceNr 
     push(b.amount_eur, geld, e.erloeskonten[schluessel], datumBerlin(b.created_at), String(b.beleg_nr), text);
   }
 
+  /** @type {Record<string, string>} */
+  const gkvLabels = { zahlung: 'GKV-Zahlung', ruecklastschrift: 'GKV-Rücklastschrift', korrektur: 'GKV-Korrektur' };
   for (const z of gkv) {
     if (z.art === 'abschreibung') continue;
-    const label = { zahlung: 'GKV-Zahlung', ruecklastschrift: 'GKV-Rücklastschrift', korrektur: 'GKV-Korrektur' }[z.art] || 'GKV';
+    const label = gkvLabels[z.art] || 'GKV';
     push(z.betrag_eur, e.geldkonten.bank, e.erloeskonten.gkv, String(z.datum).slice(0, 10),
       String(z.einzel_rechnungsnummer || ''), `${label}${z.einzel_rechnungsnummer ? ' RE ' + z.einzel_rechnungsnummer : ''}`);
   }
@@ -255,10 +320,16 @@ export const EXTF_SPALTEN = Object.freeze([
 ]);
 
 
+/** @param {unknown} s */
 const q = (s) => `"${String(s ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/"/g, '""')}"`;
+/** @param {unknown} iso */
 const yyyymmdd = (iso) => String(iso).slice(0, 10).replace(/-/g, '');
 
-/** Wirtschaftsjahr, in dem `tag` liegt: {beginn, naechster} als YYYY-MM-DD. */
+/**
+ * Wirtschaftsjahr, in dem `tag` liegt: {beginn, naechster} als YYYY-MM-DD.
+ * @param {string} tag
+ * @param {string} [wjBeginn]
+ */
 export function wirtschaftsjahr(tag, wjBeginn = '01-01') {
   const jahr = Number(String(tag).slice(0, 4));
   let beginn = `${jahr}-${wjBeginn}`;
@@ -267,37 +338,49 @@ export function wirtschaftsjahr(tag, wjBeginn = '01-01') {
   return { beginn, naechster };
 }
 
-/** Belegfeld 1 erlaubt nur [A-Za-z0-9_$&%*+-/], max. 36 (Formatbeschreibung #11). */
+/**
+ * Belegfeld 1 erlaubt nur [A-Za-z0-9_$&%*+-/], max. 36 (Formatbeschreibung #11).
+ * @param {unknown} s
+ */
 export function belegfeld(s) {
   return String(s ?? '').replace(/[^A-Za-z0-9_$&%*+\-/]/g, '-').slice(0, 36);
 }
 
-/** Text auf ISO-8859-1 (DATEV-Standardzeichensatz) bringen: Zeichen darüber werden '?'. */
+/**
+ * Text auf ISO-8859-1 (DATEV-Standardzeichensatz) bringen: Zeichen darüber werden '?'.
+ * @param {unknown} text
+ */
 export function alsLatin1(text) {
   return Buffer.from(String(text).replace(/[^\u0000-ÿ]/g, '?'), 'latin1');
 }
 
+/** @param {number} n */
 const zahl = (n) => n.toFixed(2).replace('.', ',');
 
 /**
  * Buchungen → EXTF-Datei (Buffer, ISO-8859-1, CRLF). Wirft {status:400} bei einem
  * Zeitraum über die WJ-Grenze (Belegdatum ist TTMM, das Jahr kommt aus dem
  * WJ-Beginn im Kopf, Feld #13) oder mehr als 99.999 Buchungen je Datei.
+ *
+ * @param {DatevBuchung[]} buchungen
+ * @param {{ einstellungen: DatevEinstellungen, von: string, bis: string, erzeugtAm?: Date }} opts
  */
 export function erzeugeExtfCsv(buchungen, { einstellungen: e, von, bis, erzeugtAm = new Date() }) {
   const wj = wirtschaftsjahr(von, e.wj_beginn);
   if (String(bis) >= wj.naechster) {
+    /** @type {Error & { status?: number }} */
     const err = new Error(`Der Zeitraum überschreitet das Wirtschaftsjahr — ab ${wj.naechster.split('-').reverse().join('.')} bitte einen eigenen Export.`);
     err.status = 400; throw err;
   }
   if (buchungen.length > 99999) {
+    /** @type {Error & { status?: number }} */
     const err = new Error('Mehr als 99.999 Buchungen — bitte einen kürzeren Zeitraum wählen.');
     err.status = 400; throw err;
   }
   const p = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
-  }).formatToParts(erzeugtAm).reduce((a, x) => { a[x.type] = x.value; return a; }, {});
+  }).formatToParts(erzeugtAm).reduce(/** @param {Record<string, string>} a */ (a, x) => { a[x.type] = x.value; return a; }, {});
   const stempel = `${p.year}${p.month}${p.day}${p.hour}${p.minute}${p.second}${String(erzeugtAm.getMilliseconds()).padStart(3, '0')}`;
 
   // Kopf, 31 Felder — Reihenfolge und Regeln aus der Formatbeschreibung „Satzaufbau".

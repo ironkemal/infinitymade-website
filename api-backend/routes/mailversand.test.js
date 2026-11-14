@@ -12,31 +12,36 @@ const { verschluesselePasswort } = await import('../lib/mail.js');
 const OWNER = 'aaaaaaaa-0000-4000-8000-000000000001';
 
 function fakeDb() {
+  /** @type {any} */
   const t = { praxis_mailversand: [], profiles: [{ id: OWNER, email: 'inhaber@example.invalid', business_name: 'Praxis Test', b2b_from_email: null }] };
+  /** @type {string[]} */
   const rpcs = [];
   return {
     t, rpcs,
-    rpc: async (name) => { rpcs.push(name); return { data: null, error: null }; },
-    from(name) {
-      const f = []; let op = 'select'; let wert = null;
+    rpc: async (/** @type {string} */ name) => { rpcs.push(name); return { data: null, error: null }; },
+    from(/** @type {string} */ name) {
+      /** @type {Array<(r: any) => boolean>} */
+      const f = []; let op = 'select';
+      /** @type {any} */
+      let wert = null;
       const rows = () => (t[name] ||= []);
       const b = {
         select() { return b; },
         limit() { return b; },
-        eq(k, v) { f.push(r => r[k] === v); return b; }, or(expr) { const teile = String(expr).split(','); f.push(r => teile.some(x => { const [k, op, ...rest] = x.split('.'); const v = rest.join('.'); return op === 'is' ? r[k] == null : op === 'lt' ? (r[k] != null && r[k] < v) : false; })); return b; },
-        update(w) { op = 'update'; wert = w; return b; },
-        upsert(w) { op = 'upsert'; wert = w; return b; },
+        eq(/** @type {string} */ k, /** @type {any} */ v) { f.push(r => r[k] === v); return b; }, or(/** @type {string} */ expr) { const teile = String(expr).split(','); f.push(r => teile.some(x => { const [k, op, ...rest] = x.split('.'); const v = rest.join('.'); return op === 'is' ? r[k] == null : op === 'lt' ? (r[k] != null && r[k] < v) : false; })); return b; },
+        update(/** @type {any} */ w) { op = 'update'; wert = w; return b; },
+        upsert(/** @type {any} */ w) { op = 'upsert'; wert = w; return b; },
         maybeSingle() { return b.run(true); },
-        then(ok, no) { return b.run(false).then(ok, no); },
-        async run(einzeln) {
+        then(/** @type {any} */ ok, /** @type {any} */ no) { return b.run(false).then(ok, no); },
+        async run(/** @type {boolean} */ einzeln) {
           if (op === 'upsert') {
-            const i = rows().findIndex(r => r.owner_id === wert.owner_id);
+            const i = rows().findIndex((/** @type {any} */ r) => r.owner_id === wert.owner_id);
             if (i >= 0) rows()[i] = { ...rows()[i], ...wert }; else rows().push({ ...wert });
             return { data: null, error: null };
           }
-          const hit = rows().filter(r => f.every(x => x(r)));
+          const hit = rows().filter((/** @type {any} */ r) => f.every(x => x(r)));
           if (op === 'update' && wert.letzter_test_at && Object.keys(wert).length === 1 && t.claimFehler) return { data: null, error: { code: 'DB_TEST_FEHLER' } };
-          if (op === 'update') { hit.forEach(r => Object.assign(r, wert)); return { data: hit, error: null }; }
+          if (op === 'update') { hit.forEach((/** @type {any} */ r) => Object.assign(r, wert)); return { data: hit, error: null }; }
           return { data: einzeln ? hit[0] || null : hit, error: null };
         },
       };
@@ -45,17 +50,32 @@ function fakeDb() {
   };
 }
 
-let server, base, db, rolle, verifyFehler, gesendet, kutuWert; const optionen = [];
+/** @type {any} */
+let server;
+/** @type {string} */
+let base;
+/** @type {any} */
+let db;
+/** @type {string} */
+let rolle;
+/** @type {any} */
+let verifyFehler;
+/** @type {any[]} */
+let gesendet;
+/** @type {boolean} */
+let kutuWert;
+/** @type {any[]} */
+const optionen = [];
 before(async () => {
   db = fakeDb();
   const app = express(); app.use(express.json());
-  const auth = (req, _res, next) => { req.auth = { userId: OWNER, tenantId: OWNER, role: rolle }; next(); };
-  const owner = (req, res, next) => (req.auth.role === 'owner' ? next() : res.status(403).json({ error: 'Nur für Inhaber' }));
-  const transportFabrik = (o) => (optionen.push(o), {
+  const auth = (/** @type {any} */ req, /** @type {any} */ _res, /** @type {any} */ next) => { req.auth = { userId: OWNER, tenantId: OWNER, role: rolle }; next(); };
+  const owner = (/** @type {any} */ req, /** @type {any} */ res, /** @type {any} */ next) => (req.auth.role === 'owner' ? next() : res.status(403).json({ error: 'Nur für Inhaber' }));
+  const transportFabrik = (/** @type {any} */ o) => (optionen.push(o), {
     async verify() { if (verifyFehler) throw Object.assign(new Error('x'), { code: verifyFehler }); },
-    async sendMail(m) { gesendet.push(m); },
+    async sendMail(/** @type {any} */ m) { gesendet.push(m); },
   });
-  const lookup = async (h) => [{ address: h === 'intern.example.invalid' ? '10.0.0.5' : '203.0.113.7' }];
+  const lookup = async (/** @type {string} */ h) => [{ address: h === 'intern.example.invalid' ? '10.0.0.5' : '203.0.113.7' }];
   app.use('/api', createMailversandRouter({ supabase: db, auth, owner, transportFabrik, kutu: () => kutuWert, env: {}, lookup }));
   server = app.listen(0, '127.0.0.1');
   await new Promise(r => server.once('listening', r));
@@ -63,6 +83,11 @@ before(async () => {
 });
 after(() => server?.close());
 
+/**
+ * @param {string} method
+ * @param {string} pfad
+ * @param {any} [body]
+ */
 const call = (method, pfad, body) => fetch(base + pfad, {
   method, headers: { 'Content-Type': 'application/json' }, ...(body ? { body: JSON.stringify(body) } : {}),
 }).then(async r => ({ status: r.status, body: await r.json() }));
@@ -123,24 +148,24 @@ test('Drossel gilt ueber Prozesse hinweg (2 Worker): zweiter Router mit eigenem 
   // zwei "Worker": je eigener Router = eigener Speicher, gleiche Datenbank
   const worker = async () => {
     const app2 = express(); app2.use(express.json());
-    const auth = (req, _res, next) => { req.auth = { userId: OWNER, tenantId: OWNER, role: 'owner' }; next(); };
-    app2.use('/api', createMailversandRouter({ supabase: db, auth, owner: (q, r, n) => n(), kutu: () => true, env: {},
-      transportFabrik: () => ({ async verify() {}, async sendMail(m) { gesendet.push(m); } }) }));
+    const auth = (/** @type {any} */ req, /** @type {any} */ _res, /** @type {any} */ next) => { req.auth = { userId: OWNER, tenantId: OWNER, role: 'owner' }; next(); };
+    app2.use('/api', createMailversandRouter({ supabase: db, auth, owner: (/** @type {any} */ q, /** @type {any} */ r, /** @type {any} */ n) => n(), kutu: () => true, env: {},
+      transportFabrik: () => ({ async verify() {}, async sendMail(/** @type {any} */ m) { gesendet.push(m); } }) }));
     const s = app2.listen(0, '127.0.0.1'); await new Promise(r => s.once('listening', r)); return s;
   };
   const s1 = await worker(); const s2 = await worker();
   try {
     db.t.claimFehler = true;
-    const fehler = await fetch(`http://127.0.0.1:${s1.address().port}/api/mailversand/test`, { method: 'POST' });
+    const fehler = await fetch(`http://127.0.0.1:${(/** @type {import('node:net').AddressInfo} */ (s1.address())).port}/api/mailversand/test`, { method: 'POST' });
     assert.equal(fehler.status, 503, 'DB-Sperre nicht verfügbar: kein Versand');
     assert.equal(gesendet.length, 0);
     db.t.claimFehler = false;
-    assert.equal((await fetch(`http://127.0.0.1:${s1.address().port}/api/mailversand/test`, { method: 'POST' })).status, 200);
-    const r2 = await fetch(`http://127.0.0.1:${s2.address().port}/api/mailversand/test`, { method: 'POST' });
+    assert.equal((await fetch(`http://127.0.0.1:${(/** @type {import('node:net').AddressInfo} */ (s1.address())).port}/api/mailversand/test`, { method: 'POST' })).status, 200);
+    const r2 = await fetch(`http://127.0.0.1:${(/** @type {import('node:net').AddressInfo} */ (s2.address())).port}/api/mailversand/test`, { method: 'POST' });
     assert.equal(r2.status, 429, 'anderer Prozess sieht den Anspruch in der DB');
     assert.equal(gesendet.length, 1, 'nur eine Testmail');
     db.t.praxis_mailversand[0].letzter_test_at = new Date(Date.now() - 11_000).toISOString();
-    const r3 = await fetch(`http://127.0.0.1:${s2.address().port}/api/mailversand/test`, { method: 'POST' });
+    const r3 = await fetch(`http://127.0.0.1:${(/** @type {import('node:net').AddressInfo} */ (s2.address())).port}/api/mailversand/test`, { method: 'POST' });
     assert.equal(r3.status, 200, 'nach 10 s wieder frei');
   } finally { db.t.claimFehler = false; s1.close(); s2.close(); }
 });
@@ -192,9 +217,9 @@ test('pruefeMailEingabe: Andere verlangt Host/Port/Verschluesselung, keine Heade
 test('Tabelle noch nicht angewandt: GET verfuegbar=false, PUT 503', async () => {
   reset();
   const echt = db.from.bind(db);
-  db.from = (name) => (name === 'praxis_mailversand'
-    ? { select() { return this; }, eq() { return this; }, limit() { return this; },
-        maybeSingle: async () => ({ data: null, error: { code: '42P01' } }), then(ok) { return Promise.resolve({ data: null, error: { code: '42P01' } }).then(ok); } }
+  db.from = (/** @type {string} */ name) => (name === 'praxis_mailversand'
+    ? /** @type {any} */ ({ select() { return this; }, eq() { return this; }, limit() { return this; },
+        maybeSingle: async () => ({ data: null, error: { code: '42P01' } }), then(/** @type {any} */ ok) { return Promise.resolve({ data: null, error: { code: '42P01' } }).then(ok); } })
     : echt(name));
   try {
     const g = await call('GET', '/mailversand');

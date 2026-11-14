@@ -10,7 +10,20 @@ const SPERRE_FEHLT_MS = 10 * 60 * 1000;
 const SPERRE_FEHLER_MS = 60 * 1000;
 let gesperrtBis = 0;
 
-/** Gespeicherter Terminstandort, unabhängig vom später geänderten Einsatzplan. NULL bleibt praxisweit. */
+/**
+ * @typedef {{ user_id?: string | null, business_id?: string | null }} StandortTermin
+ * @typedef {{ id: string }} StandortTeamMitglied
+ * @typedef {import('./standort-plan-regel.js').StandortPlanZeile} StandortPlanZeile
+ * @typedef {{ from: (table: string) => any }} StandortSupabaseLike
+ */
+
+/**
+ * Gespeicherter Terminstandort, unabhängig vom später geänderten Einsatzplan. NULL bleibt praxisweit.
+ * @template {StandortTermin} T
+ * @param {T[]} termine
+ * @param {string | null | undefined} businessId
+ * @returns {T[]}
+ */
 export function termineDesStandorts(termine, businessId) {
   if (!businessId) return termine;
   return termine.filter(t => !t.business_id || t.business_id === businessId);
@@ -18,10 +31,21 @@ export function termineDesStandorts(termine, businessId) {
 
 export function _planSperreZuruecksetzen() { gesperrtBis = 0; }
 
+/**
+ * @param {unknown} error
+ * @returns {boolean}
+ */
 function tabelleFehlt(error) {
-  return /42P01|PGRST205|does not exist|schema cache/i.test(`${error?.code || ''} ${error?.message || ''}`);
+  const err = /** @type {{ code?: unknown, message?: unknown } | null | undefined} */ (error);
+  return /42P01|PGRST205|does not exist|schema cache/i.test(`${err?.code || ''} ${err?.message || ''}`);
 }
 
+/**
+ * @param {StandortSupabaseLike | null | undefined} supabase
+ * @param {{ ownerId: string | null | undefined, employeeIds: string[] }} opts
+ * @param {number} [jetzt]
+ * @returns {Promise<StandortPlanZeile[]>}
+ */
 export async function ladeStandortPlan(supabase, { ownerId, employeeIds }, jetzt = Date.now()) {
   if (!supabase || !ownerId || !Array.isArray(employeeIds) || !employeeIds.length) return [];
   if (jetzt < gesperrtBis) return [];
@@ -46,6 +70,13 @@ export async function ladeStandortPlan(supabase, { ownerId, employeeIds }, jetzt
  * Rein: Teamspalten fuer einen Tag am Standort. Ein Mitarbeiter bleibt sichtbar, wenn der Plan ihn dort
  * vorsieht ODER er an dem Tag dort schon einen Termin hat (nichts Gebuchtes verschwindet).
  * Kein Plan oder kein Standort -> unveraenderte Liste. Ein verifizierter Plan darf alle Spalten ausblenden.
+ * @template {StandortTeamMitglied} T
+ * @param {T[]} team
+ * @param {StandortPlanZeile[] | null | undefined} zeilen
+ * @param {string | null | undefined} datum
+ * @param {string | null | undefined} standortId
+ * @param {StandortTermin[]} [bookings]
+ * @returns {T[]}
  */
 export function spaltenNachPlan(team, zeilen, datum, standortId, bookings = []) {
   if (!Array.isArray(team) || !standortId || !Array.isArray(zeilen) || !zeilen.length) return team;
@@ -55,7 +86,13 @@ export function spaltenNachPlan(team, zeilen, datum, standortId, bookings = []) 
   return sicht;
 }
 
-/** Einzeiler fuer dashboard.js: laedt den Plan und filtert die Spalten. */
+/**
+ * Einzeiler fuer dashboard.js: laedt den Plan und filtert die Spalten.
+ * @template {StandortTeamMitglied} T
+ * @param {StandortSupabaseLike | null | undefined} supabase
+ * @param {{ team: T[], bookings?: StandortTermin[], datum: string | null | undefined, businessId: string | null | undefined, ownerId: string | null | undefined }} opts
+ * @returns {Promise<T[]>}
+ */
 export async function planSpalten(supabase, { team, bookings, datum, businessId, ownerId }) {
   if (!businessId || !Array.isArray(team) || !team.length) return team;
   const zeilen = await ladeStandortPlan(supabase, { ownerId, employeeIds: team.map((e) => e.id) });

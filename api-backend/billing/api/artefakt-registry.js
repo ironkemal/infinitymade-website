@@ -12,31 +12,43 @@
 // Reservierungen werden nie per Timeout verworfen.
 import { createHash } from 'node:crypto';
 
+/**
+ * @param {number} status
+ * @param {string} code
+ * @param {string} message
+ * @returns {Error & { status: number, statusCode: number, code: string }}
+ */
 function fehler(status, code, message) {
-  const e = new Error(message);
-  e.status = status;
-  e.statusCode = status;
-  e.code = code;
+  /** @type {Error & { status: number, statusCode: number, code: string }} */
+  const e = Object.assign(new Error(message), { status, statusCode: status, code });
   return e;
 }
 
+/** @param {string | NodeJS.ArrayBufferView} bytes */
 export const sha256Hex = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
 // Only exact protocol exceptions may cross the API boundary. PostgreSQL details,
 // hints and arbitrary exception text can contain patient data and stay private.
+/** @type {Map<string, [number, string, string]>} */
 const PHYSIO_RPC_FEHLER = new Map([
   ...['PHYSIO_OWNER_UNAVAILABLE', 'PHYSIO_LINE_RPC_REQUIRED', 'PHYSIO_RPC_REQUIRED',
     'PHYSIO_BUSINESS_SCOPE', 'PHYSIO_ARTIFACT_SCOPE', 'PHYSIO_HEADER_SCOPE']
-    .map(code => [`42501:${code}`, [403, code, 'Zugriff auf diesen Abrechnungsvorgang nicht erlaubt.']]),
+    .map(code => /** @type {[string, [number, string, string]]} */ ([`42501:${code}`, [403, code, 'Zugriff auf diesen Abrechnungsvorgang nicht erlaubt.']])),
   ...['PHYSIO_KEY_PAYLOAD_CONFLICT', 'PHYSIO_INPUT_CHANGED', 'PHYSIO_SOURCE_SCOPE_OR_CLAIM',
     'PHYSIO_READBACK_INVALID', 'PHYSIO_BINDING_CONFLICT', 'PHYSIO_GENERATION_OR_CAS_CONFLICT']
-    .map(code => [`40001:${code}`, [409, code, 'Abrechnungsstand oder Ausführungsauftrag hat sich geändert.']]),
+    .map(code => /** @type {[string, [number, string, string]]} */ ([`40001:${code}`, [409, code, 'Abrechnungsstand oder Ausführungsauftrag hat sich geändert.']])),
   ...['PHYSIO_REQUEST_INVALID', 'PHYSIO_MANIFEST_OR_PACKAGE_INVALID']
-    .map(code => [`22023:${code}`, [422, code, 'Abrechnungsauftrag oder Dateipaket ist ungültig.']]),
+    .map(code => /** @type {[string, [number, string, string]]} */ ([`22023:${code}`, [422, code, 'Abrechnungsauftrag oder Dateipaket ist ungültig.']])),
   ['23505:PHYSIO_SESSION_CLAIM_CONFLICT', [409, 'PHYSIO_SESSION_CLAIM_CONFLICT', 'Eine Sitzung wurde bereits beansprucht.']],
 ]);
 
 // Separate from the legacy rpc(): existing registry callers keep their contract.
+/**
+ * @param {any} db
+ * @param {string} name
+ * @param {Record<string, any>} args
+ * @param {(data: any) => boolean} pruefe
+ */
 async function physioRpc(db, name, args, pruefe) {
   const unavailable = () => fehler(503, 'PHYSIO_PUBLIKATION_NICHT_VERFUEGBAR',
     'Publikationsdienst nicht verfügbar. Ausgang des Auftrags vor Wiederholung prüfen.');
@@ -55,7 +67,10 @@ async function physioRpc(db, name, args, pruefe) {
   return result.data;
 }
 
-/** Local protocol adapter; route activation still requires schema AND Storage gates. */
+/**
+ * Local protocol adapter; route activation still requires schema AND Storage gates.
+ * @param {{ db: any, ownerId: string, key: string, payload: any, expectedInput?: any }} opts
+ */
 export async function reservierePhysioPublikation({ db, ownerId, key, payload, expectedInput = null }) {
   return physioRpc(db, 'abrechnung_idempotency_reserve', {
     p_owner: ownerId, p_key: key, p_payload: payload, p_expected_input: expectedInput,
@@ -69,13 +84,19 @@ export async function reservierePhysioPublikation({ db, ownerId, key, payload, e
         && typeof data.updated_at === 'string' && data.updated_at.trim() !== '')))));
 }
 
-/** PostgreSQL owns jsonb canonicalization; JSON.stringify is not this hash contract. */
+/**
+ * PostgreSQL owns jsonb canonicalization; JSON.stringify is not this hash contract.
+ * @param {{ db: any, paket: any }} opts
+ */
 export async function berechnePhysioPaketHash({ db, paket }) {
   return physioRpc(db, 'physio_v1_hash', { p_value: paket },
     data => typeof data === 'string' && /^[0-9a-f]{64}$/.test(data));
 }
 
-/** Receipt only after immutable upload, successful readback/hash and format validation. */
+/**
+ * Receipt only after immutable upload, successful readback/hash and format validation.
+ * @param {{ db: any, ownerId: string, registryId: string, generation: number, sha256: string, bytes: number, packageSha256: string }} opts
+ */
 export async function quittierePhysioReadback({ db, ownerId, registryId, generation, sha256, bytes, packageSha256 }) {
   return physioRpc(db, 'physio_artefakt_readback', {
     p_owner: ownerId, p_id: registryId, p_generation: generation, p_sha256: sha256,
@@ -83,7 +104,10 @@ export async function quittierePhysioReadback({ db, ownerId, registryId, generat
   }, data => data === true);
 }
 
-/** A timeout is an unknown commit outcome, never evidence that a new bill is needed. */
+/**
+ * A timeout is an unknown commit outcome, never evidence that a new bill is needed.
+ * @param {{ db: any, ownerId: string, abrechnungId: string, key: string, payloadSha256: string, inputSha256: string, generation: number, expectedUpdatedAt: string, paket: any, manifest: any }} opts
+ */
 export async function finalisierePhysioPublikation({ db, ownerId, abrechnungId, key,
   payloadSha256, inputSha256, generation, expectedUpdatedAt, paket, manifest }) {
   return physioRpc(db, 'abrechnung_physio_finalize', {
@@ -94,13 +118,21 @@ export async function finalisierePhysioPublikation({ db, ownerId, abrechnungId, 
     && typeof abrechnungId === 'string' && abrechnungId.trim() !== '' && data.abrechnungId === abrechnungId);
 }
 
-/** Deterministischer Abbruch (nur vor Upload/Finalize-Unsicherheit). Nie nach published; loescht nichts. */
+/**
+ * Deterministischer Abbruch (nur vor Upload/Finalize-Unsicherheit). Nie nach published; loescht nichts.
+ * @param {{ db: any, ownerId: string, abrechnungId: string, key: string, generation: number, grund: string }} opts
+ */
 export async function abbrechePhysioPublikation({ db, ownerId, abrechnungId, key, generation, grund }) {
   return physioRpc(db, 'abrechnung_physio_abort', {
     p_owner: ownerId, p_abrechnung: abrechnungId, p_key: key, p_generation: generation, p_grund: grund,
   }, data => data?.state === 'aborted' && data.abrechnungId === abrechnungId);
 }
 
+/**
+ * @param {any} db
+ * @param {string} name
+ * @param {Record<string, any>} args
+ */
 async function rpc(db, name, args) {
   if (!db || typeof db.rpc !== 'function') {
     throw fehler(503, 'ARTEFAKT_REGISTRY_NICHT_VERFUEGBAR', 'Artefakt-Registry nicht verfügbar.');
@@ -122,7 +154,7 @@ async function rpc(db, name, args) {
  * Wirft bei jedem Fehler; loescht nie.
  *
  * @param {object}   p
- * @param {object}   p.db            supabase-js-Client (service role)
+ * @param {any}      p.db            supabase-js-Client (service role)
  * @param {string}   p.ownerId
  * @param {string}   p.abrechnungId
  * @param {string}   p.pfad          Versuchspfad (artefaktVersuchPfad), beginnt mit `${ownerId}/`
@@ -159,7 +191,7 @@ export async function reserviereUndLadeHoch({ db, ownerId, abrechnungId, pfad, k
   try {
     up = await db.storage.from('abrechnungen').upload(pfad, bytes, { contentType, upsert: false });
   } catch (e) {
-    up = { error: { message: e?.message || 'Upload fehlgeschlagen' } };
+    up = { error: { message: (e instanceof Error ? e.message : null) || 'Upload fehlgeschlagen' } };
   }
   if (up?.error) {
     // Quittieren, damit die Zeile als gescheitert (und damit ausmusterbar) gilt; Fehler hier sind nicht fatal.
@@ -197,6 +229,7 @@ export async function reserviereUndLadeHoch({ db, ownerId, abrechnungId, pfad, k
  * Schritt 5: Registry-Zeile und Header-Patch atomar veroeffentlichen.
  * `vorher.updated_at` ist die gelesene Header-Version (CAS).
  * Konflikt => 409 und KEINE Loeschung (Zeile bleibt reserved/uploaded).
+ * @param {{ db: any, ownerId: string, registryId: string, vorher: { updated_at: string }, patch: Record<string, any> }} opts
  */
 export async function veroeffentliche({ db, ownerId, registryId, vorher, patch }) {
   const ok = await rpc(db, 'artefakt_publish', {
@@ -216,7 +249,7 @@ export async function veroeffentliche({ db, ownerId, registryId, vorher, patch }
  * Zeitpunkt schon erzeugt und der Header zeigt auf die Dateien; ein Fehler hier darf sie nicht
  * zuruecknehmen — die Dateien bleiben im Bucket erhalten (der Loeschlauf behaelt unbekannte Dateien).
  *
- * @param {Array<{pfad:string, role:'dta'|'auftrag'|'begleit', sha256:string}>} dateien  leere/fehlende Pfade werden ignoriert
+ * @param {{ db: any, ownerId: string, abrechnungId: string, dateien: Array<{pfad:string, role:'dta'|'auftrag'|'begleit', sha256:string}> }} opts  leere/fehlende Pfade werden ignoriert
  * @returns {Promise<{ok:boolean, angelegt?:number}>}
  */
 export async function registriereVeroeffentlicht({ db, ownerId, abrechnungId, dateien }) {
@@ -230,7 +263,7 @@ export async function registriereVeroeffentlicht({ db, ownerId, abrechnungId, da
     });
     return { ok: true, angelegt: typeof n === 'number' ? n : 0 };
   } catch (e) {
-    console.error(`[artefakt-registry] Nachregistrierung fehlgeschlagen (Abrechnung ${abrechnungId}):`, e.message);
+    console.error(`[artefakt-registry] Nachregistrierung fehlgeschlagen (Abrechnung ${abrechnungId}):`, e instanceof Error ? e.message : String(e));
     return { ok: false };
   }
 }

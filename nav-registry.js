@@ -150,9 +150,14 @@ export const NAV_REGISTRY = {
 // Logopädie/Ergotherapie physiotherapy setini kullanır (dashboard.js getSidebarItems ile aynı mantık)
 export const SECTOR_ALIASES = { logopaedie: 'physiotherapy', ergotherapie: 'physiotherapy' };
 
+/**
+ * @param {string | null | undefined} sector
+ * @returns {string}
+ */
 export function resolveSector(sector) {
-  if (NAV_REGISTRY[sector]) return sector;
-  if (SECTOR_ALIASES[sector]) return SECTOR_ALIASES[sector];
+  if (!sector) return 'default';
+  if (Object.prototype.hasOwnProperty.call(NAV_REGISTRY, sector)) return sector;
+  if (Object.prototype.hasOwnProperty.call(SECTOR_ALIASES, sector)) return /** @type {Record<string, string>} */ (SECTOR_ALIASES)[sector];
   const praxisSectors = ['physiotherapy', 'logopaedie', 'ergotherapie', 'podologie', 'praxis'];
   return praxisSectors.includes(sector) ? 'physiotherapy' : 'default';
 }

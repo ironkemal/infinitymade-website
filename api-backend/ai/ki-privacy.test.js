@@ -28,6 +28,7 @@ test('safeAiError: accepts string codes directly', () => {
 });
 
 test('safeAiError: unknown raw provider exceptions map to generic fixed error', () => {
+  /** @type {Error & { status?: number }} */
   const providerErr = new Error('Azure OpenAI: 404 Model deployment not found at https://eastus.api.cognitive.microsoft.com/');
   providerErr.cause = 'Sensitive upstream prompt or patient details';
   providerErr.status = 404;
@@ -58,7 +59,7 @@ test('hashRequest: uses HMAC with random process seed and retains signature', ()
   const hash2 = hashRequest(payload);
 
   assert.equal(typeof hash1, 'string');
-  assert.match(hash1, /^[a-f0-9]{64}$/);
+  assert.match(/** @type {string} */ (hash1), /^[a-f0-9]{64}$/);
   assert.equal(hash1, hash2, 'Hash must be consistent within same process execution');
 
   // Verify it is NOT raw SHA-256 (no raw content hash)
@@ -97,6 +98,7 @@ test('safeAiError: generic safe fallback preserves 400/401/403/409/502/503 statu
   assert.equal(safe400.status, 400);
   assert.equal(safe400.message, GENERIC_AI_ERROR.message);
 
+  /** @type {Error & { status?: number }} */
   const err409 = new Error('Conflict leak');
   err409.status = 409;
   const safe409 = safeAiError(err409);

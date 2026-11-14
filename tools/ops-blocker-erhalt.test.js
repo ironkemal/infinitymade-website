@@ -4,10 +4,11 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const source = readFileSync(new URL('../ops/board.js', import.meta.url), 'utf8');
+/** @param {string} name */
 function declaration(name) {
   const start = source.indexOf(`function ${name}(`);
   assert.ok(start >= 0, name);
-  return source.slice(start).match(/^[\s\S]*?\n\}/)[0];
+  return source.slice(start).match(/^[\s\S]*?\n\}/)?.[0] ?? '';
 }
 
 function fixture(groupColumns = true) {
@@ -19,11 +20,12 @@ function fixture(groupColumns = true) {
     { id: 'unused-closed', title: 'Andere erledigte Aufgabe', done: true },
     { id: 'child', title: 'Eigenes Kind', parent_id: 'task', done: false },
   ];
+  /** @type {Record<string, { value?: string, selectedOptions?: Array<{ value: string, selected: boolean }> }>} */
   const fields = {};
   const context = vm.createContext({ todos, state: { members: [] }, hasGroupCols: groupColumns,
-    kidsOf: id => todos.filter(t => t.parent_id === id),
-    esc: s => String(s ?? '').replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;'),
-    $: selector => fields[selector], toast() { throw new Error('Unexpected toast'); },
+    kidsOf: (/** @type {string} */ id) => todos.filter(t => t.parent_id === id),
+    esc: (/** @type {unknown} */ s) => String(s ?? '').replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;'),
+    $: (/** @type {string} */ selector) => fields[selector], toast() { throw new Error('Unexpected toast'); },
   });
   vm.runInContext(['todoForm', 'categoryList', 'readForm'].map(declaration).join('\n'), context);
   const html = context.todoForm(task);

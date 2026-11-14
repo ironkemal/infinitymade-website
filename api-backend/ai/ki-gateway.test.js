@@ -23,6 +23,14 @@ const confirmationService = createConfirmationService({ secret: Buffer.alloc(32,
 const TENANT_1 = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const TENANT_2 = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 
+/** @typedef {Error & { code?: string, status?: number, challengeId?: string, candidates?: Array<{ id?: string, text?: string, type?: string }> }} TestGatewayError */
+
+/** @param {unknown} err @returns {TestGatewayError} */
+function asGatewayErr(err) {
+  return /** @type {TestGatewayError} */ (err);
+}
+
+/** @param {string} [tenantId] */
 function makeValidAuth(tenantId = TENANT_1) {
   return {
     userId: tenantId,
@@ -31,6 +39,7 @@ function makeValidAuth(tenantId = TENANT_1) {
   };
 }
 
+/** @param {string} [mode] */
 function makeReadyConfig(mode = 'direkt') {
   return createAiConfig({
     AI_MODE: mode,
@@ -55,12 +64,13 @@ test('auszeroDIcalls: mode "aus" throws 503 and makes ZERO transport calls', asy
       validateOutput: () => true,
       dependencies: { dictionary: [],
         config: cfg,
-        transport: async () => { transportCalled++; return {}; }
+        transport: async () => { transportCalled++; return /** @type {any} */ ({}); }
       }
     }),
-    (err) => {
-      assert.equal(err.code, 'AI_MODE_AUS');
-      assert.equal(err.status, 503);
+    (/** @type {unknown} */ err) => {
+      const e = asGatewayErr(err);
+      assert.equal(e.code, 'AI_MODE_AUS');
+      assert.equal(e.status, 503);
       return true;
     }
   );
@@ -77,9 +87,10 @@ test('invalidcontext: missing or incomplete auth throws 401/403', async () => {
       buildMessages: () => [],
     validateOutput: () => true
     }),
-    (err) => {
-      assert.equal(err.code, 'KI_AUTH_REQUIRED');
-      assert.equal(err.status, 401);
+    (/** @type {unknown} */ err) => {
+      const e = asGatewayErr(err);
+      assert.equal(e.code, 'KI_AUTH_REQUIRED');
+      assert.equal(e.status, 401);
       return true;
     }
   );
@@ -96,9 +107,10 @@ test('client tenant in payload is rejected with 400 KI_SCHEMA', async () => {
       validateOutput: () => true,
       dependencies: { dictionary: [], config: cfg }
     }),
-    (err) => {
-      assert.equal(err.code, 'KI_SCHEMA');
-      assert.equal(err.status, 400);
+    (/** @type {unknown} */ err) => {
+      const e = asGatewayErr(err);
+      assert.equal(e.code, 'KI_SCHEMA');
+      assert.equal(e.status, 400);
       return true;
     }
   );
@@ -115,9 +127,10 @@ test('ocr task is always 503 disabled', async () => {
       validateOutput: () => true,
       dependencies: { dictionary: [], config: cfg }
     }),
-    (err) => {
-      assert.equal(err.code, 'AI_OCR_DISABLED');
-      assert.equal(err.status, 503);
+    (/** @type {unknown} */ err) => {
+      const e = asGatewayErr(err);
+      assert.equal(e.code, 'AI_OCR_DISABLED');
+      assert.equal(e.status, 503);
       return true;
     }
   );
@@ -139,9 +152,10 @@ test('missing owner opt-in throws 503 AI_OWNER_OPTIN_REQUIRED', async () => {
         ownerDecisionStore: ownerStore
       }
     }),
-    (err) => {
-      assert.equal(err.code, 'AI_OWNER_OPTIN_REQUIRED');
-      assert.equal(err.status, 503);
+    (/** @type {unknown} */ err) => {
+      const e = asGatewayErr(err);
+      assert.equal(e.code, 'AI_OWNER_OPTIN_REQUIRED');
+      assert.equal(e.status, 503);
       return true;
     }
   );
@@ -170,9 +184,10 @@ test('operator readiness gate (AI_ACTIVATION_READY=0) blocks with 503', async ()
         ownerDecisionStore: ownerStore
       }
     }),
-    (err) => {
-      assert.equal(err.code, 'AI_NOT_ACTIVATED');
-      assert.equal(err.status, 503);
+    (/** @type {unknown} */ err) => {
+      const e = asGatewayErr(err);
+      assert.equal(e.code, 'AI_NOT_ACTIVATED');
+      assert.equal(e.status, 503);
       return true;
     }
   );
@@ -202,9 +217,10 @@ test('mailReady gate blocks mail draft tasks when false', async () => {
         ownerDecisionStore: ownerStore
       }
     }),
-    (err) => {
-      assert.equal(err.code, 'AI_MAIL_DISABLED');
-      assert.equal(err.status, 503);
+    (/** @type {unknown} */ err) => {
+      const e = asGatewayErr(err);
+      assert.equal(e.code, 'AI_MAIL_DISABLED');
+      assert.equal(e.status, 503);
       return true;
     }
   );
@@ -231,9 +247,10 @@ test('jeton mode without AI_ALLOW_FREETEXT refuses B-freetext with 403 KI_FREITE
         ownerDecisionStore: ownerStore
       }
     }),
-    (err) => {
-      assert.equal(err.code, 'KI_FREITEXT_GESPERRT');
-      assert.equal(err.status, 403);
+    (/** @type {unknown} */ err) => {
+      const e = asGatewayErr(err);
+      assert.equal(e.code, 'KI_FREITEXT_GESPERRT');
+      assert.equal(e.status, 403);
       return true;
     }
   );
@@ -250,7 +267,7 @@ for (const mode of ['direkt', 'jeton']) test(`${mode} mode triggers 409 KI_RUECK
         intent: 'Bitte Rückruf unter 987654321 veranlassen.'
       },
       context: { auth: makeValidAuth() },
-      buildMessages: (p) => [{ role: 'user', content: p.intent }],
+      buildMessages: (p) => [{ role: 'user', content: /** @type {string} */ (p.intent) }],
       validateOutput: () => true,
       dependencies: { dictionary: [],
         config: { ...cfg, allowFreeText: true },
@@ -258,12 +275,13 @@ for (const mode of ['direkt', 'jeton']) test(`${mode} mode triggers 409 KI_RUECK
         confirmationService
       }
     }),
-    (err) => {
-      assert.equal(err.code, 'KI_RUECKFRAGE');
-      assert.equal(err.status, 409);
-      assert.ok(err.challengeId);
-      assert.ok(err.candidates?.length > 0);
-      assert.equal(err.candidates[0].type, 'ZIFFERNFOLGE');
+    (/** @type {unknown} */ err) => {
+      const e = asGatewayErr(err);
+      assert.equal(e.code, 'KI_RUECKFRAGE');
+      assert.equal(e.status, 409);
+      assert.ok(e.challengeId);
+      assert.ok((e.candidates?.length ?? 0) > 0);
+      assert.equal(e.candidates?.[0]?.type, 'ZIFFERNFOLGE');
       return true;
     }
   );
@@ -273,11 +291,13 @@ test('end-to-end task execution: masking, transport, output validation, values-o
   const cfg = makeReadyConfig();
   const ownerStore = createFakeOwnerDecisionStore({ defaultEnabled: true });
 
+  /** @type {Array<{ role: string, content: string }> | null} */
   let sentMessages = null;
+  /** @param {Record<string, any>} opts */
   const mockTransport = async ({ messages }) => {
     sentMessages = messages;
     // Simulate model using the received placeholder
-    const userMsg = messages.find(m => m.role === 'user')?.content || '';
+    const userMsg = messages.find((/** @type {{ role: string, content: string }} */ m) => m.role === 'user')?.content || '';
 
     const placeholderMatch = userMsg.match(/⟦NAME_[a-f0-9]{32}_\d+⟧/);
     const placeholder = placeholderMatch ? placeholderMatch[0] : '⟦NAME_fake_1⟧';
@@ -295,7 +315,7 @@ test('end-to-end task execution: masking, transport, output validation, values-o
     };
   };
 
-  const result = await executeKiTask({
+  const taskParams = {
     task: 'appointment-confirm-draft',
     payload: {
       slots: [{ date: '2026-10-15', time: '14:00', employeeName: 'Therapeut Max' }],
@@ -303,26 +323,28 @@ test('end-to-end task execution: masking, transport, output validation, values-o
       service: { title: 'Physiotherapie', duration: 45 }
     },
     context: { auth: makeValidAuth() },
+    /** @param {import('./ki-gateway.js').GatewayPayload} payload */
     buildMessages: (payload) => [
       { role: 'user', content: `Patient: ${payload.patient?.name}` }
     ],
-    validateOutput: () => true, validateOutput_old: (parsed) => {
+    validateOutput: () => true, validateOutput_old: (/** @type {Record<string, any>} */ parsed) => {
       assert.ok(parsed.subject);
       assert.ok(parsed.body);
       return true;
     },
-    validateOutput: () => true,
     dependencies: { dictionary: [],
       config: cfg,
       ownerDecisionStore: ownerStore,
       transport: mockTransport,
       confirmationService
     }
-  });
+  };
+  const result = await executeKiTask(taskParams);
 
   // 1. Assert cleartext name was NOT sent to transport
-  assert.ok(!sentMessages[0].content.includes('Erika Musterfrau'));
-  assert.ok(/⟦NAME_[a-f0-9]+_\d+⟧/.test(sentMessages[0].content));
+  assert.ok(sentMessages);
+  assert.ok(!/** @type {Array<{ role: string, content: string }>} */ (sentMessages)[0].content.includes('Erika Musterfrau'));
+  assert.ok(/⟦NAME_[a-f0-9]+_\d+⟧/.test(/** @type {Array<{ role: string, content: string }>} */ (sentMessages)[0].content));
 
   // 2. Assert restored output contains unmasked name in VALUES
   assert.equal(result.output.subject, 'Termin für Erika Musterfrau');
@@ -365,10 +387,11 @@ test('output scan fails closed with 502 KI_ANTWORT_UNGUELTIG if model leaks clea
         transport: leakTransport
       }
     }),
-    (err) => {
-      assert.equal(err.code, 'KI_ANTWORT_UNGUELTIG');
-      assert.equal(err.status, 502);
-      assert.equal(err.message, 'KI-Antwort enthält unzulässige Daten');
+    (/** @type {unknown} */ err) => {
+      const e = asGatewayErr(err);
+      assert.equal(e.code, 'KI_ANTWORT_UNGUELTIG');
+      assert.equal(e.status, 502);
+      assert.equal(e.message, 'KI-Antwort enthält unzulässige Daten');
       return true;
     }
   );
@@ -378,7 +401,9 @@ test('parallel tasks from different tenants have isolated nonces and maps', asyn
   const cfg = makeReadyConfig();
   const ownerStore = createFakeOwnerDecisionStore({ defaultEnabled: true });
 
+  /** @type {string[]} */
   const nonces = [];
+  /** @param {Record<string, any>} opts */
   const captureTransport = async ({ messages }) => {
     const content = messages[0].content;
     const match = content.match(/⟦NAME_([a-f0-9]+)_1⟧/);
@@ -398,7 +423,7 @@ test('parallel tasks from different tenants have isolated nonces and maps', asyn
       task: 'appointment-confirm-draft',
       payload: { slots: [{ date: '2026-10-15', time: '10:00' }], patient: { name: 'Hans' } },
       context: { auth: makeValidAuth(TENANT_1) },
-      buildMessages: (p) => [{ role: 'user', content: `Name: ${p.patient.name}` }],
+      buildMessages: (p) => [{ role: 'user', content: `Name: ${p.patient?.name}` }],
       validateOutput: () => true,
       dependencies: { dictionary: [], config: cfg, ownerDecisionStore: ownerStore, transport: captureTransport }
     }),
@@ -406,7 +431,7 @@ test('parallel tasks from different tenants have isolated nonces and maps', asyn
       task: 'appointment-confirm-draft',
       payload: { slots: [{ date: '2026-10-15', time: '11:00' }], patient: { name: 'Peter' } },
       context: { auth: makeValidAuth(TENANT_2) },
-      buildMessages: (p) => [{ role: 'user', content: `Name: ${p.patient.name}` }],
+      buildMessages: (p) => [{ role: 'user', content: `Name: ${p.patient?.name}` }],
       validateOutput: () => true,
       dependencies: { dictionary: [], config: cfg, ownerDecisionStore: ownerStore, transport: captureTransport }
     })
@@ -432,7 +457,7 @@ test('confirmation flow: ki_confirmation resolves challenge and executes task', 
       task: 'b2c-draft',
       payload: payloadInitial,
       context: { auth: makeValidAuth() },
-      buildMessages: (p) => [{ role: 'user', content: p.intent }],
+      buildMessages: (p) => [{ role: 'user', content: /** @type {string} */ (p.intent) }],
       validateOutput: () => true,
       dependencies: { dictionary: [],
         config: { ...cfg, allowFreeText: true },
@@ -441,9 +466,10 @@ test('confirmation flow: ki_confirmation resolves challenge and executes task', 
       }
     });
   } catch (err) {
-    assert.equal(err.code, 'KI_RUECKFRAGE');
-    challengeId = err.challengeId;
-    candidateId = err.candidates[0].id;
+    const e = asGatewayErr(err);
+    assert.equal(e.code, 'KI_RUECKFRAGE');
+    challengeId = e.challengeId;
+    candidateId = e.candidates?.[0]?.id;
   }
 
   assert.ok(challengeId);
@@ -458,6 +484,7 @@ test('confirmation flow: ki_confirmation resolves challenge and executes task', 
     }
   };
 
+  /** @param {Record<string, any>} opts */
   const mockTransport = async (opts) => {
     // Find the placeholder for "Erika Musterfrau" from the masked prompt
     const content = opts.messages[0].content;
@@ -481,7 +508,7 @@ test('confirmation flow: ki_confirmation resolves challenge and executes task', 
     task: 'b2c-draft',
     payload: payloadConfirmed,
     context: { auth: makeValidAuth() },
-    buildMessages: (p) => [{ role: 'user', content: p.intent }],
+    buildMessages: (p) => [{ role: 'user', content: /** @type {string} */ (p.intent) }],
     validateOutput: () => true,
     dependencies: { dictionary: [],
         config: { ...cfg, allowFreeText: true },
@@ -499,8 +526,10 @@ test('series-scheduler: opaque employee token mapping and back-conversion', asyn
   const ownerStore = createFakeOwnerDecisionStore({ defaultEnabled: true });
 
   const realEmpUuid = '99999999-9999-4999-8999-999999999999';
+  /** @type {Array<{ role: string, content: string }> | null} */
   let modelReceivedMessages = null;
 
+  /** @param {Record<string, any>} opts */
   const mockTransport = async ({ messages }) => {
     modelReceivedMessages = messages;
     const content = messages[0].content;
@@ -536,7 +565,7 @@ test('series-scheduler: opaque employee token mapping and back-conversion', asyn
     payload,
     context: { auth: makeValidAuth() },
     buildMessages: (p) => {
-      return [{ role: 'user', content: `Slot bei Mitarbeiter ${p.employees[0].id} für ${p.customer.name}` }];
+      return [{ role: 'user', content: `Slot bei Mitarbeiter ${p.employees?.[0]?.id} für ${p.customer?.name}` }];
     },
     validateOutput: () => true,
     dependencies: { dictionary: [],
@@ -548,11 +577,13 @@ test('series-scheduler: opaque employee token mapping and back-conversion', asyn
   });
 
   // Verify real UUID was NOT in prompt
-  assert.ok(!modelReceivedMessages[0].content.includes(realEmpUuid));
+  assert.ok(modelReceivedMessages);
+  assert.ok(!/** @type {Array<{ role: string, content: string }>} */ (modelReceivedMessages)[0].content.includes(realEmpUuid));
 
   // Verify restored result mapped opaque token back to real UUID
-  assert.equal(res.output.selected[0].employeeId, realEmpUuid);
-  assert.equal(res.output.selected[0].date, '2026-10-15');
+  const selected = /** @type {Array<{ employeeId: string, date: string }>} */ (res.output.selected);
+  assert.equal(selected[0].employeeId, realEmpUuid);
+  assert.equal(selected[0].date, '2026-10-15');
 });
 
 test('handles JSON quotes, newlines, and unicode safely in values', async () => {
@@ -588,8 +619,8 @@ test('handles JSON quotes, newlines, and unicode safely in values', async () => 
   });
 
   assert.equal(res.output.subject, 'Termin "Spezial" & Zubehör');
-  assert.ok(res.output.body.includes('Zeile 1\nZeile 2'));
-  assert.ok(res.output.body.includes('äöüß'));
+  assert.ok(String(res.output.body).includes('Zeile 1\nZeile 2'));
+  assert.ok(String(res.output.body).includes('äöüß'));
 });
 
 test('adversarial: type shifting - object instead of string for intent is rejected with 400 KI_SCHEMA', async () => {
@@ -598,15 +629,16 @@ test('adversarial: type shifting - object instead of string for intent is reject
   await assert.rejects(
     async () => executeKiTask({
       task: 'b2c-draft',
-      payload: { intent: { smuggled: 'data' } },
+      payload: /** @type {any} */ ({ intent: { smuggled: 'data' } }),
       context: { auth: makeValidAuth() },
       buildMessages: () => [],
       validateOutput: () => true,
       dependencies: { dictionary: [], config: cfg, ownerDecisionStore: ownerStore }
     }),
-    (err) => {
-      assert.equal(err.code, 'KI_SCHEMA');
-      assert.equal(err.status, 400);
+    (/** @type {unknown} */ err) => {
+      const e = asGatewayErr(err);
+      assert.equal(e.code, 'KI_SCHEMA');
+      assert.equal(e.status, 400);
       return true;
     }
   );
@@ -618,18 +650,19 @@ test('adversarial: type shifting - array instead of string for patient.name is r
   await assert.rejects(
     async () => executeKiTask({
       task: 'appointment-confirm-draft',
-      payload: {
+      payload: /** @type {any} */ ({
         slots: [{ date: '2026-10-15', time: '14:00' }],
         patient: { name: ['Erika', 'Musterfrau'] }
-      },
+      }),
       context: { auth: makeValidAuth() },
       buildMessages: () => [],
       validateOutput: () => true,
       dependencies: { dictionary: [], config: cfg, ownerDecisionStore: ownerStore }
     }),
-    (err) => {
-      assert.equal(err.code, 'KI_SCHEMA');
-      assert.equal(err.status, 400);
+    (/** @type {unknown} */ err) => {
+      const e = asGatewayErr(err);
+      assert.equal(e.code, 'KI_SCHEMA');
+      assert.equal(e.status, 400);
       return true;
     }
   );
@@ -644,7 +677,7 @@ test('adversarial: freetext with unapproved PII triggers KI_RUECKFRAGE before tr
       task: 'b2c-draft',
       payload: { intent: 'Therapie, bitte Rückruf unter 987654321' }, // Unmasked digit sequence pattern
       context: { auth: makeValidAuth() },
-      buildMessages: (p) => [{ role: 'user', content: p.intent }],
+      buildMessages: (p) => [{ role: 'user', content: /** @type {string} */ (p.intent) }],
       validateOutput: () => true,
       dependencies: { dictionary: [],
         config: { ...cfg, allowFreeText: true },
@@ -652,10 +685,11 @@ test('adversarial: freetext with unapproved PII triggers KI_RUECKFRAGE before tr
         confirmationService
       }
     }),
-    (err) => {
-      assert.equal(err.code, 'KI_RUECKFRAGE');
-      assert.equal(err.status, 409);
-      assert.ok(err.candidates?.some(c => c.text === '987654321'));
+    (/** @type {unknown} */ err) => {
+      const e = asGatewayErr(err);
+      assert.equal(e.code, 'KI_RUECKFRAGE');
+      assert.equal(e.status, 409);
+      assert.ok(e.candidates?.some((c) => c.text === '987654321'));
       return true;
     }
   );
@@ -667,25 +701,27 @@ test('adversarial: deeply nested unexpected fields are rejected by schema', asyn
   await assert.rejects(
     async () => executeKiTask({
       task: 'appointment-confirm-draft',
-      payload: {
+      payload: /** @type {any} */ ({
         slots: [{ date: '2026-10-15', time: '14:00', employeeName: 'Max' }],
         unexpectedRoot: { deep: 'value' }
-      },
+      }),
       context: { auth: makeValidAuth() },
       buildMessages: () => [],
       validateOutput: () => true,
       dependencies: { dictionary: [], config: cfg, ownerDecisionStore: ownerStore }
     }),
-    (err) => {
-      assert.equal(err.code, 'KI_SCHEMA');
-      assert.equal(err.status, 400);
-      assert.ok(err.message.includes('Unbekannte Eigenschaft'));
+    (/** @type {unknown} */ err) => {
+      const e = asGatewayErr(err);
+      assert.equal(e.code, 'KI_SCHEMA');
+      assert.equal(e.status, 400);
+      assert.ok(e.message.includes('Unbekannte Eigenschaft'));
       return true;
     }
   );
 });
 
 
+/** @param {Record<string, any>} [overrides] @returns {Record<string, any>} */
 function syntheticAppointment(overrides = {}) {
   return {
     task: 'appointment-confirm-draft', payload: {
@@ -694,8 +730,8 @@ function syntheticAppointment(overrides = {}) {
       service: { title: 'Private Patient Einzel', duration: 30 },
       owner_info: { business_name: 'Private Praxis', sender_name: 'Private Owner', city: 'Private City', phone: '022419876543', sector: 'physiotherapy' }
     }, context: { auth: makeValidAuth() },
-    buildMessages: p => [{ role: 'user', content: JSON.stringify(p) }],
-    validateOutput: p => Object.keys(p).length === 1 && p.ok === true,
+    buildMessages: (/** @type {any} */ p) => [{ role: 'user', content: JSON.stringify(p) }],
+    validateOutput: (/** @type {any} */ p) => Object.keys(p).length === 1 && p.ok === true,
     dependencies: { dictionary: [], config: makeReadyConfig(), ownerDecision: { enabled: true }, transport: async () => ({ content: '{"ok":true}' }) },
     ...overrides
   };
@@ -704,27 +740,27 @@ function syntheticAppointment(overrides = {}) {
 test('every private appointment leaf opaque before prompt; original payload unchanged', async () => {
   const params = syntheticAppointment();
   const original = JSON.stringify(params.payload);
-  params.dependencies.transport = async ({ messages, jetonClient }) => {
+  params.dependencies.transport = async (/** @type {{ messages: unknown, jetonClient?: unknown }} */ { messages, jetonClient }) => {
     const prompt = JSON.stringify(messages);
     for (const raw of ['2026-10-15', '14:00', 'private-employee', 'Private Clinician', 'Private Patient', 'private@example.test', '022411234567', 'Private Praxis', 'Private Owner', 'Private City', '022419876543']) assert.ok(!prompt.includes(raw), raw);
     assert.equal(jetonClient, undefined, 'direct mode never initializes Jeton');
     return { content: '{"ok":true}' };
   };
-  await executeKiTask(params);
+  await executeKiTask(/** @type {any} */ (params));
   assert.equal(JSON.stringify(params.payload), original);
 });
 
 test('operator revoked during dictionary await blocks transport', async () => {
   const params = syntheticAppointment(); let cfg = makeReadyConfig(); let calls = 0;
   params.dependencies = { configProvider: () => cfg, ownerDecision: { enabled: true }, loadDictionary: async () => { cfg = { ...cfg, activationReady: false }; return []; }, transport: async () => { calls++; return { content: '{"ok":true}' }; } };
-  await assert.rejects(executeKiTask(params), e => e.code === 'AI_MODE_AUS');
+  await assert.rejects(executeKiTask(/** @type {any} */ (params)), (/** @type {unknown} */ e) => asGatewayErr(e).code === 'AI_MODE_AUS');
   assert.equal(calls, 0);
 });
 
 test('owner revoked during asynchronous operator refresh blocks transport', async () => {
   const params = syntheticAppointment(); let enabled = true; let configs = 0; let calls = 0;
   params.dependencies = { dictionary: [], configProvider: async () => { if (++configs === 2) enabled = false; return makeReadyConfig(); }, ownerDecisionStore: { read: async () => ({ enabled }) }, transport: async () => { calls++; return { content: '{"ok":true}' }; } };
-  await assert.rejects(executeKiTask(params), e => e.code === 'AI_OWNER_OPTIN_REQUIRED');
+  await assert.rejects(executeKiTask(/** @type {any} */ (params)), (/** @type {unknown} */ e) => asGatewayErr(e).code === 'AI_OWNER_OPTIN_REQUIRED');
   assert.equal(calls, 0);
 });
 
@@ -732,28 +768,28 @@ test('output validation cannot whitelist invented token through mutable map', as
   const params = syntheticAppointment();
   const forged = '⟦VALUE_ffffffffffffffffffffffffffffffff_999⟧';
   params.dependencies.transport = async () => ({ content: JSON.stringify({ ok: forged }) });
-  params.validateOutput = (_out, { maskMap }) => { assert.ok(Object.isFrozen(maskMap)); assert.throws(() => { maskMap[forged] = 'Secret'; }, TypeError); return true; };
-  await assert.rejects(executeKiTask(params), e => e.code === 'KI_ANTWORT_UNGUELTIG');
+  params.validateOutput = (/** @type {any} */ _out, /** @type {{ maskMap: Record<string, string> }} */ { maskMap }) => { assert.ok(Object.isFrozen(maskMap)); assert.throws(() => { maskMap[forged] = 'Secret'; }, TypeError); return true; };
+  await assert.rejects(executeKiTask(/** @type {any} */ (params)), (/** @type {unknown} */ e) => asGatewayErr(e).code === 'KI_ANTWORT_UNGUELTIG');
 });
 
 test('output raw email, address, dictionary name and malformed or token keys blocked', async () => {
   for (const output of [{ ok: 'private@example.test' }, { ok: '53721 Siegburg' }, { ok: 'Private Patient' }, { ok: '⟦broken' }, { '⟦VALUE_ffffffffffffffffffffffffffffffff_1⟧': true }]) {
     const params = syntheticAppointment(); params.validateOutput = () => true;
     params.dependencies.transport = async () => ({ content: JSON.stringify(output) });
-    await assert.rejects(executeKiTask(params), e => e.code === 'KI_ANTWORT_UNGUELTIG');
+    await assert.rejects(executeKiTask(/** @type {any} */ (params)), (/** @type {unknown} */ e) => asGatewayErr(e).code === 'KI_ANTWORT_UNGUELTIG');
   }
 });
 
 test('series preferred employee uses same opaque employee reference', async () => {
   const params = syntheticAppointment({ task: 'series-scheduler', payload: { count: 1, targetDates: ['2026-10-15'], emptyDates: [], candidates: [{ date: '2026-10-15', time: '14:00', employeeId: 'private-employee', bucket: 0 }], employees: [{ id: 'private-employee', name: 'Private Clinician' }], preferences: { preferredEmployee: 'private-employee' }, customer: { id: 'private-patient', name: 'Private Patient' } } });
-  params.buildMessages = p => { assert.equal(p.preferences.preferredEmployee, p.candidates[0].employeeId); assert.equal(p.preferences.preferredEmployee, p.employees[0].id); assert.match(p.preferences.preferredEmployee, /^⟦EMP_[a-f0-9]{32}_1⟧$/); assert.notEqual(p.customer.id, 'private-patient'); assert.equal(p.targetDates[0], '2026-10-15'); return [{ role: 'user', content: JSON.stringify(p) }]; };
-  await executeKiTask(params);
+  params.buildMessages = (/** @type {any} */ p) => { assert.equal(p.preferences.preferredEmployee, p.candidates[0].employeeId); assert.equal(p.preferences.preferredEmployee, p.employees[0].id); assert.match(p.preferences.preferredEmployee, /^⟦EMP_[a-f0-9]{32}_1⟧$/); assert.notEqual(p.customer.id, 'private-patient'); assert.equal(p.targetDates[0], '2026-10-15'); return [{ role: 'user', content: JSON.stringify(p) }]; };
+  await executeKiTask(/** @type {any} */ (params));
 });
 
 test('missing production dictionary fails closed instead of empty fallback', async () => {
   const params = syntheticAppointment(); delete params.dependencies.dictionary;
   let calls = 0; params.dependencies.transport = async () => { calls++; return { content: '{"ok":true}' }; };
-  await assert.rejects(executeKiTask(params), e => e.code === 'KI_WOERTERBUCH_FEHLER');
+  await assert.rejects(executeKiTask(/** @type {any} */ (params)), (/** @type {unknown} */ e) => asGatewayErr(e).code === 'KI_WOERTERBUCH_FEHLER');
   assert.equal(calls, 0);
 });
 
@@ -762,7 +798,7 @@ test('gateway rejects multimodal image payload before transport', async () => {
   const params = syntheticAppointment(); let calls = 0;
   params.buildMessages = () => [{ role: 'user', content: [{ type: 'image_url', image_url: { url: 'data:image/png;base64,SYNTHETIC' } }] }];
   params.dependencies.transport = async () => { calls++; return { content: '{"ok":true}' }; };
-  await assert.rejects(executeKiTask(params), e => e.code === 'KI_SCHEMA');
+  await assert.rejects(executeKiTask(/** @type {any} */ (params)), (/** @type {unknown} */ e) => asGatewayErr(e).code === 'KI_SCHEMA');
   assert.equal(calls, 0);
 });
 
@@ -780,7 +816,7 @@ test('actual driver rechecks owner and operator after asynchronous token acquisi
       } }
     };
     params.chatOptions = { fetchImpl: async () => { providerCalls++; throw new Error('Synthetic provider must not be called after revocation'); } };
-    await assert.rejects(executeKiTask(params), e => e.code === (revoked === 'owner' ? 'AI_OWNER_OPTIN_REQUIRED' : 'AI_MODE_AUS'));
+    await assert.rejects(executeKiTask(/** @type {any} */ (params)), (/** @type {unknown} */ e) => asGatewayErr(e).code === (revoked === 'owner' ? 'AI_OWNER_OPTIN_REQUIRED' : 'AI_MODE_AUS'));
     assert.equal(tokenCalls, 1); assert.equal(providerCalls, 0);
   }
 });
@@ -791,6 +827,6 @@ test('explicit direct normalize freetext joins same confirmation gate before tra
   params.dependencies.config = { ...makeReadyConfig(), allowFreeText: true };
   params.dependencies.confirmationService = confirmationService;
   let calls = 0; params.dependencies.transport = async () => { calls++; return { content: '{"ok":true}' }; };
-  await assert.rejects(executeKiTask(params), e => e.code === 'KI_RUECKFRAGE' && e.status === 409 && e.candidates.length === 1);
+  await assert.rejects(executeKiTask(/** @type {any} */ (params)), (/** @type {unknown} */ e) => { const err = asGatewayErr(e); return err.code === 'KI_RUECKFRAGE' && err.status === 409 && err.candidates?.length === 1; });
   assert.equal(calls, 0);
 });

@@ -48,10 +48,19 @@ export function quartalVon(tag) {
 }
 
 /**
+ * @typedef {{
+ *   plz?: string | null,
+ *   ort?: string | null,
+ *   strasse?: string | null,
+ *   art?: string | null,
+ * }} AnschriftKurz
+ */
+
+/**
  * Vergleicht zwei Anschrift-Objekte auf Gleichheit.
  *
- * @param {object|null} a
- * @param {object|null} b
+ * @param {AnschriftKurz | null | undefined} a
+ * @param {AnschriftKurz | null | undefined} b
  * @returns {boolean}
  */
 export function anschriftGleich(a, b) {
@@ -69,13 +78,14 @@ export function anschriftGleich(a, b) {
  * Reine, testbare Kernfunktion zur Bewertung von Empfänger- und Anschriftänderungen
  * zwischen dem Erstelltag der Abrechnung und dem heutigen Übermittlungstag.
  *
- * @param {object} param0
- * @param {string} param0.gespeichertIk       In der Abrechnung gespeicherte Empfänger-IK (DTA)
- * @param {object} param0.heuteDas            Rückgabe von ladeAnnahmestelle() zum Stichtag heute
- * @param {object} [param0.papierDamals]      Rückgabe von ladePapierannahmestelle() zum Erstelltag
- * @param {object} [param0.papierHeute]       Rückgabe von ladePapierannahmestelle() zum Stichtag heute
- * @param {string} [param0.erstelltTag]       Berliner Kalendertag 'YYYY-MM-DD' bei Erstellung
- * @param {string} [param0.heuteTag]          Berliner Kalendertag 'YYYY-MM-DD' heute
+ * @param {{
+ *   gespeichertIk?: string | null,
+ *   heuteDas?: Awaited<ReturnType<typeof ladeAnnahmestelle>> | null,
+ *   papierDamals?: Awaited<ReturnType<typeof ladePapierannahmestelle>> | null,
+ *   papierHeute?: Awaited<ReturnType<typeof ladePapierannahmestelle>> | null,
+ *   erstelltTag?: string | null,
+ *   heuteTag?: string | null,
+ * }} param0
  * @returns {{ blockiert: boolean, meldungen: Array<{ code: string, stufe: 'block'|'warnung', text: string }> }}
  */
 export function bewerteEmpfaengerWechsel({
@@ -86,6 +96,7 @@ export function bewerteEmpfaengerWechsel({
   erstelltTag,
   heuteTag,
 }) {
+  /** @type {Array<{ code: string, stufe: 'block'|'warnung', text: string }>} */
   const meldungen = [];
 
   // 1. DTA-Empfänger prüfen
@@ -105,8 +116,8 @@ export function bewerteEmpfaengerWechsel({
     });
   } else {
     // Gleiche IK, aber created_at liegt in einem anderen Kalenderquartal (Berlin) als heute -> WARNUNG
-    const qErstellt = quartalVon(erstelltTag);
-    const qHeute    = quartalVon(heuteTag);
+    const qErstellt = erstelltTag ? quartalVon(erstelltTag) : '';
+    const qHeute    = heuteTag ? quartalVon(heuteTag) : '';
     if (qErstellt && qHeute && qErstellt !== qHeute) {
       meldungen.push({
         code: 'QUARTALSWECHSEL',
@@ -154,13 +165,10 @@ export function bewerteEmpfaengerWechsel({
 /**
  * Führt die Stichtag-Prüfung für eine bestehende Abrechnungszeile asynchron gegen die DB durch.
  *
- * @param {object} supabase
- * @param {object} abrechnungZeile { kostentraeger_ik, empfaenger_ik, created_at }
- * @param {object} [opts]
- * @param {string} [opts.bereich]
- * @param {string} [opts.eigenerAbrechnungscode]
- * @param {string} [opts.heuteTag] 'YYYY-MM-DD'
- * @returns {Promise<{ blockiert: boolean, meldungen: Array<object>, gespeichertIk: string|null, heuteIk: string|null }>}
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {{ kostentraeger_ik?: string | null, empfaenger_ik?: string | null, created_at?: Date | string | null } | null | undefined} abrechnungZeile
+ * @param {{ bereich?: string, eigenerAbrechnungscode?: string, heuteTag?: string }} [opts]
+ * @returns {Promise<{ blockiert: boolean, meldungen: Array<{ code: string, stufe: 'block'|'warnung', text: string }>, gespeichertIk: string|null, heuteIk: string|null }>}
  */
 export async function pruefeEmpfaenger(supabase, abrechnungZeile, {
   bereich,

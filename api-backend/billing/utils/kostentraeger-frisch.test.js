@@ -7,6 +7,10 @@ import {
   KOSTENTRAEGER_IK_NEU_CODE,
 } from './kostentraeger-frisch.js';
 
+/** @typedef {import('@supabase/supabase-js').SupabaseClient} SbClient */
+/** @typedef {NonNullable<Parameters<typeof kostentraegerFrischAbleiten>[2]>['aufloeser']} AufloeserFn */
+const NULL_SB = /** @type {SbClient} */ (/** @type {unknown} */ (null));
+
 test('1) gleiche IK: keine Warnung, Zeile unverändert', async () => {
   const zeile = {
     id: '11112222-3333-4444',
@@ -15,7 +19,7 @@ test('1) gleiche IK: keine Warnung, Zeile unverändert', async () => {
   };
   const mockAufloeser = async () => '108310400';
 
-  const { warnungen } = await kostentraegerFrischAbleiten(null, [zeile], { aufloeser: mockAufloeser });
+  const { warnungen } = await kostentraegerFrischAbleiten(NULL_SB, [zeile], { aufloeser: mockAufloeser });
 
   assert.equal(warnungen.length, 0);
   assert.equal(zeile.kostentraeger_ik, '108310400');
@@ -29,7 +33,7 @@ test('2) abweichende IK: Zeile aktualisiert, KOSTENTRAEGER_IK_NEU Warnung mit al
   };
   const mockAufloeser = async () => '103501080';
 
-  const { warnungen } = await kostentraegerFrischAbleiten(null, [zeile], { aufloeser: mockAufloeser });
+  const { warnungen } = await kostentraegerFrischAbleiten(NULL_SB, [zeile], { aufloeser: mockAufloeser });
 
   assert.equal(warnungen.length, 1);
   assert.equal(zeile.kostentraeger_ik, '103501080');
@@ -55,9 +59,9 @@ test('3) nicht auflösbar: wirft 422 KOSTENTRAEGER_NICHT_AUFLOESBAR mit Verordnu
 
   await assert.rejects(
     async () => {
-      await kostentraegerFrischAbleiten(null, [zeile], { aufloeser: mockAufloeser });
+      await kostentraegerFrischAbleiten(NULL_SB, [zeile], { aufloeser: mockAufloeser });
     },
-    (err) => {
+    (/** @type {Error & { status?: number, code?: string, prescriptionId?: string }} */ err) => {
       assert.equal(err.status, 422);
       assert.equal(err.code, KOSTENTRAEGER_NICHT_AUFLOESBAR_CODE);
       assert.equal(err.code, 'KOSTENTRAEGER_NICHT_AUFLOESBAR');
@@ -81,9 +85,9 @@ test('3b) nicht auflösbar ohne Patientennamen: Verordnung-Kurz-ID ohne Klammer'
 
   await assert.rejects(
     async () => {
-      await kostentraegerFrischAbleiten(null, [zeile], { aufloeser: mockAufloeser });
+      await kostentraegerFrischAbleiten(NULL_SB, [zeile], { aufloeser: mockAufloeser });
     },
-    (err) => {
+    (/** @type {Error & { status?: number, code?: string, prescriptionId?: string }} */ err) => {
       assert.equal(err.status, 422);
       assert.equal(err.code, 'KOSTENTRAEGER_NICHT_AUFLOESBAR');
       assert.equal(
@@ -109,7 +113,7 @@ test('4) Karten-IK fehlt oder ungültig: Zeile unberührt, Auflöser wird nicht 
     { id: '55555555-0000', krankenkasse_ik: undefined, kostentraeger_ik: '108310400' },
   ];
 
-  const { warnungen } = await kostentraegerFrischAbleiten(null, zeilen, { aufloeser: mockAufloeser });
+  const { warnungen } = await kostentraegerFrischAbleiten(NULL_SB, zeilen, { aufloeser: mockAufloeser });
 
   assert.equal(aufgerufen, false);
   assert.equal(warnungen.length, 0);
@@ -122,7 +126,8 @@ test('4) Karten-IK fehlt oder ungültig: Zeile unberührt, Auflöser wird nicht 
 
 test('5) Cache: gleiche Karten-IK in zwei Zeilen -> Auflöser wird nur 1 Mal aufgerufen', async () => {
   let anzahlAufrufe = 0;
-  const mockAufloeser = async (_sb, patient) => {
+  /** @type {AufloeserFn} */
+  const mockAufloeser = async (_sb, _patient) => {
     anzahlAufrufe++;
     return '103501080';
   };
@@ -131,7 +136,7 @@ test('5) Cache: gleiche Karten-IK in zwei Zeilen -> Auflöser wird nur 1 Mal auf
     { id: '22222222-0000', krankenkasse_ik: '108310400', kostentraeger_ik: '108310400' },
   ];
 
-  const { warnungen } = await kostentraegerFrischAbleiten(null, zeilen, { aufloeser: mockAufloeser });
+  const { warnungen } = await kostentraegerFrischAbleiten(NULL_SB, zeilen, { aufloeser: mockAufloeser });
 
   assert.equal(anzahlAufrufe, 1);
   assert.equal(warnungen.length, 2);
@@ -140,7 +145,9 @@ test('5) Cache: gleiche Karten-IK in zwei Zeilen -> Auflöser wird nur 1 Mal auf
 });
 
 test('6) Auflöser erhält kein krankenkasse (Name) Feld, nur krankenkasse_ik', async () => {
+  /** @type {{ krankenkasse_ik?: string | null } | null} */
   let uebergebenesPatient = null;
+  /** @type {AufloeserFn} */
   const mockAufloeser = async (_sb, patient) => {
     uebergebenesPatient = patient;
     return '108310400';
@@ -153,11 +160,12 @@ test('6) Auflöser erhält kein krankenkasse (Name) Feld, nur krankenkasse_ik', 
     leads: { krankenkasse: 'Techniker Krankenkasse' },
   };
 
-  await kostentraegerFrischAbleiten(null, [zeile], { aufloeser: mockAufloeser });
+  await kostentraegerFrischAbleiten(NULL_SB, [/** @type {import('./kostentraeger-frisch.js').KostentraegerZeileInput} */ (/** @type {unknown} */ (zeile))], { aufloeser: mockAufloeser });
 
-  assert.ok(uebergebenesPatient !== null);
-  assert.equal(uebergebenesPatient.krankenkasse_ik, '108310400');
-  assert.equal('krankenkasse' in uebergebenesPatient, false);
+  const geprueft = /** @type {{ krankenkasse_ik?: string | null } | null} */ (uebergebenesPatient);
+  assert.ok(geprueft !== null);
+  assert.equal(geprueft.krankenkasse_ik, '108310400');
+  assert.equal('krankenkasse' in geprueft, false);
 });
 
 // ── gkv-302 Auflagen 1 + 3 (30.09.2026) ─────────────────────────────────────
@@ -170,8 +178,9 @@ test('Preflight: erste Zeile unauflösbar → Fehler je Zeile, spätere Zeilen f
   const z1 = { id: 'a1', krankenkasse_ik: '101111111', kostentraeger_ik: '101111111' };
   const z2 = { id: 'b2', krankenkasse_ik: '102222222', kostentraeger_ik: '100000000' };
   const z3 = { id: 'c3', krankenkasse_ik: '103333333', kostentraeger_ik: '103333333' };
+  /** @type {AufloeserFn} */
   const auf = async (_s, { krankenkasse_ik }) => (krankenkasse_ik === '101111111' ? null : '109999999');
-  const r = await kostentraegerFrischAbleiten(null, [z1, z2, z3], { aufloeser: auf, preflight: true });
+  const r = await kostentraegerFrischAbleiten(NULL_SB, [z1, z2, z3], { aufloeser: auf, preflight: true });
   assert.equal(r.fehler.length, 1);
   assert.equal(r.fehler[0].prescriptionId, 'a1');
   assert.equal(r.fehler[0].severity, 'stop');
@@ -184,23 +193,33 @@ test('Preflight: erste Zeile unauflösbar → Fehler je Zeile, spätere Zeilen f
 test('ohne Preflight-Flag wirft unauflösbare Zeile weiterhin 422', async () => {
   const z = { id: 'a1', krankenkasse_ik: '101111111', kostentraeger_ik: '101111111' };
   await assert.rejects(
-    kostentraegerFrischAbleiten(null, [z], { aufloeser: async () => null }),
-    e => e.status === 422 && e.code === KOSTENTRAEGER_NICHT_AUFLOESBAR_CODE);
+    kostentraegerFrischAbleiten(NULL_SB, [z], { aufloeser: async () => null }),
+    (/** @type {Error & { status?: number, code?: string }} */ e) => e.status === 422 && e.code === KOSTENTRAEGER_NICHT_AUFLOESBAR_CODE);
 });
 
+/**
+ * @param {Array<{ v: unknown, f: Record<string, unknown> }>} log
+ * @param {{ fehler?: boolean }} [opts]
+ * @returns {SbClient}
+ */
 function updateStub(log, { fehler = false } = {}) {
+  /** @type {{ v?: unknown, f: Record<string, unknown> }} */
   const q = { f: {} };
   const api = {
+    /** @param {string} t */
     from(t) { assert.equal(t, 'prescriptions'); q.f = {}; return api; },
+    /** @param {unknown} v */
     update(v) { q.v = v; return api; },
+    /** @param {string} c @param {unknown} v */
     eq(c, v) { q.f[c] = v; return api; },
+    /** @param {string} c @param {unknown} v */
     is(c, v) { q.f[c] = v; return api; },
     select() {
       log.push({ v: q.v, f: { ...q.f } });
       return Promise.resolve(fehler ? { data: null, error: new Error('x') } : { data: [{ id: q.f.id }], error: null });
     },
   };
-  return api;
+  return /** @type {SbClient} */ (/** @type {unknown} */ (api));
 }
 
 test('Zurückschreiben: nur bereit + ohne Belegnummer; Update-Bedingung im WHERE', async () => {
@@ -211,6 +230,7 @@ test('Zurückschreiben: nur bereit + ohne Belegnummer; Update-Bedingung im WHERE
     { id: 'd', abrechnung_status: null, belegnummer: null },
   ];
   const warn = zeilen.map(z => ({ code: KOSTENTRAEGER_IK_NEU_CODE, prescriptionId: z.id, alt: '1', neu: '2' }));
+  /** @type {Array<{ v: unknown, f: Record<string, unknown> }>} */
   const log = [];
   const ids = await kostentraegerIkZurueckschreiben(updateStub(log), zeilen, warn, 'owner-1');
   assert.deepEqual(ids, ['a']);

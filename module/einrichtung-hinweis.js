@@ -20,7 +20,25 @@
 export const NEUER_LINK_LINUX = 'sudo bash /opt/praxura/onprem/install.sh --neuer-jeton';
 export const NEUER_LINK_WINDOWS = '„Praxura-Einrichtung" erneut starten';
 
-/** Status-Antwort → { weiterleiten } | Hinweistext | null (nichts tun). */
+/**
+ * @typedef {Object} EinrichtungStatusDaten
+ * @property {boolean} [abgeschlossen]
+ * @property {boolean} [verfuegbar]
+ */
+
+/**
+ * @typedef {Object} EinrichtungHinweisInhalt
+ * @property {string} titel
+ * @property {string} text
+ * @property {string} linux
+ */
+
+/**
+ * Status-Antwort → { weiterleiten: true } | Hinweistext | null (nichts tun).
+ * @param {number} httpStatus
+ * @param {EinrichtungStatusDaten | null} [daten]
+ * @returns {{ weiterleiten: true } | EinrichtungHinweisInhalt | null}
+ */
 export function einrichtungHinweisText(httpStatus, daten) {
   if (httpStatus !== 200 || !daten || daten.abgeschlossen) return null;
   if (daten.verfuegbar !== false) return { weiterleiten: true };
@@ -31,18 +49,30 @@ export function einrichtungHinweisText(httpStatus, daten) {
   };
 }
 
-/** Holt den Status; leitet weiter oder setzt den Hinweis vor `vor` (Element). Fehler → still. */
+/**
+ * @typedef {Object} EinrichtungZeigenOptionen
+ * @property {boolean} [istKutu]
+ * @property {string} [apiBase]
+ * @property {Element | null} [vor]
+ * @property {(url: string) => void} [weiterleiten]
+ */
+
+/**
+ * Holt den Status; leitet weiter oder setzt den Hinweis vor `vor` (Element). Fehler → still.
+ * @param {EinrichtungZeigenOptionen} param0
+ */
 export async function einrichtungHinweisZeigen({ istKutu, apiBase, vor, weiterleiten = (url) => location.replace(url) }) {
   if (!istKutu || !vor) return;
+  /** @type {ReturnType<typeof einrichtungHinweisText>} */
   let hinweis = null;
   try {
-    const res = await fetch(apiBase + '/setup/status');
+    const res = await fetch((apiBase || '') + '/setup/status');
     hinweis = einrichtungHinweisText(res.status, res.status === 200 ? await res.json() : null);
   } catch {
     return;
   }
   if (!hinweis) return;
-  if (hinweis.weiterleiten) { weiterleiten('/setup.html'); return; }
+  if ('weiterleiten' in hinweis) { weiterleiten('/setup.html'); return; }
 
   const box = document.createElement('div');
   box.className = 'msg show info';

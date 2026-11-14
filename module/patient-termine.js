@@ -1,7 +1,12 @@
-const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({
+/** @param {any} s */
+const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, c => (/** @type {Record<string, string>} */ ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-}[c]));
+})[c] ?? c));
 
+/**
+ * @param {any} sb
+ * @param {{ ownerId: string, lead?: { id?: string, phone?: string } | null, patientName?: string | null, mitAbgesagten?: boolean }} opts
+ */
 export async function ladePatientTermine(sb, { ownerId, lead, patientName, mitAbgesagten = false }) {
   let query = sb.from('bookings')
     .select('id,start_time,end_time,status,cancellation_reason,cancelled_at,customer_name,services(title,code)')
@@ -21,11 +26,16 @@ export async function ladePatientTermine(sb, { ownerId, lead, patientName, mitAb
   return data || [];
 }
 
+/** @type {Record<string, string>} */
 const STATUS_DE = { confirmed: 'Bestätigt', completed: 'Erledigt', pending: 'Offen', no_show: 'Nicht erschienen' };
 
+/**
+ * @param {any} b
+ * @param {{ fmtDate: (v: any) => string, fmtTime: (v: any) => string }} fmt
+ */
 export function patientTerminZeile(b, { fmtDate, fmtTime }) {
   const datum = b.start_time ? `${fmtDate(b.start_time)} · ${fmtTime(b.start_time)}` : '—';
-  const dauer = b.end_time && b.start_time ? `${Math.round((new Date(b.end_time) - new Date(b.start_time)) / 60000)} min` : '';
+  const dauer = b.end_time && b.start_time ? `${Math.round((new Date(b.end_time).getTime() - new Date(b.start_time).getTime()) / 60000)} min` : '';
   const abgesagt = b.status === 'cancelled';
   const klasse = b.status === 'confirmed' ? 'badge-green' : (abgesagt || b.status === 'no_show') ? 'badge-red' : 'badge-gray';
   return `<div class="pd-term-item">
@@ -38,6 +48,9 @@ export function patientTerminZeile(b, { fmtDate, fmtTime }) {
 
 // Der Umschalter lebt nur in der Patientenakte. Kalender und Kennzahlen bleiben
 // auf aktive Termine beschränkt; historische Einträge haben hier keine Aktionen.
+/**
+ * @param {{ sb: any, ownerId: string, lead?: any, patientName?: string | null, content: HTMLElement, loading: HTMLElement, fmtDate: (v: any) => string, fmtTime: (v: any) => string }} opts
+ */
 export async function zeigePatientTermine({ sb, ownerId, lead, patientName, content, loading, fmtDate, fmtTime }) {
   let mitAbgesagten = false;
   let version = 0;
@@ -47,17 +60,17 @@ export async function zeigePatientTermine({ sb, ownerId, lead, patientName, cont
     const lauf = ++version;
     try {
       const rows = await ladePatientTermine(sb, { ownerId, lead, patientName, mitAbgesagten });
-      if (lauf !== version) return;
-      liste.innerHTML = rows.length ? rows.map(b => patientTerminZeile(b, { fmtDate, fmtTime })).join('')
+      if (lauf !== version || !liste) return;
+      liste.innerHTML = rows.length ? rows.map((/** @type {any} */ b) => patientTerminZeile(b, { fmtDate, fmtTime })).join('')
         : '<div class="pd-empty">Keine Termine vorhanden.</div>';
     } catch {
-      if (lauf === version) liste.innerHTML = '<div class="pd-empty">Termine konnten nicht geladen werden.</div>';
+      if (lauf === version && liste) liste.innerHTML = '<div class="pd-empty">Termine konnten nicht geladen werden.</div>';
     } finally {
       if (lauf === version) loading.hidden = true;
     }
   };
-  content.querySelector('[data-stornos]').addEventListener('change', event => {
-    mitAbgesagten = event.target.checked;
+  content.querySelector('[data-stornos]')?.addEventListener('change', event => {
+    mitAbgesagten = (/** @type {HTMLInputElement} */ (event.target)).checked;
     lade();
   });
   await lade();

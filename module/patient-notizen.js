@@ -1,7 +1,23 @@
-/** Patient-bound loading and mutations: stale responses never become editable. */
+/**
+ * @typedef {Object} NotizenControllerOptionen
+ * @property {Document} document
+ * @property {{ from: (table: string) => any }} supabase
+ * @property {() => string | null | undefined} getOwnerId
+ * @property {(msg: string, typ?: string) => void} showToast
+ * @property {() => void} [onSaved]
+ */
+
+/**
+ * Patient-bound loading and mutations: stale responses never become editable.
+ * @param {NotizenControllerOptionen} param0
+ */
 export function erstelleNotizenController({ document, supabase, getOwnerId, showToast, onSaved = () => {} }) {
-  const el = id => document.getElementById(id);
-  let generation = 0, loaded = null, busy = false;
+  /** @param {string} id */
+  const el = id => /** @type {any} */ (document.getElementById(id));
+  let generation = 0;
+  /** @type {{ leadId: string, ownerId: string | null | undefined } | null} */
+  let loaded = null;
+  let busy = false;
   function sync() {
     const ready = Boolean(loaded && loaded.leadId === el('notesPatient').value && loaded.ownerId === getOwnerId());
     for (const id of ['notesDoctor', 'notesTherapist', 'notesSaveBtn', 'aiGenBtn', 'notesSendBtn']) el(id).disabled = !ready || busy;
@@ -16,6 +32,7 @@ export function erstelleNotizenController({ document, supabase, getOwnerId, show
   function ready(leadId = el('notesPatient').value) {
     return Boolean(!busy && loaded && loaded.leadId === leadId && loaded.ownerId === getOwnerId() && el('notesPatient').value === leadId);
   }
+  /** @param {string} leadId */
   async function load(leadId) {
     const token = invalidate(), ownerId = getOwnerId();
     el('notesForm').hidden = false; el('notesEmpty').hidden = true;
@@ -33,7 +50,7 @@ export function erstelleNotizenController({ document, supabase, getOwnerId, show
     }
   }
   async function save(summaryOnly = false) {
-    if (!ready()) { showToast('Bitte Patient auswählen und Notizen vollständig laden.', 'error'); return false; }
+    if (!ready() || !loaded) { showToast('Bitte Patient auswählen und Notizen vollständig laden.', 'error'); return false; }
     const { leadId, ownerId } = loaded, token = generation;
     const notes = el('notesTherapist').value.trim();
     if (summaryOnly && !notes) { showToast('Therapeutennotizen eingeben', 'error'); return false; }
@@ -59,5 +76,5 @@ export function erstelleNotizenController({ document, supabase, getOwnerId, show
     } catch { if (token === generation) showToast('Notizen konnten nicht gespeichert werden.', 'error'); return false; }
     finally { busy = false; sync(); }
   }
-  return { invalidate, load, ready, save, version: () => generation, isCurrent: token => token === generation };
+  return { invalidate, load, ready, save, version: () => generation, isCurrent: (/** @type {number} */ token) => token === generation };
 }

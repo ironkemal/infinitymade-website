@@ -128,6 +128,7 @@ test('sanitizeEvent: bounds stack frames to maximum 25', () => {
   };
 
   const sanitized = sanitizeEvent(event);
+  assert.ok(sanitized);
   const preservedFrames = sanitized.exception.values[0].stacktrace.frames;
   assert.equal(preservedFrames.length, 25);
   // Preserves innermost frames (slice(-25))

@@ -49,11 +49,16 @@ export const TEDAVI_POSITIONEN = ['78010', '78020'];
 const BEFUNDUNG = '78030';           // Podologische Befundung
 const EINGANGSBEFUNDUNG = '78040';   // Podologische Eingangsbefundung
 
+/** @param {unknown} positionen @returns {string[]} */
 function normPositionen(positionen) {
   return (Array.isArray(positionen) ? positionen : []).map(p => String(p ?? '').trim());
 }
 
-/** TT.MM. — genug zur Unterscheidung innerhalb einer max. 84 Tage gültigen Verordnung. */
+/**
+ * TT.MM. — genug zur Unterscheidung innerhalb einer max. 84 Tage gültigen Verordnung.
+ * @param {unknown} datum
+ * @returns {string}
+ */
 function formatDatumKurz(datum) {
   const s = String(datum ?? '').trim();
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
@@ -62,7 +67,7 @@ function formatDatumKurz(datum) {
 }
 
 /**
- * @param {Array<{datum: string, positionen: string[]}>} sessions
+ * @param {Array<{datum?: string, positionen?: string[]}> | null | undefined} sessions
  *   Ein Eintrag je dokumentiertem Behandlungstag EINER Verordnung.
  * @returns {{ hart: string[], uebersteuerbar: string[] }}
  *   `hart`: Regel (a) — kein Übersteuern möglich.
@@ -73,7 +78,7 @@ export function befundpauschaleRegeln(sessions) {
   const hart = [];
   const uebersteuerbar = [];
 
-  const hatTedavi = (positionen) =>
+  const hatTedavi = (/** @type {unknown} */ positionen) =>
     normPositionen(positionen).some(p => TEDAVI_POSITIONEN.includes(p));
 
   // (a) 78030 an einem Tag, aber am SELBEN Tag keine 78010/78020.

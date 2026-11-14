@@ -12,29 +12,76 @@ const VALID_AUTH = {
   tenantId: VALID_TENANT_ID
 };
 
+/**
+ * @typedef {{
+ *   table: string,
+ *   selected: string | null,
+ *   eqField: string | null,
+ *   eqValue: string | null,
+ *   range: [number, number] | null,
+ *   isSingle: boolean,
+ *   order: [string, boolean | undefined] | null
+ * }} MockCall
+ * @typedef {import('@supabase/supabase-js').SupabaseClient & { calls: MockCall[] }} MockSupabaseClient
+ */
+
+/**
+ * @param {unknown} err
+ * @returns {Error & { code?: string, status?: number }}
+ */
+function asDictError(err) {
+  return /** @type {Error & { code?: string, status?: number }} */ (err);
+}
+
+/**
+ * @param {{
+ *   leads?: Array<Record<string, unknown>>,
+ *   profiles?: Array<Record<string, unknown>>,
+ *   ownerProfile?: Record<string, unknown> | null,
+ *   aerzte?: Array<Record<string, unknown>>,
+ *   failTable?: string | null
+ * }} [options={}]
+ * @returns {MockSupabaseClient}
+ */
 function createMockSupabase({ leads = [], profiles = [], ownerProfile = null, aerzte = [], failTable = null } = {}) {
+  /** @type {MockCall[]} */
   const calls = [];
 
-  return {
+  const mock = {
     calls,
+    /** @param {string} table */
     from(table) {
+      /** @type {MockCall} */
       const call = { table, selected: null, eqField: null, eqValue: null, range: null, isSingle: false, order: null };
       calls.push(call);
 
       const builder = {
+        /** @param {string} cols */
         select(cols) {
           call.selected = cols;
           return builder;
         },
+        /**
+         * @param {string} field
+         * @param {string} val
+         */
         eq(field, val) {
           call.eqField = field;
           call.eqValue = val;
           return builder;
         },
+        /**
+         * @param {string} column
+         * @param {{ ascending?: boolean }} [options]
+         */
         order(column, options) {
           call.order = [column, options?.ascending];
           return builder;
         },
+        /**
+         * @param {number} from
+         * @param {number} to
+         */
         range(from, to) {
           call.range = [from, to];
           return builder;
@@ -43,21 +90,23 @@ function createMockSupabase({ leads = [], profiles = [], ownerProfile = null, ae
           call.isSingle = true;
           return builder;
         },
+        /** @param {(res: { data: unknown, error: unknown }) => unknown} resolve */
         then(resolve) {
           if (failTable === table) {
             return resolve({ data: null, error: { message: `Simulated error on ${table}` } });
           }
+          const [from, to] = call.range || [0, 499];
           if (table === 'leads') {
-            return resolve({ data: leads.slice(call.range[0], call.range[1] + 1), error: null });
+            return resolve({ data: leads.slice(from, to + 1), error: null });
           }
           if (table === 'profiles') {
             if (call.isSingle) {
               return resolve({ data: ownerProfile, error: null });
             }
-            return resolve({ data: profiles.slice(call.range[0], call.range[1] + 1), error: null });
+            return resolve({ data: profiles.slice(from, to + 1), error: null });
           }
           if (table === 'aerzte') {
-            return resolve({ data: aerzte.slice(call.range[0], call.range[1] + 1), error: null });
+            return resolve({ data: aerzte.slice(from, to + 1), error: null });
           }
           return resolve({ data: [], error: null });
         }
@@ -65,6 +114,7 @@ function createMockSupabase({ leads = [], profiles = [], ownerProfile = null, ae
       return builder;
     }
   };
+  return /** @type {MockSupabaseClient} */ (/** @type {unknown} */ (mock));
 }
 
 test('asserts exact minimal columns and strict tenant filters', async () => {
@@ -79,21 +129,25 @@ test('asserts exact minimal columns and strict tenant filters', async () => {
 
   // Assert queries made
   const leadsCall = mockDb.calls.find(c => c.table === 'leads');
+  assert.ok(leadsCall);
   assert.equal(leadsCall.selected, 'first_name, last_name, title');
   assert.equal(leadsCall.eqField, 'owner_id');
   assert.equal(leadsCall.eqValue, VALID_TENANT_ID);
 
   const ownerCall = mockDb.calls.find(c => c.table === 'profiles' && c.isSingle);
+  assert.ok(ownerCall);
   assert.equal(ownerCall.selected, 'owner_first_name, owner_last_name');
   assert.equal(ownerCall.eqField, 'id');
   assert.equal(ownerCall.eqValue, VALID_TENANT_ID);
 
   const empCall = mockDb.calls.find(c => c.table === 'profiles' && !c.isSingle);
+  assert.ok(empCall);
   assert.equal(empCall.selected, 'owner_first_name, owner_last_name');
   assert.equal(empCall.eqField, 'owner_id');
   assert.equal(empCall.eqValue, VALID_TENANT_ID);
 
   const docCall = mockDb.calls.find(c => c.table === 'aerzte');
+  assert.ok(docCall);
   assert.equal(docCall.selected, 'arzt_name, praxis_name');
   assert.equal(docCall.eqField, 'owner_id');
   assert.equal(docCall.eqValue, VALID_TENANT_ID);
@@ -110,7 +164,8 @@ test('fails closed on DB error without falling back to empty array and safe cons
 
   await assert.rejects(
     async () => loadTenantDictionary(mockDb, VALID_AUTH),
-    (err) => {
+    (rawErr) => {
+      const err = asDictError(rawErr);
       assert.equal(err.code, 'KI_WOERTERBUCH_FEHLER');
       assert.equal(err.status, 503);
       assert.equal(err.message, 'Wörterbuchabfrage fehlgeschlagen');
@@ -129,7 +184,8 @@ test('blocks when owner profile is missing', async () => {
 
   await assert.rejects(
     async () => loadTenantDictionary(mockDb, VALID_AUTH),
-    (err) => {
+    (rawErr) => {
+      const err = asDictError(rawErr);
       assert.equal(err.code, 'KI_WOERTERBUCH_FEHLER');
       assert.equal(err.status, 503);
       assert.equal(err.message, 'Inhaberprofil fehlt; unvollständiges Wörterbuch blockiert');
@@ -144,7 +200,8 @@ test('rejects invalid role with 403', async () => {
 
   await assert.rejects(
     async () => loadTenantDictionary(mockDb, badAuth),
-    (err) => {
+    (rawErr) => {
+      const err = asDictError(rawErr);
       assert.equal(err.code, 'KI_AUTH_REQUIRED');
       assert.equal(err.status, 403);
       return true;
@@ -159,7 +216,8 @@ test('blocks when result count hits limit indicating incomplete dictionary', asy
 
   await assert.rejects(
     async () => loadTenantDictionary(mockDb, VALID_AUTH),
-    (err) => {
+    (rawErr) => {
+      const err = asDictError(rawErr);
       assert.equal(err.code, 'KI_WOERTERBUCH_FEHLER');
       assert.equal(err.status, 503);
       assert.equal(err.code, 'KI_WOERTERBUCH_FEHLER');

@@ -11,7 +11,10 @@
 
 const STICHTAG = /^\d{4}-\d{2}-\d{2}$/;
 
-/** @returns {'ja'|'nein'|''} Auswahlwert aus gespeichertem Merkmal (null -> '' = nicht geprüft) */
+/**
+ * @param {boolean | null | undefined} [wert]
+ * @returns {'ja'|'nein'|''} Auswahlwert aus gespeichertem Merkmal (null -> '' = nicht geprüft)
+ */
 export function merkmalZuAuswahl(wert) {
   if (wert === true) return 'ja';
   if (wert === false) return 'nein';
@@ -20,8 +23,8 @@ export function merkmalZuAuswahl(wert) {
 
 /**
  * Formularwerte -> Feldpaar. `{}` wenn Schema nicht aktiv (Felder bleiben unberührt).
- * @param {{auswahl:''|'ja'|'nein', datum:string}} werte
- * @param {{schemaAktiv?:boolean, istBlanko?:boolean}} opt
+ * @param {{auswahl?:''|'ja'|'nein'|string, datum?:string}} [werte]
+ * @param {{schemaAktiv?:boolean, istBlanko?:boolean}} [opt]
  * @returns {{ok:true, felder:object}|{ok:false, meldung:string}}
  */
 export function entlassFelderAusFormular(werte = {}, { schemaAktiv = false, istBlanko = false } = {}) {
@@ -39,11 +42,15 @@ export function entlassFelderAusFormular(werte = {}, { schemaAktiv = false, istB
   return { ok: true, felder: { entlassmanagement: null, entlassungsdatum: null } };
 }
 
-/** HTML-Block für die Verordnungsmaske; leer, solange das Schema nicht aktiv ist. */
+/**
+ * HTML-Block für die Verordnungsmaske; leer, solange das Schema nicht aktiv ist.
+ * @param {{ entlassmanagement?: boolean | null, entlassungsdatum?: string | null }} [werte]
+ * @param {{ schemaAktiv?: boolean }} [opt]
+ */
 export function entlassFeldHtml({ entlassmanagement = null, entlassungsdatum = null } = {}, { schemaAktiv = false } = {}) {
   if (!schemaAktiv) return '';
   const a = merkmalZuAuswahl(entlassmanagement);
-  const opt = (v, t) => `<option value="${v}"${a === v ? ' selected' : ''}>${t}</option>`;
+  const opt = (/** @type {string} */ v, /** @type {string} */ t) => `<option value="${v}"${a === v ? ' selected' : ''}>${t}</option>`;
   const datum = a === 'ja' && entlassungsdatum ? String(entlassungsdatum).slice(0, 10) : '';
   return `<div class="form-group"><label for="rzEntlass">Entlassmanagement</label>
 <select id="rzEntlass">${opt('', 'Nicht geprüft')}${opt('ja', 'Ja')}${opt('nein', 'Nein')}</select></div>
@@ -58,9 +65,9 @@ let _folge = 0;   // nur die jüngste Anfrage darf zeichnen (Heimschicken + Fül
  * Container füllen: nur Physio, nur wenn die Spalten existieren. Bei Bearbeitung wird der gespeicherte
  * Stand direkt geladen (eigene kleine Abfrage), damit Speichern nie einen bestätigten Wert mit "nicht
  * geprüft" überschreibt. Fehler/Schema fehlt -> Container leer + versteckt, es werden keine Felder gesendet.
- * @param {Document} doc
- * @param {object} db  Supabase-Client
- * @param {{rxId?:string|null, bereich?:string, alsVorlage?:boolean}} opt
+ * @param {Document | any} doc
+ * @param {any} db  Supabase-Client
+ * @param {{rxId?:string|null, bereich?:string, alsVorlage?:boolean}} [opt]
  */
 export async function entlassMaskeAktualisieren(doc, db, { rxId = null, bereich = 'physio', alsVorlage = false } = {}) {
   const wrap = doc?.getElementById?.(CONTAINER);
@@ -85,19 +92,24 @@ export async function entlassMaskeAktualisieren(doc, db, { rxId = null, bereich 
   wrap.innerHTML = entlassFeldHtml(zeile, { schemaAktiv: true });
   wrap.hidden = false;
   wrap.dataset.entlassAktiv = '1';
-  const sel = doc.getElementById('rzEntlass');
-  const dat = doc.getElementById('rzEntlassDatum');
+  const sel = /** @type {HTMLSelectElement | null} */ (doc.getElementById('rzEntlass'));
+  const dat = /** @type {HTMLInputElement | null} */ (doc.getElementById('rzEntlassDatum'));
   sel?.addEventListener('change', () => { if (dat) { dat.disabled = sel.value !== 'ja'; if (sel.value !== 'ja') dat.value = ''; } });
   return true;
 }
 
 // Therapiebereich-Chips setzen nur das versteckte Feld (kein Event): nach jedem Chip-Klick den Block neu bewerten.
+/** @type {{ doc: any, db: any, rxId: string | null, alsVorlage: boolean } | null} */
 let _ctx = null;
 const _beobachtet = new WeakSet();
+/**
+ * @param {any} doc
+ * @param {HTMLElement} wrap
+ */
 function chipWechselBeobachten(doc, wrap) {
   if (typeof doc.addEventListener !== 'function' || _beobachtet.has(doc)) return;
   _beobachtet.add(doc);
-  doc.addEventListener('click', (e) => {
+  doc.addEventListener('click', (/** @type {any} */ e) => {
     if (!e.target?.closest?.('.m13-chk[data-th]') || !_ctx) return;
     const b = doc.getElementById('rzTherapieBereich')?.value || '';
     if (!b) return;
@@ -109,6 +121,8 @@ function chipWechselBeobachten(doc, wrap) {
 /**
  * Feldpaar für die Nutzlast. `{}` wenn der Container nicht aktiv ist (Server lässt Spalten dann unberührt).
  * Ungültig (ja ohne Datum / Blanko) -> bewusst unvollständig senden, der Server antwortet 422 mit Klartext.
+ * @param {any} doc
+ * @param {{ istBlanko?: boolean }} [opt]
  */
 export function entlassNutzlastAusMaske(doc, { istBlanko = false } = {}) {
   const wrap = doc?.getElementById?.(CONTAINER);

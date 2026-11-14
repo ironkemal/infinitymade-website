@@ -32,10 +32,12 @@ cluster.setupPrimary({
   execArgv: ['--max-old-space-size=256', '--import', './instrument.js'],
 });
 
-const log = (msg) => console.log(`[start] ${new Date().toISOString()} ${msg}`);
+const log = (/** @type {string} */ msg) => console.log(`[start] ${new Date().toISOString()} ${msg}`);
+/** @type {Map<number, { worker: import('node:cluster').Worker, seit: number, pause: number }>} */
 const stand = new Map(); // index -> { worker, seit, pause }
 let beenden = false;
 
+/** @param {number} index */
 function starte(index) {
   const vorher = stand.get(index);
   const worker = cluster.fork({ NODE_APP_INSTANCE: String(index) });
@@ -52,6 +54,7 @@ cluster.on('exit', (worker, code, signal) => {
     return;
   }
   const s = stand.get(index);
+  if (!s) return;
   const lief = Date.now() - s.seit;
   const pause = lief > 60_000 ? 1000 : Math.min(s.pause * 2, 30_000);
   s.pause = pause;
@@ -59,6 +62,7 @@ cluster.on('exit', (worker, code, signal) => {
   setTimeout(() => { if (!beenden) starte(index); }, pause);
 });
 
+/** @param {number | undefined} pid */
 function rssKb(pid) {
   try {
     const m = readFileSync(`/proc/${pid}/status`, 'utf8').match(/^VmRSS:\s+(\d+)\s+kB/m);
@@ -76,6 +80,7 @@ setInterval(() => {
   }
 }, PRUEF_MS).unref();
 
+/** @param {NodeJS.Signals} sig */
 function stoppe(sig) {
   if (beenden) return;
   beenden = true;

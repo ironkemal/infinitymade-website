@@ -27,12 +27,14 @@ import { datumDe } from './datum.js?v=20261001a';
 
 export const ABRECHENBARE_BEHANDLUNG = new Set(['78010', '78020', '78610']);
 
+/** @param {{behandlungsdatum?:string}|null|undefined} b */
 const tagVon = (b) => String(b?.behandlungsdatum || '').slice(0, 10);
+/** @param {{storniert_am?:string|null}|null|undefined} b */
 const aktiv = (b) => !!b && !b.storniert_am;
 
 /**
  * Anzahl abrechenbarer Behandlungstage einer Verordnung.
- * @param {Array<{behandlungsdatum:string, hpnr_codes:?Array<string>, storniert_am?:?string}>} behandlungen
+ * @param {Array<{behandlungsdatum?:string, hpnr_codes?:Array<string>|null, storniert_am?:?string}>} behandlungen
  * @returns {number}
  */
 export function abrechenbareBehandlungstage(behandlungen) {
@@ -48,7 +50,7 @@ export function abrechenbareBehandlungstage(behandlungen) {
 /**
  * Steht für diesen Tag schon eine nicht stornierte Behandlung an der Verordnung?
  * Gleich welche Positionen — der Tag zählt (§ 12 Abs. 8).
- * @param {Array} behandlungen  `podologie_behandlungen` EINER Verordnung
+ * @param {Array<{behandlungsdatum?:string, hpnr_codes?:Array<string>|null, storniert_am?:?string}>} behandlungen  `podologie_behandlungen` EINER Verordnung
  * @param {string} datum        `YYYY-MM-DD`
  * @returns {?object} die vorhandene Zeile oder null
  */
@@ -58,8 +60,11 @@ export function bestehenderBehandlungstag(behandlungen, datum) {
   return (behandlungen || []).find(b => aktiv(b) && tagVon(b) === tag) || null;
 }
 
-
-/** Frage des Bestätigungsdialogs bei einem zweiten Behandlungstag. */
+/**
+ * Frage des Bestätigungsdialogs bei einem zweiten Behandlungstag.
+ * @param {string} datum
+ * @returns {string}
+ */
 export function zweiterBehandlungstagFrage(datum) {
   return `Für diese Verordnung ist am ${datumDe(datum, String(datum || ''))} bereits ein Behandlungstag erfasst. `
     + 'Je Tag ist nur eine Behandlung abrechenbar (HeilM-RL § 12 Abs. 8) — trotzdem speichern?';
@@ -73,12 +78,12 @@ export function zweiterBehandlungstagFrage(datum) {
  * HeilM-RL § 12 Abs. 8), 78610 bis 2× je Tag (Anlage 2 § 2 c), 78620 zählt nicht.
  * Bis 01.10.2026 zeigte „Neue Abrechnung" solche Verordnungen als sauber, der
  * Server lehnte die Datei beim Erstellen ab und eine Nummer war verbrannt (P1 canli-test).
- * @param {Array<{behandlungsdatum:string, hpnr_codes:?Array<string>, storniert_am?:?string}>} behandlungen
+ * @param {Array<{behandlungsdatum?:string, hpnr_codes?:Array<string>|null, storniert_am?:?string}>} behandlungen
  * @returns {Array<{datum:string, gruppe:'behandlung'|'nagelspange', anzahl:number, max:number}>}
  */
 export function zuVieleBehandlungenJeTag(behandlungen) {
-  const GRUPPE = { '78010': 'behandlung', '78020': 'behandlung', '78610': 'nagelspange' };
-  const MAX = { behandlung: 1, nagelspange: 2 };
+  const GRUPPE = /** @type {Record<string, 'behandlung'|'nagelspange'>} */ ({ '78010': 'behandlung', '78020': 'behandlung', '78610': 'nagelspange' });
+  const MAX = /** @type {Record<string, number>} */ ({ behandlung: 1, nagelspange: 2 });
   const z = new Map();
   for (const b of behandlungen || []) {
     if (!aktiv(b) || !tagVon(b)) continue;
@@ -89,6 +94,6 @@ export function zuVieleBehandlungenJeTag(behandlungen) {
       z.set(k, (z.get(k) || 0) + 1);
     }
   }
-  return [...z].map(([k, anzahl]) => { const [datum, gruppe] = k.split('|'); return { datum, gruppe, anzahl, max: MAX[gruppe] }; })
+  return [...z].map(([k, anzahl]) => { const [datum, gruppe] = /** @type {[string, 'behandlung'|'nagelspange']} */ (k.split('|')); return { datum, gruppe, anzahl, max: MAX[gruppe] }; })
     .filter(x => x.anzahl > x.max);
 }

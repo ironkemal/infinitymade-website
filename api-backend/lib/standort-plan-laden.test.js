@@ -2,9 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ladeStandortPlan, planErlaubt, _planSperreZuruecksetzen } from './standort-plan-laden.js';
 
+/**
+ * @param {unknown} result
+ * @param {{ n: number }} z
+ * @returns {Parameters<typeof ladeStandortPlan>[0]}
+ */
 function fake(result, z) {
+  /** @type {any} */
   const q = { select: () => q, eq: () => q, in: () => { z.n++; if (result instanceof Error) throw result; return Promise.resolve(result); } };
-  return { from: () => q };
+  return /** @type {Parameters<typeof ladeStandortPlan>[0]} */ (/** @type {unknown} */ ({ from: () => q }));
 }
 // e1: Montag B, Dienstag A (ein Wochentag ohne Eintrag hiesse "alle", nicht "frei").
 const plan = [{ employee_id: 'e1', business_id: 'B', weekday: 1, datum: null }, { employee_id: 'e1', business_id: 'A', weekday: 2, datum: null }];

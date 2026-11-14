@@ -33,10 +33,10 @@ test('erzeugeKimlik überschreibt nicht still; ersetzen schreibt nur *.neu und l
   const b = erzeugeKimlik({ dir, ersetzen: true });
   assert.notEqual(a.boxId, b.boxId);
   assert.equal(b.neu, true);
-  assert.equal(ladeKimlik({ dir }).boxId, a.boxId, 'alte Identität unverändert bis zur Übernahme');
+  assert.equal(/** @type {import('./kimlik.js').KutuKimlik} */ (ladeKimlik({ dir })).boxId, a.boxId, 'alte Identität unverändert bis zur Übernahme');
   assert.equal(erzeugeKimlik({ dir, ersetzen: true }).boxId, b.boxId, 'vorhandenes .neu wird wiederverwendet');
   uebernehmeNeueKimlik({ dir });
-  assert.equal(ladeKimlik({ dir }).boxId, b.boxId);
+  assert.equal(/** @type {import('./kimlik.js').KutuKimlik} */ (ladeKimlik({ dir })).boxId, b.boxId);
   assert.ok(!fs.existsSync(path.join(dir, 'box.key.neu')));
 });
 
@@ -44,15 +44,17 @@ test('ladeKimlik: gleiche Identität, null wenn leer, Ad speicherbar', () => {
   const dir = tmp();
   assert.equal(ladeKimlik({ dir }), null);
   const k = erzeugeKimlik({ dir });
-  assert.equal(ladeKimlik({ dir }).boxId, k.boxId);
+  assert.equal(/** @type {import('./kimlik.js').KutuKimlik} */ (ladeKimlik({ dir })).boxId, k.boxId);
   speichereAd({ dir, ad: 'sonne-tal-42' });
-  assert.equal(ladeKimlik({ dir }).ad, 'sonne-tal-42');
+  assert.equal(/** @type {import('./kimlik.js').KutuKimlik} */ (ladeKimlik({ dir })).ad, 'sonne-tal-42');
 });
 
 test('merkezFetch: signiert, MERKEZ_URL Pflicht, https erzwungen, Serverzeit nur zurückgegeben', async () => {
   const dir = tmp();
   const kimlik = erzeugeKimlik({ dir });
+  /** @type {{ url: string, opt: any } | undefined} */
   let gesehen;
+  /** @param {string} url @param {any} opt */
   const fetchImpl = async (url, opt) => {
     gesehen = { url, opt };
     return { status: 401, ok: false, json: async () => ({ fehler: 'signatur', serverzeit: 123 }) };
@@ -61,18 +63,19 @@ test('merkezFetch: signiert, MERKEZ_URL Pflicht, https erzwungen, Serverzeit nur
   await assert.rejects(merkezFetch('/v1/ip', { kimlik, fetchImpl, baseUrl: 'http://merkez.example.org' }), /https/);
   const r = await merkezFetch('/v1/ip', { kimlik, fetchImpl, baseUrl: 'https://merkez.example.org/', body: { modus: 'lan', ip: '192.168.1.5' } });
   assert.equal(r.serverzeit, 123);
-  assert.equal(gesehen.url, 'https://merkez.example.org/v1/ip');
-  const h = Object.fromEntries(Object.entries(gesehen.opt.headers).map(([a, b]) => [a.toLowerCase(), b]));
+  assert.equal(/** @type {{ url: string, opt: any }} */ (gesehen).url, 'https://merkez.example.org/v1/ip');
+  const h = Object.fromEntries(Object.entries(/** @type {{ url: string, opt: any }} */ (gesehen).opt.headers).map(([a, b]) => [a.toLowerCase(), b]));
   const res = pruefeSignatur({
-    method: 'POST', host: 'merkez.example.org', pfad: '/v1/ip', body: gesehen.opt.body,
+    method: 'POST', host: 'merkez.example.org', pfad: '/v1/ip', body: /** @type {{ url: string, opt: any }} */ (gesehen).opt.body,
     kopf: leseSignaturKopf(h), publicKey: kimlik.publicKey,
   });
   assert.equal(res.ok, true);
 });
 
 test('merkezFetch: Weiterleitungen werden nicht gefolgt', async () => {
+  /** @type {any} */
   let opt;
-  await merkezFetch('/v1/ip', { ohneSignatur: true, baseUrl: 'https://m.example.org', fetchImpl: async (u, o) => { opt = o; return { status: 200, ok: true, json: async () => ({}) }; } });
+  await merkezFetch('/v1/ip', { ohneSignatur: true, baseUrl: 'https://m.example.org', fetchImpl: /** @param {string} u @param {any} o */ async (u, o) => { opt = o; return { status: 200, ok: true, json: async () => ({}) }; } });
   assert.equal(opt.redirect, 'error');
 });
 

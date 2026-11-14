@@ -28,16 +28,33 @@ export const KI_TASKS = Object.freeze([
   'transkribieren'
 ]);
 
+/** @type {Set<string>} */
 const ERLAUBTE_TASKS_SET = new Set(KI_TASKS);
 const ERLAUBTE_TOP_FELDER = new Set(['reportId', 'windowStart', 'windowEnd', 'taskTotals']);
 const ERLAUBTE_METRIK_FELDER = new Set(['calls', 'prompt_tokens', 'completion_tokens', 'total_tokens']);
+
+/**
+ * @typedef {object} KiTaskMetrik
+ * @property {number} calls
+ * @property {number} prompt_tokens
+ * @property {number} completion_tokens
+ * @property {number} total_tokens
+ */
+
+/**
+ * @typedef {object} KiBericht
+ * @property {string} reportId
+ * @property {string} windowStart
+ * @property {string} windowEnd
+ * @property {Record<string, KiTaskMetrik>} taskTotals
+ */
 
 /**
  * Prüft ein aggregiertes KI-Berichtsobjekt gegen die Merkez-Vertrauensgrenze.
  * Wirft NIE eine Ausnahme.
  *
  * @param {unknown} obj - Das zu prüfende Eingabeobjekt.
- * @returns {{ ok: true, bericht: object } | { ok: false, grund: string }}
+ * @returns {{ ok: true, bericht: KiBericht, grund?: undefined } | { ok: false, grund: string, bericht?: undefined }}
  *          grund ist immer eine sichere Konstante ('form', 'zusatzfeld', 'report_id', 'fenster', 'tasks', 'metrik')
  *          und enthält niemals Benutzereingaben.
  */
@@ -65,7 +82,7 @@ export function pruefeKiBericht(obj) {
     }
 
     // 3. reportId prüfen
-    const { reportId, windowStart, windowEnd, taskTotals } = obj;
+    const { reportId, windowStart, windowEnd, taskTotals } = /** @type {Record<string, any>} */ (obj);
     if (typeof reportId !== 'string' || !RE_REPORT_ID.test(reportId)) {
       return { ok: false, grund: 'report_id' };
     }
@@ -136,10 +153,11 @@ export function pruefeKiBericht(obj) {
 
     // 6. Metriken je Task prüfen und Kopie aufbauen
     const sortedTaskKeys = [...taskKeys].sort();
+    /** @type {Record<string, KiTaskMetrik>} */
     const sanitizedTotals = {};
 
     for (const task of sortedTaskKeys) {
-      const m = taskTotals[task];
+      const m = /** @type {Record<string, any>} */ (taskTotals)[task];
       if (!m || typeof m !== 'object' || Array.isArray(m)) {
         return { ok: false, grund: 'metrik' };
       }
@@ -198,7 +216,7 @@ export function pruefeKiBericht(obj) {
  * Erzeugt einen reproduzierbaren SHA-256-Hex-Hash eines Berichts.
  * Sortiert Schlüssel kanonisch, sodass die Eingabereihenfolge keine Rolle spielt.
  *
- * @param {object} bericht - Zu hashender Bericht (oder Rohobjekt).
+ * @param {Record<string, any>} bericht - Zu hashender Bericht (oder Rohobjekt).
  * @returns {string} SHA-256 Hex-Digest.
  */
 export function kiBerichtHash(bericht) {
@@ -208,12 +226,13 @@ export function kiBerichtHash(bericht) {
 
   // Falls das Objekt validierbar ist, nutzen wir die bereits bereinigte Fassung
   const geprueft = pruefeKiBericht(bericht);
-  const quelle = geprueft.ok ? geprueft.bericht : bericht;
+  const quelle = /** @type {Record<string, any>} */ (geprueft.ok ? geprueft.bericht : bericht);
 
   const rawTotals = quelle.taskTotals && typeof quelle.taskTotals === 'object' && !Array.isArray(quelle.taskTotals)
-    ? quelle.taskTotals
+    ? /** @type {Record<string, any>} */ (quelle.taskTotals)
     : {};
   const sortedTaskKeys = Object.keys(rawTotals).sort();
+  /** @type {Record<string, any>} */
   const canonicalTotals = {};
 
   for (const t of sortedTaskKeys) {

@@ -30,37 +30,40 @@ const MAX_SAFE_FRAMES = 25;
  * Sanitizes an error event before transmission to Sentry.
  * Fails closed: any error or invalid shape drops the event by returning null.
  *
- * @param {Object} event
- * @param {Object} [_hint]
- * @returns {Object|null}
+ * @param {unknown} event
+ * @param {unknown} [_hint]
+ * @returns {Record<string, any> | null}
  */
 export function sanitizeEvent(event, _hint) {
   try {
     if (!event || typeof event !== 'object') {
       return null;
     }
+    const src = /** @type {Record<string, any>} */ (event);
 
+    /** @type {Record<string, any>} */
     const safeEvent = {};
 
-    if (typeof event.event_id === 'string' && /^[0-9a-f]{32}$/i.test(event.event_id)) {
-      safeEvent.event_id = event.event_id;
+    if (typeof src.event_id === 'string' && /^[0-9a-f]{32}$/i.test(src.event_id)) {
+      safeEvent.event_id = src.event_id;
     }
-    if (typeof event.timestamp === 'number' && Number.isFinite(event.timestamp)) {
-      safeEvent.timestamp = event.timestamp;
+    if (typeof src.timestamp === 'number' && Number.isFinite(src.timestamp)) {
+      safeEvent.timestamp = src.timestamp;
     }
     const ALLOWED_LEVELS = ['fatal', 'error', 'warning', 'info', 'debug'];
-    if (typeof event.level === 'string' && ALLOWED_LEVELS.includes(event.level)) {
-      safeEvent.level = event.level;
+    if (typeof src.level === 'string' && ALLOWED_LEVELS.includes(src.level)) {
+      safeEvent.level = src.level;
     }
-    if (typeof event.platform === 'string') {
+    if (typeof src.platform === 'string') {
       safeEvent.platform = 'node';
     }
 
-    if (event.exception && Array.isArray(event.exception.values)) {
+    if (src.exception && Array.isArray(src.exception.values)) {
       const safeExceptionValues = [];
-      for (const exc of event.exception.values) {
+      for (const exc of src.exception.values) {
         if (!exc || typeof exc !== 'object') continue;
 
+        /** @type {Record<string, any>} */
         const safeExc = {
           type: 'Error',
           value: '[REDACTED]'
@@ -75,29 +78,30 @@ export function sanitizeEvent(event, _hint) {
         if (exc.stacktrace && Array.isArray(exc.stacktrace.frames)) {
           const rawFrames = exc.stacktrace.frames.slice(-MAX_SAFE_FRAMES);
           safeExc.stacktrace = {
-            frames: rawFrames.map((f) => {
+            frames: rawFrames.map((/** @type {unknown} */ f) => {
               if (!f || typeof f !== 'object') return {};
+              const frame = /** @type {Record<string, any>} */ (f);
 
               let safeFilename = undefined;
-              if (typeof f.filename === 'string') {
-                safeFilename = f.filename.replace(/[^a-zA-Z0-9_./-]/g, '').slice(-64) || 'unknown';
+              if (typeof frame.filename === 'string') {
+                safeFilename = frame.filename.replace(/[^a-zA-Z0-9_./-]/g, '').slice(-64) || 'unknown';
               }
               let safeFunction = undefined;
-              if (typeof f.function === 'string') {
-                safeFunction = f.function.replace(/[^a-zA-Z0-9_.]/g, '').slice(0, 64) || 'unknown';
+              if (typeof frame.function === 'string') {
+                safeFunction = frame.function.replace(/[^a-zA-Z0-9_.]/g, '').slice(0, 64) || 'unknown';
               }
               let safeModule = undefined;
-              if (typeof f.module === 'string') {
-                safeModule = f.module.replace(/[^a-zA-Z0-9_.-]/g, '').slice(0, 64) || 'unknown';
+              if (typeof frame.module === 'string') {
+                safeModule = frame.module.replace(/[^a-zA-Z0-9_.-]/g, '').slice(0, 64) || 'unknown';
               }
 
               return {
                 filename: undefined,
                 function: undefined,
                 module: undefined,
-                lineno: typeof f.lineno === 'number' && Number.isInteger(f.lineno) ? f.lineno : undefined,
-                colno: typeof f.colno === 'number' && Number.isInteger(f.colno) ? f.colno : undefined,
-                in_app: typeof f.in_app === 'boolean' ? f.in_app : undefined
+                lineno: typeof frame.lineno === 'number' && Number.isInteger(frame.lineno) ? frame.lineno : undefined,
+                colno: typeof frame.colno === 'number' && Number.isInteger(frame.colno) ? frame.colno : undefined,
+                in_app: typeof frame.in_app === 'boolean' ? frame.in_app : undefined
               };
             })
           };
@@ -117,29 +121,32 @@ export function sanitizeEvent(event, _hint) {
  * Sanitizes a transaction event before transmission to Sentry.
  * Fails closed: any error or invalid shape drops the transaction by returning null.
  *
- * @param {Object} event
- * @returns {Object|null}
+ * @param {unknown} event
+ * @returns {Record<string, any> | null}
  */
 export function sanitizeTransaction(event) {
   try {
     if (!event || typeof event !== 'object') {
       return null;
     }
+    const src = /** @type {Record<string, any>} */ (event);
 
+    /** @type {Record<string, any>} */
     const safeEvent = { type: 'transaction' };
 
-    if (typeof event.event_id === 'string' && /^[0-9a-f]{32}$/i.test(event.event_id)) {
-      safeEvent.event_id = event.event_id;
+    if (typeof src.event_id === 'string' && /^[0-9a-f]{32}$/i.test(src.event_id)) {
+      safeEvent.event_id = src.event_id;
     }
-    if (typeof event.timestamp === 'number' && Number.isFinite(event.timestamp)) {
-      safeEvent.timestamp = event.timestamp;
+    if (typeof src.timestamp === 'number' && Number.isFinite(src.timestamp)) {
+      safeEvent.timestamp = src.timestamp;
     }
-    if (typeof event.start_timestamp === 'number' && Number.isFinite(event.start_timestamp)) {
-      safeEvent.start_timestamp = event.start_timestamp;
+    if (typeof src.start_timestamp === 'number' && Number.isFinite(src.start_timestamp)) {
+      safeEvent.start_timestamp = src.start_timestamp;
     }
 
-    if (event.contexts && event.contexts.trace && typeof event.contexts.trace === 'object') {
-      const trace = event.contexts.trace;
+    if (src.contexts && src.contexts.trace && typeof src.contexts.trace === 'object') {
+      const trace = src.contexts.trace;
+      /** @type {Record<string, any>} */
       const safeTrace = {};
       if (typeof trace.trace_id === 'string' && /^[0-9a-f]{32}$/i.test(trace.trace_id)) {
         safeTrace.trace_id = trace.trace_id;
@@ -150,14 +157,15 @@ export function sanitizeTransaction(event) {
       safeEvent.contexts = { trace: safeTrace };
     }
 
-    if (typeof event.transaction === 'string') {
+    if (typeof src.transaction === 'string') {
         safeEvent.transaction = 'backend';
     }
 
-    if (Array.isArray(event.spans)) {
+    if (Array.isArray(src.spans)) {
       const safeSpans = [];
-      for (const span of event.spans) {
+      for (const span of src.spans) {
         if (!span || typeof span !== 'object') continue;
+        /** @type {Record<string, any>} */
         const safeSpan = {};
         if (typeof span.span_id === 'string' && /^[0-9a-f]{16}$/i.test(span.span_id)) {
           safeSpan.span_id = span.span_id;
@@ -212,7 +220,7 @@ if (!DSN) {
     ],
 
     beforeSend(event, hint) {
-      return sanitizeEvent(event, hint);
+      return /** @type {import('@sentry/node').ErrorEvent | null} */ (sanitizeEvent(event, hint));
     },
 
     // Sentry 11 streamt Spans standardmäßig (`traceLifecycle: 'stream'`) und
@@ -224,7 +232,7 @@ if (!DSN) {
     traceLifecycle: 'static',
 
     beforeSendTransaction(event) {
-      return sanitizeTransaction(event);
+      return /** @type {ReturnType<NonNullable<import('@sentry/node').NodeOptions['beforeSendTransaction']>>} */ (sanitizeTransaction(event));
     },
 
     beforeBreadcrumb() {

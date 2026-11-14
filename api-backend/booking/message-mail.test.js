@@ -11,26 +11,31 @@ assert.ok(start >= 0 && end > start);
 
 for (const quelle of ['db', 'env']) {
   test(`Nachrichten-Mail: ${quelle} EAUTH bleibt Fehler, Log ohne Rohmeldung`, async () => {
-    let handler; const logs = []; const updates = [];
-    const supabase = { from(table) {
+    /** @type {any} */
+    let handler;
+    /** @type {string[]} */
+    const logs = [];
+    /** @type {any[]} */
+    const updates = [];
+    const supabase = { from(/** @type {string} */ table) {
       const q = {
         select() { return q; }, eq() { return q; },
         async maybeSingle() { return { data: table === 'profiles'
           ? { id: 'owner', business_name: 'Testpraxis', email: 'owner@example.invalid' }
           : { id: 'request', patients: { email: 'patient@example.invalid', vorname: 'Test' } } }; },
-        update(row) { updates.push({ table, row }); return q; },
+        update(/** @type {any} */ row) { updates.push({ table, row }); return q; },
       }; return q;
     } };
     const kanal = { weg: 'smtp', quelle, from: () => 'owner@example.invalid',
       transport: () => ({ sendMail: async () => { throw Object.assign(new Error('private recipient patient@example.invalid'), { code: 'EAUTH' }); } }) };
     vm.runInNewContext(source.slice(start, end), {
-      app: { post(_path, ...args) { handler = args.at(-1); } },
+      app: { post(/** @type {any} */ _path, /** @type {any[]} */ ...args) { handler = args.at(-1); } },
       requireAuthAI() {}, bookingRequestApprovalLimiter() {}, supabase,
       mailKanal: async () => kanal, mailEntwurfStattVersand: () => false,
-      meldeVerbindungsfehler, escHtml: s => s,
-      console: { error: (...args) => logs.push(args.join(' ')) },
+      meldeVerbindungsfehler, escHtml: (/** @type {any} */ s) => s,
+      console: { error: (/** @type {any[]} */ ...args) => logs.push(args.join(' ')) },
     });
-    const res = { code: 200, status(code) { this.code = code; return this; }, json(body) { this.body = body; return this; } };
+    const res = { code: 200, body: /** @type {any} */ (undefined), status(/** @type {number} */ code) { this.code = code; return this; }, json(/** @type {any} */ body) { this.body = body; return this; } };
     await handler({ auth: { userId: 'owner' }, body: { request_id: 'request', owner_id: 'owner', text: 'Synthetische Nachricht' } }, res);
     assert.equal(res.code, 500);
     assert.equal(updates.length, quelle === 'db' ? 1 : 0);

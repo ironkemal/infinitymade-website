@@ -22,21 +22,55 @@ export const KOSTENTRAEGER_NICHT_AUFLOESBAR_CODE = 'KOSTENTRAEGER_NICHT_AUFLOESB
 export const KOSTENTRAEGER_IK_NEU_CODE = 'KOSTENTRAEGER_IK_NEU';
 
 /**
+ * @typedef {{
+ *   id: string,
+ *   krankenkasse_ik?: string | null,
+ *   kostentraeger_ik?: string | null,
+ *   abrechnung_status?: string | null,
+ *   belegnummer?: string | null,
+ *   leads?: { first_name?: string | null, last_name?: string | null } | null,
+ * }} KostentraegerZeileInput
+ */
+
+/**
+ * @typedef {{
+ *   code: string,
+ *   prescriptionId: string,
+ *   alt: string | null | undefined,
+ *   neu: string,
+ *   text: string,
+ * }} KostentraegerWarnung
+ */
+
+/**
+ * @typedef {{
+ *   prescriptionId: string,
+ *   severity: 'stop',
+ *   code: string,
+ *   text: string,
+ * }} KostentraegerFehler
+ */
+
+/**
  * Leitet die Kostenträger-IK für jede Verordnung frisch aus der Karten-IK ab.
  *
  * @param {import('@supabase/supabase-js').SupabaseClient} supabase
- * @param {Array<object>} zeilen
- * @param {{ aufloeser?: Function, preflight?: boolean }} [options]
+ * @param {KostentraegerZeileInput[]} zeilen
+ * @param {{ aufloeser?: typeof kostentraegerIkAufloesen, preflight?: boolean }} [options]
  *   `preflight: true` — nicht auflösbare Zeilen werfen nicht, sondern landen in
  *   `fehler` (Zeile behält ihre gespeicherte IK, wird aber in `aufgeloest` NICHT
  *   geführt); alle übrigen Zeilen werden weiter frisch abgeleitet.
  *   Ohne Flag (create / create-podologie) bleibt es beim harten 422.
- * @returns {Promise<{ warnungen: Array<object>, fehler: Array<object>, aufgeloest: Set<*> }>}
+ * @returns {Promise<{ warnungen: KostentraegerWarnung[], fehler: KostentraegerFehler[], aufgeloest: Set<string> }>}
  */
 export async function kostentraegerFrischAbleiten(supabase, zeilen, { aufloeser = kostentraegerIkAufloesen, preflight = false } = {}) {
+  /** @type {KostentraegerWarnung[]} */
   const warnungen = [];
+  /** @type {KostentraegerFehler[]} */
   const fehler = [];
+  /** @type {Set<string>} */
   const aufgeloest = new Set();
+  /** @type {Map<string, string | null>} */
   const cache = new Map();
 
   for (const zeile of (zeilen || [])) {
@@ -46,6 +80,7 @@ export async function kostentraegerFrischAbleiten(supabase, zeilen, { aufloeser 
     if (!istKartenIk(zeile.krankenkasse_ik)) continue;
 
     const kartenIk = String(zeile.krankenkasse_ik);
+    /** @type {string | null | undefined} */
     let neu;
     if (cache.has(kartenIk)) {
       neu = cache.get(kartenIk);
@@ -56,13 +91,14 @@ export async function kostentraegerFrischAbleiten(supabase, zeilen, { aufloeser 
       cache.set(kartenIk, neu);
     }
 
-    if (neu === null) {
+    if (neu === null || neu === undefined) {
       const kurzId = String(zeile.id ?? '').slice(0, 8);
       const vorname = zeile.leads?.first_name;
       const nachname = zeile.leads?.last_name;
       const patientName = [vorname, nachname].map(s => String(s ?? '').trim()).filter(Boolean).join(' ');
       const patientZusatz = patientName ? ` (${patientName})` : '';
 
+      /** @type {Error & { status?: number, code?: string, prescriptionId?: string }} */
       const err = new Error(
         `Verordnung ${kurzId}${patientZusatz}: Zur IK der Versichertenkarte ${kartenIk} wurde in der aktuellen Kostenträgerdatei kein Kostenträger gefunden — Verordnung prüfen bzw. Kostenträgerdatei aktualisieren.`
       );
@@ -109,9 +145,14 @@ export async function kostentraegerFrischAbleiten(supabase, zeilen, { aufloeser 
  * `belegnummer`, `owner_id`), damit ein paralleler Lauf nichts Festgeschriebenes
  * trifft. Best effort: Fehler werden geloggt, nie geworfen.
  *
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {KostentraegerZeileInput[]} zeilen
+ * @param {Array<{ code?: string, prescriptionId: string, neu?: string }>} warnungen
+ * @param {string} ownerId
  * @returns {Promise<string[]>} ids, die tatsächlich zurückgeschrieben wurden
  */
 export async function kostentraegerIkZurueckschreiben(supabase, zeilen, warnungen, ownerId) {
+  /** @type {string[]} */
   const geschrieben = [];
   for (const w of (warnungen || [])) {
     if (w.code !== KOSTENTRAEGER_IK_NEU_CODE) continue;
@@ -129,7 +170,7 @@ export async function kostentraegerIkZurueckschreiben(supabase, zeilen, warnunge
       if (error) { console.warn('[kostentraeger-frisch] Rückschreiben fehlgeschlagen:', error.message); continue; }
       if (data && data.length) geschrieben.push(w.prescriptionId);
     } catch (e) {
-      console.warn('[kostentraeger-frisch] Rückschreiben fehlgeschlagen:', e?.message);
+      console.warn('[kostentraeger-frisch] Rückschreiben fehlgeschlagen:', e instanceof Error ? e.message : String(e));
     }
   }
   return geschrieben;
@@ -139,6 +180,11 @@ export async function kostentraegerIkZurueckschreiben(supabase, zeilen, warnunge
  * Antwortkörper für 409 KOSTENTRAEGER_GEAENDERT. Der Hinweis „Liste neu laden"
  * stimmt nur, wenn die frische IK tatsächlich gespeichert wurde — sonst käme
  * der Nutzer im Kreis (gkv-302 Auflage 1, 30.09.2026).
+ *
+ * @param {string} id
+ * @param {string | null | undefined} alt
+ * @param {string} neu
+ * @param {boolean} zurueckgeschrieben
  */
 export function kostentraegerGeaendertAntwort(id, alt, neu, zurueckgeschrieben) {
   const kurz = String(id ?? '').slice(0, 8);

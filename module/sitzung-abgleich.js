@@ -56,17 +56,44 @@
  */
 
 /**
+ * @typedef {{ einheiten?: number | string | null, doppelbehandlung?: boolean | null, code?: string, bezeichnung?: string }} HeilmittelItemInput
+ * @typedef {{
+ *   heilmittel_items?: Array<HeilmittelItemInput | string> | null,
+ *   anzahl_einheiten?: number | string | null,
+ *   doppelbehandlung?: boolean | null,
+ * }} RxTerminZielInput
+ * @typedef {{
+ *   session_number: number,
+ *   status?: string | null,
+ *   heilmittel_index?: number | null,
+ * }} VorhandeneSitzung
+ * @typedef {{
+ *   prescription_id: string,
+ *   session_number: number,
+ *   status: string,
+ *   heilmittel_index: number,
+ * }} NeueSitzungsZeile
+ * @typedef {{
+ *   from: (table: string) => {
+ *     select: (cols: string) => { eq: (col: string, val: string) => Promise<{ data: VorhandeneSitzung[] | null, error: { message: string } | null }> },
+ *     upsert: (zeilen: NeueSitzungsZeile[], opts: { onConflict: string, ignoreDuplicates: boolean }) => Promise<{ error: { message: string } | null }>,
+ *   }
+ * }} SitzungSupabase
+ */
+
+/**
  * Welche Sitzungsnummern fehlen? Rein rechnerisch, ohne Datenbank — damit
  * prüfbar.
  *
- * @param {Array<{session_number:number}>} vorhandene
- * @param {number} anzahlEinheiten
+ * @param {Array<{session_number:number}> | null | undefined} vorhandene
+ * @param {number | string | null | undefined} anzahlEinheiten
  * @returns {number[]} fehlende Nummern, aufsteigend
  */
 export function fehlendeSitzungsnummern(vorhandene, anzahlEinheiten) {
   const soll = Number(anzahlEinheiten);
   if (!Number.isFinite(soll) || soll < 1) return [];
   const da = new Set((vorhandene || []).map(s => Number(s.session_number)));
+  /** @type {number[]} */
   const fehlt = [];
   for (let n = 1; n <= soll; n++) if (!da.has(n)) fehlt.push(n);
   return fehlt;
@@ -87,9 +114,13 @@ export const ABGESCHLOSSEN = ['completed', 'billed', 'cancelled'];
  * Wie viele Termine braucht eine Verordnung? Bei Doppelbehandlung zählt ein
  * Termin zwei verordnete Einheiten (HeilM-RL §12 Abs. 8 S. 6, gkv-302 27.10.2026):
  * 6 Einheiten = 3 Termine. Ungerade Menge → der letzte Termin ist einfach.
+ *
+ * @param {number | string | null | undefined} anzahlEinheiten
+ * @param {boolean} [doppelbehandlung]
+ * @returns {number | string | null | undefined}
  */
 export function terminZiel(anzahlEinheiten, doppelbehandlung = false) {
-  const n = Number.parseInt(anzahlEinheiten, 10);
+  const n = Number.parseInt(String(anzahlEinheiten ?? ''), 10);
   if (!Number.isFinite(n) || n <= 0) return anzahlEinheiten;
   return doppelbehandlung ? Math.ceil(n / 2) : n;
 }
@@ -98,34 +129,50 @@ export function terminZiel(anzahlEinheiten, doppelbehandlung = false) {
  * Nur die neue Form { code, einheiten, … } meint mehrere Heilmittel. Altbestand
  * (Strings oder Objekte ohne `einheiten`) läuft über anzahl_einheiten — sonst
  * entstünden null Sitzungen und eine Kapazität von null.
+ *
+ * @param {unknown} items
+ * @returns {boolean}
  */
 export function istMehrfachItems(items) {
-  return Array.isArray(items) && items.some(it => it && typeof it === 'object' && it.einheiten != null);
+  return Array.isArray(items) && items.some(it => it && typeof it === 'object' && 'einheiten' in it && it.einheiten != null);
 }
 
 /**
  * Gesamt-Terminziel einer Verordnung (bei mehreren Heilmittel-Items: Summe
  * der Terminziele je Item; sonst: terminZiel(anzahl_einheiten, doppelbehandlung)).
  *
- * @param {object} rx
+ * @param {RxTerminZielInput | null | undefined} rx
  * @returns {number}
  */
 export function terminZielToplam(rx) {
   if (!rx) return 0;
   if (istMehrfachItems(rx.heilmittel_items)) {
     let sum = 0;
-    for (const it of rx.heilmittel_items) {
+    for (const rawIt of rx.heilmittel_items || []) {
+      const it = rawIt && typeof rawIt === 'object' ? rawIt : null;
       const z = terminZiel(it?.einheiten, Boolean(it?.doppelbehandlung));
-      const n = Number.parseInt(z, 10);
+      const n = Number.parseInt(String(z ?? ''), 10);
       if (Number.isFinite(n) && n > 0) sum += n;
     }
     return sum;
   }
   const z = terminZiel(rx.anzahl_einheiten, Boolean(rx.doppelbehandlung));
-  const n = Number.parseInt(z, 10);
-  return (Number.isFinite(n) && n > 0) ? n : (Number.parseInt(rx.anzahl_einheiten, 10) || 0);
+  const n = Number.parseInt(String(z ?? ''), 10);
+  return (Number.isFinite(n) && n > 0) ? n : (Number.parseInt(String(rx.anzahl_einheiten ?? ''), 10) || 0);
 }
 
+/**
+ * @param {{
+ *   supabase: SitzungSupabase | null | undefined,
+ *   prescriptionId: string | null | undefined,
+ *   anzahlEinheiten?: number | string | null,
+ *   status?: string | null,
+ *   heilmittelIndex?: number,
+ *   doppelbehandlung?: boolean,
+ *   items?: Array<HeilmittelItemInput | string> | null,
+ * }} params
+ * @returns {Promise<{ergaenzt:number, fehler:string|null}>}
+ */
 export async function gleicheSitzungenAb({ supabase, prescriptionId, anzahlEinheiten, status = null, heilmittelIndex = 0, doppelbehandlung = false, items = null }) {
   if (!supabase || !prescriptionId) return { ergaenzt: 0, fehler: null };
   if (status && ABGESCHLOSSEN.includes(status)) return { ergaenzt: 0, fehler: null };
@@ -146,18 +193,23 @@ export async function gleicheSitzungenAb({ supabase, prescriptionId, anzahlEinhe
     return naechsteNummer;
   }
 
+  /** @type {NeueSitzungsZeile[]} */
   const zeilen = [];
 
   if (istMehrfachItems(items)) {
+    const itemsListe = Array.isArray(items) ? items : [];
+    /** @type {Array<{ index: number, count: number }>} */
     const itemSlots = [];
-    for (let i = 0; i < items.length; i++) {
-      const it = items[i];
+    for (let i = 0; i < itemsListe.length; i++) {
+      const rawIt = itemsListe[i];
+      const it = rawIt && typeof rawIt === 'object' ? rawIt : null;
       const count = terminZiel(it?.einheiten, Boolean(it?.doppelbehandlung));
-      if (Number.isFinite(count) && count > 0) {
+      if (typeof count === 'number' && Number.isFinite(count) && count > 0) {
         itemSlots.push({ index: i, count });
       }
     }
 
+    /** @param {VorhandeneSitzung} s @returns {number} */
     function getSessionIndex(s) {
       if (s.heilmittel_index !== undefined && s.heilmittel_index !== null) return s.heilmittel_index;
       if (itemSlots.length > 0) {
@@ -171,10 +223,11 @@ export async function gleicheSitzungenAb({ supabase, prescriptionId, anzahlEinhe
       return 0;
     }
 
-    for (let i = 0; i < items.length; i++) {
-      const it = items[i];
+    for (let i = 0; i < itemsListe.length; i++) {
+      const rawIt = itemsListe[i];
+      const it = rawIt && typeof rawIt === 'object' ? rawIt : null;
       const ziel = terminZiel(it?.einheiten, Boolean(it?.doppelbehandlung));
-      if (!Number.isFinite(ziel) || ziel <= 0) continue;
+      if (typeof ziel !== 'number' || !Number.isFinite(ziel) || ziel <= 0) continue;
 
       const vorhandenFuerItem = (vorhandene || []).filter(s =>
         s.status !== 'cancelled' && getSessionIndex(s) === i

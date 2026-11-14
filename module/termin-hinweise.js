@@ -17,7 +17,10 @@
 
 const KEINE_VO_NOETIG = new Set(['privat', 'selbstzahler', 'bg']);
 
-/** @returns {Array<{key:string, text:string, titel:string}>} */
+/**
+ * @param {Record<string, any>|null|undefined} b
+ * @returns {Array<{key:string, text:string, titel:string}>}
+ */
 export function terminHinweise(b) {
   if (!b) return [];
   const out = [];
@@ -34,9 +37,20 @@ export function terminHinweise(b) {
   return out;
 }
 
-const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+/**
+ * @param {any} s
+ * @returns {string}
+ */
+const esc = (s) => {
+  const map = /** @type {Record<string, string>} */ ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' });
+  return String(s ?? '').replace(/[&<>"']/g, c => map[c] || c);
+};
 
-/** HTML-Leiste der Hinweise, leer ohne Hinweis. */
+/**
+ * HTML-Leiste der Hinweise, leer ohne Hinweis.
+ * @param {Record<string, any>|null|undefined} b
+ * @returns {string}
+ */
 export function terminHinweiseHtml(b) {
   const h = terminHinweise(b);
   return h.length

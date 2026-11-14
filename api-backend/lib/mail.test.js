@@ -7,20 +7,27 @@ const {
   speichereGmailMailversand, mailKanal, verschluesselePasswort, fehlerHinweis, SMTP_PRESETS, transportFabrikFuer, envSmtpAnzeige, meldeVerbindungsfehler,
 } = await import('./mail.js');
 
+/** @param {Record<string, unknown>} [extra] */
 const zeile = (extra = {}) => ({
   owner_id: 'o1', modus: 'smtp', preset: 'ionos', smtp_host: 'smtp.ionos.de', smtp_port: 465, smtp_sicherheit: 'ssl',
   smtp_benutzer: 'praxis@example.invalid', smtp_passwort: verschluesselePasswort('s3cret!'),
   absender_email: 'praxis@example.invalid', absender_name: 'Praxis Test', ...extra,
 });
 
+/** @param {Awaited<ReturnType<typeof mailKanal>>} k */
+const smtpVon = k => /** @type {Awaited<ReturnType<typeof mailKanal>> & { smtp?: { host?: string, secure?: boolean, pass?: string } | null }} */ (k).smtp;
+
 test('Reihenfolge: Einstellung der Praxis > SMTP_* > kein', async () => {
   const db = await mailKanal({ zeile: zeile(), env: { SMTP_HOST: 'smtp.env.invalid' }, kutu: true });
   assert.equal(db.weg, 'smtp'); assert.equal(db.quelle, 'db');
-  assert.equal(db.smtp.host, 'smtp.ionos.de'); assert.equal(db.smtp.secure, true); assert.equal(db.smtp.pass, 's3cret!');
+  const dbSmtp = smtpVon(db);
+  assert.ok(dbSmtp);
+  assert.equal(dbSmtp.host, 'smtp.ionos.de'); assert.equal(dbSmtp.secure, true); assert.equal(dbSmtp.pass, 's3cret!');
+  assert.ok(db.from);
   assert.equal(db.from('Ignoriert'), '"Praxis Test" <praxis@example.invalid>');
 
   const env = await mailKanal({ zeile: null, env: { SMTP_HOST: 'smtp.env.invalid' }, kutu: true });
-  assert.equal(env.weg, 'smtp'); assert.equal(env.quelle, 'env'); assert.equal(env.smtp, null);
+  assert.equal(env.weg, 'smtp'); assert.equal(env.quelle, 'env'); assert.equal(smtpVon(env), null);
 
   const kein = await mailKanal({ zeile: null, env: {}, kutu: true });
   assert.equal(kein.weg, 'kein');
@@ -53,38 +60,40 @@ test('Passwort: nie im JSON des Kanals, unlesbar -> kein Versand mit Code', asyn
 });
 
 test('Tabelle fehlt / DB-Fehler: wie keine Einstellung', async () => {
-  const supabase = { from() { return { select() { return this; }, eq() { return this; }, maybeSingle: async () => ({ data: null, error: { code: '42P01' } }) }; } };
+  const supabase = /** @type {NonNullable<Parameters<typeof mailKanal>[0]>['supabase']} */ (/** @type {unknown} */ ({ from() { return { select() { return this; }, eq() { return this; }, maybeSingle: async () => ({ data: null, error: { code: '42P01' } }) }; } }));
   const k = await mailKanal({ supabase, ownerId: 'o1', env: { SMTP_HOST: 'h' }, kutu: true });
   assert.equal(k.quelle, 'env');
-  const wirft = { from() { throw new Error('netz'); } };
+  const wirft = /** @type {NonNullable<Parameters<typeof mailKanal>[0]>['supabase']} */ (/** @type {unknown} */ ({ from() { throw new Error('netz'); } }));
   assert.equal((await mailKanal({ supabase: wirft, ownerId: 'o1', env: {}, kutu: true })).weg, 'kein');
 });
 
 test('transportFabrikFuer setzt Zugangsdaten + requireTLS ein', async () => {
   const k = await mailKanal({ zeile: zeile(), env: {}, kutu: true });
+  /** @type {unknown} */
   let o;
-  transportFabrikFuer(k, (x) => { o = x; return {}; })({ requireTLS: true });
+  transportFabrikFuer(/** @type {Parameters<typeof transportFabrikFuer>[0]} */ (/** @type {unknown} */ (k)), (x) => { o = x; return /** @type {ReturnType<typeof import('nodemailer').createTransport>} */ ({}); })({ requireTLS: true });
   assert.deepEqual(o, { host: 'smtp.ionos.de', port: 465, secure: true, user: 'praxis@example.invalid', pass: 's3cret!', requireTLS: true });
-  transportFabrikFuer(await mailKanal({ zeile: null, env: { SMTP_HOST: 'h' }, kutu: true }), (x) => { o = x; return {}; })({ requireTLS: true });
+  transportFabrikFuer(/** @type {Parameters<typeof transportFabrikFuer>[0]} */ (/** @type {unknown} */ (await mailKanal({ zeile: null, env: { SMTP_HOST: 'h' }, kutu: true }))), (x) => { o = x; return /** @type {ReturnType<typeof import('nodemailer').createTransport>} */ ({}); })({ requireTLS: true });
   assert.deepEqual(o, { requireTLS: true });
 });
 
 test('fehlerHinweis: anbieterspezifisch nur bei Anmeldefehlern, nie Rohmeldung', () => {
-  assert.match(fehlerHinweis('EAUTH', 'telekom').hinweis, /E-Mail-Passwort/);
+  assert.match(fehlerHinweis('EAUTH', 'telekom').hinweis ?? '', /E-Mail-Passwort/);
   // Live 10.11.2026: T-Online beendet bei falschen Zugangsdaten mit EPROTOCOL statt EAUTH
   assert.match(fehlerHinweis('EPROTOCOL', 'telekom').meldung, /unerwartet beendet/);
-  assert.match(fehlerHinweis('EPROTOCOL', 'telekom').hinweis, /E-Mail-Passwort/);
-  assert.match(fehlerHinweis('EAUTH', 'gmx').hinweis, /POP3\/IMAP/);
-  assert.match(fehlerHinweis('EAUTH', 'webde').hinweis, /POP3\/IMAP/);
-  assert.match(fehlerHinweis('EAUTH', 'gmail').hinweis, /App-Passwort/);
+  assert.match(fehlerHinweis('EPROTOCOL', 'telekom').hinweis ?? '', /E-Mail-Passwort/);
+  assert.match(fehlerHinweis('EAUTH', 'gmx').hinweis ?? '', /POP3\/IMAP/);
+  assert.match(fehlerHinweis('EAUTH', 'webde').hinweis ?? '', /POP3\/IMAP/);
+  assert.match(fehlerHinweis('EAUTH', 'gmail').hinweis ?? '', /App-Passwort/);
   assert.equal(fehlerHinweis('EDNS', 'gmx').hinweis, null);
   assert.match(fehlerHinweis('EAUTH', 'ionos').meldung, /abgelehnt/);
-  assert.equal(fehlerHinweis('QUATSCH').meldung, 'Unbekannter Fehler beim Mailversand.');
+  assert.equal(fehlerHinweis('QUATSCH', undefined).meldung, 'Unbekannter Fehler beim Mailversand.');
 });
 
 test('Vorlagen: feste Hosts, keine Praxura-Adresse; Env-Anzeige ohne Zugangsdaten', () => {
   for (const [k, v] of Object.entries(SMTP_PRESETS)) {
     if (k === 'andere') continue;
+    assert.ok(v.host !== null);
     assert.match(v.host, /^[a-z0-9.-]+$/);
     // Live 10.11.2026: ausgehend 465 auf dem SaaS-VPS gesperrt → alle Vorlagen 587/STARTTLS
     assert.equal(v.port, 587, `${k}: Port 587`); assert.equal(v.sicherheit, 'starttls', `${k}: STARTTLS`);
@@ -95,8 +104,11 @@ test('Vorlagen: feste Hosts, keine Praxura-Adresse; Env-Anzeige ohne Zugangsdate
 });
 
 test('meldeVerbindungsfehler: nur Praxis-Postfach + Verbindungscode', async () => {
+  /** @type {Array<Record<string, unknown>>} */
   const updates = [];
-  const supabase = { from() { return { update(w) { updates.push(w); return { eq: async () => ({}) }; } }; } };
+  const supabase = /** @type {Parameters<typeof meldeVerbindungsfehler>[0]} */ (/** @type {unknown} */ ({
+    from() { return { update(/** @type {Record<string, unknown>} */ w) { updates.push(w); return { eq: async () => ({}) }; } }; },
+  }));
   await meldeVerbindungsfehler(supabase, 'o1', { quelle: 'db' }, { code: 'EAUTH' });
   await meldeVerbindungsfehler(supabase, 'o1', { quelle: 'env' }, { code: 'EAUTH' });
   await meldeVerbindungsfehler(supabase, 'o1', { quelle: 'db' }, { code: 'EENVELOPE' });
@@ -113,15 +125,25 @@ test('Review 09.11.: unlesbares Passwort faellt auf SMTP_* zurueck (Fehler bleib
 
 
 test('Gmail-Auswahl: Vault zuerst, SMTP-Geheimnisse löschen, Fehler verhindern Erfolg', async () => {
-  const schritte = []; let rpcFehler = null; let dbFehler = null; let vorhanden = 'alter-synthetischer-token';
-  const db = {
+  /** @type {Array<{ name?: string, args?: unknown, table?: string, werte?: Record<string, unknown>, opts?: unknown }>} */
+  const schritte = [];
+  /** @type {{ code: string } | null} */
+  let rpcFehler = null;
+  /** @type {{ code: string } | null} */
+  let dbFehler = null;
+  /** @type {string | null} */
+  let vorhanden = 'alter-synthetischer-token';
+  const db = /** @type {Parameters<typeof speichereGmailMailversand>[0]['supabase']} */ (/** @type {unknown} */ ({
+    /** @param {string} name @param {unknown} args */
     async rpc(name, args) { schritte.push({ name, args }); return { data: vorhanden, error: rpcFehler }; },
-    from(table) { return { async upsert(werte, opts) { schritte.push({ table, werte, opts }); return { error: dbFehler }; } }; },
-  };
+    /** @param {string} table */
+    from(table) { return { async upsert(/** @type {Record<string, unknown>} */ werte, /** @type {unknown} */ opts) { schritte.push({ table, werte, opts }); return { error: dbFehler }; } }; },
+  }));
   const args = { supabase: db, ownerId: 'o1', email: 'praxis@example.invalid' };
   await speichereGmailMailversand({ ...args, refreshToken: 'neuer-synthetischer-token' }); // secret-scan: ignore — synthetic test fixture
   assert.equal(schritte[0].name, 'set_gmail_token');
   assert.equal(schritte[1].table, 'praxis_mailversand');
+  assert.ok(schritte[1].werte);
   assert.equal(schritte[1].werte.modus, 'gmail_oauth');
   assert.equal(schritte[1].werte.status, 'verbunden');
   assert.equal(schritte[1].werte.owner_id, 'o1');
@@ -132,11 +154,11 @@ test('Gmail-Auswahl: Vault zuerst, SMTP-Geheimnisse löschen, Fehler verhindern 
   await speichereGmailMailversand(args);
   assert.equal(schritte[0].name, 'get_gmail_token');
   schritte.length = 0; vorhanden = null;
-  await assert.rejects(speichereGmailMailversand(args), e => e.code === 'GMAIL_TOKEN_FEHLT');
+  await assert.rejects(speichereGmailMailversand(args), (/** @param {unknown} e */ e) => (/** @type {{ code?: string }} */ (e))?.code === 'GMAIL_TOKEN_FEHLT');
   assert.equal(schritte.length, 1, 'kein Moduswechsel ohne nutzbaren Token');
   rpcFehler = { code: 'VAULT_FEHLER' }; schritte.length = 0;
-  await assert.rejects(speichereGmailMailversand({ ...args, refreshToken: 'x' }), e => e.code === 'VAULT_FEHLER');
+  await assert.rejects(speichereGmailMailversand({ ...args, refreshToken: 'x' }), (/** @param {unknown} e */ e) => (/** @type {{ code?: string }} */ (e))?.code === 'VAULT_FEHLER');
   assert.equal(schritte.length, 1);
   rpcFehler = null; dbFehler = { code: 'DB_FEHLER' };
-  await assert.rejects(speichereGmailMailversand({ ...args, refreshToken: 'x' }), e => e.code === 'DB_FEHLER');
+  await assert.rejects(speichereGmailMailversand({ ...args, refreshToken: 'x' }), (/** @param {unknown} e */ e) => (/** @type {{ code?: string }} */ (e))?.code === 'DB_FEHLER');
 });

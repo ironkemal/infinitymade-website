@@ -44,7 +44,12 @@ const DAS = {
 };
 const KASSE = { tk: '101575519', barmer: '104940005', mhplus: '108035612' };
 
-/** Preis + Zuzahlung der Position am Leistungstag — aus derselben Tabelle wie die App. */
+/**
+ * Preis + Zuzahlung der Position am Leistungstag — aus derselben Tabelle wie die App.
+ * @param {string} hpnr
+ * @param {string} datum
+ * @param {number} [anzahl]
+ */
 function pos(hpnr, datum, anzahl = 1) {
   const p = findPodologiePosition(hpnr, datum);
   if (!p) throw new Error(`Position ${hpnr} am ${datum} nicht im Katalog`);
@@ -52,6 +57,13 @@ function pos(hpnr, datum, anzahl = 1) {
 }
 
 let belegnr = 0;
+/**
+ * @param {string} nachname
+ * @param {string} vorname
+ * @param {string} geburtsdatum
+ * @param {string} kvnr
+ * @param {string} [versichertenstatus]
+ */
 function patient(nachname, vorname, geburtsdatum, kvnr, versichertenstatus = '10000') {
   belegnr += 1;
   return {
@@ -61,6 +73,17 @@ function patient(nachname, vorname, geburtsdatum, kvnr, versichertenstatus = '10
   };
 }
 
+/**
+ * @param {{
+ *   kasse?: string,
+ *   icd10: string,
+ *   diagnosegruppe: string,
+ *   leitsymptomatik?: string,
+ *   zuzahlungskennzeichen?: string,
+ *   hausbesuch?: boolean,
+ *   ausstellungsdatum?: string,
+ * }} opts
+ */
 function verordnung({ kasse = AZE_MODUS ? KASSE.mhplus : KASSE.tk, icd10, diagnosegruppe, leitsymptomatik = '1010',
                       zuzahlungskennzeichen = '3', hausbesuch = false, ausstellungsdatum = '2026-09-22' }) {
   return {
@@ -71,6 +94,11 @@ function verordnung({ kasse = AZE_MODUS ? KASSE.mhplus : KASSE.tk, icd10, diagno
   };
 }
 
+/**
+ * @param {ReturnType<typeof patient>} pat
+ * @param {ReturnType<typeof verordnung>} vo
+ * @param {Array<ReturnType<typeof pos>>} sessions
+ */
 const rx = (pat, vo, sessions) => ({ patient: pat, verordnung: vo, tarif: TARIF, sessions });
 
 // ── Die Fälle ───────────────────────────────────────────────────────────────
@@ -180,7 +208,7 @@ faelle.forEach((fall, i) => {
       vkz: '01',
       prescriptions: fall.prescriptions,
     });
-    const check = pruefeDatenstrom(r.content);
+    const check = /** @type {{ segmente: number, nachrichten: number, ok?: boolean, errors?: unknown } | null | undefined} */ (pruefeDatenstrom(r.content));
     if (AZE_MODUS) {
       // Anlage 7 Prüfung 2: Nutzdatei und Auftragsdatei tragen dieselben ersten 8 Stellen.
       const ordner = join(ausgabe, `${r.filename}_${fall.name}`);
@@ -195,10 +223,10 @@ faelle.forEach((fall, i) => {
     if (!ok) fehler += 1;
     console.log(`${ok ? 'OK ' : 'ERR'} ${AZE_MODUS ? r.filename + ' ' : ''}${fall.name}  ${r.byteLength} B, ${r.segmentCount} Seg., brutto ${r.totals.brutto} €, Zuzahlung ${r.totals.gesZuzahlung} €` +
       (r.preflightWarnings?.length ? `  [Warnungen: ${r.preflightWarnings.map(w => w.code).join(', ')}]` : '') +
-      (ok ? '' : `  Selbstprüfung: ${JSON.stringify(check.errors || check).slice(0, 300)}`));
+      (ok ? '' : `  Selbstprüfung: ${JSON.stringify(check?.errors || check).slice(0, 300)}`));
   } catch (e) {
     fehler += 1;
-    console.log(`ERR ${fall.name}: ${e.message}`);
+    console.log(`ERR ${fall.name}: ${e instanceof Error ? e.message : String(e)}`);
   }
 });
 writeFileSync(join(ausgabe, 'LIESMICH.txt'),

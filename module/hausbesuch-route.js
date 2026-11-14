@@ -29,11 +29,19 @@ export function hausbesuchZiel(doc = globalThis.document) {
   const ansicht = doc?.getElementById('bkHbAddrView');
   const text = (doc?.getElementById('bkHbAddressText')?.textContent || '').trim();
   if (ansicht && !ansicht.hidden && text && text !== KEIN_PATIENT) return text;
-  const wert = id => (doc?.getElementById(id)?.value || '').trim();
+  /** @param {string} id */
+  const wert = id => {
+    const el = /** @type {HTMLInputElement | null} */ (doc?.getElementById(id));
+    return (el?.value || '').trim();
+  };
   const ort = [wert('bkHbPlz'), wert('bkHbCity')].filter(Boolean).join(' ');
   return [wert('bkHbStreet'), ort].filter(Boolean).join(', ');
 }
 
+/**
+ * @param {string} ziel
+ * @returns {string}
+ */
 export function routeLink(ziel) {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ziel)}`;
 }
@@ -78,7 +86,7 @@ if (IST_KUTU) hausbesuchRouteAusblenden();
  */
 export async function holeFahrzeitBeimSpeichern(lead, { doc = globalThis.document, maxMs = 10000, schritt = 200 } = {}) {
   if (!lead || lead.duration_min != null) return !!lead;
-  const btn = doc?.getElementById('bkHbBerechnenBtn');
+  const btn = /** @type {HTMLButtonElement | null} */ (doc?.getElementById('bkHbBerechnenBtn'));
   if (!btn) return false;
   if (!btn.disabled) btn.click();
   for (let t = 0; t < maxMs; t += schritt) {

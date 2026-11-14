@@ -2,11 +2,16 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { pruefePodologieEmpfangsnachweise, enthaeltHpnr78040 } from './podo-empfangsnachweis.js';
 
+/**
+ * @typedef {import('./podo-empfangsnachweis.js').PodoSupabaseClient} PodoSupabaseClient
+ * @typedef {import('./podo-empfangsnachweis.js').PodoBehandlungInput} PodoBehandlungInput
+ */
+
 test('enthaeltHpnr78040 identifiziert 78040 streng per String-Array', () => {
   assert.equal(enthaeltHpnr78040(['78040']), true);
   assert.equal(enthaeltHpnr78040(['78010', '78040']), true);
   assert.equal(enthaeltHpnr78040(['78010', '78020']), false);
-  assert.equal(enthaeltHpnr78040([78040]), false); // Keine Number-Koerzierung
+  assert.equal(enthaeltHpnr78040(/** @type {string[]} */ (/** @type {unknown} */ ([78040]))), false); // Keine Number-Koerzierung
   assert.equal(enthaeltHpnr78040('78040'), false); // Kein String/CSV-Fallback
   assert.equal(enthaeltHpnr78040('78010, 78040'), false);
   assert.equal(enthaeltHpnr78040(null), false);
@@ -22,11 +27,12 @@ test('pruefePodologieEmpfangsnachweise: Leere Liste erfordert keine DB-Abfragen'
     },
   };
   const res = await pruefePodologieEmpfangsnachweise({
-    supabase: fakeSupabase,
+    supabase: /** @type {PodoSupabaseClient} */ (/** @type {unknown} */ (fakeSupabase)),
     tenantId: '11111111-1111-4111-8111-111111111111',
     behandlungen: [],
   });
   assert.equal(res.ok, true);
+  assert.ok(res.gepruefteIds);
   assert.equal(res.gepruefteIds.length, 0);
   assert.equal(dbCalls, 0);
 });
@@ -40,7 +46,7 @@ test('pruefePodologieEmpfangsnachweise: Nicht-78040 Behandlungen (z.B. Physio/78
     },
   };
   const res = await pruefePodologieEmpfangsnachweise({
-    supabase: fakeSupabase,
+    supabase: /** @type {PodoSupabaseClient} */ (/** @type {unknown} */ (fakeSupabase)),
     tenantId: '11111111-1111-4111-8111-111111111111',
     behandlungen: [
       { id: 'b1', hpnr_codes: ['78010'], storniert_am: null, behandlungsdatum: '2026-10-01' },
@@ -53,6 +59,7 @@ test('pruefePodologieEmpfangsnachweise: Nicht-78040 Behandlungen (z.B. Physio/78
 
 test('pruefePodologieEmpfangsnachweise: DB-Fehler führt zu Fail-Closed 503', async () => {
   const fakeSupabase = {
+    /** @param {string} table */
     from(table) {
       assert.equal(table, 'podologie_empfangsnachweise');
       return {
@@ -76,6 +83,7 @@ test('pruefePodologieEmpfangsnachweise: DB-Fehler führt zu Fail-Closed 503', as
 
   assert.equal(res.ok, false);
   assert.equal(res.status, 503);
+  assert.ok(res.error);
   assert.match(res.error, /Datenbankfehler/);
 });
 
@@ -237,7 +245,7 @@ test('pruefePodologieEmpfangsnachweise: Erfolgreiche Validierung mit gültigen I
 
 test('pruefePodologieEmpfangsnachweise: Relevante Behandlung ohne ID führt zu Fail-Closed 422', async () => {
   const res = await pruefePodologieEmpfangsnachweise({
-    supabase: {},
+    supabase: /** @type {PodoSupabaseClient} */ (/** @type {unknown} */ ({})),
     tenantId: '11111111-1111-4111-8111-111111111111',
     behandlungen: [
       { hpnr_codes: ['78040'], storniert_am: null, behandlungsdatum: '2026-10-01' },
@@ -245,12 +253,13 @@ test('pruefePodologieEmpfangsnachweise: Relevante Behandlung ohne ID führt zu F
   });
   assert.equal(res.ok, false);
   assert.equal(res.status, 422);
+  assert.ok(res.error);
   assert.match(res.error, /unvollständig/);
 });
 
 test('pruefePodologieEmpfangsnachweise: Relevante Behandlung ohne Datum führt zu Fail-Closed 422', async () => {
   const res = await pruefePodologieEmpfangsnachweise({
-    supabase: {},
+    supabase: /** @type {PodoSupabaseClient} */ (/** @type {unknown} */ ({})),
     tenantId: '11111111-1111-4111-8111-111111111111',
     behandlungen: [
       { id: 'b-nodate', hpnr_codes: ['78040'], storniert_am: null },
@@ -258,6 +267,7 @@ test('pruefePodologieEmpfangsnachweise: Relevante Behandlung ohne Datum führt z
   });
   assert.equal(res.ok, false);
   assert.equal(res.status, 422);
+  assert.ok(res.error);
   assert.match(res.error, /unvollständig/);
 });
 
@@ -271,7 +281,7 @@ test('pruefePodologieEmpfangsnachweise: Explizite Params überspringen Nicht-GKV
   };
 
   const resNonPodo = await pruefePodologieEmpfangsnachweise({
-    supabase: fakeSupabase,
+    supabase: /** @type {PodoSupabaseClient} */ (/** @type {unknown} */ (fakeSupabase)),
     tenantId: '11111111-1111-4111-8111-111111111111',
     therapieBereich: 'physio',
     behandlungen: [{ id: 'b1', hpnr_codes: ['78040'], behandlungsdatum: '2026-10-01' }],
@@ -280,7 +290,7 @@ test('pruefePodologieEmpfangsnachweise: Explizite Params überspringen Nicht-GKV
   assert.equal(dbCalls, 0);
 
   const resNonKassen = await pruefePodologieEmpfangsnachweise({
-    supabase: fakeSupabase,
+    supabase: /** @type {PodoSupabaseClient} */ (/** @type {unknown} */ (fakeSupabase)),
     tenantId: '11111111-1111-4111-8111-111111111111',
     rezeptart: 'privat',
     behandlungen: [{ id: 'b1', hpnr_codes: ['78040'], behandlungsdatum: '2026-10-01' }],
@@ -350,12 +360,13 @@ test('pruefePodologieEmpfangsnachweise: Nicht-Array behandlungen (null, Objekt, 
 
   for (const invalid of [null, undefined, {}, 'string', 12345]) {
     const res = await pruefePodologieEmpfangsnachweise({
-      supabase: fakeSupabase,
+      supabase: /** @type {PodoSupabaseClient} */ (/** @type {unknown} */ (fakeSupabase)),
       tenantId: '11111111-1111-4111-8111-111111111111',
-      behandlungen: invalid,
+      behandlungen: /** @type {PodoBehandlungInput[]} */ (/** @type {unknown} */ (invalid)),
     });
     assert.equal(res.ok, false);
     assert.equal(res.status, 503);
+    assert.ok(res.error);
     assert.match(res.error, /Ungültiges Behandlungsformat/);
   }
   assert.equal(dbCalled, false);
@@ -382,9 +393,9 @@ test('pruefePodologieEmpfangsnachweise: Nicht-stornierte Zeile mit fehlerhaften/
 
   for (const row of invalidRows) {
     const res = await pruefePodologieEmpfangsnachweise({
-      supabase: fakeSupabase,
+      supabase: /** @type {PodoSupabaseClient} */ (/** @type {unknown} */ (fakeSupabase)),
       tenantId: '11111111-1111-4111-8111-111111111111',
-      behandlungen: [row],
+      behandlungen: /** @type {PodoBehandlungInput[]} */ (/** @type {unknown} */ ([row])),
     });
     assert.equal(res.ok, false);
     assert.equal(res.status, 503);
@@ -393,7 +404,7 @@ test('pruefePodologieEmpfangsnachweise: Nicht-stornierte Zeile mit fehlerhaften/
 
   // Stornierte Zeilen mit unvollständigen HPNR dürfen dagegen ignoriert werden
   const stornoRes = await pruefePodologieEmpfangsnachweise({
-    supabase: fakeSupabase,
+    supabase: /** @type {PodoSupabaseClient} */ (/** @type {unknown} */ (fakeSupabase)),
     tenantId: '11111111-1111-4111-8111-111111111111',
     behandlungen: [
       { id: 'b-storno', hpnr_codes: null, storniert_am: '2026-10-02T10:00:00Z', behandlungsdatum: '2026-10-01' },
@@ -419,7 +430,7 @@ test('pruefePodologieEmpfangsnachweise: Fehlerhafte Events-Antwort (nicht-Array 
     };
 
     const res = await pruefePodologieEmpfangsnachweise({
-      supabase: fakeSupabase,
+      supabase: /** @type {PodoSupabaseClient} */ (/** @type {unknown} */ (fakeSupabase)),
       tenantId: '11111111-1111-4111-8111-111111111111',
       behandlungen: [
         { id: 'b1', hpnr_codes: ['78040'], storniert_am: null, behandlungsdatum: '2026-10-01' },
@@ -465,6 +476,7 @@ test('pruefePodologieEmpfangsnachweise: Ungültige oder unsichere event_seq lief
     });
     assert.equal(res.ok, false);
     assert.equal(res.status, 503);
+    assert.ok(res.error);
     assert.match(res.error, /Ungültige Ereignis-Sequenz/);
   }
 });

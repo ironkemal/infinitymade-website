@@ -7,10 +7,11 @@ import { zaehlerPruefen, erwarteteZaehlerLesen } from './schema-zaehler.js';
 const erwartet = erwarteteZaehlerLesen(dirname(fileURLToPath(import.meta.url)));
 
 // Sahte pg-Client: beantwortet jede Abfrage mit dem erwarteten Wert, außer den überschriebenen.
+/** @param {Record<string, any>} [ueberschreiben] */
 function sahteClient(ueberschreiben = {}) {
   return {
-    async query(sql) {
-      if (/pg_tables t/.test(sql)) return { rows: erwartet.zaehler.rls_kapali_tablolar.map((n) => ({ n })) };
+    async query(/** @type {string} */ sql) {
+      if (/pg_tables t/.test(sql)) return { rows: erwartet.zaehler.rls_kapali_tablolar.map((/** @type {string} */ n) => ({ n })) };
       // Zuordnung über eindeutige Fragmente der SORGULAR
       const map = [
         ["has_table_privilege('anon','public.businesses'", 'anon_businesses_tablo_hakki'],
@@ -22,6 +23,7 @@ function sahteClient(ueberschreiben = {}) {
         ['pg_publication_tables', 'publication_uye_tablo'], ['pg_extension', 'extension'],
         ['information_schema.tables', 'public_tablo'],
       ];
+      /** @type {Record<string, any>} */
       const werte = { ...erwartet.zaehler, ...ueberschreiben };
       for (const [frag, name] of map) {
         if (frag === 'auth' && !/nspname = 'auth'/.test(sql)) continue;

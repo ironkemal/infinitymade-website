@@ -21,8 +21,8 @@ import { createClient } from '@supabase/supabase-js';
 import { MIN_INHABER } from '../lib/passwort-regel.js';
 
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  /** @type {string} */ (process.env.SUPABASE_URL),
+  /** @type {string} */ (process.env.SUPABASE_SERVICE_ROLE_KEY),
   { auth: { persistSession: false } }
 );
 
@@ -32,6 +32,11 @@ async function stdinZeile() {
   return roh.split(/\r?\n/)[0];
 }
 
+/**
+ * @param {number} code
+ * @param {string} meldung
+ * @returns {never}
+ */
 function ende(code, meldung) {
   (code === 0 ? console.log : console.error)(meldung);
   process.exit(code);

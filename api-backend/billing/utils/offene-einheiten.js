@@ -9,6 +9,11 @@
 
 export const OFFENE_EINHEITEN_CODE = 'OFFENE_EINHEITEN';
 
+/**
+ * @param {unknown} verordnet
+ * @param {unknown} erbracht
+ * @returns {number}
+ */
 export function offeneEinheiten(verordnet, erbracht) {
   const v = Number(verordnet);
   if (!Number.isFinite(v) || v <= 0) return 0;
@@ -16,13 +21,19 @@ export function offeneEinheiten(verordnet, erbracht) {
 }
 
 /**
- * @param {Array<{id:string, anzahl_einheiten?:number}>} vords
+ * @typedef {{ id: string, verordnet: number, erbracht: number, offen: number }} OffeneVerordnung
+ */
+
+/**
+ * @param {Array<{id:string, anzahl_einheiten?:number|null}>} vords
  * @param {Array<{verordnung_id:string}>} behs  nicht stornierte Behandlungen
- * @returns {Array<{id:string, verordnet:number, erbracht:number, offen:number}>}  nur offen > 0
+ * @returns {Array<OffeneVerordnung>}  nur offen > 0
  */
 export function offeneJeVerordnung(vords, behs) {
+  /** @type {Map<string, number>} */
   const zaehler = new Map();
   for (const b of behs || []) zaehler.set(b.verordnung_id, (zaehler.get(b.verordnung_id) || 0) + 1);
+  /** @type {Array<OffeneVerordnung>} */
   const out = [];
   for (const v of vords || []) {
     const erbracht = zaehler.get(v.id) || 0;
@@ -33,18 +44,24 @@ export function offeneJeVerordnung(vords, behs) {
 }
 
 /**
- * @param {Array<{id:string}>} offene  Ergebnis von offeneJeVerordnung
- * @param {*} bestaetigt  Ids-Array (create-podologie) oder true (Einzel-Statuswechsel)
- * @returns {{fehlt:Array, bestaetigt:Array}}
+ * @param {Array<OffeneVerordnung>} offene  Ergebnis von offeneJeVerordnung
+ * @param {boolean | string[] | null | undefined} bestaetigt  Ids-Array (create-podologie) oder true (Einzel-Statuswechsel)
+ * @returns {{ fehlt: Array<OffeneVerordnung>, bestaetigt: Array<OffeneVerordnung> }}
  */
 export function pruefeBestaetigung(offene, bestaetigt) {
   const ids = bestaetigt === true ? null : new Set(Array.isArray(bestaetigt) ? bestaetigt : []);
-  const fehlt = [], ok = [];
+  /** @type {Array<OffeneVerordnung>} */
+  const fehlt = [];
+  /** @type {Array<OffeneVerordnung>} */
+  const ok = [];
   for (const o of offene || []) (ids === null || ids.has(o.id) ? ok : fehlt).push(o);
   return { fehlt, bestaetigt: ok };
 }
 
-/** Antwort 428 mit Code, damit die Oberfläche den Dialog zeigen kann. */
+/**
+ * Antwort 428 mit Code, damit die Oberfläche den Dialog zeigen kann.
+ * @param {Array<OffeneVerordnung>} fehlt
+ */
 export function offeneEinheitenAntwort(fehlt) {
   return {
     status: 428,
@@ -56,7 +73,11 @@ export function offeneEinheitenAntwort(fehlt) {
   };
 }
 
-/** Zeilen für prescription_validations (Muster: abrechnung-freigabe). */
+/**
+ * Zeilen für prescription_validations (Muster: abrechnung-freigabe).
+ * @param {Array<OffeneVerordnung>} bestaetigte
+ * @param {{ abrechnungId?: string | null, aktion?: string | null, userId?: string | null }} opts
+ */
 export function protokollZeilen(bestaetigte, { abrechnungId, aktion, userId }) {
   return (bestaetigte || []).map(o => ({
     prescription_id:  o.id,
@@ -79,7 +100,7 @@ export function protokollZeilen(bestaetigte, { abrechnungId, aktion, userId }) {
  * Zahl offener Einheiten wie im Protokoll UND kein künftiger, nicht
  * stornierter Termin an der Verordnung. Sonst wird noch einmal gefragt.
  * Fehlende/ungültige Angaben => false (im Zweifel fragen).
- * @param {{offenJetzt:*, snapshotOffen:*, kuenftigeTermine:*}} p
+ * @param {{ offenJetzt?: unknown, snapshotOffen?: unknown, kuenftigeTermine?: unknown }} [p]
  * @returns {boolean}
  */
 export function bestaetigungNochGueltig({ offenJetzt, snapshotOffen, kuenftigeTermine } = {}) {
@@ -99,13 +120,17 @@ export function bestaetigungNochGueltig({ offenJetzt, snapshotOffen, kuenftigeTe
  * @returns {Set<string>}
  */
 export function gueltigBestaetigteIds(offene, bereitZeilen, kuenftigeTermine) {
+  /** @type {Map<string, {prescription_id:string, input_snapshot?:{offen?:number}, created_at?:string}>} */
   const neueste = new Map();
   for (const z of bereitZeilen || []) {
-    const alt = neueste.get(z?.prescription_id);
-    if (!alt || String(z.created_at || '') > String(alt.created_at || '')) neueste.set(z?.prescription_id, z);
+    if (!z?.prescription_id) continue;
+    const alt = neueste.get(z.prescription_id);
+    if (!alt || String(z.created_at || '') > String(alt.created_at || '')) neueste.set(z.prescription_id, z);
   }
+  /** @type {Map<string, number>} */
   const termine = new Map();
   for (const t of kuenftigeTermine || []) termine.set(t.verordnung_id, (termine.get(t.verordnung_id) || 0) + 1);
+  /** @type {Set<string>} */
   const out = new Set();
   for (const o of offene || []) {
     const z = neueste.get(o.id);

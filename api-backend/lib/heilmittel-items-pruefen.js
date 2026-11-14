@@ -17,6 +17,10 @@
 
 const RE_CODE = /^[A-Z0-9]{4,6}$/;
 
+/**
+ * @param {unknown} bereich
+ * @returns {string}
+ */
 export function normalizeBereich(bereich) {
   const b = String(bereich || '').trim().toLowerCase();
   if (['physio', 'physiotherapie', 'physiotherapy'].includes(b)) return 'physio';
@@ -27,6 +31,10 @@ export function normalizeBereich(bereich) {
   return b;
 }
 
+/**
+ * @param {unknown} items
+ * @param {{ therapie_bereich?: unknown }} [opts]
+ */
 export function pruefeHeilmittelItems(items, { therapie_bereich } = {}) {
   if (items === null || items === undefined) {
     return { ok: true, items: null, summeEinheiten: null };

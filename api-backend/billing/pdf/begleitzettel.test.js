@@ -13,6 +13,12 @@ const praxis = {
   plz_ort: '53721 Siegburg', telefon: '02241 000', ik: '123456789',
 };
 
+/**
+ * @param {number} nr
+ * @param {string} kartenIk
+ * @param {number} brutto
+ * @param {Array<{ belegnummer: string, patient_nachname: string, patient_vorname: string, verordnungsdatum: string, brutto: string | number }>} belege
+ */
 const blattFuer = (nr, kartenIk, brutto, belege) => ({
   praxis,
   abrechnung: {
@@ -30,11 +36,13 @@ const blattFuer = (nr, kartenIk, brutto, belege) => ({
   belege,
 });
 
+/** @param {string} nr @param {string} name */
 const beleg = (nr, name) => ({
   belegnummer: nr, patient_nachname: name, patient_vorname: 'Erika',
   verordnungsdatum: '2026-08-20', brutto: '100.00',
 });
 
+/** @param {string} html @param {RegExp} muster */
 const zaehle = (html, muster) => (html.match(muster) || []).length;
 
 // --- T12 ------------------------------------------------------------------
@@ -116,12 +124,13 @@ test('T12f: dta.gruppen speist die Blaetter eins zu eins', () => {
   // die Gruppen zeigen per Index dorthin.
   const basis = structuredClone(podoFixture);
   const rezept = basis.prescriptions[0];
+  /** @param {string} bel @param {string} kartenIk @param {number} betrag */
   const mk = (bel, kartenIk, betrag) => {
     const p = structuredClone(rezept);
     p.patient.belegnummer = bel;
     p.verordnung.kostentraegerIk = '101000000';
     p.verordnung.krankenkasseIk  = kartenIk;
-    p.sessions = [{ positionsnummer: '78010', datumLeistung: '2026-08-28', anzahl: 1, einzelbetrag: betrag }];
+    p.sessions = /** @type {typeof rezept.sessions} */ (/** @type {unknown} */ ([{ positionsnummer: '78010', datumLeistung: '2026-08-28', anzahl: 1, einzelbetrag: betrag }]));
     return p;
   };
   const prescriptions = [
@@ -129,7 +138,7 @@ test('T12f: dta.gruppen speist die Blaetter eins zu eins', () => {
     mk('0000011', '101000002', 40),
     mk('0000012', '101000001', 10),
   ];
-  const dta = buildDtaFile({ ...basis, prescriptions });
+  const dta = buildDtaFile(/** @type {Parameters<typeof buildDtaFile>[0]} */ ({ ...basis, prescriptions }));
   const belege = prescriptions.map(p => beleg(p.patient.belegnummer, 'Schulz'));
 
   const blaetter = dta.gruppen.map(g => ({
@@ -165,6 +174,7 @@ test('T12f: dta.gruppen speist die Blaetter eins zu eins', () => {
 
 // ── Papierannahmestelle-Adressblock ──────────────────────────────────────────
 
+/** @param {{ art: string, plz: string, ort: string, strasse: string } | null} anschrift */
 const papier = (anschrift) => ({
   ik: '661430035',
   name: 'IQVIA Health System Services GmbH',

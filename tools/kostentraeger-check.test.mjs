@@ -7,6 +7,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const P = 'https://www.gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/kostentraegerdateien_1/';
+/**
+ * @param {string} guid
+ * @param {string} [d]
+ */
 const item = (guid, d = 'g&uuml;ltig ab dem 01.10.2026- nicht barrierefrei -') =>
   `<item><guid><![CDATA[${guid}]]></guid><description><![CDATA[${d}]]></description></item>`;
 
@@ -35,8 +39,8 @@ test('bekannte Ausgaben: AUSGABEN-Text + wissensbank, Basis = neueste mit gülti
   const text = "{ datei: 'AO05Q326_KE3.txt', gueltigAb: '2026-07-27' },\n{ datei: 'AO05Q426_KE0.txt', gueltigAb: '2026-10-01' },";
   const { ausgaben, bekannt } = bekannteAusgaben({ ladeText: text, wbNamen: ['EK05Q426_KE0.txt'] });
   assert.ok(bekannt.has('EK05Q426_KE0.TXT') && bekannt.has('AO05Q426_KE0.TXT'));
-  assert.equal(basisFuer('AO05Q127_KE0.txt', ausgaben, '2026-09-30').name, 'AO05Q326_KE3.txt');
-  assert.equal(basisFuer('AO05Q127_KE0.txt', ausgaben, '2026-10-02').name, 'AO05Q426_KE0.txt');
+  assert.equal(basisFuer('AO05Q127_KE0.txt', ausgaben, '2026-09-30')?.name, 'AO05Q326_KE3.txt');
+  assert.equal(basisFuer('AO05Q127_KE0.txt', ausgaben, '2026-10-02')?.name, 'AO05Q426_KE0.txt');
   assert.equal(basisFuer('ZZ05Q127_KE0.txt', ausgaben, '2026-10-02'), null);
 });
 
@@ -56,7 +60,7 @@ test('Analyse: Zähler, IK-Kette, Papier, U+FFFD, lange VKG', () => {
 test('Nachrichten: teilt auf, Kopf/Fuß bleiben', () => {
   const m = nachrichten(['a'.repeat(3000), 'b'.repeat(3000)], 'KOPF', 'FUSS');
   assert.ok(m.length >= 2 && m.every(x => x.length <= 3800));
-  assert.ok(m[0].startsWith('KOPF') && m.at(-1).endsWith('FUSS'));
+  assert.ok(m[0].startsWith('KOPF') && m.at(-1)?.endsWith('FUSS'));
 });
 
 test('lauf: RSS nicht lesbar → BLIND-Meldung; nichts Neues → Stille; Fehler einer Datei nur dort', async () => {

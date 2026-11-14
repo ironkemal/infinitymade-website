@@ -9,21 +9,36 @@ const dashboard = readFileSync(new URL('../dashboard.js', import.meta.url), 'utf
 const anschluss = dashboard.slice(dashboard.indexOf('async function loadEmpUrlaubSection('),
   dashboard.indexOf('\nasync function deleteEmpTimeOff('));
 
+/**
+ * @param {object} [opts]
+ * @param {Array<any>} [opts.offs]
+ * @param {any} [opts.error]
+ * @param {object} [opts.basis]
+ */
 async function laden({ offs = [], error = null, basis = {} } = {}) {
   const kpi = { innerHTML: '', textContent: '' }, liste = { innerHTML: '', textContent: '' };
+  /** @type {any[]} */
   const filter = [];
   const query = { select() { return this; }, eq() { return this; },
+    /**
+     * @param {string} k
+     * @param {any} v
+     */
     lte(k, v) { filter.push(['lte', k, v]); return this; },
+    /**
+     * @param {string} k
+     * @param {any} v
+     */
     gte(k, v) { filter.push(['gte', k, v]); return this; },
     order() { return Promise.resolve({ data: offs, error }); } };
   const context = vm.createContext({
-    Date: class extends Date { constructor(...args) { super(...(args.length ? args : ['2025-12-31T23:30:00Z'])); } },
+    Date: class extends Date { constructor(/** @type {any[]} */ ...args) { super(.../** @type {[any]} */ (args.length ? args : ['2025-12-31T23:30:00Z'])); } },
     Intl, supabase: { from: () => query },
     anstellungFuerUrlaub: async () => ({ anspruch: 28, arbeitstage: new Set([1, 2, 3, 4, 5]), vorhanden: true, fehler: false, ...basis }),
     urlaubsKennzahlen, arbeitstageImZeitraum,
   });
   const fn = vm.runInContext(`${anschluss}\nloadEmpUrlaubSection`, context);
-  await fn('synthetischer-mitarbeiter', { querySelector: selector => selector === '.emp-urlaub-kpi' ? kpi : liste });
+  await fn('synthetischer-mitarbeiter', { querySelector: (/** @type {string} */ selector) => selector === '.emp-urlaub-kpi' ? kpi : liste });
   return { kpi, liste, filter };
 }
 

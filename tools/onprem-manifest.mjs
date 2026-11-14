@@ -58,6 +58,7 @@ const BUNDLE_DATEILER = [
   'volumes/db/praxura-rollen.sql',
 ];
 
+/** @param {string} pfad */
 function sha256(pfad) {
   return createHash('sha256').update(readFileSync(pfad)).digest('hex');
 }
@@ -82,6 +83,7 @@ const durakSet = args.includes('--durak');
 // Paket listesi bugün bu üç yerde elle tutuluyor; kapı onları birbirine bağlar.
 if (args.includes('--check')) {
   const { execFileSync } = await import('node:child_process');
+  /** @param {string} rel */
   const staged = (rel) => {
     try {
       return execFileSync('git', ['show', `:${rel}`], { cwd: REPO_ROOT, maxBuffer: 64 * 1024 * 1024 });
@@ -89,6 +91,7 @@ if (args.includes('--check')) {
       return null;
     }
   };
+  /** @type {string[]} */
   const hatalar = [];
   const manifestBuf = staged('onprem/manifest.json');
   if (!manifestBuf) {
@@ -99,16 +102,18 @@ if (args.includes('--check')) {
   try {
     staged_manifest = JSON.parse(manifestBuf.toString('utf8'));
   } catch (e) {
-    console.error(`✗ onprem/manifest.json geçerli JSON değil: ${e.message}`);
+    console.error(`✗ onprem/manifest.json geçerli JSON değil: ${e instanceof Error ? e.message : String(e)}`);
     process.exit(1);
   }
-  const imManifest = new Map((staged_manifest.dateien || []).map((d) => [d.yol, d.sha256]));
+  /** @type {Map<string, string>} */
+  const imManifest = new Map((staged_manifest.dateien || []).map((/** @type {{ yol: string, sha256: string }} */ d) => [d.yol, d.sha256]));
   for (const rel of BUNDLE_DATEILER) {
     const buf = staged(`onprem/${rel}`);
     if (!buf) { hatalar.push(`${rel}: index'te yok`); continue; }
     const ist = createHash('sha256').update(buf).digest('hex');
-    if (!imManifest.has(rel)) hatalar.push(`${rel}: manifest.json'da yok`);
-    else if (imManifest.get(rel) !== ist) hatalar.push(`${rel}: manifest ${imManifest.get(rel).slice(0, 12)}… ≠ staged ${ist.slice(0, 12)}…`);
+    const inManifestSha = imManifest.get(rel);
+    if (!inManifestSha) hatalar.push(`${rel}: manifest.json'da yok`);
+    else if (inManifestSha !== ist) hatalar.push(`${rel}: manifest ${inManifestSha.slice(0, 12)}… ≠ staged ${ist.slice(0, 12)}…`);
   }
   for (const yol of imManifest.keys()) {
     if (!BUNDLE_DATEILER.includes(yol)) hatalar.push(`${yol}: manifest.json'da ama BUNDLE_DATEILER'de yok`);

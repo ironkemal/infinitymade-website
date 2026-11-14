@@ -5,31 +5,40 @@ import { physioPublikationAktiv, fuehrePhysioPublikationAus } from './physio-pub
 
 const KEY = 'k'.repeat(24);
 const H = 'c'.repeat(64);
+/**
+ * @param {string} role
+ * @param {Record<string, any>} [extra]
+ */
 const mkDatei = (role, extra = {}) => ({ role, name: `x.${role}`, bytes: Buffer.from(role), contentType: 'text/plain', pruefeReadback: () => {}, ...extra });
 
+/**
+ * @param {{ reserve?: any, upload?: (a: any) => Promise<void>, finalize?: (a: any) => any, kopf?: any, dateien?: any[], erzeugeFehler?: any, abortFehler?: boolean }} [opts]
+ */
 function baue({ reserve, upload, finalize, kopf, dateien, erzeugeFehler, abortFehler } = {}) {
+  /** @type {string[]} */
   const calls = [];
+  /** @type {any} */
   const deps = {
     reservierePhysioPublikation: async () => { calls.push('reserve'); return reserve ?? { state: 'preparing', worker_granted: true, abrechnungId: 'ab1', generation: 2, input_sha256: 'a'.repeat(64) }; },
     berechnePhysioPaketHash: async () => { calls.push('hash'); return H; },
-    reserviereUndLadeHoch: async (a) => {
+    reserviereUndLadeHoch: async (/** @type {any} */ a) => {
       calls.push('upload:' + a.role);
       assert.equal(a.physio.generation, 2); assert.equal(a.physio.packageSha256, H);
       assert.ok(a.pfad.startsWith('o1/ab1/physio-v1/2/'));
       if (upload) await upload(a);
       return { registryId: 'r-' + a.role, sha256: 's'.repeat(64) };
     },
-    abbrechePhysioPublikation: async (a) => {
+    abbrechePhysioPublikation: async (/** @type {any} */ a) => {
       calls.push('abort:' + a.grund);
       assert.equal(a.generation, 2); assert.equal(a.key, KEY); assert.equal(a.abrechnungId, 'ab1');
       if (abortFehler) throw new Error('abort down');
       return { state: 'aborted', abrechnungId: 'ab1' };
     },
-    finalisierePhysioPublikation: async (a) => {
+    finalisierePhysioPublikation: async (/** @type {any} */ a) => {
       calls.push('finalize');
       if (finalize) return finalize(a);
       assert.equal(a.expectedUpdatedAt, '2026-11-07 12:00:00.123456+00');
-      assert.deepEqual(a.manifest.map(m => m.role), ['dta', 'auftrag', 'begleit']);
+      assert.deepEqual(a.manifest.map((/** @type {any} */ m) => m.role), ['dta', 'auftrag', 'begleit']);
       return { ok: true, state: 'published', abrechnungId: 'ab1' };
     },
   };
@@ -56,8 +65,8 @@ test('Route: Flag-Zweig nur hinter physioPublikationAktiv(); Legacy-Block direkt
 
 test('Ungueltiger Key -> 400 ohne Reserve', async () => {
   const { calls } = baue();
-  await assert.rejects(fuehrePhysioPublikationAus({ db: {}, ownerId: 'o1', key: 'kurz', payload: {}, erzeuge() {}, ladeKopfStand() {} ,
-    deps: { reservierePhysioPublikation: async () => { calls.push('reserve'); } } }), e => e.status === 400);
+  await assert.rejects(fuehrePhysioPublikationAus(/** @type {any} */ ({ db: {}, ownerId: 'o1', key: 'kurz', payload: {}, erzeuge() {}, ladeKopfStand() {} ,
+    deps: { reservierePhysioPublikation: async () => { calls.push('reserve'); } } })), (/** @type {any} */ e) => e.status === 400);
   assert.deepEqual(calls, []);
 });
 
@@ -79,19 +88,19 @@ test('published (Replay) -> gespeichertes Ergebnis, keine Seiteneffekte', async 
 
 test('aborted -> 409, nichts erzeugt', async () => {
   const { calls, lauf } = baue({ reserve: { state: 'aborted', abrechnungId: 'ab1', worker_granted: false } });
-  await assert.rejects(lauf(), e => e.status === 409 && e.code === 'PHYSIO_AUFTRAG_ABGEBROCHEN');
+  await assert.rejects(lauf(), (/** @type {any} */ e) => e.status === 409 && e.code === 'PHYSIO_AUFTRAG_ABGEBROCHEN');
   assert.deepEqual(calls, ['reserve']);
 });
 
 test('worker nicht granted (Lease aktiv) -> 409, nichts erzeugt', async () => {
   const { calls, lauf } = baue({ reserve: { state: 'preparing', worker_granted: false, abrechnungId: 'ab1', generation: 2 } });
-  await assert.rejects(lauf(), e => e.status === 409 && e.code === 'PHYSIO_AUFTRAG_IN_BEARBEITUNG');
+  await assert.rejects(lauf(), (/** @type {any} */ e) => e.status === 409 && e.code === 'PHYSIO_AUFTRAG_IN_BEARBEITUNG');
   assert.deepEqual(calls, ['reserve']);
 });
 
 test('Readback-Formatfehler -> kein Finalize, weitere Uploads nicht gestartet', async () => {
-  const { calls, lauf } = baue({ upload: async (a) => { if (a.role === 'auftrag') throw Object.assign(new Error('fmt'), { status: 422, code: 'PHYSIO_READBACK_FORMAT' }); } });
-  await assert.rejects(lauf(), e => e.status === 422 && e.code === 'PHYSIO_READBACK_FORMAT');
+  const { calls, lauf } = baue({ upload: async (/** @type {any} */ a) => { if (a.role === 'auftrag') throw Object.assign(new Error('fmt'), { status: 422, code: 'PHYSIO_READBACK_FORMAT' }); } });
+  await assert.rejects(lauf(), (/** @type {any} */ e) => e.status === 422 && e.code === 'PHYSIO_READBACK_FORMAT');
   assert.ok(!calls.includes('finalize')); assert.ok(!calls.includes('upload:begleit'));
 });
 
@@ -103,48 +112,49 @@ test('Kopfstand mit anderer Generation/Paket-Hash -> 409, kein Finalize', async 
     if (kopf === null) { /* ?? faellt auf Default zurueck, daher explizit */ }
     const ladeNull = kopf === null;
     const run = ladeNull
-      ? fuehrePhysioPublikationAus({ db: {}, ownerId: 'o1', key: KEY, payload: {}, erzeuge: async () => ({ paket: {}, dateien: [] }), ladeKopfStand: async () => null,
-        deps: { reservierePhysioPublikation: async () => ({ state: 'preparing', worker_granted: true, abrechnungId: 'ab1', generation: 2, input_sha256: 'a'.repeat(64) }), berechnePhysioPaketHash: async () => H, finalisierePhysioPublikation: async () => { calls.push('finalize'); } } })
+      ? fuehrePhysioPublikationAus(/** @type {any} */ ({ db: {}, ownerId: 'o1', key: KEY, payload: {}, erzeuge: async () => ({ paket: {}, dateien: [] }), ladeKopfStand: async () => null,
+        deps: { reservierePhysioPublikation: async () => ({ state: 'preparing', worker_granted: true, abrechnungId: 'ab1', generation: 2, input_sha256: 'a'.repeat(64) }), berechnePhysioPaketHash: async () => H, finalisierePhysioPublikation: async () => { calls.push('finalize'); } } }))
       : lauf();
-    await assert.rejects(run, e => e.status === 409);
+    await assert.rejects(run, (/** @type {any} */ e) => e.status === 409);
     assert.ok(!calls.includes('finalize'));
   }
 });
 
 test('Finalize-Konflikt wird als 409 durchgereicht; nie geloescht', async () => {
   const { lauf } = baue({ finalize: () => { throw Object.assign(new Error('c'), { status: 409, code: 'PHYSIO_GENERATION_OR_CAS_CONFLICT' }); } });
-  await assert.rejects(lauf(), e => e.status === 409 && e.code === 'PHYSIO_GENERATION_OR_CAS_CONFLICT');
+  await assert.rejects(lauf(), (/** @type {any} */ e) => e.status === 409 && e.code === 'PHYSIO_GENERATION_OR_CAS_CONFLICT');
 });
 
 test('Adapter-503 bei Reserve (Schema nicht live) -> 503, nichts erzeugt', async () => {
+  /** @type {string[]} */
   const calls = [];
-  await assert.rejects(fuehrePhysioPublikationAus({ db: {}, ownerId: 'o1', key: KEY, payload: {},
+  await assert.rejects(fuehrePhysioPublikationAus(/** @type {any} */ ({ db: {}, ownerId: 'o1', key: KEY, payload: {},
     erzeuge: async () => { calls.push('erzeuge'); }, ladeKopfStand: async () => null,
-    deps: { reservierePhysioPublikation: async () => { throw Object.assign(new Error('n'), { status: 503 }); } } }), e => e.status === 503);
+    deps: { reservierePhysioPublikation: async () => { throw Object.assign(new Error('n'), { status: 503 }); } } })), (/** @type {any} */ e) => e.status === 503);
   assert.deepEqual(calls, []);
 });
 
 test('Erzeugungsfehler -> Abort mit Generation, Ursprungsfehler bleibt', async () => {
   const orig = Object.assign(new Error('x'), { status: 422, code: 'X' });
   const { calls, lauf } = baue({ erzeugeFehler: orig });
-  await assert.rejects(lauf(), e => e === orig);
+  await assert.rejects(lauf(), (/** @type {any} */ e) => e === orig);
   assert.deepEqual(calls, ['reserve', 'erzeuge', 'abort:PHYSIO_ERZEUGUNG_FEHLGESCHLAGEN']);
 });
 
 test('Abort selbst faellt aus -> Ursprungsfehler wird nicht verdeckt', async () => {
   const orig = Object.assign(new Error('x'), { status: 422, code: 'X' });
   const { lauf } = baue({ erzeugeFehler: orig, abortFehler: true });
-  await assert.rejects(lauf(), e => e === orig);
+  await assert.rejects(lauf(), (/** @type {any} */ e) => e === orig);
 });
 
 test('Kopf-Konflikt vor Finalize -> Abort; Upload-/Finalize-Fehler -> KEIN Abort', async () => {
   const k = baue({ kopf: { updated_at: 't', publication_generation: 3, publication_package_sha256: H } });
-  await assert.rejects(k.lauf(), e => e.status === 409);
+  await assert.rejects(k.lauf(), (/** @type {any} */ e) => e.status === 409);
   assert.ok(k.calls.includes('abort:PHYSIO_KOPF_KONFLIKT') && !k.calls.includes('finalize'));
   const u = baue({ upload: async () => { throw Object.assign(new Error('t'), { status: 503 }); } });
-  await assert.rejects(u.lauf(), e => e.status === 503);
+  await assert.rejects(u.lauf(), (/** @type {any} */ e) => e.status === 503);
   assert.ok(!u.calls.some(c => c.startsWith('abort')));
   const f = baue({ finalize: () => { throw Object.assign(new Error('t'), { status: 503 }); } });
-  await assert.rejects(f.lauf(), e => e.status === 503);
+  await assert.rejects(f.lauf(), (/** @type {any} */ e) => e.status === 503);
   assert.ok(!f.calls.some(c => c.startsWith('abort')));
 });

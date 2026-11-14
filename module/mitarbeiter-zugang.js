@@ -43,10 +43,13 @@ export function isValidCodeFormat(code) {
 
 /**
  * Hilfsfunktion zum Auslesen des Bearer-Tokens und der Fetch-Optionen.
+ * @param {any} opts
+ * @returns {{ token: string | null, apiBase: string, fetchImpl: any }}
  */
 function resolveOptions(opts) {
   let token = null;
   let apiBase = API_BASE;
+  /** @type {any} */
   let fetchImpl = typeof fetch !== 'undefined' ? fetch : null;
 
   if (typeof opts === 'string') {
@@ -62,8 +65,8 @@ function resolveOptions(opts) {
 /**
  * Legt einen Mitarbeiter an (Backend-Aufruf POST /api/team/mitarbeiter).
  *
- * @param {object} param0 { vorname, nachname, email, anrede }
- * @param {object|string} [options] { token, apiBase, fetchImpl } oder token
+ * @param {{ vorname?: string, nachname?: string, email?: string, anrede?: string, telefon?: string }} param0
+ * @param {any} [options] { token, apiBase, fetchImpl } oder token
  * @returns {Promise<{ id: string, email: string, einrichtungscode: string, gueltig_bis: string }>}
  */
 export async function mitarbeiterAnlegen({ vorname, nachname, email, anrede, telefon }, options = {}) {
@@ -93,8 +96,8 @@ export async function mitarbeiterAnlegen({ vorname, nachname, email, anrede, tel
  * Erzeugt einen neuen Einrichtungscode für einen bestehenden Mitarbeiter
  * (Backend-Aufruf POST /api/team/mitarbeiter/:id/einrichtungscode).
  *
- * @param {string} mitarbeiterId
- * @param {object|string} [options] { token, apiBase, fetchImpl } oder token
+ * @param {string | undefined} mitarbeiterId
+ * @param {any} [options] { token, apiBase, fetchImpl } oder token
  * @returns {Promise<{ einrichtungscode: string, gueltig_bis: string }>}
  */
 export async function neuerEinrichtungscode(mitarbeiterId, options = {}) {
@@ -126,8 +129,8 @@ export async function neuerEinrichtungscode(mitarbeiterId, options = {}) {
  * Entfernt bzw. sperrt einen bestehenden Mitarbeiter
  * (Backend-Aufruf POST /api/team/mitarbeiter/:id/entfernen).
  *
- * @param {string} mitarbeiterId
- * @param {object|string} [options] { token, apiBase, fetchImpl } oder token
+ * @param {string | undefined} mitarbeiterId
+ * @param {any} [options] { token, apiBase, fetchImpl } oder token
  * @returns {Promise<{ ok: boolean, bereits_entfernt?: boolean }>}
  */
 export async function mitarbeiterEntfernen(mitarbeiterId, options = {}) {
@@ -250,6 +253,9 @@ export function zeigeEinrichtungscode(code, gueltigBis, name = '') {
 /**
  * HTML des Knopfes "Neuer Einrichtungscode" für eine Mitarbeiterkarte.
  * Leer, wenn der Aufrufer kein Inhaber ist oder die Karte kein Mitarbeiter.
+ * @param {any} m
+ * @param {boolean} istOwner
+ * @returns {string}
  */
 export function einrichtungscodeKnopfHtml(m, istOwner) {
   if (!istOwner || !m || m.role !== 'employee') return '';
@@ -259,10 +265,11 @@ export function einrichtungscodeKnopfHtml(m, istOwner) {
 /**
  * Verdrahtet die "Neuer Einrichtungscode"-Knöpfe in der Mitarbeiterliste.
  * @param {HTMLElement} liste
- * @param {{ getToken: () => Promise<string|null>, confirm: Function, toast: Function }} deps
+ * @param {{ getToken: () => Promise<string|null>, confirm: (opts: any) => Promise<boolean>, toast: (msg: string, type?: string) => void }} deps
  */
 export function verdrahteEinrichtungscodeKnoepfe(liste, { getToken, confirm, toast }) {
-  liste.querySelectorAll('.emp-neuer-code').forEach((btn) => {
+  liste.querySelectorAll('.emp-neuer-code').forEach((node) => {
+    const btn = /** @type {HTMLButtonElement} */ (node);
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
       e.preventDefault();
@@ -279,7 +286,7 @@ export function verdrahteEinrichtungscodeKnoepfe(liste, { getToken, confirm, toa
         const r = await neuerEinrichtungscode(btn.dataset.empId, { token });
         await zeigeEinrichtungscode(r.einrichtungscode, r.gueltig_bis, name);
       } catch (err) {
-        toast('Fehler: ' + err.message, 'error');
+        toast('Fehler: ' + (err instanceof Error ? err.message : String(err)), 'error');
       } finally {
         btn.disabled = false;
       }

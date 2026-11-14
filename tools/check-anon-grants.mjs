@@ -22,12 +22,15 @@ export const ANON_SPALTEN_TABELLEN = ['profiles', 'businesses'];
 
 /**
  * Prüft eine Migrationsdatei auf die drei S-56-Rückfallwege.
- * @returns {Array<{ regel: string, datei: string, satz?: string }>}
+ * @param {string} dateiname
+ * @param {string} inhalt
+ * @returns {Array<{ regel: keyof typeof TEXT, datei: string, satz?: string, tabelle?: string }>}
  */
 export function pruefeDatei(dateiname, inhalt) {
   const basis = (dateiname || '').split(/[/\\]/).pop();
   const text = extrahiereNormalenText(inhalt);
   const saetze = text.split(';').map((s) => s.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  /** @type {Array<{ regel: keyof typeof TEXT, datei: string, satz?: string, tabelle?: string }>} */
   const befunde = [];
   let hatSicht = false;
   let hatSpaltenGrant = false;
@@ -71,6 +74,7 @@ export function pruefeDatei(dateiname, inhalt) {
   return befunde;
 }
 
+/** @param {string} datei */
 function standardLeseFn(datei) {
   try {
     return execSync('git show :' + JSON.stringify(datei), { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] });
@@ -79,6 +83,10 @@ function standardLeseFn(datei) {
   }
 }
 
+/**
+ * @param {string[]} dateien
+ * @param {(datei: string) => string} [leseFn]
+ */
 export function pruefeDateien(dateien, leseFn = standardLeseFn) {
   const alle = [];
   for (const datei of dateien) {

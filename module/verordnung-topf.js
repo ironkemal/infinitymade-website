@@ -69,13 +69,63 @@ export const TOPF = 'prescriptions';
 export const PODO_SELECT = '*, leads!patient_id(first_name, last_name, patientennummer, business_id, versichertennummer, geburtsdatum, versichertenstatus)';
 
 /**
+ * @typedef {{
+ *   leads?: { first_name?: string | null, last_name?: string | null } | null,
+ *   patient_name?: string | null,
+ * }} PatientAnzeigeEingabe
+ * @typedef {Record<string, unknown> & {
+ *   patient_id?: string | null,
+ *   anzahl_einheiten?: number | null,
+ *   frequenz?: string | null,
+ *   behandlungsbeginn?: string | null,
+ *   gueltig_bis?: string | null,
+ *   is_dringend?: boolean | null,
+ *   bericht_angefordert?: boolean | null,
+ *   icd10?: string | null,
+ *   icd10_2?: string | null,
+ *   abrechnung_status?: string | null,
+ *   status?: string | null,
+ *   wagner_grad?: number | null,
+ * }} TopfZeileEingabe
+ * @typedef {Record<string, unknown> & {
+ *   lead_id: string | null,
+ *   behandlungseinheiten: number | null,
+ *   therapiefrequenz: string | null,
+ *   behandlungsstart: string | null,
+ *   beginn_spaetestens: string | null,
+ *   dringend: boolean,
+ *   therapiebericht: boolean,
+ *   icd10: string[],
+ *   status: string,
+ *   bearbeitung_status: string | null,
+ *   patient_id?: string | null,
+ *   anzahl_einheiten?: number | null,
+ *   wagner_grad?: number | null,
+ *   hausbesuch?: boolean,
+ * }} AusTopfZeile
+ * @typedef {Record<string, unknown> & {
+ *   patient_id?: string | null,
+ *   anzahl_einheiten?: number | null,
+ *   frequenz?: string | null,
+ *   is_dringend?: boolean,
+ *   bericht_angefordert?: boolean,
+ *   behandlungsbeginn?: string | null,
+ *   gueltig_bis?: string | null,
+ *   icd10?: string | null,
+ *   icd10_2?: string | null,
+ *   therapie_bereich?: 'podo',
+ *   abrechnung_status?: string | null,
+ * }} InTopfNutzlast
+ */
+
+/**
  * Der Anzeigename einer podologischen Zeile: Kartei (`leads`-Verbund) zuerst,
  * das Freitextfeld `patient_name` nur als Notbehelf für Altzeilen ohne
  * `lead_id` (siehe Kopf dieser Datei). `null`, wenn beides fehlt — die
  * aufrufende Stelle entscheidet selbst, ob dafür „—" oder ein anderer
  * Platzhalter steht.
  *
- * @param {object} v  Zeile im podologischen Wortschatz (ausTopf-Ergebnis, trägt `.leads`)
+ * @param {PatientAnzeigeEingabe | null | undefined} v  Zeile im podologischen Wortschatz (ausTopf-Ergebnis, trägt `.leads`)
  * @returns {string|null}
  */
 export function patientAnzeigename(v) {
@@ -86,7 +136,10 @@ export function patientAnzeigename(v) {
 
 // ── Statusachse ─────────────────────────────────────────────────────────────
 
-/** alter verordnungen.status → prescriptions.abrechnung_status */
+/**
+ * alter verordnungen.status → prescriptions.abrechnung_status
+ * @type {Readonly<Record<string, string | null>>}
+ */
 const NACH_TOPF = Object.freeze({
   aktiv:          null,
   abrechenbar:    'bereit',
@@ -106,6 +159,7 @@ const NACH_TOPF = Object.freeze({
  * `aktiv` fallen zu lassen wäre der teure Fehler: eine bereits eingereichte
  * Verordnung stünde wieder in der Arbeitsliste und würde ein zweites Mal
  * abgerechnet.
+ * @type {Readonly<Record<string, string>>}
  */
 const AUS_TOPF = Object.freeze({
   bereit:         'abrechenbar',
@@ -119,13 +173,21 @@ const AUS_TOPF = Object.freeze({
   archiviert:     'archiviert',
 });
 
-/** Abrechnungsstatus einer Zeile im podologischen Wortschatz. `null` = `aktiv`. */
+/**
+ * Abrechnungsstatus einer Zeile im podologischen Wortschatz. `null` = `aktiv`.
+ * @param {string | null | undefined} abrechnungStatus
+ * @returns {string}
+ */
 export function statusAusTopf(abrechnungStatus) {
   if (abrechnungStatus == null || abrechnungStatus === '') return 'aktiv';
   return AUS_TOPF[abrechnungStatus] || 'aktiv';
 }
 
-/** Podologischer Status → Spaltenwert. Unbekanntes bleibt `undefined`, nicht `null`. */
+/**
+ * Podologischer Status → Spaltenwert. Unbekanntes bleibt `undefined`, nicht `null`.
+ * @param {string | null | undefined} status
+ * @returns {string | null | undefined}
+ */
 export function statusInTopf(status) {
   if (status == null) return undefined;
   return Object.prototype.hasOwnProperty.call(NACH_TOPF, status) ? NACH_TOPF[status] : undefined;
@@ -167,8 +229,18 @@ export const PODO_ABGERECHNET_OR =
  * dazu. So kann aufrufender Code schrittweise auf die neuen Namen umziehen,
  * ohne dass etwas dazwischen bricht.
  *
- * @param {object} row  Zeile aus `prescriptions` (mit `leads`-Verbund)
- * @returns {object}
+ * @overload
+ * @param {null | undefined} row
+ * @returns {null | undefined}
+ */
+/**
+ * @overload
+ * @param {TopfZeileEingabe} row
+ * @returns {AusTopfZeile}
+ */
+/**
+ * @param {TopfZeileEingabe | null | undefined} row  Zeile aus `prescriptions` (mit `leads`-Verbund)
+ * @returns {AusTopfZeile | null | undefined}
  */
 export function ausTopf(row) {
   if (!row) return row;
@@ -191,7 +263,7 @@ export function ausTopf(row) {
     therapiebericht:      row.bericht_angefordert === true,
 
     // ICD als Liste — der podologische Zweig prüft mit Mengenoperationen.
-    icd10:                [row.icd10, row.icd10_2].filter(Boolean),
+    icd10:                [row.icd10, row.icd10_2].filter(/** @returns {x is string} */ (x) => Boolean(x)),
 
     // ⚠️ Achse tauschen: `status` heisst hier Abrechnung, nicht Bearbeitung.
     //    Die Bearbeitungsachse bleibt unter ihrem eigenen Namen erreichbar.
@@ -208,13 +280,19 @@ export function ausTopf(row) {
  * NICHT angefasst — sonst überschriebe ein Speichern aus diesem Formular
  * Felder, die es gar nicht anzeigt.
  *
- * @param {object} v  Formularobjekt im alten `verordnungen`-Wortschatz
- * @returns {object}  Nutzlast für insert/update auf `prescriptions`
+ * @param {(Record<string, unknown> & { icd10?: string | string[] | null, status?: string | null }) | null | undefined} v  Formularobjekt im alten `verordnungen`-Wortschatz
+ * @returns {InTopfNutzlast}  Nutzlast für insert/update auf `prescriptions`
  */
 export function inTopf(v) {
-  if (!v) return {};
+  if (!v) return /** @type {InTopfNutzlast} */ ({});
 
+  /** @type {Record<string, unknown>} */
   const nutzlast = {};
+  /**
+   * @param {string} quelle
+   * @param {string} ziel
+   * @param {((val: unknown) => unknown)} [wandle]
+   */
   const nimm = (quelle, ziel, wandle) => {
     if (!Object.prototype.hasOwnProperty.call(v, quelle)) return;
     nutzlast[ziel] = wandle ? wandle(v[quelle]) : v[quelle];
@@ -265,7 +343,7 @@ export function inTopf(v) {
   // eine hier gesetzte Entscheidung doch wieder still.
   if (v.status != null) nutzlast.abrechnung_status = statusInTopf(v.status);
 
-  return nutzlast;
+  return /** @type {InTopfNutzlast} */ (nutzlast);
 }
 
 /**
@@ -289,7 +367,7 @@ export function inTopf(v) {
  * Seitenbereichs ein Hauptbuch an, das niemand pflegt und das dem Zähler in
  * `terminZaehler()` widerspräche — zwei Wahrheiten über dieselbe Menge.
  *
- * @param {?string} sector  `profiles.sector`
+ * @param {string | null | undefined} sector  `profiles.sector`
  * @returns {boolean}
  */
 export function fuehrtSitzungsbuch(sector) {

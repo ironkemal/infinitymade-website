@@ -34,8 +34,9 @@ test('pruefeVorgeschichte: Zukunft, unbekannter Nagel, falscher Code', () => {
 });
 
 test('ladeVorgeschichte: filtert auf die Praxis und liefert Pseudo-Behandlungen', async () => {
+  /** @type {Array<[string, any]>} */
   const filter = [];
-  const sb = { from: () => { const q = { select: () => q, eq: (k, v) => { filter.push([k, v]); return q; },
+  const sb = { from: () => { const q = { select: () => q, eq: (/** @type {string} */ k, /** @type {any} */ v) => { filter.push([k, v]); return q; },
     maybeSingle: async () => ({ data: { podo_vorgeschichte_78040_am: '2025-03-01' } }) }; return q; } };
   const r = await ladeVorgeschichte(sb, { ownerId: 'o1', leadId: 'l1' });
   assert.deepEqual(filter, [['id', 'l1'], ['owner_id', 'o1']]);

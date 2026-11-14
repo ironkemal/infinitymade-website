@@ -6,6 +6,11 @@ import vm from 'node:vm';
 import { urlaubsKennzahlen } from '../../module/anstellung.js';
 import { istAbwesend } from '../../module/abwesenheit.js';
 
+/**
+ * @param {string[]} args
+ * @param {string} [input]
+ * @returns {Promise<{ code: number | null, out: string, err: string }>}
+ */
 function command(args, input = '') {
   return new Promise((resolve, reject) => {
     const child = spawn('docker', args, { stdio: ['pipe', 'pipe', 'pipe'] });
@@ -30,7 +35,7 @@ test('Urlaub: tatsächliche Schreibpayloads über PostgreSQL bis Saldo und Kalen
   assert.match(table, /start_date timestamp with time zone NOT NULL/);
   assert.match(table, /end_date timestamp with time zone NOT NULL/);
   const name = `praxura-urlaub-datum-${process.pid}`;
-  const sql = async text => {
+  const sql = async (/** @type {string} */ text) => {
     const r = await command(['exec', '-i', name, 'psql', '-h', '127.0.0.1', '-U', 'postgres', '-qAt', '-v', 'ON_ERROR_STOP=1'], text);
     assert.equal(r.code, 0, r.err); return r.out;
   };

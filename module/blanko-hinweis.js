@@ -4,6 +4,11 @@ import { datumDe, alsISODatum } from './datum.js?v=20261001a';
  * Bewusst keine Vergütungsampel: Vertragsgrenzen und Zählbasis sind noch nicht
  * fachbereichsspezifisch bestätigt (Ops #291). Nullwerte sind kein Verbrauch 0.
  * Erster Einsatz: Rezeptkarten in der Patientenakte.
+ *
+ * @param {{ rezept_typ?: string|null, is_blanko?: boolean|null, gueltig_bis?: string|null }|null|undefined} rx
+ * @param {number | any} [dokumentiert]
+ * @param {Date} [heute]
+ * @returns {string}
  */
 export function renderBlankoHinweis(rx, dokumentiert = 0, heute = new Date()) {
   if (!rx || !(rx.rezept_typ === 'blanko' || rx.is_blanko === true)) return '';

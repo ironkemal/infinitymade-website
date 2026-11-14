@@ -6,6 +6,7 @@ import path from 'node:path';
 import { starteIpAbgleich, ipAbgleichSchritt, erzeugeZustand, caaAbgleichSchritt, erzeugeCaaZustand } from './ip-abgleich.js';
 import { erzeugeKimlik, speichereAd } from './kimlik.js';
 
+/** @type {string[]} */
 const tmpDirs = [];
 after(() => {
   for (const d of tmpDirs) {
@@ -19,6 +20,11 @@ function tmp() {
   return d;
 }
 
+/**
+ * @param {string} dir
+ * @param {string} [name]
+ * @param {string} [fqdn]
+ */
 function erstelleRegistrierteKimlik(dir, name = 'sonne-tal-42', fqdn = 'sonne-tal-42.box.beispiel.test') {
   erzeugeKimlik({ dir });
   speichereAd({ dir, ad: name, fqdn });
@@ -96,7 +102,9 @@ test('lan: erster Tick sendet {modus:"lan", ip} signiert; gleicher Wert danach k
   fs.writeFileSync(path.join(ipDir, 'modus'), 'lan');
   fs.writeFileSync(path.join(ipDir, 'lan-ip'), '192.168.1.100');
 
+  /** @type {Array<{ url: string, opt: any }>} */
   const aufrufe = [];
+  /** @param {string} url @param {any} opt */
   const fetchImpl = async (url, opt) => {
     aufrufe.push({ url, opt });
     return {
@@ -168,7 +176,9 @@ test('internet: sendet {modus:"internet"}', async () => {
   fs.mkdirSync(ipDir, { recursive: true });
   fs.writeFileSync(path.join(ipDir, 'modus'), 'internet');
 
+  /** @type {Array<{ url: string, opt: any }>} */
   const aufrufe = [];
+  /** @param {string} url @param {any} opt */
   const fetchImpl = async (url, opt) => {
     aufrufe.push({ url, opt });
     return {
@@ -210,11 +220,12 @@ test('502 -> nächster Versuch erst nach >= 5 min; 401 -> erst nach 6 h, Warnung
     };
   };
 
+  /** @type {string[]} */
   const warnungen = [];
   const logMock = {
     log: () => {},
-    warn: (msg) => { warnungen.push(msg); },
-    error: (msg) => { warnungen.push(msg); },
+    warn: /** @param {string} msg */ (msg) => { warnungen.push(msg); },
+    error: /** @param {string} msg */ (msg) => { warnungen.push(msg); },
   };
 
   const zustand = erzeugeZustand();
@@ -328,7 +339,9 @@ test('Kaputte lan-ip-Datei -> kein fetch', async () => {
 // K2b.4b — CAA accounturi: Box meldet ihr LE-Konto (le-konto vom Host-Timer)
 test('caaAbgleichSchritt: sendet einmal, dann nur bei Änderung; ungültig/fehlend/ohne Kimlik nie', async () => {
   const kimlikDir = tmp(); const ipDir = tmp();
+  /** @type {Array<{ url: string, body: any }>} */
   const aufrufe = [];
+  /** @param {string} url @param {any} opt */
   const fetchImpl = async (url, opt) => { aufrufe.push({ url, body: JSON.parse(opt.body) }); return { status: 200, ok: true, json: async () => ({ ok: true }) }; };
   const env = { MERKEZ_URL: 'https://merkez.box.beispiel.test' };
   const z = erzeugeCaaZustand(); const jetzt = () => 1000;

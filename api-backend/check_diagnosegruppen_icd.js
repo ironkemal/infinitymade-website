@@ -36,17 +36,20 @@ const CHECK_ONLY = process.argv.includes('--check');
 // ⚠ SUPABASE_SERVICE_ROLE_KEY — nicht SUPABASE_SERVICE_KEY. Der falsche Name
 //   hat in Produktion schon eine Crash-Loop ausgelöst.
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  /** @type {string} */ (process.env.SUPABASE_URL),
+  /** @type {string} */ (process.env.SUPABASE_SERVICE_ROLE_KEY),
   { auth: { persistSession: false } },
 );
 
 const JSON_SPALTEN = ['icd_accept', 'icd_exclude', 'icd_auto_select', 'icd_accept_unsicher'];
 
-/** Regeln aus der JSON-Datei; Schlüssel mit führendem `_` sind Metadaten. */
+/** Regeln aus der JSON-Datei; Schlüssel mit führendem `_` sind Metadaten.
+ * @returns {Record<string, any>}
+ */
 function regelnAusJson() {
   const datei = join(__dirname, 'ai/validators/diagnosegruppen.json');
   const podo = JSON.parse(readFileSync(datei, 'utf-8')).podologie || {};
+  /** @type {Record<string, any>} */
   const out = {};
   for (const [code, regel] of Object.entries(podo)) {
     if (code.startsWith('_')) continue;
@@ -65,8 +68,10 @@ function regelnAusJson() {
  * Jeden Regulärausdruck kompilieren. Ein kaputtes Muster fiele sonst erst zur
  * Laufzeit in der Oberfläche auf — und dort still, weil ungültige Muster
  * übersprungen werden.
+ * @param {Record<string, any>} regeln
  */
 function pruefeRegex(regeln) {
+  /** @type {string[]} */
   const fehler = [];
   for (const [code, regel] of Object.entries(regeln)) {
     for (const spalte of JSON_SPALTEN) {
@@ -76,14 +81,16 @@ function pruefeRegex(regeln) {
           continue;
         }
         try { new RegExp(eintrag.re); }
-        catch (e) { fehler.push(`${code}.${spalte}: ${eintrag.re} — ${e.message}`); }
+        catch (e) { fehler.push(`${code}.${spalte}: ${eintrag.re} — ${e instanceof Error ? e.message : String(e)}`); }
       }
     }
   }
   return fehler;
 }
 
-/** Vergleichbare Form: Reihenfolge der Einträge zählt, Schlüssel sortiert. */
+/** Vergleichbare Form: Reihenfolge der Einträge zählt, Schlüssel sortiert.
+ * @param {any} wert
+ */
 function normalise(wert) {
   if (Array.isArray(wert)) {
     return JSON.stringify(wert.map(e => ({ re: e?.re ?? null, note: e?.note ?? null })));
@@ -115,9 +122,10 @@ async function main() {
     process.exit(1);
   }
 
-  const haveMap = new Map((have || []).map(r => [r.code, r]));
+  const haveRows = /** @type {Array<Record<string, any>>} */ (have || []);
+  const haveMap = new Map(haveRows.map(r => [r.code, r]));
   const fehlend = codes.filter(c => !haveMap.has(c));
-  const ueberzaehlig = (have || []).map(r => r.code).filter(c => !want[c]);
+  const ueberzaehlig = haveRows.map(r => r.code).filter(c => !want[c]);
 
   const abweichungen = [];
   for (const code of codes) {
@@ -131,7 +139,7 @@ async function main() {
   }
 
   console.log(`JSON-Datei: ${codes.length} Diagnosegruppen (${codes.join(', ')})`);
-  console.log(`Datenbank:  ${(have || []).length} Zeilen mit bereich='podologie'`);
+  console.log(`Datenbank:  ${haveRows.length} Zeilen mit bereich='podologie'`);
   console.log(`fehlend ${fehlend.length} · überzählig ${ueberzaehlig.length} · abweichend ${abweichungen.length}`);
 
   if (CHECK_ONLY) {

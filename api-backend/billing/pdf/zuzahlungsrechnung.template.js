@@ -6,11 +6,16 @@
 //
 // Required by §14 UStG and Bundesvertrag §125 SGB V.
 
-const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
+/** @type {Record<string, string>} */
+const HTML_ESC = {
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-}[c]));
+};
+/** @param {unknown} s */
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => HTML_ESC[c] ?? c);
 
+/** @param {unknown} n */
 const fmtEur = (n) => (n == null ? '' : Number(n).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })) + ' €';
+/** @param {Date | string | null | undefined} d */
 const fmtDate = (d) => {
   if (!d) return '';
   const dt = d instanceof Date ? d : new Date(d);
@@ -20,15 +25,18 @@ const fmtDate = (d) => {
 
 /**
  * @param {object} opts
- * @param {object} opts.praxis        { name, strasse, plz_ort, telefon, ik, steuernummer, email }
- * @param {object} opts.patient       { nachname, vorname, strasse, plz, ort, geburtsdatum, kvnr }
- * @param {object} opts.verordnung    { ausstellungsdatum, krankenkasse, arzt }
- * @param {object} opts.rechnung      { nummer, datum, faelligkeit }
- * @param {Array}  opts.sessions      [{ datum, position, bezeichnung, zuzahlung }]
+ * @param {{ name?: string, strasse?: string, plz_ort?: string, telefon?: string, ik?: string, steuernummer?: string, ust_id?: string, email?: string }} [opts.praxis]
+ * @param {{ nachname?: string, vorname?: string, strasse?: string, plz?: string, ort?: string, geburtsdatum?: Date | string, kvnr?: string }} [opts.patient]
+ * @param {{ ausstellungsdatum?: Date | string, krankenkasse?: string, arzt?: string }} [opts.verordnung]
+ * @param {{ nummer?: string, datum?: Date | string, faelligkeit?: Date | string | null }} [opts.rechnung]
+ * @param {Array<{ datum?: Date | string | null, position?: string, bezeichnung?: string, zuzahlung?: number | string | null }>} [opts.sessions]
  *                                    (brutto wird bewusst nicht gedruckt, s.u.)
- * @param {object} opts.totals        { prozZuzahlung, pauschZuzahlung, gesZuzahlung }
+ * @param {{ prozZuzahlung?: number | string | null, pauschZuzahlung?: number | string | null, gesZuzahlung?: number | string | null }} [opts.totals]
  *                                    (totals.brutto wird bewusst nicht gedruckt)
- * @param {string} opts.bankverbindung
+ * @param {string} [opts.bankverbindung]
+ * @param {string} [opts.logoUrl]
+ * @param {string} [opts.invoiceFooterText]
+ * @param {string | null} [opts.hinweisText]
  */
 export function renderZuzahlungsrechnung(opts) {
   const {

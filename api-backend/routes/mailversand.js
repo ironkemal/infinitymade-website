@@ -36,7 +36,10 @@ export const ERLAUBTE_PORTS = new Set([25, 465, 587, 2525]);
 // 15 s auf ETIMEDOUT zu warten, gleich mit klarem Hinweis ablehnen. In der Box gelten alle vier Ports.
 export const SAAS_GESPERRTE_PORTS = new Set([25, 465]);
 
-/** Private, Loopback-, Link-local-, CGNAT- und ULA-Adressen. */
+/**
+ * Private, Loopback-, Link-local-, CGNAT- und ULA-Adressen.
+ * @param {any} ip
+ */
 export function istInterneAdresse(ip) {
   const hex = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/i.exec(String(ip));
   if (hex) {
@@ -54,10 +57,14 @@ export function istInterneAdresse(ip) {
     || v.startsWith('fc') || v.startsWith('fd');
 }
 
+/**
+ * @param {string} host
+ * @param {any} [lookup]
+ */
 async function zeigtIntern(host, lookup = dns.promises.lookup) {
   try {
     const adressen = await lookup(host, { all: true });
-    return adressen.some(a => istInterneAdresse(a.address));
+    return adressen.some((/** @type {any} */ a) => istInterneAdresse(a.address));
   } catch { return false; } // nicht auflösbar → verify() meldet EDNS
 }
 
@@ -65,22 +72,29 @@ async function zeigtIntern(host, lookup = dns.promises.lookup) {
  * Verbindungsziel für verify()/Testmail. Im SaaS bei „Andere": EINMAL auflösen, prüfen und die IP festnageln
  * (tls.servername = Hostname), sonst könnte nodemailer beim Verbinden neu auflösen (DNS-Rebinding).
  * requireTLS immer: ohne STARTTLS gingen Zugangsdaten im Klartext (Review 09.11.2026).
- * @returns {Promise<object|null>} Transport-Optionen, null = internes Ziel (abgelehnt)
+ * @param {any} smtp
+ * @param {{ preset?: any, kutu?: any, lookup?: any }} opt
+ * @returns {Promise<any>} Transport-Optionen, null = internes Ziel (abgelehnt)
  */
 export async function pruefZiel(smtp, { preset, kutu, lookup = dns.promises.lookup }) {
   const basis = { ...(smtp || {}), requireTLS: true };
   if (kutu || preset !== 'andere' || !smtp?.host) return basis;
   let adressen;
   try { adressen = await lookup(smtp.host, { all: true }); } catch { return basis; }
-  if (!adressen.length || adressen.some(a => istInterneAdresse(a.address))) return null;
+  if (!adressen.length || adressen.some((/** @type {any} */ a) => istInterneAdresse(a.address))) return null;
   return { ...basis, host: adressen[0].address, tls: { servername: smtp.host } };
 }
 const VERIFY_TIMEOUT_MS = 15_000;
 
-/** Eingaben prüfen. @returns {{fehler:string}|{werte:object}} — `passwort` nur, wenn neu eingegeben. */
+/**
+ * Eingaben prüfen. `passwort` nur, wenn neu eingegeben.
+ * @param {any} [body]
+ * @param {{ kutu?: boolean }} [opt]
+ * @returns {{ fehler?: any, werte?: any }}
+ */
 export function pruefeMailEingabe(body = {}, { kutu = true } = {}) {
   const preset = String(body.preset || '');
-  const vorlage = SMTP_PRESETS[preset];
+  const vorlage = (/** @type {Record<string, any>} */ (SMTP_PRESETS))[preset];
   if (!vorlage) return { fehler: 'Bitte einen Anbieter wählen.' };
   const absender_email = String(body.absender_email || '').trim();
   if (!EMAIL_RE.test(absender_email) || absender_email.length > 254) return { fehler: 'Bitte eine gültige E-Mail-Adresse eingeben.' };
@@ -103,7 +117,10 @@ export function pruefeMailEingabe(body = {}, { kutu = true } = {}) {
   return { werte: { preset, smtp_host, smtp_port, smtp_sicherheit, smtp_benutzer, absender_email, absender_name, passwort } };
 }
 
-/** Was der Browser sehen darf — nie smtp_passwort/oauth_refresh_token. */
+/**
+ * Was der Browser sehen darf — nie smtp_passwort/oauth_refresh_token.
+ * @param {any} z
+ */
 export function oeffentlicheSicht(z) {
   if (!z) return null;
   return {
@@ -116,7 +133,12 @@ export function oeffentlicheSicht(z) {
   };
 }
 
+/**
+ * @param {Promise<any>} promise
+ * @param {number} ms
+ */
 function mitTimeout(promise, ms) {
+  /** @type {any} */
   let t;
   return Promise.race([
     promise,
@@ -125,12 +147,15 @@ function mitTimeout(promise, ms) {
 }
 
 /**
- * @param {object} o
- * @param {object} o.supabase           service_role-Client
+ * @param {object} [o]
+ * @param {any} [o.supabase]             service_role-Client
  * @param {boolean} [o.googleVerfuegbar] SaaS: GOOGLE_KONFIGURIERT (Gmail-OAuth nur dort, O-08)
- * @param {function} [o.transportFabrik] Tests
- * @param {function} [o.auth]            Ersatz für requireAuth (Tests)
- * @param {function} [o.kutu]            Ersatz für istKutu (Tests)
+ * @param {any} [o.transportFabrik]      Tests
+ * @param {any} [o.auth]                 Ersatz für requireAuth (Tests)
+ * @param {() => boolean} [o.kutu]       Ersatz für istKutu (Tests)
+ * @param {any} [o.env]
+ * @param {any} [o.owner]
+ * @param {any} [o.lookup]
  */
 export function createMailversandRouter({
   supabase, googleVerfuegbar = false, transportFabrik = createSMTPTransport, auth = requireAuth, kutu = istKutu,
@@ -139,7 +164,7 @@ export function createMailversandRouter({
   const router = Router();
   const limiter = rateLimit({
     windowMs: 60 * 1000, limit: 30, standardHeaders: 'draft-7', legacyHeaders: false,
-    keyGenerator: (req) => req.auth?.userId || req.ip,
+    keyGenerator: (/** @type {any} */ req) => /** @type {string} */ (req.auth?.userId || req.ip),
     message: { error: 'Zu viele Anfragen. Bitte warten Sie eine Minute.' },
   });
   const letzterTest = new Map();
@@ -152,12 +177,12 @@ export function createMailversandRouter({
     } catch { return false; }
   };
 
-  const ladeProfil = async (id) => {
+  const ladeProfil = async (/** @type {string} */ id) => {
     const { data } = await supabase.from('profiles').select('email, business_name, b2b_from_email').eq('id', id).maybeSingle();
     return data || {};
   };
 
-  router.get('/mailversand', auth, owner, limiter, async (req, res) => {
+  router.get('/mailversand', auth, owner, limiter, async (/** @type {any} */ req, /** @type {any} */ res) => {
     try {
       const ownerId = req.auth.tenantId;
       const box = kutu();
@@ -185,12 +210,12 @@ export function createMailversandRouter({
         fehler: sicht?.letzter_fehler_code ? fehlerHinweis(sicht.letzter_fehler_code, sicht.preset) : null,
       });
     } catch (e) {
-      console.error('[mailversand/get]', e?.code || 'Fehler');
+      console.error('[mailversand/get]', (/** @type {any} */ (e))?.code || 'Fehler');
       return res.status(500).json({ error: 'Einstellung konnte nicht geladen werden.' });
     }
   });
 
-  router.put('/mailversand', auth, owner, limiter, async (req, res) => {
+  router.put('/mailversand', auth, owner, limiter, async (/** @type {any} */ req, /** @type {any} */ res) => {
     const { fehler, werte } = pruefeMailEingabe(req.body, { kutu: kutu() });
     if (fehler) return res.status(400).json({ error: fehler });
     if (!encryptionAvailable()) {
@@ -207,6 +232,7 @@ export function createMailversandRouter({
       const gleicherZugang = alt?.smtp_passwort && alt.smtp_host === werte.smtp_host && alt.smtp_benutzer === werte.smtp_benutzer;
       if (!werte.passwort && !gleicherZugang) return res.status(400).json({ error: 'Bitte das Passwort eingeben.' });
       const smtp_passwort = werte.passwort ? verschluesselePasswort(werte.passwort) : alt.smtp_passwort;
+      /** @type {any} */
       const zeile = {
         owner_id: ownerId, modus: 'smtp', preset: werte.preset, smtp_host: werte.smtp_host, smtp_port: werte.smtp_port,
         smtp_sicherheit: werte.smtp_sicherheit, smtp_benutzer: werte.smtp_benutzer, smtp_passwort,
@@ -214,18 +240,19 @@ export function createMailversandRouter({
         status: 'nicht_eingerichtet', letzter_fehler_code: null, updated_at: new Date().toISOString(),
       };
       // Verbindung gleich prüfen (ohne Mail): sofortige Rückmeldung mit Anbieter-Hinweis.
-      const kanal = await mailKanal({ zeile, zweck: 'dokument', env: {}, kutu: kutu() });
+      const kanal = /** @type {any} */ (await mailKanal({ zeile, zweck: 'dokument', env: {}, kutu: kutu() }));
       if (kanal.weg !== 'smtp' || kanal.quelle !== 'db') {
         return res.status(400).json({ error: 'Das gespeicherte Passwort kann nicht mehr gelesen werden. Bitte das Passwort neu eingeben.', code: 'PASSWORT_NICHT_LESBAR' });
       }
       const ziel = await pruefZiel(kanal.smtp, { preset: werte.preset, kutu: kutu(), lookup });
       if (!ziel) return res.status(400).json({ error: 'Dieser Server ist aus dem Internet nicht erreichbar. Bitte den öffentlichen Postausgangsserver Ihres Anbieters eintragen.' });
+      /** @type {{ ok: boolean, code: any }} */
       let pruefung;
       try {
         await mitTimeout(Promise.resolve(transportFabrik(ziel).verify()), VERIFY_TIMEOUT_MS);
         pruefung = { ok: true, code: null };
       } catch (e) {
-        pruefung = { ok: false, code: String(e?.code || 'VERIFY_FEHLER').slice(0, 64) };
+        pruefung = { ok: false, code: String((/** @type {any} */ (e))?.code || 'VERIFY_FEHLER').slice(0, 64) };
       }
       zeile.status = pruefung.ok ? 'verbunden' : 'unterbrochen';
       zeile.letzter_fehler_code = pruefung.ok ? null : pruefung.code.replace(/[^A-Za-z0-9_]/g, '_');
@@ -237,18 +264,18 @@ export function createMailversandRouter({
         einstellung: oeffentlicheSicht(zeile),
       });
     } catch (e) {
-      console.error('[mailversand/put]', e?.code || 'Fehler');
+      console.error('[mailversand/put]', (/** @type {any} */ (e))?.code || 'Fehler');
       return res.status(500).json({ error: 'Einstellung konnte nicht gespeichert werden.' });
     }
   });
 
-  router.post('/mailversand/test', auth, owner, limiter, async (req, res) => {
+  router.post('/mailversand/test', auth, owner, limiter, async (/** @type {any} */ req, /** @type {any} */ res) => {
     const ownerId = req.auth.tenantId;
     try {
       const profil = await ladeProfil(ownerId);
       if (!profil.email) return res.status(409).json({ error: 'Für das Inhaberkonto ist keine E-Mail-Adresse hinterlegt.' });
       const z = await ladeMailEinstellung(supabase, ownerId);
-      const kanal = await mailKanal({ zeile: z, zweck: 'dokument', env, kutu: kutu() });
+      const kanal = /** @type {any} */ (await mailKanal({ zeile: z, zweck: 'dokument', env, kutu: kutu() }));
       if (kanal.weg !== 'smtp' || (kanal.quelle === 'env' && !kutu())) {
         const h = kanal.fehler ? fehlerHinweis(kanal.fehler, kanal.preset) : null;
         return res.status(409).json({ error: h?.meldung || 'Es ist noch kein Postfach eingerichtet.', code: kanal.fehler || 'VERSAND_NICHT_EINGERICHTET' });
@@ -276,6 +303,7 @@ export function createMailversandRouter({
       letzterTest.set(ownerId, jetzt);
       const ziel = await pruefZiel(kanal.smtp, { preset: kanal.preset, kutu: kutu(), lookup });
       if (!ziel) return res.status(400).json({ error: 'Dieser Server ist aus dem Internet nicht erreichbar.', code: 'ZIEL_INTERN' });
+      /** @type {{ ok: boolean, code: any }} */
       let ergebnis;
       try {
         const t = transportFabrik(ziel);
@@ -288,7 +316,7 @@ export function createMailversandRouter({
         });
         ergebnis = { ok: true, code: null };
       } catch (e) {
-        ergebnis = { ok: false, code: String(e?.code || 'VERSAND_FEHLER').slice(0, 64).replace(/[^A-Za-z0-9_]/g, '_') };
+        ergebnis = { ok: false, code: String((/** @type {any} */ (e))?.code || 'VERSAND_FEHLER').slice(0, 64).replace(/[^A-Za-z0-9_]/g, '_') };
         console.error('[mailversand/test]', ergebnis.code);
       }
       if (z && kanal.quelle === 'db') {
@@ -301,12 +329,12 @@ export function createMailversandRouter({
       if (ergebnis.ok) return res.json({ ok: true, gesendetAn: profil.email });
       return res.status(502).json({ ok: false, ...fehlerHinweis(ergebnis.code, kanal.preset), error: fehlerHinweis(ergebnis.code, kanal.preset).meldung });
     } catch (e) {
-      console.error('[mailversand/test]', e?.code || 'Fehler');
+      console.error('[mailversand/test]', (/** @type {any} */ (e))?.code || 'Fehler');
       return res.status(500).json({ error: 'Testmail konnte nicht gesendet werden.' });
     }
   });
 
-  router.delete('/mailversand', auth, owner, limiter, async (req, res) => {
+  router.delete('/mailversand', auth, owner, limiter, async (/** @type {any} */ req, /** @type {any} */ res) => {
     const ownerId = req.auth.tenantId;
     try {
       const { error } = await supabase.from('praxis_mailversand').update({
@@ -321,7 +349,7 @@ export function createMailversandRouter({
       }
       return res.json({ ok: true });
     } catch (e) {
-      console.error('[mailversand/delete]', e?.code || 'Fehler');
+      console.error('[mailversand/delete]', (/** @type {any} */ (e))?.code || 'Fehler');
       return res.status(500).json({ error: 'Postfach konnte nicht getrennt werden.' });
     }
   });

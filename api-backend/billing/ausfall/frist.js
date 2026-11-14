@@ -25,11 +25,11 @@ const MELDUNGEN = {
 };
 
 /**
- * @param {object}  opts
- * @param {boolean} opts.enabled       profiles.ausfall_enabled
- * @param {string}  opts.reason        'no_show' | 'late_cancel'
+ * @param {object}  [opts]
+ * @param {boolean} [opts.enabled]     profiles.ausfall_enabled
+ * @param {string}  [opts.reason]      'no_show' | 'late_cancel'
  * @param {number}  [opts.cutoffHours] profiles.ausfall_cutoff_hours (Vorgabe 24)
- * @param {string|Date} [opts.terminStart] bookings.start_time
+ * @param {string|Date|null} [opts.terminStart] bookings.start_time
  * @param {Date}    [opts.jetzt]       Zeitpunkt der Absage (Vorgabe: jetzt)
  * @param {boolean} [opts.override]    bewusstes Übersteuern durch die Praxis
  *
@@ -57,6 +57,7 @@ export function pruefeAusfallFrist({
     }
   }
 
+  /** @param {string} grund */
   const ablehnen = (grund) => ({
     // Übersteuern hebt die Sperre auf, der Grund bleibt aber erhalten und wird
     // vom Aufrufer in notes protokolliert — sonst wäre nicht nachvollziehbar,
@@ -85,7 +86,12 @@ export function pruefeAusfallFrist({
   return zulassen();
 }
 
-/** Kurze deutsche Protokollzeile für notes, wenn bewusst übersteuert wurde. */
+/**
+ * Kurze deutsche Protokollzeile für notes, wenn bewusst übersteuert wurde.
+ * @param {{ uebersteuert?: boolean, grund?: string | null } | null | undefined} pruefung
+ * @param {Date} [datum]
+ * @returns {string | null}
+ */
 export function uebersteuerungsNotiz(pruefung, datum = new Date()) {
   if (!pruefung?.uebersteuert) return null;
   const stand = datum.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' });

@@ -24,7 +24,7 @@ const SUPPORT_HINWEIS = 'Nachträgliche Leistung, die vor der Einreichung erbrac
 
 /**
  * @param {{status?:string, behandlungseinheiten?:?number}} vord  podologischer Wortschatz (ausTopf)
- * @param {Array} behandlungen  `podologie_behandlungen` dieser Verordnung (auch stornierte)
+ * @param {Array<{behandlungsdatum?: string, storniert_am?: string|null}>} behandlungen  `podologie_behandlungen` dieser Verordnung (auch stornierte)
  * @param {string} datum        geplantes Behandlungsdatum `YYYY-MM-DD`
  * @returns {{stufe:'frei'|'warnung'|'sperre', grund?:string, titel?:string, text?:string}}
  */

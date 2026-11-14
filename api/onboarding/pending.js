@@ -6,6 +6,10 @@ import { withServerlessTelemetry } from '../_lib/telemetry.js';
 
 import { adminFetch, adminRpc, json } from '../_lib/auth.js';
 
+/**
+ * @param {import('../_lib/auth.js').VercelRequest} req
+ * @param {import('../_lib/auth.js').VercelResponse} res
+ */
 async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
 

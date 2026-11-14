@@ -21,9 +21,11 @@ import { mailKanal } from '../lib/mail.js';
 const [, , sonuc, email, businessName] = process.argv;
 
 async function ladePostfach() {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) return null;
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceRoleKey) return null;
   const versuch = (async () => {
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+    const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
     const { data: setup } = await supabase.from('praxura_setup').select('owner_user_id').eq('id', 1).maybeSingle();
     if (!setup?.owner_user_id) return null;
     const { data } = await supabase.from('praxis_mailversand').select('*').eq('owner_id', setup.owner_user_id).maybeSingle();
@@ -41,6 +43,7 @@ const kanal = await mailKanal({ zweck: 'alarm', zeile: await ladePostfach() });
 if (kanal.weg !== 'smtp') process.exit(3);
 if (!sonuc || !email) process.exit(0);
 
+/** @type {Record<string, string>} */
 const METINLER = {
   ok: 'Automatisches Update erfolgreich abgeschlossen — Entwarnung, das vorherige Problem ist behoben.',
   durak: 'Automatisches Update angehalten: dieser Schritt erfordert eine manuelle Aktion.',
@@ -89,6 +92,7 @@ try {
   // ist bereits vor diesem Aufruf entschieden. update.sh liest nur diesen
   // Exit-Code (0/1), keine Ursache; die Diagnose steht in update.log.
   // Nur der Code: nodemailer-Meldungen können Adressen enthalten.
-  console.error('[update-alarm-mail]', err?.code || 'FEHLER');
+  const code = err && typeof err === 'object' && 'code' in err ? err.code : undefined;
+  console.error('[update-alarm-mail]', code || 'FEHLER');
   process.exit(1);
 }

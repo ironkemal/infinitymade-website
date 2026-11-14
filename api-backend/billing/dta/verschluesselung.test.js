@@ -14,7 +14,10 @@ import * as asn1js from 'asn1js';
 import { verschluesseleFuerEmpfaenger, entschluessele } from './verschluesselung.js';
 import { pruefeEmpfaengerZertifikat } from './empfaenger-zertifikat-pruefung.js';
 
-// Hilfsfunktion: Konvertiert Forge-Zertifikat in DER-Buffer
+/**
+ * Hilfsfunktion: Konvertiert Forge-Zertifikat in DER-Buffer
+ * @param {Parameters<typeof forge.pki.certificateToAsn1>[0]} forgeCert
+ */
 function forgeCertToDer(forgeCert) {
   const asn1 = forge.pki.certificateToAsn1(forgeCert);
   const derHex = forge.asn1.toDer(asn1).toHex();
@@ -140,58 +143,59 @@ test('A3: ASN.1-Struktur entspricht exakt der SECON-Spezifikation (GGT Anlage 16
   });
 
   const ab = enveloped.buffer.slice(enveloped.byteOffset, enveloped.byteOffset + enveloped.byteLength);
+  assert.ok(ab instanceof ArrayBuffer);
   const root = asn1js.fromBER(ab);
   assert.equal(root.offset !== -1, true, 'ASN.1 Parsing erfolgreich');
 
-  const contentInfoSeq = root.result;
+  const contentInfoSeq = /** @type {import('asn1js').Sequence} */ (root.result);
   // ContentType id-envelopedData (1.2.840.113549.1.7.3)
   const contentTypeOid = contentInfoSeq.valueBlock.value[0].valueBlock.toString();
   assert.equal(contentTypeOid, '1.2.840.113549.1.7.3');
 
   // [0] EXPLICIT EnvelopedData
-  const envConstructed = contentInfoSeq.valueBlock.value[1];
+  const envConstructed = /** @type {import('asn1js').Constructed} */ (contentInfoSeq.valueBlock.value[1]);
   assert.equal(envConstructed.idBlock.tagClass, 3);
   assert.equal(envConstructed.idBlock.tagNumber, 0);
 
-  const envData = envConstructed.valueBlock.value[0];
+  const envData = /** @type {import('asn1js').Sequence} */ (envConstructed.valueBlock.value[0]);
   // version CMSVersion = 0
-  assert.equal(envData.valueBlock.value[0].valueBlock.valueDec, 0);
+  assert.equal((/** @type {import('asn1js').Integer} */ (envData.valueBlock.value[0])).valueBlock.valueDec, 0);
 
   // recipientInfos
-  const recipientInfos = envData.valueBlock.value[1];
+  const recipientInfos = /** @type {import('asn1js').Sequence} */ (envData.valueBlock.value[1]);
   assert.equal(recipientInfos.valueBlock.value.length, 1);
-  const ktri = recipientInfos.valueBlock.value[0];
+  const ktri = /** @type {import('asn1js').Sequence} */ (recipientInfos.valueBlock.value[0]);
 
   // ktri.version = 0
-  assert.equal(ktri.valueBlock.value[0].valueBlock.valueDec, 0);
+  assert.equal((/** @type {import('asn1js').Integer} */ (ktri.valueBlock.value[0])).valueBlock.valueDec, 0);
 
   // rid = IssuerAndSerialNumber (kein SubjectKeyIdentifier)
   const rid = ktri.valueBlock.value[1];
   assert.equal(rid.idBlock.tagClass, 1); // Universal Sequence
 
   // keyEncryptionAlgorithm = id-RSAES-OAEP (1.2.840.113549.1.1.7)
-  const keyEncAlg = ktri.valueBlock.value[2];
+  const keyEncAlg = /** @type {import('asn1js').Sequence} */ (ktri.valueBlock.value[2]);
   assert.equal(keyEncAlg.valueBlock.value[0].valueBlock.toString(), '1.2.840.113549.1.1.7');
 
   // RSAES-OAEP-params hat 3 explizite Felder: [0] hash, [1] mgf1, [2] pSource
-  const oaepParams = keyEncAlg.valueBlock.value[1];
+  const oaepParams = /** @type {import('asn1js').Sequence} */ (keyEncAlg.valueBlock.value[1]);
   assert.equal(oaepParams.valueBlock.value.length, 3);
   assert.equal(oaepParams.valueBlock.value[0].idBlock.tagNumber, 0); // [0] hash
   assert.equal(oaepParams.valueBlock.value[1].idBlock.tagNumber, 1); // [1] mgf1
   assert.equal(oaepParams.valueBlock.value[2].idBlock.tagNumber, 2); // [2] pSource
 
   // encryptedKey ist 512 Bytes (4096 Bit RSA)
-  const encryptedKeyOctet = ktri.valueBlock.value[3];
+  const encryptedKeyOctet = /** @type {import('asn1js').OctetString} */ (ktri.valueBlock.value[3]);
   assert.equal(encryptedKeyOctet.valueBlock.valueHexView.byteLength, 512);
 
   // encryptedContentInfo
-  const encContentInfo = envData.valueBlock.value[2];
+  const encContentInfo = /** @type {import('asn1js').Sequence} */ (envData.valueBlock.value[2]);
   // contentType = id-data (1.2.840.113549.1.7.1)
   assert.equal(encContentInfo.valueBlock.value[0].valueBlock.toString(), '1.2.840.113549.1.7.1');
   // contentEncryptionAlgorithm = id-aes256-CBC (2.16.840.1.101.3.4.1.42) mit 16-Byte-IV
-  const contentEncAlg = encContentInfo.valueBlock.value[1];
+  const contentEncAlg = /** @type {import('asn1js').Sequence} */ (encContentInfo.valueBlock.value[1]);
   assert.equal(contentEncAlg.valueBlock.value[0].valueBlock.toString(), '2.16.840.1.101.3.4.1.42');
-  const ivOctet = contentEncAlg.valueBlock.value[1];
+  const ivOctet = /** @type {import('asn1js').OctetString} */ (contentEncAlg.valueBlock.value[1]);
   assert.equal(ivOctet.valueBlock.valueHexView.byteLength, 16);
 
   // encryptedContent = [0] IMPLICIT OCTET STRING
@@ -206,7 +210,7 @@ test('A4: OpenSSL CLI Kreuzvalidierung — unabhängige Entschlüsselung mit ope
   try {
     opensslVersion = execFileSync('openssl', ['version'], { encoding: 'utf8' }).trim();
   } catch (err) {
-    assert.fail(`OpenSSL CLI nicht verfügbar: ${err.message}`);
+    assert.fail(`OpenSSL CLI nicht verfügbar: ${err instanceof Error ? err.message : String(err)}`);
   }
   assert.ok(opensslVersion, `OpenSSL gefunden: ${opensslVersion}`);
 

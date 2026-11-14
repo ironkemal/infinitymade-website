@@ -44,7 +44,7 @@ test('ohne explizite Angabe wird aus dem Heilmittel-Kurzcode geraten', () => {
 
 test('kein Heilmittel und keine Position -> null, nicht geraten', () => {
   assert.equal(heilmittelPositionAufloesen({}), null);
-  assert.equal(heilmittelPositionAufloesen(undefined), null);
+  assert.equal(heilmittelPositionAufloesen(/** @type {Parameters<typeof heilmittelPositionAufloesen>[0]} */ (/** @type {unknown} */ (undefined))), null);
 });
 
 test('Podologie-Backend nutzt 78xxx und lehnt fremde oder mehrdeutige Positionen ab', () => {
@@ -62,13 +62,41 @@ test('explizite Position gewinnt gegen den Rate-Zweig', () => {
 // ── kostentraegerIkAufloesen ────────────────────────────────────────────────
 
 /**
+ * @typedef {{
+ *   name?: string,
+ *   ik: string,
+ *   abrechnender_kt_ik?: string | null,
+ *   active?: boolean,
+ *   datensatz_status?: string,
+ *   payer_type?: string,
+ *   valid_to?: string,
+ *   valid_from?: string,
+ * }} StubKkRow
+ *
+ * @typedef {{
+ *   ilike: string | null,
+ *   in: string[] | null,
+ *   active: boolean | null,
+ *   eqIk: string | null,
+ *   echt: boolean,
+ *   gkv: boolean,
+ *   heute: string | null,
+ *   heuteVon: string | null,
+ * }} StubAbfrage
+ */
+
+/**
  * Minimaler Supabase-Stub für die zwei Abfragen, die kostentraegerIkAufloesen benutzt:
  * `select().ilike('name').eq('active')` (Namenssuche) und `select().in('ik').eq('active')`
  * (Verweis-Endpunkte). Wie beim echten Client ist der Builder selbst awaitbar.
  * Zeilen: `{ name, ik, abrechnender_kt_ik?, active? }` — `active` fehlt = aktiv.
  * `optionen.fehler`: jede Abfrage liefert dann `error` statt Daten.
+ * @param {StubKkRow[]} [kkRows]
+ * @param {{ fehler?: boolean }} [optionen]
+ * @returns {Parameters<typeof kostentraegerIkAufloesen>[0]}
  */
 function makeSupabaseStub(kkRows = [], optionen = {}) {
+  /** @type {StubAbfrage} */
   let abfrage;
   function filterZeilen() {
     assert.equal(abfrage.active, true, 'jede Abfrage muss auf aktive Sätze einschränken');
@@ -76,31 +104,46 @@ function makeSupabaseStub(kkRows = [], optionen = {}) {
     assert.equal(abfrage.gkv, true, 'nur payer_type = gkv');
     assert.ok(abfrage.heuteVon, 'valid_from-Filter fehlt');
     assert.ok(abfrage.heute, 'abgelaufene Sätze (valid_to < heute) müssen ausgeschlossen werden');
+    const heute = abfrage.heute;
+    const heuteVon = abfrage.heuteVon;
     let zeilen = kkRows.filter(r => r.active !== false
       && (r.datensatz_status ?? 'echt') === 'echt'
       && (r.payer_type ?? 'gkv') === 'gkv'
-      && (!r.valid_to || r.valid_to >= abfrage.heute)
-      && (!r.valid_from || r.valid_from <= abfrage.heuteVon));
-    if (abfrage.eqIk !== null) zeilen = zeilen.filter(r => r.ik === abfrage.eqIk);
-    if (abfrage.ilike !== null) zeilen = zeilen.filter(r => (r.name || '').toLowerCase().includes(abfrage.ilike));
-    if (abfrage.in) zeilen = zeilen.filter(r => abfrage.in.includes(r.ik));
+      && (!r.valid_to || r.valid_to >= heute)
+      && (!r.valid_from || r.valid_from <= heuteVon));
+    if (abfrage.eqIk !== null) {
+      const eqIk = abfrage.eqIk;
+      zeilen = zeilen.filter(r => r.ik === eqIk);
+    }
+    if (abfrage.ilike !== null) {
+      const ilike = abfrage.ilike;
+      zeilen = zeilen.filter(r => (r.name || '').toLowerCase().includes(ilike));
+    }
+    if (abfrage.in) {
+      const inListe = abfrage.in;
+      zeilen = zeilen.filter(r => inListe.includes(r.ik));
+    }
     return zeilen.map(r => ({ ik: r.ik, abrechnender_kt_ik: r.abrechnender_kt_ik ?? null }));
   }
 
   const api = {
+    /** @param {string} table */
     from(table) {
       assert.equal(table, 'kostentraeger');
       abfrage = { ilike: null, in: null, active: null, eqIk: null, echt: false, gkv: false, heute: null, heuteVon: null };
       return api;
     },
     select() { return api; },
+    /** @param {string} _col @param {unknown} val */
     ilike(_col, val) { abfrage.ilike = String(val).replace(/%/g, '').toLowerCase(); return api; },
+    /** @param {string} col @param {string[]} liste */
     in(col, liste) { assert.equal(col, 'ik'); abfrage.in = liste; return api; },
+    /** @param {string} col @param {string | boolean} val */
     eq(col, val) {
-      if (col === 'active') {
+      if (col === 'active' && typeof val === 'boolean') {
         assert.equal(val, true);
         abfrage.active = val;
-      } else if (col === 'ik') {
+      } else if (col === 'ik' && typeof val === 'string') {
         abfrage.eqIk = val;
       } else if (col === 'datensatz_status') {
         abfrage.echt = val === 'echt';
@@ -109,11 +152,12 @@ function makeSupabaseStub(kkRows = [], optionen = {}) {
       }
       return api;
     },
+    /** @param {string} filter */
     or(filter) {
       const m = /^valid_to\.is\.null,valid_to\.gte\.(\d{4}-\d{2}-\d{2})$/.exec(filter);
       const v = /^valid_from\.is\.null,valid_from\.lte\.(\d{4}-\d{2}-\d{2})$/.exec(filter);
       assert.ok(m || v, `unerwarteter or()-Filter: ${filter}`);
-      if (m) abfrage.heute = m[1]; else abfrage.heuteVon = v[1];
+      if (m) abfrage.heute = m[1]; else if (v) abfrage.heuteVon = v[1];
       return api;
     },
     maybeSingle() {
@@ -121,23 +165,24 @@ function makeSupabaseStub(kkRows = [], optionen = {}) {
       const zeilen = filterZeilen();
       return Promise.resolve({ data: zeilen[0] || null, error: null });
     },
+    /** @param {(res: { data: unknown, error: Error | null }) => unknown} resolve */
     then(resolve) {
       if (optionen.fehler) return resolve({ data: null, error: new Error('db down') });
       const zeilen = filterZeilen();
       return resolve({ data: zeilen, error: null });
     },
   };
-  return api;
+  return /** @type {Parameters<typeof kostentraegerIkAufloesen>[0]} */ (/** @type {unknown} */ (api));
 }
 
 test('patient.kostentraeger_ik wird ignoriert — stattdessen Namenssuche oder null', async () => {
   const supabase = makeSupabaseStub([{ name: 'AOK Rheinland/Hamburg', ik: '104212505' }]);
   // kostentraeger_ik gegeben, aber kein krankenkasse_ik: kostentraeger_ik wird ignoriert, Kassenname aufgelöst
-  const ik1 = await kostentraegerIkAufloesen(supabase, { kostentraeger_ik: '999999999', krankenkasse: 'AOK Rheinland/Hamburg' });
+  const ik1 = await kostentraegerIkAufloesen(supabase, /** @type {Parameters<typeof kostentraegerIkAufloesen>[1]} */ ({ kostentraeger_ik: '999999999', krankenkasse: 'AOK Rheinland/Hamburg' }));
   assert.equal(ik1, '104212505');
 
   // Nur kostentraeger_ik ohne Kassenname und ohne krankenkasse_ik -> null
-  const ik2 = await kostentraegerIkAufloesen(supabase, { kostentraeger_ik: '999999999' });
+  const ik2 = await kostentraegerIkAufloesen(supabase, /** @type {Parameters<typeof kostentraegerIkAufloesen>[1]} */ ({ kostentraeger_ik: '999999999' }));
   assert.equal(ik2, null);
 });
 
@@ -146,11 +191,11 @@ test('krankenkasse_ik gegeben: sucht mit ik = Karten-IK und liefert abrechnender
     { name: 'Techniker Krankenkasse', ik: '101575519', abrechnender_kt_ik: '104212505' },
     { name: 'Techniker Krankenkasse (Zentrale)', ik: '104212505' },
   ]);
-  const ik = await kostentraegerIkAufloesen(supabase, {
+  const ik = await kostentraegerIkAufloesen(supabase, /** @type {Parameters<typeof kostentraegerIkAufloesen>[1]} */ ({
     krankenkasse_ik: '101575519',
     kostentraeger_ik: '111111111', // wird ignoriert
     krankenkasse: 'Techniker Krankenkasse',
-  });
+  }));
   assert.equal(ik, '104212505');
   assert.notEqual(ik, '101575519');
 });
@@ -365,7 +410,7 @@ test('artFelderAusRezept: behandlungsanlass/nagel nur wenn der Schlüssel mitkom
   assert.deepEqual(artFelderAusRezept({ behandlungsanlass: '  Nagelspange ', nagel: '' }, { neu: false }),
     { behandlungsanlass: 'Nagelspange', nagel: null });
   assert.deepEqual(artFelderAusRezept({ behandlungsanlass: null }, { neu: false }), { behandlungsanlass: null });
-  assert.deepEqual(artFelderAusRezept({ wagner_grad: 'W1' }, { neu: false }), {}, 'wagner_grad wird nie geschrieben');
+  assert.deepEqual(artFelderAusRezept(/** @type {Parameters<typeof artFelderAusRezept>[0]} */ ({ wagner_grad: 'W1' }), { neu: false }), {}, 'wagner_grad wird nie geschrieben');
 });
 
 // ── rezeptartWechselPruefen ─────────────────────────────────────────────────
@@ -384,8 +429,12 @@ test('Wechsel: mit festgeschriebener Rechnung 409 + Hinweis Storno', () => {
 });
 
 test('Wechsel weg von Kasse setzt „bereit“ zurück, Wechsel zu Kasse nicht', () => {
-  assert.equal(rezeptartWechselPruefen({ bestehend: null, neu: 'privat', hatFestgeschriebeneRechnung: false }).statusZuruecksetzen, true);
-  assert.equal(rezeptartWechselPruefen({ bestehend: 'privat', neu: 'kassen', hatFestgeschriebeneRechnung: false }).statusZuruecksetzen, false);
+  const r1 = rezeptartWechselPruefen({ bestehend: null, neu: 'privat', hatFestgeschriebeneRechnung: false });
+  if (!r1.ok) assert.fail();
+  assert.equal(r1.statusZuruecksetzen, true);
+  const r2 = rezeptartWechselPruefen({ bestehend: 'privat', neu: 'kassen', hatFestgeschriebeneRechnung: false });
+  if (!r2.ok) assert.fail();
+  assert.equal(r2.statusZuruecksetzen, false);
 });
 
 test('Wechsel: NULL zählt als Kasse (Altzeilen), neu undefined = kein Wechsel', () => {
@@ -460,6 +509,7 @@ test('nichtGkvAbrechenbarMeldung: Kasse/NULL/gkv ok, privat/selbstzahler/bg gesp
   for (const art of [null, undefined, '', 'kassen', 'gkv', ' KASSEN ']) assert.equal(nichtGkvAbrechenbarMeldung({ id: 'abcdef12-0000', rezeptart: art }), null, String(art));
   for (const art of ['privat', 'selbstzahler', 'bg']) {
     const m = nichtGkvAbrechenbarMeldung({ id: 'abcdef12-0000', rezeptart: art });
+    assert.ok(m !== null);
     assert.match(m, /abcdef12/);
     assert.match(m, new RegExp(art));
     assert.match(m, /nicht GKV-abrechenbar/);

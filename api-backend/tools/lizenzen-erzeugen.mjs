@@ -42,6 +42,7 @@ export const VERBOTEN = /\b(A?GPL|LGPL|SSPL|BUSL|Elastic|Commons[- ]Clause|Susta
 
 // Benannte, begründete Ausnahmen. Jede Ausnahme muss im Baum noch vorkommen —
 // sonst bricht der Bau ab ("veraltet"), damit sie mit dem Paket verschwindet.
+/** @type {Record<string, string>} */
 export const AUSNAHMEN = {
   // leer seit 09.10.2026: pm2 (AGPL, O-179) entfernt, KHS §5b T20 erledigt.
 };
@@ -54,17 +55,24 @@ const NORMAL = new Map([
   ['bsd-3', 'BSD-3-Clause'], ['bsd-2', 'BSD-2-Clause'],
 ]);
 
-/** Ein einzelner Lizenzname → SPDX-Schreibweise (soweit bekannt). */
+/**
+ * Ein einzelner Lizenzname → SPDX-Schreibweise (soweit bekannt).
+ * @param {unknown} name
+ */
 export function normalisiereName(name) {
   const n = String(name || '').trim();
   if (!n) return '';
   return NORMAL.get(n.toLowerCase()) || n;
 }
 
-/** package.json-Lizenzfeld (String, {type}, [{type}], licenses[]) → Ausdruck. */
+/**
+ * package.json-Lizenzfeld (String, {type}, [{type}], licenses[]) → Ausdruck.
+ * @param {{ license?: string | { type?: string }, licenses?: Array<string | { type?: string }> } | null | undefined} pkg
+ */
 export function lizenzAusdruck(pkg) {
   const roh = pkg?.license ?? pkg?.licenses;
-  const einzeln = (x) => (typeof x === 'string' ? x : x?.type || '');
+  /** @param {unknown} x */
+  const einzeln = (x) => (typeof x === 'string' ? x : (x && typeof x === 'object' && 'type' in x && typeof x.type === 'string' ? x.type : ''));
   if (Array.isArray(roh)) return roh.map(einzeln).filter(Boolean).join(' OR ');
   return einzeln(roh).trim();
 }
@@ -72,6 +80,7 @@ export function lizenzAusdruck(pkg) {
 /**
  * Bewertet einen SPDX-Ausdruck. OR: ein erlaubter Zweig reicht. AND: alle Teile
  * müssen erlaubt sein. WITH-Ausnahmen (z. B. LLVM-exception) werden ignoriert.
+ * @param {unknown} ausdruck
  * @returns {{status: 'erlaubt'|'verboten'|'unbekannt', ausdruck: string}}
  */
 export function bewerteLizenz(ausdruck) {
@@ -92,6 +101,7 @@ export function bewerteLizenz(ausdruck) {
 
 const LIZENZDATEI = /^(licen[sc]e|copying|notice)([-._].*)?$/i;
 
+/** @param {string} dir */
 function lizenzDateien(dir) {
   try {
     return fs.readdirSync(dir).filter((f) => LIZENZDATEI.test(f)).sort()
@@ -99,7 +109,10 @@ function lizenzDateien(dir) {
   } catch { return []; }
 }
 
-/** Fehlt das Feld, aus der ersten Zeile der Lizenzdatei erkennen (nur eindeutige Fälle). */
+/**
+ * Fehlt das Feld, aus der ersten Zeile der Lizenzdatei erkennen (nur eindeutige Fälle).
+ * @param {string} text
+ */
 function ausDateiErkennen(text) {
   const kopf = text.slice(0, 200);
   if (/\bMIT License\b/i.test(kopf)) return 'MIT';
@@ -109,13 +122,22 @@ function ausDateiErkennen(text) {
 }
 
 /**
+ * @typedef {{ datei: string, text: string }} LizenzText
+ * @typedef {{ name: string, version: string, ausdruck: string, erkannt: boolean, repo: string, texte: LizenzText[] }} GesammeltesPaket
+ * @typedef {GesammeltesPaket & { lizenz: string, status: 'erlaubt'|'verboten'|'unbekannt', ausnahme?: string }} LizenzErgebnis
+ */
+
+/**
  * Alle Pakete unter <wurzel>/node_modules, rekursiv (auch verschachtelte
  * node_modules), dedupliziert nach name@version.
  * @param {string} wurzel
  * @param {{devPfade?: Set<string>}} [opt] relative Pfade, die als dev gelten (nur lokal)
+ * @returns {GesammeltesPaket[]}
  */
 export function sammlePakete(wurzel, { devPfade } = {}) {
+  /** @type {Map<string, GesammeltesPaket>} */
   const pakete = new Map();
+  /** @param {string} nmDir */
   const besuche = (nmDir) => {
     let eintraege;
     try { eintraege = fs.readdirSync(nmDir); } catch { return; }
@@ -126,6 +148,7 @@ export function sammlePakete(wurzel, { devPfade } = {}) {
       } else paket(path.join(nmDir, e));
     }
   };
+  /** @param {string} dir */
   const paket = (dir) => {
     const rel = path.relative(wurzel, dir).split(path.sep).join('/');
     let pkg;
@@ -148,16 +171,24 @@ export function sammlePakete(wurzel, { devPfade } = {}) {
   return [...pakete.values()].sort((a, b) => a.name.localeCompare(b.name) || a.version.localeCompare(b.version));
 }
 
-/** dev-Pfade aus einer package-lock.json (v2/v3) — nur für lokale Läufe. */
+/**
+ * dev-Pfade aus einer package-lock.json (v2/v3) — nur für lokale Läufe.
+ * @param {string} lockDatei
+ */
 export function devPfadeAusLock(lockDatei) {
   const lock = JSON.parse(fs.readFileSync(lockDatei, 'utf8'));
-  return new Set(Object.entries(lock.packages || {}).filter(([k, v]) => k && v.dev).map(([k]) => k));
+  return new Set(Object.entries(lock.packages || {}).filter(([k, v]) => k && v && typeof v === 'object' && 'dev' in v && v.dev).map(([k]) => k));
 }
 
 // ── Prüfen + Bericht ─────────────────────────────────────────────────────────
 
-/** @returns {{fehler: string[], ergebnisse: object[]}} */
+/**
+ * @param {GesammeltesPaket[]} pakete
+ * @param {Record<string, string>} [ausnahmen]
+ * @returns {{fehler: string[], ergebnisse: LizenzErgebnis[]}}
+ */
 export function pruefe(pakete, ausnahmen = AUSNAHMEN) {
+  /** @type {string[]} */
   const fehler = [];
   const ergebnisse = pakete.map((p) => {
     const b = bewerteLizenz(p.ausdruck);
@@ -179,6 +210,10 @@ const KOPF_IMAGE = [
   'Erzeugt beim Bau des Images aus dem tatsächlich enthaltenen Paketbaum.',
 ];
 
+/**
+ * @param {LizenzErgebnis[]} ergebnisse
+ * @param {string[]} [kopf]
+ */
 export function erzeugeBericht(ergebnisse, kopf = KOPF_IMAGE) {
   const z = [...kopf];
   z.push(`${ergebnisse.length} Pakete.`);
@@ -207,6 +242,7 @@ export function erzeugeBericht(ergebnisse, kopf = KOPF_IMAGE) {
 
 // ── CLI ──────────────────────────────────────────────────────────────────────
 
+/** @param {string} name */
 function arg(name) {
   const i = process.argv.indexOf(name);
   return i > 0 ? process.argv[i + 1] : undefined;

@@ -34,7 +34,9 @@ test('Datums-Hilfen', () => {
   assert.equal(tagDavor('2026-01-01'), '2025-12-31');
 });
 
+/** @param {string} ik @param {Record<string, unknown>} [extra] */
 const rec = (ik, extra = {}) => ({ ik, name: 'K' + ik, namensteile: ['Kasse', ik], valid_from: '19950801', valid_to: null, datenannahmestellen: [], anschriften: [], ...extra });
+/** @param {string} ik @param {Record<string, unknown>} [extra] */
 const dbz = (ik, extra = {}) => ({ ik, name: `Kasse ${ik}`, kurzname: 'K' + ik, valid_from: '1995-08-01', valid_to: null, abrechnender_kt_ik: null, ist_abrechnender_kt: true, quelle: 'AO05Q326_KE3.txt', quelle_stand: '2026-07-27', datensatz_status: 'echt', ...extra });
 
 test('Vorlauf VOR dem Stichtag: Enddaten der kommenden Ausgabe + entfallene IK werden datiert, nichts sonst', () => {
@@ -60,8 +62,12 @@ test('Wegfall ist nie ein DELETE und überschreibt kein früheres Ende', () => {
 test('historischer Doppelsatz in anderer Datei beendet die aktive IK NICHT (besteJeIk)', () => {
   const bk = { ausgabe: { datei: 'BK05Q426_KE0.txt', gueltigAb: '2026-10-01' }, records: [rec('555', { valid_to: '20170331' })] };
   const ek = { ausgabe: { datei: 'EK05Q426_KE1.txt', gueltigAb: '2026-10-01' }, records: [rec('555')] };
-  assert.equal(besteJeIk([bk, ek]).get('555').r.valid_to, null);
-  assert.equal(besteJeIk([ek, bk]).get('555').r.valid_to, null);
+  const b1 = besteJeIk([bk, ek]).get('555');
+  assert.ok(b1);
+  assert.equal(b1.r.valid_to, null);
+  const b2 = besteJeIk([ek, bk]).get('555');
+  assert.ok(b2);
+  assert.equal(b2.r.valid_to, null);
   const db = [dbz('555', { quelle: 'EK05Q226_KE0.txt' })];
   const p = planKostentraeger({ dbZeilen: db, aktiv: [{ ausgabe: AUSGABEN[2], records: [rec('555')] }], kommend: [bk, ek], stichtag: '2026-09-30' });
   assert.ok(!p.patches.some(x => 'valid_to' in x.patch));
@@ -75,10 +81,12 @@ test('neue IK wird eingefügt, valid_from aus der Datei; bestehende bekommt kein
   assert.ok(!p.patches.some(x => 'valid_from' in x.patch));
 });
 
-const vkgDb = (ik, partner, id, extra = {}) => ({ id, kostentraeger_ik: ik, verknuepfungsart: '09', partner_ik: partner, abrechnungscode: '71', art_datenlieferung: '28', uebermittlungsmedium: '6', bundesland: '', leistungserbringergruppe: '', quelle: 'AO05Q326_KE3.txt', quelle_stand: '2026-07-27', valid_from: null, valid_to: null, ...extra });
+/** @param {string} ik @param {string} partner @param {number} id @param {Record<string, unknown>} [extra] */
+const vkgDb = (ik, partner, id, extra = {}) => ({ id: /** @type {string} */ (/** @type {unknown} */ (id)), kostentraeger_ik: ik, verknuepfungsart: '09', partner_ik: partner, abrechnungscode: '71', art_datenlieferung: '28', uebermittlungsmedium: '6', bundesland: '', leistungserbringergruppe: '', quelle: 'AO05Q326_KE3.txt', quelle_stand: '2026-07-27', valid_from: null, valid_to: null, ...extra });
+/** @param {string} ik @param {string} partner @param {Record<string, unknown>} [extra] */
 const vkgSoll = (ik, partner, extra = {}) => {
   const z = { kostentraeger_ik: ik, verknuepfungsart: '09', partner_ik: partner, abrechnungscode: '71', art_datenlieferung: '28', uebermittlungsmedium: '6', bundesland: '', leistungserbringergruppe: '', quelle: 'AO05Q426_KE0.txt', quelle_stand: '2026-10-01', valid_from: '2026-10-01', ...extra };
-  return [VKG_SCHLUESSEL.map(f => z[f]).join('|'), z];
+  return /** @type {[string, typeof z]} */ ([VKG_SCHLUESSEL.map(f => /** @type {Record<string, unknown>} */ (z)[f]).join('|'), z]);
 };
 const VERGLEICH = ['quelle', 'quelle_stand', 'leistungserbringergruppe'];
 
@@ -89,7 +97,7 @@ test('planKind Q3->Q4: veralteter Schlüssel wird NICHT gelöscht, sondern bekom
   assert.deepEqual(p.closes, [{ id: 1, valid_to: '2026-09-30' }]); // alter Partner
   assert.equal(p.inserts.length, 0);
   assert.equal(p.updates.length, 1); // Bestand bekommt neue Quelle
-  assert.ok(!p.closes.some(c => c.id === 3), 'Zeile der entfallenen IK bleibt unberührt');
+  assert.ok(!p.closes.some(c => Number(c.id) === 3), 'Zeile der entfallenen IK bleibt unberührt');
   assert.ok(!('deletes' in p), 'es gibt keinen DELETE-Pfad mehr');
 });
 
@@ -137,9 +145,10 @@ test('planKind: ein späteres valid_to (nach dem neuen Endtag) wird auf den Endt
 });
 
 test('planKind: Anschriften laufen über denselben Pfad (ANS_SCHLUESSEL)', () => {
-  const ansDb = (id, plz, extra = {}) => ({ id, kostentraeger_ik: '108310400', art: '1', plz, ort: 'X', strasse: 'S', quelle: 'AO05Q326_KE3.txt', quelle_stand: '2026-07-27', valid_from: null, valid_to: null, ...extra });
+  /** @param {number} id @param {string} plz @param {Record<string, unknown>} [extra] */
+  const ansDb = (id, plz, extra = {}) => ({ id: /** @type {string} */ (/** @type {unknown} */ (id)), kostentraeger_ik: '108310400', art: '1', plz, ort: 'X', strasse: 'S', quelle: 'AO05Q326_KE3.txt', quelle_stand: '2026-07-27', valid_from: null, valid_to: null, ...extra });
   const neu = { kostentraeger_ik: '108310400', art: '1', plz: '22222', ort: 'X', strasse: 'S', quelle: 'AO05Q426_KE0.txt', quelle_stand: '2026-10-01', valid_from: '2026-10-01' };
-  const soll = new Map([[ANS_SCHLUESSEL.map(f => neu[f]).join('|'), neu]]);
+  const soll = new Map([[ANS_SCHLUESSEL.map(f => /** @type {Record<string, unknown>} */ (neu)[f]).join('|'), neu]]);
   const p = planKind({ dbZeilen: [ansDb(1, '11111')], soll, felder: ANS_SCHLUESSEL, vergleich: ['quelle', 'quelle_stand'] });
   assert.equal(p.inserts.length, 1);
   assert.deepEqual(p.closes, [{ id: 1, valid_to: '2026-09-30' }]);
@@ -154,7 +163,9 @@ test('sollZeilen: Sollzeilen tragen valid_from = gültig-ab der Ausgabe (nur fü
 });
 
 test('adim2Sperre: Stichtag nach heute wird verweigert, heute/Vergangenheit erlaubt', () => {
-  assert.match(adim2Sperre('2026-10-01', '2026-09-30'), /O-139 Adim 2/);
+  const sperre = adim2Sperre('2026-10-01', '2026-09-30');
+  assert.ok(sperre);
+  assert.match(sperre, /O-139 Adim 2/);
   assert.equal(adim2Sperre('2026-09-30', '2026-09-30'), null);
   assert.equal(adim2Sperre('2026-01-01', '2026-09-30'), null);
 });

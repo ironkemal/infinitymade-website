@@ -13,6 +13,10 @@ import { buildPhysikalischerDateiname } from './filename.js';
 import { buildDtaFile } from './builder.js';
 import { physioFixture, podoFixture } from './fixtures.js';
 
+/** @param {unknown} dta @returns {import('./preflight.js').DtaInput} */
+const asDta = (dta) => /** @type {import('./preflight.js').DtaInput} */ (dta);
+
+/** @type {Parameters<typeof buildAuftragsdatei>[0]} */
 const BASIS = {
   absenderIk:          '123456789',
   empfaengerIk:         '987654321',
@@ -24,6 +28,7 @@ const BASIS = {
 };
 
 // Stellen sind 1-indexed & inklusiv, wie in der Spezifikation angegeben.
+/** @param {string} satz @param {number} von @param {number} bis */
 const feld = (satz, von, bis) => satz.slice(von - 1, bis);
 
 test('Auftragssatz ist exakt 348 Zeichen lang', () => {
@@ -190,7 +195,7 @@ test('buildPhysikalischerDateiname mit transfernummer 0 erzeugt TSOL0000 bzw. ES
 });
 
 test('wirft bei ungültigem kind', () => {
-  assert.throws(() => buildAuftragsdatei({ ...BASIS, kind: 'unbekannt' }));
+  assert.throws(() => buildAuftragsdatei({ ...BASIS, kind: /** @type {'echt'} */ (/** @type {unknown} */ ('unbekannt')) }));
 });
 
 test('wirft bei negativer nutzdateiByteLength', () => {
@@ -200,35 +205,35 @@ test('wirft bei negativer nutzdateiByteLength', () => {
 // --- Integration mit builder.js -----------------------------------------
 
 test('buildDtaFile() liefert eine 348-stellige auftragsdatei mit demselben logischen Namen', () => {
-  const dta = buildDtaFile(physioFixture);
+  const dta = buildDtaFile(asDta(physioFixture));
   assert.equal(typeof dta.auftragsdatei, 'string');
   assert.equal(dta.auftragsdatei.length, 348);
   assert.equal(feld(dta.auftragsdatei, 105, 115), dta.logischerDateiname);
 });
 
 test('buildDtaFile() Auftragsdatei traegt die Nutzdatei-Groesse (podoFixture)', () => {
-  const dta = buildDtaFile(podoFixture);
+  const dta = buildDtaFile(asDta(podoFixture));
   const groesse = feld(dta.auftragsdatei, 179, 190);
   assert.equal(Number(groesse), dta.byteLength);
 });
 
 test('buildDtaFile() ohne transfernummer wirft (Notweg entfernt)', () => {
-  const f = structuredClone(physioFixture);
+  const f = structuredClone(asDta(physioFixture));
   delete f.transfernummer;
   assert.throws(() => buildDtaFile(f), /transfernummer must be an integer in \[0, 999\]/);
 });
 
 test('buildDtaFile() mit transfernummer 0 erzeugt TSOL0000 bzw. ESOL0000', () => {
-  const fTest = { ...physioFixture, kind: 'test', transfernummer: 0 };
+  const fTest = asDta({ ...physioFixture, kind: 'test', transfernummer: 0 });
   const dtaTest = buildDtaFile(fTest);
   assert.equal(dtaTest.filename, 'TSOL0000');
 
-  const fEcht = { ...physioFixture, kind: 'echt', transfernummer: 0 };
+  const fEcht = asDta({ ...physioFixture, kind: 'echt', transfernummer: 0 });
   const dtaEcht = buildDtaFile(fEcht);
   assert.equal(dtaEcht.filename, 'ESOL0000');
 });
 
 test('buildDtaFile() mit transfernummer 1000 oder -1 wirft', () => {
-  assert.throws(() => buildDtaFile({ ...physioFixture, transfernummer: 1000 }), /transfernummer must be an integer in \[0, 999\]/);
-  assert.throws(() => buildDtaFile({ ...physioFixture, transfernummer: -1 }), /transfernummer must be an integer in \[0, 999\]/);
+  assert.throws(() => buildDtaFile(asDta({ ...physioFixture, transfernummer: 1000 })), /transfernummer must be an integer in \[0, 999\]/);
+  assert.throws(() => buildDtaFile(asDta({ ...physioFixture, transfernummer: -1 })), /transfernummer must be an integer in \[0, 999\]/);
 });

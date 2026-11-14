@@ -3,20 +3,23 @@ import assert from 'node:assert/strict';
 import express from 'express';
 
 const realFetch = globalThis.fetch;
+/** @type {any[]} */
 const calls = [];
+/** @type {any} */
 let state;
 const owner = 'owner-1';
 const employee = 'employee-1';
 const business = 'business-1';
+/** @param {any} body @param {number} [status] */
 const reply = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 
 // Exercise the actual router and Supabase SDK. Only SDK HTTP transport is synthetic.
 globalThis.fetch = async (input, options = {}) => {
-  const url = new URL(typeof input === 'string' ? input : input.url);
+  const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url);
   assert.equal(url.hostname, 'payment-security.invalid', 'SDK requests must stay synthetic');
   const headers = new Headers(options.headers);
   const authorization = headers.get('authorization');
-  const body = options.body ? JSON.parse(options.body) : null;
+  const body = options.body ? JSON.parse(String(options.body)) : null;
   calls.push({ path: url.pathname, query: url.searchParams, authorization, body });
   if (url.pathname === '/auth/v1/user') return reply({ id: state.role === 'owner' ? owner : employee });
   if (url.pathname.endsWith('/profiles')) {
@@ -41,17 +44,20 @@ globalThis.fetch = async (input, options = {}) => {
 process.env.SUPABASE_URL = 'https://payment-security.invalid';
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'synthetic-service-key';
 const { default: router } = await import('./rechnung-zahlung.routes.js');
+/** @type {import('node:http').Server} */
 let server;
+/** @type {string} */
 let base;
 before(async () => {
   const app = express();
   app.use(express.json());
   app.use(router);
   server = app.listen(0, '127.0.0.1');
-  await new Promise(resolve => server.once('listening', resolve));
-  base = `http://127.0.0.1:${server.address().port}`;
+  await new Promise((/** @type {any} */ resolve) => server.once('listening', resolve));
+  base = `http://127.0.0.1:${/** @type {import('node:net').AddressInfo} */ (server.address()).port}`;
 });
-after(async () => { globalThis.fetch = realFetch; await new Promise(resolve => server.close(resolve)); });
+after(async () => { globalThis.fetch = realFetch; await new Promise((/** @type {any} */ resolve) => server.close(resolve)); });
+/** @param {string} method @param {Record<string, any>} [overrides] @param {Record<string, any>} [body] */
 async function request(method, overrides = {}, body = {}) {
   state = { role: 'employee', ...overrides };
   calls.length = 0;
@@ -65,7 +71,7 @@ function assertDeniedSideEffects() {
   assert.equal(calls.some(c => c.path.endsWith('/profiles') && c.query.get('select')?.includes('buchungskonten')), false);
 }
 for (const method of ['GET', 'POST']) {
-  for (const [label, overrides] of [
+  for (const [label, overrides] of /** @type {Array<[string, Record<string, any>]>} */ ([
     ['denied group or explicit false override', {}],
     ['missing rights', { permissions: [] }],
     ['null rights', { permissions: null }],
@@ -82,7 +88,7 @@ for (const method of ['GET', 'POST']) {
     ['unknown employee activity', { active: null }],
     ['orphan employee', { orphan: true }],
     ['invalid tenant owner', { ownerRole: 'employee' }],
-  ]) test(`${method}: rejects ${label} before ledger/accounts/payment`, async () => {
+  ])) test(`${method}: rejects ${label} before ledger/accounts/payment`, async () => {
     const res = await request(method, overrides);
     assert.equal(res.status, 403);
     assertDeniedSideEffects();
@@ -148,13 +154,13 @@ test('Owner legacy invoice without business remains payable', async () => {
   assert.equal(calls.some(c => c.path.endsWith('/rpc/get_my_permissions')), false);
 });
 for (const role of ['owner', 'employee']) {
-  for (const [label, body] of [
+  for (const [label, body] of /** @type {Array<[string, Record<string, any>]>} */ ([
     ['zero amount', { eingegangener_betrag: 0 }],
     ['unknown account', { gegenkonto_code: 'missing' }],
     ['unknown writeoff account', { restbetrag_modus: 'ausbuchen', ausbuchungskonto_code: 'missing' }],
     ['invalid remainder mode', { restbetrag_modus: 'discard' }],
     ['invalid date', { zahlungsdatum: '18.10.2026' }],
-  ]) test(`POST: ${role} still rejects ${label} without payment writes`, async () => {
+  ])) test(`POST: ${role} still rejects ${label} without payment writes`, async () => {
     const res = await request('POST', { role, permissions: [{ module: 'abrechnung', has_access: true }] }, body);
     assert.equal(res.status, 400);
     assert.equal(calls.some(c => c.path.endsWith('/rpc/rechnung_zahlung_buchen')), false);

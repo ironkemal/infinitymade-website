@@ -21,9 +21,21 @@ const GUELTIG_WOCHEN = 16;
 const ROTE_AMPEL_ABSCHLAG_PERCENT = 9;
 const BLANKO_SHOULDER_COUNT = Object.keys(heilmittelCatalog.blanko_physio_shoulder).length;
 
+/**
+ * @typedef {import('./validate.js').RezeptEingabe} RezeptEingabe
+ * @typedef {import('./validate.js').ValidatorBefund} ValidatorBefund
+ */
+
+/**
+ * @param {{
+ *   heilmittel_typ?: string | null,
+ *   vorrangig_einheiten?: number | string | null,
+ *   ergaenzend_einheiten?: number | string | null
+ * }} opts
+ */
 function classifyAmpel({ heilmittel_typ, vorrangig_einheiten, ergaenzend_einheiten }) {
   // heilmittel_typ ∈ {"weichteil_arthrose_knorpel", "fraktur"}
-  const cfg = BLANKO_AMPEL[heilmittel_typ] || BLANKO_AMPEL.weichteil_arthrose_knorpel;
+  const cfg = (heilmittel_typ && BLANKO_AMPEL[heilmittel_typ]) || BLANKO_AMPEL.weichteil_arthrose_knorpel;
   const vorrang = Number(vorrangig_einheiten) || 0;
   const ergaenz = Number(ergaenzend_einheiten) || 0;
   const vorrangRot = vorrang >= cfg.vorrangig.rot_ab;
@@ -36,8 +48,13 @@ function classifyAmpel({ heilmittel_typ, vorrangig_einheiten, ergaenzend_einheit
   };
 }
 
+/**
+ * @param {RezeptEingabe} rezept
+ */
 export function validateBlanko(rezept) {
+  /** @type {ValidatorBefund[]} */
   const warnings = [];
+  /** @type {ValidatorBefund[]} */
   const blockers = [];
 
   // Mandatory Blanko marker check
@@ -92,8 +109,8 @@ export function validateBlanko(rezept) {
       `Bei Blankoverordnung muss die Behandlung innerhalb von ${tage} Tagen nach Ausstellung beginnen. Geplant: ${beginIso}, Frist: ${latestStartIso}.`,
     afterExtra: { regulation: 'NOVENTI-Leitfaden Blankoverordnung Physiotherapie' }
   });
-  blockers.push(...fristPruefung.blockers);
-  warnings.push(...fristPruefung.warnings);
+  blockers.push(.../** @type {ValidatorBefund[]} */ (fristPruefung.blockers));
+  warnings.push(.../** @type {ValidatorBefund[]} */ (fristPruefung.warnings));
 
   // Ampelsystem evaluation (only if user provided session counts)
   let ampel = null;
@@ -116,6 +133,7 @@ export function validateBlanko(rezept) {
   // Automatic billing bonuses — NUR wenn die Verordnung fehlerfrei ist.
   // Bei Blockern darf kein abrechenbarer Betrag ausgewiesen werden (stille Falschabrechnung).
   const ok = blockers.length === 0;
+  /** @type {{ physiotherapeutische_diagnostik: number, mehraufwandspauschale: number, bedarfsdiagnostik?: number }} */
   const bonuses = {
     physiotherapeutische_diagnostik: BLANKO_VERGUETUNG.physiotherapeutische_diagnostik,
     mehraufwandspauschale: BLANKO_VERGUETUNG.mehraufwandspauschale

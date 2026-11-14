@@ -4,11 +4,13 @@ import { createBookingsFromRequestFactory } from './from-request.js';
 
 // Minimaler Supabase-Ersatz: merkt sich alle Inserts in bookings und liefert
 // vorgegebene Antworten fuer services.
+/** @param {{ duration?: number, insertError?: any }} [opt] */
 function fakeSupabase({ duration = 30, insertError = null } = {}) {
+  /** @type {any[]} */
   const inserts = [];
   return {
     inserts,
-    from(table) {
+    from(/** @type {string} */ table) {
       if (table === 'services') {
         return {
           select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { duration_minutes: duration } }) }) }),
@@ -16,14 +18,14 @@ function fakeSupabase({ duration = 30, insertError = null } = {}) {
       }
       if (table === 'bookings') {
         return {
-          insert(row) {
+          insert(/** @type {any} */ row) {
             inserts.push(row);
             const err = typeof insertError === 'function' ? insertError(inserts.length) : insertError;
             return {
               error: err,
               select: () => ({ single: async () => ({ data: err ? null : { id: `booking-${inserts.length}` }, error: err }) }),
               // Ohne .select() wird das Insert direkt awaited (Folgetermine).
-              then: (resolve) => resolve({ error: err }),
+              then: (/** @type {any} */ resolve) => resolve({ error: err }),
             };
           },
         };
@@ -33,8 +35,8 @@ function fakeSupabase({ duration = 30, insertError = null } = {}) {
   };
 }
 
-const berlinLocalToUTC = (dateStr, timeStr) => new Date(`${dateStr}T${timeStr}:00.000Z`);
-const generateRecurringDates = (startDate, recurrence, count) => {
+const berlinLocalToUTC = (/** @type {string} */ dateStr, /** @type {string} */ timeStr) => new Date(`${dateStr}T${timeStr}:00.000Z`);
+const generateRecurringDates = (/** @type {string} */ startDate, /** @type {string} */ recurrence, /** @type {number} */ count) => {
   const step = recurrence === 'daily' ? 1 : 7;
   const out = [];
   const d = new Date(`${startDate}T00:00:00.000Z`);
@@ -84,7 +86,7 @@ test('Termindauer kommt aus der Leistung', async () => {
   await create(baseRequest, 'owner-1', 'therapeut-1', 'Max Mustermann');
 
   const row = supabase.inserts[0];
-  const minutes = (new Date(row.end_time) - new Date(row.start_time)) / 60000;
+  const minutes = (/** @type {any} */ (new Date(row.end_time)) - /** @type {any} */ (new Date(row.start_time))) / 60000;
   assert.equal(minutes, 45);
 });
 
@@ -113,7 +115,7 @@ test('1x/Woche legt die ganze Serie an — alle mit user_id', async () => {
 test('belegter Folgetermin wird gezaehlt, nicht gebucht', async () => {
   const supabase = fakeSupabase();
   // Nur der erste Wunschtermin ist frei, die Folgewoche ist ausgebucht.
-  const getAvailableSlots = async (_emp, dateStr) =>
+  const getAvailableSlots = async (/** @type {any} */ _emp, /** @type {string} */ dateStr) =>
     dateStr === '2026-09-08' ? { slots: [] } : { slots: ['10:00'] };
   const create = createBookingsFromRequestFactory({
     supabase, berlinLocalToUTC, generateRecurringDates, getAvailableSlots,
@@ -163,7 +165,7 @@ test('booking_ids enthält jeden Termin der Serie, nicht nur den ersten', async 
 
 test('booking_ids zählt einen belegten Folgetermin nicht mit', async () => {
   const supabase = fakeSupabase();
-  const getAvailableSlots = async (_emp, dateStr) =>
+  const getAvailableSlots = async (/** @type {any} */ _emp, /** @type {string} */ dateStr) =>
     dateStr === '2026-09-08' ? { slots: [] } : { slots: ['10:00'] };
   const create = createBookingsFromRequestFactory({
     supabase, berlinLocalToUTC, generateRecurringDates, getAvailableSlots,
@@ -223,7 +225,7 @@ test('andere Datenbankfehler werden durchgereicht, nichts wird stillschweigend g
 
   await assert.rejects(
     () => create(baseRequest, 'owner-1', 'therapeut-1', 'Max Mustermann'),
-    (e) => e.code === '23503',
+    (/** @type {any} */ e) => e.code === '23503',
   );
 });
 
@@ -291,6 +293,7 @@ test('leadId landet in jeder Terminzeile (direkt und im commit)', async () => {
   const create = createBookingsFromRequestFactory({ supabase, berlinLocalToUTC, generateRecurringDates, getAvailableSlots: async () => ({ slots: ['10:00'] }) });
   await create({ ...baseRequest, verordnung_sitzungen: 2, frequenz: '1x/Woche' }, 'owner-1', 'therapeut-1', 'X', { leadId: 'lead-9' });
   assert.ok(supabase.inserts.length === 2 && supabase.inserts.every(r => r.lead_id === 'lead-9'));
+  /** @type {any} */
   let geplant = null;
   await create({ ...baseRequest }, 'owner-1', 'therapeut-1', 'X', { leadId: 'lead-9', commit: async (rows, m) => { geplant = rows; return { ...m }; } });
   assert.equal(geplant[0].lead_id, 'lead-9');

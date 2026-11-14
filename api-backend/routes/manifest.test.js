@@ -5,6 +5,7 @@ import express from 'express';
 import http from 'node:http';
 import { createManifestRouter, manifestFuer, GRUNDFASSUNG, cacheLeeren } from './manifest.js';
 
+/** @param {any} ergebnis */
 function fakeSupabase(ergebnis) {
   const kette = {
     select: () => kette, eq: () => kette, order: () => kette, limit: () => kette,
@@ -13,13 +14,17 @@ function fakeSupabase(ergebnis) {
   return { from: () => kette };
 }
 
+/**
+ * @param {any} supabase
+ * @param {(url: string) => Promise<void>} fn
+ */
 async function mitServer(supabase, fn) {
   cacheLeeren();
   const app = express();
   app.use('/api', createManifestRouter({ supabase }));
   const server = http.createServer(app);
-  await new Promise((r) => server.listen(0, '127.0.0.1', r));
-  try { await fn(`http://127.0.0.1:${server.address().port}/api/manifest`); } finally { server.close(); }
+  await new Promise((r) => server.listen(0, '127.0.0.1', /** @type {() => void} */ (r)));
+  try { await fn(`http://127.0.0.1:${(/** @type {import('node:net').AddressInfo} */ (server.address())).port}/api/manifest`); } finally { server.close(); }
 }
 
 test('manifestFuer: Name übernommen, short_name ≤ 12 Zeichen', () => {
@@ -44,7 +49,7 @@ test('Box: Praxisname im Manifest, richtiger Content-Type', async () => {
   await mitServer(fakeSupabase({ data: { business_name: 'Podologie Test' }, error: null }), async (url) => {
     const r = await fetch(url);
     assert.equal(r.status, 200);
-    assert.match(r.headers.get('content-type'), /application\/manifest\+json/);
+    assert.match(/** @type {string} */ (r.headers.get('content-type')), /application\/manifest\+json/);
     assert.equal((await r.json()).name, 'Podologie Test');
   });
 });

@@ -24,13 +24,27 @@ import { encryptPHI, decryptPHI } from './phi-encrypt.js';
 // Mit `host` (Praxis-Postfach aus Einstellungen → E-Mail-Versand, praxis_mailversand)
 // werden host/port/secure/user/pass aus dem Argument genommen, sonst aus SMTP_* (wie bisher).
 // `tls` (z. B. servername beim festgenagelten Ziel, routes/mailversand.js pruefZiel) und Zeitgrenzen werden durchgereicht.
+/**
+ * @param {{
+ *   requireTLS?: boolean,
+ *   host?: string | null,
+ *   port?: number | string | null,
+ *   secure?: boolean | null,
+ *   user?: string | null,
+ *   pass?: string | null,
+ *   tls?: Record<string, unknown> | null,
+ *   connectionTimeout?: number,
+ *   greetingTimeout?: number,
+ *   socketTimeout?: number,
+ * }} [opts]
+ */
 export function createSMTPTransport({
   requireTLS = false, host, port, secure, user, pass, tls, connectionTimeout, greetingTimeout, socketTimeout,
 } = {}) {
   if (host) {
     return nodemailer.createTransport({
       host, port: Number(port) || 587, secure: !!secure,
-      auth: { user, pass },
+      auth: { user: user ?? undefined, pass: pass ?? undefined },
       ...(requireTLS ? { requireTLS: true } : {}),
       ...(tls ? { tls } : {}),
       ...(connectionTimeout ? { connectionTimeout } : {}),
@@ -51,6 +65,7 @@ export function createSMTPTransport({
 // ist Nutzereingabe (Onboarding, Faz-2.2-Sihirbaz) und ging bisher UNGEFILTERT
 // in den From-Header — eine Header-Injection-Luecke, nicht erst seit O-66,
 // hier aber miterledigt statt eine zweite Kopie mitzuschleppen.
+/** @param {unknown} text */
 function saeubereAnzeigename(text) {
   return String(text || '').replace(/[\r\n"]/g, '').trim();
 }
@@ -60,6 +75,7 @@ function saeubereAnzeigename(text) {
 // Adresse: SMTP_FROM, sonst die alte feste Adresse (SaaS-Fallback, unveraendert).
 // Anzeigename: MAIL_FROM_NAME wenn gesetzt (Box hat volle Kontrolle — kein
 // "Praxis X via Praxis X"), sonst wie bisher "<Praxis> via Praxura"/"Praxura".
+/** @param {string | null} [businessName] */
 export function getMailFrom(businessName) {
   const adresse = process.env.SMTP_FROM || 'noreply@praxura.de';
   const eigenerName = process.env.MAIL_FROM_NAME;
@@ -124,31 +140,53 @@ export const SMTP_DIAGNOSE = Object.freeze({
 /** Codes, bei denen das Postfach als „Verbindung unterbrochen" gilt (nicht: einzelner Empfänger abgelehnt). */
 export const VERBINDUNG_CODES = new Set(['EAUTH', 'EPROTOCOL', 'ECONNECTION', 'ECONNREFUSED', 'ESOCKET', 'ETIMEDOUT', 'EDNS', 'ETLS', 'PASSWORT_NICHT_LESBAR']);
 
-/** @returns {{code: string|null, meldung: string, hinweis: string|null}} — nie die Rohmeldung (kann Empfänger enthalten). */
+/**
+ * @param {unknown} code
+ * @param {unknown} preset
+ * @returns {{code: string|null, meldung: string, hinweis: string|null}} — nie die Rohmeldung (kann Empfänger enthalten).
+ */
 export function fehlerHinweis(code, preset) {
   const c = code ? String(code) : null;
-  const meldung = (c && SMTP_DIAGNOSE[c]) || 'Unbekannter Fehler beim Mailversand.';
-  const anbieter = preset && ANBIETER_HINWEIS[preset] ? ANBIETER_HINWEIS[preset] : null;
+  /** @type {Record<string, string>} */
+  const diagnose = SMTP_DIAGNOSE;
+  /** @type {Record<string, string>} */
+  const hinweise = ANBIETER_HINWEIS;
+  const meldung = (c && Object.hasOwn(diagnose, c) && diagnose[c]) || 'Unbekannter Fehler beim Mailversand.';
+  const presetKey = typeof preset === 'string' ? preset : '';
+  const anbieter = presetKey && Object.hasOwn(hinweise, presetKey) ? hinweise[presetKey] : null;
   const hinweis = anbieter && (c === 'EAUTH' || c === 'EPROTOCOL' || c === 'ETLS' || c === 'ESOCKET') ? anbieter : null;
   return { code: c, meldung, hinweis };
 }
 
-/** SMTP über Umgebung eingerichtet (install.sh/compose bzw. SaaS-VPS)? */
+/**
+ * SMTP über Umgebung eingerichtet (install.sh/compose bzw. SaaS-VPS)?
+ * @param {NodeJS.ProcessEnv | Record<string, string | undefined>} [env]
+ */
 export function envSmtpVorhanden(env = process.env) { return !!env.SMTP_HOST; }
 
-/** Anzeige der Umgebungs-Konfiguration für die Einstellungen (read-only) — ohne Benutzer/Passwort. */
+/**
+ * Anzeige der Umgebungs-Konfiguration für die Einstellungen (read-only) — ohne Benutzer/Passwort.
+ * @param {NodeJS.ProcessEnv | Record<string, string | undefined>} [env]
+ */
 export function envSmtpAnzeige(env = process.env) {
   if (!env.SMTP_HOST) return null;
   return { host: env.SMTP_HOST, port: Number(env.SMTP_PORT) || 587, absender: env.SMTP_FROM || null };
 }
 
-/** Passwort für die Spalte smtp_passwort (bytea, Hex-Eingabeformat für PostgREST). Wirft ohne DATA_ENCRYPTION_KEY. */
+/**
+ * Passwort für die Spalte smtp_passwort (bytea, Hex-Eingabeformat für PostgREST). Wirft ohne DATA_ENCRYPTION_KEY.
+ * @param {unknown} klartext
+ */
 export function verschluesselePasswort(klartext) {
   const buf = encryptPHI(String(klartext));
+  if (!buf) throw new Error('Verschlüsselung fehlgeschlagen');
   return '\\x' + buf.toString('hex');
 }
 
-/** Gmail-Auswahl aus dem Einstellungen-OAuth-Callback; Token bleibt ausschließlich im Vault. */
+/**
+ * Gmail-Auswahl aus dem Einstellungen-OAuth-Callback; Token bleibt ausschließlich im Vault.
+ * @param {{ supabase: import('@supabase/supabase-js').SupabaseClient, ownerId: string, email: string, refreshToken?: string | null }} opts
+ */
 export async function speichereGmailMailversand({ supabase, ownerId, email, refreshToken }) {
   const { data: token, error: tokenFehler } = refreshToken
     ? await supabase.rpc('set_gmail_token', { p_user_id: ownerId, p_token: refreshToken })
@@ -164,7 +202,11 @@ export async function speichereGmailMailversand({ supabase, ownerId, email, refr
   if (error) throw error;
 }
 
-/** Liest die Praxis-Einstellung; jeder Fehler (auch: Tabelle fehlt noch) = keine Einstellung. */
+/**
+ * Liest die Praxis-Einstellung; jeder Fehler (auch: Tabelle fehlt noch) = keine Einstellung.
+ * @param {import('@supabase/supabase-js').SupabaseClient | null | undefined} supabase
+ * @param {string | null | undefined} ownerId
+ */
 export async function ladeMailEinstellung(supabase, ownerId) {
   if (!supabase || !ownerId) return null;
   try {
@@ -176,14 +218,43 @@ export async function ladeMailEinstellung(supabase, ownerId) {
   }
 }
 
+/**
+ * @param {unknown} name
+ * @param {unknown} adresse
+ */
 function fromHeader(name, adresse) {
   const n = saeubereAnzeigename(name);
   const a = String(adresse || '').replace(/[\r\n<>"]/g, '').trim();
   return n ? `"${n}" <${a}>` : a;
 }
 
+/**
+ * @typedef {{
+ *   weg: 'smtp' | 'gmail' | 'kein',
+ *   quelle: 'db' | 'env' | 'saas_gmail' | null,
+ *   fehler: string | null,
+ *   preset: string | null,
+ *   absender: string | null,
+ *   from: (name?: string) => string,
+ *   transport: (opts?: Parameters<typeof createSMTPTransport>[0]) => ReturnType<typeof createSMTPTransport>,
+ * }} MailKanalResult
+ */
+
+/**
+ * @param {'smtp' | 'gmail' | 'kein'} weg
+ * @param {'db' | 'env' | 'saas_gmail' | null} quelle
+ * @param {{
+ *   smtp?: { host?: string | null, port?: number | null, secure?: boolean | null, user?: string | null, pass?: string | null } | null,
+ *   from?: ((name?: string) => string) | null,
+ *   fehler?: string | null,
+ *   preset?: string | null,
+ *   absender?: string | null,
+ * }} [extra]
+ * @returns {MailKanalResult}
+ */
 function kanal(weg, quelle, extra = {}) {
   const { smtp = null, from, fehler = null, preset = null, absender = null } = extra;
+  /** @type {MailKanalResult} */
   const k = {
     weg, quelle, fehler, preset, absender,
     from: from || (name => getMailFrom(name)),
@@ -196,12 +267,18 @@ function kanal(weg, quelle, extra = {}) {
 
 /**
  * Der Versandweg für eine Praxis.
- * @param {object} o
- * @param {'dokument'|'booking'|'erinnerung'|'alarm'} [o.zweck] — hält bei fehlender Einstellung die alten
+ * @param {{
+ *   supabase?: import('@supabase/supabase-js').SupabaseClient | null,
+ *   ownerId?: string | null,
+ *   zweck?: 'dokument' | 'booking' | 'erinnerung' | 'alarm',
+ *   env?: NodeJS.ProcessEnv | Record<string, string | undefined>,
+ *   kutu?: boolean,
+ *   zeile?: Record<string, any> | null,
+ * }} [o]
+ *   `zweck` hält bei fehlender Einstellung die alten
  *   SaaS-Unterschiede: Booking/Alarm über SMTP_* (Praxura), Dokumente nie über Praxura-SMTP, sondern Gmail
  *   der Praxis (O-233), Erinnerung nur mit Praxis-SMTP.
- * @returns {Promise<{weg:'smtp'|'gmail'|'kein', quelle:'db'|'env'|'saas_gmail'|null, fehler:string|null,
- *   preset:string|null, absender:string|null, from:(name?:string)=>string, transport:(opts?:object)=>any}>}
+ * @returns {Promise<MailKanalResult>}
  */
 export async function mailKanal({ supabase, ownerId, zweck = 'dokument', env = process.env, kutu = istKutu(), zeile } = {}) {
   const z = zeile !== undefined ? zeile : await ladeMailEinstellung(supabase, ownerId);
@@ -228,7 +305,13 @@ export async function mailKanal({ supabase, ownerId, zweck = 'dokument', env = p
   return umgebungsKanal(zweck, env, kutu);
 }
 
-/** Weg ohne Praxis-Einstellung — exakt das Verhalten vor AUFTRAG-MAILVERSAND. */
+/**
+ * Weg ohne Praxis-Einstellung — exakt das Verhalten vor AUFTRAG-MAILVERSAND.
+ * @param {'dokument' | 'booking' | 'erinnerung' | 'alarm'} zweck
+ * @param {NodeJS.ProcessEnv | Record<string, string | undefined>} env
+ * @param {boolean} kutu
+ * @returns {MailKanalResult}
+ */
 function umgebungsKanal(zweck, env, kutu) {
   const envSmtp = envSmtpVorhanden(env);
   if (kutu) return envSmtp ? kanal('smtp', 'env') : kanal('kein', null);
@@ -237,7 +320,12 @@ function umgebungsKanal(zweck, env, kutu) {
   return kanal('kein', null);
 }
 
-/** Transportfabrik, die die Zugangsdaten des Kanals einsetzt (Tests injizieren `fabrik`). */
+/**
+ * Transportfabrik, die die Zugangsdaten des Kanals einsetzt (Tests injizieren `fabrik`).
+ * @param {{ smtp?: Parameters<typeof createSMTPTransport>[0] | null } | null | undefined} k
+ * @param {typeof createSMTPTransport} [fabrik]
+ * @returns {(opts?: Parameters<typeof createSMTPTransport>[0]) => ReturnType<typeof createSMTPTransport>}
+ */
 export function transportFabrikFuer(k, fabrik = createSMTPTransport) {
   return (opts = {}) => fabrik({ ...(k?.smtp || {}), ...opts });
 }
@@ -245,6 +333,10 @@ export function transportFabrikFuer(k, fabrik = createSMTPTransport) {
 /**
  * Echter Versand scheiterte an der Verbindung: Postfach als „unterbrochen" markieren, damit Einstellungen
  * und Dashboard es zeigen. Nur für die Praxis-Einstellung (quelle 'db'); still bei jedem Fehler.
+ * @param {import('@supabase/supabase-js').SupabaseClient | null | undefined} supabase
+ * @param {string | null | undefined} ownerId
+ * @param {{ quelle?: string | null } | null | undefined} k
+ * @param {{ code?: unknown } | null | undefined} err
  */
 export async function meldeVerbindungsfehler(supabase, ownerId, k, err) {
   const code = String(err?.code || '');

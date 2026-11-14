@@ -14,13 +14,22 @@ function neueKimlik() {
 const URL_ = 'https://merkez.example.org/v1/ip?x=1';
 const JETZT = 1_800_000_000_000;
 
+/**
+ * @param {{ body?: string, method?: string, url?: string, nonce?: string }} [opts]
+ */
 function lege({ body = '{"modus":"lan"}', method = 'POST', url = URL_, nonce } = {}) {
   const k = neueKimlik();
   const s = signiereAnfrage({ method, url, body, kimlik: k, jetzt: JETZT, nonce });
-  const kopf = leseSignaturKopf(Object.fromEntries(Object.entries(s.headers).map(([a, b]) => [a.toLowerCase(), b])));
+  const kopf = /** @type {NonNullable<ReturnType<typeof leseSignaturKopf>>} */ (
+    leseSignaturKopf(Object.fromEntries(Object.entries(s.headers).map(([a, b]) => [a.toLowerCase(), b])))
+  );
   return { k, s, kopf, body, method };
 }
 
+/**
+ * @param {ReturnType<typeof lege>} l
+ * @param {Record<string, any>} [ueberschreibe]
+ */
 function pruefe(l, ueberschreibe = {}) {
   return pruefeSignatur({
     method: l.method, host: l.s.host, pfad: l.s.pfad, body: l.body, kopf: l.kopf,
@@ -91,7 +100,7 @@ test('Zeitfenster ±300 s', () => {
 test('Replay: zweiter Versuch mit gleicher Nonce → Fehler', () => {
   const l = lege();
   const gesehen = new Set();
-  const nonceNeu = (b, n) => { const k = b + n; if (gesehen.has(k)) return false; gesehen.add(k); return true; };
+  const nonceNeu = /** @param {string} b @param {string} n */ (b, n) => { const k = b + n; if (gesehen.has(k)) return false; gesehen.add(k); return true; };
   assert.equal(pruefe(l, { nonceNeu }).ok, true);
   assert.equal(pruefe(l, { nonceNeu }).grund, 'replay');
 });

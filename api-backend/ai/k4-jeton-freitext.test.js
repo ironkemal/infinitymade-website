@@ -14,20 +14,24 @@ const HOST = 'test-swedencentral.cognitiveservices.azure.com';
 const TENANT = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const ENV = { AI_MODE: 'jeton', AI_PROVIDER: '', AI_ACTIVATION_READY: '1', AI_MAIL_READY: '1', AI_ALLOW_FREETEXT: '1' };
 
+/** @param {Record<string, string>} [env] */
 function aufbau(env = ENV) {
   const config = createAiConfig(env, { allowedHosts: [HOST] });
+  /** @type {Array<{ pfad: string, body: unknown }>} */
   const zentrum = [];
+  /** @type {Array<{ url: string, headers: Record<string, string>, body: Record<string, any> }>} */
   const azure = [];
   const jetonClient = createJetonClient({
     configProvider: () => config,
     merkezFetchImpl: async (pfad, opts) => {
-      zentrum.push({ pfad, body: opts.body });
+      zentrum.push({ pfad, body: opts?.body });
       return { ok: true, status: 200, json: {
         token: 'kurzzeit-jeton-1234', exp: Math.floor(Date.now() / 1000) + 3000,
         endpoint: `https://${HOST}/`, deployment: 'praxura-box', region: 'swedencentral', apiVersion: '2024-10-21'
       } };
     }
   });
+  /** @param {string} url @param {Record<string, any>} opts */
   const fetchImpl = async (url, opts) => {
     azure.push({ url, headers: opts.headers, body: JSON.parse(opts.body) });
     return new Response(JSON.stringify({
@@ -35,10 +39,11 @@ function aufbau(env = ENV) {
       choices: [{ message: { content: JSON.stringify({ to_name: null, to_email: null, subject: 'Termin', body: 'Guten Tag' }) } }]
     }), { status: 200, headers: { 'content-type': 'application/json' } });
   };
+  /** @type {import('./ki-gateway.js').GatewayContext} */
   const context = { auth: { userId: TENANT, tenantId: TENANT, role: 'owner' }, dependencies: {
     config, jetonClient, dictionary: [], ownerDecisionStore: createFakeOwnerDecisionStore({ defaultEnabled: true }),
-    confirmationService: { createChallenge: () => ({ challengeId: 'x', expiresAt: 1, candidates: [] }) },
-    transport: (opts) => chat({ ...opts, fetchImpl })
+    confirmationService: /** @type {import('./ki-gateway.js').GatewayDependencies['confirmationService']} */ (/** @type {unknown} */ ({ createChallenge: () => ({ challengeId: 'x', expiresAt: 1, candidates: [] }) })),
+    transport: (/** @type {Record<string, any>} */ opts) => chat({ ...opts, fetchImpl })
   } };
   return { zentrum, azure, context };
 }

@@ -25,9 +25,64 @@
 //  * `kostentraeger` selbst wird NIE gelöscht (prescriptions.kostentraeger_ik FK,
 //    ON DELETE CASCADE-Kinder). Wegfall = valid_to.
 
+/**
+ * @typedef {{
+ *   verknuepfungsart?: string | null,
+ *   partner_ik?: string | null,
+ *   leistungserbringergruppe?: string | null,
+ *   abrechnungscode?: string | null,
+ *   art_datenlieferung?: string | null,
+ *   uebermittlungsmedium?: string | null,
+ *   bundesland?: string | null,
+ * }} VkgRecordInput
+ */
+
+/**
+ * @typedef {{
+ *   art?: string | number | null,
+ *   plz?: string | null,
+ *   ort?: string | null,
+ *   strasse?: string | null,
+ * }} AnsRecordInput
+ */
+
+/**
+ * @typedef {{
+ *   ik: string,
+ *   name?: string | null,
+ *   namensteile?: string[] | null,
+ *   valid_from?: string | null,
+ *   valid_to?: string | null,
+ *   datenannahmestellen?: VkgRecordInput[],
+ *   anschriften?: AnsRecordInput[],
+ * }} KotrParsedRecord
+ */
+
+/**
+ * @typedef {{ datei: string, gueltigAb: string }} AusgabeMeta
+ */
+
+/**
+ * @typedef {{
+ *   ik: string,
+ *   name?: string | null,
+ *   kurzname?: string | null,
+ *   valid_from?: string | null,
+ *   valid_to?: string | null,
+ *   abrechnender_kt_ik?: string | null,
+ *   ist_abrechnender_kt?: boolean | null,
+ *   quelle?: string | null,
+ *   quelle_stand?: string | null,
+ *   datensatz_status?: string | null,
+ * }} DbKostentraegerRow
+ */
+
 export const ZEICHEN_VDT = /^(\d{4})(\d{2})(\d{2})$/;
 
-/** 'YYYYMMDD' -> 'YYYY-MM-DD' (null bleibt null). */
+/**
+ * 'YYYYMMDD' -> 'YYYY-MM-DD' (null bleibt null).
+ * @param {unknown} v
+ */
 export function vdtZuIso(v) {
   if (!v) return null;
   const m = String(v).match(ZEICHEN_VDT);
@@ -39,6 +94,8 @@ export function vdtZuIso(v) {
  * Heute würde Zeilen mit valid_from in der Zukunft erzeugen. Solange nicht
  * sicher ist, dass alle Kanäle (:stable) den filternden Leser haben, verboten.
  * Wird entfernt, wenn Adim 3 beginnt (eigene Entscheidung, nicht dieselbe Version).
+ * @param {string} stichtag
+ * @param {string} heute
  * @returns {string|null}  Fehlertext oder null
  */
 export function adim2Sperre(stichtag, heute) {
@@ -49,6 +106,7 @@ export function adim2Sperre(stichtag, heute) {
   return null;
 }
 
+/** @param {string} iso */
 export function tagDavor(iso) {
   const d = new Date(`${iso}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() - 1);
@@ -58,13 +116,18 @@ export function tagDavor(iso) {
 /**
  * Je Kassenart (Dateiname-Präfix) die zum Stichtag gültige Ausgabe (neueste mit
  * gueltigAb <= stichtag) und die nächste zukünftige (frühestes gueltigAb > stichtag).
- * @param {Array<{datei:string,gueltigAb:string}>} ausgaben
+ * @param {AusgabeMeta[]} ausgaben
  * @param {string} stichtag ISO
- * @returns {{aktiv: object[], kommend: object[], ohneGueltige: string[]}}
+ * @returns {{aktiv: AusgabeMeta[], kommend: AusgabeMeta[], ohneGueltige: string[]}}
  */
 export function waehleAusgaben(ausgaben, stichtag) {
   const arten = [...new Set(ausgaben.map(a => a.datei.slice(0, 2)))];
-  const aktiv = [], kommend = [], ohneGueltige = [];
+  /** @type {AusgabeMeta[]} */
+  const aktiv = [];
+  /** @type {AusgabeMeta[]} */
+  const kommend = [];
+  /** @type {string[]} */
+  const ohneGueltige = [];
   for (const art of arten) {
     const alle = ausgaben.filter(a => a.datei.slice(0, 2) === art);
     const gueltig = alle.filter(a => a.gueltigAb <= stichtag)
@@ -77,9 +140,14 @@ export function waehleAusgaben(ausgaben, stichtag) {
   return { aktiv, kommend, ohneGueltige };
 }
 
+/** @param {unknown} v */
 const ns = (v) => (v === null || v === undefined ? '' : v);
 
-/** kostentraeger-Zeile aus einem geparsten Datensatz (gleiche Ableitung wie der Erstimport 06.09.2026). */
+/**
+ * kostentraeger-Zeile aus einem geparsten Datensatz (gleiche Ableitung wie der Erstimport 06.09.2026).
+ * @param {KotrParsedRecord} r
+ * @param {AusgabeMeta} ausgabe
+ */
 export function kostentraegerZeile(r, ausgabe) {
   // VKG 01 auf sich selbst (Partner = eigene IK) heisst "rechnet selbst ab" —
   // der Erstimport hat dafür abrechnender_kt_ik = NULL gespeichert (217 Zeilen).
@@ -92,7 +160,7 @@ export function kostentraegerZeile(r, ausgabe) {
     active: true,
     valid_from: vdtZuIso(r.valid_from),
     valid_to: vdtZuIso(r.valid_to),
-    abrechnender_kt_ik: vkg01 ? vkg01.partner_ik : null,
+    abrechnender_kt_ik: vkg01 ? (vkg01.partner_ik ?? null) : null,
     ist_abrechnender_kt: !vkg01,
     quelle: ausgabe.datei,
     quelle_stand: ausgabe.gueltigAb,
@@ -106,15 +174,22 @@ export function kostentraegerZeile(r, ausgabe) {
  * offen (valid_to leer) vor befristet, dann späteres valid_to, dann späteres
  * valid_from, dann die spätere Datei. Ohne das würde ein historischer BK-Satz
  * mit valid_to 2017 die aktive EK-Zeile beenden.
- * @returns {Map<string,{ausgabe:object,r:object}>}
+ * @param {Array<{ausgabe: AusgabeMeta, records: KotrParsedRecord[]}>} dateien
+ * @returns {Map<string,{ausgabe: AusgabeMeta, r: KotrParsedRecord}>}
  */
 export function besteJeIk(dateien) {
+  /** @param {KotrParsedRecord} r */
   const rang = (r) => [r.valid_to ? 0 : 1, r.valid_to || '', r.valid_from || ''];
+  /**
+   * @param {KotrParsedRecord} a
+   * @param {KotrParsedRecord} b
+   */
   const besser = (a, b) => {
     const ra = rang(a), rb = rang(b);
     for (let i = 0; i < 3; i++) { if (ra[i] !== rb[i]) return ra[i] > rb[i]; }
     return true; // Gleichstand: spätere Datei gewinnt
   };
+  /** @type {Map<string,{ausgabe: AusgabeMeta, r: KotrParsedRecord}>} */
   const m = new Map();
   for (const { ausgabe, records } of dateien) {
     for (const r of records) {
@@ -127,17 +202,25 @@ export function besteJeIk(dateien) {
 
 /**
  * Plan für die Tabelle `kostentraeger`.
- * @param {object} p
- * @param {Array} p.dbZeilen        alle Zeilen (ik, name, kurzname, valid_from, valid_to, abrechnender_kt_ik, ist_abrechnender_kt, quelle, quelle_stand, datensatz_status)
- * @param {Array<{ausgabe,records}>} p.aktiv    zum Stichtag gültige Dateien (geparst)
- * @param {Array<{ausgabe,records}>} p.kommend  nächste, noch nicht gültige Dateien (nur für Enddaten)
- * @param {string} p.stichtag
- * @returns {{inserts:object[], patches:Array<{ik,patch,grund}>, unveraendert:number, namensabweichungen:number}}
+ * @param {{
+ *   dbZeilen: DbKostentraegerRow[],
+ *   aktiv: Array<{ausgabe: AusgabeMeta, records: KotrParsedRecord[]}>,
+ *   kommend: Array<{ausgabe: AusgabeMeta, records: KotrParsedRecord[]}>,
+ *   stichtag?: string,
+ * }} p
+ * @returns {{inserts: Array<ReturnType<typeof kostentraegerZeile>>, patches:Array<{ik: string, patch: Record<string, unknown>, grund: string}>, unveraendert:number, namensabweichungen:number}}
  */
 export function planKostentraeger({ dbZeilen, aktiv, kommend, stichtag }) {
   const db = new Map(dbZeilen.map(z => [z.ik, z]));
+  /** @type {Array<ReturnType<typeof kostentraegerZeile>>} */
   const inserts = [];
+  /** @type {Map<string, {patch: Record<string, unknown>, gruende: Set<string>}>} */
   const patchMap = new Map(); // ik -> {patch, gruende:Set}
+  /**
+   * @param {string} ik
+   * @param {Record<string, unknown>} felder
+   * @param {string} grund
+   */
   const patch = (ik, felder, grund) => {
     const e = patchMap.get(ik) || { patch: {}, gruende: new Set() };
     Object.assign(e.patch, felder);
@@ -155,6 +238,7 @@ export function planKostentraeger({ dbZeilen, aktiv, kommend, stichtag }) {
       if (!ist) { inserts.push(soll); continue; }
       if (ist.datensatz_status !== 'echt') continue; // Mock-Zeilen nicht anfassen
       if (ist.name !== soll.name) namensabweichungen++; // nur zählen — Name wird nicht überschrieben
+      /** @type {Record<string, unknown>} */
       const p = {};
       if ((ist.abrechnender_kt_ik ?? null) !== soll.abrechnender_kt_ik) p.abrechnender_kt_ik = soll.abrechnender_kt_ik;
       if (Boolean(ist.ist_abrechnender_kt) !== soll.ist_abrechnender_kt) p.ist_abrechnender_kt = soll.ist_abrechnender_kt;
@@ -183,6 +267,7 @@ export function planKostentraeger({ dbZeilen, aktiv, kommend, stichtag }) {
     }
   }
   // Wegfall: IK steht in der (aktiven oder kommenden) Ausgabe ihrer Kassenart nicht mehr.
+  /** @type {Map<string, {ausgabe: AusgabeMeta, iks: Set<string>}>} */
   const neuesteJeArt = new Map(); // art -> {ausgabe, iks:Set}
   for (const e of [...aktiv, ...kommend]) {
     const art = e.ausgabe.datei.slice(0, 2);
@@ -211,15 +296,25 @@ export function planKostentraeger({ dbZeilen, aktiv, kommend, stichtag }) {
 
 export const VKG_SCHLUESSEL = ['kostentraeger_ik', 'verknuepfungsart', 'partner_ik', 'abrechnungscode', 'art_datenlieferung', 'uebermittlungsmedium', 'bundesland'];
 export const ANS_SCHLUESSEL = ['kostentraeger_ik', 'art', 'plz', 'ort', 'strasse'];
+/**
+ * @param {Record<string, unknown>} z
+ * @param {readonly string[]} felder
+ */
 export const schluessel = (z, felder) => felder.map(f => String(ns(z[f]))).join('|');
 
-/** VKG-/ANS-Sollzeilen der aktiven Dateien (dedupliziert am DB-UNIQUE-Schlüssel, erste gewinnt). */
+/**
+ * VKG-/ANS-Sollzeilen der aktiven Dateien (dedupliziert am DB-UNIQUE-Schlüssel, erste gewinnt).
+ * @param {Array<{ausgabe: AusgabeMeta, records: KotrParsedRecord[]}>} aktiv
+ */
 export function sollZeilen(aktiv) {
-  const vkg = new Map(), ans = new Map();
+  /** @type {Map<string, Record<string, unknown> & { kostentraeger_ik: string, quelle_stand: string }>} */
+  const vkg = new Map();
+  /** @type {Map<string, Record<string, unknown> & { kostentraeger_ik: string, quelle_stand: string }>} */
+  const ans = new Map();
   let ungueltigeAnschriften = 0;
   for (const { ausgabe, records } of aktiv) {
     for (const r of records) {
-      for (const v of r.datenannahmestellen) {
+      for (const v of r.datenannahmestellen || []) {
         const z = {
           kostentraeger_ik: r.ik,
           verknuepfungsart: ns(v.verknuepfungsart),
@@ -262,19 +357,37 @@ export function sollZeilen(aktiv) {
  *
  * Getrennte Listen, weil PostgREST-Bulk-Upserts einen einheitlichen Schlüsselsatz brauchen:
  * ein fehlendes valid_to in einer gemischten Liste würde zu NULL aufgefüllt.
+ *
+ * @param {{
+ *   dbZeilen: Array<Record<string, unknown> & { id: string, kostentraeger_ik: string, valid_to?: string | null }>,
+ *   soll: Map<string, Record<string, unknown> & { kostentraeger_ik: string, quelle_stand: string, valid_from?: string, valid_to?: string | null }>,
+ *   felder: readonly string[],
+ *   vergleich: readonly string[],
+ * }} opts
  */
 export function planKind({ dbZeilen, soll, felder, vergleich }) {
+  /** @type {Map<string, Record<string, unknown> & { id: string, kostentraeger_ik: string, valid_to?: string | null }>} */
   const dbMap = new Map();
   for (const z of dbZeilen) dbMap.set(schluessel(z, felder), z);
+  /** @type {Set<string>} */
   const sollIk = new Set();
+  /** @type {Map<string, string>} */
   const neueAusgabeJeIk = new Map(); // ik -> späteste gültig-ab unter den Sollzeilen
   for (const z of soll.values()) {
     sollIk.add(z.kostentraeger_ik);
     const cur = neueAusgabeJeIk.get(z.kostentraeger_ik);
     if (!cur || z.quelle_stand > cur) neueAusgabeJeIk.set(z.kostentraeger_ik, z.quelle_stand);
   }
+  /** @param {Record<string, unknown>} z */
   const ohneVonBis = (z) => { const { valid_from, valid_to, ...rest } = z; return rest; };
-  const inserts = [], updates = [], reopens = [], closes = [];
+  /** @type {Array<Record<string, unknown>>} */
+  const inserts = [];
+  /** @type {Array<Record<string, unknown>>} */
+  const updates = [];
+  /** @type {Array<Record<string, unknown>>} */
+  const reopens = [];
+  /** @type {Array<{ id: string, valid_to: string }>} */
+  const closes = [];
   for (const [k, z] of soll) {
     const ist = dbMap.get(k);
     if (!ist) { inserts.push(z); continue; }
@@ -284,7 +397,9 @@ export function planKind({ dbZeilen, soll, felder, vergleich }) {
   }
   for (const [k, ist] of dbMap) {
     if (soll.has(k) || !sollIk.has(ist.kostentraeger_ik)) continue;
-    const bis = tagDavor(neueAusgabeJeIk.get(ist.kostentraeger_ik));
+    const tag = neueAusgabeJeIk.get(ist.kostentraeger_ik);
+    if (!tag) continue;
+    const bis = tagDavor(tag);
     if (ist.valid_to && ist.valid_to <= bis) continue; // früheres Ende nie verlängern
     closes.push({ id: ist.id, valid_to: bis });
   }

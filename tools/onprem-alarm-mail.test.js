@@ -8,9 +8,10 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
 const kok = join(dirname(fileURLToPath(import.meta.url)), '..');
-const lies = (...p) => readFileSync(join(kok, ...p), 'utf8').replace(/\r\n/g, '\n'); // Windows-Checkout: CRLF
+const lies = (/** @type {string[]} */ ...p) => readFileSync(join(kok, ...p), 'utf8').replace(/\r\n/g, '\n'); // Windows-Checkout: CRLF
 const mjs = join(kok, 'api-backend', 'setup', 'update-alarm-mail.mjs');
 
+/** @param {Record<string, string>} env */
 function mailLauf(env) {
   const basis = { ...process.env };
   for (const k of Object.keys(basis)) if (k.startsWith('SMTP_')) delete basis[k];
@@ -24,6 +25,10 @@ test('update-alarm-mail.mjs: ohne SMTP_HOST Exit 3, SMTP nicht erreichbar Exit 1
 });
 
 // bildirim_degerlendir aus update.sh herausschneiden und mit gestubbter Mail-Funktion fahren.
+/**
+ * @param {string} quelle
+ * @param {string} name
+ */
 function funktion(quelle, name) {
   const s = quelle.indexOf(`\n${name}() {`);
   assert.ok(s >= 0, name + ' fehlt');
@@ -51,7 +56,7 @@ cat "$NOTIFY_FILE"`;
       const r = spawnSync('bash', ['-c', skript], { encoding: 'utf8' });
       assert.equal(r.status, 0, r.stderr);
       assert.match(r.stdout, /"son_sonuc": "yedek_basarisiz"/, `rc ${mrc}: son_sonuc`);
-      const epoch = Number(r.stdout.match(/"son_basarili_gonderim_epoch": (\d+)/)[1]);
+      const epoch = Number(r.stdout.match(/"son_basarili_gonderim_epoch": (\d+)/)?.[1]);
       assert.equal(epoch > 0, epochErwartet, `rc ${mrc}: epoch ${epoch}`);
     } finally { rmSync(dir, { recursive: true, force: true }); }
   }

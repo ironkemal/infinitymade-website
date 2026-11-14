@@ -40,6 +40,12 @@
  * Nur noch die Zuzahlungsrechnung (quittung_zuzahlung) unterliegt der Vorprüfung;
  * die alten RE-<uuid>-Rechnungsarten (rechnung_*) wurden stillgelegt (gkv-302, 09.10.2026).
  */
+/**
+ * Nur noch die Zuzahlungsrechnung (quittung_zuzahlung) unterliegt der Vorprüfung;
+ * die alten RE-<uuid>-Rechnungsarten (rechnung_*) wurden stillgelegt (gkv-302, 09.10.2026).
+ * @param {string} [typ]
+ * @returns {boolean}
+ */
 export function istRechnungsartig(typ) {
   return typ === 'quittung_zuzahlung';
 }
@@ -51,8 +57,9 @@ export function istRechnungsartig(typ) {
  * dazu (IBAN ist nach F7 ohnehin nur „Soll"). Über 250 € kommt Steuernummer/USt-IdNr. dazu.
  * Vorher blockierte die Regel jede Quittung ohne IBAN/Steuernummer.
  * Identisch mit `fehlendePflichtangaben()` im Backend — beim Ändern beide.
- * @param {object} profil
+ * @param {Record<string, any> | null | undefined} profil
  * @param {{betrag?:?number}} [o]  Belegbetrag, falls bekannt
+ * @returns {string[]}
  */
 export function fehlendePflichtangaben(profil, { betrag = null } = {}) {
   const fehlend = [];
@@ -64,7 +71,9 @@ export function fehlendePflichtangaben(profil, { betrag = null } = {}) {
 
 // Modulweiter Cache: die Angaben ändern sich einmal im Jahr, der Druck wird
 // zwanzigmal am Tag geöffnet. `null` = noch nie geladen.
+/** @type {Record<string, any> | null} */
 let _profilCache = null;
+/** @type {string | null} */
 let _profilCacheOwner = null;
 
 /** Nach dem Speichern der Rechnungsdaten aufrufen, sonst blockiert der Druck
@@ -76,7 +85,8 @@ export function abrechnungsprofilCacheLeeren() {
 
 /**
  * Rechnungsrelevante Stammdaten der Praxis (nicht des angemeldeten Nutzers).
- * @returns {Promise<object|null>} `null`, wenn nicht ladbar — dann NICHT blockieren.
+ * @param {{ supabase: any, ownerId: string }} params
+ * @returns {Promise<Record<string, any>|null>} `null`, wenn nicht ladbar — dann NICHT blockieren.
  */
 export async function ladePraxisAbrechnungsProfil({ supabase, ownerId }) {
   if (!ownerId) return null;
@@ -96,7 +106,11 @@ export async function ladePraxisAbrechnungsProfil({ supabase, ownerId }) {
   }
 }
 
-/** URL des Druckbelegs. Zwei Server-Routen, eine Stelle die sie kennt. */
+/**
+ * URL des Druckbelegs. Zwei Server-Routen, eine Stelle die sie kennt.
+ * @param {{ api: string, rxId: string, typ: string, token?: string, drucken?: boolean }} params
+ * @returns {string}
+ */
 export function belegDruckUrl({ api, rxId, typ, token, drucken = false }) {
   const tk = encodeURIComponent(token || '');
   if (typ === 'quittung_zuzahlung') {
@@ -105,6 +119,10 @@ export function belegDruckUrl({ api, rxId, typ, token, drucken = false }) {
   return `${api}/billing/prescription/${rxId}/rechnung?type=${encodeURIComponent(typ)}&token=${tk}${drucken ? '&print=1' : ''}`;
 }
 
+/**
+ * @param {string[]} fehlend
+ * @returns {string}
+ */
 function hinweisHtml(fehlend) {
   return `
     <p style="margin:0 0 12px;color:var(--text-main);line-height:1.55;">
@@ -125,14 +143,7 @@ function hinweisHtml(fehlend) {
  * @param {string} [o.typ='quittung_zuzahlung']  Belegart
  * @param {boolean} [o.drucken=false]            Druckdialog gleich mit öffnen
  * @param {boolean} [o.stillBeiFehler=false]     Popup-Blocker still hinnehmen
- * @param {object} deps
- * @param {object} deps.supabase
- * @param {string} deps.api
- * @param {string} deps.ownerId
- * @param {Function} deps.showHtmlModal
- * @param {Function} deps.showToast
- * @param {Function} deps.gehZuEinstellung   (sectionId, focusId) => void
- * @param {string} [deps.popupFehlerText]
+ * @param {any} deps
  * @returns {Promise<?boolean>} ob das Fenster aufging; `null` = Hinweis auf fehlende
  *          Rechnungsdaten gezeigt (kein Popup-Problem — canli-test 21.10.2026)
  */

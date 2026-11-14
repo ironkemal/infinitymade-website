@@ -14,13 +14,17 @@ import {
 import assert from 'node:assert/strict';
 
 let pass = 0, fail = 0;
+/**
+ * @param {string} name
+ * @param {() => void} fn
+ */
 function test(name, fn) {
   try {
     fn();
     console.log('  ok   ' + name);
     pass++;
   } catch (e) {
-    console.log('  FAIL ' + name + '\n       ' + e.message);
+    console.log('  FAIL ' + name + '\n       ' + (e instanceof Error ? e.message : String(e)));
     fail++;
   }
 }
@@ -167,10 +171,12 @@ test('masks across system+user messages with shared placeholders and nonce', () 
   const { messages: m, unmask, nonce } = maskMessages(messages, {
     entities: [{ value: 'Max Mustermann', type: 'NAME' }]
   });
-  assert.ok(!m[0].content.includes('Max Mustermann'));
-  assert.ok(!m[1].content.includes('Max Mustermann'));
-  assert.equal(m[0].content.match(new RegExp(`⟦NAME_${nonce}_1⟧`, 'g')).length, 1);
-  assert.equal(m[1].content.match(new RegExp(`⟦NAME_${nonce}_1⟧`, 'g')).length, 1);
+  const c0 = /** @type {string} */ (m[0].content);
+  const c1 = /** @type {string} */ (m[1].content);
+  assert.ok(!c0.includes('Max Mustermann'));
+  assert.ok(!c1.includes('Max Mustermann'));
+  assert.equal((c0.match(new RegExp(`⟦NAME_${nonce}_1⟧`, 'g')) || []).length, 1);
+  assert.equal((c1.match(new RegExp(`⟦NAME_${nonce}_1⟧`, 'g')) || []).length, 1);
   assert.equal(unmask(`Hallo ⟦NAME_${nonce}_1⟧`), 'Hallo Max Mustermann');
 });
 
@@ -183,9 +189,10 @@ test('preserves multi-part content (vision) — masks text part only', () => {
     ]
   }];
   const { messages: m, nonce } = maskMessages(messages);
-  assert.ok(!m[0].content[0].text.includes('A123456789'));
-  assert.ok(m[0].content[0].text.includes(`⟦KVNR_${nonce}_1⟧`));
-  assert.equal(m[0].content[1].image_url.url, 'data:image/png;base64,XXX');
+  const parts = /** @type {[{ type: string, text: string }, { type: string, image_url: { url: string } }]} */ (m[0].content);
+  assert.ok(!parts[0].text.includes('A123456789'));
+  assert.ok(parts[0].text.includes(`⟦KVNR_${nonce}_1⟧`));
+  assert.equal(parts[1].image_url.url, 'data:image/png;base64,XXX');
 });
 
 console.log('entitiesFromContacts');
@@ -284,6 +291,10 @@ console.log('Freitext-Lücken (Audit 12.11.2026) - synthetische Daten');
 
 // Everything a model would see: tokens collapsed to their type.
 const WOERTERBUCH = ['Yilmaz', 'Aylin', 'Aylin Yilmaz', 'Hoffmann', 'Koch', 'Li', 'Do'];
+/**
+ * @param {string} text
+ * @param {import('./pii-mask.js').MaskOptions} [opts={}]
+ */
 const sicht = (text, opts = {}) => {
   const r = maskPII(text, { mandantNamen: WOERTERBUCH, ignoreProtected: true, ...opts });
   assert.equal(r.unmask(r.masked), text, 'Maskierung muss verlustfrei sein');

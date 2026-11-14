@@ -14,6 +14,12 @@ const dtfBerlinParts = new Intl.DateTimeFormat('en-US', {
   second: '2-digit',
 });
 
+/**
+ * @param {number} year
+ * @param {number} month
+ * @param {number} day
+ * @returns {boolean}
+ */
 function isValidGregorian(year, month, day) {
   if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
     return false;
@@ -26,6 +32,15 @@ function isValidGregorian(year, month, day) {
   return day <= daysInMonth[month - 1];
 }
 
+/**
+ * @param {number} year
+ * @param {number} monthIndex
+ * @param {number} day
+ * @param {number} [hour]
+ * @param {number} [minute]
+ * @param {number} [second]
+ * @returns {Date}
+ */
 function createUTCDate(year, monthIndex, day, hour = 0, minute = 0, second = 0) {
   const dt = new Date(0);
   dt.setUTCFullYear(year, monthIndex, day);
@@ -33,6 +48,10 @@ function createUTCDate(year, monthIndex, day, hour = 0, minute = 0, second = 0) 
   return dt;
 }
 
+/**
+ * @param {number} ms
+ * @returns {string}
+ */
 function formatInstantBerlin(ms) {
   const dt = new Date(ms);
   if (Number.isNaN(dt.getTime()) || dt.getUTCFullYear() < 1 || dt.getUTCFullYear() > 9999) return '';
@@ -52,6 +71,8 @@ function formatInstantBerlin(ms) {
  * Accepts Date, numeric finite instant (including 0 Epoch), or ISO instant string with explicit tz (Z/+HH:MM).
  * Calendar dates (YYYY-MM-DD, years 0001–9999) remain identical if valid Gregorian.
  * Zoneless datetime, invalid calendar dates, or non-finite values return ''.
+ * @param {any} [zeitpunkt]
+ * @returns {string}
  */
 export function alsBerlinDatum(zeitpunkt) {
   if (zeitpunkt === null || zeitpunkt === undefined) return '';
@@ -104,6 +125,12 @@ export function alsBerlinDatum(zeitpunkt) {
   return '';
 }
 
+/**
+ * @param {number} year
+ * @param {number} month
+ * @param {number} day
+ * @returns {[number, number, number]}
+ */
 function getNextDay(year, month, day) {
   const isLeap = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
   const daysInMonth = [31, isLeap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
@@ -116,6 +143,12 @@ function getNextDay(year, month, day) {
   return [year + 1, 1, 1];
 }
 
+/**
+ * @param {number} year
+ * @param {number} month
+ * @param {number} day
+ * @returns {string | null}
+ */
 function findBerlinMidnightUTC(year, month, day) {
   let candidateMs = createUTCDate(year, month - 1, day, 0, 0, 0).getTime();
   for (let i = 0; i < 6; i++) {
@@ -145,6 +178,8 @@ function findBerlinMidnightUTC(year, month, day) {
 /**
  * Returns { tag, von: UTCISO, bisExklusiv: nextBerlinMidnightUTCISO } for a valid YYYY-MM-DD date.
  * Each boundary is computed independently via bounded iteration; no convergence returns null.
+ * @param {any} tag
+ * @returns {{ tag: string, von: string, bisExklusiv: string } | null}
  */
 export function berlinTagesgrenzen(tag) {
   if (typeof tag !== 'string') return null;

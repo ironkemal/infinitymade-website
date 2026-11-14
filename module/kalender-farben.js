@@ -47,9 +47,9 @@
  * Dashboards, als fester Hexwert, weil `mitDeckkraft()` daraus ein Alpha-Suffix
  * baut (eine CSS-Variable ginge den teureren color-mix-Weg).
  */
-export const STATUS_FARBEN = {
+export const STATUS_FARBEN = /** @type {Record<string, string>} */ ({
   no_show: '#dc2626',
-};
+});
 
 /**
  * Farbe mit Deckkraft für die Blockfläche.
@@ -62,6 +62,10 @@ export const STATUS_FARBEN = {
  *
  * Dreistellige Kurzform (`#abc`) geht bewusst denselben Weg: `#abc` + `22`
  * ergäbe `#abc22`, also eine völlig andere Farbe.
+ * @param {string} farbe
+ * @param {string} [hexSuffix]
+ * @param {string} [anteil]
+ * @returns {string}
  */
 export function mitDeckkraft(farbe, hexSuffix = '22', anteil = '13%') {
   return /^#[0-9a-fA-F]{6}$/.test(farbe)
@@ -72,16 +76,12 @@ export function mitDeckkraft(farbe, hexSuffix = '22', anteil = '13%') {
 /**
  * Fläche und Rand für einen Termin.
  *
- * @param {object} termin
- * @param {object} o
- * @param {Array}  o.teamMembers
- * @param {Array}  o.empFarben        EMP_COLORS
- * @param {Map}    [o.leistungFarben] service_id -> color, für Ansichten, die
- *                                    `services(color)` nicht mitladen
+ * @param {any} termin
+ * @param {{ teamMembers?: Array<{ id: string }>, empFarben?: string[], leistungFarben?: Map<string, string> | null }} [o]
  * @returns {{flaeche: string, rand: string, quelle: 'leistung'|'mitarbeiter'|'status'}}
  */
 export function terminFarben(termin, { teamMembers = [], empFarben = [], leistungFarben = null } = {}) {
-  const statusFarbe = STATUS_FARBEN[termin?.status];
+  const statusFarbe = termin?.status ? STATUS_FARBEN[termin.status] : null;
   if (statusFarbe) return { flaeche: statusFarbe, rand: statusFarbe, quelle: 'status' };
 
   const idx = teamMembers.findIndex(e => e.id === termin?.user_id);

@@ -54,13 +54,22 @@ test('owner can set and read opt-in decision atomically', { skip: POSIX_RECHTE_F
   }
 });
 
+/**
+ * @param {unknown} err
+ * @returns {Error & { code?: string, status?: number }}
+ */
+function asEinwilligungError(err) {
+  return /** @type {Error & { code?: string, status?: number }} */ (err);
+}
+
 test('employee attempt to set opt-in is rejected with 403', async () => {
   const store = createFakeOwnerDecisionStore({ boxId: BOX_ID });
   const authEmployee = { role: 'employee', userId: 'emp-user-1', tenantId: TENANT_A };
 
   await assert.rejects(
     async () => store.set(authEmployee, { enabled: true }),
-    (err) => {
+    (rawErr) => {
+      const err = asEinwilligungError(rawErr);
       assert.equal(err.code, 'KI_OWNER_REQUIRED');
       assert.equal(err.status, 403);
       return true;
@@ -74,7 +83,8 @@ test('owner with tenant mismatch (userId !== tenantId) is rejected', async () =>
 
   await assert.rejects(
     async () => store.set(authMismatch, { enabled: true }),
-    (err) => {
+    (rawErr) => {
+      const err = asEinwilligungError(rawErr);
       assert.equal(err.code, 'KI_OWNER_REQUIRED');
       assert.equal(err.status, 403);
       return true;
@@ -98,7 +108,8 @@ test('missing box identity returns inactive on read and throws on set', async ()
     const auth = { role: 'owner', userId: TENANT_A, tenantId: TENANT_A };
     await assert.rejects(
       async () => store.set(auth, { enabled: true }),
-      (err) => {
+      (rawErr) => {
+        const err = asEinwilligungError(rawErr);
         assert.equal(err.code, 'BOX_IDENTITY_MISSING');
         return true;
       }
@@ -228,9 +239,9 @@ test('fresh reads reject future timestamps, old information version and oversize
     const now = () => Date.parse('2026-10-08T10:00:00.000Z');
     const store = createOwnerDecisionStore({ directory, boxIdProvider: () => BOX_ID, now });
     const auth = { role: 'owner', userId: TENANT_A, tenantId: TENANT_A };
-    await assert.rejects(store.set(auth, { enabled: true, informationVersion: 'old' }), e => e.code === 'KI_EINWILLIGUNG_INVALID');
+    await assert.rejects(store.set(auth, { enabled: true, informationVersion: 'old' }), e => asEinwilligungError(e).code === 'KI_EINWILLIGUNG_INVALID');
     await store.set(auth, { enabled: true });
-    const file = path.join(directory, `${TENANT_A}.json`); const record = JSON.parse(fs.readFileSync(file));
+    const file = path.join(directory, `${TENANT_A}.json`); const record = JSON.parse(fs.readFileSync(file, 'utf8'));
     fs.writeFileSync(file, JSON.stringify({ ...record, decidedAt: '2026-10-08T10:00:01.000Z' }));
     assert.equal((await store.read(TENANT_A)).enabled, false);
     fs.writeFileSync(file, JSON.stringify({ ...record, informationVersion: 'old' }));

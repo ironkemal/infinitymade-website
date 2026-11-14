@@ -17,12 +17,12 @@
  */
 
 /**
- * @param {Array} ownerServices  Einträge aus `services`: {id,title,price,duration_minutes,price_config,gkv_position_nr}
+ * @param {Array<any>} ownerServices  Einträge aus `services`: {id,title,price,duration_minutes,price_config,gkv_position_nr}
  * @param {object} deps
  * @param {Function} deps.escapeHtml
  * @param {Function} deps.formatEur
  * @param {Function} [deps.preisFuer]  optional: (service) => number — Preisauflösung des Aufrufers
- * @param {Array}    [deps.stufen]    optional: benannte Selbstzahler-Preisstufen des Owners
+ * @param {Array<any>} [deps.stufen]   optional: benannte Selbstzahler-Preisstufen des Owners
  *                                    ({id,name,betrag_eur}) — siehe module/selbstzahler-stufen.js
  * @param {Function} [deps.letztePreiseLaden]  optional: () => Promise<[{title,betrag_eur,datum}]>
  *                                    was diesem Patienten zuletzt berechnet wurde
@@ -35,6 +35,7 @@ export function waehleLeistung(ownerServices, deps) {
   return new Promise((resolve) => {
     let resolved = false;
 
+    /** @param {{title:string, quantity:number, unit_price:number}|null} wert */
     function schliessenMit(wert) {
       if (resolved) return;
       resolved = true;
@@ -43,6 +44,7 @@ export function waehleLeistung(ownerServices, deps) {
       resolve(wert);
     }
 
+    /** @param {KeyboardEvent} e */
     function onEsc(e) {
       if (e.key === 'Escape') schliessenMit(null);
     }
@@ -99,10 +101,12 @@ export function waehleLeistung(ownerServices, deps) {
     ].join(';');
     body.appendChild(listeWrap);
 
+    /** @param {any} s */
     function preisVon(s) {
       return preisFuer ? preisFuer(s) : (parseFloat(s.price) || 0);
     }
 
+    /** @param {string} filter */
     function baueListenZeilen(filter) {
       listeWrap.innerHTML = '';
       if (katalog.length === 0) {
@@ -183,6 +187,11 @@ export function waehleLeistung(ownerServices, deps) {
     schnellWrap.hidden = true;
     freiWrap.insertBefore(schnellWrap, freiFelder);  // über den Feldern, die sie füllen
 
+    /**
+     * @param {string} text
+     * @param {number|string} betrag
+     * @param {string} [name]
+     */
     function schnellKnopf(text, betrag, name) {
       const b = document.createElement('button');
       b.type = 'button';
@@ -200,6 +209,7 @@ export function waehleLeistung(ownerServices, deps) {
       return b;
     }
 
+    /** @param {Array<any>} letzte */
     function zeigeSchnellpreise(letzte) {
       schnellWrap.innerHTML = '';
       const stufenListe = Array.isArray(stufen) ? stufen : [];
@@ -218,13 +228,15 @@ export function waehleLeistung(ownerServices, deps) {
       schnellWrap.hidden = false;
     }
 
+    /** @param {any} e */
     function schnellKnopfMitTitel(e) {
       const datum = e.datum ? new Date(e.datum) : null;
-      const datumText = (datum && !isNaN(datum)) ? ` (${datum.toLocaleDateString('de-DE')})` : '';
+      const datumText = (datum && !isNaN(/** @type {any} */ (datum))) ? ` (${datum.toLocaleDateString('de-DE')})` : '';
       schnellWrap.appendChild(
         schnellKnopf(`${e.title} · ${formatEur(e.betrag_eur)}${datumText}`, e.betrag_eur, e.title));
     }
 
+    /** @param {string} text */
     function beschriftung(text) {
       const s = document.createElement('span');
       s.style.cssText = 'font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;';

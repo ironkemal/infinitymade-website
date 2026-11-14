@@ -36,19 +36,25 @@ export function fahrtBeendenHinweisHtml() {
 }
 
 // ── Kontext des Fahrt-Ende-Dialogs ─────────────────────────────────────────
+/** @type {{ booking: any, onFertig?: (() => void) | null } | null} */
 let kontext = null; // { booking, onFertig } — nur solange der Dialog von hier geöffnet wurde
 
 /**
  * Beim Öffnen des Dialogs: Buchung bestimmen und Kontext setzen/löschen.
- * @param {{booking?:object, onFertig?:Function}|*} opt  ohne `booking` (z. B. Klick-Event): Termin-Aktionen
- * @param {object|null} cache  `bkActionBookingCache`
+ * @param {{booking?:any, onFertig?:(() => void) | null}|*} [opt]  ohne `booking` (z. B. Klick-Event): Termin-Aktionen
+ * @param {any} [cache]  `bkActionBookingCache`
+ * @returns {any}
  */
 export function fahrtEndOeffnen(opt, cache) {
   kontext = opt && opt.booking ? { booking: opt.booking, onFertig: opt.onFertig } : null;
   return kontext ? kontext.booking : cache;
 }
 
-/** Beim Speichern: die Buchung, für die der Dialog offen ist. */
+/**
+ * Beim Speichern: die Buchung, für die der Dialog offen ist.
+ * @param {any} [cache]
+ * @returns {any}
+ */
 export function fahrtEndAktuell(cache) {
   return kontext ? kontext.booking : cache;
 }
@@ -56,6 +62,7 @@ export function fahrtEndAktuell(cache) {
 /**
  * Nach erfolgreichem Speichern. Mit Kontext: in der Tagesbehandlung bleiben.
  * Ohne: wie bisher Panel schliessen und ins Fahrtenbuch.
+ * @param {{ closeBkActionPanel: () => void, showToast: (msg: string) => void, switchPanel: (panel: string) => void }} param0
  */
 export function fahrtEndAbschluss({ closeBkActionPanel, showToast, switchPanel }) {
   const k = kontext;
@@ -71,8 +78,8 @@ export function fahrtEndAbschluss({ closeBkActionPanel, showToast, switchPanel }
  * über die Telefonnummer gesucht und blieb ohne Nummer leer, bis erst
  * „Beenden" sie füllte (canli-test 30.09.2026). Reihenfolge wie beim Beenden:
  * `bookings.lead_id` (direkt), dann Telefon-Rückfall. Wirft nie, Ergebnis kann null sein.
- * @param {object} sb  Supabase-Client
- * @param {{lead_id?:?string, owner_id?:string, customer_phone?:?string}} b  Buchung
+ * @param {{ from: (table: string) => any }} sb  Supabase-Client
+ * @param {{lead_id?:?string, owner_id?:string, customer_phone?:?string}} [b]  Buchung
  * @returns {Promise<string|null>}
  */
 export async function leadIdFuerFahrt(sb, b) {

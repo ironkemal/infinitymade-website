@@ -12,14 +12,26 @@
  * fast immer am selben Termin geben. Ein Abwählen je Sitzung gibt es noch nicht.
  */
 
-/** Rein: soll diese Sitzung das ergänzende Heilmittel tragen? */
+/**
+ * Rein: soll diese Sitzung das ergänzende Heilmittel tragen?
+ * @param {object} params
+ * @param {{ ergaenzend_position?: string|null, therapie_bereich?: string|null, ergaenzend_einheiten?: number|null, vorrangig_einheiten?: number|null, anzahl_einheiten?: number|null }|null|undefined} params.rx
+ * @param {number} params.bereitsErbracht
+ * @returns {boolean}
+ */
 export function ergaenzendMitbuchen({ rx, bereitsErbracht }) {
   if (!rx?.ergaenzend_position || rx.therapie_bereich === 'podo') return false;
   const max = Number(rx.ergaenzend_einheiten) || Number(rx.vorrangig_einheiten) || Number(rx.anzahl_einheiten) || 0;
   return max > 0 && bereitsErbracht < max;
 }
 
-/** Setzt den Merker an den Sitzungen dieses Termins, sofern die Menge reicht. */
+/**
+ * Setzt den Merker an den Sitzungen dieses Termins, sofern die Menge reicht.
+ * @param {{ from: (table: string) => any }} supabase
+ * @param {string} prescriptionId
+ * @param {string} bookingId
+ * @returns {Promise<void>}
+ */
 export async function bucheErgaenzendMit(supabase, prescriptionId, bookingId) {
   if (!supabase || !prescriptionId || !bookingId) return;
   const { data: rx } = await supabase.from('prescriptions')

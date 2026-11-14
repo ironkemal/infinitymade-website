@@ -41,12 +41,20 @@ test('unbrauchbare Sollzahl prüft nicht', () => {
 
 // ── gleicheSitzungenAb mit einem Supabase-Doppel ───────────────────────────
 
+/**
+ * @param {{
+ *   vorhandene?: Array<{ session_number: number, status?: string, heilmittel_index?: number }>,
+ *   leseFehler?: { message: string } | null,
+ *   schreibFehler?: { message: string } | null,
+ * }} [opts]
+ */
 function supabaseDoppel({ vorhandene = [], leseFehler = null, schreibFehler = null } = {}) {
+  /** @type {Array<{ zeilen: Array<{ session_number: number, status: string, heilmittel_index: number }>, optionen: { onConflict: string, ignoreDuplicates: boolean } }>} */
   const geschrieben = [];
   const kette = {
     select: () => kette,
     eq: () => Promise.resolve({ data: vorhandene, error: leseFehler }),
-    upsert: (zeilen, optionen) => {
+    upsert: (/** @type {Array<{ session_number: number, status: string, heilmittel_index: number }>} */ zeilen, /** @type {{ onConflict: string, ignoreDuplicates: boolean }} */ optionen) => {
       geschrieben.push({ zeilen, optionen });
       return Promise.resolve({ error: schreibFehler });
     },
@@ -239,10 +247,11 @@ test('Altbestand heilmittel_items ohne einheiten: Kapazität und Sitzungen laufe
   const alt = [{ code: 'X0501', bezeichnung: 'KG' }];
   assert.equal(terminZielToplam({ heilmittel_items: alt, anzahl_einheiten: 6 }), 6);
   assert.equal(terminZielToplam({ heilmittel_items: ['KG'], anzahl_einheiten: 6, doppelbehandlung: true }), 3);
+  /** @type {Array<{ session_number: number, status: string, heilmittel_index: number }>} */
   const geschrieben = [];
   const supabase = { from: () => ({
     select: () => ({ eq: async () => ({ data: [], error: null }) }),
-    upsert: async (z) => { geschrieben.push(...z); return { error: null }; },
+    upsert: async (/** @type {Array<{ session_number: number, status: string, heilmittel_index: number }>} */ z) => { geschrieben.push(...z); return { error: null }; },
   }) };
   const r = await gleicheSitzungenAb({ supabase, prescriptionId: 'p', anzahlEinheiten: 6, items: alt });
   assert.equal(r.ergaenzt, 6);

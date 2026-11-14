@@ -35,10 +35,18 @@ import { brandingFelderPruefen } from './branding-felder.js';
 import { pruefePasswort } from '../lib/passwort-regel.js';
 import { setupKapisi, jetonAbgelaufen } from './kapi.js';
 
+/**
+ * @typedef {{ body?: Record<string, unknown>, method: string, path: string }} SetupRequest
+ * @typedef {{
+ *   status: (code: number) => { json: (body: unknown) => unknown },
+ *   json: (body: unknown) => unknown
+ * }} SetupResponse
+ */
+
 const router = express.Router();
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  /** @type {string} */ (process.env.SUPABASE_URL),
+  /** @type {string} */ (process.env.SUPABASE_SERVICE_ROLE_KEY),
   { auth: { persistSession: false } }
 );
 
@@ -51,6 +59,10 @@ const FACHBEREICHE = new Set(['podologie', 'physiotherapy', 'ergotherapie', 'log
 // Zeitkonstanter Vergleich gegen die Umgebungsvariable — DAS ist die
 // eigentliche Pruefung. praxura_setup.token_sha256 ist nur der Nachweis
 // danach, keine zweite Pruefung (db/migrations/0005, Kommentar).
+/**
+ * @param {unknown} eingabe
+ * @returns {boolean}
+ */
 function tokenGueltig(eingabe) {
   const erwartet = process.env.SETUP_TOKEN || '';
   if (!erwartet || typeof eingabe !== 'string' || eingabe.length === 0) return false;
@@ -91,7 +103,7 @@ async function istAbgeschlossen() {
 // (tools/onprem-setup-kapi.test.js prüft das am Router-Stack).
 router.use(setupKapisi({ istAbgeschlossen }));
 
-router.get('/status', async (req, res) => {
+router.get('/status', async (/** @type {SetupRequest} */ req, /** @type {SetupResponse} */ res) => {
   const { data } = await supabase
     .from('praxura_setup')
     .select('verbraucht_am, abgeschlossen_am')
@@ -111,15 +123,21 @@ router.get('/status', async (req, res) => {
 // EINE Anzeige-Logik braucht. "gri" heisst immer "nicht gemessen/gemessen aber
 // die Erwartung ist veraltet" — NIE ein Blocker (Dilim-2-Sperre: Kontrollen
 // zeigen, sperren aber den Abschluss nicht).
+/**
+ * @param {import('./selbstpruefung.js').SchemaZaehlerErgebnis | null} z
+ */
 function schemaZaehlerUebersetzen(z) {
   if (!z) return { status: 'gri', neden: 'Selbstcheck ist beim Start nicht gelaufen (keine DATABASE_URL?).' };
   if (z.status === 'ok') return { status: 'gruen' };
   if (z.status === 'veraltet') {
     return { status: 'gri', neden: `Erwartete Werte sind fuer bis_version ${z.bis_version} hinterlegt, Box ist bei ${z.aktuelleVersion} — Erwartung aktualisieren ("şema güncelle").` };
   }
-  const fmt = (v) => (Array.isArray(v) ? JSON.stringify(v) : v);
+  const fmt = (/** @type {unknown} */ v) => (Array.isArray(v) ? JSON.stringify(v) : v);
   return { status: 'kirmizi', neden: `Abweichung: ${z.abweichungen.map((a) => `${a.name} soll=${fmt(a.soll)} ist=${fmt(a.ist)}`).join(', ')}` };
 }
+/**
+ * @param {{ status: string, neden?: string, fingerprint?: string | null }} r
+ */
 function einfachUebersetzen(r) {
   // fingerprint (nur verschluesselungsTest()) bleibt erhalten — §5.4/8 verlangt
   // ihn im Panel, nicht nur ein gruenes Haekchen.
@@ -129,12 +147,15 @@ function einfachUebersetzen(r) {
   return { status: 'kirmizi', neden, ...rest };
 }
 
+/**
+ * @param {string | null} ownerUserId
+ */
 async function billigePruefungenLaufen(ownerUserId) {
   const schema = schemaZaehlerUebersetzen(schemaZaehlerLesen());
   const rls = einfachUebersetzen(
     await rlsNegativTest({
       adminClient: supabase,
-      supabaseUrl: process.env.SUPABASE_URL,
+      supabaseUrl: /** @type {string} */ (process.env.SUPABASE_URL),
       anonKey: process.env.SUPABASE_ANON_KEY,
       ownerUserId,
     })
@@ -165,7 +186,7 @@ async function billigePruefungenLaufen(ownerUserId) {
 // laesst zusaetzlich §5.4/1/5/8 laufen — bewusst hier und nicht bei jedem
 // /status-Aufruf, sonst koennte jeder Unauthentifizierte durch Wiederholung
 // Testkonten in auth.users erzeugen (onprem-Konsultation, 12.09.2026).
-router.post('/verify', async (req, res) => {
+router.post('/verify', async (/** @type {SetupRequest} */ req, /** @type {SetupResponse} */ res) => {
   const { token, pruefungen } = req.body || {};
   if (!tokenGueltig(token)) return res.status(401).json({ error: 'Ungültiges Jeton' });
 
@@ -181,7 +202,7 @@ router.post('/verify', async (req, res) => {
   res.json({ ok: true, ownerAngelegt: ownerAngelegtErgebnis, billigePruefungen });
 });
 
-router.post('/owner', async (req, res) => {
+router.post('/owner', async (/** @type {SetupRequest} */ req, /** @type {SetupResponse} */ res) => {
   const { token, email, password, business_name, owner_first_name, owner_last_name, sector } = req.body || {};
 
   if (!tokenGueltig(token)) return res.status(401).json({ error: 'Ungültiges Jeton' });
@@ -196,7 +217,7 @@ router.post('/owner', async (req, res) => {
   if (pwFehler) {
     return res.status(400).json({ error: pwFehler });
   }
-  if (!FACHBEREICHE.has(sector)) {
+  if (typeof sector !== 'string' || !FACHBEREICHE.has(sector)) {
     return res.status(400).json({ error: 'Ungültiger Fachbereich' });
   }
   if (typeof business_name !== 'string' || business_name.trim().length === 0) {
@@ -207,7 +228,7 @@ router.post('/owner', async (req, res) => {
   // Owner noch gar kein SMTP haben muss (O-66): kein Bestätigungsmail nötig.
   const { data: newUser, error: authErr } = await supabase.auth.admin.createUser({
     email,
-    password,
+    password: /** @type {string} */ (password),
     email_confirm: true,
   });
   if (authErr) {
@@ -242,7 +263,7 @@ router.post('/owner', async (req, res) => {
   // aber der Jeton bleibt gültig und ein zweiter Versuch kann es beheben —
   // umgekehrt (Jeton zuerst verbrauchen, Konto scheitert) wäre die Box for
   // immer ohne Owner und ohne Weg zurück.
-  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  const tokenHash = crypto.createHash('sha256').update(/** @type {string} */ (token)).digest('hex');
   const { data: verbrauchZeile, error: verbrauchErr } = await supabase
     .from('praxura_setup')
     .update({ verbraucht_am: new Date().toISOString(), token_sha256: tokenHash, owner_user_id: ownerId })
@@ -266,7 +287,7 @@ router.post('/owner', async (req, res) => {
 // setzt abgeschlossen_am (onprem-Konsultation, §7H "Dilim 2", 11.09.2026).
 // Jetongeschützt, nicht über istAbgeschlossen(): der Jeton ist
 // zu diesem Zeitpunkt bereits verbraucht (Schritt 2), das ist erwartet.
-router.post('/abschluss', async (req, res) => {
+router.post('/abschluss', async (/** @type {SetupRequest} */ req, /** @type {SetupResponse} */ res) => {
   const { token } = req.body || {};
   if (!tokenGueltig(token)) return res.status(401).json({ error: 'Ungültiges Jeton' });
 
@@ -297,7 +318,7 @@ router.post('/abschluss', async (req, res) => {
 // Abschluss: der Jeton ist da schon verbraucht (Schritt 2), gilt aber weiter als Ausweis (wie
 // /abschluss). Nach dem Abschluss ist der Weg zu (410) — danach nur noch angemeldet in
 // den Einstellungen. Schreibt nur eine Whitelist von Profilspalten des Owners (branding-felder.js).
-router.post('/branding', async (req, res) => {
+router.post('/branding', async (/** @type {SetupRequest} */ req, /** @type {SetupResponse} */ res) => {
   const { token } = req.body || {};
   if (!tokenGueltig(token)) return res.status(401).json({ error: 'Ungültiges Jeton' });
 

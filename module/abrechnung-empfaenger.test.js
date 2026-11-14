@@ -19,7 +19,7 @@ test('empfaengerFehlerText: 409 Empfänger ohne Hinweis bekommt Neu-erzeugen-Sat
 
 test('empfaengerFehlerText: Backendtext mit Hinweis wird nicht doppelt ergänzt', () => {
   const t = empfaengerFehlerText({ error: 'X geändert. Bitte die Abrechnung neu erzeugen.', code: 'EMPFAENGER_GEAENDERT' }, 409);
-  assert.equal(t.match(/neu erzeugen/g).length, 1);
+  assert.equal(t.match(/neu erzeugen/g)?.length, 1);
 });
 
 test('empfaengerFehlerText: anderer Fehler bleibt unverändert', () => {
@@ -28,6 +28,7 @@ test('empfaengerFehlerText: anderer Fehler bleibt unverändert', () => {
 });
 
 test('pruefeAntwort: stichtagWarnung → Warn-Toast, kein Wurf', () => {
+  /** @type {any[]} */
   const toasts = [];
   const j = pruefeAntwort({ ok: true }, { ok: true, stichtagWarnung: [{ code: 'QUARTALSWECHSEL', stufe: 'warnung', text: 'Quartal prüfen.' }] },
     (m, t) => toasts.push([m, t]));
@@ -40,9 +41,10 @@ test('pruefeAntwort: !ok wirft', () => {
 });
 
 test('empfaengerVorabPruefen: Block wirft, Warnung toastet, Ausfall blockiert nicht', async () => {
-  const antwort = body => async () => ({ ok: true, json: async () => body });
+  const antwort = (/** @type {any} */ body) => async () => ({ ok: true, json: async () => body });
   await assert.rejects(empfaengerVorabPruefen({ apiBase: 'x', token: 't', abrechnungId: '1',
     fetchFn: antwort({ blockiert: true, meldungen: [{ code: 'KEINE_DATENANNAHMESTELLE', stufe: 'block', text: 'Keine Stelle.' }] }) }), /Keine Stelle\. .*neu erzeugen/);
+  /** @type {any[]} */
   const toasts = [];
   await empfaengerVorabPruefen({ apiBase: 'x', token: 't', abrechnungId: '1', showToast: m => toasts.push(m),
     fetchFn: antwort({ blockiert: false, meldungen: [{ code: 'QUARTALSWECHSEL', stufe: 'warnung', text: 'Q prüfen.' }] }) });
@@ -61,6 +63,7 @@ test('meldungsText filtert nach Stufe', () => {
 // -------------------------------------------------------------
 
 function createMockElement(id = '') {
+  /** @type {any} */
   const el = {
     id,
     hidden: false,
@@ -68,20 +71,21 @@ function createMockElement(id = '') {
     innerHTML: '',
     style: {},
     className: '',
-    children: [],
+    children: /** @type {any[]} */ ([]),
     ownerDocument: null,
-    replaceChildren(...newChildren) {
+    replaceChildren(/** @type {any[]} */ ...newChildren) {
       el.children = [...newChildren];
       el.textContent = '';
       el.innerHTML = '';
     },
-    appendChild(child) {
+    appendChild(/** @type {any} */ child) {
       el.children.push(child);
       return child;
     },
-    querySelector(selector) {
+    querySelector(/** @type {string} */ selector) {
       const cls = selector.replace(/^\./, '');
-      const find = node => {
+      /** @type {(node: any) => any} */
+      const find = (node) => {
         if (node.className?.includes(cls)) return node;
         for (const c of node.children || []) {
           const res = find(c);
@@ -91,10 +95,11 @@ function createMockElement(id = '') {
       };
       return find(el);
     },
-    querySelectorAll(selector) {
+    querySelectorAll(/** @type {string} */ selector) {
       const cls = selector.replace(/^\./, '');
+      /** @type {any[]} */
       const list = [];
-      const collect = node => {
+      const collect = (/** @type {any} */ node) => {
         if (node.className?.includes(cls)) list.push(node);
         for (const c of node.children || []) collect(c);
       };
@@ -107,14 +112,15 @@ function createMockElement(id = '') {
 
 function createMockDoc() {
   const elements = new Map();
+  /** @type {any} */
   const doc = {
-    createElement(tag) {
+    createElement(/** @type {string} */ tag) {
       const el = createMockElement();
       el.tagName = tag.toUpperCase();
       el.ownerDocument = doc;
       return el;
     },
-    getElementById(id) {
+    getElementById(/** @type {string} */ id) {
       if (!elements.has(id)) {
         const el = createMockElement(id);
         el.ownerDocument = doc;
@@ -241,7 +247,7 @@ test('renderEmpfaengerCertMetadata: Escaped Subject — HTML-Injektion wird übe
     geprueftAm: '2026-10-03T10:00:00.000Z',
   });
 
-  const subjectSpan = container.children[0].children[1].children.find(c => c.textContent?.includes('BadSubject'));
+  const subjectSpan = container.children[0].children[1].children.find((/** @type {any} */ c) => c.textContent?.includes('BadSubject'));
   assert.ok(subjectSpan);
   assert.equal(subjectSpan.textContent, xssSubject);
   // Keine aktiven HTML-Kindelemente durch Injection
@@ -318,9 +324,10 @@ test('openDasGuideModalController: Sofort-Reset vor await (loadingquick) — kei
   const { doc } = createMockDoc();
   const header = doc.getElementById('dasGuideHeader');
   const certMeta = doc.getElementById('dasGuideCertMeta');
+  /** @type {Record<string, any>} */
   const state = { abrechnungId: 'old-id', abrechnung: { dateiname: 'alte-rechnung.dta' } };
 
-  let resolveDb;
+  let resolveDb = /** @type {any} */ (null);
   const dbPromise = new Promise(r => { resolveDb = r; });
   const supabase = {
     from: () => ({ select: () => ({ eq: () => ({ maybeSingle: () => dbPromise }) }) }),
@@ -349,6 +356,7 @@ test('openDasGuideModalController: Request-Fehlschlag -> saubere Fehlermeldung, 
   resetDasGuideModalStateForTest();
   const { doc } = createMockDoc();
   const certMeta = doc.getElementById('dasGuideCertMeta');
+  /** @type {Record<string, any>} */
   const state = {};
 
   const supabase = {
@@ -385,15 +393,16 @@ test('openDasGuideModalController: A -> B Reorder Race (spätere Antwort von A �
   resetDasGuideModalStateForTest();
   const { doc } = createMockDoc();
   const header = doc.getElementById('dasGuideHeader');
+  /** @type {Record<string, any>} */
   const state = {};
 
-  let resolveA;
+  let resolveA = /** @type {any} */ (null);
   const pA = new Promise(r => { resolveA = r; });
 
   const supabase = {
     from: () => ({
       select: () => ({
-        eq: (col, val) => ({
+        eq: (/** @type {any} */ col, /** @type {any} */ val) => ({
           maybeSingle: async () => {
             if (val === 'id-A') return pA;
             return { data: { id: 'id-B', dateiname: 'Rechnung-B.dta' }, error: null };
@@ -410,7 +419,7 @@ test('openDasGuideModalController: A -> B Reorder Race (spätere Antwort von A �
     supabase,
     state,
     doc,
-    escapeHtml: s => s,
+    escapeHtml: (/** @type {any} */ s) => s,
   });
 
   // 2. Abrechnung B öffnen (schnell)
@@ -419,7 +428,7 @@ test('openDasGuideModalController: A -> B Reorder Race (spätere Antwort von A �
     supabase,
     state,
     doc,
-    escapeHtml: s => s,
+    escapeHtml: (/** @type {any} */ s) => s,
   });
 
   assert.equal(state.abrechnung?.id, 'id-B');
@@ -438,9 +447,10 @@ test('openDasGuideModalController: Close / Reopen Race (geschlossenes Modal wird
   resetDasGuideModalStateForTest();
   const { doc } = createMockDoc();
   const header = doc.getElementById('dasGuideHeader');
+  /** @type {Record<string, any>} */
   const state = {};
 
-  let resolveDb;
+  let resolveDb = /** @type {any} */ (null);
   const pDb = new Promise(r => { resolveDb = r; });
 
   const supabase = {
@@ -478,14 +488,15 @@ for (const sameId of [false, true]) {
   test(`openDasGuideModalController: verzögerter CERTfetch überschreibt ${sameId ? 'Close/Reopen derselben ID' : 'Abrechnung B'} nicht`, async () => {
     resetDasGuideModalStateForTest();
     const { doc } = createMockDoc();
+    /** @type {Record<string, any>} */
     const state = {};
     const certMeta = doc.getElementById('dasGuideCertMeta');
-    let resolveOld;
-    let signalFetch;
+    let resolveOld = /** @type {any} */ (null);
+    let signalFetch = /** @type {any} */ (null);
     const fetchStarted = new Promise(resolve => { signalFetch = resolve; });
     const oldFetch = new Promise(resolve => { resolveOld = resolve; });
     const supabase = {
-      from: () => ({ select: () => ({ eq: (_, id) => ({ maybeSingle: async () => ({
+      from: () => ({ select: () => ({ eq: (/** @type {any} */ _, /** @type {any} */ id) => ({ maybeSingle: async () => ({
         data: { id, dateiname: `${id}.dta`, empfaenger_ik: '661430035' }, error: null,
       }) }) }) }),
       auth: { getSession: async () => ({ data: { session: { access_token: 'tok' } } }) },

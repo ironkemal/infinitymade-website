@@ -38,7 +38,7 @@ let certs;
 try {
   certs = parseAnnahmeliste(rawBytes);
 } catch (err) {
-  console.error(`::error::Fehler beim Parsen der Annahmeliste: ${err.message}`);
+  console.error(`::error::Fehler beim Parsen der Annahmeliste: ${err instanceof Error ? err.message : String(err)}`);
   process.exit(1);
 }
 
@@ -82,16 +82,17 @@ if (abgelaufene.length === certs.length) {
   }
   // Validierung 3: Fingerprints (SHA-256-Set) gegen vorhandene meta.json prüfen
   const existingMetaPath = join(REPO, 'api-backend', 'billing', 'dta', 'trust-anchors', 'meta.json');
+  /** @type {Set<string>} */
   let existingSet = new Set();
 
   if (existsSync(existingMetaPath)) {
     try {
       const existingMeta = JSON.parse(readFileSync(existingMetaPath, 'utf8'));
       if (Array.isArray(existingMeta.zertifikate)) {
-        existingSet = new Set(existingMeta.zertifikate.map(z => z.sha256.toLowerCase()));
+        existingSet = new Set(existingMeta.zertifikate.map((/** @type {{ sha256: string }} */ z) => z.sha256.toLowerCase()));
       }
     } catch (err) {
-      console.warn(`Vorhandene meta.json nicht lesbar: ${err.message}. Behandle als "alles neu".`);
+      console.warn(`Vorhandene meta.json nicht lesbar: ${err instanceof Error ? err.message : String(err)}. Behandle als "alles neu".`);
     }
   }
 

@@ -154,6 +154,7 @@ describe('schema-export-katalog.sql Source Safety & Catalog Compliance', () => {
 // ============================================================================
 // 2. SYNTHETIC FIXTURE BUILDER
 // ============================================================================
+/** @returns {Record<string, any>} */
 function createComprehensiveSyntheticFixture() {
   return {
     metadata: {
@@ -1236,8 +1237,11 @@ describe('Validation & Error Rejection (Fail Fast Guarantee)', () => {
 // 6. CLI EXECUTION & TEMP OUTPUT VERIFICATION
 // ============================================================================
 describe('CLI Execution with Isolated Temporary Directories', () => {
+  /** @type {string} */
   let tempDir;
+  /** @type {string} */
   let inputFilePath;
+  /** @type {string} */
   let outputDirPath;
 
   before(() => {

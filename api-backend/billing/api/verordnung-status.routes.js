@@ -39,14 +39,19 @@ import { pruefePodologieEmpfangsnachweise } from '../utils/podo-empfangsnachweis
 import { hatAbrechnungsRecht } from '../../lib/modulrecht.js';
 
 const router = express.Router();
+/** @type {import('@supabase/supabase-js').SupabaseClient<any>} */
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  /** @type {string} */ (process.env.SUPABASE_URL),
+  /** @type {string} */ (process.env.SUPABASE_SERVICE_ROLE_KEY),
   { auth: { persistSession: false } }
 );
 
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 async function resolveAuth(req, res) {
-  const token = req.headers.authorization?.slice(7);
+  const token = typeof req.headers.authorization === 'string' ? req.headers.authorization.slice(7) : '';
   if (!token) { res.status(401).json({ error: 'Missing bearer token' }); return null; }
 
   const { data: u, error: uErr } = await supabase.auth.getUser(token);
@@ -63,15 +68,18 @@ async function resolveAuth(req, res) {
 /**
  * Praxen, für die ein Mitarbeiter das Recht 'abrechnung' haben kann: die der Verordnung, sonst seine eigenen Zuordnungen beim Inhaber
  * (prescriptions.business_id darf leer sein). Fehler → leere Liste → Ablehnung (fail closed).
+ * @param {any} db
+ * @param {{ userId: string, ownerId: string, businessId?: string | null }} p
+ * @returns {Promise<string[]>}
  */
 export async function praxenFuerPruefung(db, { userId, ownerId, businessId }) {
   if (businessId) return [businessId];
   try {
     const { data: zuo } = await db.from('employee_business_assignments').select('business_id').eq('employee_id', userId);
-    const ids = (zuo || []).map(z => z.business_id).filter(Boolean);
+    const ids = (zuo || []).map((/** @type {any} */ z) => z.business_id).filter(Boolean);
     if (!ids.length) return [];
     const { data: eigene } = await db.from('businesses').select('id').eq('owner_id', ownerId).in('id', ids);
-    return (eigene || []).map(b => b.id);
+    return (eigene || []).map((/** @type {any} */ b) => b.id);
   } catch { return []; }
 }
 
@@ -82,6 +90,7 @@ export async function praxenFuerPruefung(db, { userId, ownerId, businessId }) {
 // Von Hand gesetzt hiesse er "ich glaube, das ist eingereicht" — und die
 // Verordnung faellt aus der Abrechnungsliste, ohne dass je eine Datei existiert
 // hat. Das ist der stille Einnahmeverlust, den wir schon einmal hatten.
+/** @type {Record<string, string[]>} */
 const UEBERGAENGE = {
   aktiv:         ['abrechenbar', 'storniert', 'archiviert'],
   abrechenbar:   ['aktiv', 'storniert', 'archiviert'],
@@ -92,6 +101,7 @@ const UEBERGAENGE = {
   archiviert:    [],
 };
 
+/** @type {Record<string, string>} */
 const LABEL = {
   aktiv:         'In Behandlung',
   abrechenbar:   'Bereit zur Abrechnung',
@@ -114,6 +124,7 @@ const NAGEL_PFLICHT_DGS = ['UI1', 'UI2'];
  * importieren (getrennte Laufzeiten), deshalb eigene Kopie. Muss den
  * Whitespace-Strip mittragen: „UI 1" ist das Format, wie es auf Muster 13
  * gedruckt steht (`module/verordnung-pruefung.test.js` deckt genau das ab).
+ * @param {unknown} roh
  */
 function dgStamm(roh) {
   const v = String(roh || '').trim().toUpperCase().replace(/\s+/g, '');
@@ -132,6 +143,7 @@ function dgStamm(roh) {
  * erbrachte Leistung kosten würde. Der Riegel gehört deshalb hierher, wo der
  * Mensch ohnehin gerade hinschaut.
  *
+ * @param {any} v
  * @returns {string[]} leer = darf freigegeben werden
  */
 function fehlendeVerordnungsangaben(v) {
@@ -163,7 +175,7 @@ function fehlendeVerordnungsangaben(v) {
 // sonst laeuft der Storno nicht durch.
 const STORNO_NACH_EINREICHUNG = ['abgerechnet', 'teilabsetzung', 'abgesetzt'];
 
-router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
+router.patch('/verordnung/:id/abrechnungsstatus', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
@@ -243,7 +255,9 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
     // `status` in podologischer Sprache — geschrieben wird unten in
     // `abrechnung_status` uebersetzt. Alle Feldnamen darunter (absetzung_*,
     // storno_*, abrechnung_id) heissen in `prescriptions` genauso.
+    /** @type {Record<string, any>} */
     const patch = { status: ziel };
+    /** @type {any[]} */
     let offenBestaetigt = [];   // Reform S2.3
 
     // ── bereit zur Abrechnung ────────────────────────────────────────────
@@ -291,13 +305,13 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
 
       // M1.9: Vor Bereitstellung prüfen, ob alle 78040-Empfangsnachweise vorliegen und bestätigt sind
       const nachweisGate = await pruefePodologieEmpfangsnachweise({
-        supabase,
+        supabase: /** @type {any} */ (supabase),
         tenantId,
         verordnungId: v.id,
         behandlungen: behRows || [],
       });
       if (!nachweisGate.ok) {
-        return res.status(nachweisGate.status).json({
+        return res.status(nachweisGate.status ?? 422).json({
           error: nachweisGate.error,
           fehlendeBehandlungIds: nachweisGate.fehlendeBehandlungIds,
         });
@@ -382,12 +396,12 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
     return res.json({ ok: true, status: ziel, label: LABEL[ziel], vorher: jetzt });
   } catch (e) {
     console.error('[verordnung/abrechnungsstatus]', e);
-    return res.status(500).json({ error: e.message });
+    return res.status(500).json({ error: e instanceof Error ? e.message : String(e) });
   }
 });
 
 // Ein Zaehler je Status — die Filterleiste der Patientenliste haengt daran.
-router.get('/verordnung/abrechnungsstatus/uebersicht', async (req, res) => {
+router.get('/verordnung/abrechnungsstatus/uebersicht', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
@@ -399,6 +413,7 @@ router.get('/verordnung/abrechnungsstatus/uebersicht', async (req, res) => {
       .eq('therapie_bereich', 'podo');
     if (error) return res.status(500).json({ error: error.message });
 
+    /** @type {Record<string, number>} */
     const zaehler = {};
     for (const r of (data || [])) {
       const s = statusAusAbrechnungStatus(r.abrechnung_status);
@@ -407,7 +422,7 @@ router.get('/verordnung/abrechnungsstatus/uebersicht', async (req, res) => {
     return res.json({ ok: true, zaehler, labels: LABEL });
   } catch (e) {
     console.error('[verordnung/uebersicht]', e);
-    return res.status(500).json({ error: e.message });
+    return res.status(500).json({ error: e instanceof Error ? e.message : String(e) });
   }
 });
 

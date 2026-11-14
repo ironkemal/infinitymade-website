@@ -6,14 +6,17 @@ import { slotParameter } from './slot-parameter.js';
 const source = readFileSync(new URL('../server.js', import.meta.url), 'utf8');
 const routeSource = source.slice(source.indexOf("app.post('/api/booking/get-slots'"), source.indexOf("app.post('/api/booking/create'"));
 function fixture() {
-  let handler; const calls = [];
+  /** @type {any} */
+  let handler;
+  /** @type {any[][]} */
+  const calls = [];
   vm.runInNewContext(routeSource, {
-    app: { post: (_path, _limiter, fn) => { handler = fn; } }, slotsLookupLimiter() {},
+    app: { post: (/** @type {any} */ _path, /** @type {any} */ _limiter, /** @type {any} */ fn) => { handler = fn; } }, slotsLookupLimiter() {},
     slotParameter, SLOT_STEP_MINUTES: 15, console: { error() {} },
-    getAvailableSlots: async (...args) => { calls.push(args); return { slots: ['09:00', '09:15'] }; }
+    getAvailableSlots: async (/** @type {any[]} */ ...args) => { calls.push(args); return { slots: ['09:00', '09:15'] }; }
   });
-  return { calls, async run(patch) {
-    const res = { code: 200, status(code) { this.code = code; return this; }, json(body) { this.body = body; return this; } };
+  return { calls, async run(/** @type {any} */ patch) {
+    const res = { code: 200, body: /** @type {any} */ (undefined), status(/** @type {number} */ code) { this.code = code; return this; }, json(/** @type {any} */ body) { this.body = body; return this; } };
     await handler({ body: { userId: 'synthetic', date: '2099-06-01', duration: 30, ...patch } }, res);
     return res;
   } };
@@ -58,19 +61,20 @@ test('internal slot engine rejects invalid values before database reads', async 
 test('actual slot engine keeps valid numeric/string lookup, buffer and bounded cadence', async () => {
   const start=source.indexOf('async function getAvailableSlots(');
   const end=source.indexOf('// 2. Booking Routes',start);
-  const supabase={from(table){
+  const supabase={from(/** @type {string} */ table){
     const data=table==='working_hours'?{is_active:true,start_time:'09:00',end_time:'10:00'}:
       ['bookings','breaks','time_offs'].includes(table)?[]:null;
+    /** @type {any} */
     const q={}; for(const key of ['select','eq','is','gte','lte','in']) q[key]=()=>q;
     q.single=q.maybeSingle=async()=>({data,error:null});
-    q.then=(resolve,reject)=>Promise.resolve({data,error:null}).then(resolve,reject);
+    q.then=(/** @type {any} */ resolve,/** @type {any} */ reject)=>Promise.resolve({data,error:null}).then(resolve,reject);
     return q;
   }};
   const get=vm.runInNewContext(source.slice(start,end)+';getAvailableSlots',{
     slotParameter,SLOT_STEP_MINUTES:15,supabase,BUSINESS_TZ:'Europe/Berlin',
     berlinDayOfWeek:()=>1,berlinDayBoundsUTC:()=>({start:'2099-06-01T00:00Z',end:'2099-06-01T23:59Z'}),
-    timeToMins:t=>{const[h,m]=t.split(':').map(Number);return h*60+m;},
-    minsToTime:m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`
+    timeToMins:(/** @type {string} */ t)=>{const[h,m]=t.split(':').map(Number);return h*60+m;},
+    minsToTime:(/** @type {number} */ m)=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`
   });
   assert.deepEqual(Array.from((await get('synthetic','2099-06-01',30,null)).slots),['09:00','09:15','09:30']);
   assert.deepEqual(Array.from((await get('synthetic','2099-06-01','30',null,'15','15')).slots),['09:00','09:15']);

@@ -12,6 +12,10 @@ import assert from 'node:assert/strict';
 import { betraegeFuerVerordnung, leistungenAusSessions, zeilenAusDta }
   from './abrechnung-zeilen.js';
 
+/**
+ * @param {Array<{ einzelbetrag: number, anzahl: number, zuzahlungProPos: number }>} sessions
+ * @param {boolean} [befreit]
+ */
 const rx = (sessions, befreit = false) => ({
   patient: { vorname: 'Anna', nachname: 'Muster', kvnr: 'A123456789', belegnummer: '7-1' },
   verordnung: { ausstellungsdatum: '2026-03-01', zuzahlungskennzeichen: befreit ? '1' : '3' },
@@ -52,8 +56,10 @@ test('betraege: anzahl > 1 zaehlt mit, auch bei der Zuzahlung', () => {
 
 test('leistungen tragen genau die vier Felder, die VKZ 04 braucht', () => {
   const l = leistungenAusSessions([
-    { positionsnummer: '2478010', datumLeistung: '2026-03-02', anzahl: 1, einzelbetrag: 28.4,
-      therapistId: 'x', requiredCert: 'MLD', hasCert: true },
+    /** @type {NonNullable<Parameters<typeof leistungenAusSessions>[0]>[number]} */ ({
+      positionsnummer: '2478010', datumLeistung: '2026-03-02', anzahl: 1, einzelbetrag: 28.4,
+      therapistId: 'x', requiredCert: 'MLD', hasCert: true,
+    }),
   ]);
   assert.deepEqual(l, [{ datum: '2026-03-02', positionsnummer: '2478010', anzahl: 1, einzelbetrag: 28.4 }]);
 });
@@ -121,8 +127,8 @@ test('zeilenAusDta: die Zeilensumme passt zur Kopfsumme der Route', () => {
       totalZu += Math.min(brutto, p.sessions.reduce((a, s) => a + Number(s.zuzahlungProPos) * Number(s.anzahl || 1), 0) + 10);
     }
   }
-  assert.equal(z.reduce((a, x) => a + x.brutto_eur, 0), +totalBrutto.toFixed(2));
-  assert.equal(z.reduce((a, x) => a + x.zuzahlung_eur, 0), +totalZu.toFixed(2));
+  assert.equal(z.reduce((a, x) => a + Number(x.brutto_eur), 0), +totalBrutto.toFixed(2));
+  assert.equal(z.reduce((a, x) => a + Number(x.zuzahlung_eur), 0), +totalZu.toFixed(2));
 });
 
 test('zeilenAusDta: ein Index ohne Quelle bricht nicht ab', () => {

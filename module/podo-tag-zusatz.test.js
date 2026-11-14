@@ -61,10 +61,13 @@ test('leadStatusLabel: Almanca etiket, bilinmeyen ham, boş —', () => {
 
 // ── Anamnese-Hinweis (S4 P3, gkv-302 30.09.2026) ──
 // Kette: select → eq(patient_id) → eq(ist_aktuell) → eq(fachbereich) → limit. Protokolliert die Filter.
+/** @type {Array<[string, any]>} */
 let gesehen = [];
-const sbMit = (ergebnis) => ({ from(t) {
+/** @param {any} ergebnis */
+const sbMit = (ergebnis) => ({ from(/** @type {string} */ t) {
   assert.equal(t, 'anamnese'); gesehen = [];
-  const k = { select: () => k, eq: (c, v) => { gesehen.push([c, v]); return k; }, limit: async () => ergebnis };
+  /** @type {any} */
+  const k = { select: () => k, eq: (/** @type {string} */ c, /** @type {any} */ v) => { gesehen.push([c, v]); return k; }, limit: async () => ergebnis };
   return k;
 } });
 test('hatAnamnese: Treffer → true, leer → false, Fehler/kein Patient/kein Client → null (dann KEIN Hinweis)', async () => {

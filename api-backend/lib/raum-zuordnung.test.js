@@ -2,14 +2,21 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { raumFelderFuerTermin } from './raum-zuordnung.js';
 
+/**
+ * @param {{ data: unknown, error: unknown }} ergebnis
+ * @returns {import('@supabase/supabase-js').SupabaseClient & { filter: Array<[string, ...unknown[]]> }}
+ */
 function falsch(ergebnis) {
+  /** @type {Array<[string, ...unknown[]]>} */
   const filter = [];
   const kette = {
     select: () => kette,
-    eq: (spalte, wert) => { filter.push([spalte, wert]); return kette; },
+    eq: (/** @type {string} */ spalte, /** @type {unknown} */ wert) => { filter.push([spalte, wert]); return kette; },
     maybeSingle: async () => ergebnis,
   };
-  return { from: tabelle => { filter.push(['tabelle', tabelle]); return kette; }, filter };
+  return /** @type {import('@supabase/supabase-js').SupabaseClient & { filter: Array<[string, ...unknown[]]> }} */ (
+    /** @type {unknown} */ ({ from: (/** @type {string} */ tabelle) => { filter.push(['tabelle', tabelle]); return kette; }, filter })
+  );
 }
 
 test('Ohne Raum bleibt der Termin unverändert, kein Datenbankzugriff', async () => {
@@ -26,7 +33,8 @@ test('Raum mit Standort liefert beide Felder und filtert nach Mandant', async ()
 
 test('Raum ohne Standort setzt keinen Standort', async () => {
   const db = falsch({ data: { id: 'R', business_id: null }, error: null });
-  assert.deepEqual((await raumFelderFuerTermin(db, 'R', 'O')).felder, { room_id: 'R' });
+  const r = await raumFelderFuerTermin(db, 'R', 'O');
+  assert.deepEqual(r.ok ? r.felder : null, { room_id: 'R' });
 });
 
 test('Fremder oder fehlender Raum wird abgewiesen', async () => {

@@ -9,10 +9,15 @@ const migration = new URL('./migrations/0102_termin_mitteilungen_tagesdeckel.sql
 const migration110 = new URL('./migrations/0110_terminerinnerung_vortag.sql', import.meta.url);
 const owner = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const other = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
-const booking = n => `md5('booking-${n}')::uuid`;
-const row = (n, tenant = owner) => `('${tenant}', ${booking(n)}, 'sondertag_geschlossen', '2026-12-24T09:00:00Z', 'fehler', 'IN_ARBEIT')`;
-const insert = (n, tenant = owner) => `INSERT INTO public.termin_mitteilungen(owner_id,booking_id,anlass,termin_beginn,status,fehler_code) VALUES ${row(n, tenant)};`;
+const booking = (/** @type {number | string} */ n) => `md5('booking-${n}')::uuid`;
+const row = (/** @type {number | string} */ n, tenant = owner) => `('${tenant}', ${booking(n)}, 'sondertag_geschlossen', '2026-12-24T09:00:00Z', 'fehler', 'IN_ARBEIT')`;
+const insert = (/** @type {number | string} */ n, tenant = owner) => `INSERT INTO public.termin_mitteilungen(owner_id,booking_id,anlass,termin_beginn,status,fehler_code) VALUES ${row(n, tenant)};`;
 
+/**
+ * @param {string[]} args
+ * @param {string} [input]
+ * @returns {Promise<{ code: number | null, out: string, err: string }>}
+ */
 function command(args, input = '') {
   return new Promise(resolve => {
     const child = spawn('docker', args, { stdio: ['pipe', 'pipe', 'pipe'] });
@@ -28,8 +33,8 @@ function command(args, input = '') {
 
 test('F12 PostgreSQL: atomarer Tagesdeckel in getrennten Sessions', { skip: !enabled, timeout: 60000 }, async t => {
   const name = `praxura-quota-test-${process.pid}`;
-  const sql = text => command(['exec', '-i', name, 'psql', '-h', '127.0.0.1', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=verbose', '-At'], text);
-  const ok = async text => { const r = await sql(text); assert.equal(r.code, 0, r.err); return r.out; };
+  const sql = (/** @type {string} */ text) => command(['exec', '-i', name, 'psql', '-h', '127.0.0.1', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=verbose', '-At'], text);
+  const ok = async (/** @type {string} */ text) => { const r = await sql(text); assert.equal(r.code, 0, r.err); return r.out; };
   const started = await command(['run', '--rm', '--detach', '--name', name, '--network', 'none', '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', 'postgres:17.11']);
   assert.equal(started.code, 0, started.err);
   try {
@@ -56,7 +61,7 @@ test('F12 PostgreSQL: atomarer Tagesdeckel in getrennten Sessions', { skip: !ena
     await ok(await readFile(migration110, 'utf8'));
     await ok('GRANT SELECT,INSERT,UPDATE ON public.termin_mitteilungen TO service_role;');
     const reset = () => ok('TRUNCATE public.termin_mitteilungen;');
-    const seed = count => ok(`INSERT INTO public.termin_mitteilungen(owner_id,booking_id,anlass,termin_beginn,status)
+    const seed = (/** @type {number} */ count) => ok(`INSERT INTO public.termin_mitteilungen(owner_id,booking_id,anlass,termin_beginn,status)
       SELECT '${owner}', md5('booking-'||n)::uuid, 'sondertag_geschlossen', '2026-12-24T09:00:00Z', 'gesendet' FROM generate_series(1,${count}) n;`);
     const waitLock = async () => {
       for (let i = 0; i < 100; i++) {
@@ -127,7 +132,7 @@ test('F12 PostgreSQL: atomarer Tagesdeckel in getrennten Sessions', { skip: !ena
     });
     await t.test('0110: Deckel zaehlt je Anlass – volle Sondertag-Grenze sperrt Erinnerungen nicht (G-6)', async () => {
       await reset(); await seed(500);
-      const erinnerung = n => `INSERT INTO public.termin_mitteilungen(owner_id,booking_id,anlass,termin_beginn,status,fehler_code) VALUES ('${owner}', ${booking(n)}, 'erinnerung_vortag', '2026-12-24T09:00:00Z', 'fehler', 'IN_ARBEIT');`;
+      const erinnerung = (/** @type {number | string} */ n) => `INSERT INTO public.termin_mitteilungen(owner_id,booking_id,anlass,termin_beginn,status,fehler_code) VALUES ('${owner}', ${booking(n)}, 'erinnerung_vortag', '2026-12-24T09:00:00Z', 'fehler', 'IN_ARBEIT');`;
       await ok(erinnerung(501));
       const sondertag = await sql(insert(501));
       assert.notEqual(sondertag.code, 0); assert.match(sondertag.err, /PT429/); // Sondertag bleibt bei 500
@@ -175,13 +180,13 @@ test('F12 Backend: atomare Quota-Ablehnung stoppt Transport und behaelt Teilzaeh
       select() { return q; }, eq() { return q; }, gte() { return q; },
       insert() { op = 'insert'; return q; }, update() { op = 'update'; return q; },
       maybeSingle() { return Promise.resolve(op === 'insert' && ++inserts === 2 ? { data: null, error: { code: 'PT429' } } : { data: { id: 'synthetic' }, error: null }); },
-      then(a,b) { return Promise.resolve({ count: 498, error: null }).then(a,b); },
+      then(/** @type {any} */ a, /** @type {any} */ b) { return Promise.resolve({ count: 498, error: null }).then(a,b); },
     }; return q;
   } };
   const r = await sendeLauf(supabase, { tenantId: owner, userId: owner, ids: ['one','two'],
     lage: { weg: 'smtp', profil: {}, mail: ['one','two'].map(id => ({ termin: { id, start_time:'2026-12-24T09:00:00Z' }, tag:{}, email:'qa@example.invalid' })) },
-    transportFabrik: () => ({ async sendMail() { transports++; } }),
+    transportFabrik: /** @type {any} */ (() => ({ async sendMail() { transports++; } })),
   });
-  assert.equal(r.status,429); assert.equal(r.body.code,'TAGESDECKEL');
-  assert.equal(r.body.gesendet,1); assert.equal(transports,1);
+  assert.equal(r.status,429); assert.equal((/** @type {any} */ (r.body)).code,'TAGESDECKEL');
+  assert.equal((/** @type {any} */ (r.body)).gesendet,1); assert.equal(transports,1);
 });

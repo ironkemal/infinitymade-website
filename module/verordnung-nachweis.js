@@ -25,15 +25,17 @@
  * `prescription_id`, an der das Dokument haengen koennte.
  */
 
+/** @param {string} id @returns {HTMLElement | null} */
 const g = (id) => document.getElementById(id);
 
-/** Die vorgemerkte Datei — hochgeladen wird erst nach dem Speichern. */
+/** Die vorgemerkte Datei — hochgeladen wird erst nach dem Speichern. @type {File | null} */
 let _datei = null;
 
+/** @returns {File | null} */
 export function nachweisVorgemerkt() { return _datei; }
 export function nachweisVerwerfen() {
   _datei = null;
-  const feld = g('rzLhbDatei');
+  const feld = /** @type {HTMLInputElement | null} */ (g('rzLhbDatei'));
   if (feld) feld.value = '';
   zeichneStand();
 }
@@ -50,7 +52,8 @@ function zeichneStand() {
 function sichtbarkeitNachziehen() {
   const streifen = g('rzLhbNachweis');
   if (!streifen) return;
-  const an = !!g('rzLhbBvb')?.checked;
+  const kasten = /** @type {HTMLInputElement | null} */ (g('rzLhbBvb'));
+  const an = !!kasten?.checked;
   streifen.hidden = !an;
   // Abgehakt heisst: die Behauptung ist zurueckgenommen, der Beleg dazu auch.
   if (!an && _datei) nachweisVerwerfen();
@@ -82,12 +85,14 @@ export function verdrahteLhbNachweis() {
       <input type="file" id="rzLhbDatei" accept="image/*,application/pdf" hidden>`;
     anker.appendChild(streifen);
 
-    g('rzLhbKnopf').addEventListener('click', () => g('rzLhbDatei').click());
-    g('rzLhbDatei').addEventListener('change', (e) => {
-      _datei = e.target.files?.[0] || null;
+    const dateiEingabe = /** @type {HTMLInputElement | null} */ (g('rzLhbDatei'));
+    g('rzLhbKnopf')?.addEventListener('click', () => dateiEingabe?.click());
+    dateiEingabe?.addEventListener('change', (e) => {
+      const target = /** @type {HTMLInputElement | null} */ (e.target);
+      _datei = target?.files?.[0] || null;
       zeichneStand();
     });
-    g('rzLhbWeg').addEventListener('click', nachweisVerwerfen);
+    g('rzLhbWeg')?.addEventListener('click', nachweisVerwerfen);
   }
 
   if (!kasten.dataset.lhbNachweisWacht) {
@@ -104,6 +109,8 @@ export function verdrahteLhbNachweis() {
  * eine Datei nicht durchging — der Anwender bekommt einen Hinweis und kann sie
  * in der Patientenakte nachreichen.
  *
+ * @param {{ storage: { from: (bucket: string) => { upload: (pfad: string, datei: File, opts: Record<string, unknown>) => Promise<{ error: unknown }> } }, from: (table: string) => { insert: (row: Record<string, unknown>) => Promise<{ error: unknown }> } } | null | undefined} supabase
+ * @param {{ ownerId?: string, patientId?: string, prescriptionId?: string, userId?: string | null }} params
  * @returns {Promise<{ok:boolean, fehler?:string}>}
  */
 export async function ladeLhbNachweisHoch(supabase, { ownerId, patientId, prescriptionId, userId }) {
@@ -140,6 +147,9 @@ export async function ladeLhbNachweisHoch(supabase, { ownerId, patientId, prescr
     return { ok: true };
   } catch (e) {
     console.warn('[verordnung-nachweis] Upload fehlgeschlagen:', e);
-    return { ok: false, fehler: e?.message || 'Unbekannter Fehler' };
+    const fehler = e && typeof e === 'object' && 'message' in e && typeof e.message === 'string' && e.message
+      ? e.message
+      : 'Unbekannter Fehler';
+    return { ok: false, fehler };
   }
 }

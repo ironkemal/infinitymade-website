@@ -13,9 +13,13 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const lib = path.join(repoRoot, 'onprem', 'lib-health.sh');
 const libPosix = lib.split(path.sep).join('/');
 
+/**
+ * @param {import('node:test').TestContext} t
+ * @param {string} eingabe
+ */
 function einordnen(t, eingabe) {
   const res = spawnSync('bash', ['-c', `source "${libPosix}"; bereitschaft_einordnen "$1"`, '_', eingabe], { encoding: 'utf8' });
-  if (res.error && res.error.code === 'ENOENT') { t.skip('bash nicht gefunden'); return null; }
+  if (res.error && /** @type {NodeJS.ErrnoException} */ (res.error).code === 'ENOENT') { t.skip('bash nicht gefunden'); return null; }
   return res.stdout.trim();
 }
 
@@ -75,6 +79,10 @@ function uebergangsBlock() {
   return m[1];
 }
 
+/**
+ * @param {import('node:test').TestContext} t
+ * @param {string | null} neueLib
+ */
 function laufeUebergang(t, neueLib) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'praxura-uebergang-'));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -89,9 +97,9 @@ function laufeUebergang(t, neueLib) {
     'echo "ergebnis=$(bereitschaft_pruefen 60)"',
   ].join('\n');
   fs.writeFileSync(path.join(dir, 'lauf.sh'), skript);
-  const posix = (p) => p.split(path.sep).join('/');
+  const posix = (/** @type {string} */ p) => p.split(path.sep).join('/');
   const res = spawnSync('bash', [posix(path.join(dir, 'lauf.sh')), posix(dir)], { encoding: 'utf8' });
-  if (res.error && res.error.code === 'ENOENT') { t.skip('bash nicht gefunden'); return null; }
+  if (res.error && /** @type {NodeJS.ErrnoException} */ (res.error).code === 'ENOENT') { t.skip('bash nicht gefunden'); return null; }
   return res;
 }
 
@@ -114,6 +122,7 @@ test('Übergang: frische lib-health.sh aus Schritt 7 wird nachgeladen', (t) => {
 // und `timeout` beendet ihn nicht — install.sh stand in Schritt 14 für immer.
 test('kein `timeout … docker compose` ohne </dev/null in den Box-Skripten', () => {
   const dir = path.join(repoRoot, 'onprem');
+  /** @type {string[]} */
   const treffer = [];
   for (const datei of fs.readdirSync(dir).filter((d) => d.endsWith('.sh'))) {
     const zeilen = fs.readFileSync(path.join(dir, datei), 'utf8').split('\n');

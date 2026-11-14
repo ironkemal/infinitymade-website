@@ -17,6 +17,7 @@ import { createCipheriv, createDecipheriv, randomBytes, createHmac } from 'node:
 const IV_LEN  = 12;   // GCM nonce length (recommended)
 const TAG_LEN = 16;   // GCM auth-tag length
 
+/** @type {Buffer | null} */
 let _key = null;
 
 function getKey() {
@@ -65,7 +66,7 @@ export function rundlaufTest() {
     if (zurueck !== probe) return { ok: false, fehler: 'Rundlauf lieferte nicht denselben Wert zurueck' };
     return { ok: true };
   } catch (err) {
-    return { ok: false, fehler: err.message };
+    return { ok: false, fehler: err instanceof Error ? err.message : String(err) };
   }
 }
 

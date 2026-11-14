@@ -27,13 +27,13 @@
 
 'use strict';
 
-const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
+const escapeHtml = (/** @type {any} */ s) => String(s ?? '').replace(/[&<>"']/g, c => /** @type {string} */ ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-}[c]));
+}[c] || c));
 
-const DE = (d) => {
+const DE = (/** @type {any} */ d) => {
   const x = d instanceof Date ? d : new Date(d);
-  return isNaN(x) ? '' : x.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return isNaN(x.getTime()) ? '' : x.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
 export const VERTRAULICH =
@@ -44,22 +44,14 @@ export const VERTRAULICH =
 
 /**
  * Das Deckblatt als vollständiges HTML-Dokument. Rein — für Tests ohne DOM.
- *
- * @param {object} o
- * @param {object} o.praxis     { name, strasse, ort, telefon, fax }
- * @param {object} o.empfaenger { name, fax, telefon }
- * @param {string} [o.betreff]
- * @param {number|string} [o.seiten]  Gesamtzahl inkl. Deckblatt
- * @param {string} [o.nachricht]
- * @param {string} [o.logoUrl]
- * @param {Date}   [o.datum]
+ * @param {Record<string, any>} [params]
  * @returns {string}
  */
 export function baueFaxDeckblattHtml({
   praxis = {}, empfaenger = {}, betreff = '', seiten = '', nachricht = '',
   logoUrl = '', datum = new Date(),
 } = {}) {
-  const zeile = (label, wert) => wert
+  const zeile = (/** @type {string} */ label, /** @type {any} */ wert) => wert
     ? `<tr><th>${escapeHtml(label)}</th><td>${escapeHtml(wert)}</td></tr>` : '';
   const seitenText = Number(seiten) > 0 ? `${Number(seiten)} (inkl. Deckblatt)` : '';
   const logoHtml = logoUrl ? `<img class="logo" src="${escapeHtml(logoUrl)}" alt="">` : '';
@@ -118,6 +110,7 @@ export function baueFaxDeckblattHtml({
 
 /**
  * Druckfenster öffnen.
+ * @param {Record<string, any>} opts
  * @returns {boolean} false, wenn der Popup-Blocker das Fenster verhindert hat
  */
 export function druckeFaxDeckblatt(opts) {
@@ -134,7 +127,7 @@ export function druckeFaxDeckblatt(opts) {
  * Knopf + kleines Formular in ein Zielelement (Arzt-Detail im Register).
  *
  * @param {HTMLElement} el
- * @param {object} deps { arzt, praxis, logoUrl }
+ * @param {Record<string, any>} [deps] { arzt, praxis, logoUrl }
  */
 export function mountFaxDeckblatt(el, { arzt, praxis = {}, logoUrl = '' } = {}) {
   if (!el || !arzt) return;
@@ -165,21 +158,24 @@ export function mountFaxDeckblatt(el, { arzt, praxis = {}, logoUrl = '' } = {}) 
         <span data-fax-fehler style="font-size:12px;color:var(--danger, #dc2626);margin-left:8px;"></span></div>
     </div>`;
 
-  const form = el.querySelector('[data-fax-form]');
-  el.querySelector('[data-fax-toggle]').addEventListener('click', () => {
+  const form = /** @type {HTMLElement | null} */ (el.querySelector('[data-fax-form]'));
+  el.querySelector('[data-fax-toggle]')?.addEventListener('click', () => {
     // style statt [hidden]: eine display-Regel überstimmt das Attribut.
-    form.style.display = form.style.display === 'none' ? 'grid' : 'none';
+    if (form) form.style.display = form.style.display === 'none' ? 'grid' : 'none';
   });
-  el.querySelector('[data-fax-drucken]').addEventListener('click', () => {
+  el.querySelector('[data-fax-drucken]')?.addEventListener('click', () => {
     const fehler = el.querySelector('[data-fax-fehler]');
-    fehler.textContent = '';
+    if (fehler) fehler.textContent = '';
+    const betreffEl = /** @type {HTMLInputElement | null} */ (el.querySelector('[data-fax-betreff]'));
+    const seitenEl = /** @type {HTMLInputElement | null} */ (el.querySelector('[data-fax-seiten]'));
+    const nachrichtEl = /** @type {HTMLTextAreaElement | null} */ (el.querySelector('[data-fax-nachricht]'));
     const ok = druckeFaxDeckblatt({
       praxis, logoUrl,
       empfaenger: { name: arzt.arzt_name || '', fax: arzt.fax || '', telefon: arzt.telefon || '' },
-      betreff: el.querySelector('[data-fax-betreff]').value.trim(),
-      seiten: el.querySelector('[data-fax-seiten]').value,
-      nachricht: el.querySelector('[data-fax-nachricht]').value,
+      betreff: betreffEl?.value.trim() || '',
+      seiten: seitenEl?.value || '',
+      nachricht: nachrichtEl?.value || '',
     });
-    if (!ok) fehler.textContent = 'Popup wurde blockiert — bitte Popups für diese Seite erlauben.';
+    if (!ok && fehler) fehler.textContent = 'Popup wurde blockiert — bitte Popups für diese Seite erlauben.';
   });
 }

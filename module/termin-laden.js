@@ -79,6 +79,11 @@ export const TERMIN_SELECT = 'id,user_id,business_id,service_id,start_time,end_t
  *
  * `.maybeSingle()` und nicht `.single()`: ein zwischenzeitlich gelöschter
  * Termin ist ein normaler Fall, kein 406-Fehler (CLAUDE.md, Regeln).
+ *
+ * @template {{ id?: string, [key: string]: any }} T
+ * @param {{ from: (table: string) => any }} supabase
+ * @param {T|null|undefined} termin
+ * @returns {Promise<T|Record<string, any>|null>}
  */
 export async function ladeTerminVollstaendig(supabase, termin) {
   if (!supabase || !termin?.id) return termin || null;

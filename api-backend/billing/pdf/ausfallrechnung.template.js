@@ -8,20 +8,26 @@
 //
 // Print flow identical to zuzahlungsrechnung.template.js: browser print-to-PDF.
 
-const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
+/** @type {Record<string, string>} */
+const HTML_ESC = {
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-}[c]));
+};
+/** @param {unknown} s */
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => HTML_ESC[c] ?? c);
 
+/** @param {unknown} n */
 const fmtEur = (n) => (n == null ? '' : Number(n).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })) + ' €';
 // timeZone bewusst gesetzt: der Server läuft in UTC. Ohne die Angabe erschien ein
 // Termin um 00:30 Berliner Zeit mit dem VORTAGSDATUM — auf einem Dokument, dessen
 // Zweck es ist, genau dieses Datum zu behaupten. fmtTime hatte die Zone schon.
+/** @param {Date | string | null | undefined} d */
 const fmtDate = (d) => {
   if (!d) return '';
   const dt = d instanceof Date ? d : new Date(d);
   if (Number.isNaN(dt.getTime())) return '';
   return dt.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' });
 };
+/** @param {Date | string | null | undefined} d */
 const fmtTime = (d) => {
   if (!d) return '';
   const dt = d instanceof Date ? d : new Date(d);
@@ -29,6 +35,7 @@ const fmtTime = (d) => {
   return dt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' });
 };
 
+/** @type {Record<string, string>} */
 const REASON_LABELS = {
   no_show: 'Nicht wahrgenommener Termin (unentschuldigtes Fernbleiben)',
   late_cancel: 'Kurzfristige Terminabsage',
@@ -36,15 +43,16 @@ const REASON_LABELS = {
 
 /**
  * @param {object} opts
- * @param {object} opts.praxis    { name, strasse, plz_ort, telefon, steuernummer, email }
- * @param {object} opts.patient   { nachname, vorname, strasse, plz, ort }
- * @param {object} opts.rechnung  { nummer, datum, faelligkeit }
- * @param {object} opts.termin    { datum (Date/ISO), leistung, reason ('no_show'|'late_cancel') }
- * @param {number} opts.amount_eur
+ * @param {{ name?: string, strasse?: string, plz_ort?: string, telefon?: string, steuernummer?: string, email?: string }} [opts.praxis]
+ * @param {{ nachname?: string, vorname?: string, geburtsdatum?: Date | string | null, strasse?: string, plz?: string, ort?: string }} [opts.patient]
+ * @param {{ nummer?: string, datum?: Date | string, faelligkeit?: Date | string }} [opts.rechnung]
+ * @param {{ datum?: Date | string, leistung?: string, reason?: string }} [opts.termin]
+ * @param {number} [opts.amount_eur]
  * @param {string} [opts.bankverbindung]
- * @param {string} [opts.hinweisText]        custom clause text (businesses.ausfall_hinweis)
+ * @param {string | null} [opts.hinweisText]        custom clause text (businesses.ausfall_hinweis)
  * @param {string} [opts.invoiceFooterText]
  * @param {string} [opts.logoUrl]
+ * @param {{ zahlungsziel_tage?: number | string | null, fusszeile?: string | null, hinweis?: string | null, betreff?: string | null }} [opts.vorlage]
  */
 export function renderAusfallrechnung(opts) {
   const {
@@ -54,7 +62,7 @@ export function renderAusfallrechnung(opts) {
     vorlage = {},
   } = opts;
 
-  const reasonLabel = REASON_LABELS[termin.reason] || REASON_LABELS.no_show;
+  const reasonLabel = REASON_LABELS[termin.reason || 'no_show'] || REASON_LABELS.no_show;
 
   const days = (vorlage?.zahlungsziel_tage && Number(vorlage.zahlungsziel_tage) > 0)
     ? Number(vorlage.zahlungsziel_tage)

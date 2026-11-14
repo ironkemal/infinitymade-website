@@ -2,7 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { checkDisk, diskcheckCli, parseDf } from './diskcheck.mjs';
 
+/** @param {number} percent */
 const df = percent => `Filesystem 1024-blocks Used Available Capacity Mounted on\n/dev/synthetic 1000 ${percent * 10} ${1000 - percent * 10} ${percent}% /synthetic path\n`;
+/**
+ * @param {number} blocks
+ * @param {number} inodes
+ * @param {Array<{ command: string, args: readonly string[] }>} [calls]
+ * @returns {(command: string, args: readonly string[]) => Promise<{ stdout: string }>}
+ */
 const runner = (blocks, inodes, calls = []) => async (command, args) => {
   calls.push({ command, args });
   return { stdout: df(args[0] === '-Pk' ? blocks : inodes) };
@@ -10,6 +17,7 @@ const runner = (blocks, inodes, calls = []) => async (command, args) => {
 
 test('Block- und Inodeschwellen werden unabhängig einschließlich Grenzwerten geprüft', async () => {
   for (const [blocks, inodes, expected] of [[79, 79, 0], [80, 10, 1], [10, 80, 1], [90, 10, 2], [10, 100, 2]]) {
+    /** @type {Array<{ command: string, args: readonly string[] }>} */
     const calls = [];
     const result = await checkDisk({ path: '/synthetic path', run: runner(blocks, inodes, calls) });
     assert.equal(result.exitCode, expected);
@@ -39,6 +47,6 @@ test('CLI validiert Argumente vor jedem Befehl und beschreibt fehlende Alarmieru
   for (const args of [['--path', '-x'], ['--warning', '90', '--critical', '80'], ['--critical', '101'], ['--warning'], ['--oops', '1'], ['--warning', '80', '--warning', '81']]) {
     assert.equal((await diskcheckCli(args, forbidden)).exitCode, 3);
   }
-  assert.match((await diskcheckCli(['--help'], forbidden)).help, /Keine Alarmierung/);
+  assert.match((await diskcheckCli(['--help'], forbidden)).help || '', /Keine Alarmierung/);
   assert.equal((await diskcheckCli(['--warning', '70', '--critical', '80'], runner(75, 10))).exitCode, 1);
 });

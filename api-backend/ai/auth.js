@@ -7,10 +7,17 @@
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  /** @type {string} */ (process.env.SUPABASE_URL),
+  /** @type {string} */ (process.env.SUPABASE_SERVICE_ROLE_KEY),
   { auth: { persistSession: false } }
 );
+
+/**
+ * @typedef {{ userId: string, tenantId: string, role: string }} AiAuthContext
+ * @typedef {{
+ *   status: (code: number) => { json: (body: unknown) => unknown }
+ * }} AiAuthResponse
+ */
 
 // ?token= nur dort, wo der Browser per window.location weitergeleitet wird und
 // keinen Authorization-Header setzen kann (OAuth-Start). Überall sonst würde ein
@@ -18,10 +25,19 @@ const supabase = createClient(
 // Die zwei Rechnungs-GETs in billing/api/abrechnung.routes.js prüfen selbst.
 const QUERY_TOKEN_PFADE = new Set(['/api/gmail/connect', '/api/calendar/google-auth']);
 
+/**
+ * @param {{ method?: string, path?: string }} req
+ * @returns {boolean}
+ */
 export function queryTokenErlaubt(req) {
-  return req.method === 'GET' && QUERY_TOKEN_PFADE.has(req.path);
+  return req.method === 'GET' && typeof req.path === 'string' && QUERY_TOKEN_PFADE.has(req.path);
 }
 
+/**
+ * @param {{ method?: string, path?: string, headers: { authorization?: string }, query?: { token?: unknown }, auth?: AiAuthContext }} req
+ * @param {AiAuthResponse} res
+ * @param {() => void} next
+ */
 export async function requireAuth(req, res, next) {
   try {
     const hdr = req.headers.authorization || '';
@@ -66,6 +82,11 @@ export async function requireAuth(req, res, next) {
 // Nur Inhaber, nach requireAuth. Strenge Form wie ai/router.js:116 — role
 // allein reicht nicht, der Inhaber ist sein eigener Mandant (O-40 /api/status,
 // guvenlik S-60). Die ~12 Inline-Prüfungen bleiben, wo sie sind.
+/**
+ * @param {{ auth?: AiAuthContext }} req
+ * @param {AiAuthResponse} res
+ * @param {() => void} next
+ */
 export function requireOwner(req, res, next) {
   const a = req.auth;
   if (!a || a.role !== 'owner' || a.userId !== a.tenantId) {

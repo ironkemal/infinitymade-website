@@ -35,6 +35,7 @@
 
 import { calcAbrechnungsfallTotals } from '../dta/builder.js';
 
+/** @param {unknown} n */
 const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 
 /**
@@ -48,15 +49,43 @@ const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
  * @returns {{brutto:number, zuzahlung:number, netto:number}}
  */
 export function betraegeFuerVerordnung(p) {
-  const t = calcAbrechnungsfallTotals(p, '01');
+  const t = calcAbrechnungsfallTotals(/** @type {Parameters<typeof calcAbrechnungsfallTotals>[0]} */ (p), '01');
   return { brutto: t.brutto, zuzahlung: t.gesZuzahlung, netto: t.netto };
 }
+
+/**
+ * @typedef {object} DtaSessionInput
+ * @property {string|null} [datumLeistung]
+ * @property {string|null} [positionsnummer]
+ * @property {number} [anzahl]
+ * @property {number} einzelbetrag
+ * @property {number} [zuzahlungProPos]
+ * @property {boolean} [position_frei]
+ */
+
+/**
+ * @typedef {object} DtaPrescriptionZeileInput
+ * @property {{ vorname?: string|null, nachname?: string|null, belegnummer?: string|null, kvnr?: string|null }} [patient]
+ * @property {{ ausstellungsdatum?: string|null, zuzahlungskennzeichen: string, pauschaleFrei?: boolean, pauschZuzahlung?: number }} verordnung
+ * @property {Array<DtaSessionInput>} sessions
+ */
+
+/**
+ * @typedef {object} QuellePrescriptionInput
+ * @property {string} id
+ * @property {string|null} [belegnummer]
+ * @property {string|null} [ausstellungsdatum]
+ * @property {string|null} [therapie_bereich]
+ * @property {string|null} [heilmittel_position]
+ * @property {number|null} [anzahl_einheiten]
+ */
 
 /**
  * Die Sitzungen einer Verordnung als `leistungen`-jsonb.
  * Bewusst nur die vier Felder, die VKZ 04 braucht („nicht zuvor vergütete
  * Positionen", Anlage 1 TP5 V21 §7.4.3) — Therapeut und Zertifikat gehören zur
  * Prüfung vor der Einreichung, nicht in den eingefrorenen Beleg.
+ * @param {Array<DtaSessionInput> | null | undefined} sessions
  */
 export function leistungenAusSessions(sessions) {
   return (Array.isArray(sessions) ? sessions : []).map(s => ({
@@ -81,11 +110,11 @@ export function leistungenAusSessions(sessions) {
  * @param {string} o.ownerId
  * @param {string|null} [o.businessId]
  * @param {string} o.kostentraegerIk   Fallback, wenn die Gruppe keinen trägt
- * @param {{gruppen?: Array<{kostentraegerIk?:string, kartenIk?:string,
+ * @param {{gruppen?: Array<{kostentraegerIk?:string, kartenIk?:string|null,
  *          einzelRechnungsnummer?:string, prescriptionIndices:number[]}>}} o.dta
- * @param {Array<object>} o.prescriptions  DTA-Form, Index = Index in `quellen`
- * @param {Array<object>} o.quellen        rohe `prescriptions`-Zeilen
- * @returns {Array<object>} Zeilen für den INSERT
+ * @param {Array<DtaPrescriptionZeileInput>} o.prescriptions  DTA-Form, Index = Index in `quellen`
+ * @param {Array<QuellePrescriptionInput>} o.quellen        rohe `prescriptions`-Zeilen
+ * @returns {Array<Record<string, unknown>>} Zeilen für den INSERT
  */
 export function zeilenAusDta({ abrechnungId, ownerId, businessId = null,
                                kostentraegerIk, dta, prescriptions, quellen }) {
@@ -97,6 +126,7 @@ export function zeilenAusDta({ abrechnungId, ownerId, businessId = null,
     : [{ kostentraegerIk, kartenIk: null, einzelRechnungsnummer: '0',
          prescriptionIndices: (prescriptions || []).map((_, i) => i) }];
 
+  /** @type {Array<Record<string, unknown>>} */
   const zeilen = [];
   for (const g of gruppen) {
     let sort = 0;
@@ -105,7 +135,7 @@ export function zeilenAusDta({ abrechnungId, ownerId, businessId = null,
       const q = quellen?.[i];
       if (!p || !q) continue;   // darf nicht vorkommen; still auslassen ist besser als abbrechen
 
-      const { brutto, zuzahlung, netto } = betraegeFuerVerordnung(p);
+      const { brutto, zuzahlung, netto } = betraegeFuerVerordnung(/** @type {Parameters<typeof betraegeFuerVerordnung>[0]} */ (p));
       const name = [p.patient?.vorname, p.patient?.nachname].filter(Boolean).join(' ').trim();
 
       zeilen.push({

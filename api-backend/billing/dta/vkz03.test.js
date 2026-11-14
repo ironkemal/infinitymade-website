@@ -15,9 +15,15 @@ import { buildDtaFile, calcAbrechnungsfallTotals } from './builder.js';
 import { preflight, segmenteTrennen } from './preflight.js';
 import { physioFixture } from './fixtures.js';
 
+/** @param {string} inhalt */
 const segmente = (inhalt) => segmenteTrennen(inhalt);
+/** @param {string} inhalt @param {string} tag */
 const findeSegmente = (inhalt, tag) => segmente(inhalt).filter(s => s.startsWith(tag + '+'));
 
+/**
+ * @param {Partial<import('./preflight.js').DtaInput>} [overrides]
+ * @returns {import('./preflight.js').DtaInput}
+ */
 function createVkz03Fixture(overrides = {}) {
   const base = {
     absender:   { ik: '801234561', name: 'Physiopraxis Test' },
@@ -71,7 +77,7 @@ function createVkz03Fixture(overrides = {}) {
     }],
   };
 
-  return { ...base, ...overrides };
+  return /** @type {import('./preflight.js').DtaInput} */ (/** @type {unknown} */ ({ ...base, ...overrides }));
 }
 
 // ---------------------------------------------------------------------------
@@ -184,6 +190,7 @@ test('VKZ 03 Berechnung: 100 € Brutto -> 10 € % + 10 € Pauschale = 20 € 
   // Preflight-Totals stimmen exakt überein
   const pf = preflight(f);
   assert.equal(pf.ok, true);
+  assert.ok(pf.totals);
   assert.equal(pf.totals.brutto, 0.00);
   assert.equal(pf.totals.zuzahlung, 20.00);
   assert.equal(pf.totals.netto, 20.00);
@@ -213,6 +220,7 @@ test('VKZ 03 Berechnung: 5 € Brutto -> 0,50 € % + 4,50 € Pauschale = 5,00 
 
   const pf = preflight(f);
   assert.equal(pf.ok, true);
+  assert.ok(pf.totals);
   assert.equal(pf.totals.brutto, 0.00);
   assert.equal(pf.totals.zuzahlung, 5.00);
   assert.equal(pf.totals.netto, 5.00);
@@ -242,6 +250,7 @@ test('VKZ 03: Explizit freie Positionen werden mit 0 € Zuzahlung gerechnet und
 
   const pf = preflight(f);
   assert.equal(pf.ok, true);
+  assert.ok(pf.totals);
   assert.equal(pf.totals.zuzahlung, 13.00);
   assert.equal(pf.totals.netto, 13.00);
   assert.equal(pf.totals.serviceBrutto, 45.00);
@@ -257,6 +266,7 @@ test('VKZ 03: Mehrere Statusgruppen bilden korrekte GES 00, 11 und 31 Zeilen mit
   p2.patient.kvnr = 'B987654320';
   p2.patient.versichertenstatus = '30000';
   p2.patient.belegnummer = '0000002';
+  assert.ok(p2.urspruenglich);
   p2.urspruenglich.belegnummer = '0000002';
   p2.sessions = [
     { positionsnummer: '10210', datumLeistung: '2026-05-12', anzahl: 1, einzelbetrag: 50.00, zuzahlungProPos: 5.00 },
@@ -305,6 +315,7 @@ test('VKZ 03: fehlt urspruenglich (URI), schlägt Preflight mit P:01006 und Buil
 
 test('VKZ 03: ungültige Absender-IK im URI wird abgewiesen', () => {
   const f = createVkz03Fixture();
+  assert.ok(f.prescriptions[0].urspruenglich);
   f.prescriptions[0].urspruenglich.ikLeistungserbringer = '12345'; // zu kurz
 
   const pf = preflight(f);
@@ -316,6 +327,7 @@ test('VKZ 03: ungültige Absender-IK im URI wird abgewiesen', () => {
 
 test('VKZ 03: ungültige Prüfziffer der Absender-IK im URI wird abgewiesen', () => {
   const f = createVkz03Fixture();
+  assert.ok(f.prescriptions[0].urspruenglich);
   f.prescriptions[0].urspruenglich.ikLeistungserbringer = '801234562'; // falsche Prüfziffer
 
   const pf = preflight(f);
@@ -327,6 +339,7 @@ test('VKZ 03: ungültige Prüfziffer der Absender-IK im URI wird abgewiesen', ()
 
 test('VKZ 03: Sammelrechnungsnummer > 14 Zeichen im URI wird abgewiesen', () => {
   const f = createVkz03Fixture();
+  assert.ok(f.prescriptions[0].urspruenglich);
   f.prescriptions[0].urspruenglich.sammelRechnungsnummer = 'RECHNUNG-2026-001'; // 17 Zeichen
 
   const pf = preflight(f);
@@ -338,6 +351,7 @@ test('VKZ 03: Sammelrechnungsnummer > 14 Zeichen im URI wird abgewiesen', () => 
 
 test('VKZ 03: unzulässige Zeichen in Sammelrechnungsnummer im URI werden abgewiesen', () => {
   const f = createVkz03Fixture();
+  assert.ok(f.prescriptions[0].urspruenglich);
   f.prescriptions[0].urspruenglich.sammelRechnungsnummer = 'R 2026/01'; // Leerzeichen
 
   const pf = preflight(f);
@@ -349,6 +363,7 @@ test('VKZ 03: unzulässige Zeichen in Sammelrechnungsnummer im URI werden abgewi
 
 test('VKZ 03: ungültiges Rechnungsdatum im URI wird abgewiesen', () => {
   const f = createVkz03Fixture();
+  assert.ok(f.prescriptions[0].urspruenglich);
   f.prescriptions[0].urspruenglich.rechnungsdatum = 'ungueltig';
 
   const pf = preflight(f);
@@ -360,6 +375,7 @@ test('VKZ 03: ungültiges Rechnungsdatum im URI wird abgewiesen', () => {
 
 test('VKZ 03: ungültige Belegnummer im URI wird abgewiesen', () => {
   const f = createVkz03Fixture();
+  assert.ok(f.prescriptions[0].urspruenglich);
   f.prescriptions[0].urspruenglich.belegnummer = 'BEL#123'; // ungültiges Sonderzeichen
 
   const pf = preflight(f);
@@ -434,7 +450,7 @@ test('VKZ 03: Nullforderung (0,00 €) wird strikt abgewiesen', () => {
 // 10. Konsistenz & Unverändertes Verhalten für VKZ 01 und VKZ 04
 // ---------------------------------------------------------------------------
 test('VKZ 01: Standardfall erzeugt BES und kein GZF, Netto = Brutto - Zuzahlung', () => {
-  const f = structuredClone(physioFixture);
+  const f = /** @type {import('./preflight.js').DtaInput} */ (/** @type {unknown} */ (structuredClone(physioFixture)));
   f.preflight = false;
   const res = buildDtaFile(f);
 
@@ -451,7 +467,7 @@ test('VKZ 01: Standardfall erzeugt BES und kein GZF, Netto = Brutto - Zuzahlung'
 });
 
 test('VKZ 04: unterstützt pauschKorrektur und erzeugt BES', () => {
-  const f = structuredClone(physioFixture);
+  const f = /** @type {import('./preflight.js').DtaInput} */ (/** @type {unknown} */ (structuredClone(physioFixture)));
   f.vkz = '04';
   f.prescriptions[0].pauschKorrektur = 5.00;
   f.prescriptions[0].urspruenglich = {
@@ -471,7 +487,7 @@ test('VKZ 04: unterstützt pauschKorrektur und erzeugt BES', () => {
 });
 
 test('VKZ 01: freie Position hat synchron 0,00 in EHE und BES-Prozentanteil', () => {
-  const f = structuredClone(physioFixture);
+  const f = /** @type {import('./preflight.js').DtaInput} */ (/** @type {unknown} */ (structuredClone(physioFixture)));
   f.preflight = false;
   f.prescriptions[0].sessions[0].position_frei = true;
   delete f.prescriptions[0].sessions[0].zuzahlungProPos;
@@ -489,7 +505,7 @@ test('VKZ 01: freie Position hat synchron 0,00 in EHE und BES-Prozentanteil', ()
 test('VKZ 03: Boolesche Zuzahlung (true/false) wird strikt abgewiesen', () => {
   for (const b of [true, false]) {
     const f = createVkz03Fixture();
-    f.prescriptions[0].sessions[0].zuzahlungProPos = b;
+    f.prescriptions[0].sessions[0].zuzahlungProPos = /** @type {number} */ (/** @type {unknown} */ (b));
 
     const pf = preflight(f);
     assert.equal(pf.ok, false, `preflight should reject boolean ${b}`);
@@ -526,7 +542,7 @@ test('VKZ 03: position_frei=true mit ungültiger Zuzahlung (true/"") wird strikt
   for (const invalid of [true, '', '   ']) {
     const f = createVkz03Fixture();
     f.prescriptions[0].sessions[0].position_frei = true;
-    f.prescriptions[0].sessions[0].zuzahlungProPos = invalid;
+    f.prescriptions[0].sessions[0].zuzahlungProPos = /** @type {number} */ (/** @type {unknown} */ (invalid));
 
     const pf = preflight(f);
     assert.equal(pf.ok, false);
@@ -538,7 +554,7 @@ test('VKZ 03: position_frei=true mit ungültiger Zuzahlung (true/"") wird strikt
 test('VKZ 03: Anzahl 0 oder negativ wird strikt abgewiesen', () => {
   for (const badQty of [0, -1, -0.5, '0', '-2']) {
     const f = createVkz03Fixture();
-    f.prescriptions[0].sessions[0].anzahl = badQty;
+    f.prescriptions[0].sessions[0].anzahl = /** @type {number} */ (/** @type {unknown} */ (badQty));
 
     const pf = preflight(f);
     assert.equal(pf.ok, false, `preflight should reject qty ${badQty}`);
@@ -550,7 +566,7 @@ test('VKZ 03: Anzahl 0 oder negativ wird strikt abgewiesen', () => {
 test('VKZ 03: Boolesche oder leere Anzahl wird strikt abgewiesen', () => {
   for (const badQty of [true, false, '', '   ']) {
     const f = createVkz03Fixture();
-    f.prescriptions[0].sessions[0].anzahl = badQty;
+    f.prescriptions[0].sessions[0].anzahl = /** @type {number} */ (/** @type {unknown} */ (badQty));
 
     const pf = preflight(f);
     assert.equal(pf.ok, false, `preflight should reject qty ${badQty}`);
@@ -562,7 +578,7 @@ test('VKZ 03: Boolesche oder leere Anzahl wird strikt abgewiesen', () => {
 test('VKZ 03: Nicht-endliche Anzahl (Infinity/NaN) wird strikt abgewiesen', () => {
   for (const badQty of [Infinity, NaN, 'abc']) {
     const f = createVkz03Fixture();
-    f.prescriptions[0].sessions[0].anzahl = badQty;
+    f.prescriptions[0].sessions[0].anzahl = /** @type {number} */ (/** @type {unknown} */ (badQty));
 
     const pf = preflight(f);
     assert.equal(pf.ok, false);
@@ -596,6 +612,7 @@ test('VKZ 03: Gültige String- und Zahlenmengen/-zuzahlungen erzeugen synchrone 
   // Preflight stimmt synchron überein
   const pf = preflight(f);
   assert.equal(pf.ok, true);
+  assert.ok(pf.totals);
   assert.equal(pf.totals.brutto, 0.00);
   assert.equal(pf.totals.zuzahlung, 20.00);
   assert.equal(pf.totals.netto, 20.00);
@@ -622,6 +639,7 @@ test('VKZ 03: Gebrochene Mengen (z.B. 1.5 oder "1,5") werden unterstützt und ex
 
   const pf = preflight(f);
   assert.equal(pf.ok, true);
+  assert.ok(pf.totals);
   assert.equal(pf.totals.zuzahlung, 13.00);
   assert.equal(pf.totals.netto, 13.00);
   assert.equal(pf.totals.serviceBrutto, 30.00);
@@ -640,6 +658,7 @@ test('VKZ 03: Echtes Fehlen der Anzahl (undefined/null) nutzt Standardwert 1', (
 
     const pf = preflight(f);
     assert.equal(pf.ok, true);
+    assert.ok(pf.totals);
     assert.equal(pf.totals.zuzahlung, 15.00);
     assert.equal(pf.totals.serviceBrutto, 50.00);
   }
@@ -676,6 +695,7 @@ test('VKZ 03: position_frei=true mit zuzahlungProPos=0 oder weggelassen ist gül
 
     const pf = preflight(f);
     assert.equal(pf.ok, true);
+    assert.ok(pf.totals);
     assert.equal(pf.totals.zuzahlung, 15.00);
   }
 });
@@ -683,7 +703,7 @@ test('VKZ 03: position_frei=true mit zuzahlungProPos=0 oder weggelassen ist gül
 test('VKZ 03: Nicht-boolescher position_frei-Wert (z.B. "false", "true", 1) wird strikt abgewiesen', () => {
   for (const nonBool of ['false', 'true', 1, 0, [true], {}]) {
     const f = createVkz03Fixture();
-    f.prescriptions[0].sessions[0].position_frei = nonBool;
+    f.prescriptions[0].sessions[0].position_frei = /** @type {boolean} */ (/** @type {unknown} */ (nonBool));
 
     const pf = preflight(f);
     assert.equal(pf.ok, false);
@@ -697,19 +717,19 @@ test('VKZ 03: Array- und Objekt-Eingaben für Finanzfelder werden strikt abgewie
   for (const badVal of [[5], {}, { value: 5 }]) {
     // anzahl
     const fQty = createVkz03Fixture();
-    fQty.prescriptions[0].sessions[0].anzahl = badVal;
+    fQty.prescriptions[0].sessions[0].anzahl = /** @type {number} */ (/** @type {unknown} */ (badVal));
     assert.equal(preflight(fQty).ok, false);
     assert.throws(() => buildDtaFile(fQty), /Anzahl.*ungültig/);
 
     // einzelbetrag
     const fPrice = createVkz03Fixture();
-    fPrice.prescriptions[0].sessions[0].einzelbetrag = badVal;
+    fPrice.prescriptions[0].sessions[0].einzelbetrag = /** @type {number} */ (/** @type {unknown} */ (badVal));
     assert.equal(preflight(fPrice).ok, false);
     assert.throws(() => buildDtaFile(fPrice), /Einzelbetrag.*ungültig/);
 
     // zuzahlungProPos
     const fCopay = createVkz03Fixture();
-    fCopay.prescriptions[0].sessions[0].zuzahlungProPos = badVal;
+    fCopay.prescriptions[0].sessions[0].zuzahlungProPos = /** @type {number} */ (/** @type {unknown} */ (badVal));
     assert.equal(preflight(fCopay).ok, false);
     assert.throws(() => buildDtaFile(fCopay), /Forderungs-Zuzahlung.*ungültig/);
   }
@@ -719,7 +739,7 @@ test('VKZ 03: Mehr als 2 Nachkommastellen bei Menge, Einzelbetrag oder Zuzahlung
   // Menge mit Subcent / mehr als 2 Dezimalstellen
   for (const badQty of [1.234, '1.234', '1,234', 1.005]) {
     const f = createVkz03Fixture();
-    f.prescriptions[0].sessions[0].anzahl = badQty;
+    f.prescriptions[0].sessions[0].anzahl = /** @type {number} */ (/** @type {unknown} */ (badQty));
     const pf = preflight(f);
     assert.equal(pf.ok, false);
     assert.ok(pf.errors.some(e => e.code === 'S:01007' && e.where.includes('anzahl')));

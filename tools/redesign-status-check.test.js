@@ -3,10 +3,16 @@ import assert from 'node:assert/strict';
 import { pruefeStatus, paketZeilen } from './redesign-status-check.mjs';
 
 const kopf = '| ID | Phase | Titel | Typ | Wirkbereich | hängt ab | Status | Commit | Nachweis | Versuche |\n|---|---|---|---|---|---|---|---|---|---|\n';
+/**
+ * @param {string} id
+ * @param {string} status
+ * @param {string} [commit]
+ */
 const zeile = (id, status, commit = '') => `| ${id} | V0 | t | Werkzeug | – | – | ${status} | ${commit} | | |\n`;
+/** @param {{ pakete: string, naechstes?: string, cache?: string, fehlerbuch?: string }} opts */
 const status = ({ pakete, naechstes = 'V0.02', cache = 'a.css ?v=1', fehlerbuch = '' }) =>
   `# S\n## 0 Kurzzustand\n- Cache-Nummern: ${cache}\n- Nächstes Paket: ${naechstes}\n\n## 2 Paketliste\n${kopf}${pakete}\n## 4 Fehlerbuch\n${fehlerbuch}\n`;
-const umgebung = { html: '<link href="a.css?v=1">', istInHead: (sha) => sha === 'abc1234' };
+const umgebung = { html: '<link href="a.css?v=1">', istInHead: (/** @type {string} */ sha) => sha === 'abc1234' };
 
 test('gültiger Stand hat keine Fehler', () => {
   const t = status({ pakete: zeile('V0.01', 'fertig', 'abc1234') + zeile('V0.02', 'offen') });

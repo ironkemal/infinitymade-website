@@ -4,6 +4,12 @@
 //
 // Nur authentifizierte Wege rufen das. Die öffentliche Buchung kennt keinen Raum.
 
+/**
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {string | null | undefined} roomId
+ * @param {string} ownerId
+ * @returns {Promise<{ ok: true, felder: { room_id?: string, business_id?: string } } | { ok: false }>}
+ */
 export async function raumFelderFuerTermin(supabase, roomId, ownerId) {
   if (!roomId) return { ok: true, felder: {} };
   const { data, error } = await supabase

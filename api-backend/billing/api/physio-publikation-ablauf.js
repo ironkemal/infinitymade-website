@@ -14,6 +14,12 @@ export function physioPublikationAktiv(env = process.env) {
 
 export const PHYSIO_KEY_MUSTER = /^[A-Za-z0-9_-]{16,128}$/;
 
+/**
+ * @param {number} status
+ * @param {string} code
+ * @param {string} message
+ * @returns {Error & { status: number, code: string }}
+ */
 function fehler(status, code, message) {
   return Object.assign(new Error(message), { status, code });
 }
@@ -22,15 +28,15 @@ const STANDARD = { reservierePhysioPublikation, berechnePhysioPaketHash, finalis
 
 /**
  * @param {object} p
- * @param {object} p.db
+ * @param {any} p.db
  * @param {string} p.ownerId
  * @param {string} p.key        Idempotency-Key (Client-Retry-Identitaet)
- * @param {object} p.payload    kanonischer Auftrag (prescription_ids, session_ids, ...)
- * @param {(r:object)=>Promise<{paket:object,dateien:Array<{role:'dta'|'auftrag'|'begleit',name:string,bytes:Buffer,contentType:string,pruefeReadback:Function}>,antwort?:object}>} p.erzeuge
+ * @param {any} p.payload    kanonischer Auftrag (prescription_ids, session_ids, ...)
+ * @param {(r:any)=>Promise<{paket:any,dateien:Array<{role:'dta'|'auftrag'|'begleit',name:string,bytes:Buffer,contentType:string,pruefeReadback:(bytes:Buffer)=>Promise<void>|void}>,antwort?:any}>} p.erzeuge
  *        Nur bei worker_granted aufgerufen; bekommt die Reservierung (Nummern, Generation).
  * @param {(abrechnungId:string)=>Promise<{updated_at:string,publication_generation:number,publication_package_sha256:string}>} p.ladeKopfStand
- * @param {object} [p.deps]     Adapter-Overrides fuer Tests
- * @returns {Promise<{replay:boolean, ergebnis:object, antwort?:object}>}
+ * @param {Record<string, any>} [p.deps]     Adapter-Overrides fuer Tests
+ * @returns {Promise<{replay:boolean, ergebnis:any, antwort?:any}>}
  */
 export async function fuehrePhysioPublikationAus({ db, ownerId, key, payload, erzeuge, ladeKopfStand, deps = {} }) {
   const d = { ...STANDARD, ...deps };
@@ -50,6 +56,7 @@ export async function fuehrePhysioPublikationAus({ db, ownerId, key, payload, er
   // Abbruch nur bei deterministischen Fehlern VOR Upload (Erzeugung) bzw. bei bewiesenem
   // Kopf-Konflikt VOR Finalize. Upload-/Finalize-Fehler mit unbekanntem Ausgang: nie abbrechen,
   // gleicher Key setzt fort. Abbruch-Fehler verdeckt den Ursprungsfehler nicht.
+  /** @param {string} grund */
   const abbrechen = async (grund) => {
     try {
       await d.abbrechePhysioPublikation({ db, ownerId, abrechnungId: res.abrechnungId, key, generation: res.generation, grund });
@@ -61,6 +68,7 @@ export async function fuehrePhysioPublikationAus({ db, ownerId, key, payload, er
   const { paket, dateien, antwort } = erzeugt;
   const paketHash = await d.berechnePhysioPaketHash({ db, paket });
 
+  /** @type {any[]} */
   const manifest = [];
   for (const f of dateien) {
     const pfad = `${ownerId}/${res.abrechnungId}/physio-v1/${res.generation}/${f.name}`;

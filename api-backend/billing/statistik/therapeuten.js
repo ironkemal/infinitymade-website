@@ -1,5 +1,11 @@
 // Therapeuten-Auslastung: Termine je bookings.user_id, ohne interne Leistungen.
 // Profile separat laden: user_id verweist auf auth.users, nicht auf profiles.
+/**
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {string} tenantId
+ * @param {string} cutoffIso
+ * @returns {Promise<Array<{ name: string, count: number }>>}
+ */
 export async function loadTherapeutenStatistik(supabase, tenantId, cutoffIso) {
   const counts = new Map();
   const pageSize = 500;
@@ -17,7 +23,8 @@ export async function loadTherapeutenStatistik(supabase, tenantId, cutoffIso) {
     const rows = data || [];
     for (const booking of rows) {
       // Blocker und andere interne Leistungen sind keine Patiententermine.
-      if (booking.services?.is_internal === true) continue;
+      const svc = /** @type {{ is_internal?: boolean } | null | undefined} */ (/** @type {unknown} */ (booking.services));
+      if (svc?.is_internal === true) continue;
       counts.set(booking.user_id, (counts.get(booking.user_id) || 0) + 1);
     }
     if (rows.length < pageSize) break;

@@ -4,7 +4,9 @@ import express from 'express';
 import { createPodoEmpfangsnachweisRouter } from './podo-empfangsnachweis.routes.js';
 
 describe('Podo Empfangsnachweis Routes (Integration via Express)', () => {
+  /** @type {import('node:http').Server} */
   let server;
+  /** @type {string} */
   let baseUrl;
 
   const ownerId = '11111111-1111-4111-8111-111111111111';
@@ -12,6 +14,7 @@ describe('Podo Empfangsnachweis Routes (Integration via Express)', () => {
   const validTreatmentId = '33333333-3333-4333-8333-333333333333';
 
   let mockProfileRole = 'owner';
+  /** @type {string | null} */
   let mockProfileOwnerId = null;
   let mockEmployeeOwnerId = ownerId;
   let mockTreatment = {
@@ -22,6 +25,7 @@ describe('Podo Empfangsnachweis Routes (Integration via Express)', () => {
     storniert_am: null,
     verordnung_id: '44444444-4444-4444-8444-444444444444',
   };
+  /** @type {any} */
   let mockRpcResponse = {
     data: {
       id: '55555555-5555-4555-8555-555555555555',
@@ -35,11 +39,12 @@ describe('Podo Empfangsnachweis Routes (Integration via Express)', () => {
     },
     error: null,
   };
+  /** @type {any} */
   let mockExistingEvent = null;
 
-  const fakeSupabase = {
+  const fakeSupabase = /** @type {any} */ ({
     auth: {
-      async getUser(token) {
+      async getUser(/** @type {string} */ token) {
         if (token === 'valid-owner-token') {
           return { data: { user: { id: ownerId } }, error: null };
         }
@@ -49,10 +54,12 @@ describe('Podo Empfangsnachweis Routes (Integration via Express)', () => {
         return { data: { user: null }, error: { message: 'Invalid token' } };
       },
     },
+    /** @param {string} table */
     from(table) {
       if (table === 'profiles') {
         return {
           select() { return this; },
+          /** @param {string} col @param {string} val */
           eq(col, val) {
             return {
               async maybeSingle() {
@@ -69,15 +76,17 @@ describe('Podo Empfangsnachweis Routes (Integration via Express)', () => {
         };
       }
       if (table === 'podologie_behandlungen') {
+        /** @type {Record<string, any>} */
+        const filter = {};
         return {
           select() { return this; },
+          /** @param {string} col @param {any} val */
           eq(col, val) {
-            this._filter = this._filter || {};
-            this._filter[col] = val;
+            filter[col] = val;
             return this;
           },
           async maybeSingle() {
-            if (this._filter?.id === validTreatmentId && this._filter?.owner_id === ownerId) {
+            if (filter.id === validTreatmentId && filter.owner_id === ownerId) {
               return { data: mockTreatment, error: null };
             }
             return { data: null, error: null };
@@ -97,6 +106,7 @@ describe('Podo Empfangsnachweis Routes (Integration via Express)', () => {
       }
       throw new Error(`Unexpected table: ${table}`);
     },
+    /** @param {string} fn @param {any} args */
     async rpc(fn, args) {
       if (fn === 'podologie_empfangsnachweis_append') {
         if (typeof mockRpcResponse === 'function') {
@@ -106,7 +116,7 @@ describe('Podo Empfangsnachweis Routes (Integration via Express)', () => {
       }
       throw new Error(`Unexpected RPC: ${fn}`);
     },
-  };
+  });
 
   before(async () => {
     const app = express();
@@ -114,9 +124,9 @@ describe('Podo Empfangsnachweis Routes (Integration via Express)', () => {
     const router = createPodoEmpfangsnachweisRouter({ supabase: fakeSupabase });
     app.use(router);
 
-    await new Promise((resolve, reject) => {
+    await new Promise((/** @type {(value?: void) => void} */ resolve, reject) => {
       server = app.listen(0, '127.0.0.1', () => {
-        const port = server.address().port;
+        const port = /** @type {import('node:net').AddressInfo} */ (server.address()).port;
         baseUrl = `http://127.0.0.1:${port}`;
         resolve();
       });
@@ -126,7 +136,7 @@ describe('Podo Empfangsnachweis Routes (Integration via Express)', () => {
 
   after(async () => {
     if (server) {
-      await new Promise(resolve => server.close(resolve));
+      await new Promise((/** @type {(err?: Error) => void} */ resolve) => server.close(resolve));
     }
   });
 

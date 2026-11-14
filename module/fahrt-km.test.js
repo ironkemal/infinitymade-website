@@ -2,8 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { letzterKmStand, startKmFehler } from './fahrt-km.js';
 
-const sb = (werte) => ({
-  from: (t) => {
+const sb = (/** @type {any} */ werte) => ({
+  from: (/** @type {any} */ t) => {
     const q = { select: () => q, eq: () => q, not: () => q, order: () => q, limit: async () => ({ data: werte[t] != null ? [{ end_km: werte[t] }] : [] }) };
     return q;
   },

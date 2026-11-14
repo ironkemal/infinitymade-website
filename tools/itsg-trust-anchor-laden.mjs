@@ -27,7 +27,9 @@ import {
 
 function parseArgs() {
   const args = process.argv.slice(2);
+  /** @type {string | null} */
   let keyPath = null;
+  /** @type {Record<string, string | boolean>} */
   const opts = {};
 
   for (let i = 0; i < args.length; i++) {
@@ -41,7 +43,7 @@ function parseArgs() {
     }
   }
 
-  if (opts.file) keyPath = opts.file;
+  if (typeof opts.file === 'string') keyPath = opts.file;
 
   return { keyPath, opts };
 }
@@ -87,13 +89,13 @@ async function main() {
   try {
     certs = parseAnnahmeliste(rawBytes);
   } catch (err) {
-    console.error(`Fehler beim Parsen der Annahmeliste: ${err.message}`);
+    console.error(`Fehler beim Parsen der Annahmeliste: ${err instanceof Error ? err.message : String(err)}`);
     process.exit(1);
   }
 
   console.log(`\n✅ ${certs.length} Zertifikat(e) erfolgreich geparst.\n`);
 
-  const zielVerzeichnis = opts.verzeichnis || DEFAULT_TRUST_ANCHORS_DIR;
+  const zielVerzeichnis = typeof opts.verzeichnis === 'string' ? opts.verzeichnis : DEFAULT_TRUST_ANCHORS_DIR;
   const quelle = String(opts.quelle).trim();
   const quelleDatum = opts.datum ? String(opts.datum).trim() : new Date().toISOString().split('T')[0];
   const onaylayan = String(opts.onaylayan).trim();
@@ -107,6 +109,7 @@ async function main() {
   });
 
   console.log('--- Extrahierte Vertrauensanker-Zertifikate ---');
+  /** @type {Date | null} */
   let earliestNotAfter = null;
 
   certs.forEach((c, idx) => {
@@ -125,7 +128,7 @@ async function main() {
   console.log('\n--- Zusammenfassung ---');
   console.log(`Zielverzeichnis:       ${zielVerzeichnis}`);
   console.log(`Anzahl Anker:          ${certs.length}`);
-  console.log(`Frühestes Ablaufdatum: ${earliestNotAfter?.toISOString() || 'unbekannt'}`);
+  console.log(`Frühestes Ablaufdatum: ${/** @type {Date | null} */ (earliestNotAfter)?.toISOString() || 'unbekannt'}`);
   console.log(`Quelle:                ${quelle}`);
   console.log(`Abrufdatum:            ${quelleDatum}`);
   console.log(`Onaylayan:             ${onaylayan}`);

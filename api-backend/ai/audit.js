@@ -16,7 +16,47 @@ import { hashRequest, safeAiError, KNOWN_AI_TASKS } from './ki-privacy.js';
 
 export { hashRequest, safeAiError };
 
+/**
+ * @typedef {{ prompt_tokens?: number | null, completion_tokens?: number | null, total_tokens?: number | null }} AiTokenUsage
+ * @typedef {{
+ *   tenantId?: string | null,
+ *   userId?: string | null,
+ *   task: string,
+ *   model?: string | null,
+ *   deployment?: string | null,
+ *   usage?: AiTokenUsage | null,
+ *   latencyMs?: number | null,
+ *   status?: string | null,
+ *   error?: unknown,
+ *   dryRun?: boolean,
+ *   requestHash?: string | null
+ * }} LogCallInput
+ * @typedef {{ calls: number, prompt_tokens: number, completion_tokens: number, total_tokens: number }} TaskAggregate
+ * @typedef {{
+ *   now?: number | Date | (() => number | Date),
+ *   boxId?: string,
+ *   pageSize?: number,
+ *   maxPages?: number,
+ *   knownTasks?: Set<string>
+ * }} UsageAggregateOptions
+ * @typedef {Error & { code?: string }} AuditError
+ */
+
+/**
+ * @param {string} message
+ * @param {string} code
+ * @returns {AuditError}
+ */
+function createAuditError(message, code) {
+  /** @type {AuditError} */
+  const err = new Error(message);
+  err.code = code;
+  return err;
+}
+
+/** @type {import('@supabase/supabase-js').SupabaseClient | null} */
 let defaultSupabase = null;
+/** @returns {import('@supabase/supabase-js').SupabaseClient | null} */
 function getSupabaseClient() {
   if (!defaultSupabase && process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
     defaultSupabase = createClient(
@@ -28,6 +68,11 @@ function getSupabaseClient() {
   return defaultSupabase;
 }
 
+/**
+ * @param {LogCallInput} entry
+ * @param {import('@supabase/supabase-js').SupabaseClient | null} [client=null]
+ * @returns {Promise<void>}
+ */
 export async function logCall({
   tenantId,
   userId,
@@ -49,14 +94,14 @@ export async function logCall({
     }
 
     const safeTask = typeof task === 'string' && KNOWN_AI_TASKS.has(task) ? task : 'unknown';
-    const safeModel = ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'whisper'].includes(model) ? model : null;
+    const safeModel = typeof model === 'string' && ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'whisper'].includes(model) ? model : null;
     const currentCfg = createAiConfig();
     const safeDeployment = (deployment === currentCfg.deployment || (currentCfg.transcribeDeployment && deployment === currentCfg.transcribeDeployment)) ? deployment : null;
-    const safeStatus = ['ok', 'success', 'error', 'blocked'].includes(status) ? status : 'unknown';
+    const safeStatus = typeof status === 'string' && ['ok', 'success', 'error', 'blocked'].includes(status) ? status : 'unknown';
 
-    const pt = Number.isSafeInteger(usage?.prompt_tokens) && usage.prompt_tokens >= 0 ? usage.prompt_tokens : null;
-    const ct = Number.isSafeInteger(usage?.completion_tokens) && usage.completion_tokens >= 0 ? usage.completion_tokens : null;
-    const tt = Number.isSafeInteger(usage?.total_tokens) && usage.total_tokens >= 0 ? usage.total_tokens : null;
+    const pt = Number.isSafeInteger(usage?.prompt_tokens) && typeof usage?.prompt_tokens === 'number' && usage.prompt_tokens >= 0 ? usage.prompt_tokens : null;
+    const ct = Number.isSafeInteger(usage?.completion_tokens) && typeof usage?.completion_tokens === 'number' && usage.completion_tokens >= 0 ? usage.completion_tokens : null;
+    const tt = Number.isSafeInteger(usage?.total_tokens) && typeof usage?.total_tokens === 'number' && usage.total_tokens >= 0 ? usage.total_tokens : null;
 
     const lat = Number.isInteger(latencyMs) ? latencyMs : null;
     const safeErrorCode = error ? safeAiError(error).code : null;
@@ -84,6 +129,12 @@ export async function logCall({
   }
 }
 
+/**
+ * @param {import('@supabase/supabase-js').SupabaseClient | null} supabase
+ * @param {string} tenantId
+ * @param {UsageAggregateOptions} [options={}]
+ * @returns {(at?: number | Date) => Promise<{ reportId: string, windowStart: string, windowEnd: string, taskTotals: Record<string, TaskAggregate> }>}
+ */
 export function makeUsageAggregateSupplier(supabase, tenantId, options = {}) {
   if (!supabase || typeof supabase.from !== 'function') {
     throw new Error('Supabase-Client erforderlich');
@@ -102,6 +153,7 @@ export function makeUsageAggregateSupplier(supabase, tenantId, options = {}) {
 
   // `at` (optional, ms/Date): Tag des Abschlussberichts (O-186) — gleiches Fenster, gleiche reportId.
   return async function usageAggregateSupplier(at) {
+    /** @type {Date} */
     let currentDate;
     if (at != null) {
       currentDate = new Date(at);
@@ -114,9 +166,7 @@ export function makeUsageAggregateSupplier(supabase, tenantId, options = {}) {
     }
 
     if (isNaN(currentDate.getTime())) {
-      const err = new Error('Ungültige Zeitstempel');
-      err.code = 'AI_AGGREGATE_INVALID_TIME';
-      throw err;
+      throw createAuditError('Ungültige Zeitstempel', 'AI_AGGREGATE_INVALID_TIME');
     }
 
     const y = currentDate.getUTCFullYear();
@@ -133,15 +183,14 @@ export function makeUsageAggregateSupplier(supabase, tenantId, options = {}) {
     const digest = crypto.createHmac('sha256', 'report_salt').update(`${tenantId}:${safeBoxId}`).digest('hex').slice(0, 40);
     const reportId = `rep_${dateSegment}_${digest}`.slice(0, 64);
 
+    /** @type {Record<string, TaskAggregate>} */
     const taskTotals = {};
     let pageIndex = 0;
     let hasMore = true;
 
     while (hasMore) {
       if (pageIndex >= maxPages) {
-        const err = new Error('Aggregatabruf unvollständig: Seitenlimit überschritten');
-        err.code = 'AI_AGGREGATE_INCOMPLETE';
-        throw err;
+        throw createAuditError('Aggregatabruf unvollständig: Seitenlimit überschritten', 'AI_AGGREGATE_INCOMPLETE');
       }
 
       const from = pageIndex * pageSize;
@@ -162,29 +211,22 @@ export function makeUsageAggregateSupplier(supabase, tenantId, options = {}) {
       const { data, error } = await query.range(from, to);
 
       if (error) {
-        const err = new Error('Datenbankabfrage für Nutzungsaggregat fehlgeschlagen');
-        err.code = 'AI_AGGREGATE_QUERY_FAILED';
-        throw err;
+        throw createAuditError('Datenbankabfrage für Nutzungsaggregat fehlgeschlagen', 'AI_AGGREGATE_QUERY_FAILED');
       }
 
       if (!Array.isArray(data)) {
-        const err = new Error('Ungültige Datenantwort der Datenbank');
-        err.code = 'AI_AGGREGATE_MALFORMED';
-        throw err;
+        throw createAuditError('Ungültige Datenantwort der Datenbank', 'AI_AGGREGATE_MALFORMED');
       }
 
-      for (const row of data) {
-        if (!row || typeof row !== 'object') {
-          const err = new Error('Ungültiger Datensatz im Audit-Log');
-          err.code = 'AI_AGGREGATE_MALFORMED';
-          throw err;
+      for (const rawRow of data) {
+        if (!rawRow || typeof rawRow !== 'object') {
+          throw createAuditError('Ungültiger Datensatz im Audit-Log', 'AI_AGGREGATE_MALFORMED');
         }
+        const row = /** @type {Record<string, unknown>} */ (rawRow);
 
         const task = row.task;
         if (typeof task !== 'string' || !knownTasks.has(task)) {
-          const err = new Error('Unbekannter Task im Audit-Log');
-          err.code = 'AI_AGGREGATE_MALFORMED_TASK';
-          throw err;
+          throw createAuditError('Unbekannter Task im Audit-Log', 'AI_AGGREGATE_MALFORMED_TASK');
         }
 
         const pt = row.prompt_tokens == null ? 0 : Number(row.prompt_tokens);
@@ -196,9 +238,7 @@ export function makeUsageAggregateSupplier(supabase, tenantId, options = {}) {
           !Number.isInteger(ct) || ct < 0 ||
           !Number.isInteger(tt) || tt < 0
         ) {
-          const err = new Error('Ungültige Token-Metriken im Audit-Log');
-          err.code = 'AI_AGGREGATE_MALFORMED_METRIC';
-          throw err;
+          throw createAuditError('Ungültige Token-Metriken im Audit-Log', 'AI_AGGREGATE_MALFORMED_METRIC');
         }
 
         if (!taskTotals[task]) {
@@ -215,9 +255,7 @@ export function makeUsageAggregateSupplier(supabase, tenantId, options = {}) {
         const nextTt = taskTotals[task].total_tokens + tt;
 
         if (nextPt > Number.MAX_SAFE_INTEGER || nextCt > Number.MAX_SAFE_INTEGER || nextTt > Number.MAX_SAFE_INTEGER) {
-          const err = new Error('Token overflow');
-          err.code = 'AI_AGGREGATE_OVERFLOW';
-          throw err;
+          throw createAuditError('Token overflow', 'AI_AGGREGATE_OVERFLOW');
         }
 
         taskTotals[task].calls += 1;
@@ -244,7 +282,12 @@ export function makeUsageAggregateSupplier(supabase, tenantId, options = {}) {
 
 
 // Lazy reuse of the existing audit client; no second counter or content store.
+/** @returns {import('@supabase/supabase-js').SupabaseClient | null} */
 export function getAiSupabaseClient() { return getSupabaseClient(); }
+/**
+ * @param {string} tenantId
+ * @returns {(at?: number | Date) => Promise<{ reportId: string, windowStart: string, windowEnd: string, taskTotals: Record<string, TaskAggregate> }>}
+ */
 export function makeDefaultUsageAggregateSupplier(tenantId) {
   return (at) => makeUsageAggregateSupplier(getSupabaseClient(), tenantId)(at);
 }

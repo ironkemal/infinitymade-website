@@ -21,12 +21,23 @@ export function acmednsVerzeichnis() {
   return process.env.ACMEDNS_DIR || '/var/lib/praxura/acmedns';
 }
 
+/**
+ * @param {{ code?: string | null }} [o]
+ * @param {Record<string, string | undefined>} [env]
+ * @returns {string | null}
+ */
 export function codeAufloesen(o = {}, env = process.env) {
   return o.code || env?.KAYIT_CODE || null;
 }
 
 // Format der caddy-dns/acmedns-Speicherdatei: { "<domain>": { username, password, fulldomain, subdomain, server_url } }
 // (in K2b.4 gegen das Caddy-Modul verifizieren)
+/**
+ * @param {string} dir
+ * @param {string} fqdn
+ * @param {any} acmedns
+ * @returns {string}
+ */
 function schreibeAcmedns(dir, fqdn, acmedns) {
   try {
     fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
@@ -35,8 +46,8 @@ function schreibeAcmedns(dir, fqdn, acmedns) {
     fs.chmodSync(pfad, 0o600);
     return pfad;
   } catch (e) {
-    if (e.code === 'EACCES' || e.code === 'EPERM') {
-      throw new Error(`Keine Schreibrechte in ${dir} (${e.code}). Volumes vorbereiten: install.sh erneut ausführen.`);
+    if ((/** @type {any} */ (e)).code === 'EACCES' || (/** @type {any} */ (e)).code === 'EPERM') {
+      throw new Error(`Keine Schreibrechte in ${dir} (${(/** @type {any} */ (e)).code}). Volumes vorbereiten: install.sh erneut ausführen.`);
     }
     throw e;
   }
@@ -51,7 +62,7 @@ function schreibeAcmedns(dir, fqdn, acmedns) {
 export function durum({ kimlikDir = kimlikVerzeichnis(), acmednsDir = acmednsVerzeichnis() } = {}) {
   const k = ladeKimlik({ dir: kimlikDir });
   const registriert = Boolean(k?.ad);
-  const fqdn = registriert ? (k.fqdn ?? null) : null;
+  const fqdn = registriert ? (/** @type {import('./kimlik.js').KutuKimlik} */ (k).fqdn ?? null) : null;
   let acmednsGueltig = false;
   if (registriert && fqdn) {
     try {
@@ -74,14 +85,28 @@ export function durum({ kimlikDir = kimlikVerzeichnis(), acmednsDir = acmednsVer
   }
   return {
     registriert,
-    ad: registriert ? k.ad : null,
+    ad: registriert ? /** @type {import('./kimlik.js').KutuKimlik} */ (k).ad : null,
     fqdn,
     acmedns: acmednsGueltig,
   };
 }
 
 /**
- * @returns {Promise<{name:string, fqdn:string, boxId:string, acmednsDatei:string, ip?:{ok:boolean, fehler?:string}}|{vorschlag:object}>}
+ * @param {{
+ *   code?: string | null,
+ *   name?: string | null,
+ *   auto?: boolean,
+ *   nurVorschlag?: boolean,
+ *   neuerSchluessel?: boolean,
+ *   ip?: { modus: string, ip?: string } | null,
+ *   kimlikDir?: string,
+ *   acmednsDir?: string,
+ *   fetchImpl?: Function,
+ *   baseUrl?: string,
+ *   frage?: (q: string) => Promise<string>,
+ *   ausgabe?: (text: string) => void
+ * }} opts
+ * @returns {Promise<{name:string, fqdn:string, boxId:string, acmednsDatei:string, ip:{ok:boolean, fehler?:string}, vorschlag?:{name:string, fqdn:string, rebind?:boolean}}>}
  */
 export async function kayitAusfuehren({
   code, name, auto = false, nurVorschlag = false, neuerSchluessel = false,
@@ -104,7 +129,7 @@ export async function kayitAusfuehren({
       const r = await merkezFetch('/v1/vorschlag', { body: { code }, ohneSignatur: true, ...opt });
       if (!r.ok) throw new Error(fehlerText(r));
       vorschlag = r.json;
-      if (nurVorschlag) return { vorschlag };
+      if (nurVorschlag) return /** @type {any} */ ({ vorschlag });
       ausgabe(`Vorgeschlagene Adresse: ${vorschlag.fqdn}`);
       if (vorschlag.rebind || auto) break;
       const antwort = ((await frage?.('Übernehmen? [J]a / [N]euen Namen vorschlagen: ')) || '').trim().toLowerCase();
@@ -145,10 +170,11 @@ export async function kayitAusfuehren({
         ipErgebnis = { ok: false, fehler };
       }
     } catch (e) {
-      ipErgebnis = { ok: false, fehler: e.message };
+      ipErgebnis = { ok: false, fehler: (/** @type {any} */ (e)).message };
     }
   }
 
+  /** @type {any} */
   const rueckgabe = { name: r.json.name, fqdn: r.json.fqdn, boxId: kimlik.boxId, acmednsDatei };
   if (ipErgebnis !== undefined) {
     rueckgabe.ip = ipErgebnis;
@@ -156,18 +182,27 @@ export async function kayitAusfuehren({
   return rueckgabe;
 }
 
+/**
+ * @param {{ status: number, json?: any }} r
+ * @returns {string}
+ */
 function fehlerText(r) {
   const f = r.json?.fehler || `HTTP ${r.status}`;
-  const hilfe = {
+  const hilfe = /** @type {Record<string, string | undefined>} */ ({
     code: 'Der Einrichtungscode ist ungültig, abgelaufen oder bereits benutzt.',
     name: 'Der Name ist nicht (mehr) reserviert — bitte einen neuen Namen vorschlagen lassen.',
     zu_viele_vorschlaege: 'Zu viele Namensvorschläge für diesen Code.',
     zu_viele_anfragen: 'Zu viele Versuche — bitte später erneut.',
-  }[f];
+  })[f];
   return hilfe ? `${hilfe} (${f})` : `Merkez-Fehler: ${f}`;
 }
 
+/**
+ * @param {string[]} argv
+ * @returns {{ code?: string | null, name?: string, auto?: boolean, nurVorschlag?: boolean, neuerSchluessel?: boolean, durum?: boolean, lanIp?: string, internet?: boolean, json?: boolean }}
+ */
 export function args(argv) {
+  /** @type {{ code?: string | null, name?: string, auto?: boolean, nurVorschlag?: boolean, neuerSchluessel?: boolean, durum?: boolean, lanIp?: string, internet?: boolean, json?: boolean }} */
   const o = {};
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -194,8 +229,9 @@ export function args(argv) {
 
 async function main() {
   const o = args(process.argv.slice(2));
+  /** @type {import('node:readline/promises').Interface | undefined} */
   let rl;
-  const frage = async (q) => { rl ??= readline.createInterface({ input: process.stdin, output: process.stderr }); return rl.question(q); };
+  const frage = /** @param {string} q */ async (q) => { rl ??= readline.createInterface({ input: process.stdin, output: process.stderr }); return rl.question(q); };
   try {
     if (o.durum) {
       const d = durum({
@@ -221,7 +257,7 @@ async function main() {
     } else if (o.internet) {
       ip = { modus: 'internet' };
     }
-    const ergebnis = await kayitAusfuehren({ ...o, ip, frage, ausgabe: o.json ? () => {} : (t) => console.error(t) });
+    const ergebnis = await kayitAusfuehren({ ...o, ip, frage, ausgabe: o.json ? () => {} : /** @param {string} t */ (t) => console.error(t) });
     if (ergebnis.ip && !ergebnis.ip.ok) {
       console.error('Adresse registriert, aber IP noch nicht eingetragen — wird beim nächsten IP-Abgleich nachgeholt');
     }
@@ -230,8 +266,8 @@ async function main() {
     else console.log(`Registriert: ${ergebnis.fqdn}`);
   } catch (e) {
     // --json: Fehler-JSON auf stdout, damit install.sh es neben dem Ergebnis-JSON lesen kann
-    if (o.json) console.log(JSON.stringify({ fehler: e.message }));
-    else console.error(`Fehler: ${e.message}`);
+    if (o.json) console.log(JSON.stringify({ fehler: (/** @type {any} */ (e)).message }));
+    else console.error(`Fehler: ${(/** @type {any} */ (e)).message}`);
     process.exitCode = 1;
   } finally {
     rl?.close();

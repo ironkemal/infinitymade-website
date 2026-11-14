@@ -2,9 +2,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { zaaRueckmeldungAnwenden, zaaDateiHash } from './anwenden.js';
 
+/**
+ * @param {{ rpcResult?: { data: unknown, error: unknown } }} [opts]
+ */
 function mockDb({ rpcResult = { data: { konflikt: false, zeilen: 1 }, error: null } } = {}) {
+  /** @type {{ rpc: Array<{ fn: string, args: Record<string, any> }>, mutationen: number }} */
   const calls = { rpc: [], mutationen: 0 };
   const db = {
+    /** @param {string} t */
     from(t) {
       const b = {
         select() { return b; },
@@ -15,19 +20,22 @@ function mockDb({ rpcResult = { data: { konflikt: false, zeilen: 1 }, error: nul
       };
       return b;
     },
+    /** @param {string} fn @param {Record<string, any>} args */
     async rpc(fn, args) { calls.rpc.push({ fn, args }); return rpcResult; },
   };
-  return { db, calls };
+  return { db: /** @type {Parameters<typeof zaaRueckmeldungAnwenden>[0]['db']} */ (/** @type {unknown} */ (db)), calls };
 }
 const basis = { tenantId: 'o', abrechnungId: 'ab1', ab: { updated_at: '2026-10-05T10:00:00.123456+00:00' }, abgesetztStatus: 'abgesetzt', heute: '2026-10-05' };
 const gueltig = Buffer.from("UNB+UNOC:3+A+B+250519:1200+1'UNH+1+SLLA:21:0:0'FEHL+101+1-1+Positionsnummer unbekannt'UNT+3+1'UNZ+1+1'");
 
-for (const [name, inhalt, reason] of [
+/** @type {Array<[string, Buffer, string]>} */
+const ungueltigeZaaFaelle = [
   ['leere Datei', Buffer.from('   '), 'empty'],
   ['unbekannte Datei', Buffer.from('Hallo Welt'), 'unknown'],
   ['EDIFACT-Huelle ohne Fehler (keine Annahme erfinden)', Buffer.from("UNB+UNOC:3+A+B+250519:1200+1'UNH+1+SLLA:21:0:0'UNT+2+1'UNZ+1+1'"), 'unknown'],
   ['kaputtes FEHL', Buffer.from("UNB+x'FEHL++1-1+Text'"), 'invalid'],
-]) {
+];
+for (const [name, inhalt, reason] of ungueltigeZaaFaelle) {
   test(`ungueltige ZAA (${name}): 422, keine Mutation, kein RPC`, async () => {
     const { db, calls } = mockDb();
     const r = await zaaRueckmeldungAnwenden({ ...basis, db, buf: inhalt });
@@ -57,6 +65,7 @@ test('gueltige Fehlerliste: genau ein atomarer RPC mit Version, nie accepted', a
 test('Fehlertexte mit Umlauten (Live-QA C-6)', async () => {
   const { db } = mockDb();
   const r = await zaaRueckmeldungAnwenden({ ...basis, db, buf: Buffer.from('Hallo Welt') });
+  assert.ok(r.body.error);
   assert.match(r.body.error, /Rückmeldung wurde nicht verarbeitet, es wurde nichts verändert/);
 });
 
@@ -65,6 +74,7 @@ test('Uebersetzung identisch mit Dateitext wird nicht doppelt gespeichert/ausgeg
   const buf = Buffer.from("UNB+UNOC:3+A+B+250519:1200+1'UNH+1+SLLA:21:0:0'FEHL+101+1-1+Positionsnummer unbekannt'UNT+3+1'UNZ+1+1'");
   const r = await zaaRueckmeldungAnwenden({ ...basis, db, buf });
   assert.equal(r.status, 200);
+  assert.ok(r.body.errors);
   const e = r.body.errors[0];
   if (e.uebersetzung !== null) assert.notEqual(String(e.uebersetzung).toLowerCase(), String(e.text).toLowerCase());
   const gesendet = calls.rpc[0].args.p_fehler[0];

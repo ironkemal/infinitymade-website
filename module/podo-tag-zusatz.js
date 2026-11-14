@@ -63,6 +63,10 @@ export function kassierAngebot({ stand = null, zustand = null, darf = false } = 
  * @param {?string} letzterBefund  `pat_fussbefund.erstellt_am` des jüngsten gültigen Befunds, oder null
  * @returns {{titel:string, hinweis:string}}
  */
+/**
+ * @param {any} letzterBefund
+ * @returns {{ titel: string, hinweis: string }}
+ */
 export function fussbefundKopf(letzterBefund) {
   const tag = datumDe(letzterBefund);
   if (!tag) {
@@ -78,6 +82,11 @@ export function fussbefundKopf(letzterBefund) {
  * @param {?string} letzterBefund
  * @param {(s:string)=>string} esc  escapeHtml
  */
+/**
+ * @param {any} letzterBefund
+ * @param {(s: string) => string} esc
+ * @returns {string}
+ */
 export function fussbefundBoxHtml(letzterBefund, esc) {
   const { titel, hinweis } = fussbefundKopf(letzterBefund);
   return `<details id="podFussbefundBox" style="border:1px solid var(--border);border-radius:8px;background:var(--bg-card-solid);margin-bottom:12px;">
@@ -92,6 +101,12 @@ export function fussbefundBoxHtml(letzterBefund, esc) {
 /**
  * Jüngster gültiger Fußbefund des Patienten — nur das Datum.
  * Wirft nie; ohne Treffer oder bei Fehler `null` (dann steht „Noch kein Fußbefund").
+ */
+/**
+ * @param {any} sb
+ * @param {string} ownerId
+ * @param {string} leadId
+ * @returns {Promise<string | null>}
  */
 export async function ladeLetzterBefund(sb, ownerId, leadId) {
   if (!sb || !leadId) return null;
@@ -114,11 +129,11 @@ export async function ladeLetzterBefund(sb, ownerId, leadId) {
  * `id`, `oeffneFolgetermin` liest dann keine Leistungen.
  *
  * @param {object} p
- * @param {?object} p.buchung   Zeile aus `bookings` (mit start_time, lead_id …) oder null
- * @param {object} p.vord       Verordnung (`id`, `lead_id`)
+ * @param {any} p.buchung   Zeile aus `bookings` (mit start_time, lead_id …) oder null
+ * @param {any} p.vord      Verordnung (`id`, `lead_id`)
  * @param {string} p.datum      Behandlungstag `YYYY-MM-DD`
  * @param {string} [p.name]     Anzeigename des Patienten
- * @returns {{quelle:'buchung'|'platzhalter', booking:object}}
+ * @returns {{quelle:'buchung'|'platzhalter', booking:any}}
  */
 export function folgeAusgangstermin({ buchung, vord, datum, name = '' }) {
   if (buchung?.id) {
@@ -136,6 +151,13 @@ export function folgeAusgangstermin({ buchung, vord, datum, name = '' }) {
 }
 
 /** Termin am Behandlungstag zu dieser Verordnung, sonst null. Wirft nie. */
+/**
+ * @param {any} sb
+ * @param {string} ownerId
+ * @param {string} vordId
+ * @param {string} datum
+ * @returns {Promise<any>}
+ */
 export async function ladeTagesTermin(sb, ownerId, vordId, datum) {
   if (!sb || !vordId || !datum) return null;
   try {
@@ -147,7 +169,7 @@ export async function ladeTagesTermin(sb, ownerId, vordId, datum) {
       .neq('status', 'cancelled')
       .gte('start_time', new Date(mitte - 36 * 3600e3).toISOString()).lt('start_time', new Date(mitte + 36 * 3600e3).toISOString())
       .order('start_time', { ascending: true });
-    return (data || []).find(b => b.start_time && alsISODatum(new Date(b.start_time)) === datum) || null;
+    return (data || []).find((/** @type {any} */ b) => b.start_time && alsISODatum(new Date(b.start_time)) === datum) || null;
   } catch { return null; }
 }
 
@@ -186,6 +208,11 @@ export const ANAMNESE_78040_FRAGE = {
  * @returns {Promise<boolean|null>} `true`/`false`, oder `null` = nicht ermittelbar
  *   (Fehler, kein Patient). Der Hinweis erscheint NUR bei `false`.
  */
+/**
+ * @param {any} sb
+ * @param {string | null | undefined} leadId
+ * @returns {Promise<boolean | null>}
+ */
 export async function hatAnamnese(sb, leadId) {
   if (!sb || !leadId) return null;
   try {
@@ -195,7 +222,12 @@ export async function hatAnamnese(sb, leadId) {
   } catch { return null; }
 }
 
-/** Notiz mit Ein-Klick-Link; leerer String, wenn nichts zu sagen ist (Anamnese da oder unbekannt). */
+/**
+ * Notiz mit Ein-Klick-Link; leerer String, wenn nichts zu sagen ist (Anamnese da oder unbekannt).
+ * @param {boolean | null} hat
+ * @param {(s: string) => string} esc
+ * @returns {string}
+ */
 export function anamneseFehltNotizHtml(hat, esc) {
   if (hat !== false) return '';
   return `<div id="podAnamneseFehltNotiz" style="font-size:12px;color:var(--warning-text,var(--text-muted));background:var(--warning-dim,var(--bg-card-solid));border:1px solid var(--warning,var(--border));border-radius:6px;padding:8px 10px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;">
@@ -204,7 +236,11 @@ export function anamneseFehltNotizHtml(hat, esc) {
       </div>`;
 }
 
-/** Fragt das Speichern von 78040 nach der Anamnese? Nur bei bestätigtem `false`. */
+/**
+ * Fragt das Speichern von 78040 nach der Anamnese? Nur bei bestätigtem `false`.
+ * @param {{ checks: any, hatAnamnese: boolean | null }} opts
+ * @returns {boolean}
+ */
 export function frageAnamnese78040({ checks, hatAnamnese: hat }) {
   return Array.isArray(checks) && checks.includes(CODE_EINGANGSBEFUNDUNG) && hat === false;
 }

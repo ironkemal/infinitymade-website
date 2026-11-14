@@ -29,8 +29,8 @@
 /**
  * Nummer einer Verordnung als Text.
  *
- * @param {object} row  Verordnungszeile — gelesen werden `belegnummer` und
- *                      `verordnungsnummer`.
+ * @param {{ belegnummer?: string|null, verordnungsnummer?: number|string|null }|null|undefined} row
+ *        Verordnungszeile — gelesen werden `belegnummer` und `verordnungsnummer`.
  * @param {object} [opt]
  * @param {number|string|null} [opt.patientennummer]
  *        `leads.patientennummer`. Fehlt sie (Liste zeigt nur EINEN Patienten,
@@ -60,11 +60,10 @@ export function belegnummerText(row, opt = {}) {
  * ein Platzhalter neben dem Patientennamen liest sich wie ein Fehler, die
  * fehlende Rosette dagegen wie „noch keine Nummer".
  *
- * @param {object} row
- * @param {object} opt
+ * @param {{ belegnummer?: string|null, verordnungsnummer?: number|string|null }|null|undefined} row
+ * @param {object} [opt]
  * @param {number|string|null} [opt.patientennummer]
- * @param {(s:string)=>string} opt.escapeHtml  Muss übergeben werden — dieses
- *        Modul bringt bewusst keine eigene Fluchtfunktion mit.
+ * @param {(s:string)=>string} [opt.escapeHtml]  Optional — fällt auf String(s) zurück.
  * @param {string} [opt.titel]  title-Attribut (Tooltip).
  * @returns {string} HTML oder ''
  */

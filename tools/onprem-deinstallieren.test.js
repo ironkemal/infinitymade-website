@@ -11,7 +11,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const s = fs.readFileSync(path.join(repoRoot, 'onprem/deinstallieren.sh'), 'utf8');
 // Erst ab main() suchen — der Kopfkommentar nennt dieselben Schritte.
 const ablauf = s.indexOf('main() {');
-const pos = (needle) => {
+const pos = (/** @type {string} */ needle) => {
   const i = s.indexOf(needle, ablauf);
   assert.ok(i >= 0, `fehlt: ${needle}`);
   return i;
@@ -53,7 +53,7 @@ test('Ablauf in main(), Aufruf in der letzten Zeile (Skript löscht seinen Ordne
 });
 
 test('im Bundle: Manifest, Dockerfile, Workflow-Trigger und Smoke-Liste', () => {
-  const lies = (p) => fs.readFileSync(path.join(repoRoot, p), 'utf8');
+  const lies = (/** @type {string} */ p) => fs.readFileSync(path.join(repoRoot, p), 'utf8');
   assert.match(lies('onprem/manifest.json'), /"deinstallieren\.sh"/);
   assert.match(lies('api-backend/Dockerfile'), /COPY --from=onprem .*deinstallieren\.sh/);
   const wf = lies('.github/workflows/publish-calendar-api.yml');

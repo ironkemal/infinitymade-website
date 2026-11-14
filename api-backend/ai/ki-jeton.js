@@ -29,6 +29,7 @@ const MIN_REFRESH_SKEW_MS = 5_000;
 const MAX_REFRESH_SKEW_MS = 600_000;
 const INTERNAL_CENTRE_TIMEOUT_MS = 15_000;
 const TAG_MS = 86_400_000;
+/** @param {number} ms */
 const utcTagStart = (ms) => Math.floor(ms / TAG_MS) * TAG_MS;
 
 const RE_API_VERSION = /^\d{4}-\d{2}-\d{2}(-preview)?$/;
@@ -39,6 +40,7 @@ const QUOTA_LOCK_FALLBACK_MS = 6 * 3600_000;
 const QUOTA_LOCK_MAX_MS = 32 * 86_400_000;
 
 // Gründe aus pruefeKiBericht → feste deutsche Meldungen (keine Eingabe wird gespiegelt).
+/** @type {Record<string, string>} */
 const BERICHT_FEHLER = Object.freeze({
   form: 'Aggregatdaten ungültig',
   zusatzfeld: 'Aggregatdaten enthalten unzulässige Felder',
@@ -49,12 +51,50 @@ const BERICHT_FEHLER = Object.freeze({
 });
 
 /**
+ * @typedef {Error & { code?: string, status?: number }} JetonError
+ * @typedef {{
+ *   token: string,
+ *   exp: number,
+ *   endpoint: string,
+ *   deployment: string,
+ *   deploymentTranscribe: string | null,
+ *   region: string,
+ *   apiVersion: string
+ * }} JetonToken
+ * @typedef {{
+ *   reportId: string,
+ *   windowStart: string,
+ *   windowEnd?: string,
+ *   taskTotals?: Record<string, unknown>,
+ *   [key: string]: unknown
+ * }} JetonBericht
+ */
+
+/**
+ * @param {string} message
+ * @param {string} code
+ * @param {number} [status]
+ * @returns {JetonError}
+ */
+function makeJetonError(message, code, status) {
+  /** @type {JetonError} */
+  const err = new Error(message);
+  err.code = code;
+  if (status !== undefined) err.status = status;
+  return err;
+}
+
+/**
  * Ende der Kontingentsperre (ms). resetAt = UNIX-Sekunden vom Zentrum; fehlt er, ist er
  * keine Ganzzahl, liegt er nicht in der Zukunft oder weiter als 32 Tage entfernt → now + 6 h.
  * Rein, ohne Seiteneffekte (M4.11 β).
+ *
+ * @param {unknown} resetAtSec
+ * @param {number} nowMs
+ * @returns {number}
  */
 export function kilitBitisMs(resetAtSec, nowMs) {
-  if (Number.isSafeInteger(resetAtSec)) {
+  if (typeof resetAtSec === 'number' && Number.isSafeInteger(resetAtSec)) {
     const bis = resetAtSec * 1000;
     if (bis > nowMs && bis - nowMs <= QUOTA_LOCK_MAX_MS) return bis;
   }
@@ -64,6 +104,12 @@ export function kilitBitisMs(resetAtSec, nowMs) {
 /**
  * Races a promise against an AbortSignal.
  * Cleans up listeners in finally block.
+ *
+ * @template T
+ * @param {Promise<T>} promise
+ * @param {AbortSignal | undefined} signal
+ * @param {string} [defaultErrMsg]
+ * @returns {Promise<T>}
  */
 function raceSignal(promise, signal, defaultErrMsg = 'Anfrage vor Jeton-Abruf abgebrochen') {
   if (!signal) return promise;
@@ -102,23 +148,24 @@ function raceSignal(promise, signal, defaultErrMsg = 'Anfrage vor Jeton-Abruf ab
  * Creates an isolated, RAM-only Jeton client.
  *
  * @param {Object} [options]
- * @param {Object} [options.config] AI config object
- * @param {Function} [options.configProvider] Supplier function for AI config
- * @param {Function} [options.merkezFetchImpl] Fetch implementation (defaults to merkezFetch)
- * @param {Object} [options.merkezOptions] Extra options passed to merkezFetch (e.g. kimlik, baseUrl)
- * @param {Function} [options.now] Timestamp provider in ms (defaults to Date.now)
- * @param {Function} [options.aggregateSupplier] Supplier of audit window aggregate metrics
+ * @param {Record<string, any>} [options.config] AI config object
+ * @param {() => Record<string, any>} [options.configProvider] Supplier function for AI config
+ * @param {(url: string, opts?: Record<string, unknown>) => Promise<Record<string, any>>} [options.merkezFetchImpl] Fetch implementation (defaults to merkezFetch)
+ * @param {Record<string, unknown>} [options.merkezOptions] Extra options passed to merkezFetch (e.g. kimlik, baseUrl)
+ * @param {() => number} [options.now] Timestamp provider in ms (defaults to Date.now)
+ * @param {(closedDayMs?: number) => unknown} [options.aggregateSupplier] Supplier of audit window aggregate metrics
  * @param {number} [options.refreshSkewMs] Lead time for proactive refresh (bounded)
+ * @param {number} [options.centreTimeoutMs] Timeout override for centre calls in ms
  * @param {ReadonlyArray<string>} [options.allowedHosts] Host allowlist override
  * @returns {{
- *   getToken: (opts?: {forceRefresh?: boolean, rejectedToken?: string, signal?: AbortSignal}) => Promise<{token: string, exp: number, endpoint: string, deployment: string, region: string, apiVersion: string}>,
+ *   getToken: (opts?: {forceRefresh?: boolean, rejectedToken?: string, signal?: AbortSignal}) => Promise<JetonToken>,
  *   invalidate: (rejectedToken?: string) => void,
- *   reportUsage: (report?: object) => Promise<{ok: boolean, staged: boolean}>,
- *   getState: () => {hasToken: boolean, tokenDisabled: boolean, disabledUntil: number|null, exp: number|null, disabledReason: string|null, hasPendingReport: boolean}
+ *   reportUsage: (report?: Record<string, unknown>) => Promise<{ok: boolean, staged: boolean}>,
+ *   getState: () => {hasToken: boolean, tokenDisabled: boolean, disabledUntil: number|null, exp: number|null, disabledReason: string|null, hasPendingReport: boolean, aggregateDiagnostic: string|null}
  * }}
  */
 export function createJetonClient(options = {}) {
-  const fetchMerkez = options.merkezFetchImpl || merkezFetch;
+  const fetchMerkez = /** @type {(url: string, opts?: Record<string, unknown>) => Promise<Record<string, any>>} */ (options.merkezFetchImpl || merkezFetch);
   const nowFn = typeof options.now === 'function' ? options.now : Date.now;
   const rawSkew = Number(options.refreshSkewMs ?? DEFAULT_REFRESH_SKEW_MS);
   const refreshSkewMs = Math.max(MIN_REFRESH_SKEW_MS, Math.min(MAX_REFRESH_SKEW_MS, rawSkew));
@@ -131,17 +178,25 @@ export function createJetonClient(options = {}) {
   }
 
   // RAM-only state closure
+  /** @type {JetonToken | null} */
   let currentToken = null;
+  /** @type {Promise<JetonToken> | null} */
   let singleflightPromise = null;
+  /** @type {number | null} */
   let disabledUntilMs = null; // M4.11 β: quota lock end; checked on each request, no timer
+  /** @type {string | null} */
   let disabledReason = null;
+  /** @type {JetonBericht | null} */
   let pendingReport = null; // Staged cumulative snapshot
+  /** @type {string | null} */
   let aggregateDiagnostic = null;
   // O-186: UTC-Tagesbeginn (ms) des zuletzt quittierten/abgelehnten Berichts. Nur RAM — nach einem
   // Neustart kann der Rest des Vortags fehlen (bekannter Rest, onprem O-186).
+  /** @type {number | null} */
   let sonBildirterTagMs = null;
   let abschlussLaeuft = false; // der gestagte Bericht ist ein Abschlussbericht
 
+  /** @param {string} [rejectedToken] */
   function invalidate(rejectedToken) {
     if (!rejectedToken || (currentToken && currentToken.token === rejectedToken)) {
       currentToken = null;
@@ -160,17 +215,16 @@ export function createJetonClient(options = {}) {
   }
 
   function quotaError() {
-    const err = new Error('KI-Jetonkontingent erschöpft (Zentrum)');
-    err.code = disabledReason || 'AI_QUOTA_EXCEEDED';
-    err.status = 503;
-    return err;
+    return makeJetonError('KI-Jetonkontingent erschöpft (Zentrum)', disabledReason || 'AI_QUOTA_EXCEEDED', 503);
   }
 
   // Report acknowledgement / permanent rejection from the centre (M4.11 γ). Only the ID is logged.
+  /** @param {unknown} json */
   function handleReportOutcome(json) {
     if (!pendingReport || !json || typeof json !== 'object') return;
-    const quittiert = json.acknowledgedReportId === pendingReport.reportId;
-    const abgelehnt = !quittiert && json.rejectedReportId === pendingReport.reportId;
+    const rec = /** @type {Record<string, unknown>} */ (json);
+    const quittiert = rec.acknowledgedReportId === pendingReport.reportId;
+    const abgelehnt = !quittiert && rec.rejectedReportId === pendingReport.reportId;
     if (!quittiert && !abgelehnt) return;
     if (abgelehnt) console.warn(`[ki-jeton] Aggregatmeldung vom Zentrum abgelehnt und verworfen: ${pendingReport.reportId}`);
     // O-186: Nach einem Abschlussbericht (auch abgelehnt) gilt heute als Ausgangspunkt — kein zweiter Abschluss.
@@ -180,14 +234,17 @@ export function createJetonClient(options = {}) {
     pendingReport = null;
   }
 
+  /**
+   * @param {unknown} payload
+   * @param {ReadonlyArray<string> | undefined} allowedHosts
+   * @returns {JetonToken}
+   */
   function validateTokenPayload(payload, allowedHosts) {
     if (!payload || typeof payload !== 'object') {
-      const err = new Error('KI-Jeton-Antwort ungültig');
-      err.code = 'AI_TOKEN_RESPONSE_INVALID';
-      throw err;
+      throw makeJetonError('KI-Jeton-Antwort ungültig', 'AI_TOKEN_RESPONSE_INVALID');
     }
 
-    const { token, exp, endpoint, deployment, deploymentTranscribe, region, apiVersion } = payload;
+    const { token, exp, endpoint, deployment, deploymentTranscribe, region, apiVersion } = /** @type {Record<string, unknown>} */ (payload);
 
     // Token string check (reject control characters / CRLF)
     if (
@@ -196,68 +253,50 @@ export function createJetonClient(options = {}) {
       token.length > MAX_TOKEN_LENGTH ||
       RE_CONTROL_CHARS.test(token)
     ) {
-      const err = new Error('KI-Jeton-Antwort ungültig');
-      err.code = 'AI_TOKEN_RESPONSE_INVALID';
-      throw err;
+      throw makeJetonError('KI-Jeton-Antwort ungültig', 'AI_TOKEN_RESPONSE_INVALID');
     }
 
     // Expiry check (UNIX seconds integer)
-    if (!Number.isInteger(exp)) {
-      const err = new Error('KI-Jeton-Antwort ungültig');
-      err.code = 'AI_TOKEN_RESPONSE_INVALID';
-      throw err;
+    if (typeof exp !== 'number' || !Number.isInteger(exp)) {
+      throw makeJetonError('KI-Jeton-Antwort ungültig', 'AI_TOKEN_RESPONSE_INVALID');
     }
 
     const currentSec = Math.floor(nowFn() / 1000);
     const ttl = exp - currentSec;
 
     if (ttl <= 0) {
-      const err = new Error('KI-Jeton ist abgelaufen');
-      err.code = 'AI_TOKEN_EXPIRED';
-      throw err;
+      throw makeJetonError('KI-Jeton ist abgelaufen', 'AI_TOKEN_EXPIRED');
     }
     if (ttl > MAX_TTL_SECONDS) {
-      const err = new Error('KI-Jeton-Gültigkeitsdauer überschritten');
-      err.code = 'AI_TOKEN_TTL_EXCEEDED';
-      throw err;
+      throw makeJetonError('KI-Jeton-Gültigkeitsdauer überschritten', 'AI_TOKEN_TTL_EXCEEDED');
     }
 
     // Endpoint URL check
-    const epVal = validateEndpointUrl(endpoint, allowedHosts);
-    if (!epVal.ok) {
-      const err = new Error('KI-Jeton-Endpunkt unzulässig');
-      err.code = 'AI_HOST_NOT_ALLOWED';
-      throw err;
+    const epVal = validateEndpointUrl(/** @type {string} */ (endpoint), /** @type {string[] | undefined} */ (allowedHosts));
+    if (!epVal.ok || !epVal.cleanEndpoint) {
+      throw makeJetonError('KI-Jeton-Endpunkt unzulässig', 'AI_HOST_NOT_ALLOWED');
     }
 
     // Deployment check
     if (typeof deployment !== 'string' || !RE_SAFE_SEGMENT.test(deployment)) {
-      const err = new Error('KI-Jeton-Deploymentname ungültig');
-      err.code = 'AI_DEPLOYMENT_INVALID';
-      throw err;
+      throw makeJetonError('KI-Jeton-Deploymentname ungültig', 'AI_DEPLOYMENT_INVALID');
     }
 
     if (deploymentTranscribe !== undefined && deploymentTranscribe !== null) {
       if (typeof deploymentTranscribe !== 'string' || !RE_SAFE_SEGMENT.test(deploymentTranscribe)) {
-        const err = new Error('KI-Jeton-Deploymentname Transkription ungültig');
-        err.code = 'AI_DEPLOYMENT_INVALID';
-        throw err;
+        throw makeJetonError('KI-Jeton-Deploymentname Transkription ungültig', 'AI_DEPLOYMENT_INVALID');
       }
     }
 
     // Region check (EU Data Boundary)
-    const normalizedRegion = (region || '').toLowerCase();
-    if (!EU_DATA_BOUNDARY_REGIONS.includes(normalizedRegion)) {
-      const err = new Error('KI-Jeton-Region liegt nicht in EU Data Boundary');
-      err.code = 'AI_INVALID_REGION';
-      throw err;
+    const normalizedRegion = (typeof region === 'string' ? region : '').toLowerCase();
+    if (!(/** @type {readonly string[]} */ (EU_DATA_BOUNDARY_REGIONS)).includes(normalizedRegion)) {
+      throw makeJetonError('KI-Jeton-Region liegt nicht in EU Data Boundary', 'AI_INVALID_REGION');
     }
 
     // ApiVersion check
     if (typeof apiVersion !== 'string' || !RE_API_VERSION.test(apiVersion)) {
-      const err = new Error('KI-Jeton-API-Version ungültig');
-      err.code = 'AI_API_VERSION_INVALID';
-      throw err;
+      throw makeJetonError('KI-Jeton-API-Version ungültig', 'AI_API_VERSION_INVALID');
     }
 
     return {
@@ -265,19 +304,21 @@ export function createJetonClient(options = {}) {
       exp,
       endpoint: epVal.cleanEndpoint,
       deployment,
-      deploymentTranscribe: deploymentTranscribe || null,
+      deploymentTranscribe: typeof deploymentTranscribe === 'string' ? deploymentTranscribe : null,
       region: normalizedRegion,
       apiVersion
     };
   }
 
   // Gemeinsames Schema mit dem Zentrum (merkez-istemci/ki-bericht-schema.js) — eine Quelle.
+  /** @param {unknown} report @returns {JetonBericht} */
   function validateReportSnapshot(report) {
     const g = pruefeKiBericht(report);
-    if (!g.ok) throw new Error(BERICHT_FEHLER[g.grund] || BERICHT_FEHLER.form);
-    return g.bericht;
+    if (!g.ok) throw new Error((g.grund && BERICHT_FEHLER[g.grund]) || BERICHT_FEHLER.form);
+    return /** @type {JetonBericht} */ (g.bericht);
   }
 
+  /** @returns {Promise<JetonToken>} */
   async function performRefresh() {
     if (isLocked()) throw quotaError();
 
@@ -292,6 +333,7 @@ export function createJetonClient(options = {}) {
       centreController.abort(new DOMException('Zentrum Zeitüberschreitung nach ' + centreTimeoutMs + 'ms', 'TimeoutError'));
     }, centreTimeoutMs);
 
+    /** @type {Record<string, any> | null | undefined} */
     let res;
     try {
       if (!pendingReport && typeof options.aggregateSupplier === 'function') {
@@ -301,7 +343,7 @@ export function createJetonClient(options = {}) {
           const jetztMs = nowFn();
           abschlussLaeuft = sonBildirterTagMs !== null && sonBildirterTagMs < utcTagStart(jetztMs)
             && jetztMs - sonBildirterTagMs < 2 * TAG_MS;
-          const supplierPromise = Promise.resolve(abschlussLaeuft
+          const supplierPromise = Promise.resolve(abschlussLaeuft && sonBildirterTagMs !== null
             ? options.aggregateSupplier(sonBildirterTagMs)
             : options.aggregateSupplier());
           const report = await raceSignal(supplierPromise, AbortSignal.timeout(Math.max(1, Math.min(1000, Math.floor(centreTimeoutMs / 2)))), 'Aggregat nicht verfügbar');
@@ -338,17 +380,14 @@ export function createJetonClient(options = {}) {
           return currentToken;
         }
       }
-      const safeErr = new Error('Zentrum für KI-Jeton nicht erreichbar');
-      safeErr.code = 'AI_JETON_UNAVAILABLE';
-      safeErr.status = 503;
-      throw safeErr;
+      throw makeJetonError('Zentrum für KI-Jeton nicht erreichbar', 'AI_JETON_UNAVAILABLE', 503);
     } finally {
       clearTimeout(centreTimer);
     }
 
     // Quota: only 402 + code AI_QUOTA_EXCEEDED (M4.11 α). Report outcome first, then lock (β).
     // 429, a 402 without that code and non-JSON bodies fall through to the transient path below.
-    const body = res && res.json && typeof res.json === 'object' ? res.json : null;
+    const body = res && res.json && typeof res.json === 'object' ? /** @type {Record<string, any>} */ (res.json) : null;
     if (res?.status === 402 && body?.code === 'AI_QUOTA_EXCEEDED') {
       handleReportOutcome(body);
       currentToken = null;
@@ -365,13 +404,11 @@ export function createJetonClient(options = {}) {
           return currentToken;
         }
       }
-      const failErr = new Error('KI-Jeton konnte nicht ausgestellt werden');
-      failErr.code = 'AI_JETON_UNAVAILABLE';
-      failErr.status = 503;
-      throw failErr;
+      throw makeJetonError('KI-Jeton konnte nicht ausgestellt werden', 'AI_JETON_UNAVAILABLE', 503);
     }
 
     // Validate payload strictly
+    /** @type {JetonToken} */
     let validated;
     try {
       validated = validateTokenPayload(body, effectiveAllowedHosts);
@@ -383,10 +420,10 @@ export function createJetonClient(options = {}) {
           return currentToken;
         }
       }
-      const invalidErr = new Error('KI-Jeton-Antwort ungültig');
-      invalidErr.code = valErr.code || 'AI_TOKEN_RESPONSE_INVALID';
-      invalidErr.status = 503;
-      throw invalidErr;
+      const code = valErr && typeof valErr === 'object' && 'code' in valErr && typeof valErr.code === 'string'
+        ? valErr.code
+        : 'AI_TOKEN_RESPONSE_INVALID';
+      throw makeJetonError('KI-Jeton-Antwort ungültig', code, 503);
     }
 
     // Acknowledgement / rejection of the staged report (exact match required)
@@ -396,27 +433,22 @@ export function createJetonClient(options = {}) {
     return validated;
   }
 
+  /**
+   * @param {{ forceRefresh?: boolean, rejectedToken?: string, signal?: AbortSignal }} [opts]
+   * @returns {Promise<JetonToken>}
+   */
   async function getToken({ forceRefresh = false, rejectedToken, signal } = {}) {
     const cfg = getConfig();
 
     // 1. Enforce dynamic configuration readiness before cache or network
     if (cfg.mode !== 'jeton') {
-      const err = new Error('KI-Dienst ist deaktiviert');
-      err.code = 'AI_MODE_NOT_JETON';
-      err.status = 503;
-      throw err;
+      throw makeJetonError('KI-Dienst ist deaktiviert', 'AI_MODE_NOT_JETON', 503);
     }
     if (!cfg.activationReady) {
-      const err = new Error('KI-Dienst ist nicht betriebsbereit geschaltet');
-      err.code = 'AI_NOT_ACTIVATED';
-      err.status = 503;
-      throw err;
+      throw makeJetonError('KI-Dienst ist nicht betriebsbereit geschaltet', 'AI_NOT_ACTIVATED', 503);
     }
     if (!cfg.valid) {
-      const err = new Error('KI-Konfiguration ist ungültig');
-      err.code = cfg.code || 'AI_CONFIG_INVALID';
-      err.status = 503;
-      throw err;
+      throw makeJetonError('KI-Konfiguration ist ungültig', cfg.code || 'AI_CONFIG_INVALID', 503);
     }
 
     if (isLocked()) throw quotaError();
@@ -468,22 +500,18 @@ export function createJetonClient(options = {}) {
     const token = await raceSignal(singleflightPromise, signal, 'Anfrage vor Jeton-Abruf abgebrochen');
     const cfgAfter = getConfig();
     if (cfgAfter.mode !== 'jeton' || !cfgAfter.activationReady || !cfgAfter.valid) {
-       const err = new Error('KI-Konfiguration während Token-Erstellung ungültig geworden');
-       err.code = 'AI_CONFIG_CHANGED';
-       err.status = 503;
-       throw err;
+      throw makeJetonError('KI-Konfiguration während Token-Erstellung ungültig geworden', 'AI_CONFIG_CHANGED', 503);
     }
     const epValAfter = validateEndpointUrl(token.endpoint, options.allowedHosts || cfgAfter.allowedHosts);
     if (!epValAfter.ok) {
-       const err = new Error('KI-Konfiguration während Token-Erstellung ungültig geworden');
-       err.code = 'AI_CONFIG_CHANGED';
-       err.status = 503;
-       throw err;
+      throw makeJetonError('KI-Konfiguration während Token-Erstellung ungültig geworden', 'AI_CONFIG_CHANGED', 503);
     }
     return token;
   }
 
+  /** @param {Record<string, unknown>} [customReport] */
   async function reportUsage(customReport) {
+    /** @type {unknown} */
     let report = customReport;
     if (!report && typeof options.aggregateSupplier === 'function') {
       try {

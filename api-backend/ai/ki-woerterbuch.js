@@ -20,17 +20,24 @@ const STOP_WORDS = new Set([
   'praxis', 'zentrum', 'gmbh', 'und', 'von', 'zu', 'im', 'in', 'am', 'der', 'die', 'das'
 ]);
 
+/**
+ * @param {string} message
+ * @param {number} [status=503]
+ * @param {string} [code='KI_WOERTERBUCH_FEHLER']
+ * @returns {Error & { status: number, code: string }}
+ */
 function createDictError(message, status = 503, code = 'KI_WOERTERBUCH_FEHLER') {
+  /** @type {Error & { status?: number, code?: string }} */
   const err = new Error(message);
   err.status = status;
   err.code = code;
-  return err;
+  return /** @type {Error & { status: number, code: string }} */ (err);
 }
 
 /**
  * Loads the tenant dictionary for PII masking from Supabase.
  *
- * @param {Object} supabase Supabase client instance
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase Supabase client instance
  * @param {{role: string, userId: string, tenantId: string}} auth Auth context
  * @returns {Promise<string[]>} List of names and terms for this tenant
  */
@@ -52,8 +59,10 @@ export async function loadTenantDictionary(supabase, auth) {
     throw createDictError('Supabase-Client fehlt oder ist ungültig', 503);
   }
 
+  /** @type {Set<string>} */
   const dictionarySet = new Set();
 
+  /** @param {unknown} term */
   function addTerm(term) {
     if (!term || typeof term !== 'string') return;
     const clean = term.trim();
@@ -71,7 +80,15 @@ export async function loadTenantDictionary(supabase, auth) {
 
   // Paging needs a fixed order: without ORDER BY Postgres may return a row on two pages and
   // skip another, and a skipped patient name would then reach the model unmasked.
+  /**
+   * @param {string} table
+   * @param {string} columns
+   * @param {string} filterKey
+   * @param {number} maxRows
+   * @returns {Promise<Array<Record<string, any>>>}
+   */
   async function readAll(table, columns, filterKey, maxRows) {
+    /** @type {Array<Record<string, any>>} */
     const rows = [];
     const pageSize = 500;
     for (let from = 0; from < maxRows; from += pageSize) {

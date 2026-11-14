@@ -6,6 +6,11 @@ import {
 } from './sondertag-mitteilung.js';
 
 const JA = `[X] ${MITTEILUNG_OPTION_TEXT}: JA`;
+/**
+ * @param {string} version
+ * @param {string} zeile
+ * @param {Record<string, unknown>} [extra]
+ */
 const einw = (version, zeile, extra = {}) => ({ consent_type: 'datenschutz', text_version: version, text_snapshot: `Kopf\n${zeile}\n[ ] Anderes: NEIN`, consented_at: '2026-11-01T10:00:00Z', revoked_at: null, ...extra });
 
 test('Version als Zahl: v10 > v6 (String-Vergleich waere falsch)', () => {
@@ -71,7 +76,8 @@ test('Betroffene: Zukunft, nicht abgesagt, kein Gruppenkind, Berliner Tag, Stand
 });
 
 test('Einteilen: Mail nur mit Patient + Einwilligung + Adresse + Versandweg; sonst Anrufliste mit Grund', () => {
-  const t = (id, lead) => ({ termin: { id, lead_id: lead, start_time: '2026-12-24T09:00:00Z' }, tag: { id: 'd' } });
+  /** @param {string} id @param {string | null} lead */
+  const t = (id, lead) => ({ termin: { id, lead_id: lead, start_time: '2026-12-24T09:00:00Z' }, tag: /** @type {Parameters<typeof einteilen>[0][number]['tag']} */ (/** @type {unknown} */ ({ id: 'd' })) });
   const leads = new Map([['l1', { email: 'a@b.de' }], ['l2', { email: 'a@b.de' }], ['l3', { email: 'kaputt' }]]);
   const ew = new Map([['l1', [einw('datenschutz-v6-2026-11-05', JA)]], ['l3', [einw('datenschutz-v6-2026-11-05', JA)]]]);
   const r = einteilen([t('b1', 'l1'), t('b2', 'l2'), t('b3', 'l3'), t('b4', null), t('b5', 'l1')], leads, ew, protokollZustand([{ booking_id: 'b5', termin_beginn: '2026-12-24T09:00:00+00:00', status: 'gesendet' }]), true);

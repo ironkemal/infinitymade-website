@@ -3,10 +3,15 @@
 // Renders key prescription data in an A4 print layout with a dashed Stempel box.
 // Intended for pre-printing / archiving purposes; not a legally binding re-issue.
 
-const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
+/** @type {Record<string, string>} */
+const HTML_ESC = {
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-}[c]));
+};
 
+/** @param {unknown} s */
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => HTML_ESC[c] ?? c);
+
+/** @param {Date | string | null | undefined} d */
 const fmtDate = (d) => {
   if (!d) return '';
   const dt = d instanceof Date ? d : new Date(d);
@@ -16,12 +21,13 @@ const fmtDate = (d) => {
 
 /**
  * @param {object} opts
- * @param {object} opts.praxis          { name, strasse, plz_ort, telefon, ik, steuernummer, email }
- * @param {object} opts.patient         { nachname, vorname, strasse, plz, ort, geburtsdatum, kvnr }
- * @param {object} opts.verordnung      { ausstellungsdatum, krankenkasse, arzt, icd10, heilmittel, frequenz }
- * @param {string} opts.logoUrl
- * @param {string} opts.praxisZusatz    From vorlage content_json.praxis_zusatz
- * @param {string} opts.stempelHinweis  From vorlage content_json.stempel_hinweis
+ * @param {{ name?: string, strasse?: string, plz_ort?: string, telefon?: string, ik?: string, steuernummer?: string, email?: string }} [opts.praxis]
+ * @param {{ patientennummer?: string | number | null, nachname?: string, vorname?: string, strasse?: string, plz?: string, ort?: string, geburtsdatum?: Date | string, kvnr?: string }} [opts.patient]
+ * @param {{ belegnummer?: string, ausstellungsdatum?: Date | string, krankenkasse?: string, arzt?: string, icd10?: string, heilmittel?: string, frequenz?: string }} [opts.verordnung]
+ * @param {string} [opts.logoUrl]
+ * @param {string | null} [opts.praxisZusatz]    From vorlage content_json.praxis_zusatz
+ * @param {string | null} [opts.stempelHinweis]  From vorlage content_json.stempel_hinweis
+ * @param {string | null} [opts.kopieHinweis]
  */
 export function renderRezeptvorderseite(opts) {
   const {

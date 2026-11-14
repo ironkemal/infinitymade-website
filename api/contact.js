@@ -21,10 +21,15 @@ function createTransport() {
   });
 }
 
+/** @param {unknown} str */
 function sanitize(str) {
   return String(str || '').trim().slice(0, 2000);
 }
 
+/**
+ * @param {import('./_lib/auth.js').VercelRequest} req
+ * @param {import('./_lib/auth.js').VercelResponse} res
+ */
 async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
   if (!allowMailRequest(req, res, 'contact')) return;

@@ -10,6 +10,10 @@ import { stripeRequest, priceIdFor, publicBaseUrl } from '../_lib/stripe.js';
 
 const PUBLIC_URL = publicBaseUrl();
 
+/**
+ * @param {import('../_lib/auth.js').VercelRequest} req
+ * @param {import('../_lib/auth.js').VercelResponse} res
+ */
 async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
 
@@ -28,7 +32,8 @@ async function handler(req, res) {
   const lineItems = [{ price: priceId, quantity: 1 }];
 
   // ── Flow 1: Authenticated existing user ──────────────────────────────────
-  const authHeader = req.headers.authorization || req.headers.Authorization;
+  const rawAuth = req.headers.authorization || req.headers.Authorization;
+  const authHeader = Array.isArray(rawAuth) ? rawAuth[0] : rawAuth;
   if (authHeader?.startsWith('Bearer ')) {
     const { user, error: authError } = await getAuthedUser(req);
     if (authError || !user?.id) return json(res, 401, { error: 'Ungültiger Token.' });

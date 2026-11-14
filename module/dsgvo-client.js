@@ -3,6 +3,7 @@
 
 let isExportRunning = false;
 let isDeleteRunning = false;
+/** @type {any} */
 let activeOpts = null;
 let isVerdrahtet = false;
 
@@ -11,7 +12,7 @@ let isVerdrahtet = false;
  * @param {object} params
  * @param {string} params.apiBase
  * @param {string} params.token
- * @param {Function} [params.fetchImpl]
+ * @param {any} [params.fetchImpl]
  * @returns {Promise<Blob>}
  */
 export async function exportAbrufen({ apiBase, token, fetchImpl = globalThis.fetch }) {
@@ -36,8 +37,8 @@ export async function exportAbrufen({ apiBase, token, fetchImpl = globalThis.fet
  * @param {object} params
  * @param {string} params.apiBase
  * @param {string} params.token
- * @param {Function} [params.fetchImpl]
- * @returns {Promise<{ ok: boolean, status: number, data: object }>}
+ * @param {any} [params.fetchImpl]
+ * @returns {Promise<{ ok: boolean, status: number, data: any }>}
  */
 export async function kontoLoeschenSenden({ apiBase, token, fetchImpl = globalThis.fetch }) {
   if (!token) throw new Error('Nicht angemeldet oder kein Zugriffstoken vorhanden.');
@@ -57,14 +58,14 @@ export async function kontoLoeschenSenden({ apiBase, token, fetchImpl = globalTh
 
 /**
  * Führt den DSGVO-Datenexport (Art. 15) aus und stößt den Browser-Download an.
- * @param {object} params
- * @param {string} params.apiBase
- * @param {Function|string} params.getToken
- * @param {Function} [params.showToast]
- * @param {Function} [params.fetchImpl]
- * @param {HTMLElement} [params.targetEl]
+ * @param {object} [params]
+ * @param {string} [params.apiBase]
+ * @param {any} [params.getToken]
+ * @param {any} [params.showToast]
+ * @param {any} [params.fetchImpl]
+ * @param {HTMLElement | null} [params.targetEl]
  */
-export async function dsgvoExportHerunterladen({ apiBase, getToken, showToast, fetchImpl = globalThis.fetch, targetEl = null } = {}) {
+export async function dsgvoExportHerunterladen({ apiBase = '', getToken, showToast, fetchImpl = globalThis.fetch, targetEl = null } = {}) {
   if (isExportRunning) return;
   isExportRunning = true;
 
@@ -72,7 +73,7 @@ export async function dsgvoExportHerunterladen({ apiBase, getToken, showToast, f
   if (targetEl) {
     origHtml = targetEl.innerHTML;
     targetEl.textContent = 'Wird vorbereitet...';
-    if ('disabled' in targetEl) targetEl.disabled = true;
+    if ('disabled' in targetEl) (/** @type {HTMLButtonElement} */ (targetEl)).disabled = true;
     targetEl.style.pointerEvents = 'none';
   }
 
@@ -96,11 +97,11 @@ export async function dsgvoExportHerunterladen({ apiBase, getToken, showToast, f
     }
     if (showToast) showToast('Export heruntergeladen ✓');
   } catch (err) {
-    if (showToast) showToast('Export fehlgeschlagen: ' + (err.message || err), 'error');
+    if (showToast) showToast('Export fehlgeschlagen: ' + (err instanceof Error ? err.message : String(err)), 'error');
   } finally {
     if (targetEl) {
       if (origHtml !== null) targetEl.innerHTML = origHtml;
-      if ('disabled' in targetEl) targetEl.disabled = false;
+      if ('disabled' in targetEl) (/** @type {HTMLButtonElement} */ (targetEl)).disabled = false;
       targetEl.style.removeProperty('pointer-events');
     }
     isExportRunning = false;
@@ -109,19 +110,19 @@ export async function dsgvoExportHerunterladen({ apiBase, getToken, showToast, f
 
 /**
  * Führt die Kontolöschung (Art. 17) nach doppelter Bestätigung aus.
- * @param {object} params
- * @param {string} params.apiBase
- * @param {Function|string} params.getToken
- * @param {Function} [params.showToast]
- * @param {Function} [params.showConfirmModal]
- * @param {Function} [params.showInputModal]
- * @param {Function} [params.signOut]
+ * @param {object} [params]
+ * @param {string} [params.apiBase]
+ * @param {any} [params.getToken]
+ * @param {any} [params.showToast]
+ * @param {any} [params.showConfirmModal]
+ * @param {any} [params.showInputModal]
+ * @param {any} [params.signOut]
  * @param {boolean} [params.istKutu]
- * @param {Function} [params.fetchImpl]
- * @param {HTMLElement} [params.targetEl]
+ * @param {any} [params.fetchImpl]
+ * @param {HTMLElement | null} [params.targetEl]
  */
 export async function dsgvoKontoLoeschen({
-  apiBase, getToken, showToast, showConfirmModal, showInputModal,
+  apiBase = '', getToken, showToast, showConfirmModal, showInputModal,
   signOut, istKutu = false, fetchImpl = globalThis.fetch, targetEl = null
 } = {}) {
   if (istKutu) {
@@ -161,7 +162,7 @@ export async function dsgvoKontoLoeschen({
   let origHtml = null;
   if (targetEl) {
     origHtml = targetEl.innerHTML;
-    if ('disabled' in targetEl) targetEl.disabled = true;
+    if ('disabled' in targetEl) (/** @type {HTMLButtonElement} */ (targetEl)).disabled = true;
     targetEl.textContent = 'Wird gelöscht...';
   }
 
@@ -171,7 +172,7 @@ export async function dsgvoKontoLoeschen({
       if (showToast) showToast('Nicht angemeldet oder Sitzung abgelaufen.', 'error');
       if (targetEl) {
         if (origHtml !== null) targetEl.innerHTML = origHtml;
-        if ('disabled' in targetEl) targetEl.disabled = false;
+        if ('disabled' in targetEl) (/** @type {HTMLButtonElement} */ (targetEl)).disabled = false;
       }
       isDeleteRunning = false;
       return;
@@ -187,7 +188,7 @@ export async function dsgvoKontoLoeschen({
       }
       if (targetEl) {
         if (origHtml !== null) targetEl.innerHTML = origHtml;
-        if ('disabled' in targetEl) targetEl.disabled = false;
+        if ('disabled' in targetEl) (/** @type {HTMLButtonElement} */ (targetEl)).disabled = false;
       }
       isDeleteRunning = false;
       return;
@@ -211,10 +212,10 @@ export async function dsgvoKontoLoeschen({
       window.location.href = '/';
     }
   } catch (err) {
-    if (showToast) showToast('Fehler: ' + (err.message || err), 'error');
+    if (showToast) showToast('Fehler: ' + (err instanceof Error ? err.message : String(err)), 'error');
     if (targetEl) {
       if (origHtml !== null) targetEl.innerHTML = origHtml;
-      if ('disabled' in targetEl) targetEl.disabled = false;
+      if ('disabled' in targetEl) (/** @type {HTMLButtonElement} */ (targetEl)).disabled = false;
     }
   } finally {
     isDeleteRunning = false;
@@ -224,14 +225,7 @@ export async function dsgvoKontoLoeschen({
 /**
  * Verdrahtet DSGVO-Export und -Löschung per Event-Delegation am Dokument.
  * In der lokalen Box wird der Lösch-Button ausgeblendet.
- * @param {object} opts
- * @param {string} opts.apiBase
- * @param {Function} opts.getToken
- * @param {Function} opts.showToast
- * @param {Function} opts.showConfirmModal
- * @param {Function} opts.showInputModal
- * @param {Function} opts.signOut
- * @param {boolean} opts.istKutu
+ * @param {any} [opts]
  */
 export function dsgvoVerdrahten(opts = {}) {
   activeOpts = opts;
@@ -252,7 +246,8 @@ export function dsgvoVerdrahten(opts = {}) {
   isVerdrahtet = true;
 
   document.addEventListener('click', async (e) => {
-    const exportEl = e.target.closest('[data-dsgvo-export], #dsgvoExportBtn');
+    const target = /** @type {Element | null} */ (e.target);
+    const exportEl = /** @type {HTMLElement | null} */ (target?.closest('[data-dsgvo-export], #dsgvoExportBtn'));
     if (exportEl) {
       e.preventDefault();
       await dsgvoExportHerunterladen({
@@ -264,7 +259,7 @@ export function dsgvoVerdrahten(opts = {}) {
       return;
     }
 
-    const deleteEl = e.target.closest('#dsgvoDeleteBtn');
+    const deleteEl = /** @type {HTMLElement | null} */ (target?.closest('#dsgvoDeleteBtn'));
     if (deleteEl) {
       e.preventDefault();
       if (activeOpts?.istKutu) {

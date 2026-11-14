@@ -6,9 +6,13 @@ import { execFileSync } from 'node:child_process';
 // Actual handlers, telemetry wrapper, auth helpers and Stripe form encoding run unchanged.
 async function exerciseHandler() {
   const { flow, checkoutModule, portalModule } = JSON.parse(process.argv[1]);
+  /** @type {typeof import('node:assert/strict')} */
   const assert = (await import('node:assert/strict')).default;
+  /** @type {Array<{ url: string, method: string, headers: Record<string, string>, body?: string }>} */
   const calls = [];
+  /** @type {Array<{ url: string, method: string }>} */
   const unexpected = [];
+  /** @type {Array<{ url: string, method: string, data: unknown }>} */
   const expected = [];
   const user = { id: 'user_synthetic', email: 'user@example.invalid' };
   const customerId = flow === 'auth-new' || flow === 'pending' ? 'cus_created' : 'cus_existing';
@@ -17,7 +21,13 @@ async function exerciseHandler() {
   const profilePath = flow === 'portal'
     ? '/profiles?id=eq.user_synthetic&select=stripe_customer_id'
     : '/profiles?id=eq.user_synthetic&select=email,stripe_customer_id';
+  /**
+   * @param {string} url
+   * @param {string} method
+   * @param {unknown} data
+   */
   const enqueue = (url, method, data) => expected.push({ url, method, data });
+  /** @param {string} path */
   const rest = path => `https://supabase.example.invalid/rest/v1${path}`;
 
   if (flow === 'pending') {
@@ -38,8 +48,10 @@ async function exerciseHandler() {
   enqueue(`https://api.stripe.com/v1${stripePath}`, 'POST', { id: 'cs_synthetic', url: responseUrl });
   if (flow === 'pending') enqueue(rest(`/pending_signups?id=eq.${pendingId}`), 'PATCH', []);
 
-  globalThis.fetch = async (url, init = {}) => {
-    const call = { url, method: init.method || 'GET', headers: init.headers, body: init.body };
+  globalThis.fetch = async (/** @type {string | URL | Request} */ input, /** @type {RequestInit} */ init = {}) => {
+    const url = String(input);
+    const headers = /** @type {Record<string, string>} */ (init.headers || {});
+    const call = { url, method: init.method || 'GET', headers, body: init.body ? String(init.body) : undefined };
     calls.push(call);
     const next = expected.shift();
     if (!next || url !== next.url || call.method !== next.method) {
@@ -47,18 +59,26 @@ async function exerciseHandler() {
       throw new Error('Unexpected network call blocked');
     }
     if (url.startsWith('https://api.stripe.com/')) {
-      assert.equal(init.headers.Authorization, 'Bearer sk_test_synthetic_not_a_key');
-      assert.equal(init.headers['Content-Type'], 'application/x-www-form-urlencoded');
+      assert.equal(headers.Authorization, 'Bearer sk_test_synthetic_not_a_key');
+      assert.equal(headers['Content-Type'], 'application/x-www-form-urlencoded');
     } else {
       const auth = url.endsWith('/auth/v1/user');
-      assert.equal(init.headers.Authorization, auth ? 'Bearer jwt_synthetic' : 'Bearer service_synthetic');
-      assert.equal(init.headers.apikey, auth ? 'anon_synthetic' : 'service_synthetic');
+      assert.equal(headers.Authorization, auth ? 'Bearer jwt_synthetic' : 'Bearer service_synthetic');
+      assert.equal(headers.apikey, auth ? 'anon_synthetic' : 'service_synthetic');
     }
     return new Response(JSON.stringify(next.data), { status: 200 });
   };
   const { default: handler } = await import(flow === 'portal' ? portalModule : checkoutModule);
-  const res = { statusCode: 200, headers: {},
+  const res = {
+    statusCode: 200,
+    /** @type {Record<string, string>} */
+    headers: {},
+    /** @type {any} */
+    body: undefined,
+    writableEnded: false,
+    /** @param {string} name @param {string} value */
     setHeader(name, value) { this.headers[name] = value; },
+    /** @param {string} value */
     end(value) { this.body = JSON.parse(value); this.writableEnded = true; },
   };
   await handler({ method: 'POST',
@@ -75,6 +95,7 @@ async function exerciseHandler() {
   assert.deepEqual(res.body, flow === 'portal' ? { url: responseUrl }
     : { url: responseUrl, sessionId: 'cs_synthetic' });
   const session = calls.find(call => call.url === `https://api.stripe.com/v1${stripePath}`);
+  if (!session) throw new Error('expected Stripe session call');
   const form = Object.fromEntries(new URLSearchParams(session.body));
   assert.equal(form.customer, customerId);
   if (flow !== 'portal') {
@@ -106,11 +127,15 @@ async function exerciseHandler() {
     if (flow === 'pending') assert.equal(customerForm.name, 'Synthetic Praxis');
   }
   const patch = calls.find(call => call.method === 'PATCH');
-  if (flow === 'auth-new') assert.deepEqual(JSON.parse(patch.body), { stripe_customer_id: customerId });
-  if (flow === 'pending') assert.deepEqual(JSON.parse(patch.body), { stripe_checkout_session_id: 'cs_synthetic' });
+  if (flow === 'auth-new') assert.deepEqual(JSON.parse(patch?.body || ''), { stripe_customer_id: customerId });
+  if (flow === 'pending') assert.deepEqual(JSON.parse(patch?.body || ''), { stripe_checkout_session_id: 'cs_synthetic' });
   process.stdout.write(JSON.stringify(form));
 }
 
+/**
+ * @param {string} flow
+ * @param {string | undefined} base
+ */
 function runFlow(flow, base) {
   // No inherited secrets, env files, NODE_OPTIONS/preloads, or telemetry transport.
   // Parent process.env is never mutated; child environment disappears on exit.

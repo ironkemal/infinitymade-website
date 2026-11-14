@@ -44,15 +44,22 @@ export function pruefeEmpfaengerZertifikat({
   try {
     x509Cert = new crypto.X509Certificate(certBuf);
   } catch (err) {
-    throw new Error(`Empfängerzertifikat ist kein gültiges X.509-Zertifikat: ${err.message}`);
+    throw new Error(`Empfängerzertifikat ist kein gültiges X.509-Zertifikat: ${err instanceof Error ? err.message : String(err)}`);
   }
 
-  const ab = certBuf.buffer.slice(certBuf.byteOffset, certBuf.byteOffset + certBuf.byteLength);
+  const rawAb = certBuf.buffer.slice(certBuf.byteOffset, certBuf.byteOffset + certBuf.byteLength);
+  let ab;
+  if (rawAb instanceof ArrayBuffer) {
+    ab = rawAb;
+  } else {
+    ab = new ArrayBuffer(certBuf.byteLength);
+    new Uint8Array(ab).set(certBuf);
+  }
   let pkiCert;
   try {
     pkiCert = pkijs.Certificate.fromBER(ab);
   } catch (err) {
-    throw new Error(`Empfängerzertifikat ASN.1-Parsing fehlgeschlagen: ${err.message}`);
+    throw new Error(`Empfängerzertifikat ASN.1-Parsing fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`);
   }
 
   // --- KONTROLLE 1: Gültigkeitszeitraum (notBefore <= jetzt <= notAfter) ---

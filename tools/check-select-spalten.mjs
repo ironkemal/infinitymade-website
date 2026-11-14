@@ -15,6 +15,7 @@ import { join } from 'node:path';
 const AUSGESCHLOSSEN = /^(ops|merkez|archive|vendor|onprem|tools|sosyal|Claude outputs|supabase\/migrations|\.claude)\/|(^|\/)node_modules\//;
 const WINDOW = 1200;
 
+/** @param {string} schema */
 export function leseTabellen(schema) {
   const tabellen = new Map();
   const norm = schema.replace(/\r\n/g, '\n');
@@ -30,6 +31,7 @@ export function leseTabellen(schema) {
 }
 
 // Eingebettete Beziehungen ("arzt:aerzte(name, lanr)"), auch verschachtelt, entfernen.
+/** @param {string} liste */
 function ohneEinbettungen(liste) {
   let s = liste;
   let vorher;
@@ -40,6 +42,7 @@ function ohneEinbettungen(liste) {
   return s;
 }
 
+/** @param {string} liste */
 export function spaltenAusSelect(liste) {
   const namen = [];
   for (const teil of ohneEinbettungen(liste).split(',')) {
@@ -48,15 +51,19 @@ export function spaltenAusSelect(liste) {
     // alias:spalte, spalte::typ, spalte->>feld
     const ohneCast = t.split('::')[0];
     const ohneJson = ohneCast.split(/->/)[0];
-    const name = ohneJson.includes(':') ? ohneJson.split(':').pop() : ohneJson;
+    const name = (ohneJson.includes(':') ? ohneJson.split(':').pop() : ohneJson) || '';
     if (name.trim()) namen.push(name.trim());
   }
   return namen;
 }
 
+/**
+ * @param {string} src
+ * @param {Map<string, Set<string>>} tabellen
+ */
 export function pruefeQuelle(src, tabellen) {
   const funde = [];
-  const ohneKommentare = src.replace(/^\s*(\/\/|\*).*$/gm, (z) => ' '.repeat(z.length));
+  const ohneKommentare = src.replace(/^\s*(\/\/|\*).*$/gm, (/** @type {string} */ z) => ' '.repeat(z.length));
   for (const m of ohneKommentare.matchAll(/\.from\(\s*['"]([^'"]+)['"]\s*\)/g)) {
     const spalten = tabellen.get(m[1]);
     if (!spalten) continue;
@@ -78,11 +85,18 @@ export function pruefeQuelle(src, tabellen) {
   return funde;
 }
 
+/** @param {string[]} args */
 function git(...args) {
   return execFileSync('git', args, { encoding: 'utf8', maxBuffer: 1 << 28 });
 }
 
+/**
+ * @param {string} dir
+ * @param {string} [basis]
+ * @returns {string[]}
+ */
 function alleDateien(dir, basis = '') {
+  /** @type {string[]} */
   const liste = [];
   for (const n of readdirSync(dir)) {
     const rel = basis ? `${basis}/${n}` : n;
@@ -94,7 +108,7 @@ function alleDateien(dir, basis = '') {
   return liste;
 }
 
-const istRelevant = (f) => /\.(js|mjs|cjs)$/.test(f) && !/\.test\.(js|mjs)$/.test(f) && !AUSGESCHLOSSEN.test(f);
+const istRelevant = (/** @type {string} */ f) => /\.(js|mjs|cjs)$/.test(f) && !/\.test\.(js|mjs)$/.test(f) && !AUSGESCHLOSSEN.test(f);
 
 function main() {
   const root = git('rev-parse', '--show-toplevel').trim();

@@ -14,6 +14,10 @@
 
 export const PODO_PAUSE_MAX_TAGE = 84;
 
+/**
+ * @param {string|null|undefined} iso
+ * @returns {number|null}
+ */
 const tagNr = (iso) => {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
   return m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) / 86400000 : null;
@@ -27,18 +31,30 @@ const tagNr = (iso) => {
 export function pauseLage(behandlungen, datum) {
   const ziel = tagNr(datum);
   if (ziel == null) return { ungueltig: false, letzteAm: null, tage: null };
+  /** @type {string|null} */
   let letzte = null;
   for (const b of behandlungen || []) {
     if (!b || b.storniert_am) continue;
     const t = tagNr(b.behandlungsdatum);
-    if (t != null && t < ziel && (letzte == null || t > tagNr(letzte))) letzte = String(b.behandlungsdatum).slice(0, 10);
+    if (t != null && t < ziel) {
+      const lTag = letzte ? tagNr(letzte) : null;
+      if (lTag == null || t > lTag) letzte = String(b.behandlungsdatum).slice(0, 10);
+    }
   }
   if (!letzte) return { ungueltig: false, letzteAm: null, tage: null };
-  const tage = ziel - tagNr(letzte);
+  const lTag = tagNr(letzte);
+  if (lTag == null) return { ungueltig: false, letzteAm: null, tage: null };
+  const tage = ziel - lTag;
   return { ungueltig: tage > PODO_PAUSE_MAX_TAGE, letzteAm: letzte, tage };
 }
 
-/** Meldung für die Sperre beim Dokumentieren. */
+/**
+ * Meldung für die Sperre beim Dokumentieren.
+ * @param {object} params
+ * @param {string|null|undefined} params.letzteAm
+ * @param {number|null|undefined} params.tage
+ * @returns {string}
+ */
 export function pauseMeldung({ letzteAm, tage }) {
   const d = new Date(letzteAm + 'T12:00:00Z').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Europe/Berlin' });
   return `Seit der letzten Behandlung dieser Verordnung (${d}) sind ${tage} Tage vergangen. `

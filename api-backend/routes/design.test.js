@@ -9,6 +9,11 @@ const { createDesignRouter, designNeuErlaubt } = await import('./design.js');
 
 const T1 = '11111111-1111-4111-8111-111111111111';
 const T2 = '22222222-2222-4222-8222-222222222222';
+/**
+ * @param {{ headers: Record<string, string | undefined>, auth?: { userId: string, tenantId: string, role: string } }} req
+ * @param {{ status: (c: number) => { json: (b: unknown) => unknown } }} res
+ * @param {() => void} next
+ */
 const fakeAuth = (req, res, next) => {
   const rolle = req.headers['x-rolle'];
   if (!rolle) return res.status(401).json({ error: 'Missing bearer token' });
@@ -29,12 +34,16 @@ test('rein: nur gelisteter Tenant, nur erlaubte Rolle, AUS gewinnt', () => {
   assert.equal(designNeuErlaubt(null, env), false);
 });
 
+/**
+ * @param {Record<string, string | undefined>} env
+ * @param {(url: string) => Promise<void>} fn
+ */
 async function mitServer(env, fn) {
   const app = express();
   app.use('/api', createDesignRouter({ auth: fakeAuth, env }));
   const server = http.createServer(app);
-  await new Promise((r) => server.listen(0, '127.0.0.1', r));
-  try { await fn(`http://127.0.0.1:${server.address().port}/api/design/entscheidung`); }
+  await /** @type {Promise<void>} */ (new Promise((r) => server.listen(0, '127.0.0.1', r)));
+  try { await fn(`http://127.0.0.1:${/** @type {import('node:net').AddressInfo} */ (server.address()).port}/api/design/entscheidung`); }
   finally { await new Promise((r) => server.close(r)); }
 }
 

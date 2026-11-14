@@ -77,7 +77,10 @@ export function einreichbarFilter() {
 // Frontend-Repo. Zwei Deploys, kein gemeinsamer Import (der Docker-Build
 // schliesst `module/` nicht ein) — wer eine Tabelle aendert, aendert beide.
 
-/** alter verordnungen.status → prescriptions.abrechnung_status */
+/**
+ * alter verordnungen.status → prescriptions.abrechnung_status
+ * @type {Readonly<Record<string, string | null>>}
+ */
 const NACH_ABRECHNUNG_STATUS = Object.freeze({
   aktiv: null, abrechenbar: 'bereit', abgerechnet: 'gesendet', abgesetzt: 'rejected',
   teilabsetzung: 'teilabsetzung', storniert: 'storniert', archiviert: 'archiviert',
@@ -91,11 +94,12 @@ const NACH_ABRECHNUNG_STATUS = Object.freeze({
  * Sie auf `aktiv` fallen zu lassen wäre der teure Fehler: eine bereits
  * eingereichte Verordnung stünde wieder in der Arbeitsliste.
  *
- * @param {string|null} abrechnungStatus
+ * @param {string|null|undefined} abrechnungStatus
  * @returns {string}
  */
 export function statusAusAbrechnungStatus(abrechnungStatus) {
   if (!abrechnungStatus) return 'aktiv';
+  /** @type {Record<string, string>} */
   const AUS = {
     bereit: 'abrechenbar', in_abrechnung: 'abgerechnet', gesendet: 'abgerechnet',
     accepted: 'abgerechnet', paid: 'abgerechnet', rejected: 'abgesetzt',

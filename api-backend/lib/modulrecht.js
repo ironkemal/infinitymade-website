@@ -5,17 +5,25 @@
 // oder Ausnahme: nein (fail closed). get_my_permissions wertet auth.uid() aus und braucht deshalb das JWT des Nutzers.
 import { createClient } from '@supabase/supabase-js';
 
+/**
+ * @param {string} token
+ * @param {string} businessId
+ */
 export function rechteAbfrage(token, businessId) {
-  const userClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    global: { headers: { Authorization: `Bearer ${token}` } },
-  });
+  const userClient = createClient(
+    /** @type {string} */ (process.env.SUPABASE_URL),
+    /** @type {string} */ (process.env.SUPABASE_SERVICE_ROLE_KEY),
+    {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    },
+  );
   return userClient.rpc('get_my_permissions', { p_business_id: businessId });
 }
 
 /**
  * @param {{auth:{userId:string, role:string}|undefined, ownerId:string, businessIds:string[], token:string|null,
- *          rpc?:(token:string, businessId:string)=>Promise<{data:any,error:any}>}} p
+ *          rpc?:(token:string, businessId:string)=>PromiseLike<{data:unknown,error:unknown}>}} p
  * @returns {Promise<boolean>}
  */
 export async function hatAbrechnungsRecht({ auth, ownerId, businessIds, token, rpc = rechteAbfrage }) {

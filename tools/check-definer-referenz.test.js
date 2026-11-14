@@ -28,7 +28,7 @@ test('Referenz ist frisch genug aufgebaut', () => {
 
 test('jede für anon/authenticated ausführbare DEFINER-Funktion ist begründet', () => {
   const ausnahmen = new Set(AUSNAHMEN.map((a) => a.name));
-  const unbegruendet = ref.funktionen
+  const unbegruendet = (/** @type {Array<{ name: string }>} */ (ref.funktionen))
     .map((f) => f.name)
     .filter((n) => !ausnahmen.has(n) && !RLS_HELFER.has(n) && !EXTENSION.has(n));
   assert.deepEqual(unbegruendet, [], 'Unbegründete EXECUTE-Rechte: ' + unbegruendet.join(', '));

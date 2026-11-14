@@ -15,23 +15,30 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { uebermittlungProtokollieren, ERLAUBTE_RICHTUNGEN } from './uebermittlung.js';
 
+/**
+ * @param {{ data?: any, error?: any, throwException?: boolean }} [opts]
+ */
 function erstelleMockDb({
   data = { id: 'uebermittlung-uuid-1' },
   error = null,
   throwException = false,
 } = {}) {
+  /** @type {any[]} */
   const inserts = [];
   return {
     inserts,
+    /** @param {string} table */
     from(table) {
       assert.equal(table, 'abrechnung_uebermittlung');
       return {
+        /** @param {any} row */
         insert(row) {
           if (throwException) {
             throw new Error('Harter Datenbankfehler beim Insert-Aufruf');
           }
           inserts.push(row);
           return {
+            /** @param {string} cols */
             select(cols) {
               assert.equal(cols, 'id');
               return {
@@ -73,7 +80,7 @@ test('1. Erfolgsfall: erwartete Pflicht- und Zusatzfelder landen im Insert, id k
       verarbeitungshinweise: 'Testnachricht ohne Fehler',
       verarbeitungskennzeichen: '01',
       fehlerstatus: 'ok',
-      fehlertext: null,
+      fehlertext: /** @type {any} */ (null),
       uebertragungsweg: 'dfue',
       sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
       betriebsart: 'test',
@@ -182,7 +189,7 @@ test('5. Pflichtfeld fehlt -> gibt null zurueck, KEIN Insert-Versuch', async () 
   assert.equal(r1, null);
 
   // richtung fehlt
-  const r2 = await uebermittlungProtokollieren({ ...basis, richtung: null }, { db: mockDb });
+  const r2 = await uebermittlungProtokollieren(/** @type {any} */ ({ ...basis, richtung: null }), { db: mockDb });
   assert.equal(r2, null);
 
   // physikalischer_dateiname fehlt
@@ -190,7 +197,7 @@ test('5. Pflichtfeld fehlt -> gibt null zurueck, KEIN Insert-Versuch', async () 
   assert.equal(r3, null);
 
   // erstellt_am fehlt
-  const r4 = await uebermittlungProtokollieren({ ...basis, erstellt_am: null }, { db: mockDb });
+  const r4 = await uebermittlungProtokollieren(/** @type {any} */ ({ ...basis, erstellt_am: null }), { db: mockDb });
   assert.equal(r4, null);
 
   // partner_ik fehlt
@@ -256,7 +263,7 @@ test('8. Striktes Whitelisting (PHI-Schutz): Patientenfelder landen niemals im I
   const mockDb = erstelleMockDb();
 
   await uebermittlungProtokollieren(
-    {
+    /** @type {any} */ ({
       owner_id: 'owner-1',
       richtung: 'senden',
       physikalischer_dateiname: 'ED010001',
@@ -268,7 +275,7 @@ test('8. Striktes Whitelisting (PHI-Schutz): Patientenfelder landen niemals im I
       geburtsdatum: '1980-01-01',
       diagnose: 'M79.1',
       arzt_name: 'Dr. Test',
-    },
+    }),
     { db: mockDb }
   );
 

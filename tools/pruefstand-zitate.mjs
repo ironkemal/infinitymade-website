@@ -23,14 +23,17 @@ const BEREICHE = ['podologie', 'physio', 'ergo', 'logo', 'uebergreifend'];
 const ENGINES = ['standard', 'lhb_bvb', 'blanko'];
 const STATUS = ['aktiv', 'bewusst', 'befund'];
 
-const norm = (s) => String(s).replace(/\s+/g, ' ').trim();
-const nichtLeer = (v) => typeof v === 'string' && v.trim() !== '';
+const norm = (/** @type {any} */ s) => String(s).replace(/\s+/g, ' ').trim();
+const nichtLeer = (/** @type {any} */ v) => typeof v === 'string' && v.trim() !== '';
+/** @type {Map<string, string[]>} */
 const cache = new Map();
+/** @param {string} rel */
 function zeilen(rel) {
   if (!cache.has(rel)) cache.set(rel, readFileSync(path.join(ROOT, rel), 'utf8').split('\n'));
-  return cache.get(rel);
+  return /** @type {string[]} */ (cache.get(rel));
 }
 // "(Z. 678)" / "(Z. 419–420)" → [von, bis] (1-basiert) oder null
+/** @param {any} abschnitt */
 function zeilenbereich(abschnitt) {
   const m = /\(Z\. (\d+)(?:[–-](\d+))?\)/.exec(String(abschnitt));
   if (!m) return null;
@@ -40,6 +43,7 @@ function zeilenbereich(abschnitt) {
 
 // Prüft alle Fixtures. Rückgabe: { fehler: string[], gesamt, zitateOk, jeDatei, jeBereich, jeStatus }
 export function pruefeZitate({ minimum = true } = {}) {
+/** @type {string[]} */
 const meldungen = [];
 const leer = { fehler: meldungen, gesamt: 0, zitateOk: 0, jeDatei: {}, jeBereich: {}, jeStatus: {} };
 
@@ -53,16 +57,21 @@ if (dateien.length === 0) {
   return leer;
 }
 
-const melde = (id, grund) => { meldungen.push(`FEHLT ${id}: ${grund}`); };
+const melde = (/** @type {string} */ id, /** @type {string} */ grund) => { meldungen.push(`FEHLT ${id}: ${grund}`); };
 
 const ids = new Set();
-const jeDatei = {}, jeBereich = {}, jeStatus = {};
+/** @type {Record<string, number>} */
+const jeDatei = {};
+/** @type {Record<string, number>} */
+const jeBereich = {};
+/** @type {Record<string, number>} */
+const jeStatus = {};
 let gesamt = 0, zitateOk = 0;
 
 for (const datei of dateien) {
   let faelle;
   try { faelle = JSON.parse(readFileSync(path.join(DIR, datei), 'utf8')); }
-  catch (e) { melde(datei, `kein gültiges JSON (${e.message})`); continue; }
+  catch (e) { melde(datei, `kein gültiges JSON (${e instanceof Error ? e.message : String(e)})`); continue; }
   if (!Array.isArray(faelle)) { melde(datei, 'Datei ist kein JSON-Array'); continue; }
   jeDatei[datei] = faelle.length;
   faelle.forEach((f, i) => {
@@ -118,7 +127,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
   const r = pruefeZitate({ minimum: !process.argv.includes('--kein-minimum') });
   for (const m of r.fehler) console.log(m);
   const pct = r.gesamt ? ((r.zitateOk / r.gesamt) * 100).toFixed(1) : '0.0';
-  const liste = (o) => Object.entries(o).map(([k, v]) => `${k}=${v}`).join(', ');
+  const liste = (/** @type {Record<string, number>} */ o) => Object.entries(o).map(([k, v]) => `${k}=${v}`).join(', ');
   console.log(`\nFälle gesamt: ${r.gesamt}`);
   console.log(`Je Datei: ${liste(r.jeDatei)}`);
   console.log(`Je Bereich: ${liste(r.jeBereich)}`);

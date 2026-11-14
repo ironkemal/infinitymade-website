@@ -16,6 +16,11 @@ import {
 } from './annahmestelle.js';
 
 // Eine VKG-Zeile, wie sie in kostentraeger_annahmestellen steht.
+/**
+ * @param {string} partner_ik
+ * @param {string} abrechnungscode
+ * @param {{ va?: string, adl?: string, bl?: string }} [opt]
+ */
 const zeile = (partner_ik, abrechnungscode, opt = {}) => ({
   partner_ik,
   abrechnungscode,
@@ -35,6 +40,7 @@ test('T9: Podologie nimmt 71/72, obwohl 99 und 00 danebenstehen', () => {
     zeile('100000002', '99'),
     zeile('100000003', '71'),
   ], { ketten: podoKette });
+  assert.ok(t);
 
   assert.equal(t.partnerIk, '100000003');
   assert.equal(t.abrechnungscode, '71');
@@ -44,6 +50,7 @@ test('T9: Podologie nimmt 71/72, obwohl 99 und 00 danebenstehen', () => {
 test('T9b: 72 zaehlt gleichwertig zu 71 (dieselbe Stufe)', () => {
   const t = waehleAnnahmestelle([zeile('100000009', '72'), zeile('100000001', '00')],
     { ketten: podoKette });
+  assert.ok(t);
   assert.equal(t.partnerIk, '100000009');
   assert.equal(t.stufe, 0);
 });
@@ -53,6 +60,7 @@ test('T9c: Physio nimmt den eigenen Code vor dem Gruppenschluessel 20', () => {
     zeile('100000001', '20'),
     zeile('100000004', '22'),
   ], { ketten: physKette });
+  assert.ok(t);
   assert.equal(t.partnerIk, '100000004');
   assert.equal(t.abrechnungscode, '22');
 });
@@ -65,6 +73,7 @@ test('T10: ohne 71/72 faellt die Podologie auf 99 — NICHT auf 20', () => {
     zeile('100000006', '99'),
     zeile('100000007', '00'),
   ], { ketten: podoKette });
+  assert.ok(t);
 
   assert.equal(t.partnerIk, '100000006', 'muss 99 nehmen, nicht die 20');
   assert.equal(t.abrechnungscode, '99');
@@ -74,6 +83,7 @@ test('T10: ohne 71/72 faellt die Podologie auf 99 — NICHT auf 20', () => {
 test('T10b: ohne 71/72/99 bleibt der Sammelschluessel 00', () => {
   const t = waehleAnnahmestelle([zeile('100000005', '20'), zeile('100000007', '00')],
     { ketten: podoKette });
+  assert.ok(t);
   assert.equal(t.partnerIk, '100000007');
   assert.equal(t.stufe, 2);
 });
@@ -84,6 +94,7 @@ test('T10c: die 20 allein macht die Podologie NICHT aufloesbar', () => {
 });
 
 test('T10d: Physio steigt eigener Code -> 20 -> 99 -> 00 ab', () => {
+  /** @type {Array<[Parameters<typeof waehleAnnahmestelle>[0], string, number]>} */
   const stufen = [
     [[zeile('1', '22'), zeile('2', '20'), zeile('3', '99'), zeile('4', '00')], '1', 0],
     [[zeile('2', '20'), zeile('3', '99'), zeile('4', '00')],                   '2', 1],
@@ -92,6 +103,7 @@ test('T10d: Physio steigt eigener Code -> 20 -> 99 -> 00 ab', () => {
   ];
   for (const [zeilen, erwartet, stufe] of stufen) {
     const t = waehleAnnahmestelle(zeilen, { ketten: physKette });
+    assert.ok(t);
     assert.equal(t.partnerIk, erwartet);
     assert.equal(t.stufe, stufe);
   }
@@ -104,6 +116,7 @@ test('03 schlaegt 02, auch wenn 02 den spezifischeren Code traegt', () => {
     zeile('100000010', '71', { va: '02' }),
     zeile('100000011', '00', { va: '03' }),
   ], { ketten: podoKette });
+  assert.ok(t);
 
   assert.equal(t.partnerIk, '100000011');
   assert.equal(t.verknuepfungsart, '03');
@@ -112,6 +125,7 @@ test('03 schlaegt 02, auch wenn 02 den spezifischeren Code traegt', () => {
 test('ohne jede 03-Zeile faellt die Auswahl auf 02', () => {
   const t = waehleAnnahmestelle([zeile('100000010', '71', { va: '02' })],
     { ketten: podoKette });
+  assert.ok(t);
   assert.equal(t.partnerIk, '100000010');
   assert.equal(t.verknuepfungsart, '02');
 });
@@ -140,11 +154,13 @@ test('nur 07 und 30 gelten als elektronisch', () => {
 test('landesunabhaengig ist der LEERE STRING, nicht NULL', () => {
   // Die Spalte ist NOT NULL DEFAULT '' — wer hier auf NULL prueft, trifft nichts.
   const t = waehleAnnahmestelle([zeile('100000015', '71', { bl: '' })], { ketten: podoKette });
+  assert.ok(t);
   assert.equal(t.partnerIk, '100000015');
 });
 
 test('99 gilt ebenfalls landesunabhaengig', () => {
   const t = waehleAnnahmestelle([zeile('100000016', '71', { bl: '99' })], { ketten: podoKette });
+  assert.ok(t);
   assert.equal(t.partnerIk, '100000016');
 });
 
@@ -152,8 +168,9 @@ test('eine landesspezifische Zeile zaehlt nur beim passenden Land', () => {
   const zeilen = [zeile('100000017', '71', { bl: '05' })];
   assert.equal(waehleAnnahmestelle(zeilen, { ketten: podoKette }), null,
     'ohne bekanntes Land darf die landesspezifische Zeile nicht gezogen werden');
-  assert.equal(waehleAnnahmestelle(zeilen, { ketten: podoKette, bundeslandVkg: '05' }).partnerIk,
-    '100000017');
+  const tMatch = waehleAnnahmestelle(zeilen, { ketten: podoKette, bundeslandVkg: '05' });
+  assert.ok(tMatch);
+  assert.equal(tMatch.partnerIk, '100000017');
   assert.equal(waehleAnnahmestelle(zeilen, { ketten: podoKette, bundeslandVkg: '01' }), null);
 });
 
@@ -161,7 +178,7 @@ test('eine landesspezifische Zeile zaehlt nur beim passenden Land', () => {
 
 test('T11: kein brauchbares Segment -> null (der Aufrufer muss 412 antworten)', () => {
   assert.equal(waehleAnnahmestelle([], { ketten: podoKette }), null);
-  assert.equal(waehleAnnahmestelle(null, { ketten: podoKette }), null);
+  assert.equal(waehleAnnahmestelle(/** @type {Parameters<typeof waehleAnnahmestelle>[0]} */ (/** @type {unknown} */ (null)), { ketten: podoKette }), null);
   assert.equal(waehleAnnahmestelle([
     zeile('100000018', '71', { va: '09' }),      // Papierannahmestelle
     zeile('100000019', '71', { adl: '21' }),     // Papier-Datenlieferung
@@ -185,6 +202,7 @@ test('zwei Empfaenger auf der 00-Stufe werden gemeldet, nicht geworfen', () => {
 test('dieselbe IK mehrfach ist NICHT mehrdeutig', () => {
   const t = waehleAnnahmestelle([zeile('661430035', '71'), zeile('661430035', '71', { adl: '30' })],
     { ketten: podoKette });
+  assert.ok(t);
   assert.equal(t.kandidaten, 1);
 });
 
@@ -202,7 +220,7 @@ test('abrechnungscodeKette: Physio/Ergo/Logo behalten die 20', () => {
 });
 
 test('abrechnungscodeKette: ohne eigenen Code faellt die erste Stufe weg', () => {
-  assert.deepEqual(abrechnungscodeKette('physiotherapy', null), [['20'], ['99'], ['00']]);
+  assert.deepEqual(abrechnungscodeKette('physiotherapy', /** @type {string} */ (/** @type {unknown} */ (null))), [['20'], ['99'], ['00']]);
 });
 
 // --- Kassenart (zweite Haelfte der Dateieinheit) --------------------------
@@ -226,11 +244,13 @@ test('kassenartAusQuelle raet NICHT — Unbekanntes ergibt null', () => {
 test('die Auswahl liefert die Kassenart mit', () => {
   const t = waehleAnnahmestelle(
     [{ ...zeile('661430035', '71'), quelle: 'EK05Q226_KE0.txt' }], { ketten: podoKette });
+  assert.ok(t);
   assert.equal(t.kassenart, 'EK');
 });
 
 test('fehlende quelle macht die Auswahl nicht kaputt, nur die Kassenart null', () => {
   const t = waehleAnnahmestelle([zeile('661430035', '71')], { ketten: podoKette });
+  assert.ok(t);
   assert.equal(t.partnerIk, '661430035');
   assert.equal(t.kassenart, null);
 });
@@ -238,6 +258,11 @@ test('fehlende quelle macht die Auswahl nicht kaputt, nur die Kassenart null', (
 // ── waehlePapierannahmestelle (VKG 09) ───────────────────────────────────────
 
 // Hilfsfunktion analog zu zeile(), aber fuer Papier-VKG-Zeilen.
+/**
+ * @param {string} partner_ik
+ * @param {string} abrechnungscode
+ * @param {{ adl?: string, bl?: string }} [opt]
+ */
 const papierZeile = (partner_ik, abrechnungscode, opt = {}) => ({
   partner_ik,
   abrechnungscode,
@@ -278,6 +303,7 @@ test('P3: Podologie nimmt 71/72 vor 99 vor 00 (dieselbe Kette wie elektronisch)'
     papierZeile('100000003', '71'),
   ];
   const t = waehlePapierannahmestelle(zeilen, { ketten: podoKette });
+  assert.ok(t);
   assert.equal(t.partnerIk, '100000003');
   assert.equal(t.abrechnungscode, '71');
   assert.equal(t.stufe, 0);
@@ -288,6 +314,7 @@ test('P3b: 71/72 fehlen → Fallback auf 99', () => {
     [papierZeile('100000006', '99'), papierZeile('100000007', '00')],
     { ketten: podoKette }
   );
+  assert.ok(t);
   assert.equal(t.partnerIk, '100000006');
   assert.equal(t.stufe, 1);
 });
@@ -306,17 +333,16 @@ test('P4: Bundesland-Filter funktioniert wie bei waehleAnnahmestelle', () => {
   assert.equal(waehlePapierannahmestelle(zeilen, { ketten: podoKette }), null,
     'landesspezifische Zeile darf ohne bekanntes Land nicht gezogen werden');
   // Mit passendem Bundesland → gewaehlt.
-  assert.equal(
-    waehlePapierannahmestelle(zeilen, { ketten: podoKette, bundeslandVkg: '05' }).partnerIk,
-    '100000017'
-  );
+  const tMatch = waehlePapierannahmestelle(zeilen, { ketten: podoKette, bundeslandVkg: '05' });
+  assert.ok(tMatch);
+  assert.equal(tMatch.partnerIk, '100000017');
   // Mit anderem Bundesland → nicht gewaehlt.
   assert.equal(waehlePapierannahmestelle(zeilen, { ketten: podoKette, bundeslandVkg: '01' }), null);
 });
 
 test('P5: keine passende Zeile → null', () => {
   assert.equal(waehlePapierannahmestelle([], { ketten: podoKette }), null);
-  assert.equal(waehlePapierannahmestelle(null, { ketten: podoKette }), null);
+  assert.equal(waehlePapierannahmestelle(/** @type {Parameters<typeof waehlePapierannahmestelle>[0]} */ (/** @type {unknown} */ (null)), { ketten: podoKette }), null);
   // VKG-02-Zeile darf nicht als Papierannahmestelle zaehlen.
   assert.equal(
     waehlePapierannahmestelle(
@@ -336,12 +362,14 @@ test('IKK-Realbeispiel: VKG 09 + abrechnungscode 71/72 → 661430035, 99 → 100
     papierZeile('100202549', '99'),
   ];
   const t71 = waehlePapierannahmestelle(zeilen, { ketten: podoKette });
+  assert.ok(t71);
   assert.equal(t71.partnerIk, '661430035', 'Podologie-Code 71 muss zu IQVIA HSS fuehren');
   assert.equal(t71.stufe, 0);
 
   // Mit Kette ohne 71/72 → faellt auf 99 = IKK selbst.
-  const kette99 = abrechnungscodeKette('podologie', null).filter((_, i) => i > 0);
+  const kette99 = abrechnungscodeKette('podologie', /** @type {string} */ (/** @type {unknown} */ (null))).filter((_, i) => i > 0);
   const t99 = waehlePapierannahmestelle(zeilen, { ketten: kette99 });
+  assert.ok(t99);
   assert.equal(t99.partnerIk, '100202549');
 });
 
@@ -349,6 +377,16 @@ test('IKK-Realbeispiel: VKG 09 + abrechnungscode 71/72 → 661430035, 99 → 100
 
 // Erzeugt einen leichtgewichtigen Mock für Supabase, der exakt die von
 // ladePapierannahmestelle() aufgerufenen Tabellen und Methoden bedient.
+/**
+ * @param {{
+ *   annahmestellen?: Array<Record<string, unknown>>,
+ *   kostentraeger?: Array<Record<string, unknown>>,
+ *   anschriften?: Array<Record<string, unknown>>,
+ *   wirfFehlerTabelle?: string | null,
+ *   datenFehlerTabelle?: string | null,
+ * }} [opts]
+ * @returns {import('@supabase/supabase-js').SupabaseClient & { aufrufe: Array<{ tabelle: string, spalten: string, feld: string, wert: unknown }> }}
+ */
 function erzeugeMockSupabase({
   annahmestellen = [],
   kostentraeger = [],
@@ -356,13 +394,17 @@ function erzeugeMockSupabase({
   wirfFehlerTabelle = null,
   datenFehlerTabelle = null,
 } = {}) {
+  /** @type {Array<{ tabelle: string, spalten: string, feld: string, wert: unknown }>} */
   const aufrufe = [];
-  return {
+  return /** @type {import('@supabase/supabase-js').SupabaseClient & { aufrufe: Array<{ tabelle: string, spalten: string, feld: string, wert: unknown }> }} */ (/** @type {unknown} */ ({
     aufrufe,
+    /** @param {string} tabelle */
     from(tabelle) {
       return {
+        /** @param {string} spalten */
         select(spalten) {
           return {
+            /** @param {string} feld @param {unknown} wert */
             eq(feld, wert) {
               aufrufe.push({ tabelle, spalten, feld, wert });
 
@@ -401,7 +443,7 @@ function erzeugeMockSupabase({
         },
       };
     },
-  };
+  }));
 }
 
 test('L1: ladePapierannahmestelle() liefert die Anschrift mit und waehlt nach 1 > 2 > 3', async () => {
@@ -555,8 +597,10 @@ test('L4: die Adresse wird zur Partner-IK geholt, nicht zur Kostentraeger-IK', a
   });
 
   assert.equal(res.ok, true);
+  assert.ok(res.ok);
   assert.equal(res.ik, '661430035');
   // Anschrift muss die der Papierannahmestelle (Taucha) sein, nicht die der Kasse (Muenchen)
+  assert.ok(res.anschrift);
   assert.equal(res.anschrift.plz, '04425');
   assert.equal(res.anschrift.ort, 'Taucha');
   assert.equal(res.anschrift.strasse, 'Gaertnerweg 12');
@@ -572,6 +616,10 @@ test('L4: die Adresse wird zur Partner-IK geholt, nicht zur Kostentraeger-IK', a
 
 import { ladeAnnahmestelle, giltAm } from './annahmestelle.js';
 
+/**
+ * @param {string} partner
+ * @param {{ va?: string, code?: string, adl?: string, von?: string | null, bis?: string | null }} [opt]
+ */
 const vkgRoh = (partner, opt = {}) => ({
   kostentraeger_ik: '108310400', partner_ik: partner, verknuepfungsart: opt.va ?? '03',
   abrechnungscode: opt.code ?? '71', art_datenlieferung: opt.adl ?? '07', bundesland: '',
@@ -600,16 +648,16 @@ test('ST1: Quartalswechsel — 30.09. alter Empfänger, 01.10. neuer (gleiche Ze
   const supabase = erzeugeMockSupabase({ annahmestellen, kostentraeger: ktNamen });
   const alt = await ladeAnnahmestelle(supabase, { ...OPT, stichtag: '2026-09-30' });
   const neu = await ladeAnnahmestelle(supabase, { ...OPT, stichtag: '2026-10-01' });
-  assert.equal(alt.ok, true); assert.equal(alt.ik, 'ALT000001');
+  assert.ok(alt.ok); assert.equal(alt.ik, 'ALT000001');
   assert.equal(alt.treffer.kandidaten, 1, 'nur EIN Kandidat am Stichtag — kein Zufall mehr');
-  assert.equal(neu.ok, true); assert.equal(neu.ik, 'NEU000001');
+  assert.ok(neu.ok); assert.equal(neu.ik, 'NEU000001');
   assert.equal(neu.treffer.kandidaten, 1);
 });
 
 test('ST2: Zeilen ohne valid_from/valid_to (Bestand) gelten immer', async () => {
   const supabase = erzeugeMockSupabase({ annahmestellen: [vkgRoh('ALT000001')], kostentraeger: ktNamen });
   const r = await ladeAnnahmestelle(supabase, { ...OPT, stichtag: '2031-01-01' });
-  assert.equal(r.ok, true);
+  assert.ok(r.ok);
   assert.equal(r.ik, 'ALT000001');
 });
 
@@ -625,6 +673,7 @@ test('ST4: ohne Stichtag gilt der Berliner Tag', async () => {
     kostentraeger: ktNamen,
   });
   const r = await ladeAnnahmestelle(supabase, OPT);
+  assert.ok(r.ok);
   assert.equal(r.ik, 'NEU000001');
 });
 
@@ -647,8 +696,10 @@ test('ST6: Papierannahmestelle und ihre Anschrift folgen demselben Stichtag wie 
   const supabase = erzeugeMockSupabase({ annahmestellen, kostentraeger: ktNamen, anschriften });
   const alt = await ladePapierannahmestelle(supabase, { ...OPT, stichtag: '2026-09-30' });
   const neu = await ladePapierannahmestelle(supabase, { ...OPT, stichtag: '2026-10-01' });
+  assert.ok(alt.ok);
   assert.equal(alt.ik, 'ALT000001');
   assert.deepEqual(alt.anschrift, { art: '1', plz: '11111', ort: 'Altstadt', strasse: 'Alt 1' });
+  assert.ok(neu.ok);
   assert.equal(neu.ik, 'NEU000001');
   assert.deepEqual(neu.anschrift, { art: '1', plz: '22222', ort: 'Neustadt', strasse: 'Neu 2' });
 });
@@ -661,5 +712,6 @@ test('ST7: Anschrift-Fenster wirkt einzeln — am 30.09. fällt die neue Hausans
   ];
   const supabase = erzeugeMockSupabase({ annahmestellen, kostentraeger: ktNamen, anschriften });
   const r = await ladePapierannahmestelle(supabase, { ...OPT, stichtag: '2026-09-30' });
+  assert.ok(r.ok && r.anschrift);
   assert.equal(r.anschrift.art, '2');
 });

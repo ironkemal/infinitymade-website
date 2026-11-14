@@ -9,9 +9,9 @@ test('Berliner Rechnungsdatum und Kalendertage bleiben über Sommerzeit stabil',
 });
 test('Ungültige Vorlagenwerte ergeben sichere 14 Kalendertage', () => {
   for (const days of [0, -2, 1.5, Infinity, 'abc', Number.MAX_SAFE_INTEGER, null]) {
-    assert.equal(ausfallFaelligAm('2026-01-01T12:00:00Z', days), '2026-01-15');
+    assert.equal(ausfallFaelligAm('2026-01-01T12:00:00Z', /** @type {number} */ (days)), '2026-01-15');
   }
-  assert.equal(ausfallFaelligAm('2026-01-01T12:00:00Z', '30'), '2026-01-31');
+  assert.equal(ausfallFaelligAm('2026-01-01T12:00:00Z', /** @type {number} */ (/** @type {unknown} */ ('30'))), '2026-01-31');
 });
 test('Altbelege und ungültige Datumswerte werden nie automatisch gemahnt', () => {
   for (const faellig_am of [null, undefined, '2026-02-30', 'garbage']) {

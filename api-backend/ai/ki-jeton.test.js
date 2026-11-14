@@ -6,6 +6,7 @@ import { createAiConfig } from './ki-config.js';
 const FAKE_HOST = 'praxura-fake-central.services.ai.azure.com';
 const ALLOWED_HOSTS = [FAKE_HOST];
 
+/** @param {Record<string, string>} [overrides] */
 function makeJetonConfig(overrides = {}) {
   return createAiConfig({
     AI_MODE: 'jeton',
@@ -15,6 +16,17 @@ function makeJetonConfig(overrides = {}) {
   }, { allowedHosts: ALLOWED_HOSTS });
 }
 
+/**
+ * @param {{
+ *   token?: string,
+ *   exp?: number,
+ *   endpoint?: string,
+ *   deployment?: string,
+ *   region?: string,
+ *   apiVersion?: string,
+ *   acknowledgedReportId?: string
+ * }} [opts]
+ */
 function mockMerkezSuccess({
   token = 'jeton-mock-valid-token-string-12345', // secret-scan: ignore — synthetic test token, no credential
   exp = Math.floor(Date.now() / 1000) + 1800,
@@ -74,7 +86,7 @@ test('TTL rejection: rejects TTL > 3600 s rather than truncating', async () => {
 
   await assert.rejects(
     async () => client.getToken(),
-    (err) => err.code === 'AI_TOKEN_TTL_EXCEEDED'
+    (/** @type {unknown} */ err) => /** @type {{ code?: string }} */ (err).code === 'AI_TOKEN_TTL_EXCEEDED'
   );
 });
 
@@ -92,7 +104,7 @@ test('expired rejection: rejects already expired token', async () => {
 
   await assert.rejects(
     async () => client.getToken(),
-    (err) => err.code === 'AI_TOKEN_EXPIRED'
+    (/** @type {unknown} */ err) => /** @type {{ code?: string }} */ (err).code === 'AI_TOKEN_EXPIRED'
   );
 });
 
@@ -109,9 +121,10 @@ test('malformed payload rejection: constant safe error message without leaking u
   });
   await assert.rejects(
     async () => badHostClient.getToken(),
-    (err) => {
-      assert.equal(err.code, 'AI_HOST_NOT_ALLOWED');
-      assert.equal(err.message, 'KI-Jeton-Antwort ungültig');
+    (/** @type {unknown} */ err) => {
+      const e = /** @type {{ code?: string, message: string }} */ (err);
+      assert.equal(e.code, 'AI_HOST_NOT_ALLOWED');
+      assert.equal(e.message, 'KI-Jeton-Antwort ungültig');
       return true;
     }
   );
@@ -125,9 +138,10 @@ test('malformed payload rejection: constant safe error message without leaking u
   });
   await assert.rejects(
     async () => floatExpClient.getToken(),
-    (err) => {
-      assert.equal(err.code, 'AI_TOKEN_RESPONSE_INVALID');
-      assert.equal(err.message, 'KI-Jeton-Antwort ungültig');
+    (/** @type {unknown} */ err) => {
+      const e = /** @type {{ code?: string, message: string }} */ (err);
+      assert.equal(e.code, 'AI_TOKEN_RESPONSE_INVALID');
+      assert.equal(e.message, 'KI-Jeton-Antwort ungültig');
       return true;
     }
   );
@@ -152,7 +166,7 @@ test('dynamic config enforcement: mode aus or missing activationReady fails clos
   // 1. Mode aus -> rejects before network
   await assert.rejects(
     async () => client.getToken(),
-    (err) => err.code === 'AI_MODE_NOT_JETON'
+    (/** @type {unknown} */ err) => /** @type {{ code?: string }} */ (err).code === 'AI_MODE_NOT_JETON'
   );
   assert.equal(networkCalls, 0);
 
@@ -160,7 +174,7 @@ test('dynamic config enforcement: mode aus or missing activationReady fails clos
   dynamicMode = 'jeton';
   await assert.rejects(
     async () => client.getToken(),
-    (err) => err.code === 'AI_NOT_ACTIVATED'
+    (/** @type {unknown} */ err) => /** @type {{ code?: string }} */ (err).code === 'AI_NOT_ACTIVATED'
   );
   assert.equal(networkCalls, 0);
 
@@ -205,7 +219,7 @@ test('revalidate cached target against changing allowlist', async () => {
   // Subsequent call rejects because cached endpoint is no longer in current allowlist
   await assert.rejects(
     async () => client.getToken(),
-    (err) => err.code === 'AI_HOST_NOT_ALLOWED'
+    (/** @type {unknown} */ err) => /** @type {{ code?: string }} */ (err).code === 'AI_HOST_NOT_ALLOWED'
   );
 });
 
@@ -246,7 +260,7 @@ test('singleflight refresh with isolated caller abort: caller A aborts, caller B
 
   await assert.rejects(
     async () => promiseA,
-    (err) => err.name === 'AbortError'
+    (/** @type {unknown} */ err) => /** @type {{ name?: string }} */ (err).name === 'AbortError'
   );
 
   const resB = await promiseB;
@@ -299,13 +313,15 @@ test('401 race: parallel caller reuses already refreshed token without duplicate
 });
 
 test('aggregate usage contract: stages snapshot and piggybacks on next jeton fetch', async () => {
+  /** @type {Record<string, any> | null} */
   let sentReport = null;
   const fakeNow = 1_700_000_000_000;
   const expSec = Math.floor(fakeNow / 1000) + 1800;
 
+  /** @param {string} path @param {Record<string, any>} [opts] */
   const mockMerkez = async (path, opts) => {
     assert.equal(path, '/v1/ki/jeton');
-    sentReport = opts.body.report;
+    sentReport = opts?.body.report;
     return {
       status: 200,
       ok: true,
@@ -355,7 +371,9 @@ test('aggregate usage contract: stages snapshot and piggybacks on next jeton fet
   // Trigger token fetch which sends staged report
   const tok = await client.getToken();
   assert.equal(tok.token, 'token-with-report-ack');
-  assert.equal(sentReport.reportId, 'rep-day-20261008');
+  const sent = /** @type {Record<string, any> | null} */ (sentReport);
+  assert.ok(sent);
+  assert.equal(sent.reportId, 'rep-day-20261008');
 
   // Since acknowledgedReportId matched, pending report is cleared!
   assert.equal(client.getState().hasPendingReport, false);
@@ -477,7 +495,7 @@ test('quota error: centre 402 AI_QUOTA_EXCEEDED locks token issuance and throws 
   shouldQuota = true;
   await assert.rejects(
     async () => client.getToken({ forceRefresh: true }),
-    (err) => err.code === 'AI_QUOTA_EXCEEDED'
+    (/** @type {unknown} */ err) => /** @type {{ code?: string }} */ (err).code === 'AI_QUOTA_EXCEEDED'
   );
 
   const state = client.getState();
@@ -486,7 +504,7 @@ test('quota error: centre 402 AI_QUOTA_EXCEEDED locks token issuance and throws 
 
   await assert.rejects(
     async () => client.getToken(),
-    (err) => err.code === 'AI_QUOTA_EXCEEDED'
+    (/** @type {unknown} */ err) => /** @type {{ code?: string }} */ (err).code === 'AI_QUOTA_EXCEEDED'
   );
 });
 
@@ -581,6 +599,6 @@ test('deploymentTranscribe in payload parsed and validated', async () => {
 
   await assert.rejects(
     () => clientBad.getToken(),
-    (err) => err.code === 'AI_DEPLOYMENT_INVALID'
+    (/** @type {unknown} */ err) => /** @type {{ code?: string }} */ (err).code === 'AI_DEPLOYMENT_INVALID'
   );
 });

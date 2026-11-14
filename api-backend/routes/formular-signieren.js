@@ -28,9 +28,8 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 /**
  * Reine Validierungsfunktion für den Request-Body.
  *
- * @param {object} body
- * @returns {{ ok: true, werte: { formular_id: string, lead_id: string, signaturen: Array, signed_name: string|null }, fehler: null }
- *          | { ok: false, fehler: string, error: string }}
+ * @param {any} [body]
+ * @returns {{ ok: boolean, werte?: any, fehler?: any, error?: string }}
  */
 export function pruefeFormularSignierenEingabe(body = {}) {
   if (!body || typeof body !== 'object') {
@@ -117,16 +116,16 @@ export function pruefeFormularSignierenEingabe(body = {}) {
  * Erzeugt den Router für Formular-Signaturen.
  *
  * @param {object} [options]
- * @param {object} options.supabase - Supabase Service-Role-Client
- * @param {Function} [options.requireAuth] - Auth-Middleware
+ * @param {any} [options.supabase] - Supabase Service-Role-Client
+ * @param {any} [options.requireAuth] - Auth-Middleware
  * @param {boolean} [options.skipRateLimit] - Deaktiviert Rate-Limiter (für Tests)
- * @returns {express.Router}
+ * @returns {import('express').Router}
  */
 export function createFormularSignierenRouter(options = {}) {
   const router = express.Router();
   const supabase = options.supabase;
   const authMiddleware = options.requireAuth || defaultRequireAuth;
-  const noopMiddleware = (_req, _res, next) => next();
+  const noopMiddleware = (/** @type {any} */ _req, /** @type {any} */ _res, /** @type {any} */ next) => next();
 
   // Rate-Limit: 30 pro Stunde je Nutzer
   const limiter = options.skipRateLimit ? noopMiddleware : rateLimit({
@@ -134,11 +133,11 @@ export function createFormularSignierenRouter(options = {}) {
     limit: 30,
     standardHeaders: 'draft-7',
     legacyHeaders: false,
-    keyGenerator: (req) => req.auth?.userId || 'unauth',
+    keyGenerator: (/** @type {any} */ req) => req.auth?.userId || 'unauth',
     message: { error: 'Zu viele Signiervorgänge in kurzer Zeit. Bitte später erneut versuchen.' },
   });
 
-  router.post('/dokument/formular-signieren', authMiddleware, limiter, async (req, res) => {
+  router.post('/dokument/formular-signieren', authMiddleware, limiter, async (/** @type {any} */ req, /** @type {any} */ res) => {
     // 1. Eingabe prüfen
     const pruefung = pruefeFormularSignierenEingabe(req.body);
     if (!pruefung.ok) {
@@ -236,8 +235,8 @@ export function createFormularSignierenRouter(options = {}) {
       try {
         signedPdfBytes = await bettePdfSignaturen(pdfBytes, felder, pngBuffers);
       } catch (embErr) {
-        console.error('[dokument/formular-signieren] PDF_EMBED_FEHLER', embErr?.code || '');
-        return res.status(500).json({ error: embErr?.message || 'Signaturen konnten nicht in das PDF eingebettet werden.' });
+        console.error('[dokument/formular-signieren] PDF_EMBED_FEHLER', (/** @type {any} */ (embErr))?.code || '');
+        return res.status(500).json({ error: (/** @type {any} */ (embErr))?.message || 'Signaturen konnten nicht in das PDF eingebettet werden.' });
       }
 
       // 6. Ergebnis-PDF nach 'patient-documents' hochladen
@@ -285,7 +284,7 @@ export function createFormularSignierenRouter(options = {}) {
         try {
           await supabase.storage.from('patient-documents').remove([ergebnisStoragePath]);
         } catch (cleanErr) {
-          console.error('[dokument/formular-signieren] CLEANUP_FEHLER', cleanErr?.code || '');
+          console.error('[dokument/formular-signieren] CLEANUP_FEHLER', (/** @type {any} */ (cleanErr))?.code || '');
         }
         return res.status(500).json({ error: 'Dokument konnte nicht in der Akte abgelegt werden.' });
       }
@@ -331,12 +330,12 @@ export function createFormularSignierenRouter(options = {}) {
 
           einwilligung_gespeichert = true;
         } catch (cErr) {
-          console.error('[dokument/formular-signieren] CONSENT_INSERT_FEHLER', cErr?.code || '');
+          console.error('[dokument/formular-signieren] CONSENT_INSERT_FEHLER', (/** @type {any} */ (cErr))?.code || '');
           // Im Fehlerfall die hochgeladene Signatur-PNG wieder entfernen
           try {
             await supabase.storage.from('patient-documents').remove([sigStoragePath]);
           } catch (cleanSigErr) {
-            console.error('[dokument/formular-signieren] CLEANUP_SIG_FEHLER', cleanSigErr?.code || '');
+            console.error('[dokument/formular-signieren] CLEANUP_SIG_FEHLER', (/** @type {any} */ (cleanSigErr))?.code || '');
           }
           // Dokument bleibt erhalten (kein Rollback des Dokuments)
           return res.status(500).json({
@@ -353,7 +352,7 @@ export function createFormularSignierenRouter(options = {}) {
         einwilligung_gespeichert,
       });
     } catch (e) {
-      console.error('[dokument/formular-signieren] ALLGEMEINER_FEHLER', e?.code || '');
+      console.error('[dokument/formular-signieren] ALLGEMEINER_FEHLER', (/** @type {any} */ (e))?.code || '');
       return res.status(500).json({ error: 'Das Formular konnte nicht signiert werden.' });
     }
   });

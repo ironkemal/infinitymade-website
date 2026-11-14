@@ -20,9 +20,9 @@
  */
 
 /**
- * @param {object} sb            Supabase-Client
+ * @param {{ from: (tabelle: string) => any }} sb  Supabase-Client
  * @param {string} verordnungId  prescriptions.id
- * @param {string|null} aktuell  bisher bekannter Beginn (YYYY-MM-DD) oder null
+ * @param {string|null} [aktuell]  bisher bekannter Beginn (YYYY-MM-DD) oder null
  * @param {string} [tabelle]     Standard `prescriptions`
  * @returns {Promise<{ok:boolean, geaendert:boolean, beginn:string|null, fehler?:string}>}
  */

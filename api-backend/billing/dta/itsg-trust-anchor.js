@@ -63,7 +63,8 @@ export function parseAnnahmeliste(pkcs7Bytes) {
   // Strategie 1: PKCS#7 / CMS SignedData in binärer DER-Kodierung (Tag 0x30 = SEQUENCE)
   if (rawBuf[0] === 0x30) {
     try {
-      const ab = rawBuf.buffer.slice(rawBuf.byteOffset, rawBuf.byteOffset + rawBuf.byteLength);
+      const rawAb = rawBuf.buffer.slice(rawBuf.byteOffset, rawBuf.byteOffset + rawBuf.byteLength);
+      const ab = rawAb instanceof ArrayBuffer ? rawAb : new Uint8Array(rawBuf).buffer;
       const asn1 = asn1js.fromBER(ab);
       if (asn1.offset > 0 && !asn1.result.error) {
         const contentInfo = new pkijs.ContentInfo({ schema: asn1.result });
@@ -306,7 +307,7 @@ export function ladeItsgTrustAnchors({ verzeichnis = DEFAULT_TRUST_ANCHORS_DIR }
  * bedienen weiterhin ihre jeweiligen Empfänger).
  *
  * @param {object} opts
- * @param {object} opts.meta           Geparste Metadaten aus meta.json
+ * @param {{ zertifikate?: Array<{ notAfter: string | number | Date }> } | null | undefined} opts.meta  Geparste Metadaten aus meta.json
  * @param {Date|string} [opts.jetzt]   Prüfzeitpunkt (Standard: new Date())
  * @param {number} [opts.warnTageVorher=60] Vorwarnzeitraum in Tagen
  * @returns {{ ok: true, warnung: string|null, ankerGueltigBis: Date, fruehesterAblauf: Date }}

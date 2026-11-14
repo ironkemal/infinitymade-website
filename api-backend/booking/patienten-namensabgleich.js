@@ -1,4 +1,8 @@
-/** Literaler, weiterhin groß-/kleinschreibungsunabhängiger Identitätsabgleich. */
+/**
+ * Literaler, weiterhin groß-/kleinschreibungsunabhängiger Identitätsabgleich.
+ * @param {unknown} value
+ * @returns {string | null}
+ */
 export function patientenNameMuster(value) {
   // PostgREST interpretiert auch '*' als LIKE-Platzhalter. Diese Schreibweise
   // wird ausdrücklich abgewiesen, statt sie in einen anderen Namen umzudeuten.

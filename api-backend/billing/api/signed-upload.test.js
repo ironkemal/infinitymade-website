@@ -14,13 +14,15 @@ const routeUrl = new URL('./abrechnung.routes.js', import.meta.url);
 const routeSource = fs.readFileSync(routeUrl, 'utf8');
 
 // Extract exact router.post upload-signed handler from source
+/** @param {string} source */
 function extractUploadSignedHandlerSource(source) {
   const match = source.match(/router\.post\(\s*['"]\/abrechnung\/:id\/upload-signed['"]/);
-  if (!match) {
+  if (!match || match.index === undefined) {
     throw new Error("Could not find router.post('/abrechnung/:id/upload-signed') in abrechnung.routes.js");
   }
   const startIndex = match.index;
   let depth = 0;
+  /** @type {string | null} */
   let inString = null;
   let inLineComment = false;
   let inBlockComment = false;
@@ -107,6 +109,7 @@ const rawPayloadBuffer = Buffer.concat([
 const expectedDtaSha256 = crypto.createHash('sha256').update(rawPayloadBuffer).digest('hex');
 
 // Real CMS binary signature generator with authenticatedAttributes
+/** @param {Buffer} payloadBuf @param {{ detached?: boolean }} [options] */
 function createCmsSignedData(payloadBuf, options = {}) {
   const p7 = forge.pkcs7.createSignedData();
   const binaryPayload = payloadBuf.toString('binary');
@@ -140,12 +143,14 @@ const validSignedBytes = createCmsSignedData(rawPayloadBuffer);
 const detachedSignedBytes = createCmsSignedData(rawPayloadBuffer, { detached: true });
 
 // Mutate actual SignerInfo signature OCTET STRING via forge.asn1 without guessing byte offsets
+/** @param {Buffer} validDerBuffer */
 function createTamperedSignature(validDerBuffer) {
   const asn1Obj = forge.asn1.fromDer(validDerBuffer.toString('binary'));
-  const contentContext = asn1Obj.value[1]; // [0] EXPLICIT SignedData
+  const contentContext = /** @type {any} */ (asn1Obj.value[1]); // [0] EXPLICIT SignedData
   const signedDataSeq = contentContext.value[0]; // SignedData SEQUENCE
 
   // Find signerInfos SET (the last SET in SignedData sequence)
+  /** @type {any} */
   let signerInfosSet = null;
   for (let i = signedDataSeq.value.length - 1; i >= 0; i--) {
     if (signedDataSeq.value[i].type === forge.asn1.Type.SET) {
@@ -158,7 +163,7 @@ function createTamperedSignature(validDerBuffer) {
   }
 
   const lastSigner = signerInfosSet.value[signerInfosSet.value.length - 1];
-  const sigOctet = lastSigner.value.find((item) => item.type === forge.asn1.Type.OCTETSTRING);
+  const sigOctet = lastSigner.value.find((/** @type {any} */ item) => item.type === forge.asn1.Type.OCTETSTRING);
   if (!sigOctet || typeof sigOctet.value !== 'string') {
     throw new Error('Signature OCTET STRING not found in SignerInfo');
   }
@@ -175,13 +180,14 @@ function createTamperedSignature(validDerBuffer) {
 const tamperedSignedBytes = createTamperedSignature(validSignedBytes);
 
 // Test execution harness via Node.js vm
+/** @param {{ abrechnungRow?: any, expectedDtaSha256?: string | null, uploadError?: any, nurInhaberResult?: any, receiverBlocked?: boolean }} [options] */
 function createHarness(options = {}) {
   const tracker = {
-    selectCalls: [],
-    updateCalls: [],
-    storageUploadCalls: [],
-    receiverCalls: [],
-    pruefeCalls: [],
+    selectCalls: /** @type {any[]} */ ([]),
+    updateCalls: /** @type {any[]} */ ([]),
+    storageUploadCalls: /** @type {any[]} */ ([]),
+    receiverCalls: /** @type {any[]} */ ([]),
+    pruefeCalls: /** @type {any[]} */ ([]),
   };
 
   const headerOverrides = options.abrechnungRow !== undefined
@@ -201,13 +207,13 @@ function createHarness(options = {}) {
   let headerRow = syntheticHeaderRow;
   const registry = erzeugeRegistryFake({
     getRow: () => headerRow,
-    setRow: (r) => { headerRow = r; },
+    setRow: (/** @type {any} */ r) => { headerRow = r; },
     bumpUpdatedAt: () => '2026-10-04T10:00:00.999999Z',
   });
-  const supabaseMock = {
-    rpc: (name, args) => registry.rpc(name, args),
-    from: (table) => ({
-      select: (fields) => {
+  const supabaseMock = /** @type {any} */ ({
+    rpc: (/** @type {string} */ name, /** @type {any} */ args) => registry.rpc(name, args),
+    from: (/** @type {string} */ table) => ({
+      select: (/** @type {string} */ fields) => {
         tracker.selectCalls.push({ table, fields });
         return {
           eq: () => ({
@@ -223,7 +229,7 @@ function createHarness(options = {}) {
           }),
         };
       },
-      update: (payload) => {
+      update: (/** @type {any} */ payload) => {
         tracker.updateCalls.push({ table, payload });
         return {
           eq: () => Promise.resolve({ data: null, error: null }),
@@ -232,8 +238,8 @@ function createHarness(options = {}) {
       upsert: async () => ({ data: null, error: null }),
     }),
     storage: {
-      from: (bucket) => ({
-        upload: async (path, bytes, uploadOpts) => {
+      from: (/** @type {string} */ bucket) => ({
+        upload: async (/** @type {string} */ path, /** @type {any} */ bytes, /** @type {any} */ uploadOpts) => {
           tracker.storageUploadCalls.push({ bucket, path, bytes, uploadOpts });
           if (options.uploadError) {
             return { error: options.uploadError };
@@ -243,16 +249,17 @@ function createHarness(options = {}) {
         ...blobAusUploads(tracker.storageUploadCalls),
       }),
     },
-  };
+  });
 
+  /** @type {any} */
   let capturedHandler = null;
   const router = {
-    post: (path, handler) => {
+    post: (/** @type {string} */ path, /** @type {any} */ handler) => {
       capturedHandler = handler;
     },
   };
 
-  const trackingPruefeSignedDta = async (args) => {
+  const trackingPruefeSignedDta = async (/** @type {any} */ args) => {
     tracker.pruefeCalls.push(args);
     return pruefeSignedDta(args);
   };
@@ -280,7 +287,7 @@ function createHarness(options = {}) {
       bereich: 'synthetic-bereich',
       eigenerAbrechnungscode: 'synthetic-code',
     }),
-    pruefeEmpfaenger: async (sb, ab, opts) => {
+    pruefeEmpfaenger: async (/** @type {any} */ sb, /** @type {any} */ ab, /** @type {any} */ opts) => {
       tracker.receiverCalls.push({ ab, opts });
       if (options.receiverBlocked) {
         return {
@@ -296,7 +303,7 @@ function createHarness(options = {}) {
       }
       return { blockiert: false, meldungen: [] };
     },
-    sha256Hex: (bytes) => crypto.createHash('sha256').update(bytes).digest('hex'),
+    sha256Hex: (/** @type {any} */ bytes) => crypto.createHash('sha256').update(bytes).digest('hex'),
     verarbeiteVerschluesselungsSchritt: async () => ({
       verschluesselt: false,
       verschluesselungHinweis: 'Synthetic test non-encrypted step.',
@@ -315,20 +322,21 @@ function createHarness(options = {}) {
 }
 
 function createMockRes() {
-  return {
+  return /** @type {any} */ ({
     statusCode: 200,
     body: null,
-    status(code) {
+    status(/** @type {number} */ code) {
       this.statusCode = code;
       return this;
     },
-    json(data) {
+    json(/** @type {any} */ data) {
       this.body = data;
       return this;
     },
-  };
+  });
 }
 
+/** @param {Buffer | null} signedBytes */
 function createMockReq(signedBytes) {
   return {
     params: { id: 'synthetic-ab-001' },

@@ -31,22 +31,22 @@ import { PODOLOGIE_POSITIONS_2025, PODOLOGIE_POSITIONS_2026 } from '../billing/c
  * etwas eingetragen — das wegzuwerfen wäre falscher als es roh stehen zu
  * lassen). Nur der Rate-Zweig (ohne explizite Angabe) darf leer bleiben.
  *
- * @param {{heilmittel_position?: string, heilmittel?: string}} rezept
+ * @param {{heilmittel_position?: string | null, heilmittel?: string | null, heilmittel_feld_text?: string | null, therapiebereich?: string | null, therapie_bereich?: string | null}} rezept
  * @returns {?string}
  */
 export function heilmittelPositionAufloesen(rezept) {
-  if (['podologie', 'podo'].includes(rezept?.therapiebereich || rezept?.therapie_bereich)) {
+  if (['podologie', 'podo'].includes(String(rezept?.therapiebereich || rezept?.therapie_bereich || ''))) {
     if (rezept?.heilmittel_position) {
       const code = String(rezept.heilmittel_position).trim();
       return [...PODOLOGIE_POSITIONS_2025, ...PODOLOGIE_POSITIONS_2026].some(p => p.hpnr === code) ? code : null;
     }
-    return podologiePositionFuerText(rezept?.heilmittel_feld_text || rezept?.heilmittel);
+    return podologiePositionFuerText(rezept?.heilmittel_feld_text || rezept?.heilmittel || undefined);
   }
   if (rezept?.heilmittel_position) {
     try { return resolvePositionsnummer(rezept.heilmittel_position, '22'); }
     catch (_e) { return rezept.heilmittel_position; }
   }
-  const posTemplate = defaultPositionForHeilmittel(rezept?.heilmittel);
+  const posTemplate = defaultPositionForHeilmittel(rezept?.heilmittel || '');
   if (!posTemplate) return null;
   try { return resolvePositionsnummer(posTemplate, '22'); }
   catch (_e) { return null; }
@@ -59,6 +59,9 @@ export function heilmittelPositionAufloesen(rezept) {
  * Kassenfeld gar nicht anbietet (Testsatz, private Kasse, abgelaufene IK).
  * `heute` = Stichtag (YYYY-MM-DD, Standard Berliner Tag; O-139 — dieselbe
  * Stichtag-Regel wie ladeAnnahmestelle).
+ *
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {string} [heute]
  */
 function kostentraegerAbfrage(supabase, heute = berlinHeute()) {
   return supabase
@@ -90,6 +93,7 @@ const MAX_VERWEIS_SPRUENGE = 3;
  *
  * @param {import('@supabase/supabase-js').SupabaseClient} supabase
  * @param {Array<{ik: string, abrechnender_kt_ik?: ?string}>} treffer
+ * @param {string} stichtag
  * @returns {Promise<?Set<string>>}
  */
 async function kostentraegerEndzieleAufloesen(supabase, treffer, stichtag) {
@@ -100,7 +104,7 @@ async function kostentraegerEndzieleAufloesen(supabase, treffer, stichtag) {
     if (error) return null;
     const bekannt = new Map((zeilen || []).map(z => [z.ik, z.abrechnender_kt_ik || z.ik]));
     if ([...ziele].some(ik => !bekannt.has(ik))) return null;
-    const weiter = new Set([...ziele].map(ik => bekannt.get(ik)));
+    const weiter = new Set([...ziele].map(ik => bekannt.get(ik) ?? ik));
     if ([...ziele].every(ik => bekannt.get(ik) === ik)) return ziele;
     ziele = weiter;
   }
@@ -179,13 +183,16 @@ export async function kostentraegerIkAufloesen(supabase, patient, { stichtag } =
 // Gespiegelt in `module/rezeptart.js` (Frontend: gleiche Wertelisten).
 
 const ARTEN = ['kassen', 'privat', 'selbstzahler', 'bg'];
+/** @type {Record<string, string>} */
 const ART_ALIAS = { gkv: 'kassen', kasse: 'kassen', pkv: 'privat' };
 
+/** @param {unknown} roh */
 function artNormalisieren(roh) {
   const w = String(roh).trim().toLowerCase();
   return ARTEN.includes(w) ? w : (ART_ALIAS[w] || null);
 }
 
+/** @param {unknown} w */
 const textOderNull = (w) => { const t = String(w ?? '').trim(); return t || null; };
 
 /**
@@ -197,11 +204,12 @@ const textOderNull = (w) => { const t = String(w ?? '').trim(); return t || null
  * - `behandlungsanlass`/`nagel`: nur wenn der Schlüssel im Rumpf steht.
  * - `wagner_grad` wird nie geschrieben (Festschreibung 0020, Maske sendet es nicht).
  *
- * @param {object} rezept  `parsed.rezept` des Rumpfes
- * @param {{neu: boolean}} opt
+ * @param {{ rezeptart?: unknown, behandlungsanlass?: unknown, nagel?: unknown }} [rezept]  `parsed.rezept` des Rumpfes
+ * @param {{neu?: boolean}} [opt]
  * @returns {{rezeptart?:string, behandlungsanlass?:?string, nagel?:?string}}
  */
 export function artFelderAusRezept(rezept = {}, { neu = false } = {}) {
+  /** @type {{rezeptart?:string, behandlungsanlass?:?string, nagel?:?string}} */
   const out = {};
   const roh = rezept?.rezeptart;
   if (roh !== undefined && roh !== null && String(roh).trim() !== '') {
@@ -226,7 +234,7 @@ export function artFelderAusRezept(rezept = {}, { neu = false } = {}) {
  * abgerechnet (PE-006 A, gkv-302 F2). Die Belegnummer-Sperre steht schon in
  * der Route (409 davor).
  *
- * @param {{bestehend: ?string, neu: ?string, hatFestgeschriebeneRechnung: boolean}} a
+ * @param {{bestehend?: ?string, neu?: ?string, hatFestgeschriebeneRechnung: boolean}} a
  * @returns {{ok: true, statusZuruecksetzen: boolean} | {ok: false, status: number, error: string}}
  */
 export function rezeptartWechselPruefen({ bestehend, neu, hatFestgeschriebeneRechnung }) {
@@ -251,6 +259,7 @@ export function rezeptartWechselPruefen({ bestehend, neu, hatFestgeschriebeneRec
 // (Frontend, module/bg-angaben.js) — beim Speichern der Verordnung wird nur
 // auf Gültigkeit geprüft (warnen, nicht blockieren).
 
+/** @type {Array<[string, string, 'datum' | number]>} */
 const BG_FELDER = [
   ['traeger_name', 'bg_traeger_name', 200],
   ['traeger_anschrift', 'bg_traeger_anschrift', 500],
@@ -262,12 +271,17 @@ const BG_FELDER = [
   ['einverstaendnis_version', 'bg_einverstaendnis_version', 60],
 ];
 
+/**
+ * @param {unknown} roh
+ * @param {string} name
+ */
 function isoDatumPruefen(roh, name) {
   const t = String(roh ?? '').trim();
   if (!t) return null;
   const m = t.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  const d = m && new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
-  if (!m || d.getUTCFullYear() !== +m[1] || d.getUTCMonth() !== +m[2] - 1 || d.getUTCDate() !== +m[3]) {
+  if (!m) throw new Error(`${name}: ungültiges Datum (JJJJ-MM-TT erwartet)`);
+  const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+  if (d.getUTCFullYear() !== +m[1] || d.getUTCMonth() !== +m[2] - 1 || d.getUTCDate() !== +m[3]) {
     throw new Error(`${name}: ungültiges Datum (JJJJ-MM-TT erwartet)`);
   }
   return t;
@@ -276,8 +290,8 @@ function isoDatumPruefen(roh, name) {
 /**
  * Die `bg_*`-Spalten für INSERT/UPDATE.
  *
- * @param {object} rezept  `parsed.rezept` (`rezept.bg` = Objekt mit den sieben Feldern)
- * @param {{art: string, explicitArt?: boolean}} opt
+ * @param {{ bg?: Record<string, unknown> | null }} [rezept]  `parsed.rezept` (`rezept.bg` = Objekt mit den sieben Feldern)
+ * @param {{art?: string, explicitArt?: boolean}} [opt]
  *   `art`: wirksame Art. Nicht-BG schreibt nur dann (alle auf null), wenn die Art
  *   ausdrücklich gesetzt wurde — Verordnungsdaten ausserhalb von BG tragen keine
  *   Unfall-/Trägerangaben.
@@ -288,12 +302,14 @@ export function bgFelderAusRezept(rezept = {}, { art, explicitArt = false } = {}
   }
   const bg = rezept?.bg;
   if (!bg || typeof bg !== 'object') return {};
+  /** @type {Record<string, string | null>} */
   const out = {};
   for (const [key, spalte, regel] of BG_FELDER) {
     if (bg[key] === undefined) continue;
     if (regel === 'datum') {
-      out[spalte] = isoDatumPruefen(bg[key], key);
-      if (key === 'unfalltag' && out[spalte] && out[spalte] > berlinHeute()) {
+      const datumWert = isoDatumPruefen(bg[key], key);
+      out[spalte] = datumWert;
+      if (key === 'unfalltag' && datumWert && datumWert > berlinHeute()) {
         throw new Error('unfalltag: liegt in der Zukunft');
       }
     } else {
@@ -306,13 +322,18 @@ export function bgFelderAusRezept(rezept = {}, { art, explicitArt = false } = {}
 }
 
 // Datum aus der Spalte kann als '2026-09-15' oder als Zeitstempel kommen — nur der Tag zählt.
+/** @param {unknown} w */
 const bgNorm = (w) => {
   if (w == null || String(w).trim() === '') return null;
   const t = String(w).trim();
   return /^\d{4}-\d{2}-\d{2}/.test(t) ? t.slice(0, 10) : t;
 };
 
-/** Würde dieses Update eine bestehende `bg_*`-Angabe inhaltlich ändern? (Sperre bei festgeschriebener Rechnung) */
+/**
+ * Würde dieses Update eine bestehende `bg_*`-Angabe inhaltlich ändern? (Sperre bei festgeschriebener Rechnung)
+ * @param {Record<string, unknown>} [bestehend]
+ * @param {Record<string, unknown>} [neu]
+ */
 export function bgAenderungGesperrt(bestehend = {}, neu = {}) {
   return Object.entries(neu).some(([spalte, wert]) => bgNorm(bestehend?.[spalte]) !== bgNorm(wert));
 }
@@ -320,7 +341,7 @@ export function bgAenderungGesperrt(bestehend = {}, neu = {}) {
 /**
  * Was für eine BG-Rechnung fehlt (Spiegel von `bgFehltFuerRechnung` in
  * `module/bg-angaben.js`): UV-Träger (Name + Anschrift) und Unfalltag.
- * @param {object} rx  Zeile aus `prescriptions` (bg_*-Spalten)
+ * @param {{ bg_traeger_name?: unknown, bg_traeger_anschrift?: unknown, bg_unfalltag?: unknown }} [rx]  Zeile aus `prescriptions` (bg_*-Spalten)
  * @returns {string[]}
  */
 export function bgFehltFuerRechnung(rx = {}) {
@@ -348,12 +369,15 @@ export function nichtGkvAbrechenbarMeldung(rx) {
  * Explicit discharge facts. Both fields form one atomic input pair.
  * Omitted pair preserves PATCH state and keeps legacy clients schema-compatible.
  * NULL means unreviewed; it must never be coerced to false.
+ * @param {{ entlassmanagement?: unknown, entlassungsdatum?: unknown, is_blanko?: unknown, rezept_typ?: unknown }} [rezept]
  */
 export function entlassFelderAusRezept(rezept = {}) {
   const marker = Object.hasOwn(rezept, 'entlassmanagement');
   const datum = Object.hasOwn(rezept, 'entlassungsdatum');
   if (!marker && !datum) return {};
+  /** @type {(message: string) => never} */
   const reject = message => {
+    /** @type {Error & { code?: string }} */
     const error = new Error(message);
     error.code = 'ENTLASSDATEN_UNGUELTIG';
     throw error;
@@ -363,8 +387,8 @@ export function entlassFelderAusRezept(rezept = {}) {
   const day = rezept.entlassungsdatum;
   if (status !== null && typeof status !== 'boolean') reject('Entlassmerkmal muss true, false oder null sein.');
   if (status === true) {
-    if (!istStichtag(day)) reject('Bestätigtes Entlassmanagement benötigt ein gültiges Entlassdatum (JJJJ-MM-TT).');
+    if (typeof day !== 'string' || !istStichtag(day)) reject('Bestätigtes Entlassmanagement benötigt ein gültiges Entlassdatum (JJJJ-MM-TT).');
     if (rezept.is_blanko === true || rezept.rezept_typ === 'blanko') reject('Blankoverordnung und Entlassmanagement dürfen nicht kombiniert werden.');
   } else if (day !== null) reject('Ohne bestätigtes Entlassmanagement muss das Entlassdatum null sein.');
-  return { entlassmanagement: status, entlassungsdatum: day };
+  return { entlassmanagement: status, entlassungsdatum: /** @type {string | null} */ (day) };
 }

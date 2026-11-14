@@ -12,8 +12,13 @@ const PAGE_SIZE = 1000;
 // (guvenlik S-42: profiles.b2b_gmail_refresh_token, calendar_integrations.*_token).
 // Die Auskunft sagt nur, DASS ein Wert gespeichert ist.
 const GEHEIM = /(^|_)(access_token|refresh_token|token|secret|password|passwort|pin_hash|code_hash)$/i;
+/**
+ * @param {Record<string, any>} row
+ * @returns {Record<string, any>}
+ */
 export function geheimnisseAusblenden(row) {
   if (!row || typeof row !== 'object') return row;
+  /** @type {Record<string, any>} */
   const out = {};
   for (const [k, v] of Object.entries(row)) {
     out[k] = GEHEIM.test(k) && v != null ? '[gespeichert — aus Sicherheitsgründen nicht exportiert]' : v;
@@ -23,6 +28,11 @@ export function geheimnisseAusblenden(row) {
 
 /**
  * Liest eine Tabelle seitenweise in 1000er-Bloecken.
+ * @param {{ from: (table: string) => any }} supabase
+ * @param {string} table
+ * @param {string} select
+ * @param {string} filterCol
+ * @param {string} filterVal
  */
 async function ladeTabelle(supabase, table, select, filterCol, filterVal) {
   let from = 0;
@@ -69,17 +79,19 @@ async function ladeTabelle(supabase, table, select, filterCol, filterVal) {
 /**
  * Erstellt den vollstaendigen DSGVO Art. 15 Auskunfts-Export.
  *
- * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {{ from: (table: string) => any }} supabase
  * @param {object} params
  * @param {string} params.userId
  * @param {string} params.tenantId
  * @param {string} params.role 'owner' | 'employee'
- * @param {object} [params.authUser] Supabase Auth User Metadaten
+ * @param {{ id?: string, email?: string, created_at?: string, last_sign_in_at?: string, email_confirmed_at?: string, user_metadata?: Record<string, unknown> | null } | null} [params.authUser] Supabase Auth User Metadaten
  * @param {boolean} [params.istKutu] Box-Modus (SaaS-Tabellen ueberspringen)
  * @returns {Promise<object>} Export-Payload
  */
 export async function exportErstellen(supabase, { userId, tenantId, role, authUser, istKutu = false }) {
+  /** @type {Record<string, unknown[]>} */
   const data = {};
+  /** @type {Record<string, string>} */
   const errors = {};
 
   const istMitarbeiter = role === 'employee';
@@ -107,13 +119,14 @@ export async function exportErstellen(supabase, { userId, tenantId, role, authUs
       const rows = await ladeTabelle(supabase, t.table, select, filterCol, filterVal);
       data[t.table] = rows || [];
     } catch (err) {
-      errors[t.table] = err.message || `status ${err.status || 500}`;
-      console.error(`[dsgvo-export] Auskunft unvollstaendig: ${t.table} (${filterCol}) ->`, err.message || err);
+      errors[t.table] = /** @type {Error} */ (err).message || `status ${/** @type {{ status?: number }} */ (err).status || 500}`;
+      console.error(`[dsgvo-export] Auskunft unvollstaendig: ${t.table} (${filterCol}) ->`, /** @type {Error} */ (err).message || err);
     }
   }
 
   // Gesperrten Bestand aus aufbewahrung_sperre lesen
   // Sperrvermerk gehört zur Praxis, nicht zur Mitarbeiterin (guvenlik: kein Praxis-Abzug).
+  /** @type {Array<Record<string, unknown>>} */
   let gesperrt = [];
   if (!istMitarbeiter) try {
     const { data: sperrRows, error: sErr } = await supabase
@@ -125,7 +138,7 @@ export async function exportErstellen(supabase, { userId, tenantId, role, authUs
       console.error('[dsgvo-export] aufbewahrung_sperre Fehler:', sErr.message);
       errors.aufbewahrung_sperre = 'nicht lesbar';
     } else if (sperrRows) {
-      gesperrt = sperrRows.map(r => ({
+      gesperrt = sperrRows.map((/** @type {Record<string, any>} */ r) => ({
         kategorie: r.kategorie,
         label: KATEGORIEN[r.kategorie]?.label || r.kategorie,
         grundlage: r.grundlage || KATEGORIEN[r.kategorie]?.grundlage,
@@ -136,7 +149,7 @@ export async function exportErstellen(supabase, { userId, tenantId, role, authUs
       }));
     }
   } catch (err) {
-    console.error('[dsgvo-export] aufbewahrung_sperre Exception:', err.message || err);
+    console.error('[dsgvo-export] aufbewahrung_sperre Exception:', /** @type {Error} */ (err).message || err);
   }
 
   const auth_meta = authUser ? {

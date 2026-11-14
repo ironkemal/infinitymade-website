@@ -62,9 +62,12 @@ export const ZAA_ERRORS = Object.freeze({
 /**
  * Look up the German translation + fix hint for an error code.
  * Returns { text, loesung } or null.
+ * @param {unknown} code
+ * @returns {{ text: string, loesung: string } | null}
  */
 export function translateZaaCode(code) {
   if (code == null) return null;
   const key = String(code).trim();
-  return ZAA_ERRORS[key] || ZAA_ERRORS[key.padStart(2, '0')] || null;
+  const map = /** @type {Readonly<Record<string, { text: string, loesung: string }>>} */ (ZAA_ERRORS);
+  return map[key] || map[key.padStart(2, '0')] || null;
 }

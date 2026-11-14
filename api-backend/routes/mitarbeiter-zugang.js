@@ -18,12 +18,13 @@ import { pruefePasswort } from '../lib/passwort-regel.js';
 const router = express.Router();
 
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  /** @type {string} */ (process.env.SUPABASE_URL),
+  /** @type {string} */ (process.env.SUPABASE_SERVICE_ROLE_KEY),
   { auth: { persistSession: false } }
 );
 
 // Plan-Limits für Mitarbeiteranzahl (identisch mit dashboard.js PLAN_EMPLOYEE_LIMITS)
+/** @type {Record<string, number>} */
 const PLAN_EMPLOYEE_LIMITS = {
   starter: 2,
   professional: 8,
@@ -31,6 +32,7 @@ const PLAN_EMPLOYEE_LIMITS = {
   enterprise: Infinity,
 };
 
+/** @param {any} str */
 function cleanSlug(str) {
   return (str || '')
     .trim()
@@ -48,7 +50,7 @@ const createEmployeeLimiter = rateLimit({
   limit: 10,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  keyGenerator: (req) => req.auth?.userId || req.ip,
+  keyGenerator: (/** @type {any} */ req) => /** @type {string} */ (req.auth?.userId || req.ip),
   message: { error: 'Zu viele Mitarbeiter-Neuanlagen. Bitte warten Sie eine Stunde.' },
 });
 
@@ -58,7 +60,7 @@ const resetCodeLimiter = rateLimit({
   limit: 20,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  keyGenerator: (req) => req.auth?.userId || req.ip,
+  keyGenerator: (/** @type {any} */ req) => /** @type {string} */ (req.auth?.userId || req.ip),
   message: { error: 'Zu viele Anfragen für Einrichtungscodes. Bitte warten Sie eine Stunde.' },
 });
 
@@ -182,7 +184,7 @@ router.post('/team/mitarbeiter', requireAuth, createEmployeeLimiter, async (req,
           try {
             await supabase.auth.admin.deleteUser(newUserId);
           } catch (delErr) {
-            console.error('[mitarbeiter-zugang] deleteUser Rollback fehlgeschlagen:', delErr.message);
+            console.error('[mitarbeiter-zugang] deleteUser Rollback fehlgeschlagen:', (/** @type {any} */ (delErr)).message);
           }
           return res.status(409).json({
             error: `Plan-Limit erreicht: max. ${lim} Mitarbeiter im ${(callerProfile.plan || 'starter')}-Paket. Bitte upgraden.`
@@ -220,6 +222,7 @@ router.post('/team/mitarbeiter', requireAuth, createEmployeeLimiter, async (req,
         .select('day_of_week, start_time, end_time, is_active')
         .eq('user_id', ownerId);
 
+      /** @type {any[]} */
       let whRows = [];
       if (ownerWh && ownerWh.length > 0) {
         whRows = ownerWh.map(h => ({
@@ -270,7 +273,7 @@ router.post('/team/mitarbeiter', requireAuth, createEmployeeLimiter, async (req,
           }, { onConflict: 'employee_id,business_id' });
         }
       } catch (bizErr) {
-        console.warn('[mitarbeiter-zugang] business-assignment Fehler (nicht blockierend):', bizErr.message);
+        console.warn('[mitarbeiter-zugang] business-assignment Fehler (nicht blockierend):', (/** @type {any} */ (bizErr)).message);
       }
 
       // Audit-Log
@@ -295,15 +298,15 @@ router.post('/team/mitarbeiter', requireAuth, createEmployeeLimiter, async (req,
 
     } catch (setupErr) {
       // Rollback: Auth-Konto wieder löschen, kein verwaistes Konto hinterlassen
-      console.error('[mitarbeiter-zugang] Fehler nach createUser, lösche Konto:', setupErr.message);
+      console.error('[mitarbeiter-zugang] Fehler nach createUser, lösche Konto:', (/** @type {any} */ (setupErr)).message);
       try {
         await supabase.auth.admin.deleteUser(newUserId);
       } catch (delErr) {
-        console.error('[mitarbeiter-zugang] deleteUser Rollback fehlgeschlagen:', delErr.message);
+        console.error('[mitarbeiter-zugang] deleteUser Rollback fehlgeschlagen:', (/** @type {any} */ (delErr)).message);
       }
       return res.status(500).json({
         error: 'Mitarbeiterprofil konnte nicht eingerichtet werden',
-        detail: setupErr.message
+        detail: (/** @type {any} */ (setupErr)).message
       });
     }
 
@@ -318,6 +321,8 @@ router.post('/team/mitarbeiter', requireAuth, createEmployeeLimiter, async (req,
  * Austritt keinen Zweck mehr (db-ustasi 01.11.2026). mitarbeiter_anstellung bleibt bewusst stehen: Resturlaub-
  * Abgeltung (§ 7 Abs. 4 BUrlG) braucht Anspruch + time_offs; beide spaeter gemeinsam per Frist (legal-de).
  * Idempotent; ein Fehler hebt die Sperre nicht auf, er wird nur gemeldet.
+ * @param {any} db
+ * @param {{ ownerId: string, employeeId: string }} p
  * @returns {Promise<boolean>} true = geloescht oder nichts zu tun
  */
 export async function standortplanAufraeumen(db, { ownerId, employeeId }) {
@@ -330,7 +335,7 @@ export async function standortplanAufraeumen(db, { ownerId, employeeId }) {
     }
     return true;
   } catch (e) {
-    console.error('[mitarbeiter-zugang] Standortplan nicht geloescht:', e?.message);
+    console.error('[mitarbeiter-zugang] Standortplan nicht geloescht:', (/** @type {any} */ (e))?.message);
     return false;
   }
 }
@@ -340,6 +345,8 @@ export async function standortplanAufraeumen(db, { ownerId, employeeId }) {
  * time_offs (31.12. des dritten Jahres nach Austritt, legal-de; Ansicht module/ehemalige-mitarbeiter.js).
  * Ein vorhandenes Datum wird nie verschoben (wiederholtes Entfernen darf die Frist nicht verlaengern).
  * Ohne Anstellungszeile wird eine angelegt (Standardwerte), damit auch reine time_offs eine Frist haben.
+ * @param {any} db
+ * @param {{ ownerId: string, employeeId: string, heute?: string }} p
  * @returns {Promise<boolean>}
  */
 export async function austrittVermerken(db, { ownerId, employeeId, heute = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' }) }) {
@@ -353,7 +360,7 @@ export async function austrittVermerken(db, { ownerId, employeeId, heute = new D
     if (e2) throw e2;
     return true;
   } catch (e) {
-    console.error('[mitarbeiter-zugang] Austritt nicht vermerkt:', e?.code || e?.message);
+    console.error('[mitarbeiter-zugang] Austritt nicht vermerkt:', (/** @type {any} */ (e))?.code || (/** @type {any} */ (e))?.message);
     return false;
   }
 }
@@ -563,7 +570,7 @@ router.post('/team/mitarbeiter/:id/einrichtungscode', requireAuth, resetCodeLimi
 });
 
 // ── c) POST /team/erstanmeldung ──────────────────────────────────────────────
-router.post('/team/erstanmeldung', erstanmeldungLimiter, async (req, res) => {
+router.post('/team/erstanmeldung', erstanmeldungLimiter, async (/** @type {any} */ req, /** @type {any} */ res) => {
   const genericFail = () => {
     logAccess(supabase, {
       userId: null,

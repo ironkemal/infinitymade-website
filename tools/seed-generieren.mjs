@@ -33,6 +33,9 @@ import { pathToFileURL } from 'node:url';
 // `pg` wird erst in main() geladen — so bleiben buildQuery/zukunftSperreSql ohne installiertes
 // pg importierbar (tools/seed-generieren.test.js).
 
+/** @typedef {{ columns: string[], conflictKeys: string[], orderBy: string, where?: string, keepOnConflict?: string[], zukunftSperre?: string, afterSql?: string }} SeedTableConfig */
+
+/** @type {Record<string, SeedTableConfig>} */
 export const TABLES = {
   kostentraeger: {
     columns: ['ik', 'name', 'das_ik', 'payer_type', 'region', 'active', 'valid_from',
@@ -141,11 +144,19 @@ export const TABLES = {
 
 const BATCH_SIZE = 500;
 
-/** SQL: Anzahl Zeilen mit Spalte > heute (Berlin) — nur für Tabellen mit zukunftSperre. */
+/**
+ * SQL: Anzahl Zeilen mit Spalte > heute (Berlin) — nur für Tabellen mit zukunftSperre.
+ * @param {string} table
+ * @param {string} spalte
+ */
 export function zukunftSperreSql(table, spalte) {
   return `SELECT count(*)::int AS n FROM public.${table} WHERE ${spalte} > (now() AT TIME ZONE 'Europe/Berlin')::date`;
 }
 
+/**
+ * @param {string} table
+ * @param {SeedTableConfig} cfg
+ */
 export function buildQuery(table, cfg) {
   const cols = cfg.columns.join(', ');
   const literalCols = cfg.columns.map(() => `%L`).join(',');

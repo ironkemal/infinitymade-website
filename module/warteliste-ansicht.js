@@ -23,10 +23,14 @@
  * erledigt; ihn zu zeigen hiesse, den Bildschirm mit Vergangenheit zu füllen.)
  */
 
-const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
+/** @type {Record<string, string>} */
+const ESC_MAP = {
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-}[c]));
+};
+/** @param {any} s */
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ESC_MAP[c] || c);
 
+/** @type {Record<number, string>} */
 const PRIO_LABEL = {
   1: 'Normal',
   2: '<span style="color:#f59e0b;font-weight:600;">Hoch</span>',
@@ -38,24 +42,30 @@ const ICON_ZURUECK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none
 
 /** Welcher Reiter ist gewählt? Steht im DOM, damit niemand den Zustand doppelt hält. */
 export function wartelisteStatus() {
-  const aktiv = document.querySelector('#wlStatusTabs [data-wl-status].btn-primary');
+  const aktiv = /** @type {HTMLElement | null} */ (document.querySelector('#wlStatusTabs [data-wl-status].btn-primary'));
   return aktiv?.dataset.wlStatus === 'matched' ? 'matched' : 'waiting';
 }
 
-/** Reiter setzen — der gewählte trägt `btn-primary`, der andere `btn-ghost`. */
+/**
+ * Reiter setzen — der gewählte trägt `btn-primary`, der andere `btn-ghost`.
+ * @param {string} status
+ */
 export function setzeWartelisteStatus(status) {
-  document.querySelectorAll('#wlStatusTabs [data-wl-status]').forEach(btn => {
+  document.querySelectorAll('#wlStatusTabs [data-wl-status]').forEach(node => {
+    const btn = /** @type {HTMLElement} */ (node);
     const gewaehlt = btn.dataset.wlStatus === status;
     btn.className = gewaehlt ? 'btn-primary' : 'btn-ghost';
   });
 }
 
+/** @param {any} e */
 function patientName(e) {
   const l = e.leads;
   if (!l) return '—';
   return `${l.first_name || ''} ${l.last_name || ''}`.trim() || l.title || '—';
 }
 
+/** @param {any} e */
 function zeitfenster(e) {
   return (e.preferred_time_from && e.preferred_time_to)
     ? `${e.preferred_time_from.slice(0, 5)} – ${e.preferred_time_to.slice(0, 5)}`
@@ -68,6 +78,10 @@ function zeitfenster(e) {
  * `aufZurueck(id, knopf)` wird beim Klick auf „Zurück auf die Warteliste"
  * gerufen und darf asynchron sein; der Knopf sperrt sich für die Dauer selbst.
  * In der `waiting`-Ansicht gibt es ihn nicht.
+ * @param {object} [o]
+ * @param {any[]} [o.rows]
+ * @param {string} [o.status]
+ * @param {((id?: string) => Promise<any> | any) | null} [o.aufZurueck]
  */
 export function rendereWarteliste({ rows = [], status = 'waiting', aufZurueck = null } = {}) {
   const tbody = document.getElementById('wlTableBody');
@@ -127,7 +141,8 @@ export function rendereWarteliste({ rows = [], status = 'waiting', aufZurueck = 
   // Delegiert und per `onclick` gesetzt: `innerHTML` hat die alten Knöpfe eben
   // weggeworfen, `addEventListener` würde sich bei jedem Aufbau erneut stapeln.
   tbody.onclick = async (ev) => {
-    const btn = ev.target.closest('[data-wl-zurueck]');
+    const target = /** @type {Element | null} */ (ev.target);
+    const btn = /** @type {HTMLButtonElement | null} */ (target?.closest?.('[data-wl-zurueck]') || null);
     if (!btn || !aufZurueck) return;
     btn.disabled = true;
     const vorher = btn.innerHTML;

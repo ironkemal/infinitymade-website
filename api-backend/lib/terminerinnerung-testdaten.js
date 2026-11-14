@@ -8,19 +8,51 @@ export const JA = `Kopf\n[X] ${MITTEILUNG_OPTION_TEXT}: JA`;
 export const jetzt = new Date('2026-12-10T17:00:00Z');     // 18:00 MEZ, morgen = 11.12.2026
 export const ENV = { SMTP_HOST: 'smtp.example.invalid' };
 
-/** PostgREST-Fake mit Schreiben, UNIQUE (booking_id, anlass, termin_beginn) und Zaehlabfrage (head). */
+/**
+ * @typedef {{
+ *   eqs: Record<string, unknown>,
+ *   select: (_c?: unknown, opt?: { head?: boolean }) => FakeQueryBuilder,
+ *   eq: (k: string, v: unknown) => FakeQueryBuilder,
+ *   neq: (k: string, v: unknown) => FakeQueryBuilder,
+ *   in: (k: string, v: unknown[]) => FakeQueryBuilder,
+ *   gte: (k: string, v: string) => FakeQueryBuilder,
+ *   lt: (k: string, v: string) => FakeQueryBuilder,
+ *   lte: (k: string, v: string) => FakeQueryBuilder,
+ *   insert: (w: Record<string, any>) => FakeQueryBuilder,
+ *   update: (w: Record<string, any>) => FakeQueryBuilder,
+ *   maybeSingle: () => Promise<{ data: Record<string, any> | null, error: { code?: string, message?: string } | null }>,
+ *   then: (ok?: ((res: { data: any, count: number | null, error: { code?: string, message?: string } | null }) => any) | null, fehl?: ((err: unknown) => any) | null) => Promise<any>,
+ *   ausfuehren: (einzeln: boolean) => Promise<any>,
+ * }} FakeQueryBuilder
+ */
+
+/**
+ * PostgREST-Fake mit Schreiben, UNIQUE (booking_id, anlass, termin_beginn) und Zaehlabfrage (head).
+ * @param {Record<string, Array<Record<string, any>>>} tabellen
+ * @param {{ fehlerBei?: ((name: string, eqs: Record<string, unknown>, op: string) => boolean) | null }} [opts]
+ */
 export function fakeDb(tabellen, { fehlerBei = null } = {}) {
   let n = 0;
+  /** @type {string[]} */
   const aufrufe = [];
   const stand = { maxIn: 0 };
   return {
     tabellen, aufrufe, stand,
+    /** @param {string} name */
     from(name) {
       aufrufe.push(name);
-      const f = []; let op = 'select'; let wert = null; let head = false;
+      /** @type {Array<(r: Record<string, any>) => boolean>} */
+      const f = [];
+      /** @type {'select' | 'insert' | 'update'} */
+      let op = 'select';
+      /** @type {Record<string, any> | null} */
+      let wert = null;
+      let head = false;
       const rows = () => (tabellen[name] ||= []);
       const treffer = () => rows().filter(r => f.every(x => x(r)));
+      /** @type {FakeQueryBuilder} */
       const b = {
+        eqs: {},
         select(_c, opt) { if (opt?.head) head = true; return b; },
         eq(k, v) { f.push(r => r[k] === v); b.eqs = { ...b.eqs, [k]: v }; return b; },
         neq(k, v) { f.push(r => r[k] !== v); return b; },
@@ -35,11 +67,12 @@ export function fakeDb(tabellen, { fehlerBei = null } = {}) {
         async ausfuehren(einzeln) {
           await Promise.resolve(); // Verschachtelung paralleler Laeufe sichtbar machen
           if (fehlerBei?.(name, b.eqs || {}, op)) return { data: null, error: { code: 'DB_TEST_FEHLER' } };
-          if (op === 'insert') {
-            const dup = rows().some(r => r.booking_id === wert.booking_id && r.anlass === wert.anlass
-              && new Date(r.termin_beginn).getTime() === new Date(wert.termin_beginn).getTime());
+          if (op === 'insert' && wert) {
+            const w = wert;
+            const dup = rows().some(r => r.booking_id === w.booking_id && r.anlass === w.anlass
+              && new Date(r.termin_beginn).getTime() === new Date(w.termin_beginn).getTime());
             if (dup) return { data: null, error: { code: '23505' } };
-            const z = { id: `m${++n}`, created_at: jetzt.toISOString(), ...wert };
+            const z = { id: `m${++n}`, created_at: jetzt.toISOString(), ...w };
             rows().push(z);
             return { data: { id: z.id }, error: null };
           }

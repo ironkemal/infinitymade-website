@@ -24,7 +24,9 @@ import { pruefeDatenstrom, segmenteTrennen } from './preflight.js';
 import { summenstatusFuer } from '../codes/anlage3_v22.js';
 import { therapiefrequenzFuer } from './zhe-kennzeichen.js';
 
+/** @param {string} inhalt */
 const segmente = (inhalt) => segmenteTrennen(inhalt);
+/** @param {string} inhalt @param {string} tag */
 const finde    = (inhalt, tag) => segmente(inhalt).filter(s => s.startsWith(tag + '+'));
 
 // --- 1. Zaehler sind n6 mit fuehrenden Nullen (Kap. 5.4) ------------------
@@ -35,7 +37,7 @@ test('UNT/UNZ zaehlen 6-stellig mit fuehrenden Nullen', () => {
 });
 
 test('der gebaute Datenstrom traegt die gepolsterten Zaehler', () => {
-  const r = buildDtaFile(structuredClone(podoFixture));
+  const r = buildDtaFile(/** @type {Parameters<typeof buildDtaFile>[0]} */ (structuredClone(podoFixture)));
   for (const unt of finde(r.content, 'UNT')) {
     assert.match(unt.split('+')[1], /^\d{6}$/, 'UNT-Zähler nicht 6-stellig: ' + unt);
   }
@@ -50,13 +52,13 @@ test('Versichertenstatus wird auf den Summenstatus abgebildet, nicht gepolstert'
   assert.equal(summenstatusFuer('50000'), '51');
   assert.equal(summenstatusFuer('90000'), '99');   // 9 hat keine eigene Summenzeile
   assert.equal(summenstatusFuer(''),      '99');
-  assert.equal(summenstatusFuer(null),    '99');
+  assert.equal(summenstatusFuer(/** @type {string} */ (/** @type {unknown} */ (null))),    '99');
 });
 
 test('GES-Zeile traegt 11/31/51, nie 01/03/05', () => {
   const basis = structuredClone(podoFixture);
   basis.prescriptions[0].patient.versichertenstatus = '30000';
-  const r = buildDtaFile(basis);
+  const r = buildDtaFile(/** @type {Parameters<typeof buildDtaFile>[0]} */ (basis));
   const status = finde(r.content, 'GES').map(s => s.split('+')[1]);
   assert.deepEqual(status, ['00', '31']);
 });
@@ -88,8 +90,8 @@ test('leerer Freitext bleibt ein leeres Feld (keine Objekt-Ausgabe)', () => {
 
 test('Diagnosetext mit Komma kommt entwertet in der Datei an, Betraege nicht', () => {
   const basis = structuredClone(podoFixture);
-  basis.prescriptions[0].verordnung.diagnosetext = 'Ulkus, plantar rechts';
-  const r = buildDtaFile(basis);
+  /** @type {Record<string, unknown>} */ (basis.prescriptions[0].verordnung).diagnosetext = 'Ulkus, plantar rechts';
+  const r = buildDtaFile(/** @type {Parameters<typeof buildDtaFile>[0]} */ (basis));
   assert.ok(r.content.includes('Ulkus?, plantar rechts'), finde(r.content, 'DIA').join(' | '));
   // Gegenprobe in derselben Datei: der Einzelbetrag bleibt unentwertet.
   assert.ok(r.content.includes('+28,90+'), 'Betrag wurde faelschlich entwertet');
@@ -100,9 +102,9 @@ test('Diagnosetext mit Komma kommt entwertet in der Datei an, Betraege nicht', (
 
 test('zwei ICD-Kodes ergeben zwei DIA-Segmente, nicht ein Feld mit Komma', () => {
   const basis = structuredClone(podoFixture);
-  basis.prescriptions[0].verordnung.icd10Liste = ['E11.40', 'I70.24'];
-  basis.prescriptions[0].verordnung.diagnosetext = 'Diabetisches Fußsyndrom';
-  const r = buildDtaFile(basis);
+  /** @type {Record<string, unknown>} */ (basis.prescriptions[0].verordnung).icd10Liste = ['E11.40', 'I70.24'];
+  /** @type {Record<string, unknown>} */ (basis.prescriptions[0].verordnung).diagnosetext = 'Diabetisches Fußsyndrom';
+  const r = buildDtaFile(/** @type {Parameters<typeof buildDtaFile>[0]} */ (basis));
   const dia = finde(r.content, 'DIA');
   assert.equal(dia.length, 2, dia.join(' | '));
   assert.equal(dia[0], 'DIA+E11.40+Diabetisches Fußsyndrom');
@@ -113,8 +115,8 @@ test('zwei ICD-Kodes ergeben zwei DIA-Segmente, nicht ein Feld mit Komma', () =>
 
 test('icd10Liste mit Strich ["E11.7-"] erzeugt ein DIA-Segment mit "E11.7" ohne Strich', () => {
   const basis = structuredClone(podoFixture);
-  basis.prescriptions[0].verordnung.icd10Liste = ['E11.7-'];
-  const r = buildDtaFile(basis);
+  /** @type {Record<string, unknown>} */ (basis.prescriptions[0].verordnung).icd10Liste = ['E11.7-'];
+  const r = buildDtaFile(/** @type {Parameters<typeof buildDtaFile>[0]} */ (basis));
   const dia = finde(r.content, 'DIA');
   assert.equal(dia.length, 1);
   assert.equal(dia[0], 'DIA+E11.7');
@@ -122,23 +124,23 @@ test('icd10Liste mit Strich ["E11.7-"] erzeugt ein DIA-Segment mit "E11.7" ohne 
 });
 
 test('ein einzelner icd10-String bleibt genau ein DIA (Rueckwaertskompatibilitaet)', () => {
-  const r = buildDtaFile(structuredClone(podoFixture));
+  const r = buildDtaFile(/** @type {Parameters<typeof buildDtaFile>[0]} */ (structuredClone(podoFixture)));
   assert.deepEqual(finde(r.content, 'DIA'), ['DIA+E11.40']);
 });
 
 test('ein zusammengeklebter Altbestand wird wieder aufgetrennt', () => {
   const basis = structuredClone(podoFixture);
   basis.prescriptions[0].verordnung.icd10 = 'E11.40,I70.24';
-  const r = buildDtaFile(basis);
+  const r = buildDtaFile(/** @type {Parameters<typeof buildDtaFile>[0]} */ (basis));
   assert.deepEqual(finde(r.content, 'DIA'), ['DIA+E11.40', 'DIA+I70.24']);
 });
 
 test('ohne ICD steht trotzdem ein DIA — das Segment ist Mussfeld', () => {
   const basis = structuredClone(podoFixture);
   basis.prescriptions[0].verordnung.icd10 = '';
-  basis.prescriptions[0].verordnung.icd10Liste = [];
-  basis.prescriptions[0].verordnung.diagnosetext = 'Nagelmykose';
-  const r = buildDtaFile(basis);
+  /** @type {Record<string, unknown>} */ (basis.prescriptions[0].verordnung).icd10Liste = [];
+  /** @type {Record<string, unknown>} */ (basis.prescriptions[0].verordnung).diagnosetext = 'Nagelmykose';
+  const r = buildDtaFile(/** @type {Parameters<typeof buildDtaFile>[0]} */ (basis));
   assert.deepEqual(finde(r.content, 'DIA'), ['DIA++Nagelmykose']);
 });
 
@@ -155,7 +157,7 @@ test('Podologie meldet immer Therapiefrequenz 0, andere Bereiche den echten Wert
 // --- 6. UNA (Kap. 5.4 kennt es nicht) -------------------------------------
 
 test('der Datenstrom beginnt mit UNB, nicht mit UNA', () => {
-  const r = buildDtaFile(structuredClone(podoFixture));
+  const r = buildDtaFile(/** @type {Parameters<typeof buildDtaFile>[0]} */ (structuredClone(podoFixture)));
   assert.ok(!r.content.startsWith('UNA'));
   assert.ok(r.content.startsWith('UNB+UNOC:3+'));
 });
@@ -169,7 +171,7 @@ test('segmenteTrennen achtet das Entwertungszeichen', () => {
 });
 
 test('pruefeDatenstrom laesst eine korrekte Datei durch', () => {
-  const r = buildDtaFile(structuredClone(podoFixture));
+  const r = buildDtaFile(/** @type {Parameters<typeof buildDtaFile>[0]} */ (structuredClone(podoFixture)));
   const ergebnis = pruefeDatenstrom(r.content);
   assert.equal(ergebnis.nachrichten, r.messageCount);
 });

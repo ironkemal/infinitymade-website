@@ -24,12 +24,15 @@ const UNVEROEFFENTLICHT_NULL_FELDER = [
 
 /**
  * Erzeugt einen generischen 409-Bereinigungskonflikt-Fehler ohne Rohwerte oder PHI.
+ * @returns {Error & { status: number, statusCode: number, code: string }}
  */
 function createBereinigungKonfliktError() {
-  const error = new Error('Konflikt bei der Bereinigung des Entwurfs.');
-  error.status = 409;
-  error.statusCode = 409;
-  error.code = 'ENTWURF_BEREINIGUNG_KONFLIKT';
+  /** @type {Error & { status: number, statusCode: number, code: string }} */
+  const error = Object.assign(new Error('Konflikt bei der Bereinigung des Entwurfs.'), {
+    status: 409,
+    statusCode: 409,
+    code: 'ENTWURF_BEREINIGUNG_KONFLIKT',
+  });
   return error;
 }
 
@@ -48,8 +51,8 @@ function createBereinigungKonfliktError() {
  *   verworfen werden kann.
  *
  * @param {object} params
- * @param {object} params.db - Datenbank- und Storage-Client
- * @param {object} params.vorher - Vollständiger Abrechnungs-Snapshot vor der Änderung
+ * @param {any} params.db - Datenbank- und Storage-Client
+ * @param {any} params.vorher - Vollständiger Abrechnungs-Snapshot vor der Änderung
  * @param {string[]} params.pfade - Array der maximal 3 zu bereinigenden Dateipfade
  * @param {string} params.verzeichnis - Verzeichnis der aktuellen Versuchsdateien
  * @param {string} [params.grund='ERSTELLUNG_KONFLIKT'] - Sicherer Whitelist-Code für Verwerfung

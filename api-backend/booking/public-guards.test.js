@@ -11,21 +11,26 @@ import {
   validatePatient
 } from './public-guards.js';
 
+/**
+ * @param {Record<string, any>} [fixtures]
+ * @param {Record<string, any>} [errors]
+ */
 function createMockSupabase(fixtures = {}, errors = {}) {
+  /** @type {any[]} */
   const queries = [];
   return {
     queries,
-    from(table) {
+    from(/** @type {string} */ table) {
       return {
-        select(cols) {
+        select(/** @type {string} */ cols) {
           return {
-            eq(col, val) {
+            eq(/** @type {string} */ col, /** @type {any} */ val) {
               return {
                 async maybeSingle() {
                   queries.push({ table, cols, col, val });
                   if (errors[table]) return { data: null, error: errors[table] };
                   const rows = fixtures[table] || [];
-                  const found = rows.find(r => r[col] === val) || null;
+                  const found = rows.find((/** @type {any} */ r) => r[col] === val) || null;
                   return { data: found, error: null };
                 }
               };
@@ -39,10 +44,10 @@ function createMockSupabase(fixtures = {}, errors = {}) {
 
 function mockRes() {
   return {
-    statusCode: null,
-    body: null,
-    status(code) { this.statusCode = code; return this; },
-    json(payload) { this.body = payload; return this; }
+    statusCode: /** @type {number | null} */ (null),
+    body: /** @type {any} */ (null),
+    status(/** @type {number} */ code) { this.statusCode = code; return this; },
+    json(/** @type {any} */ payload) { this.body = payload; return this; }
   };
 }
 
@@ -85,7 +90,7 @@ describe('Honeypot Guards', () => {
 describe('getCanonicalOwnerId', () => {
   it('gives owner_id priority even when user_id is different and falls back to null', () => {
     assert.equal(getCanonicalOwnerId(null), null);
-    assert.equal(getCanonicalOwnerId('invalid'), null);
+    assert.equal(getCanonicalOwnerId(/** @type {any} */ ('invalid')), null);
     assert.equal(getCanonicalOwnerId({}), null);
     assert.equal(getCanonicalOwnerId({ owner_id: 'own_1', user_id: 'usr_2' }), 'own_1');
     assert.equal(getCanonicalOwnerId({ user_id: 'usr_2' }), 'usr_2');
@@ -112,9 +117,9 @@ describe('validateOwnerProfile', () => {
 
     const okRes = await validateOwnerProfile(sb, 'p_valid');
     assert.equal(okRes.ok, true);
-    assert.equal(okRes.profile.id, 'p_valid');
+    assert.equal((/** @type {any} */ (okRes)).profile.id, 'p_valid');
 
-    const lastQ = sb.queries.at(-1);
+    const lastQ = /** @type {any} */ (sb.queries.at(-1));
     assert.equal(lastQ.table, 'profiles');
     assert.ok(!lastQ.cols.includes('profiles.active'), 'must not select profiles.active');
 
@@ -169,7 +174,7 @@ describe('validateService', () => {
     assert.equal(okRes.ok, true);
     assert.equal(okRes.canonicalOwnerId, 'own_1');
 
-    const lastQ = sb.queries.at(-1);
+    const lastQ = /** @type {any} */ (sb.queries.at(-1));
     assert.equal(lastQ.table, 'services');
     assert.ok(!lastQ.cols.includes('is_active'), 'no nonexistent services.is_active');
 
@@ -191,14 +196,14 @@ describe('validateLead & validatePatient', () => {
     assert.deepEqual(await validateLead(sb, 'lead_1', 'other_own'), { ok: false, status: 400, error: 'Ungültiger Lead' });
     const leadRes = await validateLead(sb, 'lead_1', 'own_1');
     assert.equal(leadRes.ok, true);
-    assert.equal(leadRes.lead.id, 'lead_1');
+    assert.equal((/** @type {any} */ (leadRes)).lead.id, 'lead_1');
 
     assert.deepEqual(await validatePatient(sb, null, 'own_1'), { ok: true });
     assert.deepEqual(await validatePatient(sb, 'missing', 'own_1'), { ok: false, status: 400, error: 'Ungültiger Patient' });
     assert.deepEqual(await validatePatient(sb, 'pat_1', 'other_own'), { ok: false, status: 400, error: 'Ungültiger Patient' });
     const patRes = await validatePatient(sb, 'pat_1', 'own_1');
     assert.equal(patRes.ok, true);
-    assert.equal(patRes.patient.id, 'pat_1');
+    assert.equal((/** @type {any} */ (patRes)).patient.id, 'pat_1');
 
     const errSb = createMockSupabase({}, { leads: { message: 'err' }, patients: { message: 'err' } });
     assert.deepEqual(await validateLead(errSb, 'lead_1', 'own_1'), { ok: false, status: 500, error: 'Interner Serverfehler' });

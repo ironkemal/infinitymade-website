@@ -5,9 +5,13 @@ import { renderBegleitzettel } from './begleitzettel.template.js';
 import assert from 'node:assert/strict';
 
 let pass = 0, fail = 0;
+/**
+ * @param {string} name
+ * @param {() => void} fn
+ */
 function test(name, fn) {
   try { fn(); console.log('  ok   ' + name); pass++; }
-  catch (e) { console.log('  FAIL ' + name + '\n       ' + e.message); fail++; }
+  catch (e) { console.log('  FAIL ' + name + '\n       ' + (e instanceof Error ? e.message : String(e))); fail++; }
 }
 
 console.log('zuzahlungsrechnung template');
@@ -17,11 +21,11 @@ const zhr = renderZuzahlungsrechnung({
   patient:  { nachname: 'Müller', vorname: 'Hans', strasse: 'Hauptstr. 5', plz: '40221', ort: 'Düsseldorf', kvnr: 'A123456789', geburtsdatum: '1972-04-13' },
   verordnung: { ausstellungsdatum: '2026-05-02', krankenkasse: 'AOK Rheinland/Hamburg' },
   rechnung: { nummer: 'ZZ-2026-W20-001', datum: '2026-05-18', faelligkeit: '2026-06-01' },
-  sessions: [
+  sessions: /** @type {Parameters<typeof renderZuzahlungsrechnung>[0]['sessions']} */ (/** @type {unknown} */ ([
     { datum: '2026-05-05', position: '20501', bezeichnung: 'KG Einzel', brutto: 29.63, zuzahlung: 2.96 },
     { datum: '2026-05-07', position: '20501', bezeichnung: 'KG Einzel', brutto: 29.63, zuzahlung: 2.96 },
-  ],
-  totals: { brutto: 59.26, prozZuzahlung: 5.92, pauschZuzahlung: 10.00, gesZuzahlung: 15.92 },
+  ])),
+  totals: /** @type {Parameters<typeof renderZuzahlungsrechnung>[0]['totals']} */ (/** @type {unknown} */ ({ brutto: 59.26, prozZuzahlung: 5.92, pauschZuzahlung: 10.00, gesZuzahlung: 15.92 })),
   bankverbindung: 'IBAN DE12 3456 7890 1234 5678 90<br>BIC AAAABBCC',
 });
 

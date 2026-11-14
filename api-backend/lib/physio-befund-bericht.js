@@ -3,6 +3,75 @@
 // Formt physio_befunde- und messreihen-Zeilen in einen strukturierten Befund-Block um
 // und erzeugt die kompakten Textzeilen fuer das PDF des Therapieberichts.
 
+/**
+ * @typedef {{
+ *   regionen?: unknown[],
+ *   positive_tests?: Array<string | { test?: string, name?: string, region?: string, seite?: string }>,
+ *   adl?: Array<string | { label?: string }>,
+ *   ziele?: Array<string | { text?: string, ziel?: string, erreicht?: string | boolean }>,
+ *   verlauf?: string | null,
+ *   massnahmen?: Array<string | { label?: string }>,
+ *   empfehlung?: string | { folge_vo?: string, eigentraining?: boolean, text?: string } | null,
+ * }} PhysioBefundDaten
+ *
+ * @typedef {{
+ *   id?: string | number | null,
+ *   prescription_id?: string | null,
+ *   befundart?: string | null,
+ *   befund_datum?: string | null,
+ *   ist_aktuell?: boolean | null,
+ *   created_at?: string | null,
+ *   daten?: (PhysioBefundDaten & { bericht?: PhysioBefundDaten | null }) | null,
+ * }} PhysioBefundRow
+ *
+ * @typedef {{
+ *   id?: string | number | null,
+ *   befund_id?: string | number | null,
+ *   typ?: string | null,
+ *   koerperteil?: string | null,
+ *   wert?: unknown,
+ *   einheit?: string | null,
+ *   seite?: string | null,
+ *   notiz?: string | null,
+ * }} PhysioMessungRow
+ *
+ * @typedef {{
+ *   datum: string,
+ *   regionen: unknown[],
+ *   nrs: Record<string, unknown>,
+ *   nrs_messungen: Array<{ label: string, seite: string | null, wert: unknown }>,
+ *   rom: Array<{ label: string, seite: string | null, wert: unknown }>,
+ *   mft: Array<{ label: string, seite: string | null, wert: unknown }>,
+ *   positive_tests: Array<string | { test?: string, name?: string, region?: string, seite?: string }>,
+ *   adl: Array<string | { label?: string }>,
+ *   ziele: Array<string | { text?: string, ziel?: string, erreicht?: string | boolean }>,
+ *   verlauf?: string | null,
+ *   massnahmen?: Array<string | { label?: string }>,
+ *   empfehlung?: string | { folge_vo?: string, eigentraining?: boolean, text?: string } | null,
+ * }} EinzelBefund
+ *
+ * @typedef {{
+ *   art: 'nrs' | 'rom' | 'mft',
+ *   label: string,
+ *   seite: string | null,
+ *   vorher: unknown,
+ *   jetzt: unknown,
+ * }} PhysioVeraenderung
+ *
+ * @typedef {{
+ *   erst: EinzelBefund,
+ *   aktuell: EinzelBefund | null,
+ *   veraenderungen: PhysioVeraenderung[],
+ *   massnahmen: Array<string | { label?: string }>,
+ *   empfehlung: string | { folge_vo?: string, eigentraining?: boolean, text?: string } | null,
+ *   verlauf: string | null,
+ * }} PhysioBefundBlock
+ */
+
+/**
+ * @param {unknown} typ
+ * @returns {'nrs' | 'rom' | 'mft' | null}
+ */
 function normalisiereTyp(typ) {
   const t = String(typ || '').trim().toUpperCase();
   if (t === 'VAS' || t === 'NRS') return 'nrs';
@@ -11,6 +80,7 @@ function normalisiereTyp(typ) {
   return null;
 }
 
+/** @param {unknown} wert */
 function parseWert(wert) {
   if (typeof wert === 'number') return wert;
   if (wert == null || wert === '') return null;
@@ -18,6 +88,10 @@ function parseWert(wert) {
   return isNaN(num) ? wert : num;
 }
 
+/**
+ * @param {PhysioBefundRow} a
+ * @param {PhysioBefundRow} b
+ */
 function sortChronologisch(a, b) {
   const da = String(a.befund_datum || a.created_at || '').slice(0, 10);
   const db = String(b.befund_datum || b.created_at || '').slice(0, 10);
@@ -27,6 +101,12 @@ function sortChronologisch(a, b) {
   return ca.localeCompare(cb);
 }
 
+/**
+ * @param {PhysioBefundRow | null | undefined} befund
+ * @param {PhysioMessungRow[]} messungen
+ * @param {PhysioBefundRow[]} alleBefunde
+ * @returns {PhysioMessungRow[]}
+ */
 function extrahiereMessungenFuerBefund(befund, messungen, alleBefunde) {
   if (!befund || !Array.isArray(messungen)) return [];
   return messungen.filter(m => {
@@ -38,6 +118,12 @@ function extrahiereMessungenFuerBefund(befund, messungen, alleBefunde) {
   });
 }
 
+/**
+ * @param {PhysioBefundRow} b
+ * @param {PhysioMessungRow[]} bMessungen
+ * @param {boolean} [istAktuell]
+ * @returns {EinzelBefund}
+ */
 function baueEinzelBefund(b, bMessungen, istAktuell = false) {
   const bericht = b.daten?.bericht || b.daten || {};
   const regionen = Array.isArray(bericht.regionen) ? bericht.regionen : [];
@@ -45,9 +131,13 @@ function baueEinzelBefund(b, bMessungen, istAktuell = false) {
   const adl = Array.isArray(bericht.adl) ? bericht.adl : [];
   const ziele = Array.isArray(bericht.ziele) ? bericht.ziele : [];
 
+  /** @type {Record<string, unknown>} */
   const nrs = {};
+  /** @type {Array<{ label: string, seite: string | null, wert: unknown }>} */
   const nrs_messungen = [];
+  /** @type {Array<{ label: string, seite: string | null, wert: unknown }>} */
   const rom = [];
+  /** @type {Array<{ label: string, seite: string | null, wert: unknown }>} */
   const mft = [];
 
   for (const m of bMessungen) {
@@ -67,6 +157,7 @@ function baueEinzelBefund(b, bMessungen, istAktuell = false) {
     }
   }
 
+  /** @type {EinzelBefund} */
   const out = {
     datum: String(b.befund_datum || b.created_at || '').slice(0, 10),
     regionen,
@@ -94,9 +185,9 @@ function baueEinzelBefund(b, bMessungen, istAktuell = false) {
  * 2. Sonst Fallback auf Befunde mit prescription_id == null.
  * 3. Befunde mit anderer prescription_id nie.
  *
- * @param {Array} befunde
- * @param {string|null} prescriptionId
- * @returns {Array}
+ * @param {PhysioBefundRow[]} befunde
+ * @param {string|null} [prescriptionId]
+ * @returns {PhysioBefundRow[]}
  */
 export function filtereBefundeFuerVo(befunde = [], prescriptionId = null) {
   const list = (befunde || []).filter(b => b && b.ist_aktuell !== false);
@@ -113,11 +204,11 @@ export function filtereBefundeFuerVo(befunde = [], prescriptionId = null) {
 /**
  * Wandelt Physio-Befunde und Messreihen in den strukturierten Befund-Block um.
  *
- * @param {Object} params
- * @param {Array} params.befunde - Liste der physio_befunde des Patienten (nur ist_aktuell)
- * @param {Array} params.messungen - messreihen-Zeilen aller dieser Befunde (nach befund_id)
+ * @param {Object} [params]
+ * @param {PhysioBefundRow[]} [params.befunde] - Liste der physio_befunde des Patienten (nur ist_aktuell)
+ * @param {PhysioMessungRow[]} [params.messungen] - messreihen-Zeilen aller dieser Befunde (nach befund_id)
  * @param {string|null} [params.prescriptionId=null] - Verordnungs-ID zur Bevorzugung
- * @returns {Object|null}
+ * @returns {PhysioBefundBlock|null}
  */
 export function baueBefundBlock({ befunde = [], messungen = [], prescriptionId = null } = {}) {
   const gefiltert = filtereBefundeFuerVo(befunde, prescriptionId);
@@ -138,7 +229,9 @@ export function baueBefundBlock({ befunde = [], messungen = [], prescriptionId =
   const bMessungenErster = extrahiereMessungenFuerBefund(erster, messungen, sortiert);
   const erst = baueEinzelBefund(erster, bMessungenErster, false);
 
+  /** @type {EinzelBefund | null} */
   let aktuell = null;
+  /** @type {PhysioMessungRow[]} */
   let bMessungenLetzter = [];
   if (letzter) {
     bMessungenLetzter = extrahiereMessungenFuerBefund(letzter, messungen, sortiert);
@@ -146,21 +239,24 @@ export function baueBefundBlock({ befunde = [], messungen = [], prescriptionId =
   }
 
   // Veraenderungen: nur geaenderte Werte zwischen erst und aktuell, gleiche koerperteil+seite+typ
+  /** @type {PhysioVeraenderung[]} */
   const veraenderungen = [];
   if (aktuell) {
-    const messListeErster = bMessungenErster.map(m => ({
-      art: normalisiereTyp(m.typ),
-      label: String(m.koerperteil || '').trim(),
-      seite: m.seite ? String(m.seite).trim() : null,
-      wert: parseWert(m.wert),
-    })).filter(m => m.art && m.wert != null);
+    /** @param {PhysioMessungRow[]} liste */
+    const zuMessPunkten = (liste) => liste.flatMap(m => {
+      const art = normalisiereTyp(m.typ);
+      const wert = parseWert(m.wert);
+      if (!art || wert == null) return [];
+      return [{
+        art,
+        label: String(m.koerperteil || '').trim(),
+        seite: m.seite ? String(m.seite).trim() : null,
+        wert,
+      }];
+    });
 
-    const messListeLetzter = bMessungenLetzter.map(m => ({
-      art: normalisiereTyp(m.typ),
-      label: String(m.koerperteil || '').trim(),
-      seite: m.seite ? String(m.seite).trim() : null,
-      wert: parseWert(m.wert),
-    })).filter(m => m.art && m.wert != null);
+    const messListeErster = zuMessPunkten(bMessungenErster);
+    const messListeLetzter = zuMessPunkten(bMessungenLetzter);
 
     for (const mL of messListeLetzter) {
       const mE = messListeErster.find(e =>
@@ -184,6 +280,7 @@ export function baueBefundBlock({ befunde = [], messungen = [], prescriptionId =
       }
     }
 
+    /** @type {Record<string, number>} */
     const artOrder = { nrs: 1, rom: 2, mft: 3 };
     veraenderungen.sort((a, b) => (artOrder[a.art] || 99) - (artOrder[b.art] || 99));
   }
@@ -214,14 +311,16 @@ export function baueBefundBlock({ befunde = [], messungen = [], prescriptionId =
 /**
  * Wandelt einen Befund-Block in kompakte Textzeilen fuer das PDF um.
  *
- * @param {Object} block
+ * @param {PhysioBefundBlock | null | undefined} block
  * @returns {Array<string>}
  */
 export function befundBlockZeilen(block) {
   if (!block || !block.erst) return [];
+  /** @type {string[]} */
   const zeilen = [];
 
   const veraenderungen = Array.isArray(block.veraenderungen) ? block.veraenderungen : [];
+  /** @type {Set<string>} */
   const behandelteMessungen = new Set();
 
   for (const v of veraenderungen) {
@@ -356,6 +455,7 @@ export function befundBlockZeilen(block) {
     if (typeof empf === 'string' && empf.trim()) {
       zeilen.push(`Empfehlung: ${empf.trim()}`);
     } else if (typeof empf === 'object') {
+      /** @type {string[]} */
       const parts = [];
       if (empf.folge_vo) parts.push(`Folge-Verordnung: ${empf.folge_vo}`);
       if (empf.eigentraining) parts.push('Eigentraining');

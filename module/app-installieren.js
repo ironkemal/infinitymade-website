@@ -17,12 +17,20 @@ export function plattform({ ua = '', standalone = false, touchPunkte = 0 } = {})
   return 'andere';
 }
 
-/** Manifest-JSON → Anzeigename; alles Unbrauchbare → „Praxura". */
+/**
+ * Manifest-JSON → Anzeigename; alles Unbrauchbare → „Praxura".
+ * @param {{ name?: any } | null | undefined} [manifest]
+ * @returns {string}
+ */
 export function praxisNameAus(manifest) {
   const n = typeof manifest?.name === 'string' ? manifest.name.trim() : '';
   return n || 'Praxura';
 }
 
+/**
+ * @param {string} id
+ * @param {boolean} [an]
+ */
 function zeige(id, an = true) { const el = document.getElementById(id); if (el) el.hidden = !an; }
 
 async function nameLaden() {
@@ -33,17 +41,23 @@ async function nameLaden() {
   return 'Praxura';
 }
 
+/** @param {string} name */
 function nameSetzen(name) {
-  document.getElementById('praxisName').textContent = name;
+  const el = document.getElementById('praxisName');
+  if (el) el.textContent = name;
   document.title = name;
   // iOS nimmt den Namen unter dem Symbol aus diesem Meta (bzw. dem Titel).
   document.querySelector('meta[name="apple-mobile-web-app-title"]')?.setAttribute('content', name);
 }
 
 export async function start() {
+  const isStandalone = Boolean(
+    window.matchMedia?.('(display-mode: standalone)').matches ||
+    ('standalone' in navigator && /** @type {any} */ (navigator).standalone === true)
+  );
   const art = plattform({
     ua: navigator.userAgent,
-    standalone: window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true,
+    standalone: isStandalone,
     touchPunkte: navigator.maxTouchPoints || 0,
   });
   // Vom Startbildschirm geöffnet: gleich in die Anwendung (dashboard leitet ggf. zum Login).
@@ -57,8 +71,10 @@ export async function start() {
   zeige('wegAndroid');
   // Box mit eigener CA (tls internal): kein sicherer Kontext → nie ein Install-Angebot.
   if (!window.isSecureContext) { zeige('androidMenue'); zeige('unsicherHinweis'); return; }
+  /** @type {any} */
   let angebot = null;
   const knopf = document.getElementById('installKnopf');
+  if (!knopf) return;
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     angebot = e;

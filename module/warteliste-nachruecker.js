@@ -46,17 +46,56 @@
  * sonst auch: `bookings` erlaubt Angestellten das Anlegen.
  */
 
+/**
+ * @typedef {{
+ *   id?: string,
+ *   service_id?: string | null,
+ *   lead_id?: string | null,
+ *   notes?: string | null,
+ *   priority?: number,
+ *   leads?: {
+ *     first_name?: string | null,
+ *     last_name?: string | null,
+ *     phone?: string | null,
+ *     email?: string | null,
+ *   } | null,
+ * }} WartelisteEintrag
+ * @typedef {{
+ *   id?: string,
+ *   user_id?: string | null,
+ *   service_id?: string | null,
+ *   start_time?: string | null,
+ *   end_time?: string | null,
+ *   group_parent_id?: string | null,
+ * }} FreiSlot
+ * @typedef {{
+ *   from: (table: string) => {
+ *     insert: (payload: Record<string, unknown>) => {
+ *       select: (cols: string) => {
+ *         single: () => Promise<{ data: { id: string } | null, error: { message?: string } | null }>,
+ *       },
+ *     },
+ *   },
+ * }} WartelisteSupabase
+ */
+
+/** @param {unknown} s @returns {string} */
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-}[c]));
+}[c] || c));
 
+/** @type {Record<number, { label: string, cls: string }>} */
 const PRIO = {
   3: { label: 'Dringend', cls: 'badge-red' },
   2: { label: 'Hoch',     cls: 'badge-yellow' },
   1: { label: 'Normal',   cls: 'badge-gray' },
 };
 
-/** Name des wartenden Patienten aus dem mitgelieferten `leads`-Join. */
+/**
+ * Name des wartenden Patienten aus dem mitgelieferten `leads`-Join.
+ * @param {WartelisteEintrag | null | undefined} eintrag
+ * @returns {string}
+ */
 function nachrueckerName(eintrag) {
   const l = eintrag?.leads || {};
   return `${l.first_name || ''} ${l.last_name || ''}`.trim() || 'Unbekannter Patient';
@@ -70,6 +109,9 @@ function nachrueckerName(eintrag) {
  * Wird VOR dem Löschen aufgerufen und das Versprechen erst danach abgewartet —
  * siehe Kopf. Wirft bei HTTP-Fehlern; der Aufrufer behandelt das wie „keine
  * Treffer", denn eine fehlgeschlagene Zusatzhilfe darf die Absage nicht aufhalten.
+ *
+ * @param {{ apiBase: string, token: string, bookingId: string }} opts
+ * @returns {Promise<{ candidates: WartelisteEintrag[], total: number }>}
  */
 export async function holeNachruecker({ apiBase, token, bookingId }) {
   const res = await fetch(`${apiBase}/warteliste/match`, {
@@ -94,8 +136,14 @@ export async function holeNachruecker({ apiBase, token, bookingId }) {
  *
  * `uebernehmen(eintrag)` wird mit dem gewählten Wartelisten-Eintrag aufgerufen
  * und darf asynchron sein; der Knopf sperrt sich für die Dauer selbst.
+ *
+ * @param {{
+ *   candidates?: WartelisteEintrag[],
+ *   slot?: FreiSlot | null,
+ *   uebernehmen?: ((eintrag: WartelisteEintrag) => Promise<unknown> | unknown) | null,
+ * }} [opts]
  */
-export function zeigeNachrueckerModal({ candidates, slot = null, uebernehmen = null } = {}) {
+export function zeigeNachrueckerModal({ candidates = [], slot = null, uebernehmen = null } = {}) {
   const listEl = document.getElementById('wlMatchList');
   if (!listEl) return;
 
@@ -110,7 +158,7 @@ export function zeigeNachrueckerModal({ candidates, slot = null, uebernehmen = n
   }
 
   listEl.innerHTML = candidates.map((c, i) => {
-    const prio = PRIO[c.priority] || PRIO[1];
+    const prio = PRIO[c.priority ?? 1] || PRIO[1];
     const phone = c.leads?.phone || '';
     const email = c.leads?.email || '';
 
@@ -152,7 +200,8 @@ export function zeigeNachrueckerModal({ candidates, slot = null, uebernehmen = n
   // samt ihren Listenern weggeworfen, und `onclick` überschreibt sich sauber —
   // `addEventListener` würde sich bei jeder Absage erneut stapeln.
   listEl.onclick = async (e) => {
-    const btn = e.target.closest('[data-nachruecker]');
+    const target = e.target instanceof Element ? e.target : null;
+    const btn = /** @type {HTMLButtonElement | null} */ (target?.closest('[data-nachruecker]'));
     if (!btn || !uebernehmen) return;
     const eintrag = candidates[Number(btn.dataset.nachruecker)];
     if (!eintrag) return;
@@ -194,8 +243,19 @@ export function zeigeNachrueckerModal({ candidates, slot = null, uebernehmen = n
  * Datenbank würde ihn gegen den Gruppentermin selbst abweisen.
  *
  * Gibt `{ ok, bookingId, warnung, error }` zurück; gemeldet wird oben.
+ *
+ * @param {{
+ *   supabase: WartelisteSupabase,
+ *   apiBase: string,
+ *   token: string,
+ *   eintrag: WartelisteEintrag,
+ *   slot: FreiSlot,
+ *   ownerId: string,
+ * }} opts
+ * @returns {Promise<{ ok: boolean, bookingId?: string, warnung?: string | null, error?: { message?: string } }>}
  */
 export async function uebernimmSlot({ supabase, apiBase, token, eintrag, slot, ownerId }) {
+  /** @type {Record<string, unknown>} */
   const payload = {
     owner_id: ownerId,
     user_id: slot.user_id,
@@ -213,6 +273,7 @@ export async function uebernimmSlot({ supabase, apiBase, token, eintrag, slot, o
 
   const { data, error } = await supabase.from('bookings').insert(payload).select('id').single();
   if (error) return { ok: false, error };
+  const bookingId = /** @type {{ id: string }} */ (data).id;
 
   // Der Termin steht — der Wartelisten-Eintrag darf ihn ab jetzt nicht mehr
   // suchen. Schlägt nur dieser Schritt fehl, bleibt der Termin trotzdem gültig:
@@ -223,14 +284,14 @@ export async function uebernimmSlot({ supabase, apiBase, token, eintrag, slot, o
     const res = await fetch(`${apiBase}/warteliste/${eintrag.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ status: 'matched', matched_booking_id: data.id }),
+      body: JSON.stringify({ status: 'matched', matched_booking_id: bookingId }),
     });
     if (!res.ok) warnung = `HTTP ${res.status}`;
   } catch (e) {
-    warnung = e.message;
+    warnung = e instanceof Error ? e.message : String(e);
   }
 
-  return { ok: true, bookingId: data.id, warnung };
+  return { ok: true, bookingId, warnung };
 }
 
 /**
@@ -251,6 +312,9 @@ export async function uebernimmSlot({ supabase, apiBase, token, eintrag, slot, o
  * `matched_booking_id` wird geleert, `notified_at` bleibt stehen: dass dieser
  * Mensch schon einmal angerufen wurde, ist beim nächsten Mal die nützlichere
  * Information.
+ *
+ * @param {{ apiBase: string, token: string, eintragId: string }} opts
+ * @returns {Promise<unknown>}
  */
 export async function machtWiederWartend({ apiBase, token, eintragId }) {
   const res = await fetch(`${apiBase}/warteliste/${eintragId}`, {

@@ -190,7 +190,7 @@ export const KNOWN_AI_TASKS = Object.freeze(new Set([
  * Whitelists known KI codes with fixed German messages.
  * Unknown raw provider exceptions or arbitrary errors always map to generic fixed error.
  *
- * @param {any} err - Error object, string code, or unknown failure
+ * @param {unknown} err - Error object, string code, or unknown failure
  * @returns {{ code: string, message: string, status: number }}
  */
 export function safeAiError(err) {
@@ -198,17 +198,17 @@ export function safeAiError(err) {
     return { ...GENERIC_AI_ERROR };
   }
 
+  /** @type {string | null} */
   let candidateCode = null;
+  const errObj = typeof err === 'object' ? /** @type {{ code?: unknown, status?: unknown }} */ (err) : null;
   if (typeof err === 'string') {
     candidateCode = err.trim();
-  } else if (typeof err === 'object') {
-    if (typeof err.code === 'string') {
-      candidateCode = err.code.trim();
-    }
+  } else if (errObj && typeof errObj.code === 'string') {
+    candidateCode = errObj.code.trim();
   }
 
   if (candidateCode && Object.prototype.hasOwnProperty.call(KNOWN_AI_CODES, candidateCode)) {
-    const entry = KNOWN_AI_CODES[candidateCode];
+    const entry = KNOWN_AI_CODES[/** @type {keyof typeof KNOWN_AI_CODES} */ (candidateCode)];
     return {
       code: candidateCode,
       message: entry.message,
@@ -218,8 +218,8 @@ export function safeAiError(err) {
 
   // Generic safe fallback
   let fallbackStatus = 503;
-  if (typeof err === 'object' && err !== null && (err.status === 400 || err.status === 401 || err.status === 403 || err.status === 409 || err.status === 502 || err.status === 503)) {
-      fallbackStatus = err.status;
+  if (errObj && (errObj.status === 400 || errObj.status === 401 || errObj.status === 403 || errObj.status === 409 || errObj.status === 502 || errObj.status === 503)) {
+      fallbackStatus = errObj.status;
   }
 
   return {

@@ -5,9 +5,13 @@ import { renderMahnung } from '../pdf/mahnung.template.js';
 import assert from 'node:assert/strict';
 
 let pass = 0, fail = 0;
+/**
+ * @param {string} name
+ * @param {() => void} fn
+ */
 function test(name, fn) {
   try { fn(); console.log('  ok   ' + name); pass++; }
-  catch (e) { console.log('  FAIL ' + name + '\n       ' + e.message); fail++; }
+  catch (e) { console.log('  FAIL ' + name + '\n       ' + (e instanceof Error ? e.message : String(e))); fail++; }
 }
 
 console.log('mahnwesen/stufe');
@@ -50,13 +54,13 @@ test('Stufe 3 als ALLERERSTE Mahnung wird abgelehnt', () => {
   // Inkassobüro an und liess sich verschicken, ohne dass der Patient je
   // eine Zahlungserinnerung bekommen hatte.
   const r = pruefeStufe(3, []);
-  assert.equal(r.ok, false);
+  if (r.ok || !r.fehler) assert.fail();
   assert.ok(r.fehler.includes('Stufe 1'));
 });
 
 test('Stufe 2 überspringen wird abgelehnt', () => {
   const r = pruefeStufe(3, [{ level: 1 }]);
-  assert.equal(r.ok, false);
+  if (r.ok || !r.fehler) assert.fail();
   assert.ok(r.fehler.includes('Stufe 2'));
 });
 
@@ -73,18 +77,18 @@ test('niedrigere Stufe wiederholen ist erlaubt', () => {
 
 test('nach Stufe 3 wird jede weitere Mahnung abgelehnt', () => {
   const r = pruefeStufe(3, [{ level: 1 }, { level: 2 }, { level: 3 }]);
-  assert.equal(r.ok, false);
+  if (r.ok || !r.fehler) assert.fail();
   assert.ok(r.fehler.includes('letzte Mahnung'));
 });
 
 test('ungültige Stufen werden abgelehnt', () => {
   for (const bad of [0, 4, -1, 'abc', null, undefined]) {
-    assert.equal(pruefeStufe(bad, []).ok, false, `Stufe ${bad}`);
+    assert.equal(pruefeStufe(/** @type {number} */ (bad), []).ok, false, `Stufe ${bad}`);
   }
 });
 
 test('Stufe als String wird akzeptiert', () => {
-  assert.equal(pruefeStufe('1', []).ok, true);
+  assert.equal(pruefeStufe(/** @type {number} */ (/** @type {unknown} */ ('1')), []).ok, true);
 });
 
 test('LEVEL_DAYS und MAX_STUFE passen zusammen', () => {
@@ -129,7 +133,7 @@ test('Zuzahlung zeigt die IK-Nummer weiterhin', () => {
 });
 
 test('unbekannte Forderungsart fällt auf Zuzahlung zurück', () => {
-  const html = renderMahnung({ ...basis, forderungsart: 'quatsch' });
+  const html = renderMahnung({ ...basis, forderungsart: /** @type {'zuzahlung'} */ (/** @type {unknown} */ ('quatsch')) });
   assert.ok(html.includes('Offene Zuzahlung'));
 });
 

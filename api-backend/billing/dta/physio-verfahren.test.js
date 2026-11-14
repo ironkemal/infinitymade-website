@@ -3,7 +3,16 @@ import assert from 'node:assert/strict';
 import { validatePhysioAbrechnung } from './physio-verfahren.js';
 
 const rx = { ausstellungsdatum: '2026-01-01', anzahl_einheiten: 6 };
+/**
+ * @param {string[]} days
+ * @param {Record<string, unknown>} [extra]
+ * @param {Record<string, unknown>} [opts]
+ */
 const run = (days, extra = {}, opts = {}) => validatePhysioAbrechnung({ rx: { ...rx, ...extra }, sessions: days.map(datumLeistung => ({ datumLeistung })), entlassmanagement: false, ...opts });
+/**
+ * @param {{ errors: Array<{ code: string }> }} result
+ * @param {string} code
+ */
 const has = (result, code) => result.errors.some(e => e.code === code);
 
 test('Standard starts on day28; day29 blocked; urgent day14/day15', () => {

@@ -5,11 +5,13 @@ import { buildDtaFile } from './builder.js';
 import { podoFixture } from './fixtures.js';
 import { segmenteTrennen } from './preflight.js';
 
+/** @param {string} inhalt */
 const segmente = (inhalt) => segmenteTrennen(inhalt);
+/** @param {string} inhalt @param {string} tag */
 const finde    = (inhalt, tag) => segmente(inhalt).filter(s => s.startsWith(tag + '+'));
 
 test('builder: eine Verordnung mit icd10Liste ["M17.1R", "E11.40†"] erzeugt DIA-Werte M17.1 und E11.40', () => {
-  const basis = structuredClone(podoFixture);
+  const basis = /** @type {import('./preflight.js').DtaInput} */ (/** @type {unknown} */ (structuredClone(podoFixture)));
   basis.prescriptions[0].verordnung.icd10Liste = ['M17.1R', 'E11.40†'];
   basis.prescriptions[0].verordnung.diagnosetext = '';
   const r = buildDtaFile(basis);
@@ -22,13 +24,13 @@ test('builder: eine Verordnung mit icd10Liste ["M17.1R", "E11.40†"] erzeugt DI
 });
 
 test('builder #338: vkz 02 ohne urspruenglich wirft 422 Fehler mit Verweis auf Anlage 1 § 7.2', () => {
-  const basis = structuredClone(podoFixture);
+  const basis = /** @type {import('./preflight.js').DtaInput} */ (/** @type {unknown} */ (structuredClone(podoFixture)));
   basis.vkz = '02';
   delete basis.prescriptions[0].urspruenglich;
 
   assert.throws(
     () => buildDtaFile(basis),
-    (err) => {
+    (/** @type {Error & { status?: number }} */ err) => {
       assert.equal(err.status, 422);
       assert.match(err.message, /Korrekturverfahren \(VKZ 02\)/);
       assert.match(err.message, /Anlage 1 TP5 V21 § 7\.2/);
@@ -38,13 +40,13 @@ test('builder #338: vkz 02 ohne urspruenglich wirft 422 Fehler mit Verweis auf A
 });
 
 test('builder #338: vkz 04 ohne urspruenglich wirft 422 Fehler mit Verweis auf Anlage 1 § 7.2', () => {
-  const basis = structuredClone(podoFixture);
+  const basis = /** @type {import('./preflight.js').DtaInput} */ (/** @type {unknown} */ (structuredClone(podoFixture)));
   basis.vkz = '04';
   delete basis.prescriptions[0].urspruenglich;
 
   assert.throws(
     () => buildDtaFile(basis),
-    (err) => {
+    (/** @type {Error & { status?: number }} */ err) => {
       assert.equal(err.status, 422);
       assert.match(err.message, /Korrekturverfahren \(VKZ 04\)/);
       assert.match(err.message, /Anlage 1 TP5 V21 § 7\.2/);
@@ -54,7 +56,7 @@ test('builder #338: vkz 04 ohne urspruenglich wirft 422 Fehler mit Verweis auf A
 });
 
 test('builder #338: vkz 02 mit urspruenglich erzeugt URI-Segment', () => {
-  const basis = structuredClone(podoFixture);
+  const basis = /** @type {import('./preflight.js').DtaInput} */ (/** @type {unknown} */ (structuredClone(podoFixture)));
   basis.vkz = '02';
   basis.prescriptions[0].urspruenglich = {
     ikLeistungserbringer:  '109999999',
@@ -71,7 +73,7 @@ test('builder #338: vkz 02 mit urspruenglich erzeugt URI-Segment', () => {
 });
 
 test('builder #338: vkz 01 ohne urspruenglich bleibt fehlerfrei und ohne URI-Segment', () => {
-  const basis = structuredClone(podoFixture);
+  const basis = /** @type {import('./preflight.js').DtaInput} */ (/** @type {unknown} */ (structuredClone(podoFixture)));
   basis.vkz = '01';
   delete basis.prescriptions[0].urspruenglich;
 
@@ -81,7 +83,7 @@ test('builder #338: vkz 01 ohne urspruenglich bleibt fehlerfrei und ohne URI-Seg
 });
 
 test('builder & preflight: KZ 5 (zuzahlungsfrei -> pflichtig) mit freiem Ersttag erzeugt 0,00 EUR Pauschale in BES und keine Falsch-Warnung S:01009', () => {
-  const basis = structuredClone(podoFixture);
+  const basis = /** @type {import('./preflight.js').DtaInput} */ (/** @type {unknown} */ (structuredClone(podoFixture)));
   const rx = basis.prescriptions[0];
   rx.verordnung.zuzahlungskennzeichen = '5';
   rx.verordnung.pauschaleFrei = true; // 1. Behandlungstag war befreit -> keine 10-EUR-Pauschale
@@ -110,7 +112,7 @@ test('builder & preflight: KZ 5 (zuzahlungsfrei -> pflichtig) mit freiem Ersttag
 });
 
 test('builder: KZ 4 (pflichtig -> befreit) deckelt 10-EUR-Pauschale auf pflichtigBrutto statt Gesamtbrutto', () => {
-  const basis = structuredClone(podoFixture);
+  const basis = /** @type {import('./preflight.js').DtaInput} */ (/** @type {unknown} */ (structuredClone(podoFixture)));
   const rx = basis.prescriptions[0];
   rx.verordnung.zuzahlungskennzeichen = '4';
   rx.sessions = [

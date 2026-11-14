@@ -32,8 +32,11 @@ test('Zeitraum: ungueltig, rueckwaerts oder zu lang -> null', () => {
   assert.equal(tageImZeitraum('kaputt', '2026-11-02'), null);
   assert.equal(tageImZeitraum('2026-11-05', '2026-11-02'), null);
   assert.equal(tageImZeitraum('2026-01-01', '2026-12-31'), null);
-  assert.equal(tageImZeitraum('2026-11-01', '2026-11-01').length, 1);
-  assert.ok(tageImZeitraum('2026-11-01', '2027-01-01', MAX_VERSETZEN_TAGE).length <= MAX_VERSETZEN_TAGE);
+  const einzeln = tageImZeitraum('2026-11-01', '2026-11-01');
+  assert.ok(einzeln);
+  assert.equal(einzeln.length, 1);
+  const begrenzt = tageImZeitraum('2026-11-01', '2027-01-01', MAX_VERSETZEN_TAGE);
+  assert.ok(begrenzt && begrenzt.length <= MAX_VERSETZEN_TAGE);
 });
 
 test('Aenderung: Muster umstellen loescht alte Zeile, legt neue an, vergangene Einzeltage bleiben', () => {
@@ -145,7 +148,9 @@ test('Versionen: Warnliste sieht kuenftige Version (Termin nach Stichtag am alte
 test('Helfer: naechsterTag ueber Jahreswechsel, musterText', () => {
   assert.equal(naechsterTag('2026-12-31'), '2027-01-01');
   assert.equal(naechsterTag('kaputt'), '');
-  assert.equal(musterText(new Set(['3|B', '1|A']), id => ({ A: 'Nord', B: 'Süd' })[id]), 'Mo Nord · Mi Süd');
+  /** @type {Record<string, string>} */
+  const standortNamen = { A: 'Nord', B: 'Süd' };
+  assert.equal(musterText(new Set(['3|B', '1|A']), id => standortNamen[id] ?? ''), 'Mo Nord · Mi Süd');
   assert.equal(musterText(new Set(), () => ''), 'kein Muster (alle Standorte)');
 });
 
@@ -171,7 +176,7 @@ test('Fenster: nur Uhrzeit geändert -> UPDATE derselben Zeile, kein Insert (UNI
   assert.deepEqual(aenderung.neu, []);
   assert.deepEqual(aenderung.loeschen, []);
   assert.deepEqual(aenderung.aendern, [{ id: 'f1', von: '07:30', bis: '12:30' }]);
-  assert.equal(planNachher(mitFenster, aenderung).find(z => z.id === 'f1').von, '07:30');
+  assert.equal(planNachher(mitFenster, aenderung).find(z => z.id === 'f1')?.von, '07:30');
 });
 
 test('Fenster: Uhrzeit leeren -> ganzer Tag (UPDATE auf null)', () => {
@@ -181,8 +186,8 @@ test('Fenster: Uhrzeit leeren -> ganzer Tag (UPDATE auf null)', () => {
 
 test('Fenster: Prüfung halb leer / rückwärts', () => {
   assert.equal(fensterFehler(new Map([['1|A', { von: '', bis: '' }]])), null);
-  assert.match(fensterFehler(new Map([['1|A', { von: '08:00', bis: '' }]])), /Beginn und Ende/);
-  assert.match(fensterFehler(new Map([['1|A', { von: '12:00', bis: '08:00' }]])), /vor dem Ende/);
+  assert.match(fensterFehler(new Map([['1|A', { von: '08:00', bis: '' }]])) ?? '', /Beginn und Ende/);
+  assert.match(fensterFehler(new Map([['1|A', { von: '12:00', bis: '08:00' }]])) ?? '', /vor dem Ende/);
   assert.equal(fensterFehler(new Map([['1|A', { von: '08:00', bis: '12:00' }]])), null);
 });
 

@@ -5,6 +5,12 @@
 // außerhalb des Express-Prozesses (z. B. preise_pruefen.mjs) dieselbe Funktion
 // verwenden können, ohne server.js zu importieren (das würde den ganzen
 // Express-Server samt DB-Clients mit hochziehen).
+/**
+ * @param {string | URL | Request} url
+ * @param {RequestInit} [options]
+ * @param {number} [timeoutMs]
+ * @returns {Promise<Response>}
+ */
 export async function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), timeoutMs);

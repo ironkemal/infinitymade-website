@@ -6,7 +6,7 @@ import { ladePatientTermine, patientTerminZeile } from './patient-termine.js';
 test('Patientenakte blendet Stornos standardmäßig aus und lädt sie auf Wunsch mit', async () => {
   const rows = [{ id: 'aktiv', status: 'confirmed' }, { id: 'storno', status: 'cancelled' }];
   const sb = createClient('https://test.invalid', 'test-key', { auth: { persistSession: false }, global: {
-    fetch: async url => {
+    fetch: async (/** @type {any} */ url) => {
       const q = new URL(url).searchParams;
       assert.equal(q.get('owner_id'), 'eq.praxis');
       assert.equal(q.get('customer_phone'), 'eq.0123');
@@ -14,8 +14,8 @@ test('Patientenakte blendet Stornos standardmäßig aus und lädt sie auf Wunsch
     },
   } });
   const opts = { ownerId: 'praxis', lead: { phone: '0123' } };
-  assert.deepEqual((await ladePatientTermine(sb, opts)).map(b => b.id), ['aktiv']);
-  assert.deepEqual((await ladePatientTermine(sb, { ...opts, mitAbgesagten: true })).map(b => b.id), ['aktiv', 'storno']);
+  assert.deepEqual((await ladePatientTermine(sb, opts)).map((/** @type {any} */ b) => b.id), ['aktiv']);
+  assert.deepEqual((await ladePatientTermine(sb, { ...opts, mitAbgesagten: true })).map((/** @type {any} */ b) => b.id), ['aktiv', 'storno']);
 });
 
 test('Absagegrund wird als Text angezeigt; historische Einträge haben keine Schreibaktion', () => {
@@ -29,15 +29,16 @@ test('Absagegrund wird als Text angezeigt; historische Einträge haben keine Sch
 
 test('ohne Patientenkennung werden keine Termine anderer Patienten geladen', async () => {
   let requested = false;
-  const sb = createClient('https://test.invalid', 'test-key', { global: { fetch: async () => { requested = true; } } });
+  const sb = createClient('https://test.invalid', 'test-key', { global: { fetch: /** @type {any} */ (async () => { requested = true; }) } });
   assert.deepEqual(await ladePatientTermine(sb, { ownerId: 'praxis' }), []);
   assert.equal(requested, false);
 });
 
 test('Akte mit lead_id: Termine über lead_id, Telefon nur zusätzlich (canli-test P2 30.09)', async () => {
+  /** @type {URLSearchParams[]} */
   const seen = [];
   const sb = createClient('https://test.invalid', 'test-key', { auth: { persistSession: false }, global: {
-    fetch: async url => { seen.push(new URL(url).searchParams); return new Response('[]'); },
+    fetch: async (/** @type {any} */ url) => { seen.push(new URL(url).searchParams); return new Response('[]'); },
   } });
   await ladePatientTermine(sb, { ownerId: 'praxis', lead: { id: 'L1', phone: '+49 1' } });
   await ladePatientTermine(sb, { ownerId: 'praxis', lead: { id: 'L1' } });
@@ -52,11 +53,11 @@ test('Geteilte Telefonnummer holt nur unzugeordnete Alttermine, niemals explizit
     { id:'other',owner_id:'praxis',lead_id:'B',customer_phone:'0123' },
     { id:'legacy',owner_id:'praxis',lead_id:null,customer_phone:'0123' },
   ];
-  const sb = createClient('https://test.invalid','test-key',{auth:{persistSession:false},global:{fetch:async url=>{
+  const sb = createClient('https://test.invalid','test-key',{auth:{persistSession:false},global:{fetch:async (/** @type {any} */ url)=>{
     const predicate = new URL(url).searchParams.get('or');
     // Transport evaluates the actual query shape, not the returned patient's name.
     assert.equal(predicate,'(lead_id.eq.A,and(lead_id.is.null,customer_phone.eq."0123"))');
     return new Response(JSON.stringify(rows.filter(r=>r.lead_id==='A'||(r.lead_id==null&&r.customer_phone==='0123'))));
   }}});
-  assert.deepEqual((await ladePatientTermine(sb,{ownerId:'praxis',lead:{id:'A',phone:'0123'}})).map(r=>r.id),['own','legacy']);
+  assert.deepEqual((await ladePatientTermine(sb,{ownerId:'praxis',lead:{id:'A',phone:'0123'}})).map((/** @type {any} */ r)=>r.id),['own','legacy']);
 });

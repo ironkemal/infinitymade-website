@@ -15,23 +15,29 @@ const EMAIL = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]{2,}$/;
 export const ZAHLUNGSARTEN = ['gkv', 'pkv', 'selbstzahler', 'bg'];
 
 // key -> { titel, zahlung }. Spiegel von ANLIEGEN in module/anfrage-anliegen.js.
+/** @type {Record<string, { titel: string, zahlung: string[] }>} */
 export const ANLIEGEN = {
   rezept: { titel: 'Behandlung mit Rezept', zahlung: ['gkv', 'pkv', 'bg'] },
   nagelspange: { titel: 'Nagelspange', zahlung: ['gkv', 'pkv', 'selbstzahler'] },
   ohne_rezept: { titel: 'Ohne Rezept – Fußpflege / Beratung', zahlung: ['selbstzahler', 'pkv'] },
   unsicher: { titel: 'Etwas anderes oder ich bin unsicher', zahlung: ['gkv', 'pkv', 'selbstzahler', 'bg'] },
 };
+/** @type {Record<string, string>} */
 export const TAGE = { mo: 'Mo', di: 'Di', mi: 'Mi', do: 'Do', fr: 'Fr' };
+/** @type {Record<string, string>} */
 export const TAGESZEITEN = {
   vormittag: 'Vormittag (8–12)',
   nachmittag: 'Nachmittag (12–16)',
   spaet: 'Später Nachmittag (ab 16 Uhr)',
 };
+/** @type {Record<string, string>} */
 export const DRINGLICHKEIT = { asap: 'So bald wie möglich', wochen: 'In 2 bis 3 Wochen', egal: 'Keine Eile' };
+/** @type {Record<string, string>} */
 export const ERSTBESUCH = { ja: 'ja', nein: 'nein' };
 export const MAX_MITTEILUNG = 140;
 export const MAX_ANMERKUNG = 80;
 
+/** @param {any} s */
 function echtesDatum(s) {
   const m = ISO.exec(String(s || ''));
   if (!m) return null;
@@ -39,18 +45,26 @@ function echtesDatum(s) {
   if (t.getUTCFullYear() !== +m[1] || t.getUTCMonth() !== +m[2] - 1 || t.getUTCDate() !== +m[3]) return null;
   return t;
 }
-const heuteBerlin = (now) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(now);
-const nameOk = (w) => typeof w === 'string' && w.trim().length >= 2 && w.trim().length <= 60 && !/[<>\u0000-\u001f]/.test(w);
+const heuteBerlin = (/** @type {Date} */ now) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(now);
+const nameOk = (/** @type {any} */ w) => typeof w === 'string' && w.trim().length >= 2 && w.trim().length <= 60 && !/[<>\u0000-\u001f]/.test(w);
 
-/** Freitext: Steuerzeichen/Zeilenumbrueche zu Leerzeichen, <> entfernt, getrimmt, gekuerzt. */
+/**
+ * Freitext: Steuerzeichen/Zeilenumbrueche zu Leerzeichen, <> entfernt, getrimmt, gekuerzt.
+ * @param {any} wert
+ * @param {number} max
+ */
 export function bereinigeFreitext(wert, max) {
   return String(wert ?? '').replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/<[^>]*>/g, '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
-const nurSchluessel = (arr, erlaubt) => Array.isArray(arr) && arr.every((k) => typeof k === 'string' && Object.hasOwn(erlaubt, k));
-const einmalig = (arr) => new Set(arr).size === arr.length;
+const nurSchluessel = (/** @type {any} */ arr, /** @type {Record<string, any>} */ erlaubt) => Array.isArray(arr) && arr.every((k) => typeof k === 'string' && Object.hasOwn(erlaubt, k));
+const einmalig = (/** @type {any[]} */ arr) => new Set(arr).size === arr.length;
 
-/** Gibt `null` (gueltig) oder eine deutsche Fehlermeldung zurueck. */
+/**
+ * Gibt `null` (gueltig) oder eine deutsche Fehlermeldung zurueck.
+ * @param {any} body
+ * @param {Date} [now]
+ */
 export function pruefeWidgetAnfrage(body, now = new Date()) {
   const p = body?.patient;
   if (!p || typeof p !== 'object') return 'Patientendaten unvollständig';
@@ -100,6 +114,7 @@ export function pruefeWidgetAnfrage(body, now = new Date()) {
  * Notiztext in FESTER Reihenfolge (gleich der Reihenfolge der Schritte im Widget). Passt
  * rechnerisch immer in 500 Zeichen: Kopf <= 95, Zeit <= 99, Wie bald <= 35, Schon da gewesen <= 22,
  * Mitteilung <= 153, Erreichbarkeit <= 96, fuenf Zeilenumbrueche.
+ * @param {any} w
  */
 export function baueWidgetNotiz(w) {
   const zeilen = [];
@@ -131,6 +146,7 @@ export function baueWidgetNotiz(w) {
  * Fuer jede anonyme create-Anfrage (nicht nur Widget): Namen ohne Markup/Steuerzeichen und
  * genau EINE E-Mail-Adresse (Komma-Listen wuerden an mehrere Empfaenger gehen, S-56).
  * Gibt `null` oder eine Fehlermeldung zurueck. Ohne `patient` (Bestandspatient) nichts zu pruefen.
+ * @param {any} patient
  */
 export function pruefeOeffentlichePatientAngaben(patient) {
   if (!patient || typeof patient !== 'object') return null;

@@ -9,6 +9,11 @@
 export function createPendingGuard(getButton, onError) {
   let pending = false;
 
+  /**
+   * @this {any}
+   * @param {Function} operation
+   * @param {...any} args
+   */
   return async function (operation, ...args) {
     if (pending) return;
     pending = true;

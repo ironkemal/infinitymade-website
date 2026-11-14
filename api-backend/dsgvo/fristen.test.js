@@ -4,18 +4,21 @@ import { grenzeIso, fristEintraege, fristenSchritt, starteFristen } from './fris
 import { TABELLEN, KATEGORIEN } from './klassifikation.js';
 
 // Mini-Fake für die genutzten supabase-js-Aufrufe; protokolliert jede Abfrage.
+/** @param {Record<string, any>} [daten] */
 function fakeSupabase(daten = {}) {
+  /** @type {any[]} */
   const log = [];
-  const from = (table) => {
+  const from = (/** @type {string} */ table) => {
+    /** @type {{ table: string, op: string, filter: any[], cols?: any, opt?: any, range?: number[] }} */
     const q = { table, op: 'select', filter: [] };
     const api = {
-      select(cols) { q.cols = cols; return api; },
-      delete(opt) { q.op = 'delete'; q.opt = opt; return api; },
-      lt(f, v) { q.filter.push(['lt', f, v]); return api; },
-      in(f, v) { q.filter.push(['in', f, v]); return api; },
+      select(/** @type {any} */ cols) { q.cols = cols; return api; },
+      delete(/** @type {any} */ opt) { q.op = 'delete'; q.opt = opt; return api; },
+      lt(/** @type {string} */ f, /** @type {any} */ v) { q.filter.push(['lt', f, v]); return api; },
+      in(/** @type {string} */ f, /** @type {any} */ v) { q.filter.push(['in', f, v]); return api; },
       order() { return api; },
-      range(a, b) { q.range = [a, b]; return api; },
-      then(res, rej) {
+      range(/** @type {number} */ a, /** @type {number} */ b) { q.range = [a, b]; return api; },
+      then(/** @type {any} */ res, /** @type {any} */ rej) {
         log.push(q);
         let out;
         if (q.op === 'delete') {
@@ -24,8 +27,8 @@ function fakeSupabase(daten = {}) {
         } else if (q.range) {
           out = { data: q.range[0] === 0 ? (daten[table] || []) : [], error: null };
         } else {
-          const ids = q.filter.find((f) => f[0] === 'in')[2];
-          out = { data: (daten[table] || []).filter((r) => ids.includes(r.patient_id)), error: null };
+          const ids = (/** @type {any[]} */ (q.filter.find((f) => f[0] === 'in')))[2];
+          out = { data: (daten[table] || []).filter((/** @type {any} */ r) => ids.includes(r.patient_id)), error: null };
         }
         return Promise.resolve(out).then(res, rej);
       },
@@ -43,7 +46,7 @@ test('Klassifikation: Fristen für booking_requests (6), patients (6, ohne Verwe
   const m = Object.fromEntries(fristEintraege().map((e) => [e.table, e.loeschfrist]));
   assert.deepEqual(m.booking_requests.status, ['declined', 'cancelled', 'pending']);
   assert.equal(m.booking_requests.monate, 6);
-  assert.equal(m.patients.nurOhneVerweis.table, 'booking_requests');
+  assert.equal((/** @type {any} */ (m.patients.nurOhneVerweis)).table, 'booking_requests');
   assert.equal(m.data_access_log.monate, 12);
   const reihenfolge = fristEintraege().map((e) => e.table);
   assert.ok(reihenfolge.indexOf('booking_requests') < reihenfolge.indexOf('patients'), 'Anfragen vor patients');
@@ -63,20 +66,20 @@ test('Lauf: Status-Filter, approved bleibt; patients nur ohne Verweis', async ()
   });
   const r = await fristenSchritt(sb, { jetzt: Date.parse('2026-10-09T00:00:00Z') });
   const br = sb.log.find((q) => q.table === 'booking_requests' && q.op === 'delete');
-  assert.deepEqual(br.filter.find((f) => f[0] === 'in'), ['in', 'status', ['declined', 'cancelled', 'pending']]);
+  assert.deepEqual((/** @type {any} */ (br)).filter.find((/** @type {any} */ f) => f[0] === 'in'), ['in', 'status', ['declined', 'cancelled', 'pending']]);
   const pd = sb.log.find((q) => q.table === 'patients' && q.op === 'delete');
-  assert.deepEqual(pd.filter, [['in', 'id', ['p1']]]);
+  assert.deepEqual((/** @type {any} */ (pd)).filter, [['in', 'id', ['p1']]]);
   assert.deepEqual(r.map((x) => [x.table, x.geloescht]), [['booking_requests', 3], ['patients', 1], ['data_access_log', 0]]);
 });
 
 test('Start: nur Instanz 0; einmal je Tag', async () => {
-  assert.equal(starteFristen({ supabase: {}, env: { NODE_APP_INSTANCE: '1' } }), null);
+  assert.equal(starteFristen({ supabase: /** @type {any} */ ({}), env: { NODE_APP_INSTANCE: '1' } }), null);
   let n = 0;
   const sb = { from: () => { n++; return fakeSupabase().from('x'); } };
-  const h = starteFristen({ supabase: sb, env: {}, timer: { setTimeout: () => null, setInterval: () => null }, log: { log() {} }, jetzt: () => Date.parse('2026-10-09T10:00:00Z') });
-  await h.tick();
+  const h = starteFristen({ supabase: sb, env: {}, timer: /** @type {any} */ ({ setTimeout: () => null, setInterval: () => null }), log: { log() {} }, jetzt: () => Date.parse('2026-10-09T10:00:00Z') });
+  await (/** @type {NonNullable<typeof h>} */ (h)).tick();
   const nachErstem = n;
-  await h.tick();
+  await (/** @type {NonNullable<typeof h>} */ (h)).tick();
   assert.ok(nachErstem > 0);
   assert.equal(n, nachErstem, 'zweiter Tick am selben Tag tut nichts');
 });

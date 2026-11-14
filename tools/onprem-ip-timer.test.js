@@ -15,9 +15,13 @@ const updatePfad = path.join(repoRoot, 'onprem', 'update.sh');
 
 const libIpPosix = libIpPfad.replace(/\\/g, '/');
 
+/**
+ * @param {import('node:test').TestContext} t
+ * @param {string} cmd
+ */
 function runBash(t, cmd) {
   const res = spawnSync('bash', ['-c', cmd], { encoding: 'utf8' });
-  if (res.error && res.error.code === 'ENOENT') {
+  if (res.error && /** @type {NodeJS.ErrnoException} */ (res.error).code === 'ENOENT') {
     t.skip('bash nicht gefunden');
     return null;
   }

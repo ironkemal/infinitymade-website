@@ -5,6 +5,11 @@ import { readFile } from 'node:fs/promises';
 
 // Ausschließlich eigener Wegwerfcontainer ohne Ports, Volumes oder Netzwerk.
 const enabled = process.env.PRAXURA_RAUM_DETAILS_PG_TEST === '1';
+/**
+ * @param {string[]} args
+ * @param {string} [input]
+ * @returns {Promise<{ code: number | null, out: string, err: string }>}
+ */
 function command(args, input = '') {
   return new Promise(resolve => {
     const child = spawn('docker', args, { stdio: ['pipe', 'pipe', 'pipe'] });
@@ -20,8 +25,8 @@ function command(args, input = '') {
 
 test('Raumdetails: echte PostgreSQL-Constraints und wiederholbare Migration', { skip: !enabled, timeout: 60000 }, async t => {
   const name = `praxura-raum-details-test-${process.pid}`;
-  const sql = text => command(['exec', '-i', name, 'psql', '-h', '127.0.0.1', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=verbose', '-At'], text);
-  const ok = async text => { const r = await sql(text); assert.equal(r.code, 0, r.err); return r.out; };
+  const sql = (/** @type {string} */ text) => command(['exec', '-i', name, 'psql', '-h', '127.0.0.1', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=verbose', '-At'], text);
+  const ok = async (/** @type {string} */ text) => { const r = await sql(text); assert.equal(r.code, 0, r.err); return r.out; };
   const start = await command(['run', '--rm', '--detach', '--name', name, '--network', 'none', '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', 'postgres:17.11']);
   assert.equal(start.code, 0, start.err);
   try {

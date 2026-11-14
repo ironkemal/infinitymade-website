@@ -13,9 +13,9 @@ import {
 test('normalizeCode: strips whitespace, dashes, underscores and converts to uppercase', () => {
   assert.equal(normalizeCode('  abc-de_fg-23  '), 'ABCDEFG23');
   assert.equal(normalizeCode(''), '');
-  assert.equal(normalizeCode(null), '');
-  assert.equal(normalizeCode(undefined), '');
-  assert.equal(normalizeCode(12345), '');
+  assert.equal(normalizeCode(/** @type {any} */ (null)), '');
+  assert.equal(normalizeCode(/** @type {any} */ (undefined)), '');
+  assert.equal(normalizeCode(/** @type {any} */ (12345)), '');
 });
 
 test('formatCode: formats 10-character code as XXXXX-XXXXX', () => {
@@ -44,7 +44,7 @@ test('isValidCodeFormat: validates 10 unambiguous characters (no 0, 1, O, I)', (
   assert.equal(isValidCodeFormat('ABCDE2345'), false); // 9 chars
   assert.equal(isValidCodeFormat('ABCDE234567'), false); // 11 chars
   assert.equal(isValidCodeFormat(''), false);
-  assert.equal(isValidCodeFormat(null), false);
+  assert.equal(isValidCodeFormat(/** @type {any} */ (null)), false);
 });
 
 test('mitarbeiterAnlegen: throws error if token is missing', async () => {
@@ -56,9 +56,10 @@ test('mitarbeiterAnlegen: throws error if token is missing', async () => {
 
 test('mitarbeiterAnlegen: calls POST /team/mitarbeiter with correct headers and payload', async () => {
   let calledUrl = '';
+  /** @type {any} */
   let calledOptions = {};
 
-  const mockFetch = async (url, options) => {
+  const mockFetch = async (/** @type {string} */ url, /** @type {any} */ options) => {
     calledUrl = url;
     calledOptions = options;
     return {
@@ -121,9 +122,10 @@ test('neuerEinrichtungscode: throws error if employee ID or token is missing', a
 
 test('neuerEinrichtungscode: calls POST /team/mitarbeiter/:id/einrichtungscode', async () => {
   let calledUrl = '';
+  /** @type {any} */
   let calledOptions = {};
 
-  const mockFetch = async (url, options) => {
+  const mockFetch = async (/** @type {string} */ url, /** @type {any} */ options) => {
     calledUrl = url;
     calledOptions = options;
     return {
@@ -165,9 +167,10 @@ test('neuerEinrichtungscode: throws backend error on failure', async () => {
 
 test('mitarbeiterEntfernen: calls POST /team/mitarbeiter/:id/entfernen with correct URL, method, and bearer header', async () => {
   let calledUrl = '';
+  /** @type {any} */
   let calledOptions = {};
 
-  const mockFetch = async (url, options) => {
+  const mockFetch = async (/** @type {string} */ url, /** @type {any} */ options) => {
     calledUrl = url;
     calledOptions = options;
     return {

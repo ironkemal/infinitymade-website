@@ -11,9 +11,10 @@ import { findPodologiePosition } from '../codes/podologie_positions.js';
 import assert from 'node:assert/strict';
 
 let pass = 0, fail = 0;
+/** @param {string} name @param {() => void} fn */
 function test(name, fn) {
   try { fn(); console.log('  ok   ' + name); pass++; }
-  catch (e) { console.log('  FAIL ' + name + '\n       ' + e.message); fail++; }
+  catch (e) { console.log('  FAIL ' + name + '\n       ' + (e instanceof Error ? e.message : String(e))); fail++; }
 }
 
 console.log('session zuzahlung');
@@ -34,6 +35,7 @@ test('6×KG mit Zuzahlung → brutto 177.78, prozZ 17.78, pausch 10€, ges 27.7
     patient:  { geburtsdatum: '1980-01-01', befreit_im_jahr: false },
     behandlungsende: '2026-05-18',
   });
+  assert.ok('brutto' in t);
   assert.equal(t.brutto, 177.78);
   assert.equal(t.prozZuzahlung, 17.76);
   assert.equal(t.pauschZuzahlung, 10.00);
@@ -48,6 +50,7 @@ test('Kind unter 18 → keine Zuzahlung', () => {
     patient:  { geburtsdatum: '2020-04-01', befreit_im_jahr: false },
     behandlungsende: '2026-05-18',
   });
+  assert.ok('brutto' in t);
   assert.equal(t.gesZuzahlung, 0);
   assert.equal(t.befreiungsgrund, 'unter_18');
 });
@@ -58,6 +61,7 @@ test('Befreiungsausweis → keine Zuzahlung, befreiungsgrund gesetzt', () => {
     patient:  { geburtsdatum: '1960-01-01', befreit_im_jahr: true },
     behandlungsende: '2026-05-18',
   });
+  assert.ok('brutto' in t);
   assert.equal(t.gesZuzahlung, 0);
   assert.equal(t.befreiungsgrund, 'befreiungsausweis');
 });
@@ -69,6 +73,7 @@ test('Verordnung-zuzahlungsfrei (ZuzahlungsKZ 4/5) → keine Zuzahlung', () => {
     behandlungsende: '2026-05-18',
     verordnung_zuzahlungsfrei: true,
   });
+  assert.ok('brutto' in t);
   assert.equal(t.gesZuzahlung, 0);
   assert.equal(t.befreiungsgrund, 'verordnung');
 });
@@ -79,6 +84,7 @@ test('kleine Brutto (3€) → Pauschale capped', () => {
     patient:  { geburtsdatum: '1960-01-01' },
     behandlungsende: '2026-05-18',
   });
+  assert.ok('brutto' in t);
   assert.equal(t.brutto, 3.00);
   assert.equal(t.prozZuzahlung, 0.30);
   assert.equal(t.pauschZuzahlung, 2.70);    // capped at brutto-prozZ
@@ -173,6 +179,7 @@ test('zuzahlungsfreie Position: keine prozentuale Zuzahlung', () => {
   // der Verordnung, nicht an der Position, und der §302-Weg berechnet sie
   // ebenfalls. Beide Wege muessen dasselbe sagen.
   const pos = findPosition('X1906', '22');
+  assert.ok(pos);
   const { zuzahlungUnit, positionFrei } = resolvePositionZuzahlung(pos, pos.preis);
   const totals = calcAbrechnungsfallZuzahlung({
     sessions: [{ preis_eur: pos.preis, zuzahlung_eur_position: positionFrei ? 0 : zuzahlungUnit, position_frei: positionFrei }],
@@ -180,6 +187,7 @@ test('zuzahlungsfreie Position: keine prozentuale Zuzahlung', () => {
     behandlungsende: '2026-06-01',
     verordnung_zuzahlungsfrei: false,
   });
+  assert.ok('brutto' in totals);
   assert.equal(totals.prozZuzahlung, 0, 'keine prozentuale Zuzahlung');
 });
 
@@ -187,6 +195,7 @@ test('Kind unter 18 auf zuzahlungsfreier Position: gar nichts, auch keine Pausch
   // Der haeufigste Fall in der Praxis (KG-ZNS Kinder) — hier greift die
   // Altersregel des Calculators und setzt alles auf 0.
   const pos = findPosition('X0708', '22');
+  assert.ok(pos);
   const { zuzahlungUnit, positionFrei } = resolvePositionZuzahlung(pos, pos.preis);
   const totals = calcAbrechnungsfallZuzahlung({
     sessions: [{ preis_eur: pos.preis, zuzahlung_eur_position: positionFrei ? 0 : zuzahlungUnit, position_frei: positionFrei }],
@@ -194,6 +203,7 @@ test('Kind unter 18 auf zuzahlungsfreier Position: gar nichts, auch keine Pausch
     behandlungsende: '2026-06-01',
     verordnung_zuzahlungsfrei: false,
   });
+  assert.ok('brutto' in totals);
   assert.equal(totals.gesZuzahlung, 0);
   assert.equal(totals.netto, totals.brutto);
 });

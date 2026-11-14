@@ -1,7 +1,22 @@
 /** Anzeige der Belegart (belegliste.type, CHECK in db/SCHEMA.sql) — vorher stand „zuzahlung" roh da (canli-test 20.10.2026). */
+/** @type {Record<string, string>} */
 const BELEGART = { zuzahlung: 'Zuzahlung', barverkauf: 'Barverkauf', storno: 'Storno', ausfall: 'Ausfallhonorar', rechnung: 'Rechnung' };
 
-/** Latest filter request owns the rendered journal; stale responses never append. */
+/**
+ * Latest filter request owns the rendered journal; stale responses never append.
+ * @param {object} deps
+ * @param {Document | any} deps.document
+ * @param {any} deps.supabase
+ * @param {string} deps.API
+ * @param {Location | { origin: string }} deps.location
+ * @param {Function} deps.fetch
+ * @param {Function} deps.escapeHtml
+ * @param {Function} deps.zahlartLabel
+ * @param {Function} deps.fmtEur
+ * @param {Function} deps.getUserId
+ * @param {Function} deps.showToast
+ * @param {Function} deps.triggerStorno
+ */
 export function erstelleZahlungsjournalLader({ document, supabase, API, location, fetch,
   escapeHtml, zahlartLabel, fmtEur, getUserId, showToast, triggerStorno }) {
   let generation = 0;
@@ -50,7 +65,7 @@ return async function loadBelegliste() {
     }
     empty.hidden = true;
 
-    rows.forEach(r => {
+    rows.forEach((/** @type {any} */ r) => {
       const dateStr = new Date(r.created_at).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' });
       const isNegative = Number(r.amount_eur) < 0;
       const color = isNegative ? 'var(--danger)' : 'var(--success)';
@@ -76,12 +91,12 @@ return async function loadBelegliste() {
     });
 
     // Wire Storno Event
-    tbody.querySelectorAll('.bl-storno-btn').forEach(btn => {
+    tbody.querySelectorAll('.bl-storno-btn').forEach((/** @type {any} */ btn) => {
       btn.addEventListener('click', () => triggerStorno(btn.dataset.nr, btn.dataset.val, btn.dataset.ref, btn.dataset.rx || null, btn.dataset.pat || null, btn.dataset.id || null));
     });
   } catch (err) {
     if (request !== generation) return;
-    showToast('Zahlungsjournal Fehler: ' + err.message, 'error');
+    showToast('Zahlungsjournal Fehler: ' + /** @type {any} */ (err).message, 'error');
   }
 }
 

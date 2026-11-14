@@ -19,7 +19,12 @@ const TEAM_ADRESSE = 'support@praxura.de';
 const INTERNE_ENDUNG = /\.(home\.arpa|local|lan|internal|intranet)$/i;
 const PRIVATE_IP = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/;
 
+/**
+ * @param {string | null | undefined} origin
+ * @returns {boolean}
+ */
 export function istOeffentlicherHost(origin) {
+  if (!origin) return false;
   let adresse;
   try {
     adresse = new URL(origin);
@@ -31,12 +36,20 @@ export function istOeffentlicherHost(origin) {
   return host !== 'localhost' && host.includes('.') && !INTERNE_ENDUNG.test(host) && !PRIVATE_IP.test(host);
 }
 
-/** Adresse für den Code, oder null, wenn von außen niemand ankommt. */
+/**
+ * Adresse für den Code, oder null, wenn von außen niemand ankommt.
+ * @param {{ istKutu?: boolean, origin?: string | null }} param0
+ * @returns {string | null}
+ */
 export function einbettungsHost({ istKutu, origin }) {
   if (!istKutu) return SAAS_HOST;
-  return istOeffentlicherHost(origin) ? new URL(origin).origin : null;
+  return istOeffentlicherHost(origin) && origin ? new URL(origin).origin : null;
 }
 
+/**
+ * @param {{ host?: string | null, ownerId?: string | null }} param0
+ * @returns {string}
+ */
 export function einbettungsCode({ host, ownerId }) {
   if (!host || !UUID.test(ownerId || '')) return '';
   return `<iframe src="${host}/widget/booking-widget.html?owner=${ownerId}"\n`
@@ -47,6 +60,10 @@ export function einbettungsCode({ host, ownerId }) {
     + "  allow=\"camera 'none'; microphone 'none'; geolocation 'none'\"></iframe>";
 }
 
+/**
+ * @param {{ istKutu?: boolean }} param0
+ * @returns {string}
+ */
 export function einbettungsHinweis({ istKutu }) {
   const gemeinsam = 'Ergänzen Sie Ihre Datenschutzerklärung um die Terminanfrage, pflegen Sie Impressums- und '
     + 'Datenschutz-URL, nutzen Sie nur HTTPS-Seiten.';
@@ -71,7 +88,10 @@ function baueBlock() {
   return block;
 }
 
-/** Setzt den Block hinter `nachElement`. Mehrfacher Aufruf ersetzt ihn. */
+/**
+ * Setzt den Block hinter `nachElement`. Mehrfacher Aufruf ersetzt ihn.
+ * @param {Element | null | undefined} nachElement
+ */
 export function mountWidgetEinbettung(nachElement) {
   if (!nachElement) return;
   document.getElementById('widgetEinbettung')?.remove();

@@ -15,10 +15,10 @@ test('Revalidierung erhält Provenienz und markiert Bearbeitung, ohne alte Berec
   const created = computedMitErfassung({gueltig_bis:'2026-12-01'}, quelle);
   assert.throws(() => computedMitErfassung({gueltig_bis:'2026-12-02'}, null, created), /erneut/);
   const edited = computedMitErfassung({gueltig_bis:'2026-12-02'}, quelle, created);
-  assert.equal(edited.erfassung.quelle,'barcode+korrigiert');
-  assert.equal(edited.gueltig_bis,'2026-12-02');
-  assert.equal(created.erfassung.quelle,'barcode');
-  assert.equal(computedMitErfassung(null,quelle,edited).erfassung.quelle,'barcode+korrigiert');
+  assert.equal(/** @type {{ quelle?: string }} */ (edited?.erfassung).quelle,'barcode+korrigiert');
+  assert.equal(edited?.gueltig_bis,'2026-12-02');
+  assert.equal(/** @type {{ quelle?: string }} */ (created?.erfassung).quelle,'barcode');
+  assert.equal(/** @type {{ quelle?: string }} */ (computedMitErfassung(null,quelle,edited)?.erfassung).quelle,'barcode+korrigiert');
   assert.equal(computedMitErfassung(null),null);
 });
 test('Backend-Mapping im API-Image ist identisch mit kanonischer Browserquelle', async () => {

@@ -16,7 +16,11 @@
 
 import { readFileSync } from 'node:fs';
 
-/** Zeichensatz-Kennung aus dem UNB-Segment ("UNB+UNOC:3+…") lesen. */
+/**
+ * Zeichensatz-Kennung aus dem UNB-Segment ("UNB+UNOC:3+…") lesen.
+ * @param {Buffer|Uint8Array} bytes
+ * @returns {string|null}
+ */
 export function unbZeichensatz(bytes) {
   // Kopf ist ASCII; die ersten 200 Bytes reichen sicher für UNA + UNB.
   const kopf = Buffer.from(bytes.subarray(0, 200)).toString('latin1');
@@ -41,6 +45,10 @@ export function dekodiereKostentraegerDatei(bytes) {
   }
 }
 
+/**
+ * @param {import('node:fs').PathOrFileDescriptor} pfad
+ * @returns {string}
+ */
 export function leseKostentraegerDatei(pfad) {
   return dekodiereKostentraegerDatei(readFileSync(pfad));
 }

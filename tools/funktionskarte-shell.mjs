@@ -6,6 +6,7 @@
  * Erkennt den Beginn eines Here-Documents in Bash.
  * Unterstützt <<, <<-, mit/ohne Quotes (' oder "), z. B. <<EOF, <<'EOF', <<-EOF.
  * Ignoriert Here-Strings (<<<) und Kommentarzeilen.
+ * @param {string} line
  */
 function getHeredocStart(line) {
   if (/^\s*#/.test(line)) return null;
@@ -21,6 +22,10 @@ function getHeredocStart(line) {
  *   und deren Einrückung <= der Einrückung der Definitionszeile ist.
  * - Heredoc-Zeilen innerhalb der Funktion können das Ende nicht auslösen.
  * - Nichts gefunden -> Ende = Definitionszeile.
+ * @param {string[]} lines
+ * @param {number} start
+ * @param {number} defIndent
+ * @param {'bash' | 'ps1'} lang
  */
 function findBodyEnd(lines, start, defIndent, lang) {
   const defLine = lines[start];
@@ -63,6 +68,8 @@ function findBodyEnd(lines, start, defIndent, lang) {
 /**
  * Sammelt zusammenhängende #-Kommentarzeilen unmittelbar über der Definition
  * und sucht nach Spiegel-Hinweisen ("Spiegel von" / "Identisch mit").
+ * @param {string[]} lines
+ * @param {number} defIdx
  */
 function extractSpiegelHinweis(lines, defIdx) {
   const toplanan = [];
@@ -90,6 +97,7 @@ function extractSpiegelHinweis(lines, defIdx) {
   return m ? m[0].trim() : null;
 }
 
+/** @param {string} s */
 function escapeRegex(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -125,7 +133,7 @@ export function shellFunktionenFinden(text, datei, lang) {
     if (/^\s*#/.test(line)) continue;
 
     let match = null;
-    let kind = null;
+    let kind = '';
 
     if (lang === 'bash') {
       const m1 = line.match(/^\s*(?:function\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*\(\)\s*\{?/);
@@ -179,6 +187,7 @@ export function shellFunktionenFinden(text, datei, lang) {
 export function shellQuellen(text) {
   if (!text) return [];
   const lines = text.split(/\r?\n/);
+  /** @type {string[]} */
   const quellen = [];
 
   for (const rawLine of lines) {
@@ -190,7 +199,7 @@ export function shellQuellen(text) {
     if (m) {
       const rawPath = m[1] || m[2];
       if (rawPath) {
-        const base = rawPath.replace(/["']/g, '').split(/[/\\]/).pop().trim();
+        const base = (rawPath.replace(/["']/g, '').split(/[/\\]/).pop() || '').trim();
         if (base && !quellen.includes(base)) {
           quellen.push(base);
         }

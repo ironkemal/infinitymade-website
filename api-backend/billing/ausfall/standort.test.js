@@ -3,9 +3,13 @@ import { standortFuerName, standortFuerZuordnung } from './standort.js';
 import assert from 'node:assert/strict';
 
 let pass = 0, fail = 0;
+/**
+ * @param {string} name
+ * @param {() => void} fn
+ */
 function test(name, fn) {
   try { fn(); console.log('  ok   ' + name); pass++; }
-  catch (e) { console.log('  FAIL ' + name + '\n       ' + e.message); fail++; }
+  catch (e) { console.log('  FAIL ' + name + '\n       ' + (e instanceof Error ? e.message : String(e))); fail++; }
 }
 
 console.log('Ausfallrechnung — Herkunft des Praxisnamens');
@@ -26,12 +30,12 @@ test('Einzelpraxis ohne business_id am Termin → ebenfalls null', () => {
 });
 test('gar keine businesses-Zeile → null', () => {
   assert.equal(standortFuerName([], 'b1'), null);
-  assert.equal(standortFuerName(null, null), null);
+  assert.equal(standortFuerName(/** @type {Parameters<typeof standortFuerName>[0]} */ (/** @type {unknown} */ (null)), null), null);
 });
 
 // Mehrere Standorte: dort bedeutet der Standortname wirklich etwas.
 test('mehrere Standorte + Termin am Standort → Standortname gewinnt', () => {
-  assert.equal(standortFuerName(mehrere, 'b2')?.business_name, 'Standort Bonn');
+  assert.equal(/** @type {{ business_name?: string } | null} */ (standortFuerName(mehrere, 'b2'))?.business_name, 'Standort Bonn');
 });
 test('mehrere Standorte, Termin ohne Standort → Inhaberprofil', () => {
   assert.equal(standortFuerName(mehrere, null), null);
@@ -45,11 +49,11 @@ test('unbekannte business_id → Inhaberprofil statt falschem Namen', () => {
 // anderen Standort.
 console.log('Zuordnung (unverändert)');
 test('nimmt den Standort des Termins', () => {
-  assert.equal(standortFuerZuordnung(mehrere, 'b2')?.id, 'b2');
+  assert.equal(/** @type {{ id?: string } | null} */ (standortFuerZuordnung(mehrere, 'b2'))?.id, 'b2');
 });
 test('fällt auf den Default-Standort zurück', () => {
-  assert.equal(standortFuerZuordnung(mehrere, null)?.id, 'b1');
-  assert.equal(standortFuerZuordnung(einzel, null)?.id, 'b1');
+  assert.equal(/** @type {{ id?: string } | null} */ (standortFuerZuordnung(mehrere, null))?.id, 'b1');
+  assert.equal(/** @type {{ id?: string } | null} */ (standortFuerZuordnung(einzel, null))?.id, 'b1');
 });
 test('ohne Standorte → null', () => {
   assert.equal(standortFuerZuordnung([], 'b1'), null);

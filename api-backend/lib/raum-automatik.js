@@ -1,4 +1,7 @@
-/** API-Eingaben bleiben begrenzt; die DB prüft zusätzlich Mandant und Standort. */
+/**
+ * API-Eingaben bleiben begrenzt; die DB prüft zusätzlich Mandant und Standort.
+ * @param {unknown} ids
+ */
 export function raumLeistungenFelder(ids) {
   if (ids === undefined) return { ok: true, felder: {} };
   if (!Array.isArray(ids) || ids.length > 30 || ids.some(id => typeof id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))) {
@@ -7,18 +10,31 @@ export function raumLeistungenFelder(ids) {
   return { ok: true, felder: { raum_service_ids: [...new Set(ids)] } };
 }
 
+/**
+ * @param {unknown} error
+ * @returns {string | null}
+ */
 export function raumBuchungsFehler(error) {
-  if (error?.code === 'P0001' && String(error.message).startsWith('Kein freier Raum mit der benötigten Ausstattung')) {
+  const err = error && typeof error === 'object'
+    ? /** @type {{ code?: unknown, message?: unknown }} */ (error)
+    : null;
+  if (err?.code === 'P0001' && String(err.message).startsWith('Kein freier Raum mit der benötigten Ausstattung')) {
     return 'Kein freier Raum mit der benötigten Ausstattung am Terminstandort verfügbar. Bitte Zeit oder Raumwahl prüfen.';
   }
   // 0106: Sondertag sperrt neue Termine in der DB (fn_check_booking_closed_day).
-  if (error?.code === 'P0001' && String(error.message).startsWith('Praxis geschlossen (Sondertag)')) {
+  if (err?.code === 'P0001' && String(err.message).startsWith('Praxis geschlossen (Sondertag)')) {
     return 'Praxis an diesem Tag geschlossen (Sondertag)';
   }
   return null;
 }
 
-/** Öffentliche Bestätigung: nur Name des bereits zugeordneten Mandantenraums. */
+/**
+ * Öffentliche Bestätigung: nur Name des bereits zugeordneten Mandantenraums.
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {{ room_id?: string | null, business_id?: string | null } | null | undefined} booking
+ * @param {string | null | undefined} ownerId
+ * @returns {Promise<string | null>}
+ */
 export async function raumNameFuerBuchung(supabase, booking, ownerId) {
   if (!booking?.room_id || !ownerId) return null;
   try {

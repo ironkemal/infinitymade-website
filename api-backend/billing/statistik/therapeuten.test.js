@@ -7,23 +7,42 @@ const tenant = '00000000-0000-4000-8000-000000000001';
 const employee = '00000000-0000-4000-8000-000000000002';
 const foreign = '00000000-0000-4000-8000-000000000003';
 const cutoff = '2026-03-08T12:00:00.000Z';
+/**
+ * @param {string} id
+ * @param {Record<string, unknown>} [extra]
+ * @returns {Record<string, any>}
+ */
 const booking = (id, extra = {}) => ({
   id, user_id: employee, owner_id: tenant, start_time: '2026-09-08T12:00:00.000Z',
   status: 'confirmed', services: { is_internal: false }, ...extra,
 });
+/**
+ * @param {string} [id]
+ * @param {Record<string, unknown>} [extra]
+ * @returns {Record<string, any>}
+ */
 const profile = (id = employee, extra = {}) => ({
   id, owner_id: tenant, owner_first_name: 'Anna', owner_last_name: 'Muster', ...extra,
 });
 
 // Echter Supabase-Querybuilder, ausschließlich lokaler HTTP-Ersatz.
 // Der Ersatz prüft Spalten/Filter und simuliert PostgREST mit Testdaten.
+/**
+ * @param {{
+ *   bookings?: Record<string, any>[],
+ *   profiles?: Record<string, any>[],
+ *   failTable?: string,
+ *   failOffset?: number,
+ * }} [opts]
+ */
 function fixture({ bookings = [], profiles = [profile()], failTable, failOffset = 0 } = {}) {
+  /** @type {Array<{ table: string | undefined, query: URLSearchParams }>} */
   const calls = [];
   const supabase = createClient('https://statistik.invalid', 'test-key', {
     auth: { persistSession: false, autoRefreshToken: false },
     global: { fetch: async (input, init) => {
-      assert.equal(init.method, 'GET');
-      const url = new URL(input);
+      assert.equal(init?.method, 'GET');
+      const url = new URL(String(input));
       const table = url.pathname.split('/').at(-1);
       const q = url.searchParams;
       calls.push({ table, query: q });
@@ -49,7 +68,9 @@ function fixture({ bookings = [], profiles = [profile()], failTable, failOffset 
         assert.equal(table, 'profiles');
         assert.equal(q.get('select'), 'id,owner_first_name,owner_last_name,business_name');
         assert.equal(q.get('or'), `(id.eq.${tenant},owner_id.eq.${tenant})`);
-        const ids = q.get('id').slice(4, -1).split(',');
+        const idFilter = q.get('id');
+        assert.ok(idFilter);
+        const ids = idFilter.slice(4, -1).split(',');
         rows = profiles.filter(p => ids.includes(p.id) && (p.id === tenant || p.owner_id === tenant));
       }
       return new Response(JSON.stringify(rows), { status: 200, headers: { 'Content-Type': 'application/json' } });
@@ -141,11 +162,12 @@ test('Statistik-Endpoint liefert Therapeuten und meldet deren Abfragefehler mit 
   });
   let fail = false;
   t.mock.method(console, 'error', () => {});
-  t.mock.method(globalThis, 'fetch', async (input, init) => {
-    assert.equal(init.method, 'GET');
-    const url = new URL(input);
+  t.mock.method(globalThis, 'fetch', /** @param {RequestInfo | URL} input @param {RequestInit} [init] */ async (input, init) => {
+    assert.equal(init?.method, 'GET');
+    const url = new URL(String(input));
     assert.equal(url.hostname, 'statistik.invalid');
     const table = url.pathname.split('/').at(-1);
+    /** @type {unknown} */
     let data = [];
     if (table === 'user') data = { id: tenant };
     else if (table === 'profiles') data = url.searchParams.has('or')
@@ -157,15 +179,25 @@ test('Statistik-Endpoint liefert Therapeuten und meldet deren Abfragefehler mit 
     return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json' } });
   });
   const { default: router } = await import('../api/statistik.routes.js');
-  const handler = router.stack.find(layer => layer.route?.path === '/statistik').route.stack[0].handle;
+  const stack = /** @type {Array<{ route?: { path?: string, stack: Array<{ handle: import('express').RequestHandler }> } }>} */ (
+    (/** @type {{ stack?: unknown[] }} */ (/** @type {unknown} */ (router))).stack ?? []
+  );
+  const layer = stack.find(l => l.route?.path === '/statistik');
+  assert.ok(layer?.route);
+  const handler = layer.route.stack[0].handle;
   for (const shouldFail of [false, true]) {
     fail = shouldFail;
+    /** @type {{ statusCode: number, body: any, status: (code: number) => any, json: (body: any) => any }} */
     const response = {
       statusCode: 200, body: null,
       status(code) { this.statusCode = code; return this; },
       json(body) { this.body = body; return this; },
     };
-    await handler({ headers: { authorization: 'Bearer test-token' }, query: { monate: '6' } }, response);
+    await handler(
+      /** @type {import('express').Request} */ (/** @type {unknown} */ ({ headers: { authorization: 'Bearer test-token' }, query: { monate: '6' } })),
+      /** @type {import('express').Response} */ (/** @type {unknown} */ (response)),
+      () => {},
+    );
     assert.equal(response.statusCode, fail ? 500 : 200);
     if (fail) assert.equal(response.body.error, 'therapeuten/bookings: Testfehler');
     else assert.deepEqual(response.body.therapeuten, [{ name: 'Anna Muster', count: 1 }]);

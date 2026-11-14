@@ -36,11 +36,11 @@ let aktuell = 'einstieg';
  * Reine Prüfung: ist `ziel` eine gültige Ansicht? Unbekanntes fällt auf den
  * Einstieg zurück — der ist immer sicher zu zeigen, jede andere Ansicht
  * braucht Daten, die beim Zurückfallen nicht garantiert geladen sind.
- * @param {string} ziel
+ * @param {string | null | undefined} [ziel]
  * @returns {string}
  */
 export function normalisiereAnsicht(ziel) {
-  return AB_ANSICHTEN.includes(ziel) ? ziel : 'einstieg';
+  return (ziel && AB_ANSICHTEN.includes(ziel)) ? ziel : 'einstieg';
 }
 
 /** Aktuell sichtbare Ansicht. */
@@ -57,7 +57,8 @@ export function aktuelleAbrechnungAnsicht() {
  */
 export function zeigeAbrechnungAnsicht(ziel) {
   aktuell = normalisiereAnsicht(ziel);
-  document.querySelectorAll('[data-ab-ansicht]').forEach(el => {
+  document.querySelectorAll('[data-ab-ansicht]').forEach(element => {
+    const el = /** @type {HTMLElement} */ (element);
     el.hidden = el.dataset.abAnsicht !== aktuell;
   });
   return aktuell;
@@ -66,16 +67,18 @@ export function zeigeAbrechnungAnsicht(ziel) {
 /**
  * Verdrahtet Klicks auf `[data-ab-goto]` innerhalb von `root` per
  * Event-Delegation — einmal je Sitzung, wie `verdrahteSitzungsUmschalter()`.
- * @param {ParentNode} [root=document]
+ * @param {HTMLElement|Document} [root=document]
  */
 export function wireAbrechnungAnsicht(root = document) {
-  if (!root || root.dataset?.abAnsichtWired === '1') return;
-  if (root.dataset) root.dataset.abAnsichtWired = '1';
+  const el = root instanceof HTMLElement ? root : null;
+  if (!root || el?.dataset?.abAnsichtWired === '1') return;
+  if (el?.dataset) el.dataset.abAnsichtWired = '1';
 
   root.addEventListener('click', (e) => {
-    const knopf = e.target.closest('[data-ab-goto]');
+    const target = /** @type {HTMLElement|null} */ (e.target);
+    const knopf = /** @type {HTMLElement|null} */ (target?.closest('[data-ab-goto]'));
     if (!knopf) return;
-    zeigeAbrechnungAnsicht(knopf.dataset.abGoto);
+    zeigeAbrechnungAnsicht(knopf.dataset.abGoto || '');
   });
 }
 

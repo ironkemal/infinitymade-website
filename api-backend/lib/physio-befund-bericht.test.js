@@ -7,8 +7,8 @@ test('baueBefundBlock: leere Eingaben', () => {
   assert.equal(baueBefundBlock({ befunde: [] }), null);
   assert.equal(baueBefundBlock({ befunde: [{ ist_aktuell: false }] }), null);
   assert.deepEqual(befundBlockZeilen(null), []);
-  assert.deepEqual(befundBlockZeilen({}), []);
-  assert.deepEqual(befundBlockZeilen({ erst: null }), []);
+  assert.deepEqual(befundBlockZeilen(/** @type {Parameters<typeof befundBlockZeilen>[0]} */ (/** @type {unknown} */ ({}))), []);
+  assert.deepEqual(befundBlockZeilen(/** @type {Parameters<typeof befundBlockZeilen>[0]} */ (/** @type {unknown} */ ({ erst: null }))), []);
 });
 
 test('baueBefundBlock: Einzelbefund (Erstbefund ohne Folge-Befund)', () => {
@@ -81,8 +81,8 @@ test('baueBefundBlock: Zwei Befunde mit Veränderungen', () => {
           positive_tests: [{ region: 'HWS', test: 'Spurling', seite: 'rechts' }],
           adl: ['Sitzen am PC'],
           massnahmen: ['MT'],
-          ziele: [{ text: 'Schmerzreduktion auf NRS <= 3', erreicht: null }],
-          empfehlung: { folge_vo: null, eigentraining: false },
+          ziele: [{ text: 'Schmerzreduktion auf NRS <= 3', erreicht: /** @type {string | undefined} */ (/** @type {unknown} */ (null)) }],
+          empfehlung: { folge_vo: /** @type {string | undefined} */ (/** @type {unknown} */ (null)), eigentraining: false },
         },
       },
     },
@@ -124,6 +124,7 @@ test('baueBefundBlock: Zwei Befunde mit Veränderungen', () => {
   const block = baueBefundBlock({ befunde, messungen });
   assert.ok(block);
   assert.equal(block.erst.datum, '2026-09-01');
+  assert.ok(block.aktuell);
   assert.equal(block.aktuell.datum, '2026-10-15');
   assert.equal(block.verlauf, 'besser');
   assert.deepEqual(block.massnahmen, ['MT', 'KGG']);

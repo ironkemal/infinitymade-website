@@ -8,7 +8,24 @@
  * kalender-kontextmenue.js:26) — die Liste kennt nur vorbei / läuft / offen nach der Uhr.
  */
 
-/** Begrüßung nach Berliner Stunde (0–23); Grenzen wie greeting() in attendance.js:62. */
+/**
+ * @typedef {{
+ *   start_time?: string | null,
+ *   end_time?: string | null,
+ *   status?: string | null,
+ *   user_id?: string | null,
+ *   group_parent_id?: string | null,
+ *   hausbesuch?: boolean,
+ *   services?: { is_internal?: boolean | null } | null,
+ * }} RohTermin
+ * @typedef {RohTermin & { zustand: 'vorbei' | 'laeuft' | 'offen' }} HeuteTermin
+ */
+
+/**
+ * Begrüßung nach Berliner Stunde (0–23); Grenzen wie greeting() in attendance.js:62.
+ * @param {number | string | null | undefined} stunde
+ * @returns {'Guten Morgen' | 'Guten Tag' | 'Guten Abend'}
+ */
 export function begruessung(stunde) {
   const h = Number(stunde);
   if (!Number.isFinite(h)) return 'Guten Tag';
@@ -17,13 +34,20 @@ export function begruessung(stunde) {
   return 'Guten Abend';
 }
 
-const ms = (iso) => { const t = new Date(iso).getTime(); return Number.isNaN(t) ? null : t; };
+/**
+ * @param {string | number | Date | null | undefined} iso
+ * @returns {number | null}
+ */
+const ms = (iso) => {
+  const t = new Date(/** @type {string | number | Date} */ (iso)).getTime();
+  return Number.isNaN(t) ? null : t;
+};
 
 /**
  * Heutige Termine für die Startseite: gefiltert, sortiert, mit Zustand nach der Uhr.
- * @param {Array} rohe  Zeilen aus bookings (start_time, end_time, status, user_id, group_parent_id, services{is_internal})
- * @param {{jetzt?: Date, uid?: string, nurEigene?: boolean}} o
- * @returns {Array} Kopien mit `zustand` ∈ 'vorbei' | 'laeuft' | 'offen'
+ * @param {RohTermin[]} rohe  Zeilen aus bookings (start_time, end_time, status, user_id, group_parent_id, services{is_internal})
+ * @param {{jetzt?: Date, uid?: string | null, nurEigene?: boolean}} [o]
+ * @returns {HeuteTermin[]} Kopien mit `zustand` ∈ 'vorbei' | 'laeuft' | 'offen'
  */
 export function heutigeTermine(rohe, { jetzt = new Date(), uid = null, nurEigene = false } = {}) {
   const t = jetzt.getTime();
@@ -32,29 +56,46 @@ export function heutigeTermine(rohe, { jetzt = new Date(), uid = null, nurEigene
     .filter((b) => !nurEigene || (uid && b.user_id === uid))
     .filter((b) => ms(b.start_time) !== null)
     .map((b) => {
-      const s = ms(b.start_time);
+      const s = ms(b.start_time) ?? 0;
       const e = ms(b.end_time) ?? s;
+      /** @type {'vorbei' | 'laeuft' | 'offen'} */
       const zustand = e <= t ? 'vorbei' : s <= t ? 'laeuft' : 'offen';
       return { ...b, zustand };
     })
-    .sort((a, b) => ms(a.start_time) - ms(b.start_time));
+    .sort((a, b) => (ms(a.start_time) ?? 0) - (ms(b.start_time) ?? 0));
 }
 
-/** Als Nächstes = erster Termin, der noch nicht vorbei ist (läuft oder offen); dazu bis zu drei danach. */
+/**
+ * Als Nächstes = erster Termin, der noch nicht vorbei ist (läuft oder offen); dazu bis zu drei danach.
+ * @param {HeuteTermin[] | null | undefined} liste
+ * @param {number} [anzahlDanach]
+ * @returns {{ termin: HeuteTermin | null, danach: HeuteTermin[] }}
+ */
 export function alsNaechstes(liste, anzahlDanach = 3) {
-  const i = (liste || []).findIndex((b) => b.zustand !== 'vorbei');
+  const xs = liste || [];
+  const i = xs.findIndex((b) => b.zustand !== 'vorbei');
   if (i < 0) return { termin: null, danach: [] };
-  return { termin: liste[i], danach: liste.slice(i + 1, i + 1 + anzahlDanach) };
+  return { termin: xs[i], danach: xs.slice(i + 1, i + 1 + anzahlDanach) };
 }
 
-/** Minuten bis zum Beginn (aufgerundet, nie negativ). */
+/**
+ * Minuten bis zum Beginn (aufgerundet, nie negativ).
+ * @param {string | number | Date | null | undefined} startIso
+ * @param {Date} [jetzt]
+ * @returns {number | null}
+ */
 export function minutenBis(startIso, jetzt = new Date()) {
   const s = ms(startIso);
   if (s === null) return null;
   return Math.max(0, Math.ceil((s - jetzt.getTime()) / 60000));
 }
 
-/** Kurztext für den Abstand: „läuft“, „in 15 Min“, „in 2 Std 5 Min“. */
+/**
+ * Kurztext für den Abstand: „läuft“, „in 15 Min“, „in 2 Std 5 Min“.
+ * @param {HeuteTermin | null | undefined} termin
+ * @param {Date} [jetzt]
+ * @returns {string}
+ */
 export function abstandText(termin, jetzt = new Date()) {
   if (!termin) return '';
   if (termin.zustand === 'laeuft') return 'läuft';
@@ -69,35 +110,47 @@ export function abstandText(termin, jetzt = new Date()) {
  * Nutzbare freie Zeit heute (Redesign V6.F03, podoloji 13.11.2026): vergangene Lücken fallen weg, eine
  * laufende zählt nur ab jetzt, kürzer als `minDauer` zählt nicht. 30 Min ist eine Annahme, solange die
  * kürzeste aktive Leistung beim Start nicht geladen ist (servicesCache ist dort meist leer).
- * @param {{start:string,end:string}[]} luecken  'HH:MM' wie aus findGaps/renderGapsForDate
+ * @param {{start:string,end:string}[] | null | undefined} luecken  'HH:MM' wie aus findGaps/renderGapsForDate
  * @param {{jetztMin?: number|null, minDauer?: number}} [opt]  jetztMin = Minuten seit Mitternacht (Berlin)
  * @returns {{liste: {start:string,end:string,dauer:number}[], summeMin: number}}
  */
 export function nutzbareLuecken(luecken, { jetztMin = null, minDauer = 30 } = {}) {
+  /** @param {unknown} t @returns {number | null} */
   const inMin = (t) => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(t ?? '').trim()); return m && +m[1] < 25 && +m[2] < 60 ? +m[1] * 60 + +m[2] : null; };
+  /** @param {number} n @returns {string} */
   const alsZeit = (n) => `${String(Math.floor(n / 60)).padStart(2, '0')}:${String(n % 60).padStart(2, '0')}`;
+  /** @type {{start:string,end:string,dauer:number}[]} */
   const liste = [];
   for (const l of luecken || []) {
     let s = inMin(l?.start); const e = inMin(l?.end);
     if (s === null || e === null || e <= s) continue;
-    if (Number.isFinite(jetztMin)) { if (e <= jetztMin) continue; if (s < jetztMin) s = jetztMin; }
+    if (jetztMin !== null && Number.isFinite(jetztMin)) { if (e <= jetztMin) continue; if (s < jetztMin) s = jetztMin; }
     if (e - s < minDauer) continue;
     liste.push({ start: alsZeit(s), end: alsZeit(e), dauer: e - s });
   }
   return { liste, summeMin: liste.reduce((n, l) => n + l.dauer, 0) };
 }
 
-/** Dauer in Minuten (0, wenn unbekannt). */
+/**
+ * Dauer in Minuten (0, wenn unbekannt).
+ * @param {RohTermin | null | undefined} termin
+ * @returns {number}
+ */
 export function dauerMin(termin) {
   const s = ms(termin?.start_time), e = ms(termin?.end_time);
   return s !== null && e !== null && e > s ? Math.round((e - s) / 60000) : 0;
 }
 
-/** Tageszeile: „13 Termine, davon 2 Hausbesuche“ / „1 Termin“ / „Keine Termine“. */
+/**
+ * Tageszeile: „13 Termine, davon 2 Hausbesuche“ / „1 Termin“ / „Keine Termine“.
+ * @param {RohTermin[] | null | undefined} liste
+ * @returns {string}
+ */
 export function tageszeile(liste) {
-  const n = (liste || []).length;
+  const xs = liste || [];
+  const n = xs.length;
   if (!n) return 'Keine Termine';
-  const hb = liste.filter((b) => b.hausbesuch).length;
+  const hb = xs.filter((b) => b.hausbesuch).length;
   const basis = `${n} ${n === 1 ? 'Termin' : 'Termine'}`;
   return hb ? `${basis}, davon ${hb} ${hb === 1 ? 'Hausbesuch' : 'Hausbesuche'}` : basis;
 }
@@ -105,9 +158,13 @@ export function tageszeile(liste) {
 /**
  * „Zu erledigen“: nur Zeilen mit Zahl > 0, in fester Reihenfolge (dringend zuerst).
  * Zahlen kommen aus dem, was die Praxis schon geladen hat; null/undefined = unbekannt → keine Zeile.
+ * @param {{ anfragen?: number | string | null, voUeberfaellig?: number | string | null, voBald?: number | string | null }} [o]
+ * @returns {{ id: string, titel: string, text: string, zahl: number, ton: string, ziel: string }[]}
  */
 export function zuErledigen({ anfragen, voUeberfaellig, voBald } = {}) {
+  /** @type {{ id: string, titel: string, text: string, zahl: number, ton: string, ziel: string }[]} */
   const zeilen = [];
+  /** @param {unknown} v @returns {number} */
   const zahl = (v) => (Number.isFinite(Number(v)) && v !== null && v !== '' ? Number(v) : 0);
   // Wortlaut neutral (gkv-302 + podoloji, 13.11.2026): Die Zahlen kommen aus `gueltig_bis`, das je nach
   // Speicherweg Beginnfrist, leer oder Blanko-Ende bedeutet. „Gültigkeit abgelaufen“ wäre bei laufender Serie falsch.

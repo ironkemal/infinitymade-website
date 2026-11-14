@@ -47,10 +47,10 @@
   // Umami >= 2.18: auch bereits registrierte Tracker-Listener müssen nach
   // Widerruf verstummen, selbst wenn Browser-Speicherung inzwischen fehlschlägt.
   // https://docs.umami.is/docs/tracker-configuration#data-before-send
-  function praxuraUmamiVorSenden(_typ, payload) {
+  function praxuraUmamiVorSenden(/** @type {any} */ _typ, /** @type {any} */ payload) {
     return messungErlaubt && widerrufMarker() === false ? payload : false;
   }
-  window.praxuraUmamiVorSenden = praxuraUmamiVorSenden;
+  /** @type {any} */ (window).praxuraUmamiVorSenden = praxuraUmamiVorSenden;
 
   function injectUmami() {
     if (geladen || !messungErlaubt || widerrufMarker() !== false) return;              // doppeltes Einhängen verhindern
@@ -66,6 +66,7 @@
   // Ausschließlich notwendige Widerrufssperre: fester Wert, kein Bezeichner,
   // host-only (__Host-, kein Domain), höchstens die bestehende Consent-Laufzeit.
   // null heißt: nicht lesbar, also keine Messung. Schreibversuche werden geprüft.
+  /** @param {any} [aktion] */
   function widerrufMarker(aktion) {
     try {
       if (aktion === 'loeschen' && widerrufMarker() === false) return true;
@@ -116,7 +117,7 @@
   }
 
   // Rückgabe: dauerhaft sicher für Navigation, nicht zwingend „declined gespeichert“.
-  function speichern(wert) {
+  function speichern(/** @type {any} */ wert) {
     if (wert === 'declined') widerrufAusstehend = true;
     try {
       var zeitpunkt = String(Date.now());
@@ -138,6 +139,10 @@
     if (alt && alt.parentNode) alt.parentNode.removeChild(alt);
   }
 
+  /**
+   * @param {any} beschriftung
+   * @param {any} [gefuellt]
+   */
   function knopf(beschriftung, gefuellt) {
     var b = document.createElement('button');
     b.type = 'button';
@@ -220,7 +225,7 @@
     // ── Widerruf: drei Wege, damit er wirklich so einfach ist wie die Erteilung ──
     // 1. Ein Link/Button mit [data-cookie-einstellungen] auf beliebiger Seite.
     document.addEventListener('click', function (e) {
-      var ausloeser = e.target && e.target.closest && e.target.closest('[data-cookie-einstellungen]');
+      var ausloeser = e.target && (e.target instanceof Element) && e.target.closest('[data-cookie-einstellungen]');
       if (ausloeser) { e.preventDefault(); zeigeBanner(); }
     });
     // 2. Der Anker `#cookie-einstellungen` — funktioniert damit als Link von JEDER
@@ -231,7 +236,7 @@
       if (location.hash === '#cookie-einstellungen') zeigeBanner();
     });
     // 3. Für die Konsole und für Seiten, die es selbst auslösen wollen.
-    window.praxuraCookieEinstellungen = zeigeBanner;
+    /** @type {any} */ (window).praxuraCookieEinstellungen = zeigeBanner;
   }
 
   if (document.readyState === 'loading') {

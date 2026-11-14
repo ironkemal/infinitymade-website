@@ -1,14 +1,19 @@
-/** One patient prefill owns one mask generation, including delayed doctor data. */
+/**
+ * One patient prefill owns one mask generation, including delayed doctor data.
+ * @param {Record<string, any>} params
+ */
 export function erstelleRezeptPatientenkopf({ document, supabase, getOwnerId, leadGeburtsdatum,
   leadHausbesuch, setHausbesuch, vorauswahlArtAusPatient, tazeleIkHinweis, aktualisiereArztSperreBanner }) {
-  const g = id => document.getElementById(id);
+  const g = (/** @type {string} */ id) => /** @type {HTMLInputElement | HTMLElement | null} */ (document.getElementById(id));
   const patientFelder = ['rzPatName','rzPatVorname','rzPatGeb','rzPatStrasse','rzPatOrt',
     'rzPatVersNr','rzPatStatus','rzPatKasse','rzPatKasseIk'];
   const arztFelder = ['rzArztName','rzLanr','rzBsnr'];
   let generation = 0;
+  /** @type {Array<{ feld: any, disabled: boolean }> | null} */
   let sperre = null;
   const automatischeArztwerte = new Map();
   let automatischerHausbesuch = false;
+  /** @type {string | null} */
   let letzterPatient = null;
   function entsperre() {
     if (!sperre) return;
@@ -20,32 +25,32 @@ export function erstelleRezeptPatientenkopf({ document, supabase, getOwnerId, le
     generation++; entsperre(); automatischeArztwerte.clear(); automatischerHausbesuch = false; letzterPatient = null;
     return generation;
   }
-  async function load(leadId) {
+  async function load(/** @type {string | null | undefined} */ leadId) {
     const token = ++generation, ownerId = getOwnerId(); entsperre();
     const idFeld = g('rzPatientId'), wrap = g('rzMaskeWrap'), parent = wrap?.parentElement;
-    const modal = wrap?.closest?.('.modal-overlay'), hidden = modal?.hidden;
+    const modal = /** @type {HTMLElement | null} */ (wrap?.closest?.('.modal-overlay')), hidden = modal?.hidden;
     const current = () => token === generation && getOwnerId() === ownerId
-      && g('rzPatientId') === idFeld && idFeld?.value === (leadId || '')
+      && g('rzPatientId') === idFeld && (/** @type {HTMLInputElement | null} */ (idFeld))?.value === (leadId || '')
       && (!wrap || (wrap.isConnected !== false && wrap.parentElement === parent && modal?.hidden === hidden));
     if (!idFeld) return false;
     if (letzterPatient !== leadId) {
       // Name, LANR and BSNR form one identity. Preserve the whole manually
       // edited group instead of mixing a new name with an old manual number.
-      if (automatischeArztwerte.size && arztFelder.every(id => (g(id)?.value || '') === automatischeArztwerte.get(id))) {
-        for (const id of arztFelder) { const feld = g(id); if (feld) feld.value = ''; }
+      if (automatischeArztwerte.size && arztFelder.every(id => (/** @type {HTMLInputElement | null} */ (g(id)))?.value === automatischeArztwerte.get(id))) {
+        for (const id of arztFelder) { const feld = g(id); if (feld) (/** @type {HTMLInputElement} */ (feld)).value = ''; }
       }
       automatischeArztwerte.clear();
-      if (automatischerHausbesuch && g('rzHausbesuch')?.checked) setHausbesuch(false);
+      if (automatischerHausbesuch && (/** @type {HTMLInputElement | null} */ (g('rzHausbesuch')))?.checked) setHausbesuch(false);
       automatischerHausbesuch = false;
     }
     letzterPatient = leadId || null;
-    idFeld.value = leadId || '';
-    for (const id of patientFelder) { const feld = g(id); if (feld) feld.value = ''; }
+    (/** @type {HTMLInputElement} */ (idFeld)).value = leadId || '';
+    for (const id of patientFelder) { const feld = g(id); if (feld) (/** @type {HTMLInputElement} */ (feld)).value = ''; }
     const hint = g('rzPatientHint'); if (hint) hint.textContent = '';
     if (!leadId) return true;
     const save = g('rzSaveBtn');
     sperre = [...patientFelder, 'rzArztName','rzLanr','rzBsnr','rzSaveBtn']
-      .map(g).filter(Boolean).map(feld => ({ feld, disabled: feld.disabled }));
+      .map(g).filter(Boolean).map(feld => ({ feld, disabled: (/** @type {HTMLInputElement} */ (feld)).disabled }));
     for (const { feld } of sperre) feld.disabled = true;
     if (save) save.dataset.patientLoading = '1';
     if (hint) hint.textContent = 'Patientendaten werden geladen…';
@@ -54,7 +59,7 @@ export function erstelleRezeptPatientenkopf({ document, supabase, getOwnerId, le
       if (!current()) return false;
       if (error || !lead) throw new Error('Patientendaten konnten nicht geladen werden. Bitte Patient erneut auswählen.');
       const md = lead.metadata || {};
-      const set = (id,value) => { const feld = g(id); if (feld) feld.value = value; };
+      const set = (/** @type {string} */ id, /** @type {any} */ value) => { const feld = g(id); if (feld) (/** @type {HTMLInputElement} */ (feld)).value = value; };
       set('rzPatName',lead.last_name || ''); set('rzPatVorname',lead.first_name || '');
       const bd = leadGeburtsdatum(lead) || '', m = String(bd).match(/^(\d{4})-(\d{2})-(\d{2})/);
       set('rzPatGeb',m ? `${m[3]}.${m[2]}.${m[1]}` : bd);
@@ -64,17 +69,17 @@ export function erstelleRezeptPatientenkopf({ document, supabase, getOwnerId, le
       const kasse = lead.krankenkasse || md.krankenkasse || '';
       set('rzPatKasse',kasse); vorauswahlArtAusPatient(lead);
       set('rzPatKasseIk',lead.krankenkasse_ik || ''); tazeleIkHinweis(g('rzPatKasseIk'));
-      if (leadHausbesuch(lead) && !g('rzHausbesuch')?.checked) {
+      if (leadHausbesuch(lead) && !(/** @type {HTMLInputElement | null} */ (g('rzHausbesuch')))?.checked) {
         setHausbesuch(true); automatischerHausbesuch = true;
       }
-      if (lead.arzt_id && arztFelder.every(id => !g(id)?.value)) {
+      if (lead.arzt_id && arztFelder.every(id => !(/** @type {HTMLInputElement | null} */ (g(id)))?.value)) {
         try {
           const { data: arzt } = await supabase.from('aerzte').select('arzt_name,lanr,bsnr').eq('id',lead.arzt_id).maybeSingle();
           if (!current()) return false;
-          if (arzt && arztFelder.every(id => !g(id)?.value)) {
+          if (arzt && arztFelder.every(id => !(/** @type {HTMLInputElement | null} */ (g(id)))?.value)) {
             set('rzArztName',arzt.arzt_name || '');
             set('rzLanr',arzt.lanr || ''); set('rzBsnr',arzt.bsnr || '');
-            for (const id of arztFelder) automatischeArztwerte.set(id,g(id)?.value || '');
+            for (const id of arztFelder) automatischeArztwerte.set(id,(/** @type {HTMLInputElement | null} */ (g(id)))?.value || '');
             aktualisiereArztSperreBanner();
           }
         } catch { /* Optional doctor lookup does not block patient selection. */ }
@@ -82,14 +87,14 @@ export function erstelleRezeptPatientenkopf({ document, supabase, getOwnerId, le
       if (!current()) return false;
       if (hint) {
         const missing = [];
-        if (!g('rzPatGeb')?.value) missing.push('Geb.-Datum');
-        if (!g('rzPatVersNr')?.value) missing.push('Vers.-Nr.');
+        if (!(/** @type {HTMLInputElement | null} */ (g('rzPatGeb')))?.value) missing.push('Geb.-Datum');
+        if (!(/** @type {HTMLInputElement | null} */ (g('rzPatVersNr')))?.value) missing.push('Vers.-Nr.');
         if (!kasse) missing.push('Kasse');
         hint.textContent = missing.length ? `⚠ fehlt beim Patienten: ${missing.join(', ')} — bitte manuell ergänzen` : '✓ Patientendaten übernommen';
         hint.style.color = missing.length ? 'var(--warning-text)' : 'var(--success)';
       }
       entsperre(); return true;
-    } catch (error) {
+    } catch (/** @type {any} */ error) {
       if (current() && hint) hint.textContent = error.message;
       return false; // Save stays locked until reselect/reset; empty data is not ready.
     }

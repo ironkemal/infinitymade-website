@@ -25,20 +25,23 @@ export const BRANDING_SPALTEN = 'business_name,praxis_inhaber,owner_first_name,o
   + 'phone,whatsapp_number,email,ik_number,praxis_logo_url,praxis_stempel_path,invoice_footer_text,iban,bic,bank_name,'
   + 'steuernummer,ust_id,tax_exempt_note';
 
-const t = (w) => String(w ?? '').trim();
+const t = (/** @type {any} */ w) => String(w ?? '').trim();
 
 /**
  * Nur https, ≤500 Zeichen, ohne Leer-/Steuerzeichen — sonst ''. Der DB-CHECK (0069/0073)
  * hält javascript: & Co. fern; hier wird VOR dem href noch einmal geprüft (onprem O-181 i,
  * Box-Kopien könnten abweichen). Auch für praxis_impressum_url/praxis_datenschutz_url (K2b.15).
  */
-export const httpsUrl = (w) => {
+export const httpsUrl = (/** @type {any} */ w) => {
   const u = t(w);
   if (!u || u.length > 500 || /[\s\u0000-\u001f\u007f]/.test(u)) return '';
   try { return new URL(u).protocol === 'https:' ? u : ''; } catch { return ''; }
 };
 
-/** Profilzeile -> einheitliches Branding-Objekt. */
+/**
+ * Profilzeile -> einheitliches Branding-Objekt.
+ * @param {Record<string, any> | null | undefined} p
+ */
 export function brandingAus(p) {
   const x = p || {};
   const strasse = [t(x.street), t(x.house_number)].filter(Boolean).join(' ');
@@ -75,7 +78,10 @@ export function ausstellerSnapshot(p) {
   };
 }
 
-/** Der bisherige Vertrag von `terminzettelPraxis()` (dashboard.js) — Termin- und Behandlungsbeleg. */
+/**
+ * Der bisherige Vertrag von `terminzettelPraxis()` (dashboard.js) — Termin- und Behandlungsbeleg.
+ * @param {Record<string, any>} b
+ */
 export function terminzettelPraxis(b) {
   return {
     praxis: {
@@ -89,13 +95,24 @@ export function terminzettelPraxis(b) {
 const ZIEL = 'settingsBrandingSection';
 
 /**
+ * @typedef {{ schluessel: string, label: string, ziel: string, feld: string }} Luecke
+ */
+
+/**
  * Was fehlt? Pflicht = § 14 Abs. 4 UStG (legal-de F7, 05.10.2026), Soll = praktisch nötig,
  * optional = Optik. `ziel` ist die Einstellungs-Stelle (Sprung vom Fortschrittsring, M2.6).
+ * @param {Record<string, any>} b
+ * @returns {{ pflicht: Luecke[], soll: Luecke[], optional: Luecke[] }}
  */
 export function brandingLuecken(b) {
-  const pflicht = []; const soll = []; const optional = [];
+  /** @type {Luecke[]} */
+  const pflicht = [];
+  /** @type {Luecke[]} */
+  const soll = [];
+  /** @type {Luecke[]} */
+  const optional = [];
   // `feld` = das Eingabefeld selbst: der Ring springt nicht nur in den Abschnitt, sondern setzt den Cursor hinein.
-  const f = (liste, schluessel, label, ziel = ZIEL, feld = '') => liste.push({ schluessel, label, ziel, feld });
+  const f = (/** @type {Luecke[]} */ liste, /** @type {string} */ schluessel, /** @type {string} */ label, ziel = ZIEL, feld = '') => liste.push({ schluessel, label, ziel, feld });
   if (!b.name) f(pflicht, 'name', 'Praxisname', 'settingsProfileSection', 'setBiz');
   if (!b.strasseName || !b.plz || !b.ort) f(pflicht, 'anschrift', 'Praxisanschrift', 'settingsProfileSection', !b.strasseName ? 'setStreet' : !b.plz ? 'setPlz' : 'setCity');
   if (!b.inhaber) f(pflicht, 'inhaber', 'Name der Inhaberin / des Inhabers', ZIEL, 'brandingInhaber');

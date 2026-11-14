@@ -40,17 +40,21 @@ import { findPodologiePosition } from '../codes/podologie_positions.js';
 import { resolvePositionZuzahlung } from '../zuzahlung/calculator.js';
 import { istStichtag } from '../../lib/berlin-tag.js';
 
+/** @param {unknown} n */
 const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+
+/** @typedef {Error & { status?: number, code?: string }} PreisError */
 
 /**
  * Löst Preis und Zuzahlung einer Position für ein Leistungsdatum auf.
  *
- * @param {object}  opts
- * @param {string}  opts.bereich          'podologie' | 'physiotherapie'
+ * @param {object}  [opts]
+ * @param {string}  [opts.bereich]        'podologie' | 'physiotherapie'
  * @param {string}  opts.code             gespeicherter Code ('X0501' oder '78010')
- * @param {string}  [opts.datum]          Leistungsdatum ISO. Ohne Angabe: heute bzw.
+ * @param {string|null} [opts.datum=null] Leistungsdatum ISO. Ohne Angabe: heute bzw.
  *                                        aktuellstes Preisfenster.
  * @param {string}  [opts.abrechnungscode='22']
+ * @param {boolean} [opts.abrechnung=false]
  *
  * @returns {{
  *   preis_eur: number, zuzahlung_eur: number, position_frei: boolean,
@@ -64,8 +68,9 @@ export function resolvePreis({
   datum = null,
   abrechnungscode = '22',
   abrechnung = false,
-} = {}) {
+} = /** @type {{ code: string }} */ ({})) {
   if (abrechnung && !istStichtag(datum)) {
+    /** @type {PreisError} */
     const error = new Error('Für die Abrechnung ist ein gültiges Leistungsdatum erforderlich.');
     error.status = 422;
     error.code = 'PREIS_LEISTUNGSDATUM_UNGUELTIG';
@@ -78,14 +83,17 @@ export function resolvePreis({
     ? findPodologiePosition(code, datum || undefined)
     : findPosition(code, abrechnungscode, datum);
 
-  if (abrechnung && (!katalogPosition || katalogPosition.ausserhalb_preisfenster)) {
+  if (abrechnung && (!katalogPosition || ('ausserhalb_preisfenster' in katalogPosition && katalogPosition.ausserhalb_preisfenster))) {
+    /** @type {PreisError} */
     const error = new Error('Für diese Leistung liegt am Leistungsdatum kein gültiger Vertragspreis vor.');
     error.status = 422;
     error.code = !katalogPosition ? 'PREIS_POSITION_UNBEKANNT' : 'PREIS_FENSTER_FEHLT';
     throw error;
   }
   if (abrechnung && !istPodologie && /^\d{5}$/.test(String(code))
+      && katalogPosition && 'positionsnummer' in katalogPosition
       && katalogPosition.positionsnummer !== String(code)) {
+    /** @type {PreisError} */
     const error = new Error('Positionsnummer passt nicht zur abrechnenden Leistungserbringergruppe.');
     error.status = 422;
     error.code = 'PREIS_POSITION_FALSCHE_LE_GRUPPE';
@@ -110,7 +118,7 @@ export function resolvePreis({
     position_frei: basis.positionFrei,
     gefunden: basis.gefunden,
     quelle,
-    ausserhalb_preisfenster: !!katalogPosition?.ausserhalb_preisfenster,
+    ausserhalb_preisfenster: !!(katalogPosition && 'ausserhalb_preisfenster' in katalogPosition && katalogPosition.ausserhalb_preisfenster),
     katalogPosition: katalogPosition || null,
   };
 }

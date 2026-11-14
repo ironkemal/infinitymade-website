@@ -11,19 +11,33 @@
  */
 
 /**
+ * @typedef {object} TarifHistoryEntry
+ * @property {string|null} [tarife_id]
+ * @property {string|null} [id]
+ * @property {Date|string} valid_from
+ * @property {Date|string|null} [valid_to]
+ * @property {number|string} preis_eur
+ * @property {string|null} [pos_nr]
+ */
+
+/**
+ * @typedef {object} TarifSplitResult
+ * @property {string|null} tarife_id
+ * @property {string|null} pos_nr
+ * @property {number} preis_eur
+ * @property {number} sessions_in_period
+ * @property {number} subtotal_eur
+ */
+
+/**
  * Splits sessions across tariff periods proportional to calendar-day coverage.
  *
  * @param {object} opts
- * @param {Date}   opts.startDate      - Start of the prescription period
- * @param {Date}   opts.endDate        - End of the prescription period (or today)
- * @param {number} opts.totalSessions  - Total number of sessions in the prescription
- * @param {Array}  opts.tarifeHistory  - Chronologically ordered tariff records:
- *                                       [{ tarife_id, valid_from, valid_to, preis_eur, pos_nr }, ...]
- *                                       valid_from / valid_to may be Date objects or ISO strings.
- *                                       valid_to = null means "open-ended / still active".
- * @returns {Array} Array of split results:
- *   [{ tarife_id, pos_nr, preis_eur, sessions_in_period, subtotal_eur }, ...]
- *   Only entries with sessions_in_period > 0 are included.
+ * @param {Date|string} opts.startDate      - Start of the prescription period
+ * @param {Date|string} opts.endDate        - End of the prescription period (or today)
+ * @param {number} opts.totalSessions       - Total number of sessions in the prescription
+ * @param {Array<TarifHistoryEntry>} opts.tarifeHistory - Chronologically ordered tariff records
+ * @returns {Array<TarifSplitResult>} Only entries with sessions_in_period > 0 are included.
  */
 export function splitSessionsByTarif(opts) {
   const { startDate, endDate, totalSessions, tarifeHistory } = opts;
@@ -84,6 +98,7 @@ export function splitSessionsByTarif(opts) {
   }
 
   let assignedSessions = 0;
+  /** @type {Array<TarifSplitResult>} */
   const results = [];
 
   overlaps.forEach((o, idx) => {
@@ -121,6 +136,8 @@ export function splitSessionsByTarif(opts) {
 /**
  * Normalise a value to a plain Date (UTC midnight for date-only strings).
  * Accepts Date objects, ISO strings, or "YYYY-MM-DD" strings.
+ * @param {Date|string} value
+ * @returns {Date}
  */
 function toDate(value) {
   if (value instanceof Date) return value;
@@ -134,14 +151,34 @@ function toDate(value) {
   throw new TypeError(`Cannot convert ${value} to Date`);
 }
 
-/** Whole calendar days between two dates (inclusive of startDate day, exclusive of endDate day). */
+/**
+ * Whole calendar days between two dates (inclusive of startDate day, exclusive of endDate day).
+ * @param {Date} a
+ * @param {Date} b
+ * @returns {number}
+ */
 function daysBetween(a, b) {
   const msPerDay = 24 * 60 * 60 * 1000;
   return Math.max(0, Math.round((b.getTime() - a.getTime()) / msPerDay));
 }
 
+/**
+ * @param {Date} a
+ * @param {Date} b
+ * @returns {Date}
+ */
 function maxDate(a, b) { return a > b ? a : b; }
+
+/**
+ * @param {Date} a
+ * @param {Date} b
+ * @returns {Date}
+ */
 function minDate(a, b) { return a < b ? a : b; }
 
-/** Round to 2 decimal places (banker's rounding avoided intentionally). */
+/**
+ * Round to 2 decimal places (banker's rounding avoided intentionally).
+ * @param {number} n
+ * @returns {number}
+ */
 function round2(n) { return Math.round(n * 100) / 100; }

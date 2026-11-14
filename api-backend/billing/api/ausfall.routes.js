@@ -18,15 +18,20 @@ import { ausfallAusstellerSnapshot, ausfallEmpfaengerSnapshot } from '../ausfall
 import { ausfallFaelligAm, gespeicherteAusfallFaelligkeit } from '../ausfall/faelligkeit.js';
 
 const router = express.Router();
+/** @type {import('@supabase/supabase-js').SupabaseClient<any>} */
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  /** @type {string} */ (process.env.SUPABASE_URL),
+  /** @type {string} */ (process.env.SUPABASE_SERVICE_ROLE_KEY),
   { auth: { persistSession: false } }
 );
 
 
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 async function resolveAuth(req, res) {
-  const token = req.headers.authorization?.slice(7);
+  const token = typeof req.headers.authorization === 'string' ? req.headers.authorization.slice(7) : '';
   if (!token) { res.status(401).json({ error: 'Missing bearer token' }); return null; }
 
   const { data: u, error: uErr } = await supabase.auth.getUser(token);
@@ -46,7 +51,11 @@ async function resolveAuth(req, res) {
   return { user: u.user, profile, tenantId };
 }
 
-// Praxis details always come from the owner profile (employee may be logged in)
+/**
+ * Praxis details always come from the owner profile (employee may be logged in)
+ * @param {any} profile
+ * @param {string} tenantId
+ */
 async function loadPraxisProfile(profile, tenantId) {
   if (profile.role === 'employee' && profile.owner_id) {
     const { data: ownerProf } = await supabase
@@ -70,6 +79,9 @@ async function loadPraxisProfile(profile, tenantId) {
 // wandert beim Umbenennen nicht mit, und die Ausfallrechnung trug deshalb noch
 // den alten Ladennamen (Beta-2, 12.08.2026). Nur bei mehreren Standorten ist der
 // Standortname die richtige Antwort; das entscheidet der Aufrufer.
+/**
+ * @param {{ praxisProfile: any, userEmail: string, row: any, business: any, standort?: any, patient: any, vorlage: any }} p
+ */
 function renderInvoiceHtml({ praxisProfile, userEmail, row, business, standort = null, patient, vorlage }) {
   // Eingefrorener Beleg: Kopf, Bank und Empfänger aus dem Snapshot; Altbelege (ohne) wie bisher live.
   const snap = row.aussteller_snapshot || ausfallAusstellerSnapshot(praxisProfile, { standort, userEmail });
@@ -119,6 +131,7 @@ function renderInvoiceHtml({ praxisProfile, userEmail, row, business, standort =
   });
 }
 
+/** @param {any} booking */
 function patientFromBooking(booking) {
   const lead = booking.leads || null;
   if (lead) {
@@ -156,7 +169,7 @@ function patientFromBooking(booking) {
 // Body: { bookingId, amountEur, reason ('no_show'|'late_cancel'), notes? }
 // Returns text/html invoice for browser printing.
 // ============================================================================
-router.post('/ausfall/create', async (req, res) => {
+router.post('/ausfall/create', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
@@ -189,7 +202,7 @@ router.post('/ausfall/create', async (req, res) => {
     const vorlageJson = vorlage?.content_json || {};
 
     // 1. Fetch booking + patient + service
-    const { data: booking, error: bkErr } = await supabase
+    const { data: bookingRaw, error: bkErr } = await supabase
       .from('bookings')
       .select(`
         id, owner_id, user_id, business_id, lead_id, customer_name, start_time, status,
@@ -198,7 +211,9 @@ router.post('/ausfall/create', async (req, res) => {
       `)
       .eq('id', bookingId)
       .maybeSingle();
-    if (bkErr || !booking) return res.status(404).json({ error: 'Booking not found' });
+    if (bkErr || !bookingRaw) return res.status(404).json({ error: 'Booking not found' });
+    /** @type {any} */
+    const booking = bookingRaw;
 
     const bookingOwner = booking.owner_id || booking.user_id;
     if (bookingOwner !== tenantId) return res.status(403).json({ error: 'Forbidden' });
@@ -241,6 +256,7 @@ router.post('/ausfall/create', async (req, res) => {
       .select('id, business_name, phone, ausfall_hinweis, is_default')
       .eq('owner_id', tenantId);
     const standorte = alleStandorte || [];
+    /** @type {any} */
     const business = standortFuerZuordnung(standorte, booking.business_id);
     const standortName = standortFuerName(standorte, booking.business_id);
 
@@ -256,7 +272,7 @@ router.post('/ausfall/create', async (req, res) => {
     ].filter(Boolean);
 
     const praxisProfile = await loadPraxisProfile(profile, tenantId);
-    const userEmail = praxisProfile.id === user.id ? user.email : '';
+    const userEmail = praxisProfile.id === user.id ? (user.email || '') : '';
     const patient = patientFromBooking(booking);
 
     const createdAt = new Date().toISOString();
@@ -298,14 +314,14 @@ router.post('/ausfall/create', async (req, res) => {
     return res.send(html);
   } catch (e) {
     console.error('[ausfall/create]', e);
-    return res.status(500).json({ error: e.message || 'Server error' });
+    return res.status(500).json({ error: (e instanceof Error ? e.message : '') || 'Server error' });
   }
 });
 
 // ============================================================================
 // GET /api/billing/ausfall/list
 // ============================================================================
-router.get('/ausfall/list', async (req, res) => {
+router.get('/ausfall/list', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
@@ -324,7 +340,7 @@ router.get('/ausfall/list', async (req, res) => {
       .limit(200);
     if (error) return res.status(500).json({ error: error.message });
 
-    return res.json((rows || []).map(r => ({
+    return res.json((rows || []).map((/** @type {any} */ r) => ({
       id: r.id,
       rechnung_nr: r.rechnung_nr,
       nummer: `AF-${String(r.rechnung_nr).padStart(4, '0')}`,
@@ -341,14 +357,14 @@ router.get('/ausfall/list', async (req, res) => {
     })));
   } catch (e) {
     console.error('[ausfall/list]', e);
-    return res.status(500).json({ error: e.message || 'Server error' });
+    return res.status(500).json({ error: (e instanceof Error ? e.message : '') || 'Server error' });
   }
 });
 
 // ============================================================================
 // GET /api/billing/ausfall/:id/print — re-render existing invoice
 // ============================================================================
-router.get('/ausfall/:id/print', async (req, res) => {
+router.get('/ausfall/:id/print', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
@@ -419,7 +435,7 @@ router.get('/ausfall/:id/print', async (req, res) => {
 
     const html = renderInvoiceHtml({
       praxisProfile,
-      userEmail: praxisProfile.id === user.id ? user.email : '',
+      userEmail: praxisProfile.id === user.id ? (user.email || '') : '',
       row,
       business: row.businesses || null,
       standort: standortName,
@@ -431,7 +447,7 @@ router.get('/ausfall/:id/print', async (req, res) => {
     return res.send(html);
   } catch (e) {
     console.error('[ausfall/print]', e);
-    return res.status(500).send('Server-Fehler: ' + e.message);
+    return res.status(500).send('Server-Fehler: ' + (e instanceof Error ? e.message : String(e)));
   }
 });
 
@@ -440,7 +456,7 @@ router.get('/ausfall/:id/print', async (req, res) => {
 // Body: { status } — 'bezahlt' | 'storniert' | 'abgeschrieben'
 // On 'bezahlt': GoBD Belegliste entry (type 'ausfall').
 // ============================================================================
-router.patch('/ausfall/:id/status', async (req, res) => {
+router.patch('/ausfall/:id/status', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
@@ -481,7 +497,7 @@ router.patch('/ausfall/:id/status', async (req, res) => {
     return res.json({ ok: true });
   } catch (e) {
     console.error('[ausfall/status]', e);
-    return res.status(500).json({ error: e.message || 'Server error' });
+    return res.status(500).json({ error: (e instanceof Error ? e.message : '') || 'Server error' });
   }
 });
 

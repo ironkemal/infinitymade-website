@@ -27,8 +27,10 @@ test('ohne KMT im Katalog passiert nichts', () => {
 });
 
 test('migrierePhysioAltlast schreibt und hält den Cache synchron', async () => {
+  /** @type {any[]} */
   const calls = [];
-  const supabase = { from: () => ({ update: (patch) => ({ eq: async (_c, id) => { calls.push([id, patch]); return { error: null }; } }) }) };
+  const supabase = { from: () => ({ update: (/** @type {any} */ patch) => ({ eq: async (/** @type {string} */ _c, /** @type {string} */ id) => { calls.push([id, patch]); return { error: null }; } }) }) };
+  /** @type {any[]} */
   const services = [{ id: 'a', gkv_position_nr: 'X0102', title: 'Massage Einzel' }];
   await migrierePhysioAltlast({ supabase, services, katalog: [kmt] });
   assert.equal(calls.length, 1);
@@ -59,8 +61,10 @@ test('nur Werte, die der DB-Constraint kennt', () => {
 });
 
 test('migrierePhysioAltlast trägt das Zertifikat ein und hält den Cache synchron', async () => {
+  /** @type {any[]} */
   const calls = [];
-  const supabase = { from: () => ({ update: (patch) => ({ eq: async (_c, id) => { calls.push([id, patch]); return { error: null }; } }) }) };
+  const supabase = { from: () => ({ update: (/** @type {any} */ patch) => ({ eq: async (/** @type {string} */ _c, /** @type {string} */ id) => { calls.push([id, patch]); return { error: null }; } }) }) };
+  /** @type {any[]} */
   const services = [{ id: 'm', gkv_position_nr: 'X0202', title: 'MLD 60' }];
   await migrierePhysioAltlast({ supabase, services, katalog: [kmt] });
   assert.deepEqual(calls, [['m', { required_certificate: 'MLD' }]]);
@@ -86,7 +90,7 @@ test('K11: Ergänzung trägt die Preise der Abrechnungsdatei', () => {
   const quelle = new Map(PHYSIO_POSITIONS.map(p => [p.x, p]));
   for (const e of PHYSIO_KATALOG_ERGAENZUNG) {
     assert.ok(quelle.has(e.code), `${e.code} fehlt in physio_positions.js`);
-    assert.equal(e.price, quelle.get(e.code).preis, e.code);
+    assert.equal(e.price, quelle.get(e.code)?.preis, e.code);
     assert.equal(e.price_min, e.price); assert.equal(e.price_max, e.price);
     assert.equal(e.locked, true);
   }

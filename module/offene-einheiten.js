@@ -31,14 +31,16 @@ export function offeneEinheiten(verordnet, erbracht) {
  * Vorauswahl in der §302-Liste: eine Verordnung mit offenen Einheiten wird
  * nicht von selbst mitgenommen — außer ihre Bereit-Bestätigung gilt noch
  * (`bereitBestaetigt`, Reform S2.3b).
+ * @param {{offen?: number|string|null, bereitBestaetigt?: boolean} | null | undefined} [zeile]
+ * @returns {boolean}
  */
 export function vorausgewaehltPodo(zeile) {
   return !(Number(zeile?.offen) > 0) || zeile?.bereitBestaetigt === true;
 }
 
 /**
- * @param {Array<{id:string, patient?:string, nummer?:string, offen?:number}>} zeilen  gewählte Podo-Zeilen
- * @returns {Array<{id:string, patient:string, nummer:string, offen:number}>}
+ * @param {Array<{id:string, patient?:string, nummer?:string, offen?:number, bereitBestaetigt?:boolean, termine?:Array<any>, freigabeAm?:any, freigabeOffen?:any}> | null | undefined} [zeilen]  gewählte Podo-Zeilen
+ * @returns {Array<{id:string, patient:string, nummer:string, offen:number, termine?:Array<any>, freigabeAm?:any, freigabeOffen?:any}>}
  */
 export function offeneAuswahl(zeilen) {
   return (zeilen || [])
@@ -66,10 +68,11 @@ export function datumKurz(wert, heute = new Date()) {
 /**
  * Grund der Rückfrage (Reform S2.3b, Beschluss 30.09.2026). Ergänzt den
  * freigegebenen Text, ersetzt ihn nie. Leer, wenn es keinen Grund gibt.
- * @param {{termine?:Array, freigabeAm?:*, freigabeOffen?:*, offen?:number}} e
+ * @param {{termine?:Array<any>, freigabeAm?:*, freigabeOffen?:*, offen?:number}} e
  *   termine: künftige, nicht stornierte Termine (Zeitpunkte, beliebige Reihenfolge)
  *   freigabeAm/freigabeOffen: Bereit-Protokoll (Datum, damals offen) — nur gesetzt,
  *   wenn sich die Zahl seither geändert hat
+ * @param {Date} [heute]
  * @returns {{zeilen:string[], kurz:string}} zeilen = ganze Sätze (Einzeldialog),
  *   kurz = Anhängsel für eine Listenzeile („ · Termin am 14.10. geplant"), sonst ''
  */
@@ -77,7 +80,7 @@ export function rueckfrageGrund(e, heute = new Date()) {
   const zeilen = [];
   const kurz = [];
   const ts = (Array.isArray(e?.termine) ? e.termine : [])
-    .map(t => new Date(t)).filter(d => !Number.isNaN(d.getTime())).sort((a, b) => a - b);
+    .map(t => new Date(t)).filter(d => !Number.isNaN(d.getTime())).sort((a, b) => /** @type {any} */ (a) - /** @type {any} */ (b));
   if (ts.length === 1) {
     const d = datumKurz(ts[0], heute);
     zeilen.push(`Für diese Verordnung ist noch ein Termin am ${d} geplant.`);
@@ -114,6 +117,7 @@ export function grundDaten(offene, bereitZeilen, kuenftigeTermine) {
     const termine = (kuenftigeTermine || []).filter(t => t.verordnung_id === o.id && t.start_time).map(t => t.start_time);
     const z = neueste.get(o.id);
     const damals = z?.input_snapshot?.offen;
+    /** @type {{termine:string[], freigabeAm?:string, freigabeOffen?:number}} */
     const d = { termine };
     if (z && damals != null && Number(damals) !== Number(o.offen)) {
       d.freigabeAm = z.created_at;
@@ -127,7 +131,8 @@ export function grundDaten(offene, bereitZeilen, kuenftigeTermine) {
 /**
  * Text des Bestätigungsdialogs (freigegebener Wortlaut, gkv-302 29.09.2026).
  * „N Einheit(en)" bleibt bewusst so — kein Plural-Umbau.
- * @param {Array<{patient:string, nummer:string, offen:number}>} eintraege
+ * @param {Array<{patient:string, nummer:string, offen:number, termine?:Array<any>, freigabeAm?:any, freigabeOffen?:any}>} eintraege
+ * @param {Date} [heute]
  * @returns {{title:string, message:string, confirmText:string, cancelText:string}}
  */
 export function bestaetigungsText(eintraege, heute = new Date()) {
@@ -155,7 +160,8 @@ export function bestaetigungsText(eintraege, heute = new Date()) {
  * Fragt einmal für alle. Liefert die bestätigten Ids, `[]` wenn nichts offen
  * war, `null` bei Abbruch (oder wenn kein Dialog verfügbar ist — ohne Dialog
  * wird nie stillschweigend durchgewunken).
- * @param {Function} frage  showConfirmModal (Promise<boolean>)
+ * @param {Array<{id:string, patient?:string, nummer?:string, offen?:number, bereitBestaetigt?:boolean, termine?:Array<any>, freigabeAm?:any, freigabeOffen?:any}> | null | undefined} zeilen
+ * @param {Function | null | undefined} [frage]  showConfirmModal (Promise<boolean>)
  */
 export async function frageOffeneEinheiten(zeilen, frage) {
   const offen = offeneAuswahl(zeilen);
@@ -171,7 +177,7 @@ export async function frageOffeneEinheiten(zeilen, frage) {
  * Zahl offener Einheiten wie im Protokoll UND kein künftiger, nicht
  * stornierter Termin an der Verordnung. Sonst wird noch einmal gefragt.
  * Fehlende/ungültige Angaben => false (im Zweifel fragen).
- * @param {{offenJetzt:*, snapshotOffen:*, kuenftigeTermine:*}} p
+ * @param {{offenJetzt?:*, snapshotOffen?:*, kuenftigeTermine?:*}} [p]
  * @returns {boolean}
  */
 export function bestaetigungNochGueltig({ offenJetzt, snapshotOffen, kuenftigeTermine } = {}) {

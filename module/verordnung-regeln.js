@@ -99,6 +99,8 @@ export const POD_ORIENTIEREND = { UI1: 8, UI2: 8 };
 /**
  * Wurzel einer Diagnosegruppe: „DF-a" → „DF", „UI 1" → „UI1".
  * Die Untergruppe a/b/c ist Leitsymptomatik, keine eigene Gruppe.
+ * @param {string|null|undefined} raw
+ * @returns {string}
  */
 export function dgWurzel(raw) {
   const v = String(raw || '').trim().toUpperCase().replace(/\s+/g, '');
@@ -109,6 +111,7 @@ export function dgWurzel(raw) {
 /**
  * Fachbereich-Schlüssel vereinheitlichen. Die Tabelle `diagnosegruppen`
  * schreibt „physiotherapy" (englisch, historisch), der Rest deutsch.
+ * @param {string|null|undefined} raw
  * @returns {'podologie'|'physiotherapy'|'ergotherapie'|'logopaedie'|string}
  */
 export function bereichSchluessel(raw) {
@@ -137,6 +140,7 @@ export function bereichSchluessel(raw) {
  * abgebildet haben. Fehlt er, wird die Leitsymptomatik NICHT geprüft und das
  * offen gesagt, statt stillschweigend „alles in Ordnung" zu melden.
  */
+/** @type {Record<string, any>} */
 export const BEREICHE = {
   podologie: {
     label: 'Podologische Therapie',
@@ -193,6 +197,9 @@ export const BEREICHE = {
  * ⚠ `icd_ranges` ist eine eigene Hilfstabelle, KEINE amtliche Zuordnung —
  * HeilM-RL § 4 Abs. 2: Beispieldiagnosen „nicht abschließend". Daher nur für
  * Warnungen verwenden, nie zum Sperren (gkv-302, 31.10.2026).
+ * @param {string|null|undefined} code
+ * @param {string[]} [ranges]
+ * @returns {boolean}
  */
 export function icdInBereichen(code, ranges = []) {
   const k = String(code || '').toUpperCase().replace(/\s+/g, '');
@@ -206,10 +213,20 @@ export function icdInBereichen(code, ranges = []) {
   });
 }
 
+/**
+ * Regelsatz für einen Fachbereich bauen: Datenbankzeilen gewinnen, der
+ * Rückfall aus dieser Datei füllt nur die Lücken.
+ *
+ * @param {string} bereich   'podologie' | 'physiotherapy' | 'ergotherapie' | 'logopaedie'
+ * @param {Array<any>}  [dbZeilen]  Zeilen aus `diagnosegruppen` (aktiv, dieser Bereich)
+ * @returns {{bereich:string, profil:object|null, gruppen:Record<string, any>, luecken:string[]}}
+ *          `gruppen` ist nach Gruppenkürzel geschlüsselt; `luecken` benennt,
+ *          was mangels Regeldaten NICHT geprüft werden kann.
+ */
 export function regelnFuerBereich(bereich, dbZeilen = []) {
   const key = bereichSchluessel(bereich);
   const profil = BEREICHE[key] || null;
-  const gruppen = {};
+  const gruppen = /** @type {Record<string, any>} */ ({});
   const rueckfall = profil?.hoechstmengeRueckfall || {};
 
   for (const z of dbZeilen || []) {

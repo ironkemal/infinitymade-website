@@ -8,7 +8,11 @@
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** „kemal" oder „https://praxura.de/booking.html?u=kemal" -> „kemal". */
+/**
+ * „kemal" oder „https://praxura.de/booking.html?u=kemal" -> „kemal".
+ * @param {string | null | undefined} s
+ * @returns {string}
+ */
 export function slugAusKennung(s) {
   let slug = String(s || '').trim();
   const i = slug.toLowerCase().indexOf('booking.html?u=');
@@ -16,7 +20,11 @@ export function slugAusKennung(s) {
   return slug;
 }
 
-/** Was steht im Link? owner_id (`business`) hat Vorrang vor Slug/Code (`u`, `c`). */
+/**
+ * Was steht im Link? owner_id (`business`) hat Vorrang vor Slug/Code (`u`, `c`).
+ * @param {string | URLSearchParams | null | undefined} search
+ * @returns {{ ownerId: string | null, kennung: string | null }}
+ */
 export function kennungAusSuche(search) {
   const p = new URLSearchParams(search || '');
   const business = (p.get('business') || '').trim();
@@ -27,9 +35,20 @@ export function kennungAusSuche(search) {
 }
 
 /**
+ * @typedef {Object} KennungErgebnis
+ * @property {string} ownerId
+ * @property {string | null} employeeId
+ * @property {string | null} businessId
+ * @property {string | null} businessName
+ */
+
+/**
  * Volle Aufloesung: { ownerId, employeeId, businessId, businessName } oder null.
  * employeeId: Link zeigt auf einen Mitarbeiter-Account; businessId/businessName: Link
  * ist der Slug eines Standorts (businesses). `sb` = supabase-js-Client (anon).
+ * @param {{ from: (table: string) => any, rpc: (fn: string, params: any) => any }} sb
+ * @param {string | URLSearchParams | null | undefined} search
+ * @returns {Promise<KennungErgebnis | null>}
  */
 export async function ladeKennung(sb, search) {
   const { ownerId, kennung } = kennungAusSuche(search);
@@ -37,6 +56,10 @@ export async function ladeKennung(sb, search) {
   if (!kennung) return null;
   if (!/^[\w.-]+$/.test(kennung)) return null; // geht in einen PostgREST-Filter
   const spalten = 'id,role,owner_id';
+  /**
+   * @param {{ id: string, role?: string | null, owner_id?: string | null } | null} p
+   * @returns {KennungErgebnis | null}
+   */
   const ausProfil = p => (p ? {
     ownerId: p.role === 'employee' && p.owner_id ? p.owner_id : p.id,
     employeeId: p.role === 'employee' && p.owner_id ? p.id : null,
@@ -60,7 +83,12 @@ export async function ladeKennung(sb, search) {
     : null;
 }
 
-/** owner_id zur Kennung, oder null. `sb` = supabase-js-Client (anon). */
+/**
+ * owner_id zur Kennung, oder null. `sb` = supabase-js-Client (anon).
+ * @param {{ from: (table: string) => any, rpc: (fn: string, params: any) => any }} sb
+ * @param {string | URLSearchParams | null | undefined} search
+ * @returns {Promise<string | null>}
+ */
 export async function ladeOwnerId(sb, search) {
   return (await ladeKennung(sb, search))?.ownerId || null;
 }

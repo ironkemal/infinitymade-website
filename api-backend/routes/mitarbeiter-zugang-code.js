@@ -13,6 +13,10 @@ export const KUTU_CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 export const KUTU_CODE_LAENGE = 16;
 
 // Prüfzeichen: gewichtete Summe (ungerade Gewichte 1,3,5,…) mod 32.
+/**
+ * @param {string} daten
+ * @returns {string}
+ */
 function kutuPruefzeichen(daten) {
   let summe = 0;
   for (let i = 0; i < daten.length; i++) {
@@ -31,7 +35,7 @@ function generateKutuCode() {
 /**
  * Formal gültiger Kutu-Code? (Länge, Alphabet, Prüfzeichen) — fängt Tippfehler
  * ab, bevor die Datenbank gefragt wird.
- * @param {string} code
+ * @param {unknown} code
  * @returns {boolean}
  */
 export function istKutuCodeGueltig(code) {
@@ -46,6 +50,7 @@ export function istKutuCodeGueltig(code) {
  * Da das Alphabet genau 32 (2^5) Zeichen lang ist, gibt byte % 32 keinen Modulo-Bias.
  *
  * @param {number} [length=10]
+ * @param {string} [format]
  * @returns {string} 10-stelliger Code im Rohformat, z. B. 'ABCDE23456'
  */
 export function generateSetupCode(length = 10, format) {
@@ -63,12 +68,13 @@ export function generateSetupCode(length = 10, format) {
  * Formatiert einen Code in das Anzeigeformat XXXXX-XXXXX.
  *
  * @param {string} code
+ * @param {string} [format]
  * @returns {string} Formatiertes Format oder unformatiert bei unerwarteter Länge
  */
 export function formatSetupCode(code, format) {
   const clean = normalizeCode(code, format);
   if (format === FORMAT_KUTU) {
-    return clean.length === KUTU_CODE_LAENGE ? clean.match(/.{4}/g).join('-') : clean;
+    return clean.length === KUTU_CODE_LAENGE ? /** @type {RegExpMatchArray} */ (clean.match(/.{4}/g)).join('-') : clean;
   }
   if (clean.length === 10) {
     return `${clean.slice(0, 5)}-${clean.slice(5)}`;
@@ -79,7 +85,8 @@ export function formatSetupCode(code, format) {
 /**
  * Normalisiert eine Eingabe: Leerzeichen und Bindestriche entfernen, Großschreibung.
  *
- * @param {string} code
+ * @param {unknown} code
+ * @param {string} [format]
  * @returns {string}
  */
 export function normalizeCode(code, format) {
@@ -94,6 +101,7 @@ export function normalizeCode(code, format) {
  * Erzeugt den SHA-256 Hex-Hash eines Codes (normalisiert vor dem Hashen).
  *
  * @param {string} code
+ * @param {string} [format]
  * @returns {string} 64 Hex-Zeichen
  */
 export function hashCode(code, format) {
@@ -104,8 +112,9 @@ export function hashCode(code, format) {
 /**
  * Prüft timing-sicher, ob der eingegebene Code mit dem gespeicherten SHA-256-Hash übereinstimmt.
  *
- * @param {string} inputCode
- * @param {string} storedHash
+ * @param {unknown} inputCode
+ * @param {unknown} storedHash
+ * @param {string} [format]
  * @returns {boolean}
  */
 export function verifyCode(inputCode, storedHash, format) {

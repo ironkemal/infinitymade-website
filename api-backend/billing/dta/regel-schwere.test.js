@@ -32,7 +32,7 @@ function codesImQuelltext() {
 
 test('jede Preflight-Regel ist klassifiziert', () => {
   const imCode = codesImQuelltext();
-  const fehlend = [...imCode].filter(c => !REGEL_SCHWERE[c]).sort();
+  const fehlend = [...imCode].filter(c => !Object.prototype.hasOwnProperty.call(REGEL_SCHWERE, c)).sort();
 
   assert.deepEqual(fehlend, [],
     `Neue Regel(n) ohne Klassifikation: ${fehlend.join(', ')}.\n`

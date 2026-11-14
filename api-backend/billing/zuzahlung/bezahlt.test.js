@@ -3,9 +3,10 @@ import { istZuzahlungBezahlt, saldoJeRezept } from './bezahlt.js';
 import assert from 'node:assert/strict';
 
 let pass = 0, fail = 0;
+/** @param {string} name @param {() => void} fn */
 function test(name, fn) {
   try { fn(); console.log('  ok   ' + name); pass++; }
-  catch (e) { console.log('  FAIL ' + name + '\n       ' + e.message); fail++; }
+  catch (e) { console.log('  FAIL ' + name + '\n       ' + (e instanceof Error ? e.message : String(e))); fail++; }
 }
 
 console.log('istZuzahlungBezahlt');
@@ -58,11 +59,11 @@ test('summiert je Rezept und rechnet Stornos gegen', () => {
   ]);
   assert.equal(m.get('a'), 13.50);
   assert.equal(m.get('b'), 0);
-  assert.equal(m.has(null), false, 'Belege ohne Rezeptbezug gehoeren nicht in die Zuordnung');
+  assert.equal(/** @type {Map<unknown, number>} */ (m).has(null), false, 'Belege ohne Rezeptbezug gehoeren nicht in die Zuordnung');
 });
 
 test('leere Eingabe → leere Zuordnung', () => {
-  assert.equal(saldoJeRezept(null).size, 0);
+  assert.equal(saldoJeRezept(/** @type {Parameters<typeof saldoJeRezept>[0]} */ (/** @type {unknown} */ (null))).size, 0);
   assert.equal(saldoJeRezept([]).size, 0);
 });
 

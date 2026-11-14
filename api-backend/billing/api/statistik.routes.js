@@ -8,16 +8,21 @@ import { istZuzahlungBezahlt, saldoJeRezept } from '../zuzahlung/bezahlt.js';
 import { loadTherapeutenStatistik } from '../statistik/therapeuten.js';
 
 const router = express.Router();
+/** @type {import('@supabase/supabase-js').SupabaseClient<any>} */
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  /** @type {string} */ (process.env.SUPABASE_URL),
+  /** @type {string} */ (process.env.SUPABASE_SERVICE_ROLE_KEY),
   { auth: { persistSession: false } }
 );
 
 // ---------- shared auth helper (same pattern as mahnwesen.routes.js) ----------
 
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 async function resolveAuth(req, res) {
-  const token = req.headers.authorization?.slice(7);
+  const token = typeof req.headers.authorization === 'string' ? req.headers.authorization.slice(7) : '';
   if (!token) { res.status(401).json({ error: 'Missing bearer token' }); return null; }
 
   const { data: u, error: uErr } = await supabase.auth.getUser(token);
@@ -42,7 +47,7 @@ async function resolveAuth(req, res) {
 // Query params:
 //   monate — number of months to look back (default 6, max 12)
 // ============================================================================
-router.get('/statistik', async (req, res) => {
+router.get('/statistik', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
@@ -53,7 +58,7 @@ router.get('/statistik', async (req, res) => {
     const { tenantId } = auth;
 
     // Clamp monate: 1..12, default 6
-    const monate = Math.min(12, Math.max(1, parseInt(req.query.monate, 10) || 6));
+    const monate = Math.min(12, Math.max(1, parseInt(String(req.query.monate ?? ''), 10) || 6));
 
     // Cutoff date: now minus N months (JS-native, no raw SQL needed)
     const cutoff = new Date();
@@ -177,6 +182,7 @@ router.get('/statistik', async (req, res) => {
     // Sessions query may fail if table doesn't exist yet — treat as empty
     const sessionRows = sessionsResult.error ? [] : (sessionsResult.data || []);
 
+    /** @param {unknown} v */
     const r2 = (v) => Math.round((Number(v) || 0) * 100) / 100;
 
     // ── 1a. Einnahmen je Monat aus dem Kassenbuch ───────────────────────────
@@ -190,7 +196,9 @@ router.get('/statistik', async (req, res) => {
     //             Ein Barverkauf hat mit offenen Forderungen nichts zu tun und
     //             würde den Vergleich verfälschen.
     const FORDERUNGS_TYPEN = new Set(['zuzahlung', 'ausfall', 'storno']);
+    /** @type {Record<string, number>} */
     const umsatzByMonth = {};
+    /** @type {Record<string, number>} */
     const bezahltByMonth = {};
     for (const b of (belegResult.data || [])) {
       const key = b.created_at.slice(0, 7); // "2026-04"
@@ -231,6 +239,7 @@ router.get('/statistik', async (req, res) => {
       saldo: saldoByRx.get(rx.id) || 0,
     }));
 
+    /** @type {Record<string, number>} */
     const offenByMonth = {};
     for (const rx of offeneRx) {
       if (!rx.ausstellungsdatum) continue; // ohne Datum keinem Monat zuzuordnen
@@ -324,9 +333,13 @@ router.get('/statistik', async (req, res) => {
     // Podologie — beide stehen in `prescriptions`. `therapie_bereich`
     // entscheidet unten, ob die Heilmittel aus dem Skalarfeld `heilmittel`
     // oder aus der JSON-Liste `heilmittel_items` (Podologie) kommen.
+    /** @type {Record<string, any>} */
     const arztMap = {};
 
-    /** Zählt eine Verordnung auf das Konto ihres Arztes. */
+    /**
+     * Zählt eine Verordnung auf das Konto ihres Arztes.
+     * @param {{ arzt: any, arztId: string | null | undefined, patientKey: string | null, heilmittel: string | string[] | null | undefined, diagnosegruppe: string | null | undefined, datum: string | null | undefined }} p
+     */
     function erfasseVerordnung({ arzt, arztId, patientKey, heilmittel, diagnosegruppe, datum }) {
       if (!arztId) return;
       if (!arztMap[arztId]) {
@@ -347,7 +360,7 @@ router.get('/statistik', async (req, res) => {
       const e = arztMap[arztId];
       e.verordnungen++;
       if (patientKey) e._patienten.add(patientKey);
-      for (const hm of [].concat(heilmittel || [])) {
+      for (const hm of (/** @type {string[]} */ ([])).concat(heilmittel || [])) {
         if (hm) e._heilmittel[hm] = (e._heilmittel[hm] || 0) + 1;
       }
       if (diagnosegruppe) e._diagnosen[diagnosegruppe] = (e._diagnosen[diagnosegruppe] || 0) + 1;
@@ -360,7 +373,7 @@ router.get('/statistik', async (req, res) => {
       // Physio/Ergo/Logo ein einzelnes Textfeld.
       const heilmittel = istPodo
         ? (Array.isArray(rx.heilmittel_items) ? rx.heilmittel_items : [])
-            .map(i => i?.bezeichnung || i?.code).filter(Boolean)
+            .map((/** @type {any} */ i) => i?.bezeichnung || i?.code).filter(Boolean)
         : rx.heilmittel;
       erfasseVerordnung({
         arzt:           rx.aerzte,
@@ -374,6 +387,7 @@ router.get('/statistik', async (req, res) => {
       });
     }
 
+    /** @param {Record<string, number>} obj */
     const top = (obj, n = 3) => Object.entries(obj)
       .sort((a, b) => b[1] - a[1])
       .slice(0, n)
@@ -431,7 +445,7 @@ router.get('/statistik', async (req, res) => {
     });
   } catch (e) {
     console.error('[billing/statistik]', e);
-    return res.status(500).json({ error: e.message || 'Server error' });
+    return res.status(500).json({ error: (e instanceof Error ? e.message : '') || 'Server error' });
   }
 });
 

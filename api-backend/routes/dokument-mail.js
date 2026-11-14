@@ -34,6 +34,9 @@ const MAX_TEXT = 4000;
  * Darf diese Instanz selbst mailen? Box mit SMTP der Praxis (siehe Kopf). Mit `kanal` (lib/mail.js mailKanal)
  * zählt auch das in den Einstellungen verbundene Postfach — auch im SaaS, denn dann ist es das eigene Postfach
  * der Praxis, nicht der Praxura-Absender.
+ * @param {any} [env]
+ * @param {boolean} [kutu]
+ * @param {any} [kanal]
  */
 export function versandMoeglich(env = process.env, kutu = istKutu(), kanal = null) {
   if (kanal) return kanal.weg === 'smtp' && (kanal.quelle === 'db' || !!kutu);
@@ -44,6 +47,7 @@ export function versandMoeglich(env = process.env, kutu = istKutu(), kanal = nul
  * Reine Entscheidung über Faxversand (onprem O-231).
  * Gibt { senden: true, adresse } oder { senden: false, code } zurück.
  * Codes: 'SAAS' | 'KEIN_SMTP' | 'KEIN_MUSTER' | 'KEINE_FAXNUMMER'.
+ * @param {{ kutu?: boolean, smtp?: any, muster?: string | null, nummer?: string | null }} [opt]
  */
 export function entscheideFaxVersand({ kutu = false, smtp = null, muster = null, nummer = null } = {}) {
   if (!kutu) return { senden: false, code: 'SAAS' };
@@ -52,19 +56,23 @@ export function entscheideFaxVersand({ kutu = false, smtp = null, muster = null,
   if (!p.ok) return { senden: false, code: 'KEIN_MUSTER' };
   const nr = faxNummerNormalisieren(nummer);
   if (!nr) return { senden: false, code: 'KEINE_FAXNUMMER' };
-  const adresse = baueFaxAdresse(muster, nummer);
+  const adresse = baueFaxAdresse(/** @type {string} */ (muster), /** @type {string} */ (nummer));
   if (!adresse) return { senden: false, code: 'KEIN_MUSTER' };
   return { senden: true, adresse };
 }
 
-/** Eingaben prüfen und normalisieren. Gibt {fehler} oder {werte} zurück. */
+/**
+ * Eingaben prüfen und normalisieren. Gibt {fehler} oder {werte} zurück.
+ * @param {any} [body]
+ * @returns {{ fehler?: string, werte?: any }}
+ */
 export function pruefeEingabe(body = {}) {
   const aktion = String(body.aktion || '');
   if (!['vorschau', 'mail', 'fax', 'druck'].includes(aktion)) return { fehler: 'Unbekannte Aktion.' };
   const prescription_id = String(body.prescription_id || '');
   if (!/^[0-9a-f-]{36}$/i.test(prescription_id)) return { fehler: 'Verordnung fehlt.' };
-  const art = body.art && BERICHT_ARTEN[body.art] ? body.art : 'zwischenbericht';
-  const empfehlung_code = body.empfehlung_code && EMPFEHLUNG_CODES[body.empfehlung_code] ? body.empfehlung_code : null;
+  const art = body.art && (/** @type {Record<string, any>} */ (BERICHT_ARTEN))[body.art] ? body.art : 'zwischenbericht';
+  const empfehlung_code = body.empfehlung_code && (/** @type {Record<string, any>} */ (EMPFEHLUNG_CODES))[body.empfehlung_code] ? body.empfehlung_code : null;
   const verlauf = String(body.verlauf || '').slice(0, MAX_TEXT);
   const empfehlung = String(body.empfehlung || '').slice(0, MAX_TEXT);
   const an_email = String(body.an_email || '').trim();
@@ -75,6 +83,9 @@ export function pruefeEingabe(body = {}) {
 /**
  * Versandweg für Dokumente an Patienten (onprem O-233): Box → nur Praxis-SMTP,
  * SaaS → nur das Gmail-Konto der Praxis. Nie ein Praxura-SMTP als Rückfall.
+ * @param {any} [env]
+ * @param {boolean} [kutu]
+ * @param {any} [kanal]
  * @returns {'smtp'|'gmail'|null}
  */
 export function versandWeg(env = process.env, kutu = istKutu(), kanal = null) {
@@ -83,7 +94,14 @@ export function versandWeg(env = process.env, kutu = istKutu(), kanal = null) {
   return 'gmail';
 }
 
-/** Kanal für Dokumente einer Praxis (Einstellung → SMTP_* → kein), mit den injizierten env/kutu der Tests. */
+/**
+ * Kanal für Dokumente einer Praxis (Einstellung → SMTP_* → kein), mit den injizierten env/kutu der Tests.
+ * @param {any} supabase
+ * @param {string} tenantId
+ * @param {any} [env]
+ * @param {boolean} [kutu]
+ * @returns {Promise<any>}
+ */
 export function dokumentKanal(supabase, tenantId, env = process.env, kutu = istKutu()) {
   return mailKanal({ supabase, ownerId: tenantId, zweck: 'dokument', env, kutu });
 }
@@ -92,11 +110,18 @@ export function dokumentKanal(supabase, tenantId, env = process.env, kutu = istK
  * Darf der Aufrufer diese Rechnung sehen/versenden? Inhaber: ja. Mitarbeiter: nur mit dem Recht 'abrechnung' für die Praxis der
  * Rechnung (wie api-backend/billing/api/rechnung-zahlung.routes.js und die Datenbank-Policy 0121). Die Prüfung selbst steht in
  * lib/modulrecht.js (gemeinsam mit dem Abrechnungsstatus, guvenlik S-65). Rechnung ohne Praxis: für Mitarbeiter nein.
+ * @param {any} auth
+ * @param {any} inv
+ * @param {any} [token]
+ * @param {any} [rpc]
  */
 export function abrechnungRechtFuerRechnung(auth, inv, token, rpc) {
   return hatAbrechnungsRecht({ auth, ownerId: inv?.owner_id, businessIds: inv?.business_id ? [inv.business_id] : [], token, rpc });
 }
 
+/**
+ * @param {{ supabase?: any, transportFabrik?: any, env?: any, kutu?: () => boolean, gmail?: any }} [opt]
+ */
 export function createDokumentMailRouter({ supabase, transportFabrik = createSMTPTransport, env = process.env, kutu = istKutu, gmail = null } = {}) {
   const router = express.Router();
 
@@ -105,11 +130,11 @@ export function createDokumentMailRouter({ supabase, transportFabrik = createSMT
     limit: 60,
     standardHeaders: 'draft-7',
     legacyHeaders: false,
-    keyGenerator: (req) => req.auth?.userId || req.ip,
+    keyGenerator: (/** @type {any} */ req) => /** @type {string} */ (req.auth?.userId || req.ip),
     message: { error: 'Zu viele Berichte in kurzer Zeit. Bitte später erneut versuchen.' },
   });
 
-  router.post('/dokument/therapiebericht', requireAuth, limiter, async (req, res) => {
+  router.post('/dokument/therapiebericht', requireAuth, limiter, async (/** @type {any} */ req, /** @type {any} */ res) => {
     const { fehler, werte } = pruefeEingabe(req.body);
     if (fehler) return res.status(400).json({ error: fehler });
     const { tenantId, userId } = req.auth;
@@ -149,8 +174,8 @@ export function createDokumentMailRouter({ supabase, transportFabrik = createSMT
           });
           gesendet = true;
         } catch (e) {
-          console.error('[dokument/therapiebericht] Versand fehlgeschlagen', e?.code || '', e?.responseCode || '');
-          await meldeVerbindungsfehler(supabase, tenantId, kanal, e);
+          console.error('[dokument/therapiebericht] Versand fehlgeschlagen', (/** @type {any} */ (e))?.code || '', (/** @type {any} */ (e))?.responseCode || '');
+          await meldeVerbindungsfehler(supabase, tenantId, kanal, /** @type {any} */ (e));
           return res.status(502).json({ error: 'Die E-Mail konnte nicht versendet werden (Mailserver). Bitte Einstellungen prüfen oder als Fax/Druck senden.', code: 'SMTP_FEHLER' });
         }
       }
@@ -189,8 +214,8 @@ export function createDokumentMailRouter({ supabase, transportFabrik = createSMT
             });
             gesendet = true;
           } catch (e) {
-            console.error('[dokument/therapiebericht] Fax-Versand fehlgeschlagen', e?.code || '', e?.responseCode || '');
-            await meldeVerbindungsfehler(supabase, tenantId, kanal, e);
+            console.error('[dokument/therapiebericht] Fax-Versand fehlgeschlagen', (/** @type {any} */ (e))?.code || '', (/** @type {any} */ (e))?.responseCode || '');
+            await meldeVerbindungsfehler(supabase, tenantId, kanal, /** @type {any} */ (e));
             return res.status(502).json({
               error: 'Das Fax konnte nicht über den Mailserver versendet werden. Bitte Einstellungen prüfen oder das PDF drucken.',
               code: 'SMTP_FEHLER',
@@ -235,14 +260,14 @@ export function createDokumentMailRouter({ supabase, transportFabrik = createSMT
         praxis: snapshot.praxis,
       });
     } catch (e) {
-      if (e?.status === 404) return res.status(404).json({ error: e.message });
-      console.error('[dokument/therapiebericht]', e?.code || 'Fehler');
+      if ((/** @type {any} */ (e))?.status === 404) return res.status(404).json({ error: (/** @type {any} */ (e)).message });
+      console.error('[dokument/therapiebericht]', (/** @type {any} */ (e))?.code || 'Fehler');
       return res.status(500).json({ error: 'Der Bericht konnte nicht erstellt werden.' });
     }
   });
 
   // Vermerk „Passwort telefonisch übermittelt" — die einzige Änderung nach dem Versand.
-  router.post('/dokument/therapiebericht/:id/passwort-telefonisch', requireAuth, limiter, async (req, res) => {
+  router.post('/dokument/therapiebericht/:id/passwort-telefonisch', requireAuth, limiter, async (/** @type {any} */ req, /** @type {any} */ res) => {
     const id = String(req.params.id || '');
     if (!/^[0-9a-f-]{36}$/i.test(id)) return res.status(400).json({ error: 'Ungültige ID.' });
     try {
@@ -252,14 +277,14 @@ export function createDokumentMailRouter({ supabase, transportFabrik = createSMT
       if (!data?.length) return res.status(404).json({ error: 'Bericht nicht gefunden.' });
       return res.json({ ok: true });
     } catch (e) {
-      console.error('[dokument/passwort-telefonisch]', e?.code || 'Fehler');
+      console.error('[dokument/passwort-telefonisch]', (/** @type {any} */ (e))?.code || 'Fehler');
       return res.status(500).json({ error: 'Vermerk konnte nicht gespeichert werden.' });
     }
   });
 
   // Rechnung an den Patienten: Vorschau (offen) oder Mail (immer passwortgeschützt).
   // LEGAL_DECISIONS 2026-10-31. Inhalt, Empfänger und PDF werden nicht gespeichert/geloggt.
-  router.post('/dokument/rechnung', requireAuth, limiter, async (req, res) => {
+  router.post('/dokument/rechnung', requireAuth, limiter, async (/** @type {any} */ req, /** @type {any} */ res) => {
     const aktion = String(req.body?.aktion || '');
     const invoice_id = String(req.body?.invoice_id || '');
     const an_email = String(req.body?.an_email || '').trim();
@@ -321,10 +346,10 @@ export function createDokumentMailRouter({ supabase, transportFabrik = createSMT
             gesendet = true;
           }
         } catch (e) {
-          console.error('[dokument/rechnung] Versand fehlgeschlagen', e?.code || '', e?.responseCode || '');
-          await meldeVerbindungsfehler(supabase, tenantId, kanal, e);
-          if (e?.code === 'GMAIL_NICHT_VERBUNDEN' || e?.code === 'gmail_reauth_required') {
-            return res.status(409).json({ error: 'Gmail ist nicht verbunden. Bitte unter Einstellungen → E-Mail-Versand verbinden – oder das PDF herunterladen und selbst senden.', code: e.code, passwort, pdf_base64: pdf.toString('base64'), dateiname });
+          console.error('[dokument/rechnung] Versand fehlgeschlagen', (/** @type {any} */ (e))?.code || '', (/** @type {any} */ (e))?.responseCode || '');
+          await meldeVerbindungsfehler(supabase, tenantId, kanal, /** @type {any} */ (e));
+          if ((/** @type {any} */ (e))?.code === 'GMAIL_NICHT_VERBUNDEN' || (/** @type {any} */ (e))?.code === 'gmail_reauth_required') {
+            return res.status(409).json({ error: 'Gmail ist nicht verbunden. Bitte unter Einstellungen → E-Mail-Versand verbinden – oder das PDF herunterladen und selbst senden.', code: (/** @type {any} */ (e)).code, passwort, pdf_base64: pdf.toString('base64'), dateiname });
           }
           return res.status(502).json({ error: 'Die E-Mail konnte nicht versendet werden. Bitte das PDF herunterladen und selbst senden.', code: 'VERSAND_FEHLER', passwort, pdf_base64: pdf.toString('base64'), dateiname });
         }
@@ -334,13 +359,13 @@ export function createDokumentMailRouter({ supabase, transportFabrik = createSMT
         ...(gesendet ? {} : { pdf_base64: pdf.toString('base64'), dateiname, code: !an ? 'KEINE_EMAIL' : 'VERSAND_NICHT_EINGERICHTET' }),
       });
     } catch (e) {
-      console.error('[dokument/rechnung]', e?.code || 'Fehler');
+      console.error('[dokument/rechnung]', (/** @type {any} */ (e))?.code || 'Fehler');
       return res.status(500).json({ error: 'Die Rechnung konnte nicht erstellt werden.' });
     }
   });
 
   // Archiv: versandten Bericht aus dem Snapshot neu erzeugen (offen, nur für die Praxis).
-  router.get('/dokument/therapiebericht/:id/pdf', requireAuth, limiter, async (req, res) => {
+  router.get('/dokument/therapiebericht/:id/pdf', requireAuth, limiter, async (/** @type {any} */ req, /** @type {any} */ res) => {
     const id = String(req.params.id || '');
     if (!/^[0-9a-f-]{36}$/i.test(id)) return res.status(400).json({ error: 'Ungültige ID.' });
     try {
@@ -353,7 +378,7 @@ export function createDokumentMailRouter({ supabase, transportFabrik = createSMT
       const pdf = await erzeugeBerichtPdf({ snapshot: b.inhalt_snapshot, art: b.art, verlauf: b.verlauf || '', empfehlung: b.empfehlung || '', empfehlung_code: b.empfehlung_code, datum });
       return res.json({ pdf_base64: pdf.toString('base64'), dateiname: berichtDateiname(b.inhalt_snapshot, datum) });
     } catch (e) {
-      console.error('[dokument/therapiebericht/pdf]', e?.code || 'Fehler');
+      console.error('[dokument/therapiebericht/pdf]', (/** @type {any} */ (e))?.code || 'Fehler');
       return res.status(500).json({ error: 'Der Bericht konnte nicht erzeugt werden.' });
     }
   });

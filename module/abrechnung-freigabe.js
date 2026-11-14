@@ -35,6 +35,18 @@
  * käme z. B. ein vierter `bericht_status` dazu, liesse die Oberfläche durch, was
  * der Server abweist — und der Fehler fiele erst bei der DTA-Erzeugung auf.
  */
+/**
+ * Ist für dieses Rezept ein Bericht angefordert, aber keiner geschrieben?
+ *
+ * ⚠️ Zwilling: `api-backend/billing/api/abrechnung.routes.js:482` und `:585`
+ * prüfen dieselbe Bedingung noch einmal. Das ist Absicht — dieses Modul geht in
+ * den Browser, die Route in den Container, eine gemeinsame Importkette gibt es
+ * nicht (und G8 will keine neue). Wer hier etwas ändert, muss dort mitziehen:
+ * käme z. B. ein vierter `bericht_status` dazu, liesse die Oberfläche durch, was
+ * der Server abweist — und der Fehler fiele erst bei der DTA-Erzeugung auf.
+ * @param {Record<string, any> | null | undefined} rx
+ * @returns {boolean}
+ */
 export function istBerichtOffen(rx) {
   return !!(rx && rx.bericht_angefordert && rx.bericht_status !== 'erledigt');
 }
@@ -45,6 +57,17 @@ export function istBerichtOffen(rx) {
  * Aus `dashboard.js` hierher gezogen, unverändert in der Logik. `isReportMissing`
  * ist seit der Übersteuerbarkeit ein *Hinweis*, kein Riegel mehr — wer das Feld
  * auswertet, muss es entsprechend behandeln (siehe `istHarterRiegel`).
+ * @param {Record<string, any>} rx
+ * @param {any} [therapistCertsMap]
+ * @returns {{
+ *   has14DayGap: boolean,
+ *   gapDays: number,
+ *   gapDates: string,
+ *   missingCert: boolean,
+ *   missingCertName: string,
+ *   missingCertDate: string,
+ *   isReportMissing: boolean,
+ * }}
  */
 export function checkPrescriptionCompliance(rx, therapistCertsMap) {
   const issues = {
@@ -57,16 +80,16 @@ export function checkPrescriptionCompliance(rx, therapistCertsMap) {
     isReportMissing: istBerichtOffen(rx),
   };
 
-  const doneSessions = (rx.prescription_sessions || [])
+  const doneSessions = /** @type {Array<Record<string, any>>} */ ((rx.prescription_sessions || []))
     .filter(s => s.status === 'done');
 
   // Check 14-day gap
   if (doneSessions.length > 1) {
-    const sorted = [...doneSessions].sort((a, b) => new Date(a.done_at) - new Date(b.done_at));
+    const sorted = [...doneSessions].sort((a, b) => new Date(a.done_at).getTime() - new Date(b.done_at).getTime());
     for (let k = 1; k < sorted.length; k++) {
       const prevD = new Date(sorted[k - 1].done_at);
       const currD = new Date(sorted[k].done_at);
-      const diffTime = currD - prevD;
+      const diffTime = currD.getTime() - prevD.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       if (diffDays > 14) {
         issues.has14DayGap = true;
@@ -104,13 +127,15 @@ export function checkPrescriptionCompliance(rx, therapistCertsMap) {
  * eine ist eine Frage der Leistungsberechtigung, das andere macht die Verordnung
  * nach HeilM-RL § 16 Abs. 4 ungültig. Beides lässt sich nicht durch eine
  * Begründung heilen.
+ * @param {Record<string, any> | null | undefined} issues
+ * @returns {boolean}
  */
 export function istHarterRiegel(issues) {
   return !!(issues && (issues.missingCert || issues.has14DayGap));
 }
 
-const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => (
-  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]
+const esc = (/** @type {any} */ s) => String(s ?? '').replace(/[&<>"]/g, c => /** @type {string} */ (
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] || c)
 ));
 
 /**
@@ -162,26 +187,26 @@ export function frageBerichtFreigabe(betroffene) {
         </div>
       </div>`;
 
-    const schliessen = (wert) => {
+    const schliessen = (/** @type {any} */ wert) => {
       document.removeEventListener('keydown', beiTaste);
       overlay.remove();
       resolve(wert);
     };
-    const beiTaste = (e) => {
+    const beiTaste = (/** @type {KeyboardEvent} */ e) => {
       if (e.key === 'Escape') schliessen(null);
       if (e.key === 'Enter' && document.activeElement?.id === 'tbFreigabeGrund') bestaetigen();
     };
     const bestaetigen = () => schliessen({
       ids: betroffene.map(b => b.id),
-      grund: (overlay.querySelector('#tbFreigabeGrund')?.value || '').trim(),
+      grund: ((/** @type {HTMLInputElement | null} */ (overlay.querySelector('#tbFreigabeGrund')))?.value || '').trim(),
     });
 
     overlay.addEventListener('click', e => { if (e.target === overlay) schliessen(null); });
-    overlay.querySelector('#tbFreigabeAbbruch').addEventListener('click', () => schliessen(null));
-    overlay.querySelector('#tbFreigabeOk').addEventListener('click', bestaetigen);
+    overlay.querySelector('#tbFreigabeAbbruch')?.addEventListener('click', () => schliessen(null));
+    overlay.querySelector('#tbFreigabeOk')?.addEventListener('click', bestaetigen);
     document.addEventListener('keydown', beiTaste);
 
     document.body.appendChild(overlay);
-    overlay.querySelector('#tbFreigabeGrund')?.focus();
+    (/** @type {HTMLElement | null} */ (overlay.querySelector('#tbFreigabeGrund')))?.focus();
   });
 }

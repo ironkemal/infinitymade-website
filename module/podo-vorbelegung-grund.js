@@ -20,6 +20,7 @@ import { datumDe } from './datum.js?v=20261001a';
 /**
  * Grund fuer den Befundungsvorschlag der Termin-/Serienmaske. `grund` ist der
  * Schluessel aus `befundungFuerLeistung()`.
+ * @param {string|null|undefined} grund
  * @returns {string} Kurztext ohne Satzzeichen am Ende; leer, wenn kein Grund bekannt
  */
 export function befundGrundText(grund) {
@@ -44,11 +45,12 @@ export function befundGrundText(grund) {
  *
  * @param {object} p
  * @param {string}  p.code
- * @param {boolean} p.isUI              Nagelzweig UI1/UI2 (keine 78030/78040)
- * @param {{erlaubt:boolean, grund?:string, schonAm?:?string, ersteAm?:?string}} p.eingang  Lage der Eingangsbefundung
- * @param {boolean} p.hausbesuch        Verordnung sieht Hausbesuch vor
- * @param {boolean} p.geplant           im Termin dieses Tages geplant
- * @param {string}  p.rezeptPosition    vorbelegte Behandlungsposition (78010/78020)
+ * @param {boolean} [p.isUI]              Nagelzweig UI1/UI2 (keine 78030/78040)
+ * @param {{erlaubt:boolean, grund?:string, schonAm?:?string, ersteAm?:?string}} [p.eingang]  Lage der Eingangsbefundung
+ * @param {boolean} [p.hausbesuch]        Verordnung sieht Hausbesuch vor
+ * @param {boolean} [p.geplant]           im Termin dieses Tages geplant
+ * @param {string}  [p.rezeptPosition]    vorbelegte Behandlungsposition (78010/78020)
+ * @param {string} [p.rohPosition]
  * @param {string} [p.POD_EINGANG='78040']
  * @param {string} [p.POD_BEFUND='78030']
  * @returns {string} leer, wenn die Position nicht vorbelegt ist oder kein Grund bekannt

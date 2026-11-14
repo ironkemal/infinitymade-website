@@ -1,6 +1,10 @@
 import { withServerlessTelemetry } from '../_lib/telemetry.js';
 import { getAuthedUser, adminFetch, isAdmin, json } from '../_lib/auth.js';
 
+/**
+ * @param {import('../_lib/auth.js').VercelRequest} req
+ * @param {import('../_lib/auth.js').VercelResponse} res
+ */
 async function handler(req, res) {
   const { user, error: authErr } = await getAuthedUser(req);
   if (authErr || !user) return json(res, 401, { error: 'Unauthorized' });
@@ -15,6 +19,7 @@ async function handler(req, res) {
   if (req.method === 'PATCH') {
     const { id, status: st, priority, admin_notes } = req.body || {};
     if (!id) return json(res, 400, { error: 'id required' });
+    /** @type {Record<string, unknown>} */
     const payload = {};
     if (st !== undefined) payload.status = st;
     if (priority !== undefined) payload.priority = priority;

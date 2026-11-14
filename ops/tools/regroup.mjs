@@ -15,13 +15,25 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { GROUPS } from './groups.mjs';
 
+/**
+ * @typedef {{ id: string, title: string, parent_id?: string | null, [key: string]: any }} TodoRow
+ * @typedef {{ match: string, alt?: string, after?: string[], _row?: TodoRow }} GroupItem
+ * @typedef {{ title: string, notes: string, category: string, priority: string, blockedByGroups?: string[], items: GroupItem[], _id?: string }} GroupSpec
+ * @typedef {{ id?: string, insert?: Record<string, any>, patch?: Record<string, any>, label: string, _group?: GroupSpec }} PlanStep
+ */
+
 const here = dirname(fileURLToPath(import.meta.url));
+/**
+ * @param {string} msg
+ * @returns {never}
+ */
 const die = (msg) => { console.error('✗ ' + msg); process.exit(1); };
 
 function loadEnv() {
-  let raw;
+  let raw = '';
   try { raw = readFileSync(join(here, '..', '.env.ops'), 'utf8'); }
   catch { die('ops/.env.ops yok.'); }
+  /** @type {Record<string, string>} */
   const env = {};
   for (const line of raw.split('\n')) {
     const m = line.match(/^\s*([A-Z_]+)\s*=\s*(.*)\s*$/);
@@ -38,6 +50,11 @@ const dry = process.argv.includes('--dry');
 // ve kartları tasarlanan tema sırasına diz. Tema kartı açmaz, hiyerarşi kurmaz.
 const flat = process.argv.includes('--flat');
 
+/**
+ * @param {string} path
+ * @param {RequestInit} [opts]
+ * @returns {Promise<any>}
+ */
 async function api(path, opts = {}) {
   const r = await fetch(`${env.SUPABASE_URL}/rest/v1/${path}`, {
     ...opts,
@@ -56,6 +73,7 @@ async function api(path, opts = {}) {
 
 // Türkçe/Almanca kesme işaretleri ve tırnaklar kaynaktan kaynağa değişiyor;
 // eşleştirme bunlara takılmasın.
+/** @param {unknown} s */
 const norm = (s) => String(s)
   .replace(/[’‘‛`´']/g, "'")
   .replace(/[“”„]/g, '"')
@@ -65,6 +83,7 @@ const norm = (s) => String(s)
 
 // ── Bestand lesen ───────────────────────────────────────────────────────
 
+/** @type {TodoRow[]} */
 const all = await api('ops_todos?select=*');
 if (!all.length) die('Board boş.');
 // --dry planı sütunlar olmadan da hesaplanabilir; yazmak için şart.
@@ -73,13 +92,20 @@ if (!schemaReady && !dry && !flat)
   die('parent_id / blocked_by sütunları yok. Önce ops/schema-groups.sql dosyasını\n'
     + '  Supabase (praxura-ops) → SQL Editor içinde çalıştır.');
 
-const groupTitles = new Set(GROUPS.map(g => norm(g.title)));
+const groups = /** @type {GroupSpec[]} */ (GROUPS);
+const groupTitles = new Set(groups.map(g => norm(g.title)));
+/** @type {Map<string, TodoRow>} */
 const parents = new Map();                       // group title → mevcut satır
 for (const t of all) if (groupTitles.has(norm(t.title)) && !t.parent_id) parents.set(norm(t.title), t);
 
 // Eşleşme havuzu: tema kartlarının kendisi hariç her şey.
 const pool = all.filter(t => !groupTitles.has(norm(t.title)));
 
+/**
+ * @param {GroupItem} spec
+ * @param {string} groupTitle
+ * @returns {TodoRow}
+ */
 function resolve(spec, groupTitle) {
   for (const needle of [spec.match, spec.alt].filter(Boolean)) {
     const hits = pool.filter(t => norm(t.title).includes(norm(needle)));
@@ -88,16 +114,18 @@ function resolve(spec, groupTitle) {
       die(`"${needle}" (${groupTitle}) ${hits.length} karta uyuyor:\n   `
         + hits.map(h => h.title).join('\n   '));
   }
-  die(`"${spec.match}" (${groupTitle}) hiçbir karta uymuyor. Kart silinmiş veya başlığı değişmiş olabilir.`);
+  return die(`"${spec.match}" (${groupTitle}) hiçbir karta uymuyor. Kart silinmiş veya başlığı değişmiş olabilir.`);
 }
 
 // ── Plan aufbauen ───────────────────────────────────────────────────────
 
+/** @type {Map<string, string>} */
 const resolved = new Map();      // match-string → todo id (blocker çözümü için)
+/** @type {PlanStep[]} */
 const plan = [];                 // { id?, insert?, patch, label }
 let newParents = 0;
 
-GROUPS.forEach((g, gi) => {
+groups.forEach((g) => {
   // Önce çocukları çöz — blocker'lar hep aynı çalışmada tanımlı olsun.
   g.items.forEach(it => {
     const row = resolve(it, g.title);
@@ -112,13 +140,14 @@ GROUPS.forEach((g, gi) => {
 // pano en azından doğru sırada ve kimseye atanmamış olur.
 if (flat) {
   let n = 0;
-  for (const [gi, g] of GROUPS.entries()) {
+  for (const [gi, g] of groups.entries()) {
     console.log(`\n${gi + 1}. ${g.title}`);
     for (const [ii, it] of g.items.entries()) {
       const sort_order = (gi + 1) * 1000 + (ii + 1) * 10;
-      console.log(`   ${String(sort_order).padStart(5)}  ${it._row.title.slice(0, 78)}`);
+      const itemRow = /** @type {TodoRow} */ (it._row);
+      console.log(`   ${String(sort_order).padStart(5)}  ${itemRow.title.slice(0, 78)}`);
       if (!dry) {
-        await api(`ops_todos?id=eq.${it._row.id}`, {
+        await api(`ops_todos?id=eq.${itemRow.id}`, {
           method: 'PATCH', body: JSON.stringify({ assignee: null, sort_order })
         });
       }
@@ -133,15 +162,21 @@ if (flat) {
 }
 
 // Blocker referansları: önce tam eşleşme, sonra "içeren" araması.
+/**
+ * @param {string} needle
+ * @param {string} ctx
+ * @returns {string}
+ */
 function blockerId(needle, ctx) {
   const key = norm(needle);
-  if (resolved.has(key)) return resolved.get(key);
+  const direct = resolved.get(key);
+  if (direct) return direct;
   const hit = [...resolved.entries()].find(([k]) => k.includes(key) || key.includes(k));
   if (hit) return hit[1];
-  die(`Ön koşul "${needle}" (${ctx}) çözülemedi.`);
+  return die(`Ön koşul "${needle}" (${ctx}) çözülemedi.`);
 }
 
-GROUPS.forEach((g, gi) => {
+groups.forEach((g, gi) => {
   const sort = (gi + 1) * 10;
   const existing = parents.get(norm(g.title));
   const base = {
@@ -163,27 +198,28 @@ GROUPS.forEach((g, gi) => {
   }
 
   g.items.forEach((it, ii) => {
+    const itemRow = /** @type {TodoRow} */ (it._row);
     plan.push({
-      id: it._row.id,
+      id: itemRow.id,
       patch: {
         parent_id: '__PARENT__' + gi,
         assignee: null,
         sort_order: (ii + 1) * 10,
         blocked_by: (it.after || []).map(a => blockerId(a, it.match))
       },
-      label: `   ${ii + 1}. ${it._row.title}${it.after ? `   ⟵ önce: ${it.after.join(' + ')}` : ''}`
+      label: `   ${ii + 1}. ${itemRow.title}${it.after ? `   ⟵ önce: ${it.after.join(' + ')}` : ''}`
     });
   });
 });
 
 // ── Ausgabe ─────────────────────────────────────────────────────────────
 
-const childCount = GROUPS.reduce((n, g) => n + g.items.length, 0);
-const untouched = pool.filter(t => !GROUPS.some(g => g.items.some(i => i._row.id === t.id)));
+const childCount = groups.reduce((n, g) => n + g.items.length, 0);
+const untouched = pool.filter(t => !groups.some(g => g.items.some(i => i._row?.id === t.id)));
 
 for (const p of plan) console.log(p.label);
-console.log(`\n${GROUPS.length} tema · ${childCount} alt görev · ${newParents} yeni tema kartı`);
-console.log(`Panoda görünecek kart sayısı: ${GROUPS.length} (şu an ${pool.length})`);
+console.log(`\n${groups.length} tema · ${childCount} alt görev · ${newParents} yeni tema kartı`);
+console.log(`Panoda görünecek kart sayısı: ${groups.length} (şu an ${pool.length})`);
 if (untouched.length) {
   console.log(`\n⚠ Hiçbir temaya girmeyen ${untouched.length} kart (elle bak):`);
   for (const t of untouched) console.log('   · ' + t.title);
@@ -195,36 +231,37 @@ if (dry) { console.log('\n--dry: hiçbir şey yazılmadı.'); process.exit(0); }
 
 // 1) Eksik tema kartlarını aç
 for (const p of plan) {
-  if (!p.insert) continue;
+  if (!p.insert || !p._group) continue;
+  /** @type {TodoRow[]} */
   const [row] = await api('ops_todos', { method: 'POST', body: JSON.stringify(p.insert) });
   p._group._id = row.id;
 }
 
 // 2) Mevcut tema kartlarını güncelle
 for (const p of plan) {
-  if (!p.id || !p.patch.title) continue;
+  if (!p.id || !p.patch?.title) continue;
   await api(`ops_todos?id=eq.${p.id}`, { method: 'PATCH', body: JSON.stringify(p.patch) });
 }
 
 // 3) Alt görevleri bağla
 for (const p of plan) {
-  if (!p.id || p.patch.title) continue;
+  if (!p.id || !p.patch || p.patch.title) continue;
   const gi = Number(String(p.patch.parent_id).replace('__PARENT__', ''));
   await api(`ops_todos?id=eq.${p.id}`, {
     method: 'PATCH',
-    body: JSON.stringify({ ...p.patch, parent_id: GROUPS[gi]._id })
+    body: JSON.stringify({ ...p.patch, parent_id: groups[gi]._id })
   });
 }
 
 // 4) Tema düzeyindeki ön koşullar (Launch → diğer temalar)
-for (const g of GROUPS) {
+for (const g of groups) {
   if (!g.blockedByGroups?.length) continue;
   const ids = g.blockedByGroups.map(t => {
-    const target = GROUPS.find(x => norm(x.title) === norm(t));
-    if (!target) die(`Tema ön koşulu "${t}" bulunamadı.`);
+    const target = groups.find(x => norm(x.title) === norm(t));
+    if (!target) return die(`Tema ön koşulu "${t}" bulunamadı.`);
     return target._id;
   });
   await api(`ops_todos?id=eq.${g._id}`, { method: 'PATCH', body: JSON.stringify({ blocked_by: ids }) });
 }
 
-console.log(`\n✓ Board yeniden düzenlendi: ${GROUPS.length} tema, ${childCount} alt görev, hepsi Gemeinsam.`);
+console.log(`\n✓ Board yeniden düzenlendi: ${groups.length} tema, ${childCount} alt görev, hepsi Gemeinsam.`);

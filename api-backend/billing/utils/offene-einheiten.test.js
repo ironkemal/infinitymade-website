@@ -48,7 +48,7 @@ test('protokollZeilen: Muster abrechnung-freigabe', () => {
 });
 
 test('ohne Feld anzahl_einheiten (z. B. Frontend-Wortschatz) -> nichts offen, kein Absturz', () => {
-  assert.deepEqual(offeneJeVerordnung([{ id: 'a', behandlungseinheiten: 6 }], []), []);
+  assert.deepEqual(offeneJeVerordnung([/** @type {Parameters<typeof offeneJeVerordnung>[0][number]} */ ({ id: 'a', behandlungseinheiten: 6 })], []), []);
 });
 
 import { bestaetigungNochGueltig, gueltigBestaetigteIds } from './offene-einheiten.js';
@@ -74,5 +74,5 @@ test('gueltigBestaetigteIds: neueste Zeile zählt, Termine und Änderung entwert
   const ids = gueltigBestaetigteIds(offene, zeilen, [{ verordnung_id: 'b' }]);
   assert.deepEqual([...ids].sort(), ['a', 'c']);
   assert.equal(gueltigBestaetigteIds([], zeilen, []).size, 0);
-  assert.equal(gueltigBestaetigteIds(offene, null, null).size, 0);
+  assert.equal(gueltigBestaetigteIds(offene, /** @type {Parameters<typeof gueltigBestaetigteIds>[1]} */ (/** @type {unknown} */ (null)), /** @type {Parameters<typeof gueltigBestaetigteIds>[2]} */ (/** @type {unknown} */ (null))).size, 0);
 });

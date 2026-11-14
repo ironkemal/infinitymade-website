@@ -141,7 +141,7 @@ export function sollDateiUebersprungenWerden(pfad) {
   if (/(?:^|\/)tools\/check-secrets[^/]*\.(mjs|test\.js)$/.test(norm)) {
     return true;
   }
-  const basisname = norm.split('/').pop();
+  const basisname = norm.split('/').pop() || '';
   if (/^check-secrets.*(\.mjs|\.test\.js)$/.test(basisname)) {
     return true;
   }
@@ -196,6 +196,7 @@ export function pruefeText(text, dateiname = '', allowlist = undefined) {
     if (zeile.includes('secret-scan: ignore')) continue;
     // Ein Wert, der auf zwei Muster passt (z. B. ghToken = "ghp_…"), zählt einmal:
     // überlappende Trefferbereiche derselben Zeile werden nur beim ersten Muster gemeldet.
+    /** @type {Array<[number, number]>} */
     const belegt = [];
 
     for (const muster of MUSTER) {
@@ -261,7 +262,7 @@ export function pruefeDatei(dateiname, inhalt, allowlist) {
  * Scannt alle gestagten Dateien im Repository.
  *
  * @param {string} [repoRoot=process.cwd()]
- * @param {Set<string>} [allowlist=null]
+ * @param {Set<string> | null} [allowlist=null]
  * @returns {Array<{ datei: string, zeile: number, muster: string, auszug: string }>}
  */
 export function scanneStaged(repoRoot = process.cwd(), allowlist = null) {
@@ -279,7 +280,7 @@ export function scanneStaged(repoRoot = process.cwd(), allowlist = null) {
       maxBuffer: 50 * 1024 * 1024,
     });
   } catch (err) {
-    console.error('Fehler beim Ausführen von git diff --cached:', err.message);
+    console.error('Fehler beim Ausführen von git diff --cached:', err instanceof Error ? err.message : String(err));
     return [];
   }
 
@@ -315,7 +316,7 @@ export function scanneStaged(repoRoot = process.cwd(), allowlist = null) {
  * Scannt alle getrackten Dateien in der Arbeitskopie.
  *
  * @param {string} [repoRoot=process.cwd()]
- * @param {Set<string>} [allowlist=null]
+ * @param {Set<string> | null} [allowlist=null]
  * @returns {Array<{ datei: string, zeile: number, muster: string, auszug: string }>}
  */
 export function scanneAlle(repoRoot = process.cwd(), allowlist = null) {
@@ -328,7 +329,7 @@ export function scanneAlle(repoRoot = process.cwd(), allowlist = null) {
       maxBuffer: 50 * 1024 * 1024,
     });
   } catch (err) {
-    console.error('Fehler beim Ausführen von git ls-files:', err.message);
+    console.error('Fehler beim Ausführen von git ls-files:', err instanceof Error ? err.message : String(err));
     return [];
   }
 

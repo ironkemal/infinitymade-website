@@ -9,12 +9,29 @@
 // Diagnose (kein Nutzdatensatz), gilt nur fuer den laufenden Container, und wird
 // bei jedem Neustart ohnehin frisch von migrate.js geliefert.
 
+/**
+ * @typedef {{
+ *   status: 'ok' | 'veraltet' | 'abweichung' | string,
+ *   abweichungen: Array<{ name: string, soll: unknown, ist: unknown }>,
+ *   bis_version: string,
+ *   aktuelleVersion?: string | null
+ * }} SchemaZaehlerErgebnis
+ */
+
+/** @type {SchemaZaehlerErgebnis | null} */
 let schemaZaehlerErgebnis = null;
 
+/**
+ * @param {SchemaZaehlerErgebnis | null} ergebnis
+ * @returns {void}
+ */
 export function schemaZaehlerSetzen(ergebnis) {
   schemaZaehlerErgebnis = ergebnis;
 }
 
+/**
+ * @returns {SchemaZaehlerErgebnis | null}
+ */
 export function schemaZaehlerLesen() {
   return schemaZaehlerErgebnis;
 }

@@ -10,21 +10,33 @@
 
 const DATUM_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-function escapeHtml(s) {
-  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function escapeHtml(/** @type {any} */ s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => /** @type {string} */ ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] || c));
 }
 
-/** 31.12. des dritten Kalenderjahres nach dem Austrittsjahr; ohne gültiges Datum null. */
+/**
+ * 31.12. des dritten Kalenderjahres nach dem Austrittsjahr; ohne gültiges Datum null.
+ * @param {string | null | undefined} austrittAm
+ * @returns {string | null}
+ */
 export function loeschbarAb(austrittAm) {
   if (typeof austrittAm !== 'string' || !DATUM_RE.test(austrittAm.slice(0, 10))) return null;
   return `${Number(austrittAm.slice(0, 4)) + 3}-12-31`;
 }
 
-const datumDe = tag => (tag ? new Date(`${tag}T12:00:00Z`).toLocaleDateString('de-DE', { timeZone: 'UTC', day: '2-digit', month: '2-digit', year: 'numeric' }) : '');
+const datumDe = (/** @type {string | null | undefined} */ tag) => (tag ? new Date(`${tag}T12:00:00Z`).toLocaleDateString('de-DE', { timeZone: 'UTC', day: '2-digit', month: '2-digit', year: 'numeric' }) : '');
+
+/**
+ * @typedef {{ id: string, name: string, austritt: string | null, loeschbar: string | null, faellig: boolean, abwesenheiten: number, anstellung: boolean }} EhemaligerEintrag
+ */
 
 /**
  * Nur Ehemalige mit Daten zum Löschen; sortiert: fällige zuerst, dann nach Austritt.
- * @returns {Array<{id,name,austritt,loeschbar,faellig,abwesenheiten,anstellung}>}
+ * @param {Array<Record<string, any>> | null | undefined} profile
+ * @param {Array<Record<string, any>> | null | undefined} anstellungen
+ * @param {Array<Record<string, any>> | null | undefined} abwesenheiten
+ * @param {string} heute
+ * @returns {EhemaligerEintrag[]}
  */
 export function ehemaligeListe(profile, anstellungen, abwesenheiten, heute) {
   const anst = new Map((anstellungen || []).map(a => [a.employee_id, a]));
@@ -46,6 +58,10 @@ export function ehemaligeListe(profile, anstellungen, abwesenheiten, heute) {
     .sort((x, y) => Number(y.faellig) - Number(x.faellig) || String(x.austritt || '').localeCompare(String(y.austritt || '')));
 }
 
+/**
+ * @param {EhemaligerEintrag[]} liste
+ * @returns {string}
+ */
 export function ehemaligeHtml(liste) {
   if (!liste.length) return '';
   const zeilen = liste.map(e => `
@@ -66,7 +82,7 @@ export function ehemaligeHtml(liste) {
 
 /**
  * @param {HTMLElement} host
- * @param {object} deps supabase, ownerId, showToast, showConfirmModal, heute (für Tests)
+ * @param {any} [deps] supabase, ownerId, showToast, showConfirmModal, heute (für Tests)
  */
 export async function mountEhemalige(host, deps = {}) {
   if (!host) return;
@@ -75,7 +91,7 @@ export async function mountEhemalige(host, deps = {}) {
   const { data: profile, error } = await supabase.from('profiles').select('id,business_name,email')
     .eq('owner_id', ownerId).eq('role', 'employee').eq('is_active', false);
   if (error || !profile?.length) { host.innerHTML = ''; return; }
-  const ids = profile.map(p => p.id);
+  const ids = profile.map((/** @type {any} */ p) => p.id);
   const [anst, abw] = await Promise.all([
     supabase.from('mitarbeiter_anstellung').select('employee_id,austritt_am').eq('owner_id', ownerId).in('employee_id', ids),
     supabase.from('time_offs').select('employee_id').in('employee_id', ids),
@@ -83,22 +99,25 @@ export async function mountEhemalige(host, deps = {}) {
   if (anst.error || abw.error) { host.innerHTML = ''; return; }
   const liste = ehemaligeListe(profile, anst.data, abw.data, heute);
   host.innerHTML = ehemaligeHtml(liste);
-  host.querySelectorAll('.ehem-loeschen').forEach(knopf => knopf.addEventListener('click', async () => {
-    const e = liste.find(x => x.id === knopf.dataset.emp);
-    if (!e) return;
-    const vorzeitig = e.loeschbar && heute <= e.loeschbar;
-    const ok = showConfirmModal ? await showConfirmModal({
-      title: 'Daten endgültig löschen?',
-      message: `Abwesenheiten und Anstellung von ${e.name} werden gelöscht. Das lässt sich nicht rückgängig machen.${vorzeitig ? ' Die empfohlene Frist läuft noch – nur löschen, wenn Resturlaub abgerechnet ist.' : ''}`,
-      confirmText: 'Endgültig löschen', cancelText: 'Abbrechen', variant: 'danger',
-    }) : false;
-    if (!ok) return;
-    knopf.disabled = true;
-    const t = await supabase.from('time_offs').delete().eq('employee_id', e.id);
-    if (t.error) { showToast('Abwesenheiten konnten nicht gelöscht werden.', 'error'); knopf.disabled = false; return; }
-    const a = await supabase.from('mitarbeiter_anstellung').delete().eq('owner_id', ownerId).eq('employee_id', e.id);
-    if (a.error) { showToast('Anstellung konnte nicht gelöscht werden.', 'error'); knopf.disabled = false; return; }
-    showToast('Daten gelöscht ✓');
-    await mountEhemalige(host, deps);
-  }));
+  host.querySelectorAll('.ehem-loeschen').forEach(element => {
+    const knopf = /** @type {HTMLButtonElement} */ (element);
+    knopf.addEventListener('click', async () => {
+      const e = liste.find(x => x.id === knopf.dataset.emp);
+      if (!e) return;
+      const vorzeitig = e.loeschbar && heute <= e.loeschbar;
+      const ok = showConfirmModal ? await showConfirmModal({
+        title: 'Daten endgültig löschen?',
+        message: `Abwesenheiten und Anstellung von ${e.name} werden gelöscht. Das lässt sich nicht rückgängig machen.${vorzeitig ? ' Die empfohlene Frist läuft noch – nur löschen, wenn Resturlaub abgerechnet ist.' : ''}`,
+        confirmText: 'Endgültig löschen', cancelText: 'Abbrechen', variant: 'danger',
+      }) : false;
+      if (!ok) return;
+      knopf.disabled = true;
+      const t = await supabase.from('time_offs').delete().eq('employee_id', e.id);
+      if (t.error) { showToast('Abwesenheiten konnten nicht gelöscht werden.', 'error'); knopf.disabled = false; return; }
+      const a = await supabase.from('mitarbeiter_anstellung').delete().eq('owner_id', ownerId).eq('employee_id', e.id);
+      if (a.error) { showToast('Anstellung konnte nicht gelöscht werden.', 'error'); knopf.disabled = false; return; }
+      showToast('Daten gelöscht ✓');
+      await mountEhemalige(host, deps);
+    });
+  });
 }

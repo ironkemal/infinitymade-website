@@ -65,6 +65,7 @@ export const KOSTENTRAEGER_MOCK = Object.freeze([
 
 const MOCK_BY_IK = new Map(KOSTENTRAEGER_MOCK.map(k => [k.ik, k]));
 
+/** @param {string} krankenkasseIk */
 export function routeToDatenannahmestelle(krankenkasseIk) {
   const k = MOCK_BY_IK.get(krankenkasseIk);
   if (!k) {
@@ -100,6 +101,21 @@ export function routeToDatenannahmestelle(krankenkasseIk) {
 // ---------------------------------------------------------------------------
 const DEFAULT_DELIM = { component: ':', element: '+', release: '?', terminator: "'" };
 
+/** @typedef {{ component: string, element: string, release: string, terminator: string }} EdifactDelim */
+
+/**
+ * @typedef {object} KotrRecord
+ * @property {string | string[]} ik
+ * @property {string | string[]} name
+ * @property {string[][]} contacts
+ * @property {Array<{ art: string, plz: string, ort: string, strasse: string }>} anschriften
+ * @property {Array<Record<string, unknown>>} datenannahmestellen
+ * @property {string | string[]} [valid_from]
+ * @property {string | string[] | null} [valid_to]
+ * @property {string[]} [namensteile]
+ */
+
+/** @param {string} input @returns {EdifactDelim} */
 function parseUNAHeader(input) {
   if (!input.startsWith('UNA')) return DEFAULT_DELIM;
   return {
@@ -112,6 +128,11 @@ function parseUNAHeader(input) {
   };
 }
 
+/**
+ * @param {string} input
+ * @param {EdifactDelim} delim
+ * @returns {string[]}
+ */
 function splitSegments(input, delim) {
   // Split on terminator, honoring release escapes.
   const out = [];
@@ -129,13 +150,22 @@ function splitSegments(input, delim) {
   return out;
 }
 
+/**
+ * @param {string} line
+ * @param {EdifactDelim} delim
+ * @returns {{ tag: string, fields: Array<string | string[]> }}
+ */
 function parseSegment(line, delim) {
   const parts = line.split(delim.element);
-  const tag = parts.shift();
+  const tag = parts.shift() || '';
   const fields = parts.map(p => p.includes(delim.component) ? p.split(delim.component) : p);
   return { tag, fields };
 }
 
+/**
+ * @param {string} text
+ * @returns {Array<KotrRecord>}
+ */
 export function parseKostentraegerDatei(text) {
   const delim = parseUNAHeader(text);
   const rohkoerper = text.startsWith('UNA') ? text.slice(9) : text;
@@ -147,7 +177,9 @@ export function parseKostentraegerDatei(text) {
   const body = rohkoerper.replace(/\r\n|\r|\n/g, '');
   const segments = splitSegments(body, delim).map(s => parseSegment(s, delim));
 
+  /** @type {Array<KotrRecord>} */
   const records = [];
+  /** @type {KotrRecord | null} */
   let current = null;
   for (const seg of segments) {
     switch (seg.tag) {
@@ -258,6 +290,9 @@ export function waehlePostanschrift(anschriften) {
 // Sync helper: write mock dataset into Supabase `kostentraeger` table.
 // Real .kotr files will use the same shape via upsert.
 // ---------------------------------------------------------------------------
+/**
+ * @param {ReadonlyArray<{ ik: unknown, name: unknown, das_ik?: unknown, datenannahmestellen?: Array<{ das_ik?: unknown }>, payer_type?: string, region?: string | null, active?: boolean, valid_from?: unknown, valid_to?: unknown }>} [records]
+ */
 export function toUpsertRows(records = KOSTENTRAEGER_MOCK) {
   return records.map(r => ({
     ik: r.ik,

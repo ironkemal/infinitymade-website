@@ -16,17 +16,25 @@ import { aktualisiereArtefaktVersion } from './artefakt-version.js';
 
 const ERLAUBTE_STATUS = ['erstellt', 'heruntergeladen'];
 
+/**
+ * @param {any} db
+ * @param {string} name
+ * @param {Record<string, any>} args
+ */
 async function rpcSicher(db, name, args) {
   try {
     const r = await db.rpc(name, args);
     if (!r || r.error) return { ok: false, fehler: r?.error?.message || 'RPC fehlgeschlagen' };
     return { ok: true, data: r.data };
   } catch (e) {
-    return { ok: false, fehler: e?.message || 'RPC fehlgeschlagen' };
+    return { ok: false, fehler: (e instanceof Error ? e.message : null) || 'RPC fehlgeschlagen' };
   }
 }
 
-/** Claim -> Storage-Remove -> Abschluss. Wiederholbar (Claim liefert dasselbe Token). */
+/**
+ * Claim -> Storage-Remove -> Abschluss. Wiederholbar (Claim liefert dasselbe Token).
+ * @param {{ db: any, ownerId: string, registryId: string, pfad: string }} opts
+ */
 export async function musterAus({ db, ownerId, registryId, pfad }) {
   const claim = await rpcSicher(db, 'artefakt_retire_claim', { p_owner: ownerId, p_id: registryId });
   if (!claim.ok) return { ok: false, grund: 'claim', fehler: claim.fehler };
@@ -36,7 +44,7 @@ export async function musterAus({ db, ownerId, registryId, pfad }) {
   try {
     remove = await db.storage.from('abrechnungen').remove([pfad]);
   } catch (e) {
-    remove = { error: { message: e?.message || 'remove fehlgeschlagen' } };
+    remove = { error: { message: (e instanceof Error ? e.message : null) || 'remove fehlgeschlagen' } };
   }
   if (!remove || remove.error) {
     await rpcSicher(db, 'artefakt_retire_done', { p_owner: ownerId, p_id: registryId, p_token: token, p_error: remove?.error?.message || 'remove fehlgeschlagen' });
@@ -47,6 +55,7 @@ export async function musterAus({ db, ownerId, registryId, pfad }) {
   return { ok: true };
 }
 
+/** @param {PromiseLike<any>} query */
 async function einzeln(query) {
   const r = await query;
   if (!r || r.error) return { fehler: true, data: null };
@@ -54,7 +63,8 @@ async function einzeln(query) {
 }
 
 /**
- * @returns {Promise<{entfernt:boolean, grund?:string}>}  wirft nie
+ * @param {{ db: any, ownerId: string, abrechnungId: string, ladeHeader: () => Promise<any> }} opts
+ * @returns {Promise<{entfernt:boolean, grund?:string, wiederholbar?:boolean}>}  wirft nie
  */
 export async function entferneUnsignierteDta({ db, ownerId, abrechnungId, ladeHeader }) {
   try {
@@ -77,13 +87,14 @@ export async function entferneUnsignierteDta({ db, ownerId, abrechnungId, ladeHe
     const erg = await musterAus({ db, ownerId, registryId: dta.data.id, pfad: dtaPfad });
     return erg.ok ? { entfernt: true } : { entfernt: false, grund: erg.grund, wiederholbar: true };
   } catch (e) {
-    return { entfernt: false, grund: e?.status === 409 ? 'konflikt' : 'fehler' };
+    return { entfernt: false, grund: (/** @type {{ status?: number } | null} */ (e))?.status === 409 ? 'konflikt' : 'fehler' };
   }
 }
 
 /**
  * Wiederholt eine gescheiterte Ausmusterung. NUR fuer bereits beanspruchte (retire_pending) unsignierte
  * DTA-Versionen derselben Abrechnung — es wird nie eine neue Ausmusterung ausgeloest.
+ * @param {{ db: any, ownerId: string, abrechnungId: string, versionId: string }} opts
  * @returns {Promise<{ok:boolean, grund?:string}>}  wirft nie
  */
 export async function wiederholeAusmusterung({ db, ownerId, abrechnungId, versionId }) {
@@ -103,6 +114,8 @@ export async function wiederholeAusmusterung({ db, ownerId, abrechnungId, versio
  * Wann die unsignierte DTA nach der Signatur entfernt wird (Rechtsentscheidung 02.10.2026).
  * Standard: AN fuer Testdateien (Betriebsart test/leer — dort liegen keine Echtdaten); fuer Echt-/Erprobungsdateien nur mit
  * ARTEFAKT_DTA_ENTFERNEN=1. ARTEFAKT_DTA_ENTFERNEN=0 schaltet es komplett ab.
+ * @param {{ betriebsart?: string | null } | null | undefined} ab
+ * @param {Record<string, string | undefined>} [env]
  */
 export function dtaEntfernungAktiv(ab, env = process.env) {
   const flag = env.ARTEFAKT_DTA_ENTFERNEN;

@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { verbindungenListe } from './verbindungen.js';
 
+/** @param {Record<string, string | undefined>} env */
 const ziele = (env) => verbindungenListe(env).verbindungen.map((v) => v.ziel);
 
 test('Minimal-Box (eigene Adresse, tls internal, kein SMTP, KI aus): nur Updates + OS', () => {

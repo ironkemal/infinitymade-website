@@ -70,12 +70,22 @@ const AUSGABEN = [
   { datei: 'LK05Q226_KE0.txt', gueltigAb: '2025-08-26' },
 ];
 
+/**
+ * @param {{ datei: string, gueltigAb: string }} ausgabe
+ * @returns {Parameters<typeof planKostentraeger>[0]['aktiv'][number]}
+ */
 function parseDatei(ausgabe) {
-  return { ausgabe, records: parseKostentraegerDatei(leseKostentraegerDatei(join(ECHT_DIR, ausgabe.datei))) };
+  return {
+    ausgabe,
+    records: /** @type {Parameters<typeof planKostentraeger>[0]['aktiv'][number]['records']} */ (
+      /** @type {unknown} */ (parseKostentraegerDatei(leseKostentraegerDatei(join(ECHT_DIR, ausgabe.datei))))
+    ),
+  };
 }
 
 function envLesen() {
   const text = readFileSync(join(REPO, 'api-backend', '.env'), 'utf8');
+  /** @type {Record<string, string>} */
   const env = {};
   for (const line of text.split(/\r?\n/)) {
     const m = line.match(/^([A-Z_]+)=(.*)$/);
@@ -84,42 +94,72 @@ function envLesen() {
   return env;
 }
 
+/** @param {Record<string, string>} env */
 function restClient(env) {
   const base = `${env.SUPABASE_URL}/rest/v1`;
   const kopf = { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` };
   const json = { ...kopf, 'Content-Type': 'application/json' };
+  /**
+   * @param {Response} res
+   * @param {string} was
+   */
   const pruefen = async (res, was) => {
     if (!res.ok) { console.error(`${was} fehlgeschlagen: ${res.status} ${(await res.text()).slice(0, 500)}`); process.exit(1); }
   };
   return {
+    /**
+     * @param {string} tabelle
+     * @param {string} select
+     * @param {string} order
+     */
     async alle(tabelle, select, order) {
+      /** @type {any[]} */
       const out = [];
       for (let o = 0; ; o += 1000) {
         const res = await fetch(`${base}/${tabelle}?select=${select}&order=${order}&offset=${o}&limit=1000`, { headers: kopf });
         await pruefen(res, `Lesen ${tabelle}`);
-        const j = await res.json();
+        const j = /** @type {any[]} */ (await res.json());
         out.push(...j);
         if (j.length < 1000) break;
       }
       return out;
     },
+    /**
+     * @param {string} tabelle
+     * @param {Array<Record<string, unknown>>} zeilen
+     */
     async insert(tabelle, zeilen) {
       for (let i = 0; i < zeilen.length; i += 500) {
         const res = await fetch(`${base}/${tabelle}`, { method: 'POST', headers: { ...json, Prefer: 'return=minimal' }, body: JSON.stringify(zeilen.slice(i, i + 500)) });
         await pruefen(res, `INSERT ${tabelle} ${i}`);
       }
     },
+    /**
+     * @param {string} tabelle
+     * @param {Array<Record<string, unknown>>} zeilen
+     * @param {string} onConflict
+     */
     async upsert(tabelle, zeilen, onConflict) {
       for (let i = 0; i < zeilen.length; i += 500) {
         const res = await fetch(`${base}/${tabelle}?on_conflict=${onConflict}`, { method: 'POST', headers: { ...json, Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(zeilen.slice(i, i + 500)) });
         await pruefen(res, `UPSERT ${tabelle} ${i}`);
       }
     },
+    /**
+     * @param {string} tabelle
+     * @param {string} ik
+     * @param {Record<string, unknown>} felder
+     */
     async patch(tabelle, ik, felder) {
       const res = await fetch(`${base}/${tabelle}?ik=eq.${encodeURIComponent(ik)}`, { method: 'PATCH', headers: { ...json, Prefer: 'return=minimal' }, body: JSON.stringify({ ...felder, updated_at: new Date().toISOString() }) });
       await pruefen(res, `PATCH ${tabelle} ${ik}`);
     },
     // Gültigkeitsende setzen (kein DELETE mehr, O-139): gleicher Wert je Aufruf, IDs in Blöcken.
+    /**
+     * @param {string} tabelle
+     * @param {Array<string | number>} ids
+     * @param {string} validTo
+     */
     async schliessen(tabelle, ids, validTo) {
       for (let i = 0; i < ids.length; i += 100) {
         const res = await fetch(`${base}/${tabelle}?id=in.(${ids.slice(i, i + 100).join(',')})`, { method: 'PATCH', headers: { ...json, Prefer: 'return=minimal' }, body: JSON.stringify({ valid_to: validTo }) });
@@ -187,10 +227,16 @@ async function main() {
   // Erst neue/aktualisierte/wieder geöffnete Zeilen, dann veraltete beenden: kurzzeitig zwei Stände
   // ist besser als kurzzeitig keiner. INSERT und UPDATE getrennt — die Payloads haben verschiedene
   // Spalten (valid_from nur beim INSERT, valid_to nur beim Wiederöffnen).
+  /**
+   * @param {string} tabelle
+   * @param {ReturnType<typeof planKind>} plan
+   * @param {readonly string[]} schl
+   */
   const schreibeKind = async (tabelle, plan, schl) => {
     if (plan.inserts.length) await db.insert(tabelle, plan.inserts);
     if (plan.updates.length) await db.upsert(tabelle, plan.updates, schl.join(','));
     if (plan.reopens.length) await db.upsert(tabelle, plan.reopens, schl.join(','));
+    /** @type {Map<string, Array<string | number>>} */
     const nachBis = new Map();
     for (const c of plan.closes) nachBis.set(c.valid_to, [...(nachBis.get(c.valid_to) || []), c.id]);
     for (const [bis, ids] of nachBis) await db.schliessen(tabelle, ids, bis);

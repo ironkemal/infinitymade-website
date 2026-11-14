@@ -8,42 +8,56 @@ import {
 } from './artefakt-version.js';
 
 class FakeDB {
+  /** @param {Record<string, any> | null} initialRow */
   constructor(initialRow) {
+    /** @type {any} */
     this.currentRow = initialRow ? { ...initialRow } : null;
+    /** @type {any[]} */
     this.calls = [];
+    /** @type {Error | null} */
     this.error = null;
+    /** @type {any[] | null} */
     this.forcedResult = null;
     this.versionTick = 1;
   }
 
+  /** @param {string} table */
   from(table) {
     this.calls.push({ method: 'from', table });
     const self = this;
+    /** @type {Record<string, any> | null} */
     let updatePatch = null;
+    /** @type {Array<{ type: string, col: string, val: any }>} */
     const filters = [];
+    /** @type {string | null} */
     let selectFields = null;
 
     const builder = {
+      /** @param {Record<string, any>} patch */
       update(patch) {
         self.calls.push({ method: 'update', patch });
         updatePatch = patch;
         return builder;
       },
+      /** @param {string} col @param {any} val */
       eq(col, val) {
         self.calls.push({ method: 'eq', col, val });
         filters.push({ type: 'eq', col, val });
         return builder;
       },
+      /** @param {string} col @param {any} val */
       is(col, val) {
         self.calls.push({ method: 'is', col, val });
         filters.push({ type: 'is', col, val });
         return builder;
       },
+      /** @param {string} fields */
       select(fields) {
         self.calls.push({ method: 'select', fields });
         selectFields = fields;
         return builder;
       },
+      /** @param {any} onFulfilled @param {any} [onRejected] */
       then(onFulfilled, onRejected) {
         const promise = (async () => {
           await Promise.resolve();
@@ -70,6 +84,10 @@ class FakeDB {
   }
 }
 
+/**
+ * @param {Record<string, any>} [overrides]
+ * @returns {any}
+ */
 function createSnapshot(overrides = {}) {
   const fields = ABRECHNUNG_VERSION_FELDER.split(',').map((f) => f.trim());
   const base = Object.fromEntries(fields.map((f) => [f, null]));
@@ -127,7 +145,7 @@ test('two concurrent operations with same before result in exact one winner and 
   assert.strictEqual(fulfilled.length, 1);
   assert.strictEqual(rejected.length, 1);
 
-  const err = rejected[0].reason;
+  const err = /** @type {any} */ (rejected[0].reason);
   assert.strictEqual(err.status ?? err.statusCode, 409);
   assert.strictEqual(err.code, 'ABRECHNUNG_VERSION_CONFLICT');
 });
@@ -167,13 +185,13 @@ test('stale status, signaturepath, hash, and encgroup individually yield 409', a
     const db = new FakeDB(c.current);
     await assert.rejects(
       aktualisiereArtefaktVersion({ db, vorher: c.vorher, patch: { status: 'heruntergeladen' } }),
-      (err) => (err.status ?? err.statusCode) === 409 && err.code === 'ABRECHNUNG_VERSION_CONFLICT'
+      (/** @type {any} */ err) => (err.status ?? err.statusCode) === 409 && err.code === 'ABRECHNUNG_VERSION_CONFLICT'
     );
   }
 
   assert.throws(
     () => pruefeEntwurfsVersion(createSnapshot({ signed_storage_path: 'sig/1.p7m', signed_sha256: null })),
-    (err) => (err.status ?? err.statusCode) === 409 && err.code === 'ABRECHNUNG_VERSION_CONFLICT'
+    (/** @type {any} */ err) => (err.status ?? err.statusCode) === 409 && err.code === 'ABRECHNUNG_VERSION_CONFLICT'
   );
 });
 
@@ -190,7 +208,7 @@ test('missing snapshot field or updated_at rejects BEFORE DB updates', async () 
     const db = new FakeDB(createSnapshot());
     await assert.rejects(
       aktualisiereArtefaktVersion({ db, vorher: badSnap, patch: { status: 'heruntergeladen' } }),
-      (err) => (err.status ?? err.statusCode) === 409 && err.code === 'ABRECHNUNG_VERSION_CONFLICT'
+      (/** @type {any} */ err) => (err.status ?? err.statusCode) === 409 && err.code === 'ABRECHNUNG_VERSION_CONFLICT'
     );
     assert.strictEqual(db.calls.length, 0, 'DB must not be called when snapshot is invalid');
   }
@@ -208,13 +226,13 @@ test('terminal status or completed workflow rejects with 409', async () => {
   for (const snap of terminalCases) {
     assert.throws(
       () => pruefeEntwurfsVersion(snap),
-      (err) => (err.status ?? err.statusCode) === 409 && err.code === 'ABRECHNUNG_VERSION_CONFLICT'
+      (/** @type {any} */ err) => (err.status ?? err.statusCode) === 409 && err.code === 'ABRECHNUNG_VERSION_CONFLICT'
     );
 
     const db = new FakeDB(snap);
     await assert.rejects(
       aktualisiereArtefaktVersion({ db, vorher: snap, patch: {} }),
-      (err) => (err.status ?? err.statusCode) === 409 && err.code === 'ABRECHNUNG_VERSION_CONFLICT'
+      (/** @type {any} */ err) => (err.status ?? err.statusCode) === 409 && err.code === 'ABRECHNUNG_VERSION_CONFLICT'
     );
     assert.strictEqual(db.calls.length, 0);
   }
@@ -227,7 +245,7 @@ test('DB error throws 500 with ARTEFAKT_PERSISTENZ_FEHLER', async () => {
 
   await assert.rejects(
     aktualisiereArtefaktVersion({ db, vorher: snap, patch: { status: 'heruntergeladen' } }),
-    (err) => (err.status ?? err.statusCode) === 500 && err.code === 'ARTEFAKT_PERSISTENZ_FEHLER'
+    (/** @type {any} */ err) => (err.status ?? err.statusCode) === 500 && err.code === 'ARTEFAKT_PERSISTENZ_FEHLER'
   );
 });
 
@@ -238,21 +256,21 @@ test('zero, multiple, or malformed returned rows fail closed', async () => {
   dbZero.forcedResult = [];
   await assert.rejects(
     aktualisiereArtefaktVersion({ db: dbZero, vorher: snap, patch: { status: 'heruntergeladen' } }),
-    (err) => (err.status ?? err.statusCode) === 409 && err.code === 'ABRECHNUNG_VERSION_CONFLICT'
+    (/** @type {any} */ err) => (err.status ?? err.statusCode) === 409 && err.code === 'ABRECHNUNG_VERSION_CONFLICT'
   );
 
   const dbMultiple = new FakeDB(snap);
   dbMultiple.forcedResult = [snap, snap];
   await assert.rejects(
     aktualisiereArtefaktVersion({ db: dbMultiple, vorher: snap, patch: { status: 'heruntergeladen' } }),
-    (err) => (err.status ?? err.statusCode) === 409 && err.code === 'ABRECHNUNG_VERSION_CONFLICT'
+    (/** @type {any} */ err) => (err.status ?? err.statusCode) === 409 && err.code === 'ABRECHNUNG_VERSION_CONFLICT'
   );
 
   const dbMalformed = new FakeDB(snap);
   dbMalformed.forcedResult = [{ id: snap.id, status: 'heruntergeladen' }];
   await assert.rejects(
     aktualisiereArtefaktVersion({ db: dbMalformed, vorher: snap, patch: { status: 'heruntergeladen' } }),
-    (err) => (err.status ?? err.statusCode) === 500 && err.code === 'ARTEFAKT_PERSISTENZ_FEHLER'
+    (/** @type {any} */ err) => (err.status ?? err.statusCode) === 500 && err.code === 'ARTEFAKT_PERSISTENZ_FEHLER'
   );
 });
 
@@ -271,7 +289,7 @@ test('artefaktVersuchPfad produces unique collision-free paths and rejects path 
   const encPath = artefaktVersuchPfad({ ownerId: 'own-001', abrechnungId: 'abr-001', kind: 'encrypted' });
   assert.ok(encPath.endsWith('/payload.dta.enc.p7m'));
 
-  assert.throws(() => artefaktVersuchPfad({ ownerId: 'own-001', abrechnungId: 'abr-001', kind: 'invalid' }));
+  assert.throws(() => artefaktVersuchPfad(/** @type {any} */ ({ ownerId: 'own-001', abrechnungId: 'abr-001', kind: 'invalid' })));
 
   const unsafeInputs = [
     { ownerId: '../evil', abrechnungId: 'abr-001' },
@@ -305,7 +323,7 @@ test('old version cannot clear newer encryption state', async () => {
       vorher: oldVorher,
       patch: { encrypted_storage_path: null, encrypted_sha256: null },
     }),
-    (err) => (err.status ?? err.statusCode) === 409 && err.code === 'ABRECHNUNG_VERSION_CONFLICT'
+    (/** @type {any} */ err) => (err.status ?? err.statusCode) === 409 && err.code === 'ABRECHNUNG_VERSION_CONFLICT'
   );
 
   assert.strictEqual(db.currentRow.encrypted_storage_path, encGroup.encrypted_storage_path);

@@ -14,6 +14,11 @@ const OID_ID_DATA = '1.2.840.113549.1.7.1';
  * Führt standardisierte HTTP-Statuscodes und maschinenlesbare Fehlercodes mit.
  */
 export class DtaVerificationError extends Error {
+  /**
+   * @param {string} message
+   * @param {number} [status=500]
+   * @param {string} [code='DTA_VERIFICATION_ERROR']
+   */
   constructor(message, status = 500, code = 'DTA_VERIFICATION_ERROR') {
     super(message);
     this.name = 'DtaVerificationError';
@@ -25,6 +30,9 @@ export class DtaVerificationError extends Error {
 
 /**
  * Validiert strikt, ob ein gegebener Hash genau 64 Hexadezimalzeichen umfasst.
+ * @param {unknown} hash
+ * @param {string} fieldName
+ * @returns {asserts hash is string}
  */
 function validateSha256Hex(hash, fieldName) {
   if (typeof hash !== 'string' || !SHA256_HEX_REGEX.test(hash)) {
@@ -43,6 +51,8 @@ function validateSha256Hex(hash, fieldName) {
 
 /**
  * Validiert den Speicherpfad gegen Mandanten-Isolation und Path-Traversal-Muster.
+ * @param {unknown} path
+ * @param {unknown} ownerId
  */
 function validateTenantStoragePath(path, ownerId) {
   if (typeof path !== 'string' || path.length === 0) {
@@ -79,6 +89,8 @@ function validateTenantStoragePath(path, ownerId) {
 
 /**
  * Wandelt Datenobjekte aus dem Speicher zuverlässig in einen Node.js Buffer um.
+ * @param {unknown} data
+ * @returns {Promise<Buffer>}
  */
 async function toBuffer(data) {
   if (Buffer.isBuffer(data)) {
@@ -90,7 +102,7 @@ async function toBuffer(data) {
   if (data instanceof ArrayBuffer) {
     return Buffer.from(data);
   }
-  if (data && typeof data.arrayBuffer === 'function') {
+  if (data && typeof data === 'object' && 'arrayBuffer' in data && typeof data.arrayBuffer === 'function') {
     const ab = await data.arrayBuffer();
     return Buffer.from(ab);
   }
@@ -99,15 +111,24 @@ async function toBuffer(data) {
 
 /**
  * Prüft, ob ein Fehler der Speicherkomponente einem exakten HTTP 404 Not Found entspricht.
+ * @param {unknown} error
+ * @returns {boolean}
  */
 function isExact404(error) {
-  if (!error) return false;
-  const status = error.status ?? error.statusCode;
+  if (!error || typeof error !== 'object') return false;
+  const errObj = /** @type {{ status?: unknown, statusCode?: unknown }} */ (error);
+  const status = errObj.status ?? errObj.statusCode;
   return status === 404 || status === '404';
 }
 
 /**
+ * @typedef {{ storage: { from: (bucket: string) => { download: (path: string) => Promise<unknown> } } }} DtaStorageClient
+ */
+
+/**
  * Lädt ein Objekt aus dem Speicher herunter und kapselt Provider-Ausnahmen ab.
+ * @param {DtaStorageClient} db
+ * @param {string} path
  */
 async function downloadBlob(db, path) {
   let response;
@@ -119,12 +140,17 @@ async function downloadBlob(db, path) {
   if (!response || typeof response !== 'object' || (!('data' in response) && !('error' in response))) {
     throw new DtaVerificationError('Fehler beim Speicherzugriff', 500, 'STORAGE_DOWNLOAD_FAILED');
   }
-  return { data: response.data, error: response.error };
+  const resp = /** @type {{ data?: unknown, error?: unknown }} */ (response);
+  return { data: resp.data ?? null, error: resp.error ?? null };
 }
 
 /**
  * Verifiziert eine signierte DTA-Datei (PKCS#7 / CMS SignedData) kryptografisch und extrahiert
  * die eingebetteten Originaldaten nach striktem SHA-256-Abgleich.
+ * @param {object} opts
+ * @param {Buffer | Uint8Array} opts.signedBytes
+ * @param {string} opts.expectedDtaSha256
+ * @param {string} [opts.expectedSignedSha256]
  */
 export async function pruefeSignedDta({ signedBytes, expectedDtaSha256, expectedSignedSha256 }) {
   const buf = Buffer.isBuffer(signedBytes)
@@ -155,7 +181,8 @@ export async function pruefeSignedDta({ signedBytes, expectedDtaSha256, expected
     }
   }
 
-  const arrayBuffer = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+  const rawAb = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+  const arrayBuffer = rawAb instanceof ArrayBuffer ? rawAb : new Uint8Array(buf).buffer;
 
   let ber;
   try {
@@ -244,8 +271,8 @@ export async function pruefeSignedDta({ signedBytes, expectedDtaSha256, expected
 
   const cryptoEngine = new pkijs.CryptoEngine({
     name: 'node',
-    crypto: webcrypto,
-    subtle: webcrypto.subtle,
+    crypto: /** @type {Crypto} */ (/** @type {unknown} */ (webcrypto)),
+    subtle: /** @type {SubtleCrypto} */ (/** @type {unknown} */ (webcrypto.subtle)),
   });
 
   /**
@@ -287,6 +314,9 @@ export async function pruefeSignedDta({ signedBytes, expectedDtaSha256, expected
  * Lädt die Original-DTA-Bytes für eine Abrechnung.
  * Ruft primär storage_path ab und weicht ausschließlich bei exaktem 404
  * (oder fehlendem storage_path) auf den verifizierten signed_storage_path aus.
+ * @param {object} opts
+ * @param {DtaStorageClient} opts.db
+ * @param {{ owner_id?: string | null, storage_path?: string | null, signed_storage_path?: string | null, dta_sha256?: string | null, signed_sha256?: string | null }} opts.abrechnung
  */
 export async function ladeDtaOriginalbytes({ db, abrechnung }) {
   if (!abrechnung || typeof abrechnung !== 'object') {

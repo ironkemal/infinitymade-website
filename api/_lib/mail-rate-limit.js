@@ -9,6 +9,10 @@ export function createMailRateLimiter({ limit = 5, windowMs = 600_000, maxEntrie
     throw new TypeError('Ungültige Drosselungsgrenzen');
   }
   const buckets = new Map();
+  /**
+   * @param {import('./auth.js').VercelRequest} req
+   * @param {string} scope
+   */
   return function consume(req, scope) {
     if (!['contact', 'demo-create', 'demo-reschedule'].includes(scope)) throw new TypeError('Unbekannter Mailpfad');
     const current = now();
@@ -39,6 +43,11 @@ export function createMailRateLimiter({ limit = 5, windowMs = 600_000, maxEntrie
 
 const consume = createMailRateLimiter();
 
+/**
+ * @param {import('./auth.js').VercelRequest} req
+ * @param {import('./auth.js').VercelResponse} res
+ * @param {string} scope
+ */
 export function allowMailRequest(req, res, scope) {
   const decision = consume(req, scope);
   if (decision.allowed) return true;

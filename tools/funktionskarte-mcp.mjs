@@ -140,7 +140,21 @@ export const araclar = [
 ];
 
 /**
+ * @typedef {{ name: string, kind?: string, lang?: string, file: string, start: number, end: number, lines: number, spiegelHinweis?: string | null, tables?: string[], rpcs?: string[], writes?: string[], endpoints?: string[], storage?: string[], domIds?: string[], domRender?: boolean, calls?: string[], calledBy?: string[], modules?: string[], gemeinsam?: boolean, uiPfad?: string[] }} FunktionsEintrag
+ * @typedef {{ tabelle: string, anzahl: number, pfade?: Array<{ leitfunktion: string, funktionen?: Array<{ name: string, file: string, start: number, writes?: string[] }> }> }} KopieKandidat
+ * @typedef {{ erzeugt?: string, dateien?: number, funktionen?: number, eintraege?: FunktionsEintrag[], kopieKandidaten?: KopieKandidat[] }} IndexVerisi
+ * @typedef {{ name: string, spalten?: number, status?: string, warum?: string, [key: string]: any }} NutzungTabelle
+ * @typedef {{ erzeugt?: string, anzahl?: number, tabellen?: NutzungTabelle[] }} NutzungVerisi
+ * @typedef {{ okuyan: FunktionsEintrag[], yazan: Array<{ eintrag: FunktionsEintrag, op: string, rawWrite: string }> }} TabloHaritaGiris
+ * @typedef {{ kok: string, indexPfad: string, nutzungPfad: string, indexMtime: number, nutzungMtime: number, indexVerisi: IndexVerisi | null, nutzungVerisi: NutzungVerisi | null, isimHaritasi: Map<string, FunktionsEintrag[]>, dosyaHaritasi: Map<string, FunktionsEintrag[]>, domHaritasi: Map<string, FunktionsEintrag[]>, tabloHaritasi: Map<string, TabloHaritaGiris> }} McpDurum
+ * @typedef {{ jsonrpc?: string, id?: string | number | null, method?: string, params?: Record<string, any> }} JsonRpcMesaj
+ * @typedef {{ jsonrpc: string, id: string | number | null, result?: any, error?: { code: number, message: string } }} JsonRpcYanit
+ */
+
+/**
  * Sunucu durumunu başlatır.
+ * @param {string} [kok]
+ * @returns {McpDurum}
  */
 export function durumOlustur(kok = VARSAYILAN_KOK) {
   return {
@@ -160,6 +174,7 @@ export function durumOlustur(kok = VARSAYILAN_KOK) {
 
 /**
  * INDEX.json ve NUTZUNG.json verilerini mtime kontrolüyle tembel (lazy) yükler.
+ * @param {McpDurum} durum
  */
 export function verileriYukle(durum) {
   // 1. INDEX.json kontrolü
@@ -172,7 +187,8 @@ export function verileriYukle(durum) {
         indeksleriKur(durum);
       }
     } catch (e) {
-      console.error(`[funktionskarte-mcp] INDEX.json okuma hatası: ${e.message}`);
+      const errMsg = e instanceof Error ? e.message : String(e);
+      console.error(`[funktionskarte-mcp] INDEX.json okuma hatası: ${errMsg}`);
     }
   } else {
     durum.indexVerisi = null;
@@ -192,7 +208,8 @@ export function verileriYukle(durum) {
         durum.nutzungMtime = st.mtimeMs;
       }
     } catch (e) {
-      console.error(`[funktionskarte-mcp] NUTZUNG.json okuma hatası: ${e.message}`);
+      const errMsg = e instanceof Error ? e.message : String(e);
+      console.error(`[funktionskarte-mcp] NUTZUNG.json okuma hatası: ${errMsg}`);
     }
   } else {
     durum.nutzungVerisi = null;
@@ -202,6 +219,7 @@ export function verileriYukle(durum) {
 
 /**
  * Hızlı arama için Map indekslerini oluşturur.
+ * @param {McpDurum} durum
  */
 function indeksleriKur(durum) {
   durum.isimHaritasi.clear();
@@ -281,6 +299,10 @@ function indeksleriKur(durum) {
 
 // ── Araç Çalıştırıcıları ─────────────────────────────────────────────────────
 
+/**
+ * @param {McpDurum} durum
+ * @param {Record<string, any>} args
+ */
 function calistirFonksiyonBul(durum, args) {
   const { name, ara, dosya, limit: rawLimit } = args;
   const limit = Math.max(1, Math.min(Number(rawLimit) || 30, 200));
@@ -372,6 +394,10 @@ function calistirFonksiyonBul(durum, args) {
   };
 }
 
+/**
+ * @param {McpDurum} durum
+ * @param {Record<string, any>} args
+ */
 function calistirFonksiyonDetay(durum, args) {
   const { name, dosya } = args;
   if (!name) throw new Error('name parametresi zorunludur');
@@ -392,6 +418,12 @@ function calistirFonksiyonDetay(durum, args) {
 
 // Cevap boyu sınırı (06.11.2026): sunucunun amacı token tasarrufu. Derinlik 4'te
 // çağrı ağacı 120 KB'a, dashboard.js fonksiyon listesi 40 KB'a çıkıyordu.
+/**
+ * @template T
+ * @param {T[]} liste
+ * @param {unknown} rawLimit
+ * @param {number} varsayilan
+ */
 function kesVeIsaretle(liste, rawLimit, varsayilan) {
   const limit = Math.max(1, Math.min(Number(rawLimit) || varsayilan, 2000));
   return liste.length > limit
@@ -399,6 +431,10 @@ function kesVeIsaretle(liste, rawLimit, varsayilan) {
     : { liste, ek: {} };
 }
 
+/**
+ * @param {McpDurum} durum
+ * @param {Record<string, any>} args
+ */
 function calistirCagiranlar(durum, args) {
   const { name, derinlik: rawDerinlik } = args;
   if (!name) throw new Error('name parametresi zorunludur');
@@ -446,6 +482,10 @@ function calistirCagiranlar(durum, args) {
   };
 }
 
+/**
+ * @param {McpDurum} durum
+ * @param {Record<string, any>} args
+ */
 function calistirCagirdiklari(durum, args) {
   const { name, derinlik: rawDerinlik } = args;
   if (!name) throw new Error('name parametresi zorunludur');
@@ -491,6 +531,10 @@ function calistirCagirdiklari(durum, args) {
   };
 }
 
+/**
+ * @param {McpDurum} durum
+ * @param {Record<string, any>} args
+ */
 function calistirTabloKullanan(durum, args) {
   const { tablo } = args;
   if (!tablo) throw new Error('tablo parametresi zorunludur');
@@ -526,6 +570,11 @@ function calistirTabloKullanan(durum, args) {
   );
 
   const limit = Number.isInteger(args.limit) && args.limit > 0 ? args.limit : 15;
+  /**
+   * @template T
+   * @param {T[]} a
+   * @returns {T[]}
+   */
   const kes = (a) => args.tam ? a : a.slice(0, limit);
 
   return {
@@ -539,6 +588,10 @@ function calistirTabloKullanan(durum, args) {
   };
 }
 
+/**
+ * @param {McpDurum} durum
+ * @param {Record<string, any>} args
+ */
 function calistirDomHedefi(durum, args) {
   const { id } = args;
   if (!id) throw new Error('id parametresi zorunludur');
@@ -562,6 +615,10 @@ function calistirDomHedefi(durum, args) {
   };
 }
 
+/**
+ * @param {McpDurum} durum
+ * @param {Record<string, any>} args
+ */
 function calistirKopyaAdaylari(durum, args) {
   const { tablo, limit: rawLimit } = args;
   const limit = Math.max(1, Math.min(Number(rawLimit) || 3, 100));
@@ -591,6 +648,10 @@ function calistirKopyaAdaylari(durum, args) {
   };
 }
 
+/**
+ * @param {McpDurum} durum
+ * @param {Record<string, any>} args
+ */
 function calistirDosyaFonksiyonlari(durum, args) {
   const { dosya } = args;
   if (!dosya) throw new Error('dosya parametresi zorunludur');
@@ -622,6 +683,9 @@ function calistirDosyaFonksiyonlari(durum, args) {
   };
 }
 
+/**
+ * @param {McpDurum} durum
+ */
 function calistirHaritaDurumu(durum) {
   return {
     erzeugt: durum.indexVerisi?.erzeugt || null,
@@ -637,6 +701,9 @@ function calistirHaritaDurumu(durum) {
 
 /**
  * Tek bir JSON-RPC mesajını işler ve gerekiyorsa cevabı döner.
+ * @param {JsonRpcMesaj | null | undefined} mesaj
+ * @param {McpDurum} durum
+ * @returns {JsonRpcYanit | null}
  */
 export function isle(mesaj, durum) {
   if (!mesaj || typeof mesaj !== 'object') return null;
@@ -756,6 +823,7 @@ export function isle(mesaj, durum) {
         }
       };
     } catch (err) {
+      const errObj = /** @type {{ message?: string } | null | undefined} */ (err);
       return {
         jsonrpc: '2.0',
         id,
@@ -763,7 +831,7 @@ export function isle(mesaj, durum) {
           content: [
             {
               type: 'text',
-              text: err?.message || String(err)
+              text: errObj?.message || String(err)
             }
           ],
           isError: true
@@ -785,6 +853,7 @@ export function isle(mesaj, durum) {
 
 /**
  * Satır bazlı stdio JSON-RPC döngüsünü başlatır.
+ * @param {McpDurum} durum
  */
 export function baslat(durum) {
   const rl = createInterface({
@@ -800,12 +869,13 @@ export function baslat(durum) {
     try {
       mesaj = JSON.parse(trimmed);
     } catch (parseErr) {
+      const pErr = /** @type {{ message?: string }} */ (parseErr);
       process.stdout.write(JSON.stringify({
         jsonrpc: '2.0',
         id: null,
         error: {
           code: -32700,
-          message: `Parse error: ${parseErr.message}`
+          message: `Parse error: ${pErr.message}`
         }
       }) + '\n');
       return;
@@ -817,7 +887,8 @@ export function baslat(durum) {
         process.stdout.write(JSON.stringify(yanit) + '\n');
       }
     } catch (err) {
-      console.error(`[funktionskarte-mcp] Beklenmeyen hata: ${err.stack || err.message}`);
+      const uErr = /** @type {{ stack?: string, message?: string }} */ (err);
+      console.error(`[funktionskarte-mcp] Beklenmeyen hata: ${uErr.stack || uErr.message}`);
     }
   });
 

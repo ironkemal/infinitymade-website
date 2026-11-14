@@ -14,6 +14,14 @@
 //     Sie greift also ausschliesslich ueber user_id. Ohne user_id waere jeder
 //     Termin unsichtbar fuer die Sperre.
 
+/**
+ * @param {{
+ *   supabase: any,
+ *   berlinLocalToUTC: (dateStr: string, timeStr: string) => Date,
+ *   generateRecurringDates: (startDate: string, recurrence: string, count: number) => string[],
+ *   getAvailableSlots: (...args: any[]) => Promise<any>,
+ * }} deps
+ */
 export function createBookingsFromRequestFactory({
   supabase,
   berlinLocalToUTC,
@@ -23,23 +31,38 @@ export function createBookingsFromRequestFactory({
   // Ist die Wunschzeit an diesem Tag beim Therapeuten wirklich frei?
   // Die DB-Sperre allein reicht nicht: ein laut Sperre "freier" Slot kann trotzdem
   // ein Feiertag, ein Urlaubstag oder ausserhalb der Arbeitszeiten liegen.
+  /**
+   * @param {string} empId
+   * @param {string} dateStr
+   * @param {string} timeStr
+   * @param {number} duration
+   * @param {string | null} [serviceId]
+   */
   async function slotIstFrei(empId, dateStr, timeStr, duration, serviceId) {
     // `undefined` = Standard-Raster aus getAvailableSlots (SLOT_STEP_MINUTES).
     // Mit dem alten festen 30er-Raster galt eine Wunschzeit wie 09:45 faelschlich als belegt.
     const avail = await getAvailableSlots(empId, dateStr, duration, null, 0, undefined, serviceId || null);
     if (avail.reason) return false;
-    const slotTimes = (avail.slots || []).map(s => (typeof s === 'string' ? s : s.time || s.start || '').substring(0, 5));
+    const slotTimes = (avail.slots || []).map((/** @type {any} */ s) => (typeof s === 'string' ? s : s.time || s.start || '').substring(0, 5));
     return slotTimes.includes(timeStr.substring(0, 5));
   }
 
+  /**
+   * @param {any} bookReq
+   * @param {string} ownerId
+   * @param {string} empId
+   * @param {string} patName
+   * @param {{ leadId?: string | null, commit?: (rows: any[], result: any) => Promise<any> }} [options]
+   */
   return async function createBookingsFromRequest(bookReq, ownerId, empId, patName, options = {}) {
     // Nur die manuelle Bestätigung übergibt commit: vor dem RPC werden keine
     // Termine geschrieben. Die bisherigen Auto-/Alternativwege bleiben unverändert.
+    /** @type {any[]} */
     const plannedRows = [];
     // Patientenakte (lead-aus-anfrage.js) an jeden Termin — ohne sie fehlte der
     // Patient unter „Patienten" (canli-test 21.10.2026). NULL bleibt erlaubt.
-    const mitAkte = (row) => (options.leadId ? { ...row, lead_id: options.leadId } : row);
-    const insertBooking = async (zeile) => {
+    const mitAkte = (/** @type {any} */ row) => (options.leadId ? { ...row, lead_id: options.leadId } : row);
+    const insertBooking = async (/** @type {any} */ zeile) => {
       const row = mitAkte(zeile);
       if (options.commit) {
         plannedRows.push(row);

@@ -47,7 +47,7 @@ const ALLE_REITER = ['verlauf', 'notes', 'anamnese', 'einwilligung', 'ueberweisu
  * @returns {{sichtbar: Record<string,boolean>, rezepteText: string}}
  */
 export function akteReiterPlan({ isPhysio, isPodo }) {
-  const sichtbar = {};
+  const sichtbar = /** @type {Record<string, boolean>} */ ({});
   for (const t of ALLE_REITER) sichtbar[t] = true;
   if (isPodo) {
     // Nur die sechs. Alles andere entfällt als Reiter (Panels ziehen um, s. Kopf).
@@ -88,7 +88,7 @@ const PODO_ABSCHNITTE = ['pdVerlaufNotizenBox', 'pdVerlaufTermineBox', 'pdDokEin
 export function setzeAkteReiter(f, doc = document) {
   const plan = akteReiterPlan(f);
   for (const tab of ALLE_REITER) {
-    const btn = doc.querySelector(`.pd-tab[data-tab="${tab}"]`);
+    const btn = /** @type {HTMLElement|null} */ (doc.querySelector(`.pd-tab[data-tab="${tab}"]`));
     if (btn) btn.style.display = plan.sichtbar[tab] ? '' : 'none';
   }
   const rez = doc.querySelector('.pd-tab[data-tab="rezepte"]');
@@ -139,7 +139,7 @@ export function setzeAkteReiter(f, doc = document) {
  * @param {object} deps
  * @param {()=>?string} deps.leadId               aktuell geöffneter Patient
  * @param {(id:string)=>void} deps.closeModal
- * @param {(startStr:?string)=>Promise} deps.prefillBookingModal   dashboard.js — öffnet die Terminmaske leer
+ * @param {(startStr:?string)=>Promise<any>} deps.prefillBookingModal   dashboard.js — öffnet die Terminmaske leer
  * @param {(leadId:?string)=>void} deps.oeffneAnlegenWahl          Rezept-Anlegen-Wahl (Scan / Foto / von Hand)
  * @param {Document} [doc]
  */
@@ -151,7 +151,7 @@ export function verdrahteAkteKopf(deps, doc = document) {
     // Dieselbe Terminmaske wie „Neuer Termin" im Kalender; der Patient wird über die
     // vorhandene Bruecke `_bkApplyLead` gesetzt (Name, Telefon, Hausbesuch, Verordnungskarten).
     await deps.prefillBookingModal(null);
-    globalThis._bkApplyLead?.(id);
+    /** @type {any} */ (globalThis)._bkApplyLead?.(id);
   });
   doc.getElementById('pdKopfVerordnungBtn')?.addEventListener('click', () => {
     const id = deps.leadId();

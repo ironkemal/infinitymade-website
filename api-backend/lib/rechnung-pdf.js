@@ -13,35 +13,157 @@
 import crypto from 'node:crypto';
 import PDFDocument from 'pdfkit';
 
+/**
+ * @typedef {{
+ *   title?: unknown,
+ *   unit_price?: unknown,
+ *   quantity?: unknown,
+ *   ust_satz?: unknown,
+ * }} RechnungLineItemInput
+ *
+ * @typedef {{
+ *   title: string,
+ *   unit_price: number,
+ *   quantity: number,
+ *   ust_satz?: unknown,
+ * }} RechnungLineSummary
+ *
+ * @typedef {{
+ *   art?: string,
+ *   empfaenger?: Array<string | null | undefined>,
+ *   bezug?: Array<string | null | undefined>,
+ *   name?: string | null,
+ *   strasse?: string | null,
+ *   plzOrt?: string | null,
+ *   geburtsdatum?: string | null,
+ *   krankenkasse?: string | null,
+ *   versichertennummer?: string | null,
+ * }} RechnungEmpfaengerSnapshot
+ *
+ * @typedef {{
+ *   name?: string | null,
+ *   inhaber?: string | null,
+ *   strasse?: string | null,
+ *   plzOrt?: string | null,
+ *   telefon?: string | null,
+ *   email?: string | null,
+ *   ik?: string | null,
+ *   bank?: { name?: string | null, iban?: string | null, bic?: string | null } | null,
+ * }} RechnungAusstellerSnapshot
+ *
+ * @typedef {{
+ *   satz?: number | string | null,
+ *   netto?: number | string | null,
+ *   steuer?: number | string | null,
+ * }} RechnungTaxSummaryEntry
+ *
+ * @typedef {{
+ *   business_name?: string | null,
+ *   owner_first_name?: string | null,
+ *   owner_last_name?: string | null,
+ *   street?: string | null,
+ *   house_number?: string | null,
+ *   zip?: string | null,
+ *   plz?: string | null,
+ *   city?: string | null,
+ *   phone?: string | null,
+ *   email?: string | null,
+ *   ik_number?: string | null,
+ *   tax_exempt_note?: string | null,
+ *   steuernummer?: string | null,
+ *   ust_id?: string | null,
+ *   invoice_footer_text?: string | null,
+ * }} RechnungProfilInput
+ *
+ * @typedef {{
+ *   first_name?: string | null,
+ *   last_name?: string | null,
+ *   title?: string | null,
+ *   street?: string | null,
+ *   plz?: string | null,
+ *   city?: string | null,
+ *   geburtsdatum?: string | null,
+ * }} RechnungPatientInput
+ *
+ * @typedef {{
+ *   heilmittel?: string | null,
+ *   icd10?: string | null,
+ *   diagnosegruppe?: string | null,
+ *   ausstellungsdatum?: string | null,
+ * }} RechnungRxInput
+ *
+ * @typedef {{
+ *   invoice_number?: string | null,
+ *   issued_at?: string | null,
+ *   created_at?: string | null,
+ *   leistung_von?: string | null,
+ *   leistung_bis?: string | null,
+ *   invoice_type?: string | null,
+ *   empfaenger_snapshot?: RechnungEmpfaengerSnapshot | null,
+ *   aussteller_snapshot?: RechnungAusstellerSnapshot | null,
+ *   kassenzuzahlung?: number | string | null,
+ *   line_items?: RechnungLineItemInput[] | null,
+ *   subtotal?: number | string | null,
+ *   eigenanteil_eur?: number | string | null,
+ *   eigenanteil_pct?: number | string | null,
+ *   tax_summary?: RechnungTaxSummaryEntry[] | null,
+ *   steuer_gesamt?: number | string | null,
+ *   total_patient?: number | string | null,
+ *   notes?: string | null,
+ *   steuerhinweis_text?: string | null,
+ *   steuernummer_snapshot?: string | null,
+ *   ust_id_snapshot?: string | null,
+ * }} RechnungPdfInput
+ */
+
+/** @param {unknown} v */
 const t = (v) => (v == null ? '' : String(v).trim());
+/** @param {unknown} n */
 const eur = (n) => `${(Number(n) || 0).toFixed(2).replace('.', ',')} €`;
+/** @param {unknown} iso */
 function datumDE(iso) {
   if (!iso) return '';
   const s = String(iso).slice(0, 10);
   return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s.split('-').reverse().join('.') : s;
 }
 
-/** Wie aggregateInvLines (module/rechnung-editor.js): gleiche Leistung + Preis = eine Zeile. */
+/**
+ * Wie aggregateInvLines (module/rechnung-editor.js): gleiche Leistung + Preis = eine Zeile.
+ * @param {RechnungLineItemInput[] | null | undefined} lines
+ * @returns {RechnungLineSummary[]}
+ */
 export function zeilenZusammenfassen(lines) {
+  /** @type {Map<string, RechnungLineSummary>} */
   const groups = new Map();
   for (const l of lines || []) {
     const title = t(l.title);
-    const price = parseFloat(l.unit_price) || 0;
+    const price = parseFloat(String(l.unit_price ?? '')) || 0;
     const key = `${title}::${price.toFixed(2)}`;
-    if (!groups.has(key)) groups.set(key, { title, unit_price: price, quantity: 0, ust_satz: l.ust_satz });
-    groups.get(key).quantity += parseFloat(l.quantity) || 1;
+    let entry = groups.get(key);
+    if (!entry) {
+      entry = { title, unit_price: price, quantity: 0, ust_satz: l.ust_satz };
+      groups.set(key, entry);
+    }
+    entry.quantity += parseFloat(String(l.quantity ?? '')) || 1;
   }
   return [...groups.values()];
 }
 
-/** Wie summenAnzeige (module/rechnung-summen.js). */
+/**
+ * Wie summenAnzeige (module/rechnung-summen.js).
+ * @param {string | null | undefined} typ
+ */
 export function summenLabel(typ) {
   if (typ === 'bg') return { eigen: false, kasse: false, label: 'Rechnungsbetrag (zahlbar durch den Unfallversicherungsträger)' };
   if (typ === 'privat' || typ === 'selbstzahler') return { eigen: false, kasse: false, label: 'Rechnungsbetrag' };
   return { eigen: true, kasse: true, label: 'Zu zahlen (Patient)' };
 }
 
-/** Rückfall für Altbelege ohne aussteller_snapshot. */
+/**
+ * Rückfall für Altbelege ohne aussteller_snapshot.
+ * @param {RechnungProfilInput} [p]
+ * @returns {RechnungAusstellerSnapshot}
+ */
 function ausstellerAusProfil(p = {}) {
   return {
     name: p.business_name || '',
@@ -52,22 +174,27 @@ function ausstellerAusProfil(p = {}) {
   };
 }
 
-/** Empfängerzeilen — Snapshot vor Akte (§ 147 Abs. 2 Nr. 1 AO). */
+/**
+ * Empfängerzeilen — Snapshot vor Akte (§ 147 Abs. 2 Nr. 1 AO).
+ * @param {RechnungPdfInput} inv
+ * @param {RechnungPatientInput | null | undefined} [patient]
+ * @returns {string[]}
+ */
 export function empfaengerZeilen(inv, patient) {
   const emp = inv.empfaenger_snapshot;
-  if (emp?.art === 'bg') return [...(emp.empfaenger || []), '', ...(emp.bezug || [])];
+  if (emp?.art === 'bg') return [...(emp.empfaenger || []), '', ...(emp.bezug || [])].map((z) => z ?? '');
   if (emp?.art === 'patient' && emp.name) {
-    return [emp.name, emp.strasse, emp.plzOrt, emp.geburtsdatum && `Geboren: ${datumDE(emp.geburtsdatum)}`,
-      emp.krankenkasse && `Krankenkasse: ${emp.krankenkasse}`, emp.versichertennummer && `Versichertennr.: ${emp.versichertennummer}`].filter(Boolean);
+    return /** @type {string[]} */ ([emp.name, emp.strasse, emp.plzOrt, emp.geburtsdatum && `Geboren: ${datumDE(emp.geburtsdatum)}`,
+      emp.krankenkasse && `Krankenkasse: ${emp.krankenkasse}`, emp.versichertennummer && `Versichertennr.: ${emp.versichertennummer}`].filter(Boolean));
   }
   if (!patient) return [];
   const name = [patient.first_name, patient.last_name].filter(Boolean).join(' ') || patient.title || '';
-  return [name, patient.street, [patient.plz, patient.city].filter(Boolean).join(' '),
-    patient.geburtsdatum && `Geboren: ${datumDE(patient.geburtsdatum)}`].filter(Boolean);
+  return /** @type {string[]} */ ([name, patient.street, [patient.plz, patient.city].filter(Boolean).join(' '),
+    patient.geburtsdatum && `Geboren: ${datumDE(patient.geburtsdatum)}`].filter(Boolean));
 }
 
 /**
- * @param {{inv:object, patient?:object, rx?:object, profil?:object}} daten
+ * @param {{inv: RechnungPdfInput, patient?: RechnungPatientInput | null, rx?: RechnungRxInput | null, profil?: RechnungProfilInput}} daten
  * @param {{passwort?:string|null}} [opt]
  * @returns {Promise<Buffer>}
  */
@@ -82,9 +209,11 @@ export function erzeugeRechnungPdf({ inv, patient = null, rx = null, profil = {}
     });
   }
   const doc = new PDFDocument(opts);
+  const emitter = /** @type {NodeJS.EventEmitter} */ (/** @type {unknown} */ (doc));
+  /** @type {Buffer[]} */
   const teile = [];
-  doc.on('data', (b) => teile.push(b));
-  const fertig = new Promise((res, rej) => { doc.on('end', () => res(Buffer.concat(teile))); doc.on('error', rej); });
+  emitter.on('data', (b) => teile.push(b));
+  const fertig = new Promise((res, rej) => { emitter.on('end', () => res(Buffer.concat(teile))); emitter.on('error', rej); });
   const links = 62;
   const breite = doc.page.width - 124;
 
@@ -101,6 +230,7 @@ export function erzeugeRechnungPdf({ inv, patient = null, rx = null, profil = {}
 
   doc.font('Helvetica-Bold').fontSize(15).text('Rechnung');
   doc.font('Helvetica').fontSize(10).moveDown(0.3);
+  /** @param {string} k @param {unknown} v */
   const kv = (k, v) => { if (t(v)) doc.font('Helvetica-Bold').text(`${k}: `, { continued: true }).font('Helvetica').text(String(v)); };
   kv('Rechnungsnummer', inv.invoice_number);
   kv('Rechnungsdatum', datumDE(inv.issued_at || inv.created_at));
@@ -148,6 +278,7 @@ export function erzeugeRechnungPdf({ inv, patient = null, rx = null, profil = {}
 
   // Summen
   const s = summenLabel(inv.invoice_type);
+  /** @param {string} k @param {string} v @param {boolean} [fett] */
   const summe = (k, v, fett = false) => {
     const y = doc.y;
     doc.font(fett ? 'Helvetica-Bold' : 'Helvetica').fontSize(fett ? 11 : 10)
@@ -180,7 +311,10 @@ export function erzeugeRechnungPdf({ inv, patient = null, rx = null, profil = {}
   return fertig;
 }
 
-/** Dateiname ohne Patientennamen — er wandert durch Postfächer. */
+/**
+ * Dateiname ohne Patientennamen — er wandert durch Postfächer.
+ * @param {{ invoice_number?: string | null }} inv
+ */
 export function rechnungDateiname(inv) {
   const nr = t(inv.invoice_number).replace(/[^A-Za-z0-9._-]+/g, '-').slice(0, 40);
   return `Rechnung${nr ? '_' + nr : ''}.pdf`;

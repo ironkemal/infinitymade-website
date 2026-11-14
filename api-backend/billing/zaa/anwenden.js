@@ -13,18 +13,43 @@ import { parseZaaFile } from './parser.js';
 
 // „Uebersetzung" nur, wenn sie dem Anwender etwas Neues sagt: ist sie identisch mit dem Dateitext (z. B. gleiche
 // Woerterbuch-Formulierung), bleibt sie leer und die Oberflaeche zeigt den Text nicht doppelt (Live-QA 3. Lauf, C-3).
+/** @param {{ uebersetzung?: string | null, text?: string | null } | null | undefined} e */
 function istEchteUebersetzung(e) {
   const u = String(e?.uebersetzung || '').trim();
   return u !== '' && u.toLowerCase() !== String(e?.text || '').trim().toLowerCase();
 }
 
+/** @param {string | Buffer | Uint8Array} buf */
 export function zaaDateiHash(buf) {
   return createHash('sha256').update(buf).digest('hex');
 }
 
-// idempotenz=true (Flag, Standard aus): die RPC bekommt den Datei-Hash und erkennt Wiederholung
-// derselben Datei (Schema: db/entwuerfe/zaa-import-idempotenz.sql, nicht aktiv). Ohne Flag bleibt
-// der Aufruf byte-identisch zum bisherigen Verhalten.
+/**
+ * @typedef {{
+ *   from: (table: string) => {
+ *     select: (cols: string) => {
+ *       eq: (col: string, val: string) => PromiseLike<{ data: Array<{ id: string, belegnummer?: string | null }> | null }>
+ *     }
+ *   },
+ *   rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{
+ *     data: { konflikt?: boolean, wiederholt?: boolean, zeilen?: number } | null,
+ *     error: unknown
+ *   }>
+ * }} ZaaDbClient
+ */
+
+/**
+ * @param {object} opts
+ * @param {ZaaDbClient} opts.db
+ * @param {string} opts.tenantId
+ * @param {string} opts.abrechnungId
+ * @param {{ updated_at?: string | null }} opts.ab
+ * @param {string | Buffer} opts.buf
+ * @param {string | null} [opts.filename]
+ * @param {string} opts.abgesetztStatus
+ * @param {string} opts.heute
+ * @param {boolean} [opts.idempotenz=false]
+ */
 export async function zaaRueckmeldungAnwenden({ db, tenantId, abrechnungId, ab, buf, filename, abgesetztStatus, heute, idempotenz = false }) {
   const { data: rxRows } = await db
     .from('prescriptions')

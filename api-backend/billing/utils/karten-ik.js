@@ -11,24 +11,28 @@
 
 export const KARTEN_IK_FEHLT_CODE = 'KARTEN_IK_FEHLT';
 
-/** 9 Ziffern? (CHECK der Spalte `prescriptions.krankenkasse_ik`) */
+/**
+ * 9 Ziffern? (CHECK der Spalte `prescriptions.krankenkasse_ik`)
+ * @param {unknown} ik
+ * @returns {boolean}
+ */
 export function istKartenIk(ik) {
   return /^\d{9}$/.test(String(ik ?? ''));
 }
 
 /**
  * @param {{id?: string, krankenkasse_ik?: ?string}} rx  Verordnungszeile
- * @param {{vorname?: string, nachname?: string}} np    Name aus der Patientenakte
- * @returns {?Error}  Fehler mit `status` 422 und `code`, oder `null` wenn in Ordnung
+ * @param {{vorname?: string, nachname?: string}} [np]  Name aus der Patientenakte
+ * @returns {(Error & { status: number, code: string }) | null}  Fehler mit `status` 422 und `code`, oder `null` wenn in Ordnung
  */
 export function kartenIkFehler(rx, np = {}) {
   if (istKartenIk(rx?.krankenkasse_ik)) return null;
   const kurz = String(rx?.id ?? '').slice(0, 8);
   const patient = [np.vorname, np.nachname].filter(Boolean).join(' ');
-  const e = new Error(
+  const e = /** @type {Error & { status: number, code: string }} */ (new Error(
     `Verordnung ${kurz}${patient ? ` (${patient})` : ''}: IK der Krankenkasse von der ` +
     'Versichertenkarte fehlt — in der Verordnung eintragen.'
-  );
+  ));
   e.status = 422;
   e.code = KARTEN_IK_FEHLT_CODE;
   return e;

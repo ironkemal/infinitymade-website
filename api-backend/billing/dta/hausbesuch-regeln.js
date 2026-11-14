@@ -16,6 +16,7 @@
 
 export const HAUSBESUCH_POSITIONEN = ['79933', '79934'];
 
+/** @param {unknown} datum @returns {string} */
 function formatDatum(datum) {
   const s = String(datum ?? '').trim();
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
@@ -23,7 +24,7 @@ function formatDatum(datum) {
 }
 
 /**
- * @param {{ hausbesuch: any, tage: Array<{datum: string, positionen: string[]}> }} arg
+ * @param {{ hausbesuch?: unknown, tage?: Array<{datum?: string, positionen?: string[]}> }} [arg]
  * @returns {string[]} harte Gründe, leer = in Ordnung
  */
 export function hausbesuchRegeln({ hausbesuch, tage } = {}) {

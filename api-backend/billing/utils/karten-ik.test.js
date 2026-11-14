@@ -70,7 +70,7 @@ test('kartenIkFehler: ohne Patientenname', () => {
 });
 
 test('kartenIkFehler: rx ist null oder undefined', () => {
-  const err = kartenIkFehler(null);
+  const err = kartenIkFehler(/** @type {Parameters<typeof kartenIkFehler>[0]} */ (/** @type {unknown} */ (null)));
   assert.ok(err instanceof Error);
   assert.equal(err.status, 422);
   assert.equal(err.code, 'KARTEN_IK_FEHLT');

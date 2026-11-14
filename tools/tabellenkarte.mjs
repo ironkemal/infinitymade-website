@@ -33,7 +33,9 @@ const FNKARTE   = join(ROOT, 'funktionen/INDEX.json');
 const OUT_JSON = join(ROOT, 'db/NUTZUNG.json');
 const OUT_MD   = join(ROOT, 'db/NUTZUNG.md');
 
+/** @param {Iterable<any>} a */
 const uniq = (a) => [...new Set(a)];
+/** @param {string} p */
 const rel  = (p) => relative(ROOT, p).split(sep).join('/');
 
 // ── 1. Şemadaki tablolar ────────────────────────────────────────────────────
@@ -59,8 +61,16 @@ const schemaStand = (schemaText.match(/ERZEUGT AM:\s*([0-9-]+)/) || [])[1] || '?
 
 // ── 2. Fonksiyon haritasını ters çevir ──────────────────────────────────────
 const karte = existsSync(FNKARTE) ? JSON.parse(readFileSync(FNKARTE, 'utf8')) : { eintraege: [], erzeugt: null };
-const leser = new Map(), schreiber = new Map();
-const add = (map, t, v) => { if (!map.has(t)) map.set(t, []); map.get(t).push(v); };
+/** @type {Map<string, any[]>} */
+const leser = new Map();
+/** @type {Map<string, any[]>} */
+const schreiber = new Map();
+/**
+ * @param {Map<string, any[]>} map
+ * @param {string} t
+ * @param {any} v
+ */
+const add = (map, t, v) => { if (!map.has(t)) map.set(t, []); map.get(t)?.push(v); };
 
 for (const fn of karte.eintraege || []) {
   const ops = new Map(); // table -> [op]
@@ -91,6 +101,11 @@ for (const fn of karte.eintraege || []) {
 const SKIP_DIRS = new Set(['node_modules', '.git', 'archive', 'dist', 'build', '.vercel', '.next',
   'funktionen', 'coverage', '.claude', 'onprem',
   'db', 'supabase', 'sql-melih', 'ops']);
+/**
+ * @param {string} dir
+ * @param {string[]} [acc]
+ * @returns {string[]}
+ */
 function walk(dir, acc = []) {
   let entries; try { entries = readdirSync(dir); } catch { return acc; }
   for (const e of entries) {
@@ -103,9 +118,16 @@ function walk(dir, acc = []) {
   return acc;
 }
 const dateien = walk(ROOT);
+/** @type {Map<string, Set<string>>} */
 const dateiTreffer = new Map();  // table -> Set(datei)   — .from() ile gerçek erişim
+/** @type {Map<string, Set<string>>} */
 const erwaehnungen = new Map();  // table -> Set(datei)   — string literali olarak anılma
-const treffer = (map, t, f) => { if (!map.has(t)) map.set(t, new Set()); map.get(t).add(f); };
+/**
+ * @param {Map<string, Set<string>>} map
+ * @param {string} t
+ * @param {string} f
+ */
+const treffer = (map, t, f) => { let set = map.get(t); if (!set) { set = new Set(); map.set(t, set); } set.add(f); };
 
 for (const f of dateien) {
   let txt; try { txt = readFileSync(f, 'utf8'); } catch { continue; }
@@ -160,10 +182,12 @@ const registerEintraege = new Map();
 {
   const re = /^###\s+`?([a-zA-Z0-9_ßäöü]+)`?\s*$/gm;
   let m;
+  /** @type {Array<{ name: string, idx: number }>} */
   const positions = [];
   while ((m = re.exec(registerText))) positions.push({ name: m[1], idx: m.index });
   positions.forEach((p, i) => {
     const block = registerText.slice(p.idx, i + 1 < positions.length ? positions[i + 1].idx : undefined);
+    /** @param {string} k */
     const feld = (k) => (block.match(new RegExp(`\\*\\*${k}:\\*\\*\\s*(.+)`)) || [])[1]?.trim() || null;
     registerEintraege.set(p.name, {
       warum: feld('Warum'),
@@ -194,8 +218,8 @@ for (const [name, t] of [...tabellen].sort()) {
     warum: reg?.warum || null,
     seit: reg?.seit || null,
     ungeklaert: reg?.offen || false,
-    leser: l.sort((a, b) => a.name.localeCompare(b.name)),
-    schreiber: s.sort((a, b) => a.name.localeCompare(b.name)),
+    leser: l.sort((/** @type {{ name: string }} */ a, /** @type {{ name: string }} */ b) => a.name.localeCompare(b.name)),
+    schreiber: s.sort((/** @type {{ name: string }} */ a, /** @type {{ name: string }} */ b) => a.name.localeCompare(b.name)),
     dateien: d,
     module: uniq([...l, ...s].flatMap(x => x.module)).sort(),
     sqlTreffer: sqlTreffer.get(name) || 0,
@@ -207,7 +231,7 @@ for (const [name, t] of [...tabellen].sort()) {
 // Ölçüt: owner_id/user_id/patient_id/lead_id FK'si var ama Auskunft listesinde yok.
 const dsgvoLuecke = out.filter(t =>
   !t.dsgvoAuskunft &&
-  t.fkRaus.some(fk => ['leads', 'profiles', 'auth.users'].includes(fk)) &&
+  t.fkRaus.some((/** @type {string} */ fk) => ['leads', 'profiles', 'auth.users'].includes(fk)) &&
   !['spatial_ref_sys'].includes(t.name)
 ).map(t => t.name);
 
@@ -291,11 +315,11 @@ for (const t of out) {
   if (t.warum) md.push(`Warum: ${t.warum}`);
   md.push('');
   if (t.schreiber.length) {
-    md.push(`**Schreibt (${t.schreiber.length}):** ` + t.schreiber.map(f => `\`${f.name}()\` [${f.ops.join('/')}] — ${f.file}:${f.start}`).join(' · '));
+    md.push(`**Schreibt (${t.schreiber.length}):** ` + t.schreiber.map((/** @type {{ name: string, ops: string[], file: string, start: number }} */ f) => `\`${f.name}()\` [${f.ops.join('/')}] — ${f.file}:${f.start}`).join(' · '));
     md.push('');
   }
   if (t.leser.length) {
-    md.push(`**Liest (${t.leser.length}):** ` + t.leser.slice(0, 20).map(f => `\`${f.name}()\``).join(', ') + (t.leser.length > 20 ? ` … +${t.leser.length - 20}` : ''));
+    md.push(`**Liest (${t.leser.length}):** ` + t.leser.slice(0, 20).map((/** @type {{ name: string }} */ f) => `\`${f.name}()\``).join(', ') + (t.leser.length > 20 ? ` … +${t.leser.length - 20}` : ''));
     md.push('');
   }
   if (t.dateien.length) { md.push(`**Dateien:** ${t.dateien.map(d => '`' + d + '`').join(', ')}`); md.push(''); }

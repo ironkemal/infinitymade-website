@@ -17,6 +17,7 @@ import { physioFixture, podoFixture } from './fixtures.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+/** @type {Omit<Parameters<typeof buildAuftragsdatei>[0], 'erstellungsdatum'>} */
 const BASE_AUFTRAG = {
   absenderIk:          '123456789',
   empfaengerIk:        '987654321',
@@ -57,7 +58,7 @@ test('fmtDate: preserves existing falsy and invalid behavior', () => {
   assert.equal(fmtDate(null), '');
   assert.equal(fmtDate(undefined), '');
   assert.equal(fmtDate(''), '');
-  assert.equal(fmtDate(false), '');
+  assert.equal(fmtDate(/** @type {string} */ (/** @type {unknown} */ (false))), '');
   assert.equal(fmtDate('not-a-date'), '');
   assert.equal(fmtDate(new Date(NaN)), '');
 });
@@ -104,7 +105,7 @@ test('buildUNB: rejects nonexistent dateonly with controlled error', () => {
 });
 
 test('buildUNB: invalid/falsy erstellungsdatum throws controlled error', () => {
-  assert.throws(() => buildUNB({ ...BASE_UNB, erstellungsdatum: null }), /invalid erstellungsdatum/);
+  assert.throws(() => buildUNB({ ...BASE_UNB, erstellungsdatum: /** @type {string} */ (/** @type {unknown} */ (null)) }), /invalid erstellungsdatum/);
   assert.throws(() => buildUNB({ ...BASE_UNB, erstellungsdatum: '' }), /invalid erstellungsdatum/);
   assert.throws(() => buildUNB({ ...BASE_UNB, erstellungsdatum: 'invalid' }), /invalid erstellungsdatum/);
 });
@@ -144,6 +145,7 @@ test('buildUNB: fall DST 2026-10-25T00:59:59Z -> 02:59 and 01:00Z -> 02:00', () 
 // 3. buildAuftragsdatei (length 348, fields 116-129 YYYYMMDDhhmmss)
 // ---------------------------------------------------------------------------
 
+/** @param {string} satz @param {number} von @param {number} bis */
 const feld = (satz, von, bis) => satz.slice(von - 1, bis);
 
 test('buildAuftragsdatei: genuine dateonly preserves calendar day with Berlin midnight 00:00:00', () => {
@@ -202,7 +204,7 @@ test('buildAuftragsdatei: fall DST 2026-10-25T00:59:59Z -> 02:59:59 and 01:00:00
 // ---------------------------------------------------------------------------
 
 test('buildDtaFile: physioFixture preserves dateonly and non-03 output', () => {
-  const dta = buildDtaFile(physioFixture);
+  const dta = buildDtaFile(/** @type {Parameters<typeof buildDtaFile>[0]} */ (physioFixture));
   assert.ok(dta.content.startsWith("UNB+UNOC:3+123456789+987654321+20260518:0000+00023+B+SL345678S05+2'"));
   assert.equal(dta.auftragsdatei.length, 348);
   assert.equal(feld(dta.auftragsdatei, 116, 129), '20260518000000');
@@ -212,7 +214,7 @@ test('buildDtaFile: physioFixture preserves dateonly and non-03 output', () => {
 });
 
 test('buildDtaFile: podoFixture preserves dateonly and non-03 output', () => {
-  const dta = buildDtaFile(podoFixture);
+  const dta = buildDtaFile(/** @type {Parameters<typeof buildDtaFile>[0]} */ (podoFixture));
   assert.ok(dta.content.startsWith("UNB+UNOC:3+123456789+987654321+20260828:0000+00024+B+SL345678S08+2'"));
   assert.equal(dta.auftragsdatei.length, 348);
   assert.equal(feld(dta.auftragsdatei, 116, 129), '20260828000000');
@@ -221,7 +223,7 @@ test('buildDtaFile: podoFixture preserves dateonly and non-03 output', () => {
 test('buildDtaFile: timestamp input uses Berlin DST in both UNB and Auftragsdatei', () => {
   const f = structuredClone(physioFixture);
   f.rechnung.datum = '2026-01-15T23:30:15Z';
-  const dta = buildDtaFile(f);
+  const dta = buildDtaFile(/** @type {Parameters<typeof buildDtaFile>[0]} */ (f));
   assert.ok(dta.content.includes("+20260116:0030+"), 'UNB carries 20260116:0030');
   assert.equal(dta.auftragsdatei.length, 348);
   assert.equal(feld(dta.auftragsdatei, 116, 129), '20260116003015');

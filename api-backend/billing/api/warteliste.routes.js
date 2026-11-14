@@ -13,16 +13,21 @@ import { createClient } from '@supabase/supabase-js';
 import { wartelisteZeitfensterGueltig } from '../../booking/warteliste-zeitfenster.js';
 
 const router = express.Router();
+/** @type {import('@supabase/supabase-js').SupabaseClient<any>} */
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  /** @type {string} */ (process.env.SUPABASE_URL),
+  /** @type {string} */ (process.env.SUPABASE_SERVICE_ROLE_KEY),
   { auth: { persistSession: false } }
 );
 
 // ---------- shared auth helper ----------
 
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 async function resolveAuth(req, res) {
-  const token = req.headers.authorization?.slice(7);
+  const token = typeof req.headers.authorization === 'string' ? req.headers.authorization.slice(7) : '';
   if (!token) { res.status(401).json({ error: 'Missing bearer token' }); return null; }
 
   const { data: u, error: uErr } = await supabase.auth.getUser(token);
@@ -43,7 +48,12 @@ async function resolveAuth(req, res) {
   return { user: u.user, profile, tenantId };
 }
 
-// Never hydrate service-role joins: historical rows can contain foreign references.
+/**
+ * Never hydrate service-role joins: historical rows can contain foreign references.
+ * @param {any[]} entries
+ * @param {string} tenantId
+ * @param {boolean} [includeServices=false]
+ */
 async function hydrateTenantLinks(entries, tenantId, includeServices = false) {
   const leadIds = [...new Set(entries.map(entry => entry.lead_id).filter(Boolean))];
   const serviceIds = includeServices
@@ -83,7 +93,7 @@ async function hydrateTenantLinks(entries, tenantId, includeServices = false) {
 // Returns all 'waiting' entries for the authenticated tenant, joined with the
 // lead's name for display purposes.
 // ============================================================================
-router.get('/', async (req, res) => {
+router.get('/', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
@@ -108,7 +118,7 @@ router.get('/', async (req, res) => {
     return res.json(await hydrateTenantLinks(data || [], tenantId, true));
   } catch (e) {
     console.error('[warteliste/GET]', e);
-    return res.status(500).json({ error: e.message || 'Server error' });
+    return res.status(500).json({ error: (e instanceof Error ? e.message : '') || 'Server error' });
   }
 });
 
@@ -118,7 +128,7 @@ router.get('/', async (req, res) => {
 //         preferred_time_to?, notes?, priority? }
 // Creates a new waiting-list entry with status 'waiting'.
 // ============================================================================
-router.post('/', async (req, res) => {
+router.post('/', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
@@ -144,7 +154,7 @@ router.post('/', async (req, res) => {
       const result = field === 'lead_id'
         ? await validateLead(supabase, value, tenantId)
         : await validateAuthenticatedService(supabase, value, tenantId);
-      if (!result.ok) return res.status(result.status).json({ error: result.error });
+      if (!result.ok) return res.status(result.status ?? 400).json({ error: result.error });
     }
 
     const payload = {
@@ -169,7 +179,7 @@ router.post('/', async (req, res) => {
     return res.status(201).json(data);
   } catch (e) {
     console.error('[warteliste/POST]', e);
-    return res.status(500).json({ error: e.message || 'Server error' });
+    return res.status(500).json({ error: (e instanceof Error ? e.message : '') || 'Server error' });
   }
 });
 
@@ -178,7 +188,7 @@ router.post('/', async (req, res) => {
 // Body: { status, matched_booking_id? }
 // Allowed status transitions: waiting → matched | cancelled
 // ============================================================================
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
@@ -211,6 +221,7 @@ router.patch('/:id', async (req, res) => {
       if (!booking || getCanonicalOwnerId(booking) !== tenantId) return res.status(400).json({ error: 'Ungültige Buchung' });
     }
 
+    /** @type {Record<string, unknown>} */
     const updates = {};
     if (status !== undefined)              updates.status              = status;
     if (matched_booking_id !== undefined)  updates.matched_booking_id  = matched_booking_id;
@@ -233,7 +244,7 @@ router.patch('/:id', async (req, res) => {
     return res.json(data);
   } catch (e) {
     console.error('[warteliste/PATCH]', e);
-    return res.status(500).json({ error: e.message || 'Server error' });
+    return res.status(500).json({ error: (e instanceof Error ? e.message : '') || 'Server error' });
   }
 });
 
@@ -251,7 +262,7 @@ router.patch('/:id', async (req, res) => {
 // Deshalb steht die Rollenprüfung im Code. Siehe compliance/LEGAL_DECISIONS.md,
 // Eintrag vom 17.09.2026.
 // ============================================================================
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
@@ -281,7 +292,7 @@ router.delete('/:id', async (req, res) => {
     return res.json({ ok: true });
   } catch (e) {
     console.error('[warteliste/DELETE]', e);
-    return res.status(500).json({ error: e.message || 'Server error' });
+    return res.status(500).json({ error: (e instanceof Error ? e.message : '') || 'Server error' });
   }
 });
 
@@ -297,7 +308,7 @@ router.delete('/:id', async (req, res) => {
 // Returns a ranked list of candidates (ordered by priority DESC, created_at ASC).
 // Does NOT automatically update status — caller decides which candidate to notify.
 // ============================================================================
-router.post('/match', async (req, res) => {
+router.post('/match', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
@@ -318,6 +329,7 @@ router.post('/match', async (req, res) => {
 
     // 2. Determine weekday abbreviation (Berlin time, German short names)
     const bookingDate = new Date(booking.start_time);
+    /** @type {Record<string, string>} */
     const WEEKDAY_MAP = { Mon: 'Mo', Tue: 'Di', Wed: 'Mi', Thu: 'Do', Fri: 'Fr', Sat: 'Sa', Sun: 'So' };
     const engDay = new Intl.DateTimeFormat('en-US', {
       timeZone: 'Europe/Berlin',
@@ -332,7 +344,7 @@ router.post('/match', async (req, res) => {
       minute: '2-digit',
       hour12: false,
     }).formatToParts(bookingDate);
-    const bookingTimeStr = `${bookingTimeParts.find(p => p.type === 'hour').value}:${bookingTimeParts.find(p => p.type === 'minute').value}`;
+    const bookingTimeStr = `${bookingTimeParts.find(p => p.type === 'hour')?.value}:${bookingTimeParts.find(p => p.type === 'minute')?.value}`;
 
     // 3. Fetch all 'waiting' entries for this tenant
     const { data: candidates, error: cErr } = await supabase
@@ -350,13 +362,14 @@ router.post('/match', async (req, res) => {
     if (cErr) return res.status(500).json({ error: cErr.message });
 
     // 4. Filter candidates
+    /** @param {string | null | undefined} t */
     function timeStrToMins(t) {
       if (!t) return null;
       const [h, m] = t.split(':').map(Number);
       return h * 60 + (m || 0);
     }
 
-    const bookingMins = timeStrToMins(bookingTimeStr);
+    const bookingMins = /** @type {number} */ (timeStrToMins(bookingTimeStr));
 
     const matched = (candidates || []).filter(entry => {
       // Service match: if the entry specifies a service, it must match
@@ -395,7 +408,7 @@ router.post('/match', async (req, res) => {
     });
   } catch (e) {
     console.error('[warteliste/match]', e);
-    return res.status(500).json({ error: e.message || 'Server error' });
+    return res.status(500).json({ error: (e instanceof Error ? e.message : '') || 'Server error' });
   }
 });
 

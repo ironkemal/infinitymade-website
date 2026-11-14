@@ -6,6 +6,7 @@
 
 let _mountSequence = 0;
 
+/** @param {any} str */
 function safeEscape(str) {
   return String(str ?? '')
     .replace(/&/g, '&amp;')
@@ -15,9 +16,13 @@ function safeEscape(str) {
     .replace(/'/g, '&#39;');
 }
 
+/**
+ * @param {any} ctx
+ * @returns {(s: any) => string}
+ */
 function getEscape(ctx) {
   if (ctx && typeof ctx.escapeHtml === 'function') {
-    return (s) => ctx.escapeHtml(s);
+    return (/** @type {any} */ s) => ctx.escapeHtml(s);
   }
   return safeEscape;
 }
@@ -25,6 +30,8 @@ function getEscape(ctx) {
 /**
  * Pure eligibility check: treatment must be non-cancelled and contain exact '78040' in hpnr_codes.
  * Does not mutate the treatment object.
+ * @param {any} beh
+ * @returns {boolean}
  */
 export function ist78040EmpfangsnachweisEligible(beh) {
   if (!beh || typeof beh !== 'object') return false;
@@ -36,6 +43,7 @@ export function ist78040EmpfangsnachweisEligible(beh) {
 /**
  * Pure status helper: maps server event to readable German status and attributes.
  * DB statuses recognized: only bestaetigt, widerrufen, or null/other -> ungeprueft.
+ * @param {any} nachweis
  */
 export function getEmpfangsnachweisStatusInfo(nachweis) {
   if (!nachweis || typeof nachweis !== 'object' || !nachweis.status) {
@@ -81,6 +89,9 @@ export function getEmpfangsnachweisStatusInfo(nachweis) {
  * Renders the host container HTML for an eligible treatment in the main history cell.
  * Returns empty string if treatment is not eligible.
  * Fails safe with proper HTML escaping even if ctx.escapeHtml is absent.
+ * @param {any} beh
+ * @param {any} [ctx]
+ * @returns {string}
  */
 export function renderEmpfangsnachweisHost(beh, ctx) {
   if (!ist78040EmpfangsnachweisEligible(beh)) return '';
@@ -96,6 +107,12 @@ export function renderEmpfangsnachweisHost(beh, ctx) {
   </div>`;
 }
 
+/**
+ * @param {any} data
+ * @param {any} beh
+ * @param {{ isGet?: boolean, expectedStatus?: string | null }} [opts]
+ * @returns {boolean}
+ */
 function validateNachweisEnvelope(data, beh, { isGet = false, expectedStatus = null } = {}) {
   if (!data || typeof data !== 'object' || !Object.prototype.hasOwnProperty.call(data, 'nachweis')) {
     return false;
@@ -138,6 +155,10 @@ function validateNachweisEnvelope(data, beh, { isGet = false, expectedStatus = n
 
 /**
  * Mounts interactive behavior on a single host element.
+ * @param {any} host
+ * @param {any} beh
+ * @param {any} ctx
+ * @param {any} [fetchFn]
  */
 export function mountEmpfangsnachweis(host, beh, ctx, fetchFn = globalThis.fetch) {
   if (!host || !beh || !ist78040EmpfangsnachweisEligible(beh)) return;
@@ -149,6 +170,7 @@ export function mountEmpfangsnachweis(host, beh, ctx, fetchFn = globalThis.fetch
   let loadRequestId = 0;
 
   const escape = getEscape(ctx);
+  /** @type {any} */
   let currentNachweis = null;
 
   function isStale() {
@@ -298,6 +320,14 @@ export function mountEmpfangsnachweis(host, beh, ctx, fetchFn = globalThis.fetch
     }
   }
 
+  /**
+   * @param {any} payload
+   * @param {string} successMsg
+   * @param {string} toastType
+   * @param {any} submitBtn
+   * @param {any} cancelBtn
+   * @param {(msg: string) => void} showFormError
+   */
   async function executePost(payload, successMsg, toastType, submitBtn, cancelBtn, showFormError) {
     pending = true;
     if (submitBtn) submitBtn.disabled = true;
@@ -387,6 +417,7 @@ export function mountEmpfangsnachweis(host, beh, ctx, fetchFn = globalThis.fetch
     }
   }
 
+  /** @param {any} [e] */
   async function handleConfirmSubmit(e) {
     if (e?.preventDefault) e.preventDefault();
     if (isStale() || pending) return;
@@ -397,6 +428,7 @@ export function mountEmpfangsnachweis(host, beh, ctx, fetchFn = globalThis.fetch
     const submitBtn = host.querySelector('.podo-nachweis-submit-confirm-btn');
     const cancelBtn = host.querySelector('.podo-nachweis-cancel-btn');
 
+    /** @param {string} msg */
     function showFormError(msg) {
       if (errorEl) {
         errorEl.textContent = msg;
@@ -425,6 +457,7 @@ export function mountEmpfangsnachweis(host, beh, ctx, fetchFn = globalThis.fetch
     );
   }
 
+  /** @param {any} [e] */
   async function handleWithdrawSubmit(e) {
     if (e?.preventDefault) e.preventDefault();
     if (isStale() || pending) return;
@@ -434,6 +467,7 @@ export function mountEmpfangsnachweis(host, beh, ctx, fetchFn = globalThis.fetch
     const submitBtn = host.querySelector('.podo-nachweis-submit-withdraw-btn');
     const cancelBtn = host.querySelector('.podo-nachweis-cancel-btn');
 
+    /** @param {string} msg */
     function showFormError(msg) {
       if (errorEl) {
         errorEl.textContent = msg;
@@ -510,6 +544,10 @@ export function mountEmpfangsnachweis(host, beh, ctx, fetchFn = globalThis.fetch
 /**
  * Mounts all receipt hosts inside rootEl for documented treatments.
  * Accepts actual documented rows and ctx; avoids guessing APIs.
+ * @param {any} rootEl
+ * @param {any[]} behandlungen
+ * @param {any} ctx
+ * @param {any} [fetchFn]
  */
 export function mountEmpfangsnachweise(rootEl, behandlungen, ctx, fetchFn = globalThis.fetch) {
   if (!rootEl || !Array.isArray(behandlungen)) return;

@@ -18,6 +18,7 @@ import { jahresendePlus } from '../lib/berlin-tag.js';
 // Fristkategorien fuer SaaS-Kontoloeschung (guvenlik S-61, CLAUDE_SYNC_AUDIT_REPORT §1.3)
 export const FRIST_KATEGORIEN = ['behandlung', 'einwilligung', 'beleg', 'grundaufzeichnung', 'geschaeftsbrief'];
 
+/** @type {Record<string, string[]>} */
 export const KATEGORIE_TABELLEN = {
   behandlung: [
     'einheiten_korrekturen',
@@ -79,13 +80,13 @@ export function antworttextFallB(gesperrt = []) {
 /**
  * Fuehrt die vollstaendige SaaS-Kontoloeschung nach Fall B durch.
  *
- * @param {import('@supabase/supabase-js').SupabaseClient} supabase
- * @param {object} params
- * @param {string} params.ownerId
- * @param {string} [params.ownerEmail]
- * @param {string} params.vorgangId
- * @param {string} [params.stripeKey]
- * @returns {Promise<{ status: 'geloescht'|'teilweise_geloescht'|'fehler', gesperrt: Array<object>, unerwartet: string[], log: Array<object>, stripe_fehler?: boolean }>}
+ * @param {any} supabase
+ * @param {object} args
+ * @param {string} args.ownerId
+ * @param {string} [args.ownerEmail]
+ * @param {string} args.vorgangId
+ * @param {string} [args.stripeKey]
+ * @returns {Promise<{ status: 'geloescht'|'teilweise_geloescht'|'fehler', gesperrt: Array<Record<string, unknown>>, unerwartet: string[], log: Array<Record<string, unknown>>, stripe_fehler?: boolean }>}
  */
 export async function kontoLoeschen(supabase, args) {
   const erg = await kontoLoeschenIntern(supabase, args);
@@ -98,14 +99,22 @@ export async function kontoLoeschen(supabase, args) {
       erg.log.push({ step: 'artefakt:owner_unfreeze', ok: !error && data === true });
     }
   } catch (e) {
-    erg?.log?.push({ step: 'artefakt:owner_unfreeze', ok: false, error: e?.message });
+    erg?.log?.push({ step: 'artefakt:owner_unfreeze', ok: false, error: /** @type {Error} */ (e)?.message });
   }
   return erg;
 }
 
+/**
+ * @param {any} supabase
+ * @param {{ ownerId: string, ownerEmail?: string, vorgangId: string, stripeKey?: string }} args
+ * @returns {Promise<{ status: 'geloescht'|'teilweise_geloescht'|'fehler', gesperrt: Array<Record<string, unknown>>, unerwartet: string[], log: Array<Record<string, unknown>>, stripe_fehler?: boolean }>}
+ */
 async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, stripeKey }) {
+  /** @type {Array<Record<string, unknown>>} */
   const log = [];
+  /** @type {string[]} */
   const unerwartet = [];
+  /** @type {Array<Record<string, unknown>>} */
   const gesperrt = [];
 
   // ── 0. K4 Artefakt-Schutz: Freeze RPC & Registry Preflight ──────────────────
@@ -130,7 +139,7 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
     log.push({ step: 'artefakt:owner_freeze', ok: true });
   } catch (err) {
     unerwartet.push('artefakt:owner_freeze');
-    log.push({ step: 'artefakt:owner_freeze', ok: false, error: err.message });
+    log.push({ step: 'artefakt:owner_freeze', ok: false, error: /** @type {Error} */ (err).message });
     return {
       status: 'fehler',
       gesperrt: [],
@@ -200,7 +209,7 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
     });
   } catch (err) {
     unerwartet.push('artefakt:registry_check');
-    log.push({ step: 'artefakt:registry_check', ok: false, error: err.message });
+    log.push({ step: 'artefakt:registry_check', ok: false, error: /** @type {Error} */ (err).message });
     return {
       status: 'fehler',
       gesperrt: [],
@@ -223,7 +232,7 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
     stripeSubId = prof?.stripe_subscription_id || null;
   } catch (err) {
     // Ohne Abo-Kenntnis kein Löschen — sonst läuft ein Abo eines gelöschten Kontos weiter.
-    console.error('[dsgvo-loeschen] Stripe Profil-Lookup fehlgeschlagen — Abbruch vor jeder Loeschung:', err.message);
+    console.error('[dsgvo-loeschen] Stripe Profil-Lookup fehlgeschlagen — Abbruch vor jeder Loeschung:', /** @type {Error} */ (err).message);
     return { status: 'fehler', gesperrt: [], unerwartet: ['profiles:stripe'], log: [{ step: 'stripe:profile_lookup', ok: false }] };
   }
 
@@ -257,13 +266,13 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
       }
       log.push({ step: 'stripe:cancel_subscription', ok: true, status: res.status });
     } catch (err) {
-      console.error('[dsgvo-loeschen] Stripe Netzfehler:', err.message);
+      console.error('[dsgvo-loeschen] Stripe Netzfehler:', /** @type {Error} */ (err).message);
       return {
         status: 'fehler',
         stripe_fehler: true,
         gesperrt: [],
         unerwartet: ['stripe'],
-        log: [{ step: 'stripe:cancel_subscription', ok: false, error: err.message }],
+        log: [{ step: 'stripe:cancel_subscription', ok: false, error: /** @type {Error} */ (err).message }],
       };
     }
     // Stripe Customer wird bewusst NICHT geloescht (unsere eigenen Belege nach § 147 AO, legal-de Punkt 7).
@@ -283,6 +292,7 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
 
     if (voErr) throw voErr;
 
+    /** @type {string[]} */
     const kandidaten = [];
     for (const vo of vos || []) {
       // Kassierte Zuzahlung = Beleg; in_therapy/completed/billed = Behandlung begonnen/abgerechnet.
@@ -297,6 +307,11 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
 
     if (kandidaten.length > 0) {
       // Hilfsfunktion: Pruefe Relation auf Vorhandensein
+      /**
+       * @param {string} tabelle
+       * @param {string} spalte
+       * @param {Record<string, unknown> | null} [filterExtra=null]
+       */
       async function pruefeRelation(tabelle, spalte, filterExtra = null) {
         try {
           let q = supabase.from(tabelle).select(spalte).in(spalte, kandidaten);
@@ -314,7 +329,7 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
             }
           }
         } catch (e) {
-          console.error(`[dsgvo-loeschen] Fehler beim Behandelt-Check (${tabelle}) — alle Kandidaten bleiben:`, e.message);
+          console.error(`[dsgvo-loeschen] Fehler beim Behandelt-Check (${tabelle}) — alle Kandidaten bleiben:`, /** @type {Error} */ (e).message);
           for (const id of kandidaten) behandelteVoIds.add(id);
         }
       }
@@ -348,7 +363,7 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
     log.push({ step: 'prescriptions:classify', ok: true, behandelt: behandelteVoIds.size, unbehandelt: unbehandelteVoIds.size });
   } catch (err) {
     // Ohne Klassifikation weder Sperre noch Löschung entscheidbar → Abbruch, nichts gelöscht.
-    console.error('[dsgvo-loeschen] VO-Klassifikation fehlgeschlagen — Abbruch vor jeder Loeschung:', err.message);
+    console.error('[dsgvo-loeschen] VO-Klassifikation fehlgeschlagen — Abbruch vor jeder Loeschung:', /** @type {Error} */ (err).message);
     return { status: 'fehler', gesperrt: [], unerwartet: ['prescriptions:classify'], log };
   }
 
@@ -357,6 +372,7 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
   const fristKategorien = FRIST_KATEGORIEN;
   // Fail-closed: ein Zählfehler zählt als „Zeilen vorhanden". Lieber eine Sperre zu viel
   // als ein gelöschtes businesses (CASCADE auf Rechnungen/Abrechnungen/Verordnungen).
+  /** @param {string} tbl */
   async function hatZeilenIn(tbl) {
     const { count, error } = await supabase.from(tbl).select('*', { count: 'exact', head: true }).eq('owner_id', ownerId);
     if (error) {
@@ -404,7 +420,7 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
           gesperrt_bis,
         });
       } catch (err) {
-        console.error(`[dsgvo-loeschen] aufbewahrung_sperre Eintrag fuer ${kat} fehlgeschlagen:`, err.message);
+        console.error(`[dsgvo-loeschen] aufbewahrung_sperre Eintrag fuer ${kat} fehlgeschlagen:`, /** @type {Error} */ (err).message);
         unerwartet.push(`aufbewahrung_sperre:${kat}`);
       }
     }
@@ -422,9 +438,9 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
       if (voDelErr) throw voDelErr;
       log.push({ step: 'delete:prescriptions:unbehandelt', ok: true, anzahl: unbIds.length });
     } catch (err) {
-      console.error('[dsgvo-loeschen] Loeschen unbehandelter Rezepte fehlgeschlagen:', err.message);
+      console.error('[dsgvo-loeschen] Loeschen unbehandelter Rezepte fehlgeschlagen:', /** @type {Error} */ (err).message);
       unerwartet.push('prescriptions:unbehandelt');
-      log.push({ step: 'delete:prescriptions:unbehandelt', ok: false, error: err.message });
+      log.push({ step: 'delete:prescriptions:unbehandelt', ok: false, error: /** @type {Error} */ (err).message });
     }
   }
 
@@ -436,7 +452,7 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
   //     Scheitert eine Bezugsabfrage: KEIN Termin wird gelöscht.
   try {
     const geschuetzt = new Set();
-    const bezug = async (tbl, select = 'booking_id', filter = 'owner_id') => {
+    const bezug = async (/** @type {string} */ tbl, select = 'booking_id', filter = 'owner_id') => {
       const { data, error } = await supabase.from(tbl).select(select)
         .eq(filter, ownerId).not('booking_id', 'is', null);
       if (error) throw new Error(`${tbl}: ${error.message}`);
@@ -465,30 +481,31 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
         }
       }
     }
-    const zuLoeschen = (termine || []).map(t => t.id).filter(id => !geschuetzt.has(id));
+    const zuLoeschen = (termine || []).map((/** @type {{ id: string }} */ t) => t.id).filter((/** @type {string} */ id) => !geschuetzt.has(id));
     for (let i = 0; i < zuLoeschen.length; i += 200) {
       const { error: bErr } = await supabase.from('bookings').delete().in('id', zuLoeschen.slice(i, i + 200));
       if (bErr) throw new Error(`bookings delete: ${bErr.message}`);
     }
     log.push({ step: 'delete:bookings', ok: true, geloescht: zuLoeschen.length, geschuetzt: geschuetzt.size });
   } catch (err) {
-    console.error('[dsgvo-loeschen] Loeschen von bookings fehlgeschlagen:', err.message);
+    console.error('[dsgvo-loeschen] Loeschen von bookings fehlgeschlagen:', /** @type {Error} */ (err).message);
     unerwartet.push('bookings');
     log.push({ step: 'delete:bookings', ok: false });
   }
 
   // 4c. Tabellen ohne owner_id ueber bekannte Beziehungen aufraeumen
+  /** @type {string[]} */
   let empIds = [];
   try {
     const { data: empRows, error: empErr } = await supabase.from('profiles').select('id').eq('owner_id', ownerId);
     if (empErr) throw new Error(`profiles: ${empErr.message}`);
-    empIds = (empRows || []).map(e => e.id);
+    empIds = (empRows || []).map((/** @type {{ id: string }} */ e) => e.id);
 
     const { data: bizRows, error: bizErr } = await supabase.from('businesses').select('id').eq('owner_id', ownerId);
     if (bizErr) throw new Error(`businesses: ${bizErr.message}`);
-    const bizIds = (bizRows || []).map(b => b.id);
+    const bizIds = (bizRows || []).map((/** @type {{ id: string }} */ b) => b.id);
 
-    const pruefe = ({ error }, was) => { if (error) throw new Error(`${was}: ${error.message}`); };
+    const pruefe = (/** @type {{ error?: { message: string } | null }} */ { error }, /** @type {string} */ was) => { if (error) throw new Error(`${was}: ${error.message}`); };
     if (empIds.length > 0) {
       pruefe(await supabase.from('employee_services').delete().in('employee_id', empIds), 'employee_services');
       pruefe(await supabase.from('employee_business_assignments').delete().in('employee_id', empIds), 'employee_business_assignments');
@@ -497,7 +514,7 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
     if (bizIds.length > 0) {
       const grp = await supabase.from('employee_groups').select('id').in('business_id', bizIds);
       pruefe(grp, 'employee_groups select');
-      const grpIds = (grp.data || []).map(g => g.id);
+      const grpIds = (grp.data || []).map((/** @type {{ id: string }} */ g) => g.id);
       if (grpIds.length > 0) {
         pruefe(await supabase.from('group_scopes').delete().in('group_id', grpIds), 'group_scopes');
       }
@@ -505,9 +522,9 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
     }
     log.push({ step: 'delete:employee_relations', ok: true });
   } catch (err) {
-    console.error('[dsgvo-loeschen] Aufraeumen der Mitarbeiter-/Standortrelationen fehlgeschlagen:', err.message);
+    console.error('[dsgvo-loeschen] Aufraeumen der Mitarbeiter-/Standortrelationen fehlgeschlagen:', /** @type {Error} */ (err).message);
     unerwartet.push('employee_relations');
-    log.push({ step: 'delete:employee_relations', ok: false, error: err.message });
+    log.push({ step: 'delete:employee_relations', ok: false, error: /** @type {Error} */ (err).message });
   }
 
   // 4d. pending_signups mit RPC leeren
@@ -525,9 +542,9 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
       }
       log.push({ step: 'delete:pending_signups', ok: true });
     } catch (err) {
-      console.error('[dsgvo-loeschen] pending_signups RPC fehlgeschlagen:', err.message);
+      console.error('[dsgvo-loeschen] pending_signups RPC fehlgeschlagen:', /** @type {Error} */ (err).message);
       unerwartet.push('pending_signups');
-      log.push({ step: 'delete:pending_signups', ok: false, error: err.message });
+      log.push({ step: 'delete:pending_signups', ok: false, error: /** @type {Error} */ (err).message });
     }
   }
 
@@ -580,9 +597,9 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
       }
       log.push({ step: stepName, ok: true });
     } catch (err) {
-      console.error(`[dsgvo-loeschen] Loeschen von ${table} (${filter}) fehlgeschlagen:`, err.message);
+      console.error(`[dsgvo-loeschen] Loeschen von ${table} (${filter}) fehlgeschlagen:`, /** @type {Error} */ (err).message);
       unerwartet.push(table);
-      log.push({ step: stepName, ok: false, error: err.message });
+      log.push({ step: stepName, ok: false, error: /** @type {Error} */ (err).message });
     }
   }
 
@@ -652,9 +669,9 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
     }
     log.push({ step: 'leads:process', ok: true });
   } catch (err) {
-    console.error('[dsgvo-loeschen] Verarbeitung von leads fehlgeschlagen:', err.message);
+    console.error('[dsgvo-loeschen] Verarbeitung von leads fehlgeschlagen:', /** @type {Error} */ (err).message);
     unerwartet.push('leads');
-    log.push({ step: 'leads:process', ok: false, error: err.message });
+    log.push({ step: 'leads:process', ok: false, error: /** @type {Error} */ (err).message });
   }
 
   // ── 6. businesses / aerzte ──────────────────────────────────────────────────
@@ -668,9 +685,9 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
       }
       log.push({ step: 'delete:businesses_and_aerzte', ok: true });
     } catch (err) {
-      console.error('[dsgvo-loeschen] Loeschen von businesses/aerzte fehlgeschlagen:', err.message);
+      console.error('[dsgvo-loeschen] Loeschen von businesses/aerzte fehlgeschlagen:', /** @type {Error} */ (err).message);
       unerwartet.push('businesses');
-      log.push({ step: 'delete:businesses_and_aerzte', ok: false, error: err.message });
+      log.push({ step: 'delete:businesses_and_aerzte', ok: false, error: /** @type {Error} */ (err).message });
     }
   }
 
@@ -690,7 +707,7 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
       unerwartet.push('auth:mitarbeiterliste');
     }
 
-    const alleNutzerIds = [ownerId, ...(empList || []).map(e => e.id)];
+    const alleNutzerIds = [ownerId, ...(empList || []).map((/** @type {{ id: string }} */ e) => e.id)];
 
     for (const uid of alleNutzerIds) {
       if (supabase.auth?.admin?.updateUserById) {
@@ -714,9 +731,9 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
     // Kommentar: Bann sperrt auch OAuth-Login (Google-Identitäten). NIE auth.admin.deleteUser aufrufen.
     log.push({ step: 'auth:ban_accounts', ok: true, anzahl: alleNutzerIds.length });
   } catch (err) {
-    console.error('[dsgvo-loeschen] Kontensperrung fehlgeschlagen:', err.message);
+    console.error('[dsgvo-loeschen] Kontensperrung fehlgeschlagen:', /** @type {Error} */ (err).message);
     unerwartet.push('auth:ban');
-    log.push({ step: 'auth:ban_accounts', ok: false, error: err.message });
+    log.push({ step: 'auth:ban_accounts', ok: false, error: /** @type {Error} */ (err).message });
   }
 
   // ── 9. profiles anonymisieren ───────────────────────────────────────────────
@@ -799,12 +816,13 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
 
     log.push({ step: 'profiles:anonymize', ok: true });
   } catch (err) {
-    console.error('[dsgvo-loeschen] Profil-Anonymisierung fehlgeschlagen:', err.message);
+    console.error('[dsgvo-loeschen] Profil-Anonymisierung fehlgeschlagen:', /** @type {Error} */ (err).message);
     unerwartet.push('profiles');
-    log.push({ step: 'profiles:anonymize', ok: false, error: err.message });
+    log.push({ step: 'profiles:anonymize', ok: false, error: /** @type {Error} */ (err).message });
   }
 
   // ── 10. Status bestimmen ───────────────────────────────────────────────────
+  /** @type {'geloescht' | 'teilweise_geloescht' | 'fehler'} */
   let status = 'geloescht';
   if (unerwartet.length > 0) {
     status = 'fehler';
@@ -822,6 +840,11 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
 
 /**
  * Raeumt Storage-Objekte fuer einen geloeschten Mandanten auf.
+ * @param {any} supabase
+ * @param {string} ownerId
+ * @param {string[]} unerwartet
+ * @param {Array<Record<string, unknown>>} log
+ * @param {Set<string>} [nonRetiredProtectedPaths]
  */
 export async function bereinigeStorage(supabase, ownerId, unerwartet, log, nonRetiredProtectedPaths = new Set()) {
   for (const b of BUCKETS) {
@@ -857,8 +880,10 @@ export async function bereinigeStorage(supabase, ownerId, unerwartet, log, nonRe
 
       if (supabase.storage?.from) {
         const bucketClient = supabase.storage.from(b.bucket);
+        /** @type {string[]} */
         const zuLoeschendeDateien = [];
 
+        /** @param {string} prefix */
         async function listRekursiv(prefix) {
           const { data: items, error } = await bucketClient.list(prefix, { limit: 1000 });
           if (error) throw new Error(`list ${prefix}: ${error.message}`);
@@ -889,9 +914,9 @@ export async function bereinigeStorage(supabase, ownerId, unerwartet, log, nonRe
         log.push({ step: `storage:${b.bucket}`, ok: true, geloescht: zuLoeschendeDateien.length });
       }
     } catch (err) {
-      console.error(`[dsgvo-loeschen] Storage-Bereinigung in ${b.bucket} fehlgeschlagen:`, err.message);
+      console.error(`[dsgvo-loeschen] Storage-Bereinigung in ${b.bucket} fehlgeschlagen:`, /** @type {Error} */ (err).message);
       unerwartet.push(`storage:${b.bucket}`);
-      log.push({ step: `storage:${b.bucket}`, ok: false, error: err.message });
+      log.push({ step: `storage:${b.bucket}`, ok: false, error: /** @type {Error} */ (err).message });
     }
   }
 }

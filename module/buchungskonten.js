@@ -82,10 +82,17 @@ export const ZAHLART_JE_KATEGORIE = Object.freeze({
 });
 
 /**
+ * @typedef {{ code: string, label: string, aktiv: boolean, kategorie: string }} Buchungskonto
+ * @typedef {{ code: string, label: string, aktiv: boolean, kategorie?: string }} BuchungskontoDraft
+ */
+
+/**
  * Zahlungskonten (Bar/Karte/Überweisung/PayPal) vs. reine Ausbuchungskonten
  * (Erlösschmälerung, Teilabsetzung — nie ein Zahlungsziel). Trennt im
  * Zahlungseingangs-Dialog das Gegenkonto-Feld vom Ausbuchungs-Feld
  * (Ops #271): Ersteres zeigt nur Zahlungskonten, Letzteres alle aktiven.
+ * @param {any} kategorie
+ * @returns {boolean}
  */
 export function istZahlungskategorie(kategorie) {
   return kategorie === 'bar' || kategorie === 'karte'
@@ -105,10 +112,13 @@ export function istZahlungskategorie(kategorie) {
  * `STANDARD_KONTEN` macht `kontenAusProfil()` — so kann die Speicherfunktion
  * unterscheiden zwischen „Owner hat nichts gepflegt" und „Owner hat Unsinn
  * eingegeben".
+ * @param {any} roh
+ * @returns {Buchungskonto[]}
  */
 export function normalisiereKonten(roh) {
   if (!Array.isArray(roh)) return [];
   const gesehen = new Set();
+  /** @type {Buchungskonto[]} */
   const raus = [];
   for (const e of roh) {
     if (!e || typeof e !== 'object') continue;
@@ -132,13 +142,19 @@ export function normalisiereKonten(roh) {
  * Der Kontenrahmen eines Profils. Leer gepflegt = Standardrahmen, damit beim
  * ersten Zahlungseingang etwas zur Auswahl steht und niemand erst eine
  * Einstellungsseite suchen muss.
+ * @param {any} profile
+ * @returns {Buchungskonto[]}
  */
 export function kontenAusProfil(profile) {
   const eigene = normalisiereKonten(profile?.buchungskonten);
   return eigene.length ? eigene : STANDARD_KONTEN.map(k => ({ ...k }));
 }
 
-/** Nur die Konten, die in einem Auswahlfeld erscheinen sollen. */
+/**
+ * Nur die Konten, die in einem Auswahlfeld erscheinen sollen.
+ * @param {any} profile
+ * @returns {Buchungskonto[]}
+ */
 export function aktiveKonten(profile) {
   return kontenAusProfil(profile).filter(k => k.aktiv);
 }
@@ -146,6 +162,9 @@ export function aktiveKonten(profile) {
 /**
  * Sucht ein Konto über seinen Code. Deaktivierte werden mitgefunden: eine alte
  * Buchung darf ihr Konto weiter anzeigen, auch wenn es nicht mehr angeboten wird.
+ * @param {any} profile
+ * @param {any} code
+ * @returns {Buchungskonto | null}
  */
 export function findeKonto(profile, code) {
   const gesucht = String(code ?? '').replace(/\s+/g, '');
@@ -153,7 +172,11 @@ export function findeKonto(profile, code) {
   return kontenAusProfil(profile).find(k => k.code === gesucht) || null;
 }
 
-/** Anzeigeform „1000 Kasse". Code und Bezeichnung bleiben getrennt gespeichert. */
+/**
+ * Anzeigeform „1000 Kasse". Code und Bezeichnung bleiben getrennt gespeichert.
+ * @param {any} konto
+ * @returns {string}
+ */
 export function kontoAnzeige(konto) {
   if (!konto) return '';
   return `${konto.code} ${konto.label}`.trim();
@@ -164,8 +187,10 @@ export function kontoAnzeige(konto) {
 // Der Entwurf ist eine Kopie: solange nicht gespeichert wurde, darf ein offener
 // Zahlungsdialog nichts von der Bearbeitung mitbekommen.
 
+/** @type {BuchungskontoDraft[]} */
 let kontenEntwurf = [];
 
+/** @param {any} deps */
 export async function renderKontenSettings(deps) {
   const section = document.getElementById('settingsKontenSection');
   if (!section) return;
@@ -198,12 +223,13 @@ export async function renderKontenSettings(deps) {
     kontenEntwurf.push({ code: '', label: '', aktiv: true });
     zeichneKontenListe(deps);
     const codes = document.querySelectorAll('#setKontenList .konto-code');
-    codes[codes.length - 1]?.focus();
+    (/** @type {HTMLElement | undefined} */ (codes[codes.length - 1]))?.focus();
   });
 
   document.getElementById('setKontenSaveBtn')?.addEventListener('click', () => speichereKonten(deps));
 }
 
+/** @param {any} deps */
 function zeichneKontenListe(deps) {
   const wrap = document.getElementById('setKontenList');
   if (!wrap) return;
@@ -241,6 +267,7 @@ function zeichneKontenListe(deps) {
 
     // Entscheidet, ob und als welche Zahlart eine Buchung auf diesem Konto
     // automatisch einen Beleg im Journal erzeugt (Ops #271, 08.09.2026).
+    /** @type {Record<string, string>} */
     const kategorieLabel = {
       bar: 'Bar', karte: 'Karte', ueberweisung: 'Überweisung',
       paypal: 'PayPal', sonstiges: 'Sonstiges (kein Zahlungskonto)',
@@ -250,7 +277,7 @@ function zeichneKontenListe(deps) {
     kategorie.style.cssText = 'width:170px;';
     kategorie.innerHTML = KONTO_KATEGORIEN
       .map(k => `<option value="${k}">${kategorieLabel[k]}</option>`).join('');
-    kategorie.value = KONTO_KATEGORIEN.includes(konto.kategorie) ? konto.kategorie : 'sonstiges';
+    kategorie.value = konto.kategorie && (/** @type {readonly string[]} */ (KONTO_KATEGORIEN)).includes(konto.kategorie) ? konto.kategorie : 'sonstiges';
     kategorie.addEventListener('change', () => { kontenEntwurf[i].kategorie = kategorie.value; });
 
     const aktivWrap = document.createElement('label');
@@ -292,8 +319,9 @@ function zeichneKontenListe(deps) {
   });
 }
 
+/** @param {any} deps */
 async function speichereKonten(deps) {
-  const btn = document.getElementById('setKontenSaveBtn');
+  const btn = /** @type {HTMLButtonElement | null} */ (document.getElementById('setKontenSaveBtn'));
   const sauber = normalisiereKonten(kontenEntwurf);
 
   // Halb ausgefüllte oder doppelte Zeilen still zu verschlucken wäre schlimmer

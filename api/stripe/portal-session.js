@@ -8,6 +8,10 @@ import { stripeRequest, publicBaseUrl } from '../_lib/stripe.js';
 
 const PUBLIC_URL = publicBaseUrl();
 
+/**
+ * @param {import('../_lib/auth.js').VercelRequest} req
+ * @param {import('../_lib/auth.js').VercelResponse} res
+ */
 async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
 

@@ -12,14 +12,23 @@
  * entscheidet. Diese Datei ist der Ort, an dem sie zusammenlaufen sollen.
  */
 
+/** @param {any} s */
 const klein = (s) => String(s ?? '').trim().toLocaleLowerCase('de-DE');
 
-/** Schlüssel aus Name + Geburtsdatum, oder null wenn etwas fehlt. */
+/**
+ * Schlüssel aus Name + Geburtsdatum, oder null wenn etwas fehlt.
+ * @param {{ last_name?: string|null, first_name?: string|null, geburtsdatum?: string|null, metadata?: Record<string, any>|null }|null|undefined} p
+ * @returns {string|null}
+ */
 export function nameGeburtSchluessel(p) {
   const nach = klein(p?.last_name), vor = klein(p?.first_name), geb = p?.geburtsdatum || p?.metadata?.geburtsdatum;
   return nach && vor && geb ? `${nach}|${vor}|${geb}` : null;
 }
 
+/**
+ * @param {{ versichertennummer?: string|null }|null|undefined} p
+ * @returns {string|null}
+ */
 function kvnr(p) {
   const k = String(p?.versichertennummer ?? '').replace(/\s+/g, '').toUpperCase();
   return k || null;
@@ -27,9 +36,10 @@ function kvnr(p) {
 
 /**
  * Sucht einen passenden Patienten.
- * @param {object} p neuer Patient (leads-Felder)
- * @param {object[]} bestehende vorhandene leads
- * @returns {object|null} der gefundene Patient
+ * @template {{ last_name?: string|null, first_name?: string|null, geburtsdatum?: string|null, versichertennummer?: string|null, metadata?: Record<string, any>|null }} T
+ * @param {T|null|undefined} p neuer Patient (leads-Felder)
+ * @param {T[]} bestehende vorhandene leads
+ * @returns {T|null} der gefundene Patient
  */
 export function findePatientDublette(p, bestehende) {
   const k = kvnr(p);

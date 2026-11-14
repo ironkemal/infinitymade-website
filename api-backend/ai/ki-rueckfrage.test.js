@@ -229,6 +229,7 @@ test('confirmation rejects duplicate, unknown, subset and malformed expiry witho
   const service = createConfirmationService({ secret: Buffer.alloc(32, 9), directory: getTempDir(), now: () => 1000 });
   const args = { task: TEST_TASK, userId: TEST_USER, tenantId: TEST_TENANT, payload: { intent: 'Test' }, candidates: [{ id: 'one', text: 'NameOne', type: 'NAME' }, { id: 'two', text: 'NameTwo', type: 'NAME' }] };
   const challenge = service.createChallenge(args);
+  /** @param {Array<{ id: string, action: string }>} choices */
   const verify = choices => service.verifyConfirmation({ ...args, currentCandidates: args.candidates, kiConfirmation: { challengeId: challenge.challengeId, choices } });
   for (const ids of [['one', 'one'], ['one', 'unknown'], ['one']]) assert.equal(verify(ids.map(id => ({ id, action: 'maskieren' }))).code, 'KI_CHOICES_INVALID');
   assert.equal(service.verifyConfirmation({ ...args, currentCandidates: args.candidates, kiConfirmation: { challengeId: challenge.challengeId + 'junk', choices: [] } }).code, 'KI_CHALLENGE_MALFORMED');

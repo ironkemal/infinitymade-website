@@ -17,14 +17,22 @@
 import { istKutu } from './dagitim.js';
 import { envSmtpVorhanden } from './mail.js';
 
+/**
+ * @param {{ weg?: string | null } | null} [kanal=null]
+ */
 export function mailEntwurfStattVersand(kanal = null) {
   if (!istKutu()) return false;
   return kanal ? kanal.weg !== 'smtp' : !envSmtpVorhanden();
 }
 
+/** @param {unknown} d */
 const datumDe = d => new Date(`${String(d).slice(0, 10)}T12:00:00`).toLocaleDateString('de-DE');
+/** @param {string | null | undefined} praxis */
 const gruss = praxis => `\n\nFreundliche Grüße\n${praxis || 'Ihre Praxis'}`;
 
+/**
+ * @param {{ to: string, vorname?: string | null, praxis?: string | null, datum?: string | null, uhrzeit?: string | null, therapeut?: string | null }} opts
+ */
 export function entwurfBestaetigt({ to, vorname, praxis, datum, uhrzeit, therapeut }) {
   const zeilen = [
     praxis ? `Praxis: ${praxis}` : null,
@@ -42,6 +50,9 @@ export function entwurfBestaetigt({ to, vorname, praxis, datum, uhrzeit, therape
   };
 }
 
+/**
+ * @param {{ to: string, vorname?: string | null, praxis?: string | null, grund?: string | null }} opts
+ */
 export function entwurfAbgelehnt({ to, vorname, praxis, grund }) {
   return {
     to,
@@ -53,6 +64,9 @@ export function entwurfAbgelehnt({ to, vorname, praxis, grund }) {
   };
 }
 
+/**
+ * @param {{ to: string, vorname?: string | null, praxis?: string | null, grund?: string | null, termine?: Array<{ date: string, time: string }> | null }} opts
+ */
 export function entwurfGegenangebot({ to, vorname, praxis, grund, termine }) {
   const liste = (termine || []).map(a => {
     const tag = new Date(`${a.date}T12:00:00`).toLocaleDateString('de-DE', {
@@ -72,6 +86,9 @@ export function entwurfGegenangebot({ to, vorname, praxis, grund, termine }) {
   };
 }
 
+/**
+ * @param {{ to: string, vorname?: string | null, praxis?: string | null, nachricht?: string | null }} opts
+ */
 export function entwurfNachricht({ to, vorname, praxis, nachricht }) {
   return {
     to,

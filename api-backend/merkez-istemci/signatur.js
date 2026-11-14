@@ -19,6 +19,10 @@ const RE_ZEIT = /^[0-9]{1,12}$/;
 const RE_NONCE = /^[A-Za-z0-9_-]{22}$/;   // 128 Bit base64url
 const RE_SIGNATUR = /^[A-Za-z0-9_-]{86}$/; // Ed25519 = 64 Byte base64url
 
+/**
+ * @param {unknown} body
+ * @returns {string}
+ */
 export function sha256Hex(body) {
   // Nur Buffer/string/null: ein anderer Typ (z. B. {} von express.raw ohne Body) würde still falsch gehasht.
   if (body != null && !Buffer.isBuffer(body) && typeof body !== 'string') throw new TypeError('Body muss Buffer, string oder leer sein');
@@ -32,6 +36,7 @@ export function neueNonce() {
 
 /**
  * Öffentlichen Ed25519-Schlüssel einlesen: KeyObject, SPKI-PEM oder base64url(SPKI-DER).
+ * @param {any} eingabe
  * @returns {crypto.KeyObject}
  */
 export function publicKeyLesen(eingabe) {
@@ -49,16 +54,28 @@ export function publicKeyLesen(eingabe) {
   return key;
 }
 
+/**
+ * @param {crypto.KeyObject | string | Buffer} key
+ * @returns {string}
+ */
 export function publicKeyAlsBase64url(key) {
   return publicKeyLesen(key).export({ type: 'spki', format: 'der' }).toString('base64url');
 }
 
-/** box_id = erste 128 Bit (32 Hex) von sha256(SPKI-DER) — aus dem Schlüssel ableitbar, nicht frei wählbar. */
+/**
+ * box_id = erste 128 Bit (32 Hex) von sha256(SPKI-DER) — aus dem Schlüssel ableitbar, nicht frei wählbar.
+ * @param {crypto.KeyObject | string | Buffer} eingabe
+ * @returns {string}
+ */
 export function boxIdAusPublicKey(eingabe) {
   const der = publicKeyLesen(eingabe).export({ type: 'spki', format: 'der' });
   return crypto.createHash('sha256').update(der).digest('hex').slice(0, 32);
 }
 
+/**
+ * @param {{ method: string, host: string, pfad: string, boxId: string, zeit: string | number, nonce: string, body?: Buffer | string | null }} p
+ * @returns {string}
+ */
 export function baueSignaturString({ method, host, pfad, boxId, zeit, nonce, body }) {
   return [PROTOKOLL, String(method).toUpperCase(), host, pfad, boxId, String(zeit), nonce, sha256Hex(body)].join('\n');
 }
@@ -66,6 +83,8 @@ export function baueSignaturString({ method, host, pfad, boxId, zeit, nonce, bod
 /**
  * URL ohne Normalisierung zerlegen (new URL() würde Pfade umschreiben).
  * Host klein, Standardport (80/443) weggelassen — so sendet ihn auch fetch.
+ * @param {string} url
+ * @returns {{ schema: string, host: string, pfad: string }}
  */
 export function zerlegeUrl(url) {
   const m = /^(https?):\/\/([^/?#]+)([^#]*)$/i.exec(String(url));
@@ -103,9 +122,13 @@ export function signiereAnfrage({ method, url, body, kimlik, jetzt = Date.now(),
   };
 }
 
-/** Signatur-Kopfzeilen lesen und formal prüfen (Node: Header-Namen klein). null = fehlt/ungültig. */
+/**
+ * Signatur-Kopfzeilen lesen und formal prüfen (Node: Header-Namen klein). null = fehlt/ungültig.
+ * @param {Record<string, any> | null | undefined} headers
+ * @returns {{ boxId: string, zeit: number, nonce: string, signatur: string } | null}
+ */
 export function leseSignaturKopf(headers) {
-  const h = (n) => (typeof headers?.[n] === 'string' ? headers[n] : null);
+  const h = /** @param {string} n */ (n) => (typeof headers?.[n] === 'string' ? headers[n] : null);
   const boxId = h('x-praxura-box');
   const zeit = h('x-praxura-zeit');
   const nonce = h('x-praxura-nonce');
@@ -124,12 +147,12 @@ export function leseSignaturKopf(headers) {
  * @param {string} p.host        Host-Header der Anfrage
  * @param {string} p.pfad        roher Pfad + Query (req.originalUrl)
  * @param {Buffer|string} [p.body] roher Body
- * @param {{boxId,zeit,nonce,signatur}} p.kopf  aus leseSignaturKopf
+ * @param {{boxId: string, zeit: number, nonce: string, signatur: string} | null | undefined} p.kopf  aus leseSignaturKopf
  * @param {*} p.publicKey        Schlüssel der Box (aus dem Register)
  * @param {number} [p.jetzt]     ms
  * @param {(boxId:string, nonce:string)=>boolean} [p.nonceNeu] true = Nonce war neu (und ist jetzt gemerkt)
  * @param {string} [p.erwarteterHost] wenn gesetzt, muss der Host genau so lauten
- * @returns {{ok:true}|{ok:false, grund:string}}
+ * @returns {{ok:true, grund?:undefined}|{ok:false, grund:string}}
  */
 export function pruefeSignatur({ method, host, pfad, body, kopf, publicKey, jetzt = Date.now(), nonceNeu, erwarteterHost }) {
   if (!kopf) return { ok: false, grund: 'kopf' };

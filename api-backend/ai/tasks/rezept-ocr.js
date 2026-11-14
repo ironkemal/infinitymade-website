@@ -12,8 +12,9 @@ import { executeKiTask } from '../ki-gateway.js';
  * Executes rezept-ocr task.
  * Under M4 / C5 gate, OCR is strictly disabled and rejected without transmitting image data.
  *
- * @param {object} payload
- * @param {object} [context]
+ * @param {import('../ki-gateway.js').GatewayPayload} payload
+ * @param {import('../ki-gateway.js').GatewayContext} [context={}]
+ * @returns {Promise<never>}
  * @throws {Error} always throws AI_OCR_DISABLED (status 503)
  */
 export async function run(payload, context = {}) {
@@ -28,6 +29,7 @@ export async function run(payload, context = {}) {
   });
 
   // Fail-safe if gateway ever returned without error:
+  /** @type {Error & { code?: string, status?: number }} */
   const err = new Error('OCR über diesen Dienst ist deaktiviert');
   err.code = 'AI_OCR_DISABLED';
   err.status = 503;

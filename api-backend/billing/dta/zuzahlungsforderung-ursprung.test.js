@@ -21,6 +21,18 @@ const TEST_PATIENT_ID = '22222222-2222-4222-8222-222222222222';
 const AUDIT_DATE = '2026-09-15';
 const AUDIT_INSTANT = '2026-09-15T10:00:00.000Z'; // 12:00:00 MESZ am gleichen Berliner Tag
 
+/** @typedef {Error & { status?: number, code?: string }} TestError */
+/** @typedef {import('./preflight.js').DtaInput} DtaInput */
+/** @typedef {DtaInput & { rechnung: DtaInput['rechnung'] & { datum: string }, prescriptions: Array<DtaInput['prescriptions'][number] & { verordnung: DtaInput['prescriptions'][number]['verordnung'] & { ausstellungsdatum: string } }> }} TestDtaInput */
+
+/**
+ * @param {unknown} fixture
+ * @returns {TestDtaInput}
+ */
+function cloneFixture(fixture) {
+  return /** @type {TestDtaInput} */ (structuredClone(fixture));
+}
+
 function makeValidProofKZ1({
   art = 'belastungsgrenze62',
   referenz = 'BEFR-2026-001',
@@ -119,7 +131,7 @@ test('1. EDIFACT-Hilfsfunktionen: Entwertung, Trennung und strikte Kalenderprüf
   assert.equal(unescapeEdifact('Doppelpunkt?:test'), 'Doppelpunkt:test');
   assert.equal(unescapeEdifact("Apostroph?'test"), "Apostroph'test");
   assert.equal(unescapeEdifact(''), '');
-  assert.equal(unescapeEdifact(null), '');
+  assert.equal(unescapeEdifact(/** @type {string} */ (/** @type {unknown} */ (null))), '');
 
   // Komponenten-Trennung
   assert.deepEqual(komponentenTrennen('A:B:C').map(unescapeEdifact), ['A', 'B', 'C']);
@@ -132,21 +144,21 @@ test('1. EDIFACT-Hilfsfunktionen: Entwertung, Trennung und strikte Kalenderprüf
   assert.equal(parseGermanAmount('10'), 10.00);
   assert.equal(parseGermanAmount('-5,50'), -5.50);
   assert.ok(Number.isNaN(parseGermanAmount('')));
-  assert.ok(Number.isNaN(parseGermanAmount(null)));
-  assert.throws(() => parseGermanAmount('abc'), (err) => err.status === 422);
+  assert.ok(Number.isNaN(parseGermanAmount(/** @type {string} */ (/** @type {unknown} */ (null)))));
+  assert.throws(() => parseGermanAmount('abc'), (/** @type {TestError} */ err) => err.status === 422);
 
   // Datum & Kalenderprüfung
   assert.equal(toIsoDate('20260828'), '2026-08-28');
   assert.equal(toIsoDate('2026-08-28'), '2026-08-28');
   assert.equal(toIsoDate(''), '');
-  assert.equal(toIsoDate(null), '');
+  assert.equal(toIsoDate(/** @type {string} */ (/** @type {unknown} */ (null))), '');
   // Feb 31 wird strikt abgewiesen
-  assert.throws(() => toIsoDate('20260231'), (err) => {
+  assert.throws(() => toIsoDate('20260231'), (/** @type {TestError} */ err) => {
     assert.equal(err.status, 422);
     assert.equal(err.code, 'INVALID_CALENDAR_DATE');
     return true;
   });
-  assert.throws(() => toIsoDate('2026-02-31'), (err) => {
+  assert.throws(() => toIsoDate('2026-02-31'), (/** @type {TestError} */ err) => {
     assert.equal(err.status, 422);
     assert.equal(err.code, 'INVALID_CALENDAR_DATE');
     return true;
@@ -154,7 +166,7 @@ test('1. EDIFACT-Hilfsfunktionen: Entwertung, Trennung und strikte Kalenderprüf
 });
 
 test('2. Roundtrip Builder -> Parser -> VKZ03 Builder mit allen Snapshot-Pflichtfeldern und Hash', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   f.absender.ik = '800000000';
   f.empfaenger.ik = '108310400';
   f.prescriptions[0].verordnung.kostentraegerIk = '108310400';
@@ -230,7 +242,7 @@ test('2. Roundtrip Builder -> Parser -> VKZ03 Builder mit allen Snapshot-Pflicht
 });
 
 test('3. Negativtest optionalhash: Fehlende oder ungültige SHA-256 Prüfsumme wird abgewiesen', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
 
   const baseHeader = {
@@ -250,13 +262,13 @@ test('3. Negativtest optionalhash: Fehlende oder ungültige SHA-256 Prüfsumme w
 
   // Ohne expectedSha256
   assert.throws(() => {
-    parseOriginalDtaMessage({
+    parseOriginalDtaMessage(/** @type {Parameters<typeof parseOriginalDtaMessage>[0]} */ (/** @type {unknown} */ ({
       dtaContent: Buffer.from(built.content, 'latin1'),
       sourceHeader: baseHeader,
       sourceZeile: baseZeile,
       reason: 'KZ2',
-    });
-  }, (err) => {
+    })));
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.code, 'DTA_HASH_REQUIRED');
     assert.equal(err.status, 422);
     return true;
@@ -271,7 +283,7 @@ test('3. Negativtest optionalhash: Fehlende oder ungültige SHA-256 Prüfsumme w
       sourceZeile: baseZeile,
       reason: 'KZ2',
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.code, 'DTA_HASH_REQUIRED');
     assert.equal(err.status, 422);
     return true;
@@ -286,7 +298,7 @@ test('3. Negativtest optionalhash: Fehlende oder ungültige SHA-256 Prüfsumme w
       sourceZeile: baseZeile,
       reason: 'KZ2',
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.code, 'DTA_HASH_MISMATCH');
     assert.equal(err.status, 422);
     return true;
@@ -294,7 +306,7 @@ test('3. Negativtest optionalhash: Fehlende oder ungültige SHA-256 Prüfsumme w
 });
 
 test('4. Negativtest missinginvoice: Fehlende Rechnungsnummer im Header wird abgewiesen', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   const hash = sha256Hex(Buffer.from(built.content, 'latin1'));
 
@@ -318,7 +330,7 @@ test('4. Negativtest missinginvoice: Fehlende Rechnungsnummer im Header wird abg
       },
       reason: 'KZ2',
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.code, 'MISSING_INVOICE_NUMBER');
     assert.equal(err.status, 422);
     return true;
@@ -326,7 +338,7 @@ test('4. Negativtest missinginvoice: Fehlende Rechnungsnummer im Header wird abg
 });
 
 test('5. Negativtest KVNR: Fehlende KVNR im Beleg wird abgewiesen', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   const hash = sha256Hex(Buffer.from(built.content, 'latin1'));
 
@@ -350,7 +362,7 @@ test('5. Negativtest KVNR: Fehlende KVNR im Beleg wird abgewiesen', () => {
       },
       reason: 'KZ2',
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.code, 'MISSING_KVNR');
     assert.equal(err.status, 422);
     return true;
@@ -358,7 +370,7 @@ test('5. Negativtest KVNR: Fehlende KVNR im Beleg wird abgewiesen', () => {
 });
 
 test('6. Negativtest Feb31: Ungültiges Kalenderdatum in DTA wird strikt mit 422 abgewiesen', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   // Rechnungsdatum im REC auf 2026-02-31 manipulieren
   const badDta = built.content.replace("20260828+1'", "20260231+1'");
@@ -384,7 +396,7 @@ test('6. Negativtest Feb31: Ungültiges Kalenderdatum in DTA wird strikt mit 422
       },
       reason: 'KZ2',
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.code, 'INVALID_CALENDAR_DATE');
     assert.equal(err.status, 422);
     return true;
@@ -392,7 +404,7 @@ test('6. Negativtest Feb31: Ungültiges Kalenderdatum in DTA wird strikt mit 422
 });
 
 test('7. Negativtest negativeprice: Nicht-positiver Einzelbetrag in EHE wird mit 422 abgewiesen', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   // EHE Einzelbetrag von 28,90 auf -28,90 manipulieren (in EHE)
   const badDta = built.content.replace("+1,00+28,90+", "+1,00+-28,90+");
@@ -418,7 +430,7 @@ test('7. Negativtest negativeprice: Nicht-positiver Einzelbetrag in EHE wird mit
       },
       reason: 'KZ2',
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     // Strict byte grammar now rejects this malformed source before domain extraction.
     assert.equal(err.code, 'DTA_SYNTAX_ERROR');
     assert.equal(err.status, 422);
@@ -427,7 +439,7 @@ test('7. Negativtest negativeprice: Nicht-positiver Einzelbetrag in EHE wird mit
 });
 
 test('8. Negativtest missingBES: Unvollständiges BES-Segment wird mit 422 abgewiesen', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   // BES verstümmeln: Pauschale und Prozent fehlen (nur Brutto)
   const badDta = built.content.replace("BES+28,90+12,89+2,89+10,00'", "BES+28,90'");
@@ -453,7 +465,7 @@ test('8. Negativtest missingBES: Unvollständiges BES-Segment wird mit 422 abgew
       },
       reason: 'KZ2',
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.code, 'DTA_SYNTAX_ERROR');
     assert.equal(err.status, 422);
     return true;
@@ -461,7 +473,7 @@ test('8. Negativtest missingBES: Unvollständiges BES-Segment wird mit 422 abgew
 });
 
 test('9. Negativtest money mismatch: Abweichung zwischen Schnappschuss und DTA wird abgewiesen', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   const hash = sha256Hex(Buffer.from(built.content, 'latin1'));
 
@@ -485,7 +497,7 @@ test('9. Negativtest money mismatch: Abweichung zwischen Schnappschuss und DTA w
       },
       reason: 'KZ2',
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.code, 'SNAPSHOT_MONEY_MISMATCH');
     assert.equal(err.status, 422);
     return true;
@@ -493,7 +505,7 @@ test('9. Negativtest money mismatch: Abweichung zwischen Schnappschuss und DTA w
 });
 
 test('10. Negativtest removedEHEcopay: Fehlender EHE-Zuzahlungsbetrag wird mit 422 abgewiesen (kein 10% Erfinden)', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   // Feld 6 im EHE entfernen: +20260828+2,89' -> +20260828+'
   const badDta = built.content.replace("+20260828+2,89'", "+20260828+'");
@@ -519,7 +531,7 @@ test('10. Negativtest removedEHEcopay: Fehlender EHE-Zuzahlungsbetrag wird mit 4
       },
       reason: 'KZ2',
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     // Strict byte grammar now rejects this malformed source before domain extraction.
     assert.equal(err.code, 'DTA_SYNTAX_ERROR');
     assert.equal(err.status, 422);
@@ -528,7 +540,7 @@ test('10. Negativtest removedEHEcopay: Fehlender EHE-Zuzahlungsbetrag wird mit 4
 });
 
 test('11. Negativtest secondDIAtext: Zweiter Diagnosetext wird mit UNSUPPORTED_ORIGINAL_SEGMENT abgewiesen', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   // Zweites DIA-Segment mit Diagnosetext einfügen und UNT-Segmentzähler um 1 erhöhen
   const badDta = built.content
@@ -556,7 +568,7 @@ test('11. Negativtest secondDIAtext: Zweiter Diagnosetext wird mit UNSUPPORTED_O
       },
       reason: 'KZ2',
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.code, 'UNSUPPORTED_ORIGINAL_SEGMENT');
     assert.equal(err.status, 422);
     assert.match(err.message, /Mehrere Diagnosetexte/);
@@ -565,7 +577,7 @@ test('11. Negativtest secondDIAtext: Zweiter Diagnosetext wird mit UNSUPPORTED_O
 });
 
 test('12. Negativtest multipleTXT: Mehrere TXT-Segmente zu einer EHE werden mit 422 abgewiesen', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   // Nach EHE zwei TXT-Segmente einfügen und UNT-Segmentzähler um 2 erhöhen
   const badDta = built.content
@@ -596,7 +608,7 @@ test('12. Negativtest multipleTXT: Mehrere TXT-Segmente zu einer EHE werden mit 
       },
       reason: 'KZ2',
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     // Strict byte grammar now rejects this malformed source before domain extraction.
     assert.equal(err.code, 'DTA_SYNTAX_ERROR');
     assert.equal(err.status, 422);
@@ -606,7 +618,7 @@ test('12. Negativtest multipleTXT: Mehrere TXT-Segmente zu einer EHE werden mit 
 });
 
 test('13. Negativtest partialindices: Teilselektionen bei KZ1 und KZ2 werden strikt abgewiesen', () => {
-  const f = structuredClone(physioFixture);
+  const f = cloneFixture(physioFixture);
   const built = buildDtaFile(f);
   const hash = sha256Hex(Buffer.from(built.content, 'latin1'));
 
@@ -640,7 +652,7 @@ test('13. Negativtest partialindices: Teilselektionen bei KZ1 und KZ2 werden str
       nachweisPruefung: makeValidProofKZ2({ kostentraegerIk: f.prescriptions[0].verordnung.kostentraegerIk }),
       verifiedSourcePatientId: TEST_PATIENT_ID,
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.code, 'PARTIAL_SELECTION_REJECTED');
     assert.equal(err.status, 422);
     return true;
@@ -662,7 +674,7 @@ test('13. Negativtest partialindices: Teilselektionen bei KZ1 und KZ2 werden str
       }),
       verifiedSourcePatientId: TEST_PATIENT_ID,
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.code, 'PARTIAL_SELECTION_REJECTED');
     assert.equal(err.status, 422);
     return true;
@@ -670,7 +682,7 @@ test('13. Negativtest partialindices: Teilselektionen bei KZ1 und KZ2 werden str
 });
 
 test('14. Negativtest falseproof: Unbestätigter oder fehlerhafter Nachweis wird abgewiesen', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   const hash = sha256Hex(Buffer.from(built.content, 'latin1'));
 
@@ -702,7 +714,7 @@ test('14. Negativtest falseproof: Unbestätigter oder fehlerhafter Nachweis wird
       reason: 'KZ1',
       nachweisPruefung: makeValidProofKZ1({ bestaetigt: false }),
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.code, 'EXEMPTION_EVIDENCE_UNVERIFIED');
     assert.equal(err.status, 422);
     return true;
@@ -718,7 +730,7 @@ test('14. Negativtest falseproof: Unbestätigter oder fehlerhafter Nachweis wird
       reason: 'KZ1',
       nachweisPruefung: makeValidProofKZ1({ art: 'falsche_art' }),
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.code, 'EXEMPTION_EVIDENCE_UNVERIFIED');
     assert.equal(err.status, 422);
     return true;
@@ -726,7 +738,7 @@ test('14. Negativtest falseproof: Unbestätigter oder fehlerhafter Nachweis wird
 });
 
 test('15. Negativtest periodgap: Behandlungsdatum außerhalb des Befreiungszeitraums wird abgewiesen', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   const hash = sha256Hex(Buffer.from(built.content, 'latin1'));
 
@@ -755,7 +767,7 @@ test('15. Negativtest periodgap: Behandlungsdatum außerhalb des Befreiungszeitr
       reason: 'KZ1',
       nachweisPruefung: makeValidProofKZ1({ gueltigAb: '2026-01-01', gueltigBis: '2026-08-27' }),
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.code, 'EXEMPTION_EVIDENCE_UNVERIFIED');
     assert.equal(err.status, 422);
     assert.match(err.message, /liegt außerhalb des verifizierten Befreiungszeitraums/);
@@ -764,7 +776,7 @@ test('15. Negativtest periodgap: Behandlungsdatum außerhalb des Befreiungszeitr
 });
 
 test('16. Negativtest wrongpatientIK: Falsche Patienten-ID oder Kostenträger-IK im Nachweis wird abgewiesen', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   const hash = sha256Hex(Buffer.from(built.content, 'latin1'));
 
@@ -796,7 +808,7 @@ test('16. Negativtest wrongpatientIK: Falsche Patienten-ID oder Kostenträger-IK
       reason: 'KZ1',
       nachweisPruefung: makeValidProofKZ1({ patientId: '33333333-3333-4333-8333-333333333333' }),
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.code, 'EXEMPTION_EVIDENCE_UNVERIFIED');
     assert.equal(err.status, 422);
     assert.match(err.message, /Patienten-ID/);
@@ -813,7 +825,7 @@ test('16. Negativtest wrongpatientIK: Falsche Patienten-ID oder Kostenträger-IK
       reason: 'KZ1',
       nachweisPruefung: makeValidProofKZ1({ kostentraegerIk: '999999999' }),
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.code, 'EXEMPTION_EVIDENCE_UNVERIFIED');
     assert.equal(err.status, 422);
     assert.match(err.message, /Kostenträger-IK/);
@@ -822,7 +834,7 @@ test('16. Negativtest wrongpatientIK: Falsche Patienten-ID oder Kostenträger-IK
 });
 
 test('17. Negativtest auditor: Ungültige Prüfer-ID oder zukünftiger Prüfzeitpunkt wird abgewiesen', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   const hash = sha256Hex(Buffer.from(built.content, 'latin1'));
 
@@ -854,7 +866,7 @@ test('17. Negativtest auditor: Ungültige Prüfer-ID oder zukünftiger Prüfzeit
       reason: 'KZ1',
       nachweisPruefung: makeValidProofKZ1({ prueferId: 'keine-uuid' }),
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.code, 'EXEMPTION_EVIDENCE_UNVERIFIED');
     assert.equal(err.status, 422);
     return true;
@@ -873,7 +885,7 @@ test('17. Negativtest auditor: Ungültige Prüfer-ID oder zukünftiger Prüfzeit
         geprueftZeitpunkt: '2099-01-01T10:00:00.000Z',
       }),
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.code, 'EXEMPTION_EVIDENCE_UNVERIFIED');
     assert.equal(err.status, 422);
     assert.match(err.message, /Zukunft/);
@@ -882,7 +894,7 @@ test('17. Negativtest auditor: Ungültige Prüfer-ID oder zukünftiger Prüfzeit
 });
 
 test('18. Negativtest KZ5selectedwithoutproof: KZ5 ohne Nachweis wird strikt abgewiesen', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   const hash = sha256Hex(Buffer.from(built.content, 'latin1'));
 
@@ -911,7 +923,7 @@ test('18. Negativtest KZ5selectedwithoutproof: KZ5 ohne Nachweis wird strikt abg
       selectedSessionIndices: [0],
       // Kein nachweisPruefung!
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.code, 'YEAR_TRANSITION_EVIDENCE_UNVERIFIED');
     assert.equal(err.status, 422);
     return true;
@@ -919,7 +931,7 @@ test('18. Negativtest KZ5selectedwithoutproof: KZ5 ohne Nachweis wird strikt abg
 });
 
 test('19. Positivtest KZ1 mit vollständigem manuellem Nachweis (belastungsgrenze62)', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   const hash = sha256Hex(Buffer.from(built.content, 'latin1'));
 
@@ -958,7 +970,7 @@ test('19. Positivtest KZ1 mit vollständigem manuellem Nachweis (belastungsgrenz
 });
 
 test('20. Positivtest KZ5 mit vollständigem manuellem Nachweis (statuswechsel_jahreswechsel)', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   const hash = sha256Hex(Buffer.from(built.content, 'latin1'));
 
@@ -1003,7 +1015,7 @@ test('20. Positivtest KZ5 mit vollständigem manuellem Nachweis (statuswechsel_j
 });
 
 test('21. Ursprungsrechnung mit VKZ ungleich 01 wird strikt abgewiesen', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   const modifiedContent = built.content.replace("FKT+01++123456789+101000000+101000000'", "FKT+02++123456789+101000000+101000000'");
   const hash = sha256Hex(Buffer.from(modifiedContent, 'latin1'));
@@ -1029,7 +1041,7 @@ test('21. Ursprungsrechnung mit VKZ ungleich 01 wird strikt abgewiesen', () => {
       reason: 'KZ2',
       currentSenderIk: f.absender.ik,
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     // Strict byte grammar now rejects this malformed source before domain extraction.
     assert.equal(err.code, 'DTA_SYNTAX_ERROR');
     assert.equal(err.status, 422);
@@ -1063,7 +1075,7 @@ test('22. Strikte Mengen- und Betragsvalidierung (keine nicht-positive Menge)', 
       reason: 'KZ2',
       currentSenderIk: '800000000',
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     // Strict byte grammar now rejects this malformed source before domain extraction.
     assert.equal(err.code, 'DTA_SYNTAX_ERROR');
     assert.match(err.message, /syntaktisch beschädigt/);
@@ -1096,7 +1108,7 @@ test('23. Mehrere Tarife in einer Verordnung werden strikt abgewiesen', () => {
       reason: 'KZ2',
       currentSenderIk: '800000000',
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     // Strict byte grammar now rejects this malformed source before domain extraction.
     assert.equal(err.code, 'DTA_SYNTAX_ERROR');
     return true;
@@ -1104,7 +1116,7 @@ test('23. Mehrere Tarife in einer Verordnung werden strikt abgewiesen', () => {
 });
 
 test('24. Negativtest sourceconflict owner: Abweichende Inhaber-IDs in Ursprungskopf und Zeile werden abgewiesen', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   const hash = sha256Hex(Buffer.from(built.content, 'latin1'));
 
@@ -1132,7 +1144,7 @@ test('24. Negativtest sourceconflict owner: Abweichende Inhaber-IDs in Ursprungs
       reason: 'KZ2',
       nachweisPruefung: makeValidProofKZ2(),
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.status, 422);
     assert.match(err.message, /Widersprüchliche Inhaber/);
     return true;
@@ -1140,7 +1152,7 @@ test('24. Negativtest sourceconflict owner: Abweichende Inhaber-IDs in Ursprungs
 });
 
 test('25. Negativtest sourceconflict patient: Abweichende Patienten-IDs zwischen Zeile und verifiedSourcePatientId werden abgewiesen', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   const hash = sha256Hex(Buffer.from(built.content, 'latin1'));
 
@@ -1169,7 +1181,7 @@ test('25. Negativtest sourceconflict patient: Abweichende Patienten-IDs zwischen
       nachweisPruefung: makeValidProofKZ2(),
       verifiedSourcePatientId: '88888888-8888-4888-8888-888888888888', // Konflikt mit TEST_PATIENT_ID!
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.status, 422);
     assert.match(err.message, /Widersprüchliche Patienten-IDs/);
     return true;
@@ -1177,7 +1189,7 @@ test('25. Negativtest sourceconflict patient: Abweichende Patienten-IDs zwischen
 });
 
 test('26. Negativtest duplicate indices: Doppelte Sitzungsindizes werden strikt abgewiesen (kein stilles Entdoppeln)', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   const hash = sha256Hex(Buffer.from(built.content, 'latin1'));
 
@@ -1206,7 +1218,7 @@ test('26. Negativtest duplicate indices: Doppelte Sitzungsindizes werden strikt 
       selectedSessionIndices: [0, 0], // Doppelt!
       nachweisPruefung: makeValidProofKZ2(),
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.status, 422);
     assert.equal(err.code, 'DUPLICATE_SESSION_INDICES');
     return true;
@@ -1214,7 +1226,7 @@ test('26. Negativtest duplicate indices: Doppelte Sitzungsindizes werden strikt 
 });
 
 test('27. Negativtest missingproof2: Grund 2 ohne Nachweis wird mit PAYMENT_DEMAND_EVIDENCE_UNVERIFIED abgewiesen', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   const hash = sha256Hex(Buffer.from(built.content, 'latin1'));
 
@@ -1242,7 +1254,7 @@ test('27. Negativtest missingproof2: Grund 2 ohne Nachweis wird mit PAYMENT_DEMA
       reason: 'KZ2',
       // Kein nachweisPruefung!
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.status, 422);
     assert.equal(err.code, 'PAYMENT_DEMAND_EVIDENCE_UNVERIFIED');
     return true;
@@ -1250,7 +1262,7 @@ test('27. Negativtest missingproof2: Grund 2 ohne Nachweis wird mit PAYMENT_DEMA
 });
 
 test('28. Negativtest proof2keys: Unerwartete oder fehlende Schlüssel bei Grund 2 werden abgewiesen', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   const hash = sha256Hex(Buffer.from(built.content, 'latin1'));
 
@@ -1285,7 +1297,7 @@ test('28. Negativtest proof2keys: Unerwartete oder fehlende Schlüssel bei Grund
         gueltigAb: '2026-01-01',
       },
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.status, 422);
     assert.equal(err.code, 'PAYMENT_DEMAND_EVIDENCE_UNVERIFIED');
     assert.match(err.message, /Unerwarteter Schlüssel/);
@@ -1293,6 +1305,7 @@ test('28. Negativtest proof2keys: Unerwartete oder fehlende Schlüssel bei Grund
   });
 
   // Fehlender Pflichtschlüssel (versandArt fehlt)
+  /** @type {Record<string, unknown>} */
   const proofWithoutVersandArt = makeValidProofKZ2();
   delete proofWithoutVersandArt.versandArt;
   assert.throws(() => {
@@ -1302,9 +1315,9 @@ test('28. Negativtest proof2keys: Unerwartete oder fehlende Schlüssel bei Grund
       sourceHeader: baseHeader,
       sourceZeile: baseZeile,
       reason: 'KZ2',
-      nachweisPruefung: proofWithoutVersandArt,
+      nachweisPruefung: /** @type {Parameters<typeof parseOriginalDtaMessage>[0]['nachweisPruefung']} */ (proofWithoutVersandArt),
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.status, 422);
     assert.equal(err.code, 'PAYMENT_DEMAND_EVIDENCE_UNVERIFIED');
     assert.match(err.message, /Pflichtfeld "versandArt" im Nachweisobjekt fehlt/);
@@ -1313,7 +1326,7 @@ test('28. Negativtest proof2keys: Unerwartete oder fehlende Schlüssel bei Grund
 });
 
 test('29. Negativtest Grund-2-Felder: Ungültige versandArt, Versand nach Prüfung und unbestätigte Flags werden abgewiesen', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   const hash = sha256Hex(Buffer.from(built.content, 'latin1'));
 
@@ -1345,7 +1358,7 @@ test('29. Negativtest Grund-2-Felder: Ungültige versandArt, Versand nach Prüfu
       reason: 'KZ2',
       nachweisPruefung: makeValidProofKZ2({ versandArt: 'brieftaube' }),
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.status, 422);
     assert.equal(err.code, 'PAYMENT_DEMAND_EVIDENCE_UNVERIFIED');
     assert.match(err.message, /Ungültige Versandart/);
@@ -1362,7 +1375,7 @@ test('29. Negativtest Grund-2-Felder: Ungültige versandArt, Versand nach Prüfu
       reason: 'KZ2',
       nachweisPruefung: makeValidProofKZ2({ versandDatum: '2026-09-16', geprueftAm: '2026-09-15' }),
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.status, 422);
     assert.equal(err.code, 'PAYMENT_DEMAND_EVIDENCE_UNVERIFIED');
     assert.match(err.message, /darf nicht nach dem Prüfdatum/);
@@ -1379,7 +1392,7 @@ test('29. Negativtest Grund-2-Felder: Ungültige versandArt, Versand nach Prüfu
       reason: 'KZ2',
       nachweisPruefung: makeValidProofKZ2({ nachweisBeigefuegtBestaetigt: false }),
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.status, 422);
     assert.equal(err.code, 'PAYMENT_DEMAND_EVIDENCE_UNVERIFIED');
     assert.match(err.message, /Beifügung des Nachweises/);
@@ -1396,7 +1409,7 @@ test('29. Negativtest Grund-2-Felder: Ungültige versandArt, Versand nach Prüfu
       reason: 'KZ2',
       nachweisPruefung: makeValidProofKZ2({ erfolgloserEinzugBestaetigt: false }),
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.status, 422);
     assert.equal(err.code, 'PAYMENT_DEMAND_EVIDENCE_UNVERIFIED');
     assert.match(err.message, /erfolglose Einzug/);
@@ -1405,7 +1418,7 @@ test('29. Negativtest Grund-2-Felder: Ungültige versandArt, Versand nach Prüfu
 });
 
 test('30. Strikte Nachweis-String-Validierung: Datumsstrings und 9-stellige IK-Prüfung', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   const hash = sha256Hex(Buffer.from(built.content, 'latin1'));
 
@@ -1437,7 +1450,7 @@ test('30. Strikte Nachweis-String-Validierung: Datumsstrings und 9-stellige IK-P
       reason: 'KZ2',
       nachweisPruefung: makeValidProofKZ2({ kostentraegerIk: '1010' }),
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.status, 422);
     assert.match(err.message, /9-stelliger Ziffernstring/);
     return true;
@@ -1451,9 +1464,9 @@ test('30. Strikte Nachweis-String-Validierung: Datumsstrings und 9-stellige IK-P
       sourceHeader: baseHeader,
       sourceZeile: baseZeile,
       reason: 'KZ2',
-      nachweisPruefung: makeValidProofKZ2({ kostentraegerIk: 101000000 }),
+      nachweisPruefung: makeValidProofKZ2({ kostentraegerIk: /** @type {string} */ (/** @type {unknown} */ (101000000)) }),
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.status, 422);
     assert.match(err.message, /9-stelliger Ziffernstring/);
     return true;
@@ -1473,7 +1486,7 @@ test('30. Strikte Nachweis-String-Validierung: Datumsstrings und 9-stellige IK-P
         versandDatum: '2026-02-31',
       }),
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.status, 422);
     assert.match(err.message, /kein gültiger ISO-Kalendertag/);
     return true;
@@ -1481,7 +1494,7 @@ test('30. Strikte Nachweis-String-Validierung: Datumsstrings und 9-stellige IK-P
 });
 
 test('31. Zeitstempel-, Zeitzonen- und 24h-Guard-Regressionen', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   const built = buildDtaFile(f);
   const hash = sha256Hex(Buffer.from(built.content, 'latin1'));
 
@@ -1517,7 +1530,7 @@ test('31. Zeitstempel-, Zeitzonen- und 24h-Guard-Regressionen', () => {
         versandDatum: '2026-09-14',
       }),
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.status, 422);
     assert.match(err.message, /stimmt nicht mit dem Prüfdatum/);
     return true;
@@ -1537,7 +1550,7 @@ test('31. Zeitstempel-, Zeitzonen- und 24h-Guard-Regressionen', () => {
         versandDatum: '2026-09-15',
       }),
     });
-  }, (err) => {
+  }, (/** @type {TestError} */ err) => {
     assert.equal(err.status, 422);
     assert.match(err.message, /24h-Guard/);
     return true;
@@ -1545,7 +1558,7 @@ test('31. Zeitstempel-, Zeitzonen- und 24h-Guard-Regressionen', () => {
 });
 
 test('32. Positivtest Grund 2: Roundtrip Builder -> Parser -> VKZ03 Builder mit tatsächlichem buildDtaFile', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   f.absender.ik = '800000000';
   f.empfaenger.ik = '108310400';
   f.prescriptions[0].verordnung.kostentraegerIk = '108310400';
@@ -1612,7 +1625,7 @@ test('32. Positivtest Grund 2: Roundtrip Builder -> Parser -> VKZ03 Builder mit 
 });
 
 test('33. Positivtest Grund 1: Roundtrip Builder -> Parser -> VKZ03 Builder mit tatsächlichem buildDtaFile', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   f.absender.ik = '800000000';
   f.empfaenger.ik = '108310400';
   f.prescriptions[0].verordnung.kostentraegerIk = '108310400';
@@ -1682,7 +1695,7 @@ test('33. Positivtest Grund 1: Roundtrip Builder -> Parser -> VKZ03 Builder mit 
 });
 
 test('34. Positivtest Grund 5: Roundtrip Builder -> Parser -> VKZ03 Builder mit tatsächlichem buildDtaFile', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   f.absender.ik = '800000000';
   f.empfaenger.ik = '108310400';
   f.prescriptions[0].verordnung.kostentraegerIk = '108310400';
@@ -1756,7 +1769,7 @@ test('34. Positivtest Grund 5: Roundtrip Builder -> Parser -> VKZ03 Builder mit 
 });
 
 test('35. Positivtest Grund 5 mit freiem Ersttag (pauschZuzahlung = 0) und Misch-Sitzungen: Roundtrip Builder -> Parser -> VKZ03 Builder', () => {
-  const f = structuredClone(podoFixture);
+  const f = cloneFixture(podoFixture);
   f.absender.ik = '800000000';
   f.empfaenger.ik = '108310400';
   f.prescriptions[0].verordnung.kostentraegerIk = '108310400';

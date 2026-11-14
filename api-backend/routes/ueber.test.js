@@ -8,12 +8,15 @@ process.env.SUPABASE_URL ||= 'http://127.0.0.1:9';
 process.env.SUPABASE_SERVICE_ROLE_KEY ||= 'test-dummy';
 const { default: ueberRouter } = await import('./ueber.js');
 
+/**
+ * @param {(base: string) => Promise<void>} fn
+ */
 async function mitServer(fn) {
   const app = express();
   app.use('/api', ueberRouter);
   const server = http.createServer(app);
-  await new Promise((r) => server.listen(0, '127.0.0.1', r));
-  const base = `http://127.0.0.1:${server.address().port}/api`;
+  await /** @type {Promise<void>} */ (new Promise((r) => server.listen(0, '127.0.0.1', r)));
+  const base = `http://127.0.0.1:${/** @type {import('node:net').AddressInfo} */ (server.address()).port}/api`;
   try { await fn(base); } finally { server.close(); }
 }
 

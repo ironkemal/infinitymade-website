@@ -36,7 +36,10 @@ export const GRUNDFASSUNG = Object.freeze({
   categories: ['business', 'productivity'],
 });
 
-/** Praxisname → Manifest. Leer/ungültig → Grundfassung. */
+/**
+ * Praxisname → Manifest. Leer/ungültig → Grundfassung.
+ * @param {unknown} praxisName
+ */
 export function manifestFuer(praxisName) {
   const name = String(praxisName ?? '').replace(/\s+/g, ' ').trim().slice(0, 60);
   if (!name) return { ...GRUNDFASSUNG };
@@ -53,11 +56,15 @@ const manifestLimiter = rateLimit({
 });
 
 // Ein Name pro Box (eine Praxis) — 5 min im Speicher, keine Abfrage pro Aufruf.
+/** @type {{ name: string | null, bis: number }} */
 let cache = { name: null, bis: 0 };
 
+/**
+ * @param {{ supabase: { from: (table: string) => any } }} opts
+ */
 export function createManifestRouter({ supabase }) {
   const router = Router();
-  router.get('/manifest', nurKutu, manifestLimiter, async (req, res) => {
+  router.get('/manifest', nurKutu, manifestLimiter, async (/** @type {unknown} */ req, /** @type {{ set: (k: string, v: string) => void, type: (t: string) => { send: (body: string) => void } }} */ res) => {
     const jetzt = Date.now();
     if (jetzt >= cache.bis) {
       let name = null;

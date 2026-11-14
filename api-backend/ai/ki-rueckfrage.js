@@ -6,17 +6,34 @@ const DEFAULT_TTL_MS = 300_000;
 const MAX_CANDIDATES = 5;
 const MAX_SEEN_FILES = 1000; // Cap file count
 
+/**
+ * @typedef {{ id?: string, text?: string, ausschnitt?: string, type?: string, art?: string }} RueckfrageCandidateInput
+ * @typedef {{ id: string, text: string, type: string }} RueckfrageCandidate
+ * @typedef {{ id: string, action: 'maskieren' | 'kein_name' | string }} RueckfrageChoice
+ * @typedef {{ challengeId?: string, choices?: RueckfrageChoice[] }} KiConfirmationInput
+ */
+
+/**
+ * @param {unknown} payload
+ * @returns {string}
+ */
 export function computePayloadFingerprint(payload) {
   if (!payload || typeof payload !== 'object') return '';
-  const clone = { ...payload };
+  const clone = { .../** @type {Record<string, unknown>} */ (payload) };
   delete clone.ki_confirmation;
 
+  /**
+   * @param {unknown} obj
+   * @returns {unknown}
+   */
   function sortKeys(obj) {
     if (obj === null || typeof obj !== 'object') return obj;
     if (Array.isArray(obj)) return obj.map(sortKeys);
+    const rec = /** @type {Record<string, unknown>} */ (obj);
+    /** @type {Record<string, unknown>} */
     const sorted = {};
-    for (const k of Object.keys(obj).sort()) {
-      sorted[k] = sortKeys(obj[k]);
+    for (const k of Object.keys(rec).sort()) {
+      sorted[k] = sortKeys(rec[k]);
     }
     return sorted;
   }
@@ -25,6 +42,9 @@ export function computePayloadFingerprint(payload) {
   return crypto.createHash('sha256').update(canonicalJson).digest('hex');
 }
 
+/**
+ * @param {{ secret?: Buffer, directory?: string, ttlMs?: number, now?: () => number }} [options={}]
+ */
 export function createConfirmationService({
   secret, // derived from boxIdentity
   directory, // injected temp directory for tests
@@ -39,10 +59,18 @@ export function createConfirmationService({
     return directory || process.env.KI_EINWILLIGUNG_DIR || '/var/lib/praxura/ki-freigaben';
   }
 
+  /**
+   * @param {string} data
+   * @returns {string}
+   */
   function makeHmac(data) {
     return crypto.createHmac('sha256', hmacSecret).update(data).digest('hex');
   }
 
+  /**
+   * @param {string} sig
+   * @returns {string}
+   */
   function getMarkerPath(sig) {
     return path.join(getMetadataDir(), `.challenge-${sig}.consumed`);
   }
@@ -88,12 +116,18 @@ export function createConfirmationService({
     }
   }
 
+  /**
+   * @param {RueckfrageCandidate[]} candidates
+   */
   function validateCandidates(candidates) {
     const ids = new Set();
     if (!Array.isArray(candidates) || !candidates.length || candidates.length > MAX_CANDIDATES) throw new Error('Kandidaten ungültig');
     for (const c of candidates) { if (typeof c.id !== 'string' || c.id.length > 100 || ids.has(c.id) || typeof c.text !== 'string' || !c.text.length || c.text.length > 200 || typeof c.type !== 'string' || c.type.length > 50) throw new Error('Kandidaten ungültig'); ids.add(c.id); }
   }
 
+  /**
+   * @param {{ task: string, userId: string, tenantId: string, payload: Record<string, unknown>, candidates?: RueckfrageCandidateInput[] }} params
+   */
   function createChallenge({ task, userId, tenantId, payload, candidates = [] }) {
     if (candidates.length > MAX_CANDIDATES) {
       throw new Error('Zu viele unmaskierte Freitext-Kandidaten');
@@ -120,6 +154,9 @@ export function createConfirmationService({
     };
   }
 
+  /**
+   * @param {{ task: string, userId: string, tenantId: string, payload: Record<string, unknown>, kiConfirmation?: KiConfirmationInput | null, currentCandidates?: RueckfrageCandidateInput[] }} params
+   */
   function verifyConfirmation({ task, userId, tenantId, payload, kiConfirmation, currentCandidates = [] }) {
     if (!kiConfirmation || typeof kiConfirmation !== 'object') {
       return { valid: false, code: 'KI_CONFIRMATION_MISSING', reason: 'Bestätigungs-Payload fehlt' };
@@ -191,7 +228,7 @@ export function createConfirmationService({
       fd = fs.openSync(markerPath, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_NOFOLLOW, 0o600);
       fs.writeSync(fd, JSON.stringify({ expiresAt }));
     } catch (e) {
-      if (e.code === 'EEXIST') {
+      if (e && typeof e === 'object' && 'code' in e && e.code === 'EEXIST') {
         return { valid: false, code: 'KI_CHALLENGE_REPLAY', reason: 'Challenge-ID wurde bereits verwendet' };
       }
       return { valid: false, code: 'KI_CHALLENGE_TAMPERED', reason: 'Interner Fehler bei Replay-Prüfung' };

@@ -9,9 +9,15 @@
  * (`fahrten`); privat gefahrene Kilometer dazwischen trägt man darüber ein.
  */
 
-/** Höchster bekannter End-KM eines Fahrzeugs, oder null. */
+/**
+ * Höchster bekannter End-KM eines Fahrzeugs, oder null.
+ * @param {{ from: (table: string) => any }} sb
+ * @param {string | null | undefined} vehicleId
+ * @returns {Promise<number | null>}
+ */
 export async function letzterKmStand(sb, vehicleId) {
   if (!sb || !vehicleId) return null;
+  /** @param {string} tabelle */
   const hole = (tabelle) => sb.from(tabelle).select('end_km')
     .eq('vehicle_id', vehicleId).not('end_km', 'is', null)
     .order('end_km', { ascending: false }).limit(1);
@@ -20,10 +26,15 @@ export async function letzterKmStand(sb, vehicleId) {
   return werte.length ? Math.max(...werte) : null;
 }
 
-/** Fehlertext oder '' — reine Regel. */
+/**
+ * Fehlertext oder '' — reine Regel.
+ * @param {number | null | undefined} startKm
+ * @param {number | null | undefined} letzter
+ * @returns {string}
+ */
 export function startKmFehler(startKm, letzter) {
   if (letzter == null || !Number.isFinite(startKm)) return '';
-  return startKm < letzter
+  return /** @type {number} */ (startKm) < letzter
     ? `Start-KM liegt unter dem letzten Kilometerstand dieses Fahrzeugs (${letzter.toLocaleString('de-DE')} km).`
     : '';
 }
@@ -31,11 +42,12 @@ export function startKmFehler(startKm, letzter) {
 /**
  * Feld `#fsStartKm` vorbelegen und bei Fahrzeugwechsel nachziehen. Ein schon
  * getippter Wert bleibt stehen.
- * @param {object} sb
+ * @param {{ from: (table: string) => any }} sb
  * @param {HTMLSelectElement} sel  `#fsVehicleSelect`
+ * @param {Document} [doc]
  */
 export function vorbelegeStartKm(sb, sel, doc = globalThis.document) {
-  const feld = doc?.getElementById('fsStartKm');
+  const feld = /** @type {HTMLInputElement | null} */ (doc?.getElementById('fsStartKm'));
   if (!feld || !sel) return;
   const fuelle = async () => {
     const vorher = feld.value;

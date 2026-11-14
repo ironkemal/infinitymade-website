@@ -13,6 +13,7 @@
 // das ist nicht diese Datei. Hier steht nur, was erlaubt ist und was aus einem
 // gesenkten Soll folgt.
 
+/** @param {number | string} v @returns {number} */
 const r2 = (v) => Math.round((+v + Number.EPSILON) * 100) / 100;
 
 /** Gruende, die eine Korrektur tragen duerfen. Muss zum CHECK der Tabelle passen. */
@@ -43,7 +44,7 @@ export const KORREKTUR_GRUENDE = [
  * gelassen. Ein Riegel darauf sperrte genau die Rezepte, die man dann anfassen
  * muss.
  *
- * @param {object} rx  {belegnummer, abrechnung_status}
+ * @param {{ belegnummer?: string | null, abrechnung_status?: string | null } | null | undefined} rx
  * @returns {{erlaubt: boolean, grund: string|null, status: number}}
  */
 export function korrekturErlaubt(rx) {

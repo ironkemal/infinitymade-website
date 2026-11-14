@@ -1,14 +1,20 @@
 // Mahnung (dunning letter) HTML template — print-ready A4, German standard.
 // Level 1 = Zahlungserinnerung (friendly), Level 2 = 1. Mahnung, Level 3 = 2. Mahnung.
 
-const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/** @type {Record<string, string>} */
+const HTML_ESC = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
+/** @param {unknown} s */
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => HTML_ESC[c] ?? c);
+/** @param {unknown} n */
 const fmtEur = (n) => Number(n ?? 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+/** @param {Date | string | null | undefined} d */
 const fmtDate = (d) => {
   if (!d) return '';
   const dt = d instanceof Date ? d : new Date(d);
-  return isNaN(dt) ? '' : dt.toLocaleDateString('de-DE');
+  return Number.isNaN(dt.getTime()) ? '' : dt.toLocaleDateString('de-DE');
 };
 
+/** @type {Record<number, { title: string, salutation: string, tone: 'friendly' | 'firm' | 'final', color: string }>} */
 const LEVEL_META = {
   1: { title: 'Zahlungserinnerung',    salutation: 'freundliche Erinnerung',  tone: 'friendly',  color: '#1d4ed8' },
   2: { title: '1. Mahnung',            salutation: 'erste Mahnung',           tone: 'firm',      color: '#d97706' },
@@ -19,6 +25,7 @@ const LEVEL_META = {
 // "Ausstehender Betrag (Zuzahlung)"). Eine Ausfallrechnung ist aber kein
 // GKV-Vorgang: dort darf weder von Zuzahlung die Rede sein noch die IK-Nummer
 // in der Fusszeile stehen.
+/** @type {Record<string, { betreff: string, betragLabel: string, rechnungWort: string, zeigtIk: boolean }>} */
 const FORDERUNGSART = {
   zuzahlung: {
     betreff:      'Offene Zuzahlung',
@@ -35,23 +42,26 @@ const FORDERUNGSART = {
 };
 
 const TONE_BODY = {
+  /** @param {string} rechnungWort @param {string} fällig */
   friendly: (rechnungWort, fällig) => `wir möchten Sie freundlich daran erinnern, dass folgende ${rechnungWort} noch offen ist. Möglicherweise hat Ihre Zahlung unsere Buchung noch nicht erreicht. Bitte begleichen Sie den ausstehenden Betrag bis zum <strong>${fällig}</strong>.`,
+  /** @param {string} rechnungWort @param {string} fällig */
   firm:     (rechnungWort, fällig) => `trotz unserer Zahlungserinnerung haben wir bisher keinen Zahlungseingang feststellen können. Wir bitten Sie dringend, den offenen Betrag bis zum <strong>${fällig}</strong> zu begleichen, um weitere Schritte zu vermeiden.`,
+  /** @param {string} rechnungWort @param {string} fällig */
   final:    (rechnungWort, fällig) => `leider ist der ausstehende Betrag trotz unserer vorherigen Mahnung immer noch nicht bei uns eingegangen. Dies ist unsere letzte Mahnung. Sollten wir bis zum <strong>${fällig}</strong> keinen Zahlungseingang verbuchen können, sehen wir uns gezwungen, das Inkassobüro einzuschalten.`,
 };
 
 /**
  * @param {object} opts
- * @param {object} opts.praxis         { name, strasse, plz_ort, telefon, email, ik }
- * @param {object} opts.patient        { vorname, nachname, strasse, plz, ort }
- * @param {number} opts.level          1 | 2 | 3
- * @param {number} opts.mahnung_nr
- * @param {number} opts.amount_eur
- * @param {string} opts.original_rechnung_nr   e.g. "ZU-3A9B1234"
- * @param {Date|string} opts.original_faelligkeit
- * @param {Date|string} opts.neue_faelligkeit
- * @param {string} opts.bankverbindung
- * @param {Date|string} opts.datum             letter date (default: today)
+ * @param {{ name?: string, strasse?: string, plz_ort?: string, telefon?: string, email?: string, ik?: string }} [opts.praxis]
+ * @param {{ vorname?: string, nachname?: string, strasse?: string, plz?: string, ort?: string }} [opts.patient]
+ * @param {number} [opts.level]
+ * @param {number} [opts.mahnung_nr]
+ * @param {number} [opts.amount_eur]
+ * @param {string} [opts.original_rechnung_nr]   e.g. "ZU-3A9B1234"
+ * @param {Date|string} [opts.original_faelligkeit]
+ * @param {Date|string} [opts.neue_faelligkeit]
+ * @param {string} [opts.bankverbindung]
+ * @param {Date|string} [opts.datum]             letter date (default: today)
  * @param {'zuzahlung'|'ausfall'} [opts.forderungsart='zuzahlung']
  */
 export function renderMahnung(opts) {

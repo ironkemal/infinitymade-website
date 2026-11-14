@@ -1,13 +1,19 @@
 // Structured appointment drafts. All identifying leaves are allocated by the gateway.
 import { executeKiTask } from '../ki-gateway.js';
 const SYSTEM = `Verfasse eine kurze deutsche Terminbestätigung in Sie-Form. Übernimm die bereitgestellten Platzhalter unverändert. Antworte nur als JSON mit genau to_name, to_email (string|null), subject und body (string). Liste alle Termine und den Behandlungstitel. Versende keine Nachricht.`;
+/** @param {unknown} parsed @returns {boolean} */
 function validateDraft(parsed) {
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return false;
   if (Object.keys(parsed).sort().join(',') !== 'body,subject,to_email,to_name') return false;
-  return ['to_name','to_email'].every(k => parsed[k] === null || typeof parsed[k] === 'string' && parsed[k].length <= 200)
-    && typeof parsed.subject === 'string' && parsed.subject.trim().length > 0 && parsed.subject.length <= 200
-    && typeof parsed.body === 'string' && parsed.body.trim().length > 0 && parsed.body.length <= 8000;
+  const rec = /** @type {Record<string, unknown>} */ (parsed);
+  return (['to_name', 'to_email'].every(k => rec[k] === null || (typeof rec[k] === 'string' && /** @type {string} */ (rec[k]).length <= 200)))
+    && typeof rec.subject === 'string' && rec.subject.trim().length > 0 && rec.subject.length <= 200
+    && typeof rec.body === 'string' && rec.body.trim().length > 0 && rec.body.length <= 8000;
 }
+/**
+ * @param {import('../ki-gateway.js').GatewayPayload} payload
+ * @param {import('../ki-gateway.js').GatewayContext} [context={}]
+ */
 export async function run(payload, context = {}) {
   const { output, meta } = await executeKiTask({
     task: 'appointment-confirm-draft', payload, context,

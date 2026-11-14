@@ -12,7 +12,9 @@ import { durumOlustur, isle, araclar } from './funktionskarte-mcp.mjs';
 const sunucuDosyaYolu = fileURLToPath(new URL('./funktionskarte-mcp.mjs', import.meta.url));
 
 describe('funktionskarte-mcp birim ve protokol testleri', () => {
+  /** @type {string} */
   let tmpDir;
+  /** @type {ReturnType<typeof durumOlustur>} */
   let durum;
 
   const sahteIndex = {
@@ -166,6 +168,7 @@ describe('funktionskarte-mcp birim ve protokol testleri', () => {
     };
 
     const yanit = isle(mesaj, durum);
+    assert.ok(yanit && yanit.result);
     assert.equal(yanit.jsonrpc, '2.0');
     assert.equal(yanit.id, 1);
     assert.equal(yanit.result.protocolVersion, '2024-11-05');
@@ -176,6 +179,7 @@ describe('funktionskarte-mcp birim ve protokol testleri', () => {
   test('2. ping isteği boş result nesnesi döner', () => {
     const mesaj = { jsonrpc: '2.0', id: 2, method: 'ping' };
     const yanit = isle(mesaj, durum);
+    assert.ok(yanit && yanit.result);
     assert.equal(yanit.id, 2);
     assert.deepEqual(yanit.result, {});
   });
@@ -183,11 +187,12 @@ describe('funktionskarte-mcp birim ve protokol testleri', () => {
   test('3. tools/list tam 9 araç döndürür ve şemaları geçerlidir', () => {
     const mesaj = { jsonrpc: '2.0', id: 3, method: 'tools/list' };
     const yanit = isle(mesaj, durum);
+    assert.ok(yanit && yanit.result);
     assert.equal(yanit.id, 3);
     assert.ok(Array.isArray(yanit.result.tools));
     assert.equal(yanit.result.tools.length, 9);
 
-    const isimler = yanit.result.tools.map(t => t.name);
+    const isimler = yanit.result.tools.map((/** @type {{ name: string }} */ t) => t.name);
     assert.ok(isimler.includes('fonksiyon_bul'));
     assert.ok(isimler.includes('fonksiyon_detay'));
     assert.ok(isimler.includes('cagiranlar'));
@@ -213,6 +218,7 @@ describe('funktionskarte-mcp birim ve protokol testleri', () => {
       params: { name: 'fonksiyon_bul', arguments: { name: 'fnA' } }
     };
     const r1 = isle(msg1, durum);
+    assert.ok(r1 && r1.result);
     const data1 = JSON.parse(r1.result.content[0].text);
     assert.equal(data1.toplam, 1);
     assert.equal(data1.sonuclar[0].name, 'fnA');
@@ -228,6 +234,7 @@ describe('funktionskarte-mcp birim ve protokol testleri', () => {
       params: { name: 'fonksiyon_bul', arguments: { ara: 'fn', limit: 2 } }
     };
     const r2 = isle(msg2, durum);
+    assert.ok(r2 && r2.result);
     const data2 = JSON.parse(r2.result.content[0].text);
     assert.equal(data2.toplam, 4);
     assert.equal(data2.sonuclar.length, 2);
@@ -242,9 +249,10 @@ describe('funktionskarte-mcp birim ve protokol testleri', () => {
       params: { name: 'fonksiyon_bul', arguments: { dosya: 'module/b.js' } }
     };
     const r3 = isle(msg3, durum);
+    assert.ok(r3 && r3.result);
     const data3 = JSON.parse(r3.result.content[0].text);
     assert.equal(data3.toplam, 2);
-    assert.deepEqual(data3.sonuclar.map(s => s.name).sort(), ['fnB', 'fnC']);
+    assert.deepEqual(data3.sonuclar.map((/** @type {{ name: string }} */ s) => s.name).sort(), ['fnB', 'fnC']);
   });
 
   test('5. fonksiyon_detay: tam kaydı döndürür', () => {
@@ -255,6 +263,7 @@ describe('funktionskarte-mcp birim ve protokol testleri', () => {
       params: { name: 'fonksiyon_detay', arguments: { name: 'fnA' } }
     };
     const r = isle(msg, durum);
+    assert.ok(r && r.result);
     const data = JSON.parse(r.result.content[0].text);
     assert.equal(data.name, 'fnA');
     assert.equal(data.toplam, 1);
@@ -271,15 +280,16 @@ describe('funktionskarte-mcp birim ve protokol testleri', () => {
       params: { name: 'cagiranlar', arguments: { name: 'fnC', derinlik: 2 } }
     };
     const r1 = isle(msg1, durum);
+    assert.ok(r1 && r1.result);
     const d1 = JSON.parse(r1.result.content[0].text);
     assert.equal(d1.fonksiyon, 'fnC');
     assert.equal(d1.derinlik, 2);
 
-    const s1 = d1.cagiranlar.find(c => c.seviye === 1);
+    const s1 = d1.cagiranlar.find((/** @type {{ seviye: number }} */ c) => c.seviye === 1);
     assert.equal(s1?.cagiran, 'fnB');
     assert.equal(s1?.ustSeviyeKod, false);
 
-    const s2 = d1.cagiranlar.find(c => c.seviye === 2);
+    const s2 = d1.cagiranlar.find((/** @type {{ seviye: number }} */ c) => c.seviye === 2);
     assert.equal(s2?.cagiran, 'fnA');
     assert.equal(s2?.ustSeviyeKod, false);
 
@@ -291,8 +301,9 @@ describe('funktionskarte-mcp birim ve protokol testleri', () => {
       params: { name: 'cagiranlar', arguments: { name: 'fnA', derinlik: 1 } }
     };
     const r2 = isle(msg2, durum);
+    assert.ok(r2 && r2.result);
     const d2 = JSON.parse(r2.result.content[0].text);
-    const fileCall = d2.cagiranlar.find(c => c.cagiran.startsWith('(datei)'));
+    const fileCall = d2.cagiranlar.find((/** @type {{ cagiran: string }} */ c) => c.cagiran.startsWith('(datei)'));
     assert.ok(fileCall);
     assert.equal(fileCall.ustSeviyeKod, true);
   });
@@ -305,13 +316,14 @@ describe('funktionskarte-mcp birim ve protokol testleri', () => {
       params: { name: 'cagirdiklari', arguments: { name: 'fnA', derinlik: 2 } }
     };
     const r = isle(msg, durum);
+    assert.ok(r && r.result);
     const d = JSON.parse(r.result.content[0].text);
     assert.equal(d.fonksiyon, 'fnA');
 
-    const s1 = d.cagirdiklari.find(c => c.seviye === 1);
+    const s1 = d.cagirdiklari.find((/** @type {{ seviye: number }} */ c) => c.seviye === 1);
     assert.equal(s1?.cagrilan, 'fnB');
 
-    const s2 = d.cagirdiklari.find(c => c.seviye === 2);
+    const s2 = d.cagirdiklari.find((/** @type {{ seviye: number }} */ c) => c.seviye === 2);
     assert.equal(s2?.cagrilan, 'fnC');
   });
 
@@ -323,6 +335,7 @@ describe('funktionskarte-mcp birim ve protokol testleri', () => {
       params: { name: 'tablo_kullanan', arguments: { tablo: 'abrechnung' } }
     };
     const r = isle(msg, durum);
+    assert.ok(r && r.result);
     const d = JSON.parse(r.result.content[0].text);
 
     assert.equal(d.tablo, 'abrechnung');
@@ -360,6 +373,7 @@ describe('funktionskarte-mcp birim ve protokol testleri', () => {
       params: { name: 'tablo_kullanan', arguments: { tablo: 'abrechnung' } }
     };
     const r = isle(msg, durum);
+    assert.ok(r && r.result);
     const d = JSON.parse(r.result.content[0].text);
 
     assert.ok(d.nutzung);
@@ -376,6 +390,7 @@ describe('funktionskarte-mcp birim ve protokol testleri', () => {
       params: { name: 'dom_hedefi', arguments: { id: 'btnSave' } }
     };
     const r = isle(msg, durum);
+    assert.ok(r && r.result);
     const d = JSON.parse(r.result.content[0].text);
 
     assert.equal(d.id, 'btnSave');
@@ -392,6 +407,7 @@ describe('funktionskarte-mcp birim ve protokol testleri', () => {
       params: { name: 'kopya_adaylari', arguments: { tablo: 'abrechnung' } }
     };
     const r = isle(msg, durum);
+    assert.ok(r && r.result);
     const d = JSON.parse(r.result.content[0].text);
 
     assert.equal(d.toplam, 1);
@@ -406,6 +422,7 @@ describe('funktionskarte-mcp birim ve protokol testleri', () => {
       params: { name: 'dosya_fonksiyonlari', arguments: { dosya: 'module/b.js' } }
     };
     const r = isle(msg, durum);
+    assert.ok(r && r.result);
     const d = JSON.parse(r.result.content[0].text);
 
     assert.equal(d.toplam, 2);
@@ -423,6 +440,7 @@ describe('funktionskarte-mcp birim ve protokol testleri', () => {
       params: { name: 'harita_durumu', arguments: {} }
     };
     const r = isle(msg, durum);
+    assert.ok(r && r.result);
     const d = JSON.parse(r.result.content[0].text);
 
     assert.equal(d.erzeugt, '2026-11-06');
@@ -435,6 +453,7 @@ describe('funktionskarte-mcp birim ve protokol testleri', () => {
   test('14. bilinmeyen metot -32601 hatası döner', () => {
     const msg = { jsonrpc: '2.0', id: 17, method: 'olmayan_metot', params: {} };
     const r = isle(msg, durum);
+    assert.ok(r && r.error);
     assert.equal(r.id, 17);
     assert.equal(r.error.code, -32601);
   });
@@ -451,6 +470,7 @@ describe('funktionskarte-mcp birim ve protokol testleri', () => {
       stdio: ['pipe', 'pipe', 'pipe']
     });
 
+    /** @type {string[]} */
     const satirlar = [];
     const rl = createInterface({ input: cp.stdout, terminal: false });
 

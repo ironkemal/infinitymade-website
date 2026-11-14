@@ -6,16 +6,22 @@ process.env.SUPABASE_URL ||= 'http://127.0.0.1:9';
 process.env.SUPABASE_SERVICE_ROLE_KEY ||= 'test-key';
 const { standortplanAufraeumen } = await import('./mitarbeiter-zugang.js');
 
+/** @param {any} ergebnis */
 function fakeDb(ergebnis) {
+  /** @type {any[]} */
   const aufrufe = [];
   return {
     aufrufe,
+    /** @param {string} tabelle */
     from(tabelle) {
+      /** @type {{ tabelle: string, op: string | null, filter: Record<string, any> }} */
       const a = { tabelle, op: null, filter: {} };
       aufrufe.push(a);
       const b = {
         delete() { a.op = 'delete'; return b; },
+        /** @param {string} k @param {any} v */
         eq(k, v) { a.filter[k] = v; return b; },
+        /** @param {any} ok @param {any} fehl */
         then(ok, fehl) {
           if (ergebnis instanceof Error) return Promise.reject(ergebnis).then(ok, fehl);
           return Promise.resolve(ergebnis).then(ok, fehl);
@@ -52,17 +58,24 @@ test('DB-Fehler oder Ausnahme -> false, wirft nicht (Sperre bleibt gueltig)', as
 
 const { austrittVermerken } = await import('./mitarbeiter-zugang.js');
 
+/**
+ * @param {any} vorhanden
+ * @param {{ fehler?: any }} [opt]
+ */
 function anstellungDb(vorhanden, { fehler = null } = {}) {
+  /** @type {any[]} */
   const log = [];
   return {
     log,
+    /** @param {string} tabelle */
     from(tabelle) {
+      /** @type {{ tabelle: string, op: string, filter: Record<string, any>, wert: any, opt: any }} */
       const a = { tabelle, op: 'select', filter: {}, wert: null, opt: null };
       log.push(a);
       const b = {
-        select() { return b; }, eq(k, v) { a.filter[k] = v; return b; },
+        select() { return b; }, eq(/** @type {string} */ k, /** @type {any} */ v) { a.filter[k] = v; return b; },
         maybeSingle() { return Promise.resolve(fehler ? { data: null, error: fehler } : { data: vorhanden, error: null }); },
-        upsert(wert, opt) { a.op = 'upsert'; a.wert = wert; a.opt = opt; return Promise.resolve({ error: null }); },
+        upsert(/** @type {any} */ wert, /** @type {any} */ opt) { a.op = 'upsert'; a.wert = wert; a.opt = opt; return Promise.resolve({ error: null }); },
       };
       return b;
     },

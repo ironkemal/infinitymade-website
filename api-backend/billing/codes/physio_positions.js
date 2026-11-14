@@ -138,6 +138,7 @@ export const PHYSIO_POSITIONS = PHYSIO_PREISFENSTER[PHYSIO_PREISFENSTER.length -
  * also weiter (Abrechnung bleibt bedienbar), die Abweichung ist aber sichtbar
  * statt still.
  */
+/** @param {string | null | undefined} dateStr */
 function fensterFuerDatum(dateStr) {
   const fenster = PHYSIO_PREISFENSTER;
   if (!dateStr) return { fenster: fenster[fenster.length - 1], ausserhalb: false };
@@ -153,8 +154,12 @@ function fensterFuerDatum(dateStr) {
 /**
  * Resolve template position (e.g. 'X0501') → concrete EDIFACT code for the
  * given Abrechnungscode (e.g. '22' → '20501').
+ * @param {string} templateOrCode
+ * @param {string} [abrechnungscode='22']
+ * @returns {string}
  */
 export function resolvePositionsnummer(templateOrCode, abrechnungscode = '22') {
+  /** @type {Record<string, string>} */
   const prefixMap = { '21': '1', '22': '2', '27': '6', '28': '8' };
   const prefix = prefixMap[abrechnungscode];
   if (!prefix) throw new Error(`Unknown Heilmittel-Abrechnungscode for prefix substitution: ${abrechnungscode}`);
@@ -174,7 +179,7 @@ export function resolvePositionsnummer(templateOrCode, abrechnungscode = '22') {
  *
  * @param {string} code
  * @param {string} [abrechnungscode='22']
- * @param {string} [dateStr] Leistungsdatum (ISO). Ohne Angabe gilt das aktuellste
+ * @param {string | null} [dateStr=null] Leistungsdatum (ISO). Ohne Angabe gilt das aktuellste
  *                           Preisfenster — identisches Verhalten wie vor der
  *                           Versionierung, deshalb rückwärtskompatibel.
  */
@@ -231,17 +236,21 @@ const HEILMITTEL_DEFAULTS = Object.freeze({
 /**
  * Best-effort map from OCR'd Heilmittel free-text → template position (X-form).
  * Returns null if no guess.
+ * @param {unknown} heilmittelText
+ * @returns {string | null}
  */
 export function defaultPositionForHeilmittel(heilmittelText) {
   if (!heilmittelText) return null;
+  /** @type {Record<string, string>} */
+  const defaults = HEILMITTEL_DEFAULTS;
   const norm = String(heilmittelText).trim().toUpperCase();
-  if (HEILMITTEL_DEFAULTS[norm]) return HEILMITTEL_DEFAULTS[norm];
+  if (defaults[norm]) return defaults[norm];
   // strip whitespace/dashes and try again
   const compact = norm.replace(/[\s_-]+/g, '');
-  for (const [k, v] of Object.entries(HEILMITTEL_DEFAULTS)) {
+  for (const [k, v] of Object.entries(defaults)) {
     if (k.replace(/[\s_-]+/g, '') === compact) return v;
   }
   // first-word fallback (e.g. "KG am Gerät" → KG)
   const first = norm.split(/[\s,/]+/)[0];
-  return HEILMITTEL_DEFAULTS[first] || null;
+  return defaults[first] || null;
 }

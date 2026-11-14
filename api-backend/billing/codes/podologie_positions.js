@@ -119,21 +119,48 @@ export const PODOLOGIE_PREISFENSTER = Object.freeze([
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /**
+ * @typedef {object} PodologiePosition
+ * @property {string} hpnr
+ * @property {string} label
+ * @property {string} [kat]
+ * @property {readonly string[]} diagnosegruppen
+ * @property {number} preis
+ * @property {number} zuzahlung
+ * @property {string|null} dauer
+ * @property {string} gueltig_ab
+ * @property {string} gueltig_bis
+ * @property {boolean} [deprecated]
+ * @property {string} [ersetzt_durch]
+ * @property {string} [ungueltig_ab]
+ * @property {number} [max_pro_tag]
+ * @property {number} [max_pro_termin]
+ * @property {string} [notiz]
+ */
+
+/**
  * Find a position by HPNR for a given treatment date (YYYY-MM-DD string).
  * Returns the matching entry or null.
+ * @param {string} hpnr
+ * @param {string} [dateStr]
+ * @returns {PodologiePosition | null}
  */
 export function findPodologiePosition(hpnr, dateStr) {
   const d = dateStr || new Date().toISOString().slice(0, 10);
-  const all = PODOLOGIE_PREISFENSTER.flatMap(f => f.positionen);
+  /** @type {readonly PodologiePosition[]} */
+  const all = PODOLOGIE_PREISFENSTER.flatMap(f => /** @type {readonly PodologiePosition[]} */ (f.positionen));
   return all.find(p => p.hpnr === hpnr && p.gueltig_ab <= d && p.gueltig_bis >= d) || null;
 }
 
 /**
  * Get all active (non-deprecated) positions for a given date and diagnosegruppe.
+ * @param {string} diagnosegruppe
+ * @param {string} [dateStr]
+ * @returns {PodologiePosition[]}
  */
 export function getPodologiePositionenFuerDiagnosegruppe(diagnosegruppe, dateStr) {
   const d = dateStr || new Date().toISOString().slice(0, 10);
-  const all = PODOLOGIE_PREISFENSTER.flatMap(f => f.positionen);
+  /** @type {readonly PodologiePosition[]} */
+  const all = PODOLOGIE_PREISFENSTER.flatMap(f => /** @type {readonly PodologiePosition[]} */ (f.positionen));
   return all.filter(p =>
     p.diagnosegruppen.includes(diagnosegruppe) &&
     p.gueltig_ab <= d &&

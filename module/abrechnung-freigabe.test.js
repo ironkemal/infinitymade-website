@@ -49,7 +49,7 @@ test('ohne Befunde kein Riegel', () => {
 });
 
 // --- checkPrescriptionCompliance --------------------------------------------
-const sitzung = (datum) => ({ status: 'done', done_at: datum, bookings: {} });
+const sitzung = (/** @type {any} */ datum) => ({ status: 'done', done_at: datum, bookings: {} });
 
 test('Rezept ohne Sitzungen meldet keine Unterbrechung', () => {
   const issues = checkPrescriptionCompliance({ prescription_sessions: [] }, null);

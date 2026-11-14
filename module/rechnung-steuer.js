@@ -77,11 +77,19 @@ export const BEFREIUNG_HEILBEHANDLUNG = '4_14a';
  * Gesamtumsatz herausrechnet. Deshalb wird `ust_grund` auch dann pro Zeile
  * gespeichert, wenn er nicht gedruckt wird.
  */
+/**
+ * @param {Record<string, any> | null | undefined} profile
+ * @returns {boolean}
+ */
 export function istKleinunternehmer(profile) {
   const note = (profile?.tax_exempt_note || '').trim();
   return note === TAX_EXEMPT_OPTIONS['§19'];
 }
 
+/**
+ * @param {Record<string, any> | null | undefined} profile
+ * @returns {'kleinunternehmer' | 'regel'}
+ */
 export function steuerStatusVon(profile) {
   return istKleinunternehmer(profile) ? 'kleinunternehmer' : 'regel';
 }
@@ -100,6 +108,7 @@ export function steuerStatusVon(profile) {
  * Das ist ein Vorschlag, kein Automatismus: die Auswahl steht sichtbar auf dem
  * Rechnungsformular und wird mitgespeichert.
  *
+ * @param {{ verordnung?: Record<string, any>, behandlung?: Record<string, any> }} [params]
  * @returns {'medizinisch'|'kosmetisch'}
  */
 export function leistungsartVorschlag({ verordnung, behandlung } = {}) {
@@ -115,7 +124,10 @@ export function leistungsartVorschlag({ verordnung, behandlung } = {}) {
   return hatAnker ? 'medizinisch' : 'kosmetisch';
 }
 
-/** Steuerangaben einer Zeile aus der Leistungsart. */
+/**
+ * Steuerangaben einer Zeile aus der Leistungsart.
+ * @param {string} art
+ */
 export function zeilenSteuerVon(art) {
   return art === 'kosmetisch'
     ? { ust_satz: USt_REGELSATZ, ust_grund: null }
@@ -124,6 +136,10 @@ export function zeilenSteuerVon(art) {
 
 // ── Berechnung ──────────────────────────────────────────────────────────────
 
+/**
+ * @param {number|string} n
+ * @returns {number}
+ */
 function runde(n) {
   return Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 }
@@ -138,9 +154,9 @@ function runde(n) {
  * Beim Kleinunternehmer entfällt die Aufschlüsselung: es gibt keinen
  * ausgewiesenen Steuerbetrag. Die Summe ist dann schlicht der Bruttobetrag.
  *
- * @param {Array}  lines  [{quantity, unit_price(brutto), ust_satz, ust_grund}]
- * @param {string} steuerStatus  'regel' | 'kleinunternehmer'
- * @returns {{tax_summary:Array, netto:number, steuer:number, brutto:number}}
+ * @param {Array<Record<string, any>>} lines [{quantity, unit_price(brutto), ust_satz, ust_grund}]
+ * @param {string} [steuerStatus] 'regel' | 'kleinunternehmer'
+ * @returns {{tax_summary: Array<Record<string, any>>, netto:number, steuer:number, brutto:number}}
  */
 export function berechneSteuer(lines, steuerStatus = 'regel') {
   const zeilen = Array.isArray(lines) ? lines : [];
@@ -192,8 +208,8 @@ export function berechneSteuer(lines, steuerStatus = 'regel') {
  * Vorjahr verändern (§ 146 Abs. 4 AO — der ursprüngliche Inhalt muss feststellbar
  * bleiben).
  *
- * @param {object} profile        aktuelles Praxisprofil
- * @param {Array}  tax_summary    Rückgabe von berechneSteuer
+ * @param {Record<string, any> | null | undefined} profile        aktuelles Praxisprofil
+ * @param {Array<Record<string, any>>}  tax_summary    Rückgabe von berechneSteuer
  */
 export function steuerhinweisText(profile, tax_summary) {
   if (istKleinunternehmer(profile)) return TAX_EXEMPT_OPTIONS['§19'];
@@ -221,6 +237,7 @@ export function steuerhinweisText(profile, tax_summary) {
  * blieb dadurch in der Podologie leer — der Bezug existierte in diesem Topf
  * nicht. Aus den Zeilen gelesen funktioniert es für beide Töpfe.
  *
+ * @param {Array<Record<string, any>>} lines
  * @returns {{von:string|null, bis:string|null, gleich:boolean}}
  */
 export function leistungszeitraum(lines) {
@@ -242,10 +259,10 @@ export function leistungszeitraum(lines) {
  * Grenze reisst, braucht die Unterscheidung rückwirkend.
  *
  * @param {object} opts
- * @param {object} opts.profile      Praxisprofil
- * @param {string} opts.vorschlag    'medizinisch' | 'kosmetisch'
- * @param {Function} opts.getLines   () => aktuelle Zeilen
- * @param {Function} opts.onChange   (zeilen) => void — nach dem Setzen aufgerufen
+ * @param {Record<string, any> | null | undefined} opts.profile      Praxisprofil
+ * @param {string} [opts.vorschlag]    'medizinisch' | 'kosmetisch'
+ * @param {() => Array<Record<string, any>>} [opts.getLines]   () => aktuelle Zeilen
+ * @param {(zeilen: Array<Record<string, any>>) => void} [opts.onChange]   (zeilen) => void — nach dem Setzen aufgerufen
  */
 export function mountLeistungsart({ profile, vorschlag, getLines, onChange }) {
   const wrap = document.getElementById('invLeistungsartWrap');
@@ -257,9 +274,9 @@ export function mountLeistungsart({ profile, vorschlag, getLines, onChange }) {
 
   const radios = wrap.querySelectorAll('input[name="invLeistungsart"]');
   const art = vorschlag || 'medizinisch';
-  radios.forEach(r => { r.checked = (r.value === art); });
+  radios.forEach(r => { /** @type {HTMLInputElement} */ (r).checked = (/** @type {HTMLInputElement} */ (r).value === art); });
 
-  const anwenden = (gewaehlt) => {
+  const anwenden = (/** @type {any} */ gewaehlt) => {
     const steuer = zeilenSteuerVon(gewaehlt);
     const zeilen = (getLines?.() || []).map(l => ({ ...l, ...steuer }));
     if (hint) {
@@ -271,7 +288,8 @@ export function mountLeistungsart({ profile, vorschlag, getLines, onChange }) {
     onChange?.(zeilen);
   };
 
-  radios.forEach(r => {
+  radios.forEach(element => {
+    const r = /** @type {HTMLInputElement} */ (element);
     r.onchange = () => { if (r.checked) anwenden(r.value); };
   });
   anwenden(art);
@@ -279,16 +297,19 @@ export function mountLeistungsart({ profile, vorschlag, getLines, onChange }) {
 
 // ── Einstellungen-Dropdown (aus dashboard.js hierher gezogen) ───────────────
 
+/**
+ * @param {string | null | undefined} savedValue
+ */
 export function initTaxExemptDropdown(savedValue) {
-  const sel  = document.getElementById('setTaxExemptSelect');
-  const inp  = document.getElementById('setTaxExempt');
+  const sel  = /** @type {HTMLSelectElement | null} */ (document.getElementById('setTaxExemptSelect'));
+  const inp  = /** @type {HTMLInputElement | null} */ (document.getElementById('setTaxExempt'));
   const hint = document.getElementById('setTaxExemptHint');
   if (!sel || !inp || !hint) return;
 
-  const applyOption = (key) => {
-    hint.textContent = TAX_EXEMPT_HINTS[key] || '';
+  const applyOption = (/** @type {string} */ key) => {
+    hint.textContent = (/** @type {Record<string, string>} */ (TAX_EXEMPT_HINTS))[key] || '';
     if (key === 'custom') { inp.style.display = ''; inp.focus(); }
-    else { inp.style.display = 'none'; inp.value = TAX_EXEMPT_OPTIONS[key] ?? ''; }
+    else { inp.style.display = 'none'; inp.value = (/** @type {Record<string, string>} */ (TAX_EXEMPT_OPTIONS))[key] ?? ''; }
   };
 
   let matchedKey = 'custom';
@@ -304,17 +325,17 @@ export function initTaxExemptDropdown(savedValue) {
   }
   sel.value = matchedKey;
   if (matchedKey === 'custom') { inp.value = savedValue || ''; inp.style.display = ''; }
-  else { inp.value = TAX_EXEMPT_OPTIONS[matchedKey]; inp.style.display = 'none'; }
-  hint.textContent = TAX_EXEMPT_HINTS[matchedKey] || '';
+  else { inp.value = (/** @type {Record<string, string>} */ (TAX_EXEMPT_OPTIONS))[matchedKey] || ''; inp.style.display = 'none'; }
+  hint.textContent = (/** @type {Record<string, string>} */ (TAX_EXEMPT_HINTS))[matchedKey] || '';
 
   sel.addEventListener('change', () => applyOption(sel.value));
 }
 
 export function getTaxExemptValue() {
-  const sel = document.getElementById('setTaxExemptSelect');
-  const inp = document.getElementById('setTaxExempt');
+  const sel = /** @type {HTMLSelectElement | null} */ (document.getElementById('setTaxExemptSelect'));
+  const inp = /** @type {HTMLInputElement | null} */ (document.getElementById('setTaxExempt'));
   if (!sel) return '';
   if (sel.value === 'custom') return (inp?.value || '').trim();
   if (sel.value === '19pct') return '';
-  return TAX_EXEMPT_OPTIONS[sel.value] || '';
+  return (/** @type {Record<string, string>} */ (TAX_EXEMPT_OPTIONS))[sel.value] || '';
 }

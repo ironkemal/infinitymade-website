@@ -6,21 +6,47 @@
 import assert from 'node:assert/strict';
 import { resolveOrCreateArzt, normalizeArztName } from './arzt-registry.js';
 
+/**
+ * @typedef {Record<string, any>} StubArztRow
+ * @typedef {{
+ *   _mode: string | null,
+ *   _payload: StubArztRow | null,
+ *   select: () => ArztStubBuilder,
+ *   eq: (col: string, val: unknown) => ArztStubBuilder,
+ *   is: (col: string, val: unknown) => ArztStubBuilder,
+ *   ilike: (col: string, val: unknown) => ArztStubBuilder,
+ *   _match: () => StubArztRow[],
+ *   maybeSingle: () => Promise<{ data: StubArztRow | null, error: null }>,
+ *   single: () => Promise<{ data: StubArztRow | null, error: { code: string, message: string } | null }>,
+ *   insert: (payload: StubArztRow) => ArztStubBuilder,
+ *   update: (patch: StubArztRow) => { eq: (col: string, val: unknown) => Promise<{ error: null }> },
+ * }} ArztStubBuilder
+ */
+
 let passed = 0, failed = 0;
+/** @param {string} name @param {() => void | Promise<void>} fn */
 async function test(name, fn) {
   try { await fn(); console.log('  ok   ' + name); passed++; }
-  catch (e) { console.log('  FAIL ' + name + '\n       ' + e.message); failed++; }
+  catch (e) { console.log('  FAIL ' + name + '\n       ' + (e instanceof Error ? e.message : String(e))); failed++; }
 }
 
 // --------------------------------------------------------------------------
 // Supabase-Stub
 // --------------------------------------------------------------------------
+/**
+ * @param {StubArztRow[]} [rows]
+ * @param {{ altNameKey?: boolean }} [opts]
+ */
 function makeStub(rows = [], { altNameKey = false } = {}) {
+  /** @type {StubArztRow[]} */
   const store = rows.map((r, i) => ({ id: r.id || `id-${i + 1}`, ...r }));
   let seq = store.length;
 
+  /** @returns {ArztStubBuilder} */
   function builder() {
+    /** @type {Array<(r: StubArztRow) => boolean>} */
     const filters = [];
+    /** @type {ArztStubBuilder} */
     const api = {
       _mode: null, _payload: null,
       select() { return api; },
@@ -34,7 +60,7 @@ function makeStub(rows = [], { altNameKey = false } = {}) {
       _match() { return store.filter(r => filters.every(f => f(r))); },
       async maybeSingle() { return { data: api._match()[0] || null, error: null }; },
       async single() {
-        if (api._mode === 'insert') {
+        if (api._mode === 'insert' && api._payload) {
           const row = api._payload;
           // Unique-Indizes nachbilden: v32 (LANR / Name ohne LANR) und — mit
           // altNameKey — der ältere aerzte_owner_id_arzt_name_key = UNIQUE
@@ -67,7 +93,7 @@ function makeStub(rows = [], { altNameKey = false } = {}) {
     return api;
   }
 
-  return { from: () => builder(), _store: store };
+  return /** @type {Parameters<typeof resolveOrCreateArzt>[0] & { _store: StubArztRow[], _builder: () => ArztStubBuilder }} */ (/** @type {unknown} */ ({ from: () => builder(), _store: store, _builder: builder }));
 }
 
 const OWNER = 'owner-1';
@@ -208,15 +234,15 @@ await test('Wettlauf (unique violation) liefert den vorhandenen Datensatz', asyn
   // Suche künstlich blind stellen, damit der INSERT-Pfad in den 23505 läuft.
   const echt = db.from;
   let ersterAufruf = true;
-  db.from = () => {
-    const b = echt();
+  db.from = /** @type {typeof db.from} */ ((/** @type {Parameters<typeof db.from>[0]} */ table) => {
+    const b = /** @type {ReturnType<typeof echt> & { maybeSingle: () => Promise<{ data: unknown, error: unknown }> }} */ (echt(table));
     if (ersterAufruf) {
       ersterAufruf = false;
       const orig = b.maybeSingle.bind(b);
       b.maybeSingle = async () => { b.maybeSingle = orig; return { data: null, error: null }; };
     }
     return b;
-  };
+  });
   const r = await resolveOrCreateArzt(db, OWNER, { name: 'Dr. Meyer', lanr: '123456789' });
   assert.equal(r.id, 'race-1');
   assert.equal(r.created, false);

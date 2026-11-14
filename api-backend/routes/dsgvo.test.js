@@ -11,14 +11,16 @@ const { antworttextFallB, kontoLoeschen } = await import('../dsgvo/loeschen.js')
 
 /**
  * Startet einen temporaeren Express-Server auf einem freien Port fuer isolierte Route-Tests.
+ * @param {any} router
+ * @param {(baseUrl: string) => Promise<void>} fn
  */
 async function withServer(router, fn) {
   const app = express();
   app.use(express.json());
   app.use(router);
   const server = http.createServer(app);
-  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-  const port = server.address().port;
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', /** @type {() => void} */ (resolve)));
+  const port = (/** @type {import('node:net').AddressInfo} */ (server.address())).port;
   const baseUrl = `http://127.0.0.1:${port}`;
   try {
     await fn(baseUrl);
@@ -29,8 +31,10 @@ async function withServer(router, fn) {
 
 /**
  * Erzeugt einen flexiblen Mock-Supabase-Client fuer DSGVO-Tests.
+ * @param {Record<string, any>} [handlers]
  */
 function createMockSupabase(handlers = {}) {
+  /** @type {{ deleteUser: number, updateUserById: number, rpcCalls: any[], insertedLogs: any[] }} */
   const calls = {
     deleteUser: 0,
     updateUserById: 0,
@@ -42,57 +46,58 @@ function createMockSupabase(handlers = {}) {
     calls,
     auth: {
       admin: {
-        getUserById: async (id) => ({
+        getUserById: async (/** @type {string} */ id) => ({
           data: { user: { id, email: `owner-${id}@praxis-test.de` } },
           error: null,
         }),
-        updateUserById: async (id, payload) => {
+        updateUserById: async (/** @type {string} */ id, /** @type {any} */ payload) => {
           calls.updateUserById++;
           return { data: { id, ...payload }, error: null };
         },
-        deleteUser: async (_id) => {
+        deleteUser: async (/** @type {string} */ _id) => {
           calls.deleteUser++;
           throw new Error('deleteUser darf NIE aufgerufen werden!');
         },
       },
     },
-    rpc: async (fnName, params) => {
+    rpc: async (/** @type {string} */ fnName, /** @type {any} */ params) => {
       calls.rpcCalls.push({ fnName, params });
       if (fnName === 'artefakt_owner_freeze') return { data: true, error: null };
       return { data: null, error: null };
     },
     storage: {
-      from: (_bucket) => ({
+      from: (/** @type {string} */ _bucket) => ({
         list: async () => ({ data: [], error: null }),
         remove: async () => ({ data: [], error: null }),
       }),
     },
-    from: (tableName) => {
+    from: (/** @type {string} */ tableName) => {
       let selectedCols = '*';
+      /** @type {any[]} */
       const filters = [];
 
       const query = {
-        select: (cols) => {
+        select: (/** @type {any} */ cols) => {
           selectedCols = cols;
           return query;
         },
-        eq: (col, val) => {
+        eq: (/** @type {string} */ col, /** @type {any} */ val) => {
           filters.push({ type: 'eq', col, val });
           return query;
         },
-        not: (col, op, val) => {
+        not: (/** @type {string} */ col, /** @type {string} */ op, /** @type {any} */ val) => {
           filters.push({ type: 'not', col, op, val });
           return query;
         },
-        in: (col, vals) => {
+        in: (/** @type {string} */ col, /** @type {any} */ vals) => {
           filters.push({ type: 'in', col, vals });
           return query;
         },
-        gte: (col, val) => {
+        gte: (/** @type {string} */ col, /** @type {any} */ val) => {
           filters.push({ type: 'gte', col, val });
           return query;
         },
-        limit: (_n) => query,
+        limit: (/** @type {any} */ _n) => query,
         order: () => query,
         range: async () => {
           if (tableName === 'abrechnung_artefakt_version') return { data: [], error: null, count: 0 };
@@ -114,8 +119,8 @@ function createMockSupabase(handlers = {}) {
           }
           return { data: null, error: null };
         },
-        update: (payload) => ({
-          eq: async (col, val) => {
+        update: (/** @type {any} */ payload) => ({
+          eq: async (/** @type {string} */ col, /** @type {any} */ val) => {
             if (handlers[tableName]?.update) {
               return handlers[tableName].update(payload, { col, val });
             }
@@ -123,20 +128,20 @@ function createMockSupabase(handlers = {}) {
           },
         }),
         delete: () => ({
-          eq: async (col, val) => {
+          eq: async (/** @type {string} */ col, /** @type {any} */ val) => {
             if (handlers[tableName]?.delete) {
               return handlers[tableName].delete({ col, val });
             }
             return { data: null, error: null };
           },
-          in: async (col, vals) => {
+          in: async (/** @type {string} */ col, /** @type {any} */ vals) => {
             if (handlers[tableName]?.delete) {
               return handlers[tableName].delete({ col, vals });
             }
             return { data: null, error: null };
           },
         }),
-        insert: async (rows) => {
+        insert: async (/** @type {any} */ rows) => {
           if (tableName === 'data_access_log') {
             calls.insertedLogs.push(rows);
           }
@@ -145,7 +150,7 @@ function createMockSupabase(handlers = {}) {
           }
           return { data: rows, error: null };
         },
-        then: (resolve) => {
+        then: (/** @type {any} */ resolve) => {
           if (handlers[tableName]?.select) {
             Promise.resolve(handlers[tableName].select(filters)).then((res) => {
               resolve({ data: res, error: null });
@@ -170,7 +175,7 @@ function createMockSupabase(handlers = {}) {
 test('DSGVO Route: 404 in der Box (istKutu = true)', async () => {
   const router = createDsgvoRouter({
     istKutu: () => true,
-    requireAuth: (req, _res, next) => {
+    requireAuth: (/** @type {any} */ req, /** @type {any} */ _res, /** @type {any} */ next) => {
       req.auth = { userId: 'usr-1', tenantId: 'usr-1', role: 'owner' };
       next();
     },
@@ -193,7 +198,7 @@ test('DSGVO Route: 404 in der Box (istKutu = true)', async () => {
 test('DSGVO Route: 403 fuer Mitarbeiter (role != owner)', async () => {
   const router = createDsgvoRouter({
     istKutu: () => false,
-    requireAuth: (req, _res, next) => {
+    requireAuth: (/** @type {any} */ req, /** @type {any} */ _res, /** @type {any} */ next) => {
       req.auth = { userId: 'emp-1', tenantId: 'usr-1', role: 'employee' };
       next();
     },
@@ -216,7 +221,7 @@ test('DSGVO Route: 403 fuer Mitarbeiter (role != owner)', async () => {
 test('DSGVO Route: 400 wenn confirm nicht "LÖSCHEN" lautet', async () => {
   const router = createDsgvoRouter({
     istKutu: () => false,
-    requireAuth: (req, _res, next) => {
+    requireAuth: (/** @type {any} */ req, /** @type {any} */ _res, /** @type {any} */ next) => {
       req.auth = { userId: 'usr-1', tenantId: 'usr-1', role: 'owner' };
       next();
     },
@@ -239,7 +244,7 @@ test('DSGVO Route: 400 wenn confirm nicht "LÖSCHEN" lautet', async () => {
 test('DSGVO Route: 429 bei bereits laufendem Loeschantrag (Doppelantrag-Sperre)', async () => {
   const mockSupabase = createMockSupabase({
     data_access_log: {
-      select: (filters) => {
+      select: (/** @type {any[]} */ filters) => {
         const isDeletionCheck = filters.some((f) => f.val === 'dsgvo_deletion');
         if (isDeletionCheck) {
           return [{ id: 'existing-log-1', action: 'dsgvo_deletion' }];
@@ -252,7 +257,7 @@ test('DSGVO Route: 429 bei bereits laufendem Loeschantrag (Doppelantrag-Sperre)'
   const router = createDsgvoRouter({
     istKutu: () => false,
     supabase: mockSupabase,
-    requireAuth: (req, _res, next) => {
+    requireAuth: (/** @type {any} */ req, /** @type {any} */ _res, /** @type {any} */ next) => {
       req.auth = { userId: 'usr-1', tenantId: 'usr-1', role: 'owner' };
       next();
     },
@@ -275,7 +280,7 @@ test('DSGVO Route: 429 bei bereits laufendem Loeschantrag (Doppelantrag-Sperre)'
 test('DSGVO Route: 409 wenn vor der Loeschung kein Export innerhalb 24h vorliegt', async () => {
   const mockSupabase = createMockSupabase({
     data_access_log: {
-      select: (_filters) => {
+      select: (/** @type {any[]} */ _filters) => {
         // Kein Export-Log vorhanden
         return [];
       },
@@ -285,7 +290,7 @@ test('DSGVO Route: 409 wenn vor der Loeschung kein Export innerhalb 24h vorliegt
   const router = createDsgvoRouter({
     istKutu: () => false,
     supabase: mockSupabase,
-    requireAuth: (req, _res, next) => {
+    requireAuth: (/** @type {any} */ req, /** @type {any} */ _res, /** @type {any} */ next) => {
       req.auth = { userId: 'usr-1', tenantId: 'usr-1', role: 'owner' };
       next();
     },
@@ -308,7 +313,7 @@ test('DSGVO Route: 409 wenn vor der Loeschung kein Export innerhalb 24h vorliegt
 test('DSGVO Route: 502 wenn Stripe-Kuendigung fehlschlaegt (Abo aktiv, aber kein Key)', async () => {
   const mockSupabase = createMockSupabase({
     data_access_log: {
-      select: (filters) => {
+      select: (/** @type {any[]} */ filters) => {
         const isExportCheck = filters.some((f) => f.val === 'dsgvo_export');
         if (isExportCheck) {
           return [{ id: 'export-log-1', action: 'dsgvo_export' }];
@@ -328,7 +333,7 @@ test('DSGVO Route: 502 wenn Stripe-Kuendigung fehlschlaegt (Abo aktiv, aber kein
     istKutu: () => false,
     supabase: mockSupabase,
     stripeKey: null, // Fehlender Key fuehrt zu kontrolliertem Abbruch
-    requireAuth: (req, _res, next) => {
+    requireAuth: (/** @type {any} */ req, /** @type {any} */ _res, /** @type {any} */ next) => {
       req.auth = { userId: 'usr-1', tenantId: 'usr-1', role: 'owner' };
       next();
     },
@@ -366,7 +371,7 @@ test('DSGVO Route: GET /dsgvo/export liefert 200, Content-Disposition und protok
   const router = createDsgvoRouter({
     istKutu: () => false,
     supabase: mockSupabase,
-    requireAuth: (req, _res, next) => {
+    requireAuth: (/** @type {any} */ req, /** @type {any} */ _res, /** @type {any} */ next) => {
       req.auth = { userId: 'usr-1', tenantId: 'usr-1', role: 'owner' };
       next();
     },
@@ -462,7 +467,7 @@ test('kontoLoeschen: bricht bei existierendem Abo ohne Stripe-Key sofort mit sta
   const res = await kontoLoeschen(mockSupabase, {
     ownerId: 'usr-1',
     vorgangId: 'vorgang-1',
-    stripeKey: null,
+    stripeKey: /** @type {any} */ (null),
   });
 
   assert.equal(res.status, 'fehler');
@@ -505,7 +510,7 @@ test('kontoLoeschen: ruft NIE auth.admin.deleteUser auf, sondern bannt per updat
   const res = await kontoLoeschen(mockSupabase, {
     ownerId: 'usr-1',
     vorgangId: 'vorgang-2',
-    stripeKey: null,
+    stripeKey: /** @type {any} */ (null),
   });
 
   // deleteUser darf unter keinen Umstaenden aufgerufen worden sein!

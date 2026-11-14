@@ -3,11 +3,16 @@
 // Produces a print-ready A4 invoice. Browser print-to-PDF or html2pdf.js converts to PDF.
 // Heilmittel are KSt-befreit (§ 4 Nr. 14 UStG) → no VAT.
 
-const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
+/** @type {Record<string, string>} */
+const HTML_ESC = {
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-}[c]));
+};
+/** @param {unknown} s */
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => HTML_ESC[c] ?? c);
 
+/** @param {unknown} n */
 const fmtEur = (n) => (n == null ? '' : Number(n).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })) + ' €';
+/** @param {Date | string | null | undefined} d */
 const fmtDate = (d) => {
   if (!d) return '';
   const dt = d instanceof Date ? d : new Date(d);
@@ -16,13 +21,16 @@ const fmtDate = (d) => {
 };
 
 // TT.MM.JJJJ mit führenden Nullen (BG-Bezug: der UV-Träger ordnet nach Datum zu).
+/** @param {Date | string | null | undefined} d */
 const fmtDateLang = (d) => {
+  if (!d) return '';
   const dt = d instanceof Date ? d : new Date(d);
   return Number.isNaN(dt.getTime()) ? '' : dt.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
 // rechnung_privat trägt den Fachbereich im Titel — der wird übergeben, damit auf
 // einer Podologie-Rechnung nicht "Physiotherapeutische Leistungen" steht.
+/** @type {Record<string, string>} */
 const TYPE_TITLES = {
   rechnung_selbstzahler: 'Rechnung – Selbstzahler',
   rechnung_eigenanteil:  'Rechnung – Eigenanteil',
@@ -32,18 +40,18 @@ const TYPE_TITLES = {
 
 /**
  * @param {object} opts
- * @param {string} opts.type            One of the rechnung_* keys above
- * @param {object} opts.praxis          { name, strasse, plz_ort, telefon, ik, steuernummer, email }
- * @param {object} opts.patient         { nachname, vorname, strasse, plz, ort, geburtsdatum }
- * @param {object} opts.verordnung      { ausstellungsdatum, krankenkasse, arzt }
- * @param {object} opts.rechnung        { nummer, datum, faelligkeit, kvnr, bg_aktenzeichen }
- * @param {Array}  opts.sessions        [{ datum, position, bezeichnung, brutto }]
- * @param {object} opts.totals          { brutto, netto, mwst, gesamt }
- * @param {string} opts.bankverbindung
- * @param {string} opts.logoUrl
- * @param {string} opts.invoiceFooterText
- * @param {string} opts.betreff         Optional, from vorlage content_json.betreff
- * @param {string} opts.bereichTitel    Fachbereichs-Bezeichnung für rechnung_privat
+ * @param {string} [opts.type]          One of the rechnung_* keys above
+ * @param {{ name?: string, strasse?: string, plz_ort?: string, telefon?: string, ik?: string, steuernummer?: string, ust_id?: string, email?: string }} [opts.praxis]
+ * @param {{ nachname?: string, vorname?: string, strasse?: string, plz?: string, ort?: string, geburtsdatum?: Date | string | null }} [opts.patient]
+ * @param {{ ausstellungsdatum?: Date | string, krankenkasse?: string, arzt?: string }} [opts.verordnung]
+ * @param {{ nummer?: string, datum?: Date | string, faelligkeit?: Date | string, kvnr?: string, bg_aktenzeichen?: string, bg?: { traeger_name?: string, traeger_anschrift?: string, unfalltag?: Date | string, aktenzeichen?: string } | null }} [opts.rechnung]
+ * @param {Array<{ datum?: Date | string | null, position?: string, bezeichnung?: string, brutto?: number | string | null }>} [opts.sessions]
+ * @param {{ brutto?: number | string | null, netto?: number | string | null, mwst?: number | string | null, gesamt?: number | string | null }} [opts.totals]
+ * @param {string} [opts.bankverbindung]
+ * @param {string} [opts.logoUrl]
+ * @param {string} [opts.invoiceFooterText]
+ * @param {string | null} [opts.betreff]         Optional, from vorlage content_json.betreff
+ * @param {string} [opts.bereichTitel]    Fachbereichs-Bezeichnung für rechnung_privat
  */
 export function renderRechnung(opts) {
   const {

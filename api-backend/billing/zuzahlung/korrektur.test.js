@@ -19,7 +19,7 @@ test('eine vergebene Belegnummer sperrt und verweist aufs Korrekturverfahren', (
   const r = korrekturErlaubt({ belegnummer: '4711-3' });
   assert.equal(r.erlaubt, false);
   assert.equal(r.status, 409);
-  assert.match(r.grund, /Korrekturverfahren/);
+  assert.match(r.grund ?? '', /Korrekturverfahren/);
 });
 
 test('laufende Abrechnung sperrt in jedem Zwischenstatus', () => {
@@ -64,14 +64,14 @@ test('Betrag allein reicht', () => {
 test('ohne Einheiten und ohne Betrag gibt es nichts zu korrigieren', () => {
   const r = pruefeEingabe({ grund: 'irgendwas', grundCode: 'sonstiges' });
   assert.equal(r.ok, false);
-  assert.match(r.fehler, /Weder/);
+  assert.match(r.fehler ?? '', /Weder/);
 });
 
 test('die Begruendung ist Pflicht — das ist der Unterschied zum stillen Ueberschreiben', () => {
   assert.equal(pruefeEingabe({ ...GUELTIG, grund: '' }).ok, false);
   assert.equal(pruefeEingabe({ ...GUELTIG, grund: '   ' }).ok, false);
   assert.equal(pruefeEingabe({ ...GUELTIG, grund: 'ok' }).ok, false);
-  assert.equal(pruefeEingabe({ ...GUELTIG, grund: undefined }).ok, false);
+  assert.equal(pruefeEingabe({ ...GUELTIG, grund: /** @type {string} */ (/** @type {unknown} */ (undefined)) }).ok, false);
 });
 
 test('null Einheiten sind erlaubt — "gar nichts erbracht" ist eine Aussage', () => {
@@ -171,6 +171,6 @@ test('aufgebrauchtes Guthaben verrechnet nichts mehr', () => {
 });
 
 test('kaputte Eingaben ergeben 0 statt NaN', () => {
-  assert.equal(verrechnungsBetrag({ rest: null, zielSoll: undefined }).betrag, 0);
+  assert.equal(verrechnungsBetrag({ rest: /** @type {number} */ (/** @type {unknown} */ (null)), zielSoll: /** @type {number} */ (/** @type {unknown} */ (undefined)) }).betrag, 0);
   assert.equal(verrechnungsBetrag({ rest: -5, zielSoll: 10 }).betrag, 0);
 });

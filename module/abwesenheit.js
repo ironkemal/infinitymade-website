@@ -28,7 +28,16 @@
  * wächst nicht).
  */
 
-/** Lädt alle Abwesenheiten der Mitarbeiter, die den Zeitraum [von, bis] schneiden. */
+/**
+ * @typedef {{ employee_id: string, start_date: string, end_date: string, reason?: string | null, note?: string | null, type?: string | null }} AbwesenheitEintrag
+ */
+
+/**
+ * Lädt alle Abwesenheiten der Mitarbeiter, die den Zeitraum [von, bis] schneiden.
+ * @param {any} supabase
+ * @param {{ empIds: string[], vonISO: string, bisISO: string }} params
+ * @returns {Promise<AbwesenheitEintrag[]>}
+ */
 export async function ladeAbwesenheiten(supabase, { empIds, vonISO, bisISO }) {
   if (!empIds?.length) return [];
   const { data } = await supabase.from('time_offs')
@@ -49,6 +58,10 @@ export async function ladeAbwesenheiten(supabase, { empIds, vonISO, bisISO }) {
  * sich der Vergleich um die Offset-Stunden und ein einzelner Tag wirkt einen
  * Tag zu lang — die Browser-Zeitzone des jeweiligen Rechners darf das Ergebnis
  * nicht verändern.
+ *
+ * @param {AbwesenheitEintrag} eintrag
+ * @param {string} tagISO
+ * @returns {boolean}
  */
 function trifftTag(eintrag, tagISO) {
   const tagStart = new Date(`${tagISO}T00:00:00Z`).getTime();
@@ -58,28 +71,48 @@ function trifftTag(eintrag, tagISO) {
   return von <= tagEnd && bis >= tagStart;
 }
 
-/** Ist `empId` an `tagISO` abwesend? */
+/**
+ * Ist `empId` an `tagISO` abwesend?
+ * @param {AbwesenheitEintrag[] | null | undefined} abwesenheiten
+ * @param {string} empId
+ * @param {string} tagISO
+ * @returns {boolean}
+ */
 export function istAbwesend(abwesenheiten, empId, tagISO) {
   return (abwesenheiten || []).some(t => t.employee_id === empId && trifftTag(t, tagISO));
 }
 
-/** Alle Mitarbeiter-Ids, die an `tagISO` abwesend sind (ohne Duplikate). */
+/**
+ * Alle Mitarbeiter-Ids, die an `tagISO` abwesend sind (ohne Duplikate).
+ * @param {AbwesenheitEintrag[] | null | undefined} abwesenheiten
+ * @param {string} tagISO
+ * @returns {string[]}
+ */
 export function abwesendeMitarbeiterIds(abwesenheiten, tagISO) {
   return [...new Set((abwesenheiten || []).filter(t => trifftTag(t, tagISO)).map(t => t.employee_id))];
 }
 
 // Kollegen sehen nur „Abwesend": Krankheit ist ein Gesundheitsdatum (legal-de, 31.10.2026).
 // Nur Anzeige. Die Lesegrenze in der Datenbank ist ein eigener Schritt (Physio/PLANUNG-UMSETZUNG.md).
-let grundSichtbar = () => true;
+let grundSichtbar = (/** @type {string} */ _empId) => true;
+/** @param {(empId: string) => boolean} pruefe */
 export function setzeGrundSichtbar(pruefe) {
   grundSichtbar = pruefe;
 }
 
 /** Anzeigetext für einen Eintrag: reason vor note vor Typ-Label. */
+/** @type {Record<string, string>} */
 const TYP_LABEL = { urlaub: 'Urlaub', krank: 'Krank', frei: 'Frei', elternzeit: 'Elternzeit' };
+
+/**
+ * @param {AbwesenheitEintrag[] | null | undefined} abwesenheiten
+ * @param {string} empId
+ * @param {string} tagISO
+ * @returns {string | null}
+ */
 export function abwesenheitsGrund(abwesenheiten, empId, tagISO) {
   const eintrag = (abwesenheiten || []).find(t => t.employee_id === empId && trifftTag(t, tagISO));
   if (!eintrag) return null;
   if (!grundSichtbar(empId)) return 'Abwesend';
-  return eintrag.reason || eintrag.note || TYP_LABEL[eintrag.type] || 'Abwesend';
+  return eintrag.reason || eintrag.note || TYP_LABEL[eintrag.type || ''] || 'Abwesend';
 }

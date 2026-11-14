@@ -19,6 +19,16 @@
 export const JETON_GUELTIG_TAGE = 14;
 const JETON_GUELTIG_MS = JETON_GUELTIG_TAGE * 24 * 60 * 60 * 1000;
 
+/**
+ * @typedef {{ method: string, path: string }} SetupKapiRequest
+ * @typedef {{ status: (code: number) => { json: (body: unknown) => unknown } }} SetupKapiResponse
+ */
+
+/**
+ * @param {string | number | null | undefined} seitRoh
+ * @param {number} [jetztMs=Date.now()]
+ * @returns {boolean}
+ */
 export function jetonAbgelaufen(seitRoh, jetztMs = Date.now()) {
   if (seitRoh === undefined || seitRoh === null || String(seitRoh).trim() === '') return false;
   const seit = Number(String(seitRoh).trim());
@@ -26,7 +36,20 @@ export function jetonAbgelaufen(seitRoh, jetztMs = Date.now()) {
   return jetztMs - seit * 1000 > JETON_GUELTIG_MS;
 }
 
+/**
+ * @param {{
+ *   istAbgeschlossen: () => Promise<boolean>,
+ *   seit?: () => string | number | null | undefined,
+ *   jetzt?: () => number
+ * }} opts
+ * @returns {(req: SetupKapiRequest, res: SetupKapiResponse, next: () => void) => Promise<unknown>}
+ */
 export function setupKapisi({ istAbgeschlossen, seit = () => process.env.SETUP_TOKEN_SEIT, jetzt = () => Date.now() }) {
+  /**
+   * @param {SetupKapiRequest} req
+   * @param {SetupKapiResponse} res
+   * @param {() => void} next
+   */
   return async function setupKapi(req, res, next) {
     if (req.method === 'GET' && req.path === '/status') return next();
     try {

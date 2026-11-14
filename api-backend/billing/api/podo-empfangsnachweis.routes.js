@@ -8,9 +8,12 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-
  * - Inhaber: role === 'owner', profile.id === user.id, profile.owner_id === null
  * - Mitarbeiter: role === 'employee', profile.owner_id vorhanden
  * - Andere Rollen: 403 Forbidden
+ * @param {import('express').Request} req
+ * @param {import('@supabase/supabase-js').SupabaseClient<any>} supabase
  */
 async function resolveAuth(req, supabase) {
-  const authHeader = req.headers?.authorization || '';
+  const rawAuth = req.headers?.authorization || '';
+  const authHeader = Array.isArray(rawAuth) ? rawAuth[0] : rawAuth;
   if (!authHeader.startsWith('Bearer ')) {
     return { status: 401, error: 'Fehlender oder ungültiger Authorization-Header' };
   }
@@ -72,6 +75,7 @@ async function resolveAuth(req, supabase) {
 
 /**
  * Erzeugt den Router für podologische Empfangsnachweise (Dependency Injected).
+ * @param {{ supabase: import('@supabase/supabase-js').SupabaseClient<any> }} deps
  */
 export function createPodoEmpfangsnachweisRouter({ supabase }) {
   if (!supabase) {
@@ -81,7 +85,7 @@ export function createPodoEmpfangsnachweisRouter({ supabase }) {
   const router = express.Router();
 
   // GET /podologie/behandlungen/:id/empfangsnachweis
-  router.get('/podologie/behandlungen/:id/empfangsnachweis', async (req, res) => {
+  router.get('/podologie/behandlungen/:id/empfangsnachweis', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
     try {
       const auth = await resolveAuth(req, supabase);
       if (auth.status) {
@@ -128,7 +132,7 @@ export function createPodoEmpfangsnachweisRouter({ supabase }) {
   });
 
   // POST /podologie/behandlungen/:id/empfangsnachweis
-  router.post('/podologie/behandlungen/:id/empfangsnachweis', async (req, res) => {
+  router.post('/podologie/behandlungen/:id/empfangsnachweis', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
     try {
       const auth = await resolveAuth(req, supabase);
       if (auth.status) {
@@ -353,6 +357,8 @@ export function createPodoEmpfangsnachweisRouter({ supabase }) {
 
 /**
  * Mountet die Routen auf den Abrechnungs-Router.
+ * @param {import('express').Router} parentRouter
+ * @param {{ supabase: import('@supabase/supabase-js').SupabaseClient<any> }} deps
  */
 export function mountPodoEmpfangsnachweisRoutes(parentRouter, deps) {
   const subRouter = createPodoEmpfangsnachweisRouter(deps);

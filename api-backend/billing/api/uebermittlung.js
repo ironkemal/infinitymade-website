@@ -40,40 +40,44 @@
 export const ERLAUBTE_RICHTUNGEN = new Set(['senden', 'empfangen']);
 
 /**
+ * @typedef {object} UebermittlungFelder
+ * @property {string} [owner_id]               Mandant (Pflicht)
+ * @property {string} [richtung]               'senden' | 'empfangen' (Pflicht)
+ * @property {string} [physikalischer_dateiname] Dateiname nach Richtlinie (Pflicht)
+ * @property {string|Date} [erstellt_am]       Erstellungsdatum (Pflicht)
+ * @property {string} [partner_ik]             IK des Kommunikationspartners (Pflicht)
+ * @property {string} [business_id]            Betriebsstätte
+ * @property {string} [abrechnung_id]          Referenz zur Abrechnung
+ * @property {string} [antwort_auf]            Referenz zur Vorgaenger-Uebermittlung
+ * @property {number} [laufende_nummer]        Laufende Nummer
+ * @property {number} [transfernummer]         Transfernummer
+ * @property {string} [partner_name]           Name des Partners (z. B. Datenannahmestelle)
+ * @property {string|Date} [begonnen_am]       Beginn der Uebertragung (Default now())
+ * @property {string|Date} [beendet_am]        Ende der Uebertragung
+ * @property {number} [dateigroesse_bytes]     Dateigroesse in Bytes
+ * @property {string} [verarbeitungshinweise]  Freitext (ACHTUNG: PHI vorher maskieren!)
+ * @property {string} [verarbeitungskennzeichen] VKZ
+ * @property {string} [fehlerstatus]           'offen'|'ok'|'fehler'|'abgebrochen'
+ * @property {string} [fehlertext]             Freitext (ACHTUNG: PHI vorher maskieren!)
+ * @property {string} [uebertragungsweg]       'portal'|'dfue'|'mail'|'datentraeger'|'papier'
+ * @property {string} [sha256]                 Pruefsumme der Datei
+ * @property {string} [betriebsart]            'test'|'erprobung'|'echt'
+ * @property {string} [absender_ik]            Absender-IK
+ * @property {string} [created_by]             User-UUID
+ */
+
+/**
  * Protokolliert einen Uebertragungsschritt in public.abrechnung_uebermittlung.
  *
  * Fehler werden geschluckt und geloggt (best-effort, Vorbild logCall() in ai/audit.js),
  * damit ein Protokollierungsfehler niemals die eigentliche Abrechnung blockiert.
  *
- * @param {object} felder
- * @param {string} felder.owner_id                 Mandant (Pflicht)
- * @param {string} felder.richtung                 'senden' | 'empfangen' (Pflicht)
- * @param {string} felder.physikalischer_dateiname Dateiname nach Richtlinie (Pflicht)
- * @param {string|Date} felder.erstellt_am          Erstellungsdatum (Pflicht)
- * @param {string} felder.partner_ik               IK des Kommunikationspartners (Pflicht)
- * @param {string} [felder.business_id]            Betriebsstätte
- * @param {string} [felder.abrechnung_id]          Referenz zur Abrechnung
- * @param {string} [felder.antwort_auf]            Referenz zur Vorgaenger-Uebermittlung
- * @param {number} [felder.laufende_nummer]        Laufende Nummer
- * @param {number} [felder.transfernummer]         Transfernummer
- * @param {string} [felder.partner_name]           Name des Partners (z. B. Datenannahmestelle)
- * @param {string|Date} [felder.begonnen_am]       Beginn der Uebertragung (Default now())
- * @param {string|Date} [felder.beendet_am]        Ende der Uebertragung
- * @param {number} [felder.dateigroesse_bytes]     Dateigroesse in Bytes
- * @param {string} [felder.verarbeitungshinweise]  Freitext (ACHTUNG: PHI vorher maskieren!)
- * @param {string} [felder.verarbeitungskennzeichen] VKZ
- * @param {string} [felder.fehlerstatus='offen']   'offen'|'ok'|'fehler'|'abgebrochen'
- * @param {string} [felder.fehlertext]             Freitext (ACHTUNG: PHI vorher maskieren!)
- * @param {string} [felder.uebertragungsweg]       'portal'|'dfue'|'mail'|'datentraeger'|'papier'
- * @param {string} [felder.sha256]                 Pruefsumme der Datei
- * @param {string} [felder.betriebsart]            'test'|'erprobung'|'echt'
- * @param {string} [felder.absender_ik]            Absender-IK
- * @param {string} [felder.created_by]             User-UUID
- * @param {object} [opts]
- * @param {object} [opts.db]                       Supabase-Client
+ * @param {UebermittlungFelder} [felder]
+ * @param {{ db?: any }} [opts]
  * @returns {Promise<string|null>} Die UUID des Protokolleintrags oder null bei Fehler
  */
-export async function uebermittlungProtokollieren(felder = {}, { db } = {}) {
+export async function uebermittlungProtokollieren(felder = {}, opts = {}) {
+  const { db } = opts || {};
   if (!db) {
     console.warn('[abrechnung/uebermittlung] Kein Datenbank-Client uebergeben (db ist Pflicht).');
     return null;
@@ -132,6 +136,7 @@ export async function uebermittlungProtokollieren(felder = {}, { db } = {}) {
   }
 
   // 3. Zeile fuer Insert zusammenstellen (striktes Whitelisting gegen versehentliche PHI-Felder)
+  /** @type {Record<string, unknown>} */
   const zeile = {
     owner_id: cleanOwnerId,
     richtung: cleanRichtung,
@@ -181,7 +186,7 @@ export async function uebermittlungProtokollieren(felder = {}, { db } = {}) {
     const id = data?.id ?? (Array.isArray(data) ? data[0]?.id : null);
     return id ?? null;
   } catch (err) {
-    console.error('[abrechnung/uebermittlung] Unerwartete Ausnahme beim Protokollieren:', err.message || err);
+    console.error('[abrechnung/uebermittlung] Unerwartete Ausnahme beim Protokollieren:', (err instanceof Error ? err.message : '') || err);
     return null;
   }
 }

@@ -11,10 +11,11 @@ test('DSGVO-Client Unit Tests', async (t) => {
   const dummyToken = 'jwt-token-xyz-123';
 
   await t.test('exportAbrufen: ruft korrekte URL auf, setzt Auth-Header und enthaelt kein token= in URL', async () => {
-    let capturedUrl = null;
-    let capturedOptions = null;
+    let capturedUrl = '';
+    /** @type {any} */
+    let capturedOptions = {};
 
-    const mockFetch = async (url, options) => {
+    const mockFetch = async (/** @type {string} */ url, /** @type {any} */ options) => {
       capturedUrl = url;
       capturedOptions = options;
       return {
@@ -40,17 +41,18 @@ test('DSGVO-Client Unit Tests', async (t) => {
   await t.test('exportAbrufen: wirft Fehler wenn kein Token vorhanden ist', async () => {
     await assert.rejects(
       async () => {
-        await exportAbrufen({ apiBase: dummyApiBase, token: null });
+        await exportAbrufen({ apiBase: dummyApiBase, token: /** @type {any} */ (null) });
       },
       /Nicht angemeldet/
     );
   });
 
   await t.test('kontoLoeschenSenden: sendet POST mit { confirm: "LÖSCHEN" }, Auth-Header und kein token= in URL', async () => {
-    let capturedUrl = null;
-    let capturedOptions = null;
+    let capturedUrl = '';
+    /** @type {any} */
+    let capturedOptions = {};
 
-    const mockFetch = async (url, options) => {
+    const mockFetch = async (/** @type {string} */ url, /** @type {any} */ options) => {
       capturedUrl = url;
       capturedOptions = options;
       return {
@@ -77,7 +79,12 @@ test('DSGVO-Client Unit Tests', async (t) => {
   });
 
   await t.test('dsgvoKontoLoeschen: 409 EXPORT_FEHLT führt zu Toast mit Export-Hinweis', async () => {
+    /** @type {Array<{ msg: string, type?: string }>} */
     const toasts = [];
+    /**
+     * @param {string} msg
+     * @param {string} [type]
+     */
     const mockToast = (msg, type) => toasts.push({ msg, type });
 
     const mockFetch = async () => ({
@@ -104,12 +111,13 @@ test('DSGVO-Client Unit Tests', async (t) => {
 
   await t.test('dsgvoKontoLoeschen: bricht bei Box (istKutu = true) ab und ruft kein fetch auf', async () => {
     let fetchCalled = false;
+    /** @type {Array<{ msg: string, type?: string }>} */
     const toasts = [];
 
     await dsgvoKontoLoeschen({
       apiBase: dummyApiBase,
       getToken: async () => dummyToken,
-      showToast: (msg, type) => toasts.push({ msg, type }),
+      showToast: (/** @type {string} */ msg, /** @type {string} */ type) => toasts.push({ msg, type }),
       istKutu: true,
       fetchImpl: async () => {
         fetchCalled = true;
@@ -123,6 +131,7 @@ test('DSGVO-Client Unit Tests', async (t) => {
   });
 
   await t.test('dsgvoKontoLoeschen: 200 Erfolg führt zu Toast und signOut', async () => {
+    /** @type {string[]} */
     const toasts = [];
     let signedOut = false;
 
@@ -139,7 +148,7 @@ test('DSGVO-Client Unit Tests', async (t) => {
     await dsgvoKontoLoeschen({
       apiBase: dummyApiBase,
       getToken: async () => dummyToken,
-      showToast: (msg) => toasts.push(msg),
+      showToast: (/** @type {string} */ msg) => toasts.push(msg),
       showConfirmModal: async () => true,
       showInputModal: async () => 'LÖSCHEN',
       signOut: async () => {
@@ -155,6 +164,7 @@ test('DSGVO-Client Unit Tests', async (t) => {
   });
 
   await t.test('dsgvoKontoLoeschen: 200 teilweise_geloescht zeigt gesperrte Unterlagen Hinweis', async () => {
+    /** @type {string[]} */
     const toasts = [];
     let signedOut = false;
 
@@ -171,7 +181,7 @@ test('DSGVO-Client Unit Tests', async (t) => {
     await dsgvoKontoLoeschen({
       apiBase: dummyApiBase,
       getToken: async () => dummyToken,
-      showToast: (msg) => toasts.push(msg),
+      showToast: (/** @type {string} */ msg) => toasts.push(msg),
       showConfirmModal: async () => true,
       showInputModal: async () => 'LÖSCHEN',
       signOut: async () => {

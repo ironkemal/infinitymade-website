@@ -16,7 +16,7 @@ export const FEHLER_TERMIN_VOR_AUSSTELLUNG =
  * Unterstützt Date-Objekte, Zeitstempel, ISO-Strings und Termin-Objekte mit
  * start_time, date+time oder date.
  *
- * @param {Date|string|number|object|null|undefined} termin
+ * @param {Date|string|number|Record<string, any>|null|undefined} termin
  * @returns {string} YYYY-MM-DD oder ''
  */
 export function terminKalendertagBerlin(termin) {
@@ -28,7 +28,7 @@ export function terminKalendertagBerlin(termin) {
     if (termin.start) return terminKalendertagBerlin(termin.start);
     if (termin.behandlungsdatum) return terminKalendertagBerlin(termin.behandlungsdatum);
   }
-  const direkt = alsBerlinDatum(termin);
+  const direkt = alsBerlinDatum(/** @type {any} */ (termin));
   if (direkt) return direkt;
 
   if (typeof termin === 'string') {
@@ -42,7 +42,7 @@ export function terminKalendertagBerlin(termin) {
  * Ermittelt den Europe/Berlin-Kalendertag (YYYY-MM-DD) des Ausstellungsdatums einer Verordnung.
  * Unterstützt Date-Objekte, ISO-Datumsstrings oder Verordnungsobjekte.
  *
- * @param {Date|string|number|object|null|undefined} vo
+ * @param {Date|string|number|Record<string, any>|null|undefined} vo
  * @returns {string} YYYY-MM-DD oder ''
  */
 export function verordnungAusstellungstagBerlin(vo) {
@@ -51,7 +51,7 @@ export function verordnungAusstellungstagBerlin(vo) {
     if (vo.ausstellungsdatum) return verordnungAusstellungstagBerlin(vo.ausstellungsdatum);
     if (vo.verordnungsdatum) return verordnungAusstellungstagBerlin(vo.verordnungsdatum);
   }
-  const direkt = alsBerlinDatum(vo);
+  const direkt = alsBerlinDatum(/** @type {any} */ (vo));
   if (direkt) return direkt;
 
   if (typeof vo === 'string') {
@@ -66,8 +66,8 @@ export function verordnungAusstellungstagBerlin(vo) {
  * Ist der Kalendertag in Berlin strikt kleiner als das Ausstellungsdatum,
  * ist die Bindung unzulässig.
  *
- * @param {Date|string|number|object} terminZeit  Termin-Startzeitpunkt oder Termin-Objekt
- * @param {Date|string|number|object} ausstellungsdatum  Ausstellungsdatum oder Verordnungsobjekt
+ * @param {Date|string|number|Record<string, any>|null|undefined} terminZeit  Termin-Startzeitpunkt oder Termin-Objekt
+ * @param {Date|string|number|Record<string, any>|null|undefined} ausstellungsdatum  Ausstellungsdatum oder Verordnungsobjekt
  * @returns {{ok: boolean, fehler?: string}}
  */
 export function pruefeTerminVoDatum(terminZeit, ausstellungsdatum) {

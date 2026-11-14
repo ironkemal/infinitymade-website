@@ -30,9 +30,69 @@
  */
 
 /**
+ * @typedef {{
+ *   first_name?: string | null,
+ *   last_name?: string | null,
+ *   geburtsdatum?: string | null,
+ *   versichertennummer?: string | null,
+ *   versichertenstatus?: string | null,
+ *   krankenkasse?: string | null,
+ *   krankenkasse_ik?: string | null,
+ *   street?: string | null,
+ *   plz?: string | null,
+ *   city?: string | null,
+ * }} OcrPatient
+ * @typedef {{
+ *   ausstellungsdatum?: string | null,
+ *   lanr?: string | null,
+ *   bsnr?: string | null,
+ *   name?: string | null,
+ * }} OcrArzt
+ * @typedef {{
+ *   icd10?: string | null,
+ *   icd10_2?: string | null,
+ *   diagnose_text?: string | null,
+ *   diagnosegruppe?: string | null,
+ *   leitsymptomatik?: string | null,
+ *   pat_leitsymptomatik?: string | null,
+ *   heilmittel?: string | null,
+ *   heilmittel_items?: unknown[] | null,
+ *   vorrangig_einheiten?: number | null,
+ *   heilmittel_feld_text?: string | null,
+ *   heilmittel_position?: string | null,
+ *   anzahl_einheiten?: number | null,
+ *   ergaenzendes_heilmittel?: string | null,
+ *   anzahl_ergaenzend?: number | null,
+ *   frequenz?: string | null,
+ *   therapiebereich?: string | null,
+ *   behandlungsbeginn?: string | null,
+ *   is_dringend?: boolean,
+ *   hausbesuch?: boolean,
+ *   is_blanko?: boolean,
+ *   is_lhb_bvb?: boolean,
+ *   zuzahlung_befreit?: boolean,
+ *   bericht_angefordert?: boolean,
+ *   bericht_status?: string | null,
+ *   therapieziele?: string | null,
+ *   unterschrift_vorhanden?: boolean | null,
+ *   signature_confidence?: number | string | null,
+ * }} OcrRezept
+ * @typedef {{ patient?: OcrPatient | null, arzt?: OcrArzt | null, rezept?: OcrRezept | null }} OcrParsed
+ * @typedef {{
+ *   first_name?: string | null,
+ *   last_name?: string | null,
+ *   geburtsdatum?: string | null,
+ *   versichertennummer?: string | null,
+ * }} PatientSuchKriterien
+ * @typedef {PatientSuchKriterien & { metadata?: { geburtsdatum?: string | null } | null }} LeadPatient
+ */
+
+/**
  * ISO-Datum in die Schreibweise des Papiers.
  * `1975-03-08` → `08.03.1975`. Alles andere kommt unveraendert zurueck: im
  * Zweifel lieber der Rohwert im Feld als ein leeres Feld.
+ * @param {unknown} roh
+ * @returns {string}
  */
 export function alsDeutschesDatum(roh) {
   const treffer = String(roh ?? '').match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -49,6 +109,8 @@ export function alsDeutschesDatum(roh) {
  *
  * Was schon ISO ist, kommt unveraendert zurueck; alles andere leer, denn ein
  * halb gelesenes Datum ist schlimmer als gar keins.
+ * @param {unknown} roh
+ * @returns {string}
  */
 export function alsIsoDatum(roh) {
   const t = String(roh ?? '').trim();
@@ -72,8 +134,8 @@ export function alsIsoDatum(roh) {
  * — eine eigene Spalte dafuer gibt es nicht. Zwei Regeln fuer dasselbe Feld
  * waeren wieder der Fehler, den diese Zusammenlegung beseitigt.
  *
- * @param {object} parsed  `{ patient, arzt, rezept }` aus `/rezept/upload`
- * @returns {object}       Satz in der Form einer `prescriptions`-Zeile
+ * @param {OcrParsed | null | undefined} parsed  `{ patient, arzt, rezept }` aus `/rezept/upload`
+ * @returns {Record<string, unknown>}            Satz in der Form einer `prescriptions`-Zeile
  */
 export function ocrAlsVerordnung(parsed) {
   const p = parsed || {};
@@ -143,11 +205,12 @@ export function ocrAlsVerordnung(parsed) {
  * `rzPatKasseIk` (die Karten-IK) steht nur drin, wenn die Texterkennung sie
  * gelesen hat — sonst bleibt das Feld leer und die Praxis trägt sie von der Karte ein.
  *
- * @param {object} parsed
- * @returns {Object<string,string>}
+ * @param {OcrParsed | null | undefined} parsed
+ * @returns {Record<string, string>}
  */
 export function ocrAlsPatientkopf(parsed) {
   const patient = (parsed || {}).patient || {};
+  /** @type {Record<string, string>} */
   const kopf = {
     rzPatVorname: patient.first_name || '',
     rzPatName: patient.last_name || '',
@@ -168,12 +231,13 @@ export function ocrAlsPatientkopf(parsed) {
  * Eigener Rueckgabewert, damit der Abgleich nicht in den Feldern der Maske
  * herumliest: dort steht das Geburtsdatum deutsch, gesucht wird aber ISO.
  *
- * @param {object} parsed
- * @returns {{first_name:?string, last_name:?string, geburtsdatum:?string,
- *            versichertennummer:?string}}
+ * @param {OcrParsed | null | undefined} parsed
+ * @returns {{first_name: string | null, last_name: string | null, geburtsdatum: string | null,
+ *            versichertennummer: string | null}}
  */
 export function ocrAlsPatientensuche(parsed) {
   const patient = (parsed || {}).patient || {};
+  /** @param {unknown} w @returns {string | null} */
   const putzen = (w) => {
     const t = String(w ?? '').trim();
     return t || null;
@@ -205,14 +269,26 @@ export function ocrAlsPatientensuche(parsed) {
 // mehrdeutig, oder neu. Was daraus wird, sagt die Oberflaeche — und bei
 // „mehrdeutig" waehlt der Mensch.
 
-/** Versichertennummer vergleichbar machen: „a 123 456 789" → „A123456789". */
+/**
+ * Versichertennummer vergleichbar machen: „a 123 456 789" → „A123456789".
+ * @param {unknown} w
+ * @returns {string}
+ */
 const alsVsnr = (w) => String(w ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 
-/** Name eines Patienten, klein geschrieben — Schreibweise entscheidet nicht. */
+/**
+ * Name eines Patienten, klein geschrieben — Schreibweise entscheidet nicht.
+ * @param {LeadPatient | null | undefined} l
+ * @returns {string}
+ */
 const kleinName = (l) =>
   String(l?.first_name || '').trim().toLowerCase() + '|' + String(l?.last_name || '').trim().toLowerCase();
 
-/** Geburtsdatum eines Patienten; Altbestand traegt es in `metadata`. */
+/**
+ * Geburtsdatum eines Patienten; Altbestand traegt es in `metadata`.
+ * @param {LeadPatient | null | undefined} l
+ * @returns {string | null}
+ */
 const gebVon = (l) => l?.geburtsdatum || l?.metadata?.geburtsdatum || null;
 
 /**
@@ -230,9 +306,9 @@ const gebVon = (l) => l?.geburtsdatum || l?.metadata?.geburtsdatum || null;
  * dort heute `ilike '%'` ein und trifft damit jeden Namensvetter; genau das
  * soll hier nicht passieren.
  *
- * @param {object} kriterien  Ausgabe von `ocrAlsPatientensuche()`
- * @param {Array}  patienten  Patienten der Praxis (bereits mandantengefiltert)
- * @returns {{status:'gefunden'|'mehrdeutig'|'neu'|'unbekannt', kandidaten:Array}}
+ * @param {PatientSuchKriterien | null | undefined} kriterien  Ausgabe von `ocrAlsPatientensuche()`
+ * @param {LeadPatient[] | null | undefined}       patienten  Patienten der Praxis (bereits mandantengefiltert)
+ * @returns {{status:'gefunden'|'mehrdeutig'|'neu'|'unbekannt', kandidaten:LeadPatient[]}}
  */
 export function patientAbgleichAusOcr(kriterien, patienten) {
   const k = kriterien || {};
@@ -246,6 +322,7 @@ export function patientAbgleichAusOcr(kriterien, patienten) {
   // Gar nichts gelesen — dann ist auch „neu" eine Behauptung zu viel.
   if (!vsnr && !geb && !nach) return { status: 'unbekannt', kandidaten: [] };
 
+  /** @param {LeadPatient[]} kandidaten @returns {{status:'gefunden'|'mehrdeutig'|'neu', kandidaten:LeadPatient[]}} */
   const befund = (kandidaten) => ({
     status: kandidaten.length === 1 ? 'gefunden' : kandidaten.length > 1 ? 'mehrdeutig' : 'neu',
     kandidaten,
@@ -299,9 +376,9 @@ export function patientAbgleichAusOcr(kriterien, patienten) {
  * Kein Befund, wenn eine der beiden Seiten leer ist: eine fehlende Nummer in
  * der Akte ist eine Luecke, kein Wechsel — die fuellt das Speichern ohnehin.
  *
- * @param {object} kriterien  Ausgabe von `ocrAlsPatientensuche()`
- * @param {object} lead       der getroffene Patient
- * @returns {{geaendert:boolean, alt:?string, neu:?string}}
+ * @param {PatientSuchKriterien | null | undefined} kriterien  Ausgabe von `ocrAlsPatientensuche()`
+ * @param {LeadPatient | null | undefined}          lead       der getroffene Patient
+ * @returns {{geaendert:boolean, alt:string | null, neu:string | null}}
  */
 export function versichertennummerAbweichung(kriterien, lead) {
   const neu = alsVsnr(kriterien?.versichertennummer);

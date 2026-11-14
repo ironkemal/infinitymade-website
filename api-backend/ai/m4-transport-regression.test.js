@@ -10,6 +10,7 @@ const allowedHosts = ['test.openai.azure.com'];
 test('M4 Transport Regression', async (t) => {
   await t.test('getToken: fetch ignoring signal forever rejects safe <=100ms, singleflight cleared', async () => {
     let callCount = 0;
+    /** @param {string} url @param {Record<string, any>} [opts] */
     const fakeMerkez = async (url, opts) => {
       callCount++;
       if (callCount === 1) {
@@ -63,10 +64,12 @@ test('M4 Transport Regression', async (t) => {
     };
 
     let fakeMerkezCount = 0;
+    /** @type {any[]} */
     let bodies = [];
+    /** @param {string} url @param {Record<string, any>} [opts] */
     const fakeMerkez = async (url, opts) => {
       fakeMerkezCount++;
-      const body = opts.body;
+      const body = opts?.body;
       bodies.push(JSON.parse(JSON.stringify(body)));
       let acknowledgedReportId = null;
       if (body.report && body.report.reportId === 'report-1') {
@@ -119,9 +122,11 @@ test('M4 Transport Regression', async (t) => {
       taskTotals: { 'b2c-draft': { calls: 1, prompt_tokens: 10, completion_tokens: 2, total_tokens: 12 } }
     };
 
+    /** @type {any} */
     let lastBody = null;
+    /** @param {string} url @param {Record<string, any>} [opts] */
     const fakeMerkez = async (url, opts) => {
-      lastBody = JSON.parse(JSON.stringify(opts.body));
+      lastBody = JSON.parse(JSON.stringify(opts?.body));
       return {
         ok: true,
         json: {
@@ -174,9 +179,11 @@ test('M4 Transport Regression', async (t) => {
       throw { code: 'SENTINEL_PATIENT', name: 'SECRET' };
     };
 
+    /** @type {any} */
     let bodySeen = null;
+    /** @param {string} url @param {Record<string, any>} [opts] */
     const fakeMerkez = async (url, opts) => {
-      bodySeen = opts.body;
+      bodySeen = opts?.body;
       return {
         ok: true,
         json: {
@@ -207,10 +214,12 @@ test('M4 Transport Regression', async (t) => {
   });
 
   await t.test('Dynamic config mode changes during awaited refresh rejects safe, no token released', async () => {
-    let resolveMerkez;
-    let entered;
-    const centreEntered = new Promise(r => entered = r);
-    const merkezPromise = new Promise(r => resolveMerkez = r);
+    /** @type {(value?: unknown) => void} */
+    let resolveMerkez = () => {};
+    /** @type {(value?: unknown) => void} */
+    let entered = () => {};
+    const centreEntered = new Promise(r => { entered = r; });
+    const merkezPromise = new Promise(r => { resolveMerkez = r; });
 
     const fakeMerkez = async () => {
       entered();
@@ -299,6 +308,7 @@ test('M4 Transport Regression', async (t) => {
     });
 
     let fetchCount = 0;
+    /** @param {string} url @param {Record<string, any>} [opts] */
     const fakeFetch = async (url, opts) => {
       fetchCount++;
       if (fetchCount === 1 || fetchCount === 2) {
@@ -347,13 +357,13 @@ test('M4 Transport Regression', async (t) => {
 
     const start = Date.now();
     await assert.rejects(
-      chat({ messages: [{ role: 'user', content: 'hi' }],
+      chat(/** @type {import('./azureClient.js').ChatOptions} */ ({ messages: [{ role: 'user', content: 'hi' }],
         jetonClient: client,
         fetchImpl: fakeFetch,
         deployment: 'test-dep',
         retries: 2,
         config: testCfg
-      })
+      }))
     );
     const duration = Date.now() - start;
 
@@ -361,6 +371,7 @@ test('M4 Transport Regression', async (t) => {
   });
 
   await t.test('chat: provider fetch hang obeys total short deadline', async () => {
+    /** @param {string} url @param {Record<string, any>} [opts] */
     const fakeFetch = async (url, opts) => {
       return new Promise(() => {});
     };
@@ -405,21 +416,26 @@ const okay=()=>({ok:true,status:200,json:async()=>({choices:[{message:{content:'
 test('Provider body consumption deadline and AbortSignal.any fallback remove listeners',async()=>{
  const descriptor=Object.getOwnPropertyDescriptor(AbortSignal,'any');Object.defineProperty(AbortSignal,'any',{value:undefined,configurable:true});
  const controller=new AbortController();let added=0,removed=0;const add=controller.signal.addEventListener.bind(controller.signal),remove=controller.signal.removeEventListener.bind(controller.signal);
- controller.signal.addEventListener=(...args)=>{added++;return add(...args);};controller.signal.removeEventListener=(...args)=>{removed++;return remove(...args);};
+ controller.signal.addEventListener=(/** @type {any[]} */ ...args)=>{added++;return add(/** @type {Parameters<AbortSignal['addEventListener']>[0]} */ (args[0]), args[1], args[2]);};controller.signal.removeEventListener=(/** @type {any[]} */ ...args)=>{removed++;return remove(/** @type {Parameters<AbortSignal['removeEventListener']>[0]} */ (args[0]), args[1], args[2]);};
  try{
   await assert.rejects(chat({messages,config:testCfg,jetonClient:tokenClient(),signal:controller.signal,timeoutMs:20,fetchImpl:async()=>({ok:true,status:200,json:()=>new Promise(()=>{})})}),{code:'AI_TIMEOUT'});
   assert.equal(added,removed);assert.ok(added>=1);
- }finally{Object.defineProperty(AbortSignal,'any',descriptor);}
+ }finally{if(descriptor)Object.defineProperty(AbortSignal,'any',descriptor);}
 });
 test('External abort never echoes reason while consuming provider body',async()=>{
- const controller=new AbortController();let entered;const bodyEntered=new Promise(r=>entered=r);
+ const controller=new AbortController();
+ /** @type {(value?: unknown) => void} */
+ let entered=()=>{};
+ const bodyEntered=new Promise(r=>{entered=r;});
  const result=chat({messages,config:testCfg,jetonClient:tokenClient(),signal:controller.signal,fetchImpl:async()=>({ok:true,status:200,json:()=>{entered();return new Promise(()=>{});}})});
  await bodyEntered;controller.abort(new Error('PATIENT_SENTINEL'));
- await assert.rejects(result,err=>{assert.equal(err.code,'AI_ABORTED');assert.ok(!err.message.includes('SENTINEL'));return true;});
+ await assert.rejects(result,(/** @type {unknown} */ err)=>{const e=/** @type {{ code?: string, message: string }} */ (err);assert.equal(e.code,'AI_ABORTED');assert.ok(!e.message.includes('SENTINEL'));return true;});
 });
 test('Retry-After date, fraction and huge values clamp without hard test sleeps',async()=>{
- const nativeTimeout=globalThis.setTimeout;const captured=[];
- globalThis.setTimeout=(callback,ms,...args)=>{if(ms>=500&&ms<=10000){captured.push(ms);queueMicrotask(()=>callback(...args));return {testTimer:true};}return nativeTimeout(callback,ms,...args);};
+ const nativeTimeout=globalThis.setTimeout;
+ /** @type {number[]} */
+ const captured=[];
+ globalThis.setTimeout=/** @type {typeof globalThis.setTimeout} */ (/** @type {unknown} */ ((/** @type {(...args: any[]) => void} */ callback,/** @type {number} */ ms,/** @type {any[]} */ ...args)=>{if(ms>=500&&ms<=10000){captured.push(ms);queueMicrotask(()=>callback(...args));return {testTimer:true};}return nativeTimeout(callback,ms,...args);}));
  try{
   for(const value of ['0.01',new Date(Date.now()+5000).toUTCString(),'999999999']) {
    let calls=0;const before=captured.length;
@@ -430,9 +446,16 @@ test('Retry-After date, fraction and huge values clamp without hard test sleeps'
  }finally{globalThis.setTimeout=nativeTimeout;}
 });
 test('429 queue caps eight waiters, abort releases every occupied slot',async()=>{
- const nativeTimeout=globalThis.setTimeout;let entered;const allQueued=new Promise(r=>entered=r);let waits=0;const handles=[];
- globalThis.setTimeout=(callback,ms,...args)=>{if(ms>=500&&ms<=10000){waits++;if(waits===8)entered();const handle={testTimer:true};handles.push(handle);return handle;}return nativeTimeout(callback,ms,...args);};
- const controllers=Array.from({length:8},()=>new AbortController());let results=[];
+ const nativeTimeout=globalThis.setTimeout;
+ /** @type {(value?: unknown) => void} */
+ let entered=()=>{};
+ const allQueued=new Promise(r=>{entered=r;});let waits=0;
+ /** @type {any[]} */
+ const handles=[];
+ globalThis.setTimeout=/** @type {typeof globalThis.setTimeout} */ (/** @type {unknown} */ ((/** @type {(...args: any[]) => void} */ callback,/** @type {number} */ ms,/** @type {any[]} */ ...args)=>{if(ms>=500&&ms<=10000){waits++;if(waits===8)entered();const handle={testTimer:true};handles.push(handle);return handle;}return nativeTimeout(callback,ms,...args);}));
+ const controllers=Array.from({length:8},()=>new AbortController());
+ /** @type {Promise<any>[]} */
+ let results=[];
  try{
   results=controllers.map(controller=>chat({messages,config:testCfg,jetonClient:tokenClient(),signal:controller.signal,fetchImpl:async()=>({ok:false,status:429,headers:new Headers({'retry-after':'5'})})}).catch(e=>e));
   await allQueued;

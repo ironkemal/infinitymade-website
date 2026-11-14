@@ -9,8 +9,30 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { validateRezept } from '../validate.js';
 
+/**
+ * @typedef {{
+ *   id: string,
+ *   titel?: string,
+ *   status: string,
+ *   grund?: string,
+ *   eingabe: import('../validate.js').RezeptEingabe,
+ *   erwartet?: {
+ *     ok?: boolean,
+ *     engine?: string,
+ *     blocker_enthaelt?: string[],
+ *     blocker_enthaelt_nicht?: string[],
+ *     warnung_enthaelt?: string[],
+ *     warnung_enthaelt_nicht?: string[],
+ *     computed?: Record<string, unknown>
+ *   },
+ *   quelle?: { zitat?: string },
+ *   engine_erwartet?: string
+ * }} PruefstandFall
+ */
+
 const DIR = new URL('./fixtures/pruefstand/', import.meta.url);
 const dateien = readdirSync(DIR).filter((f) => f.endsWith('.json')).sort();
+/** @type {PruefstandFall[]} */
 const faelle = dateien.flatMap((f) => JSON.parse(readFileSync(new URL(f, DIR), 'utf8')));
 
 const BEKANNT = new Set([
@@ -24,7 +46,7 @@ test('Prüfstand: Struktur (Dateien, eindeutige ids, Zitate)', () => {
   assert.equal(new Set(ids).size, ids.length, 'ids nicht eindeutig');
   for (const f of faelle) {
     assert.ok(f.quelle && typeof f.quelle.zitat === 'string' && f.quelle.zitat.trim().length > 0, `${f.id}: quelle.zitat fehlt`);
-    if ('engine' in (f.erwartet || {})) assert.equal(f.erwartet.engine, f.engine_erwartet, `${f.id}: erwartet.engine ≠ engine_erwartet`);
+    if (f.erwartet && 'engine' in f.erwartet) assert.equal(f.erwartet.engine, f.engine_erwartet, `${f.id}: erwartet.engine ≠ engine_erwartet`);
     // Ein aktiver Fall braucht mindestens eine positive Erwartung, sonst wäre er grundlos grün.
     const e = f.erwartet || {};
     const positiv = 'ok' in e || (e.blocker_enthaelt || []).length > 0 || (e.warnung_enthaelt || []).length > 0
@@ -43,11 +65,14 @@ test('Prüfstand: Zitate stehen wörtlich in der Quelle', { skip: !existsSync(WE
   assert.equal(r.zitateOk, r.gesamt);
 });
 
+/**
+ * @param {PruefstandFall} fall
+ */
 function pruefe(fall) {
   const e = fall.erwartet || {};
   const unbekannt = Object.keys(e).filter((k) => !BEKANNT.has(k));
   assert.deepStrictEqual(unbekannt, [], `${fall.id}: unbekannte Schlüssel in erwartet: ${unbekannt.join(', ')}`);
-  for (const k of ['blocker_enthaelt', 'blocker_enthaelt_nicht', 'warnung_enthaelt', 'warnung_enthaelt_nicht']) {
+  for (const k of /** @type {const} */ (['blocker_enthaelt', 'blocker_enthaelt_nicht', 'warnung_enthaelt', 'warnung_enthaelt_nicht'])) {
     if (k in e) assert.ok(Array.isArray(e[k]), `${fall.id}: erwartet.${k} muss ein Array sein`);
   }
   const r = validateRezept(fall.eingabe);

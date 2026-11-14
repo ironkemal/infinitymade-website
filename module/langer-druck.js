@@ -36,9 +36,11 @@ export function aufLangenDruck(behaelter, selektor, handler, opt = {}) {
   const { ms = 500, toleranzPx = 8, nurBeruehrung = true } = opt;
   if (!behaelter) return () => {};
 
+  /** @type {ReturnType<typeof setTimeout> | null} */
   let timer = null;
   let startX = 0;
   let startY = 0;
+  /** @type {Element | null} */
   let ziel = null;
   let ausgeloest = false;
 
@@ -47,9 +49,12 @@ export function aufLangenDruck(behaelter, selektor, handler, opt = {}) {
     ziel = null;
   };
 
-  const beiDruck = (ev) => {
+  /** @param {Event} event */
+  const beiDruck = (event) => {
+    const ev = /** @type {PointerEvent} */ (event);
     if (nurBeruehrung && ev.pointerType === 'mouse') return;
-    const treffer = ev.target?.closest?.(selektor);
+    const target = /** @type {Element | null} */ (ev.target);
+    const treffer = target?.closest?.(selektor);
     if (!treffer || !behaelter.contains(treffer)) return;
     abbrechen();
     ziel = treffer;
@@ -65,7 +70,9 @@ export function aufLangenDruck(behaelter, selektor, handler, opt = {}) {
     }, ms);
   };
 
-  const beiBewegung = (ev) => {
+  /** @param {Event} event */
+  const beiBewegung = (event) => {
+    const ev = /** @type {PointerEvent} */ (event);
     if (!timer) return;
     if (Math.abs(ev.clientX - startX) > toleranzPx || Math.abs(ev.clientY - startY) > toleranzPx) {
       abbrechen();
@@ -75,6 +82,7 @@ export function aufLangenDruck(behaelter, selektor, handler, opt = {}) {
   // Nach dem Loslassen schickt der Browser noch ein `click`. Ohne diesen
   // Fänger liefe zusätzlich die Einfachklick-Handlung — in der Monatsansicht
   // also der Sprung in den Tag, direkt nach dem Öffnen der Terminmaske.
+  /** @param {Event} ev */
   const beiKlick = (ev) => {
     if (!ausgeloest) return;
     ausgeloest = false;

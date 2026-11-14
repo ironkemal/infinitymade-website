@@ -24,40 +24,65 @@
 // dass ein schlecht gescanntes Rezept gute Daten zerstört.
 // ============================================================================
 
-/** Normalisiert einen Arztnamen für den Namensvergleich (Fallback ohne LANR). */
+/**
+ * Normalisiert einen Arztnamen für den Namensvergleich (Fallback ohne LANR).
+ * @param {unknown} name
+ */
 export function normalizeArztName(name) {
   return String(name || '')
     .replace(/\s+/g, ' ')
     .trim();
 }
 
-/** LANR/BSNR: nur Ziffern, exakt 9 Stellen. Alles andere gilt als "nicht vorhanden". */
+/**
+ * LANR/BSNR: nur Ziffern, exakt 9 Stellen. Alles andere gilt als "nicht vorhanden".
+ * @param {unknown} v
+ */
 function cleanNummer(v) {
   const digits = String(v || '').replace(/\D/g, '');
   return /^\d{9}$/.test(digits) ? digits : null;
 }
 
-/** ILIKE-Muster ohne Platzhalter: % und _ im Namen sind Zeichen, keine Joker. */
+/**
+ * ILIKE-Muster ohne Platzhalter: % und _ im Namen sind Zeichen, keine Joker.
+ * @param {unknown} s
+ */
 function ilikeWoertlich(s) {
   return String(s).replace(/[\\%_]/g, m => '\\' + m);
 }
 
+/** @param {unknown} v */
 function clean(v) {
   const s = String(v ?? '').trim();
   return s || null;
 }
 
 /**
+ * @typedef {{
+ *   name?: unknown,
+ *   lanr?: unknown,
+ *   bsnr?: unknown,
+ *   adresse?: unknown,
+ *   telefon?: unknown,
+ *   fax?: unknown,
+ *   email?: unknown,
+ *   fachrichtung?: unknown,
+ *   praxis_name?: unknown,
+ *   notizen?: unknown,
+ * }} ArztInput
+ */
+
+/**
  * Findet den Arzt oder legt ihn an. Reichert vorhandene Datensätze an.
  *
- * @param {object}  supabase  Service-Role-Client
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase  Service-Role-Client
  * @param {string}  ownerId   Mandant (profiles.owner_id-Wurzel)
- * @param {object}  input     { name, lanr, bsnr, adresse, telefon, fax, email,
- *                              fachrichtung, praxis_name, notizen }
- * @param {object} [opts]     { businessId, quelle }
+ * @param {ArztInput}  [input]
+ * @param {{ businessId?: string | null, quelle?: string | null }} [opts]
  * @returns {Promise<{id: string|null, created: boolean, enriched: string[], matchedBy: 'lanr'|'name'|null, konflikt?: 'name_andere_lanr'}>}
  */
 export async function resolveOrCreateArzt(supabase, ownerId, input = {}, opts = {}) {
+  /** @type {{id: string|null, created: boolean, enriched: string[], matchedBy: 'lanr'|'name'|null}} */
   const empty = { id: null, created: false, enriched: [], matchedBy: null };
   if (!ownerId) return empty;
 
@@ -67,6 +92,7 @@ export async function resolveOrCreateArzt(supabase, ownerId, input = {}, opts = 
   // Ohne irgendeinen Anker lässt sich kein Arzt führen.
   if (!lanr && !name) return empty;
 
+  /** @type {Record<string, string | null>} */
   const incoming = {
     arzt_name:    name || null,
     lanr,
@@ -81,7 +107,9 @@ export async function resolveOrCreateArzt(supabase, ownerId, input = {}, opts = 
   };
 
   // ---- 1. Treffer suchen: erst LANR, dann Name --------------------------
+  /** @type {({ id: string, lanr?: string | null } & Record<string, unknown>) | null} */
   let existing = null;
+  /** @type {'lanr' | 'name' | null} */
   let matchedBy = null;
 
   if (lanr) {
@@ -110,6 +138,7 @@ export async function resolveOrCreateArzt(supabase, ownerId, input = {}, opts = 
 
   // ---- 2. Vorhandenen Datensatz anreichern ------------------------------
   if (existing) {
+    /** @type {Record<string, unknown>} */
     const patch = {};
 
     // Bewegliche Stammdaten: bei LANR-Treffer gewinnt der neuere Beleg.
@@ -144,7 +173,8 @@ export async function resolveOrCreateArzt(supabase, ownerId, input = {}, opts = 
   }
 
   // ---- 3. Neu anlegen ---------------------------------------------------
-  const row = { owner_id: ownerId, ...incoming };
+  /** @type {Record<string, unknown> & { owner_id: string, arzt_name: string | null, business_id?: string | null, quelle?: string | null }} */
+  const row = { owner_id: ownerId, arzt_name: incoming.arzt_name, ...incoming };
   // arzt_name ist NOT NULL. Ohne gelesenen Namen einen sprechenden Platzhalter
   // aus der LANR bilden, damit der Datensatz auffindbar und korrigierbar bleibt.
   if (!row.arzt_name) row.arzt_name = `Unbekannt (LANR ${lanr})`;

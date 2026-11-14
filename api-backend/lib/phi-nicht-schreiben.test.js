@@ -10,6 +10,11 @@ import { dirname, join } from 'node:path';
 
 const quelle = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'server.js'), 'utf8');
 
+/**
+ * @param {string} start
+ * @param {string} ende
+ * @returns {string}
+ */
 function handler(start, ende) {
   const a = quelle.indexOf(start);
   assert.ok(a >= 0, `${start} nicht gefunden`);

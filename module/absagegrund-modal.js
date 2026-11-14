@@ -30,6 +30,8 @@ export const ABSAGE_GRUENDE = [
  * Zeigt den Grund-Dialog und löst mit dem gewählten Grund auf.
  * `null` = Dialog abgebrochen (Absage soll NICHT weiterlaufen).
  * `''`   = "Kein Grund angeben" gewählt (Absage läuft weiter, ohne Grund).
+ * @param {{ title?: string, confirmText?: string, cancelText?: string, variant?: string }} [param0]
+ * @returns {Promise<string | null>}
  */
 export function showAbsagegrundModal({ title = 'Termin absagen', confirmText = 'Bestätigen', cancelText = 'Abbrechen', variant = 'danger' } = {}) {
   return new Promise(resolve => {
@@ -69,9 +71,11 @@ export function showAbsagegrundModal({ title = 'Termin absagen', confirmText = '
     overlay.appendChild(box);
     document.body.appendChild(overlay);
 
-    const sel = document.getElementById('_absageSelect');
-    const customWrap = document.getElementById('_absageCustomWrap');
-    const customField = document.getElementById('_absageCustom');
+    const sel = /** @type {HTMLSelectElement} */ (box.querySelector('#_absageSelect'));
+    const customWrap = /** @type {HTMLElement} */ (box.querySelector('#_absageCustomWrap'));
+    const customField = /** @type {HTMLInputElement} */ (box.querySelector('#_absageCustom'));
+    const cancelBtn = /** @type {HTMLElement} */ (box.querySelector('#_absageCancel'));
+    const confirmBtn = /** @type {HTMLElement} */ (box.querySelector('#_absageConfirm'));
 
     sel.addEventListener('change', () => {
       const isSonstiges = sel.value === 'Sonstiges…';
@@ -79,6 +83,7 @@ export function showAbsagegrundModal({ title = 'Termin absagen', confirmText = '
       if (isSonstiges) setTimeout(() => customField.focus(), 50);
     });
 
+    /** @param {boolean} cancelled */
     const cleanup = (cancelled) => {
       overlay.remove();
       if (cancelled) { resolve(null); return; }
@@ -88,8 +93,8 @@ export function showAbsagegrundModal({ title = 'Termin absagen', confirmText = '
       resolve(selected);
     };
 
-    document.getElementById('_absageCancel').addEventListener('click', () => cleanup(true));
-    document.getElementById('_absageConfirm').addEventListener('click', () => cleanup(false));
+    cancelBtn.addEventListener('click', () => cleanup(true));
+    confirmBtn.addEventListener('click', () => cleanup(false));
     overlay.addEventListener('click', e => { if (e.target === overlay) cleanup(true); });
     document.addEventListener('keydown', function esc(e) {
       if (e.key === 'Escape') { document.removeEventListener('keydown', esc); cleanup(true); }

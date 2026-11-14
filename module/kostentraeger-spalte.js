@@ -108,14 +108,17 @@
 
 // null = noch nicht festgestellt. Bewusst modulweit und nicht pro Aufruf:
 // die Antwort aendert sich innerhalb einer Sitzung nicht.
+/** @type {boolean | null} */
 let bekannt = null;
 
 // Die gerade laufende Sonde, damit zwei gleichzeitige Ladevorgaenge sich eine
 // teilen statt zwei zu feuern (Falle b).
+/** @type {Promise<boolean> | null} */
 let laufendeSonde = null;
 
 /**
  * Was die geladenen Zeilen ueber die Spalte verraten.
+ * @param {any[] | null | undefined} [zeilen]
  * @returns {boolean|null} null, wenn es keine Zeile gibt — dann sagen sie nichts.
  */
 export function spalteAusZeilen(zeilen) {
@@ -125,6 +128,7 @@ export function spalteAusZeilen(zeilen) {
 
 /**
  * Eine gezielte Abfrage gegen das Schema.
+ * @param {{ from: (table: string) => any }} client
  * @returns {Promise<boolean|null>} null heisst "keine Aussage moeglich" —
  *   NICHT "Spalte fehlt". Der Unterschied ist der ganze Punkt (Falle a).
  */
@@ -160,8 +164,8 @@ let sondeFristMs = 5000;
 /**
  * Stellt einmal je Sitzung fest, ob es die Spalte gibt, und merkt sich das.
  *
- * @param {Array}  zeilen  die gerade geladenen Leistungen (servicesCache)
- * @param {object} client  Supabase-Client — nur noetig, wenn `zeilen` leer ist
+ * @param {any[]} [zeilen]  die gerade geladenen Leistungen (servicesCache)
+ * @param {{ from: (table: string) => any }} [client]  Supabase-Client — nur noetig, wenn `zeilen` leer ist
  * @returns {Promise<boolean>}
  */
 export async function ermittleKostentraegerSpalte(zeilen, client) {
@@ -224,7 +228,10 @@ export function _spaltenwissenZuruecksetzen() {
   laufendeSonde = null;
 }
 
-/** Nur fuer Tests — verkuerzt die Frist, damit ein Timeout pruefbar ist. */
+/**
+ * Nur fuer Tests — verkuerzt die Frist, damit ein Timeout pruefbar ist.
+ * @param {number} ms
+ */
 export function _fristSetzen(ms) {
   sondeFristMs = ms;
 }

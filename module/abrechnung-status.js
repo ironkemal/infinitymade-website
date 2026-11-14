@@ -142,7 +142,9 @@ export const DATEI_STATUS = [
 ];
 
 /** Ein Abbruch vor der Dateierzeugung — keine Datei, kein Einreichen, kein Geld.
- *  Eigene Funktion, weil drei Bildschirme dieselbe Frage stellen. */
+ *  Eigene Funktion, weil drei Bildschirme dieselbe Frage stellen.
+ *  @param {string|{status?: string|null}|null|undefined} abrechnung
+ *  @returns {boolean} */
 export function istVerworfen(abrechnung) {
   return (typeof abrechnung === 'string' ? abrechnung : abrechnung?.status) === 'verworfen';
 }
@@ -154,9 +156,11 @@ const BY_KEY = new Map(DATEI_STATUS.map(s => [s.key, s]));
  *  nicht auf einen falschen bekannten Status geschönt (anders als der
  *  Fallback in `abrechnungsstatus.js` — dort ist der Fallback "aktiv" ein
  *  bewusster Normalfall, hier gibt es keinen Normalfall, auf den es sich
- *  lohnt zu raten). */
+ *  lohnt zu raten).
+ *  @param {string|null|undefined} key
+ *  @returns {{ key: string, label: string, kurz: string, farbe: string, bg: string, hilfe: string }} */
 export function dateiStatusInfo(key) {
-  return BY_KEY.get(key) || {
+  return BY_KEY.get(key || '') || {
     key: key || '—', label: key || 'Unbekannt', kurz: key || '—',
     farbe: 'var(--text-muted)', bg: 'transparent',
     hilfe: 'Unbekannter Status — steht so in der Datenbank.',
@@ -184,8 +188,13 @@ export function aggregierterDateiStatus(abrechnung) {
   return 'rejected';
 }
 
+/**
+ * @param {string|null|undefined} s
+ * @returns {string}
+ */
 function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const map = /** @type {Record<string, string>} */ ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' });
+  return String(s || '').replace(/[&<>"']/g, c => map[c] || c);
 }
 
 /**

@@ -39,15 +39,30 @@ process.on('message', async ({ id, op, config, args }) => {
 });
 `;
 
+/**
+ * @typedef {{ directory: string, boxId: string, pkcs8: string }} WorkerConfig
+ * @typedef {{
+ *   call: (op: string, args?: Record<string, unknown>) => Promise<Record<string, unknown>>,
+ *   close: () => Promise<void>,
+ *   pid: number | undefined
+ * }} WorkerHandle
+ */
+
+/**
+ * @param {WorkerConfig} config
+ * @returns {Promise<WorkerHandle>}
+ */
 async function worker(config) {
   const child = spawn(process.execPath, ['--input-type=module', '-e', childSource], {
     stdio: ['ignore', 'pipe', 'pipe', 'ipc']
   });
   let nextId = 0;
+  /** @type {Map<number, { resolve: (value: Record<string, unknown>) => void, reject: (err: Error) => void }>} */
   const pending = new Map();
   let diagnostics = '';
-  child.stderr.on('data', data => { diagnostics = (diagnostics + data).slice(-2048); });
-  child.on('message', ({ id, value, error }) => {
+  child.stderr?.on('data', data => { diagnostics = (diagnostics + data).slice(-2048); });
+  child.on('message', (rawMsg) => {
+    const { id, value, error } = /** @type {{ id: number, value: Record<string, unknown>, error?: { code?: string } }} */ (rawMsg);
     const request = pending.get(id);
     if (!request) return;
     pending.delete(id);
@@ -58,6 +73,11 @@ async function worker(config) {
     for (const request of pending.values()) request.reject(new Error(`Worker exited (${code}): ${diagnostics}`));
     pending.clear();
   });
+  /**
+   * @param {string} op
+   * @param {Record<string, unknown>} [args]
+   * @returns {Promise<Record<string, unknown>>}
+   */
   function call(op, args) {
     return new Promise((resolve, reject) => {
       const id = ++nextId;
@@ -78,6 +98,9 @@ async function worker(config) {
   return { call, close, pid: child.pid };
 }
 
+/**
+ * @param {(workers: WorkerHandle[], directory: string, config: WorkerConfig) => Promise<void>} run
+ */
 async function withWorkers(run) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'praxura-m4-process-'));
   fs.chmodSync(directory, 0o700);
@@ -86,6 +109,7 @@ async function withWorkers(run) {
     directory, boxId: 'synthetic-m4-process-box',
     pkcs8: privateKey.export({ type: 'pkcs8', format: 'der' }).toString('base64')
   };
+  /** @type {WorkerHandle[]} */
   const workers = [];
   try {
     workers.push(await worker(config), await worker(config));
@@ -97,6 +121,10 @@ async function withWorkers(run) {
   }
 }
 
+/**
+ * @param {boolean} enabled
+ * @param {string} [tenantId=TENANT]
+ */
 function ownerDecision(enabled, tenantId = TENANT) {
   return { auth: { role: 'owner', userId: tenantId, tenantId }, decision: { enabled } };
 }
@@ -113,7 +141,7 @@ test('two live processes see owner opt-in and revocation without restarting or c
     assert.equal((await first.call('read', { tenantId: OTHER_TENANT })).enabled, false);
     const recordPath = path.join(directory, `${TENANT}.json`);
     assert.equal(fs.statSync(recordPath).mode & 0o777, 0o600);
-    assert.deepEqual(Object.keys(JSON.parse(fs.readFileSync(recordPath))).sort(), [
+    assert.deepEqual(Object.keys(JSON.parse(fs.readFileSync(recordPath, 'utf8'))).sort(), [
       'actorId', 'boxId', 'decidedAt', 'enabled', 'informationVersion', 'tenantId', 'version'
     ]);
   });
@@ -143,7 +171,7 @@ test('two processes derive same identity key: one concurrent confirmation wins, 
     const marker = path.join(directory, markers[0]);
     assert.match(markers[0], /^\.challenge-[a-f0-9]{64}\.consumed$/);
     assert.equal(fs.statSync(marker).mode & 0o777, 0o600);
-    const metadata = JSON.parse(fs.readFileSync(marker));
+    const metadata = JSON.parse(fs.readFileSync(marker, 'utf8'));
     assert.deepEqual(Object.keys(metadata), ['expiresAt']);
     assert.equal(metadata.expiresAt, challenge.expiresAt);
     await second.close();

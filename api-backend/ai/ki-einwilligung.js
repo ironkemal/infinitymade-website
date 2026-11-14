@@ -17,6 +17,51 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { istKutu } from '../lib/dagitim.js';
 
+/**
+ * @typedef {Error & { code?: string, status?: number }} EinwilligungError
+ * @typedef {{
+ *   enabled: boolean,
+ *   active: boolean,
+ *   status?: string,
+ *   informationVersion?: string,
+ *   decidedAt?: string,
+ *   boxId?: string,
+ *   tenantId?: string,
+ *   actorId?: string,
+ *   version?: string,
+ *   reason?: string
+ * }} OwnerDecisionReadResult
+ * @typedef {{
+ *   ok: boolean,
+ *   enabled: boolean,
+ *   informationVersion: string,
+ *   decidedAt: string,
+ *   boxId: string,
+ *   tenantId: string,
+ *   actorId: string,
+ *   version: string
+ * }} OwnerDecisionWriteResult
+ * @typedef {{
+ *   read: (tenantId: string) => Promise<OwnerDecisionReadResult>,
+ *   set: (auth: { role: string, userId: string, tenantId: string }, options?: { enabled?: boolean, informationVersion?: string }) => Promise<OwnerDecisionWriteResult>,
+ *   directory?: string
+ * }} OwnerDecisionStore
+ */
+
+/**
+ * @param {string} message
+ * @param {string} code
+ * @param {number} status
+ * @returns {EinwilligungError}
+ */
+function createEinwilligungError(message, code, status) {
+  /** @type {EinwilligungError} */
+  const err = new Error(message);
+  err.code = code;
+  err.status = status;
+  return err;
+}
+
 export const CURRENT_EINWILLIGUNG_VERSION = '2026-10-30-v1';
 const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -28,6 +73,7 @@ function getDefaultDirectory() {
 // Inhaber-Freigabe im SaaS nie speichern (31.10.2026). Box = SUPABASE_PUBLIC_URL (lib/dagitim.js).
 export const SAAS_BOX_ID = 'saas';
 
+/** @returns {Promise<string | null>} */
 async function defaultBoxIdProvider() {
   if (!istKutu()) return SAAS_BOX_ID;
   try {
@@ -42,15 +88,12 @@ async function defaultBoxIdProvider() {
 /**
  * Creates the local owner decision store.
  *
- * @param {Object} [options]
- * @param {string} [options.directory] directory path override
- * @param {Function} [options.boxIdProvider] function returning boxId
- * @param {Function} [options.now] time provider
- * @returns {{
- *   read: (tenantId: string) => Promise<{enabled: boolean, active: boolean, informationVersion?: string, decidedAt?: string, boxId?: string, tenantId?: string, actorId?: string, version?: string, reason?: string}>,
- *   set: (auth: {role: string, userId: string, tenantId: string}, options: {enabled: boolean, informationVersion?: string}) => Promise<{ok: boolean, enabled: boolean, informationVersion: string, decidedAt: string, boxId: string, tenantId: string, actorId: string, version: string}>,
- *   directory: string
- * }}
+ * @param {{
+ *   directory?: string,
+ *   boxIdProvider?: () => (string | null | Promise<string | null>),
+ *   now?: () => number
+ * }} [options={}]
+ * @returns {OwnerDecisionStore & { directory: string }}
  */
 export function createOwnerDecisionStore({
   directory,
@@ -66,6 +109,7 @@ export function createOwnerDecisionStore({
     return null;
   }
 
+  /** @param {string} tenantId @returns {string | null} */
   function getFilePath(tenantId) {
     if (!tenantId || typeof tenantId !== 'string' || !RE_UUID.test(tenantId)) {
       return null;
@@ -163,48 +207,35 @@ export function createOwnerDecisionStore({
   /**
    * Sets decision for tenant. Must be called by owner (userId === tenantId).
    *
-   * @param {{role: string, userId: string, tenantId: string}} auth
-   * @param {{enabled: boolean, informationVersion?: string}} options
+   * @param {{ role: string, userId: string, tenantId: string }} auth
+   * @param {{ enabled?: boolean, informationVersion?: string }} [options={}]
    */
   async function set(auth, { enabled, informationVersion } = {}) {
     if (!auth || typeof auth !== 'object') {
-      const err = new Error('Auth-Kontext fehlt');
-      err.code = 'KI_AUTH_REQUIRED';
-      err.status = 401;
-      throw err;
+      throw createEinwilligungError('Auth-Kontext fehlt', 'KI_AUTH_REQUIRED', 401);
     }
 
     if (auth.role !== 'owner' || auth.userId !== auth.tenantId) {
-      const err = new Error('Nur der Praxisinhaber darf die KI-Einwilligung verwalten');
-      err.code = 'KI_OWNER_REQUIRED';
-      err.status = 403;
-      throw err;
+      throw createEinwilligungError('Nur der Praxisinhaber darf die KI-Einwilligung verwalten', 'KI_OWNER_REQUIRED', 403);
     }
 
     if (typeof enabled !== 'boolean') {
-      const err = new Error('enabled muss ein boolescher Wert sein (true oder false)');
-      err.code = 'KI_EINWILLIGUNG_INVALID';
-      err.status = 400;
-      throw err;
+      throw createEinwilligungError('enabled muss ein boolescher Wert sein (true oder false)', 'KI_EINWILLIGUNG_INVALID', 400);
     }
 
     const currentBoxId = await resolveBoxId();
     if (!currentBoxId) {
-      const err = new Error('Box-Identität ist nicht konfiguriert oder fehlt');
-      err.code = 'BOX_IDENTITY_MISSING';
-      err.status = 503;
-      throw err;
+      throw createEinwilligungError('Box-Identität ist nicht konfiguriert oder fehlt', 'BOX_IDENTITY_MISSING', 503);
     }
 
     const filePath = getFilePath(auth.tenantId);
     if (!filePath) {
-      const err = new Error('Ungültige Mandanten-ID (UUID erforderlich)');
-      err.code = 'KI_INVALID_TENANT_ID';
-      err.status = 400;
-      throw err;
+      throw createEinwilligungError('Ungültige Mandanten-ID (UUID erforderlich)', 'KI_INVALID_TENANT_ID', 400);
     }
 
-    if (informationVersion !== undefined && informationVersion !== CURRENT_EINWILLIGUNG_VERSION) { const err = new Error('Informationsversion ungültig'); err.code = 'KI_EINWILLIGUNG_INVALID'; err.status = 400; throw err; }
+    if (informationVersion !== undefined && informationVersion !== CURRENT_EINWILLIGUNG_VERSION) {
+      throw createEinwilligungError('Informationsversion ungültig', 'KI_EINWILLIGUNG_INVALID', 400);
+    }
 
     // Ensure target directory exists with 0700 permissions
     fs.mkdirSync(targetDir, { recursive: true, mode: 0o700 });
@@ -258,18 +289,23 @@ export function createOwnerDecisionStore({
 /**
  * Creates an in-memory decision store for testing.
  *
- * @param {Object} [options]
- * @param {boolean} [options.defaultEnabled=false]
- * @param {string} [options.boxId='test-box-id']
+ * @param {{
+ *   defaultEnabled?: boolean,
+ *   boxId?: string,
+ *   now?: () => number
+ * }} [options={}]
+ * @returns {OwnerDecisionStore}
  */
 export function createFakeOwnerDecisionStore({
   defaultEnabled = false,
   boxId = 'test-box-id',
   now = Date.now
 } = {}) {
+  /** @type {Map<string, { boxId: string, tenantId: string, actorId: string, enabled: boolean, informationVersion: string, decidedAt: string, version: string }>} */
   const store = new Map();
 
   return {
+    /** @param {string} tenantId */
     async read(tenantId) {
       if (!tenantId || !RE_UUID.test(tenantId)) {
         return { enabled: false, active: false, reason: 'INVALID_TENANT_ID' };
@@ -288,24 +324,19 @@ export function createFakeOwnerDecisionStore({
       return { ...existing, active: existing.enabled };
     },
 
+    /**
+     * @param {{ role: string, userId: string, tenantId: string }} auth
+     * @param {{ enabled?: boolean, informationVersion?: string }} [options={}]
+     */
     async set(auth, { enabled, informationVersion } = {}) {
       if (!auth || auth.role !== 'owner' || auth.userId !== auth.tenantId) {
-        const err = new Error('Nur der Praxisinhaber darf die KI-Einwilligung verwalten');
-        err.code = 'KI_OWNER_REQUIRED';
-        err.status = 403;
-        throw err;
+        throw createEinwilligungError('Nur der Praxisinhaber darf die KI-Einwilligung verwalten', 'KI_OWNER_REQUIRED', 403);
       }
       if (typeof enabled !== 'boolean') {
-        const err = new Error('enabled muss boolesch sein');
-        err.code = 'KI_EINWILLIGUNG_INVALID';
-        err.status = 400;
-        throw err;
+        throw createEinwilligungError('enabled muss boolesch sein', 'KI_EINWILLIGUNG_INVALID', 400);
       }
       if (!boxId) {
-        const err = new Error('Box-Identität fehlt');
-        err.code = 'BOX_IDENTITY_MISSING';
-        err.status = 503;
-        throw err;
+        throw createEinwilligungError('Box-Identität fehlt', 'BOX_IDENTITY_MISSING', 503);
       }
 
       const record = {
@@ -326,9 +357,9 @@ export function createFakeOwnerDecisionStore({
 /**
  * Returns safe opt-in metadata for frontend GET endpoint.
  *
- * @param {Object} store owner decision store
+ * @param {OwnerDecisionStore} store owner decision store
  * @param {string} tenantId
- * @param {Object} config AI config object
+ * @param {{ activationReady?: boolean, valid?: boolean, mode?: string } | null} config AI config object
  */
 export async function getBrowserOptInStatus(store, tenantId, config) {
   const decision = await store.read(tenantId);

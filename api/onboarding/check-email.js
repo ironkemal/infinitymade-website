@@ -5,10 +5,14 @@ import { withServerlessTelemetry } from '../_lib/telemetry.js';
 
 import { adminFetch, json } from '../_lib/auth.js';
 
+/**
+ * @param {import('../_lib/auth.js').VercelRequest} req
+ * @param {import('../_lib/auth.js').VercelResponse} res
+ */
 async function handler(req, res) {
   if (req.method !== 'GET') return json(res, 405, { error: 'Method not allowed' });
 
-  const email = (req.query.email || '').trim().toLowerCase();
+  const email = String(req.query?.email || '').trim().toLowerCase();
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return json(res, 400, { error: 'Ungültige E-Mail-Adresse.' });
   }

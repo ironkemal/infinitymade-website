@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ostersonntag, feiertage, feiertageZeilen, BUNDESLAENDER } from './feiertage.js';
 
+/** @param {number} j @param {string} l */
 const d = (j, l) => Object.fromEntries(feiertage(j, l).map(f => [f.name, f.datum]));
 
 test('Ostersonntag bekannte Jahre', () => {

@@ -4,6 +4,11 @@ import { pruefeDatenstrom } from './preflight.js';
 import { buildDtaFile } from './builder.js';
 import { podoFixture } from './fixtures.js';
 
+/** @returns {import('./preflight.js').DtaInput} */
+function clonePodo() {
+  return structuredClone(/** @type {import('./preflight.js').DtaInput} */ (/** @type {unknown} */ (podoFixture)));
+}
+
 // Handwritten byte string and cent totals, independent of production builder.
 // Artificial identities/prices: syntax fixture, not contractual entitlement.
 const VALID = "UNB+UNOC:3+801234561+108310400+20260523:1200+00001+B+SL123456S05+0'"
@@ -14,7 +19,7 @@ test('independent syntactic fixture has 2 messages and 19 real segments', () => 
   assert.deepEqual(pruefeDatenstrom(VALID), { segmente: 19, nachrichten: 2 });
 });
 
-for (const [name, mutate] of [
+for (const [name, mutate] of /** @type {Array<[string, (s: string) => string]>} */ ([
   ['message version', s => s.replace('SLLA:21:0:0', 'SLLA:99:0:0')],
   ['unknown segment', s => s.replace('NAD+Test', 'BOG+Test')],
   ['UNZ reference', s => s.replace("UNZ+000002+00001'", "UNZ+000002+99999'")],
@@ -41,7 +46,7 @@ for (const [name, mutate] of [
   ['inflated GES summary and status together', s => s.replaceAll('+80,00+100,00+20,00', '+999,00+999,00+999,00')],
   ['wrong SLLA payer reference', s => s.replace("FKT+01++801234561+108310400+108310400'", "FKT+01++801234561+109999999+108310400'")],
   ['wrong SLLA invoice reference', s => s.replace("REC+R1:0+20260523+1'INV", "REC+R2:0+20260523+1'INV")],
-]) test(`mutation rejects ${name}`, () => assert.throws(() => pruefeDatenstrom(mutate(VALID)), { code: 'DTA_SELBSTPRUEFUNG' }));
+])) test(`mutation rejects ${name}`, () => assert.throws(() => pruefeDatenstrom(mutate(VALID)), { code: 'DTA_SELBSTPRUEFUNG' }));
 
 test('independent VKZ03 GES reconciles against GZF, not original service gross', () => {
   const claim = VALID.replaceAll('FKT+01', 'FKT+03')
@@ -58,13 +63,13 @@ test('cannot bypass mandatory output grammar with obsolete minimal file', () => 
 });
 
 test('builder cannot diverge UNB application reference from order filename', () => {
-  const input = structuredClone(podoFixture);
+  const input = clonePodo();
   input.rechnung.anwendungsreferenz = 'SL000000S01';
   assert.throws(() => buildDtaFile(input), /Anwendungsreferenz/);
 });
 
 test('escaped apostrophe counts once as text, not as segment', () => {
-  const input = structuredClone(podoFixture);
+  const input = clonePodo();
   input.prescriptions[0].patient.nachname = "O'Neil";
   const dta = buildDtaFile(input);
   assert.ok(dta.content.includes("O?'Neil"));
@@ -72,13 +77,13 @@ test('escaped apostrophe counts once as text, not as segment', () => {
 });
 
 test('builder cannot silently truncate non-Latin-1 name into bytes', () => {
-  const input = structuredClone(podoFixture);
+  const input = clonePodo();
   input.prescriptions[0].patient.nachname = 'Test😀';
   assert.throws(() => buildDtaFile(input), /ISO-8859-1/);
 });
 
 test('missing per-position copay is emitted using same fallback as totals', () => {
-  const input = structuredClone(podoFixture);
+  const input = clonePodo();
   delete input.prescriptions[0].sessions[0].zuzahlungProPos;
   const dta = buildDtaFile(input);
   assert.ok(dta.content.includes('EHE+71:00501+78010+1,00+28,90+20260828+2,89'));

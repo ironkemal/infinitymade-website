@@ -5,6 +5,10 @@
 
 import { validateRezept } from '../validators/validate.js';
 
+/**
+ * @param {import('../validators/validate.js').RezeptEingabe | null | undefined} payload
+ * @param {Record<string, unknown>} [_context={}]
+ */
 export async function run(payload, _context = {}) {
   const result = validateRezept(payload || {});
   return {

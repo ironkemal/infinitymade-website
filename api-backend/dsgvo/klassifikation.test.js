@@ -115,7 +115,7 @@ test('Löschen-Drift: jede Fristkategorie-Tabelle steht in KATEGORIE_TABELLEN od
   // guvenlik S-61, CLAUDE_SYNC_AUDIT_REPORT §1.3
   for (const t of TABELLEN) {
     if (FRIST_KATEGORIEN.includes(t.kategorie)) {
-      const inKategorieTabellen = Array.isArray(KATEGORIE_TABELLEN[t.kategorie]) && KATEGORIE_TABELLEN[t.kategorie].includes(t.table);
+      const inKategorieTabellen = Array.isArray(/** @type {Record<string, string[]>} */ (KATEGORIE_TABELLEN)[t.kategorie]) && /** @type {Record<string, string[]>} */ (KATEGORIE_TABELLEN)[t.kategorie].includes(t.table);
       const inAusnahmen = t.table in KATEGORIE_AUSNAHMEN;
       assert.ok(
         inKategorieTabellen || inAusnahmen,

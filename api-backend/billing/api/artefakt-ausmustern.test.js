@@ -5,32 +5,44 @@ import { ABRECHNUNG_VERSION_FELDER } from './artefakt-version.js';
 
 const O = 'o1', A = 'ab1';
 const felder = Object.fromEntries(ABRECHNUNG_VERSION_FELDER.split(',').map(k => [k, null]));
+/** @param {Record<string, any>} [o] */
 const header = (o = {}) => ({ ...felder, id: A, owner_id: O, updated_at: '2026-10-05T10:00:00.1Z', status: 'erstellt',
   storage_path: 'o1/ab1/d.dta', dta_sha256: 'a'.repeat(64), signed_storage_path: 'o1/ab1/s.p7m', signed_sha256: 'b'.repeat(64), ...o });
 
+/**
+ * @param {{ hdr?: any, regs?: any[], claimErr?: string | null, removeErr?: string | null, doneOk?: boolean, headerUpdateEmpty?: boolean }} [opts]
+ */
 function bau({ hdr = header(), regs, claimErr = null, removeErr = null, doneOk = true, headerUpdateEmpty = false } = {}) {
+  /** @type {any[]} */
   const log = [];
   let h = { ...hdr };
   const registry = regs || [
     { id: 'rd', storage_path: 'o1/ab1/d.dta', role: 'dta', state: 'published' },
     { id: 'rs', storage_path: 'o1/ab1/s.p7m', role: 'signed', state: 'published' }];
   const db = {
+    /** @param {string} t */
     from(t) {
+      /** @type {Array<[string, any]>} */
       const f = [];
+      /** @type {any} */
       const b = {
-        select() { return b; }, eq(c, v) { f.push([c, v]); return b; }, is(c, v) { f.push([c, v]); return b; },
-        update(p) { log.push(['update', p]); b._p = p; return b; },
+        select() { return b; }, eq(/** @type {string} */ c, /** @type {any} */ v) { f.push([c, v]); return b; }, is(/** @type {string} */ c, /** @type {any} */ v) { f.push([c, v]); return b; },
+        update(/** @type {any} */ p) { log.push(['update', p]); b._p = p; return b; },
         select2() { return b; },
         async maybeSingle() { const m = registry.find(r => f.every(([c, v]) => r[c] === undefined || r[c] === v)); return { data: m || null, error: null }; },
-        then(res) { if (t === 'abrechnung') { if (headerUpdateEmpty) return Promise.resolve({ data: [], error: null }).then(res); h = { ...h, ...b._p, updated_at: 'neu' }; return Promise.resolve({ data: [{ ...h }], error: null }).then(res); } return Promise.resolve({ data: [], error: null }).then(res); },
+        then(/** @type {any} */ res) { if (t === 'abrechnung') { if (headerUpdateEmpty) return Promise.resolve({ data: [], error: null }).then(res); h = { ...h, ...b._p, updated_at: 'neu' }; return Promise.resolve({ data: [{ ...h }], error: null }).then(res); } return Promise.resolve({ data: [], error: null }).then(res); },
       };
       return b;
     },
-    async rpc(n, a) { log.push([n]); if (n === 'artefakt_retire_claim') return claimErr ? { data: null, error: { message: claimErr } } : { data: 'tok', error: null }; if (n === 'artefakt_retire_done') return { data: a.p_error ? false : doneOk, error: null }; return { data: null, error: null }; },
-    storage: { from: () => ({ async remove(p) { log.push(['remove', p]); return removeErr ? { error: { message: removeErr } } : { data: p.map(x => ({ name: x })), error: null }; } }) },
+    async rpc(/** @type {string} */ n, /** @type {any} */ a) { log.push([n]); if (n === 'artefakt_retire_claim') return claimErr ? { data: null, error: { message: claimErr } } : { data: 'tok', error: null }; if (n === 'artefakt_retire_done') return { data: a.p_error ? false : doneOk, error: null }; return { data: null, error: null }; },
+    storage: { from: () => ({ async remove(/** @type {string[]} */ p) { log.push(['remove', p]); return removeErr ? { error: { message: removeErr } } : { data: p.map(x => ({ name: x })), error: null }; } }) },
   };
   return { db, log, hdr: () => h };
 }
+/**
+ * @param {any} t
+ * @param {Record<string, any>} [extra]
+ */
 const lauf = (t, extra = {}) => entferneUnsignierteDta({ db: t.db, ownerId: O, abrechnungId: A, ladeHeader: async () => t.hdr(), ...extra });
 
 test('Erfolg: Header-Referenz geloest, Claim, genau EIN remove (nur die DTA), Abschluss', async () => {
@@ -92,12 +104,17 @@ test('musterAus: bereits ausgemustert (Claim liefert NULL) ist ok ohne remove', 
 
 import { wiederholeAusmusterung } from './artefakt-ausmustern.js';
 
+/**
+ * @param {any} row
+ * @param {{ removeErr?: string | null }} [opts]
+ */
 function dbWdh(row, { removeErr = null } = {}) {
+  /** @type {any[]} */
   const log = [];
   return { log, db: {
-    from() { const b = { select() { return b; }, eq() { return b; }, async maybeSingle() { return { data: row, error: null }; } }; return b; },
-    async rpc(n) { log.push(n); return n === 'artefakt_retire_claim' ? { data: 'tok', error: null } : { data: true, error: null }; },
-    storage: { from: () => ({ async remove(p) { log.push(['remove', p]); return removeErr ? { error: { message: removeErr } } : { data: p, error: null }; } }) },
+    from() { /** @type {any} */ const b = { select() { return b; }, eq() { return b; }, async maybeSingle() { return { data: row, error: null }; } }; return b; },
+    async rpc(/** @type {string} */ n) { log.push(n); return n === 'artefakt_retire_claim' ? { data: 'tok', error: null } : { data: true, error: null }; },
+    storage: { from: () => ({ async remove(/** @type {string[]} */ p) { log.push(['remove', p]); return removeErr ? { error: { message: removeErr } } : { data: p, error: null }; } }) },
   } };
 }
 

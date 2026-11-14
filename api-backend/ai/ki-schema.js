@@ -7,12 +7,17 @@ import { FREQUENZ_OPTIONEN, DIAGNOSEGRUPPEN } from './catalogs/rezept-optionen.j
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
+/** @typedef {Error & { code?: string, status?: number }} SchemaError */
+
+/** @type {Set<string> | null} */
 let cachedKnownLabels = null;
 
+/** @returns {Set<string>} */
 function getKnownCatalogLabels() {
   if (cachedKnownLabels) return cachedKnownLabels;
   try {
-    const catalog = require('./validators/heilmittel-catalog.json');
+    const catalog = /** @type {{ positions?: Record<string, { label?: string }> }} */ (require('./validators/heilmittel-catalog.json'));
+    /** @type {Set<string>} */
     const set = new Set();
     if (catalog?.positions) {
       for (const p of Object.values(catalog.positions)) {
@@ -55,17 +60,31 @@ export const ALLOWED_SECTORS = Object.freeze(new Set([
 const RE_ISO_DATE = /^20[2-9]\d-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])$/;
 const RE_TIME_HHMM = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 const MAX_DEPTH = 5;
+/** @param {unknown} value @returns {value is string} */
 function validDate(value) { return typeof value === 'string' && RE_ISO_DATE.test(value) && new Date(value + 'T00:00:00.000Z').toISOString().slice(0, 10) === value; }
+/** @param {unknown} value @param {number} [max=5000] @returns {value is string} */
 function boundedString(value, max = 5000) { return typeof value === 'string' && value.length <= max; }
-function integer(value, min, max) { return Number.isSafeInteger(value) && value >= min && value <= max; }
+/** @param {unknown} value @param {number} min @param {number} max @returns {value is number} */
+function integer(value, min, max) { return Number.isSafeInteger(value) && /** @type {number} */ (value) >= min && /** @type {number} */ (value) <= max; }
 
+/**
+ * @param {string} message
+ * @param {string} [code='KI_SCHEMA']
+ * @param {number} [status=400]
+ * @returns {SchemaError}
+ */
 function createSchemaError(message, code = 'KI_SCHEMA', status = 400) {
+  /** @type {SchemaError} */
   const err = new Error(message);
   err.code = code;
   err.status = status;
   return err;
 }
 
+/**
+ * @param {unknown} obj
+ * @param {number} [currentDepth=0]
+ */
 function checkDepth(obj, currentDepth = 0) {
   if (currentDepth >= MAX_DEPTH) {
     throw createSchemaError(`Verschachtelungstiefe überschreitet Maximum (${MAX_DEPTH})`);
@@ -79,6 +98,11 @@ function checkDepth(obj, currentDepth = 0) {
   }
 }
 
+/**
+ * @param {unknown} obj
+ * @param {string[]} allowedKeys
+ * @param {string} [path='']
+ */
 function checkUnknownKeys(obj, allowedKeys, path = '') {
   if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return;
   const allowed = new Set(allowedKeys);
@@ -92,6 +116,8 @@ function checkUnknownKeys(obj, allowedKeys, path = '') {
 
 /**
  * Validates payload for b2c-draft and b2b-draft.
+ * @param {Record<string, unknown>} payload
+ * @param {{ mode: string, allowFreeText: boolean }} ctx
  */
 function validateDraftPayload(payload, { mode, allowFreeText }) {
   checkUnknownKeys(payload, ['intent', 'contacts', 'owner_info', 'ki_confirmation']);
@@ -116,10 +142,11 @@ function validateDraftPayload(payload, { mode, allowFreeText }) {
       throw createSchemaError('contacts Array überschreitet Maximalgröße von 50');
     }
     for (let i = 0; i < payload.contacts.length; i++) {
-      const c = payload.contacts[i];
-      if (!c || typeof c !== 'object' || Array.isArray(c)) {
+      const rawC = payload.contacts[i];
+      if (!rawC || typeof rawC !== 'object' || Array.isArray(rawC)) {
         throw createSchemaError(`contacts[${i}] muss ein Objekt sein`);
       }
+      const c = /** @type {Record<string, unknown>} */ (rawC);
       checkUnknownKeys(c, [
         'id', 'name', 'contact_name', 'first_name', 'last_name',
         'email', 'phone', 'company', 'notes', 'geburtsdatum', 'kvnr'
@@ -145,27 +172,28 @@ function validateDraftPayload(payload, { mode, allowFreeText }) {
     if (!payload.owner_info || typeof payload.owner_info !== 'object' || Array.isArray(payload.owner_info)) {
       throw createSchemaError('owner_info muss ein Objekt sein');
     }
-    checkUnknownKeys(payload.owner_info, [
+    const ownerInfo = /** @type {Record<string, unknown>} */ (payload.owner_info);
+    checkUnknownKeys(ownerInfo, [
       'business_name', 'sender_name', 'city', 'sector', 'phone', 'extra_context'
     ], 'owner_info')
     for (const k of ['business_name', 'sender_name', 'city', 'phone', 'extra_context', 'sector']) {
-      if (payload.owner_info[k] !== undefined && typeof payload.owner_info[k] !== 'string') {
+      if (ownerInfo[k] !== undefined && typeof ownerInfo[k] !== 'string') {
         throw createSchemaError(`owner_info.${k} muss ein String sein`);
       }
     };
 
-    if (payload.owner_info.sector) {
-      const sec = String(payload.owner_info.sector).toLowerCase();
+    if (ownerInfo.sector) {
+      const sec = String(ownerInfo.sector).toLowerCase();
       if (!ALLOWED_SECTORS.has(sec)) {
         throw createSchemaError(`Ungültige Branche`);
       }
     }
 
-    if (payload.owner_info.extra_context && typeof payload.owner_info.extra_context === 'string' && payload.owner_info.extra_context.trim()) {
+    if (ownerInfo.extra_context && typeof ownerInfo.extra_context === 'string' && ownerInfo.extra_context.trim()) {
       if (!allowFreeText) {
         throw createSchemaError('Freitext in owner_info ist ohne Betreiber-Freigabe gesperrt', 'KI_FREITEXT_GESPERRT', 403);
       }
-      if (payload.owner_info.extra_context.length > 500) {
+      if (ownerInfo.extra_context.length > 500) {
         throw createSchemaError('owner_info.extra_context überschreitet Maximallänge von 500 Zeichen');
       }
     }
@@ -174,6 +202,7 @@ function validateDraftPayload(payload, { mode, allowFreeText }) {
 
 /**
  * Validates payload for appointment-confirm-draft.
+ * @param {Record<string, unknown>} payload
  */
 function validateAppointmentConfirmPayload(payload) {
   checkUnknownKeys(payload, ['patient', 'slots', 'service', 'owner_info', 'ki_confirmation']);
@@ -186,10 +215,11 @@ function validateAppointmentConfirmPayload(payload) {
   }
 
   for (let i = 0; i < payload.slots.length; i++) {
-    const s = payload.slots[i];
-    if (!s || typeof s !== 'object' || Array.isArray(s)) {
+    const rawS = payload.slots[i];
+    if (!rawS || typeof rawS !== 'object' || Array.isArray(rawS)) {
       throw createSchemaError(`slots[${i}] muss ein Objekt sein`);
     }
+    const s = /** @type {Record<string, unknown>} */ (rawS);
 
       checkUnknownKeys(s, ['date', 'time', 'employeeName', 'employeeId'], `slots[${i}]`);
       if (s.employeeName !== undefined && typeof s.employeeName !== 'string') throw createSchemaError('slot employeeName muss String sein');
@@ -208,10 +238,11 @@ function validateAppointmentConfirmPayload(payload) {
     if (typeof payload.patient !== 'object' || Array.isArray(payload.patient)) {
       throw createSchemaError('patient muss ein Objekt sein');
     }
-    checkUnknownKeys(payload.patient, ['name', 'email', 'phone'], 'patient');
+    const patient = /** @type {Record<string, unknown>} */ (payload.patient);
+    checkUnknownKeys(patient, ['name', 'email', 'phone'], 'patient');
 
     for (const k of ['name', 'email', 'phone']) {
-      if (payload.patient[k] !== undefined && typeof payload.patient[k] !== 'string') {
+      if (patient[k] !== undefined && typeof patient[k] !== 'string') {
         throw createSchemaError(`patient.${k} muss ein String sein`);
       }
     }
@@ -222,15 +253,16 @@ function validateAppointmentConfirmPayload(payload) {
     if (typeof payload.service !== 'object' || Array.isArray(payload.service)) {
       throw createSchemaError('service muss ein Objekt sein');
     }
-    checkUnknownKeys(payload.service, ['title', 'duration'], 'service');
+    const service = /** @type {Record<string, unknown>} */ (payload.service);
+    checkUnknownKeys(service, ['title', 'duration'], 'service');
 
-    if (payload.service.title !== undefined && !boundedString(payload.service.title, 500)) {
+    if (service.title !== undefined && !boundedString(service.title, 500)) {
       throw createSchemaError('service.title muss ein String sein');
     }
 
-    if (payload.service.duration !== undefined) {
-      const dur = payload.service.duration;
-      if (!Number.isInteger(dur) || dur < 1 || dur > 480) {
+    if (service.duration !== undefined) {
+      const dur = service.duration;
+      if (!Number.isInteger(dur) || typeof dur !== 'number' || dur < 1 || dur > 480) {
         throw createSchemaError('service.duration muss eine positive Ganzzahl zwischen 1 und 480 sein');
       }
     }
@@ -240,14 +272,15 @@ function validateAppointmentConfirmPayload(payload) {
     if (typeof payload.owner_info !== 'object' || Array.isArray(payload.owner_info)) {
       throw createSchemaError('owner_info muss ein Objekt sein');
     }
-    checkUnknownKeys(payload.owner_info, ['business_name', 'sender_name', 'city', 'phone', 'sector'], 'owner_info')
+    const ownerInfo = /** @type {Record<string, unknown>} */ (payload.owner_info);
+    checkUnknownKeys(ownerInfo, ['business_name', 'sender_name', 'city', 'phone', 'sector'], 'owner_info')
     for (const k of ['business_name', 'sender_name', 'city', 'phone', 'extra_context', 'sector']) {
-      if (payload.owner_info[k] !== undefined && typeof payload.owner_info[k] !== 'string') {
+      if (ownerInfo[k] !== undefined && typeof ownerInfo[k] !== 'string') {
         throw createSchemaError(`owner_info.${k} muss ein String sein`);
       }
     };
-    if (payload.owner_info.sector) {
-      const sec = String(payload.owner_info.sector).toLowerCase();
+    if (ownerInfo.sector) {
+      const sec = String(ownerInfo.sector).toLowerCase();
       if (!ALLOWED_SECTORS.has(sec)) {
         throw createSchemaError(`Ungültige Branche`);
       }
@@ -257,6 +290,8 @@ function validateAppointmentConfirmPayload(payload) {
 
 /**
  * Validates payload for series-scheduler.
+ * @param {Record<string, unknown>} payload
+ * @param {{ mode: string, allowFreeText: boolean }} ctx
  */
 function validateSeriesSchedulerPayload(payload, { mode, allowFreeText }) {
   checkUnknownKeys(payload, [
@@ -268,13 +303,13 @@ function validateSeriesSchedulerPayload(payload, { mode, allowFreeText }) {
 
   if (payload.count !== undefined) {
     const c = payload.count;
-    if (!Number.isInteger(c) || c < 1 || c > 60) {
+    if (!Number.isInteger(c) || typeof c !== 'number' || c < 1 || c > 60) {
       throw createSchemaError('count muss eine Ganzzahl zwischen 1 und 50 sein');
     }
   }
 
   if (payload.recurrence !== undefined) {
-    if (!['weekly', 'biweekly', 'daily'].includes(payload.recurrence)) {
+    if (typeof payload.recurrence !== 'string' || !['weekly', 'biweekly', 'daily'].includes(payload.recurrence)) {
       throw createSchemaError('recurrence muss "weekly", "biweekly" oder "daily" sein');
     }
   }
@@ -301,28 +336,31 @@ function validateSeriesSchedulerPayload(payload, { mode, allowFreeText }) {
 
   if (payload.service) {
     if (typeof payload.service !== 'object' || Array.isArray(payload.service)) throw createSchemaError('service muss ein Objekt sein');
-    checkUnknownKeys(payload.service, ['title', 'duration'], 'service');
-    if (payload.service.title !== undefined && !boundedString(payload.service.title, 500)) throw createSchemaError('service.title muss ein String sein');
-    if (payload.service.duration !== undefined) {
-      const dur = payload.service.duration;
-      if (!Number.isSafeInteger(dur) || dur < 1 || dur > 480) throw createSchemaError('service.duration ungültig');
+    const service = /** @type {Record<string, unknown>} */ (payload.service);
+    checkUnknownKeys(service, ['title', 'duration'], 'service');
+    if (service.title !== undefined && !boundedString(service.title, 500)) throw createSchemaError('service.title muss ein String sein');
+    if (service.duration !== undefined) {
+      const dur = service.duration;
+      if (!Number.isSafeInteger(dur) || typeof dur !== 'number' || dur < 1 || dur > 480) throw createSchemaError('service.duration ungültig');
     }
   }
 
   if (payload.customer) {
     if (typeof payload.customer !== 'object' || Array.isArray(payload.customer)) throw createSchemaError('customer muss ein Objekt sein');
-    checkUnknownKeys(payload.customer, ['id', 'name', 'email', 'phone'], 'customer');
-    if (payload.customer.id !== undefined && payload.customer.id !== null && !boundedString(payload.customer.id, 200)) throw createSchemaError('customer.id ungültig');
+    const customer = /** @type {Record<string, unknown>} */ (payload.customer);
+    checkUnknownKeys(customer, ['id', 'name', 'email', 'phone'], 'customer');
+    if (customer.id !== undefined && customer.id !== null && !boundedString(customer.id, 200)) throw createSchemaError('customer.id ungültig');
     for (const k of ['name', 'email', 'phone']) {
-      if (payload.customer[k] !== undefined && typeof payload.customer[k] !== 'string') throw createSchemaError(`customer.${k} muss ein String sein`);
+      if (customer[k] !== undefined && typeof customer[k] !== 'string') throw createSchemaError(`customer.${k} muss ein String sein`);
     }
   }
 
   if (payload.employees) {
     if (!Array.isArray(payload.employees) || payload.employees.length > 50) throw createSchemaError('employees muss ein Array sein');
     for (let i = 0; i < payload.employees.length; i++) {
-      const e = payload.employees[i];
-      if (!e || typeof e !== 'object' || Array.isArray(e)) throw createSchemaError('employees Eintrag muss ein Objekt sein');
+      const rawE = payload.employees[i];
+      if (!rawE || typeof rawE !== 'object' || Array.isArray(rawE)) throw createSchemaError('employees Eintrag muss ein Objekt sein');
+      const e = /** @type {Record<string, unknown>} */ (rawE);
       checkUnknownKeys(e, ['id', 'name', 'anrede'], `employees[${i}]`);
       if (e.id !== undefined && typeof e.id !== 'string') throw createSchemaError('employees id muss ein String sein');
       if (e.name !== undefined && typeof e.name !== 'string') throw createSchemaError('employees name muss ein String sein');
@@ -342,20 +380,25 @@ function validateSeriesSchedulerPayload(payload, { mode, allowFreeText }) {
     }
   }
 
-  function validateSlot(cand, candidate) {
-    if (!cand || typeof cand !== 'object' || Array.isArray(cand)) throw createSchemaError('Termin muss ein Objekt sein');
+  /**
+   * @param {unknown} rawCand
+   * @param {boolean} [candidate]
+   */
+  function validateSlot(rawCand, candidate) {
+    if (!rawCand || typeof rawCand !== 'object' || Array.isArray(rawCand)) throw createSchemaError('Termin muss ein Objekt sein');
+    const cand = /** @type {Record<string, unknown>} */ (rawCand);
     checkUnknownKeys(cand, ['date', 'time', 'employeeId', 'employeeName', 'bucket', 'shiftedFromDate', 'dateShiftDays']);
-    if (!validDate(cand.date) || !RE_TIME_HHMM.test(cand.time)) throw createSchemaError('Termin Datum oder Uhrzeit ungültig');
-    if (typeof cand.time !== 'string') throw createSchemaError('Uhrzeit muss String sein');
+    if (!validDate(cand.date) || typeof cand.time !== 'string' || !RE_TIME_HHMM.test(cand.time)) throw createSchemaError('Termin Datum oder Uhrzeit ungültig');
     for (const key of ['employeeId', 'employeeName']) if (cand[key] !== undefined && !boundedString(cand[key], 200)) throw createSchemaError('Mitarbeiter ungültig');
     if (cand.bucket !== undefined && !integer(cand.bucket, 0, 59)) throw createSchemaError('bucket ungültig');
     if (cand.shiftedFromDate !== undefined && !validDate(cand.shiftedFromDate)) throw createSchemaError('Verschobenes Datum ungültig');
     if (cand.dateShiftDays !== undefined && !integer(cand.dateShiftDays, -3, 3)) throw createSchemaError('Verschiebung ungültig');
   }
-  for (const [key, max] of [['previousSelected', 60], ['candidates', 1024]]) {
-    if (payload[key] !== undefined) {
-      if (!Array.isArray(payload[key]) || payload[key].length > max) throw createSchemaError('Terminliste ungültig');
-      for (const slot of payload[key]) validateSlot(slot, key === 'candidates');
+  for (const [key, max] of /** @type {const} */ ([['previousSelected', 60], ['candidates', 1024]])) {
+    const list = payload[key];
+    if (list !== undefined) {
+      if (!Array.isArray(list) || list.length > max) throw createSchemaError('Terminliste ungültig');
+      for (const slot of list) validateSlot(slot, key === 'candidates');
     }
   }
   if (!integer(payload.count, 1, 60)) throw createSchemaError('count ungültig');
@@ -375,30 +418,31 @@ function validateSeriesSchedulerPayload(payload, { mode, allowFreeText }) {
     if (typeof payload.preferences !== 'object' || Array.isArray(payload.preferences)) {
       throw createSchemaError('preferences muss ein Objekt sein');
     }
-    checkUnknownKeys(payload.preferences, ['sameEmployee', 'preferredEmployee', 'timeOfDay', 'notes'], 'preferences');
+    const prefs = /** @type {Record<string, unknown>} */ (payload.preferences);
+    checkUnknownKeys(prefs, ['sameEmployee', 'preferredEmployee', 'timeOfDay', 'notes'], 'preferences');
 
-    if (payload.preferences.sameEmployee !== undefined) {
-      if (payload.preferences.sameEmployee !== 'always' && payload.preferences.sameEmployee !== 'preferred' && payload.preferences.sameEmployee !== 'any' && typeof payload.preferences.sameEmployee !== 'boolean') {
+    if (prefs.sameEmployee !== undefined) {
+      if (prefs.sameEmployee !== 'always' && prefs.sameEmployee !== 'preferred' && prefs.sameEmployee !== 'any' && typeof prefs.sameEmployee !== 'boolean') {
         throw createSchemaError('preferences.sameEmployee ungültig');
       }
     }
 
-    if (payload.preferences.preferredEmployee !== undefined && payload.preferences.preferredEmployee !== null && typeof payload.preferences.preferredEmployee !== 'string') {
+    if (prefs.preferredEmployee !== undefined && prefs.preferredEmployee !== null && typeof prefs.preferredEmployee !== 'string') {
       throw createSchemaError('preferences.preferredEmployee muss ein String sein');
     }
 
-    if (payload.preferences.timeOfDay !== undefined) {
-      if (payload.preferences.timeOfDay !== 'morning' && payload.preferences.timeOfDay !== 'afternoon' && payload.preferences.timeOfDay !== 'any') {
+    if (prefs.timeOfDay !== undefined) {
+      if (prefs.timeOfDay !== 'morning' && prefs.timeOfDay !== 'afternoon' && prefs.timeOfDay !== 'any') {
         throw createSchemaError('preferences.timeOfDay ungültig');
       }
     }
 
-    if (payload.preferences.notes !== undefined && payload.preferences.notes !== null && !boundedString(payload.preferences.notes, 500)) throw createSchemaError('preferences.notes ungültig');
-    if (payload.preferences.notes && typeof payload.preferences.notes === 'string' && payload.preferences.notes.trim()) {
+    if (prefs.notes !== undefined && prefs.notes !== null && !boundedString(prefs.notes, 500)) throw createSchemaError('preferences.notes ungültig');
+    if (prefs.notes && typeof prefs.notes === 'string' && prefs.notes.trim()) {
       if (!allowFreeText) {
         throw createSchemaError('preferences.notes ist ohne Betreiber-Freigabe gesperrt', 'KI_FREITEXT_GESPERRT', 403);
       }
-      if (payload.preferences.notes.length > 500) {
+      if (prefs.notes.length > 500) {
         throw createSchemaError('preferences.notes überschreitet Maximallänge von 500 Zeichen');
       }
     }
@@ -414,6 +458,8 @@ function validateSeriesSchedulerPayload(payload, { mode, allowFreeText }) {
 
 /**
  * Validates payload for rezept-normalize.
+ * @param {Record<string, unknown>} payload
+ * @param {{ mode: string, allowFreeText: boolean }} ctx
  */
 function validateRezeptNormalizePayload(payload, { mode, allowFreeText }) {
   checkUnknownKeys(payload, ['rezept', 'heilmittel_positionen', 'ki_confirmation']);
@@ -421,28 +467,32 @@ function validateRezeptNormalizePayload(payload, { mode, allowFreeText }) {
   if (!payload.rezept || typeof payload.rezept !== 'object' || Array.isArray(payload.rezept)) {
     throw createSchemaError('rezept muss ein Objekt sein');
   }
+  const rezept = /** @type {Record<string, unknown>} */ (payload.rezept);
 
   // Allowed rezept keys (local-only patient/arzt are stripped during transform)
-  checkUnknownKeys(payload.rezept, [
+  checkUnknownKeys(rezept, [
     'frequenz', 'diagnosegruppe', 'heilmittel', 'ergaenzendes_heilmittel',
     'heilmittel_feld_text', 'therapiebereich', 'patient', 'arzt'
   ], 'rezept');
 
   for (const key of ['frequenz', 'diagnosegruppe', 'heilmittel', 'ergaenzendes_heilmittel', 'heilmittel_feld_text', 'therapiebereich']) {
-    if (payload.rezept[key] !== undefined && payload.rezept[key] !== null && !boundedString(payload.rezept[key], 500)) throw createSchemaError('Rezeptfeld ungültig');
+    if (rezept[key] !== undefined && rezept[key] !== null && !boundedString(rezept[key], 500)) throw createSchemaError('Rezeptfeld ungültig');
   }
-  if (payload.rezept.frequenz && !FREQUENZ_OPTIONEN.includes(payload.rezept.frequenz)) throw createSchemaError('Frequenz nicht im Katalog');
-  if (payload.rezept.diagnosegruppe && !DIAGNOSEGRUPPEN.includes(payload.rezept.diagnosegruppe)) throw createSchemaError('Diagnosegruppe nicht im Katalog');
-  for (const key of ['heilmittel', 'ergaenzendes_heilmittel']) if (payload.rezept[key] && !/^X[0-9]{4}$/.test(payload.rezept[key])) throw createSchemaError('Heilmittelcode ungültig');
-  if (payload.rezept.therapiebereich && !ALLOWED_SECTORS.has(payload.rezept.therapiebereich.toLowerCase())) throw createSchemaError('Therapiebereich ungültig');
-  for (const key of ['patient', 'arzt']) if (payload.rezept[key] !== undefined) {
-    const obj = payload.rezept[key];
+  if (typeof rezept.frequenz === 'string' && rezept.frequenz && !FREQUENZ_OPTIONEN.includes(rezept.frequenz)) throw createSchemaError('Frequenz nicht im Katalog');
+  if (typeof rezept.diagnosegruppe === 'string' && rezept.diagnosegruppe && !DIAGNOSEGRUPPEN.includes(rezept.diagnosegruppe)) throw createSchemaError('Diagnosegruppe nicht im Katalog');
+  for (const key of ['heilmittel', 'ergaenzendes_heilmittel']) {
+    const val = rezept[key];
+    if (typeof val === 'string' && val && !/^X[0-9]{4}$/.test(val)) throw createSchemaError('Heilmittelcode ungültig');
+  }
+  if (typeof rezept.therapiebereich === 'string' && rezept.therapiebereich && !ALLOWED_SECTORS.has(rezept.therapiebereich.toLowerCase())) throw createSchemaError('Therapiebereich ungültig');
+  for (const key of ['patient', 'arzt']) if (rezept[key] !== undefined) {
+    const obj = rezept[key];
     if (!obj || typeof obj !== 'object' || Array.isArray(obj)) throw createSchemaError('Lokaler Kopf ungültig');
     checkUnknownKeys(obj, ['name', 'first_name', 'last_name', 'email', 'phone', 'geburtsdatum', 'kvnr', 'arzt_name', 'praxis_name']);
     for (const value of Object.values(obj)) if (!boundedString(value, 500)) throw createSchemaError('Lokaler Kopfwert ungültig');
   }
   // In Jeton mode: heilmittel_feld_text is B freetext and forbidden!
-  if ((mode === 'jeton' || !allowFreeText) && payload.rezept.heilmittel_feld_text && String(payload.rezept.heilmittel_feld_text).trim()) {
+  if ((mode === 'jeton' || !allowFreeText) && rezept.heilmittel_feld_text && String(rezept.heilmittel_feld_text).trim()) {
     throw createSchemaError('heilmittel_feld_text ist im Jeton-Modus gesperrt', 'KI_FREITEXT_GESPERRT', 403);
   }
 
@@ -453,10 +503,11 @@ function validateRezeptNormalizePayload(payload, { mode, allowFreeText }) {
     const knownLabels = getKnownCatalogLabels();
 
     for (let i = 0; i < payload.heilmittel_positionen.length; i++) {
-      const p = payload.heilmittel_positionen[i];
-      if (!p || typeof p !== 'object' || Array.isArray(p)) {
+      const rawP = payload.heilmittel_positionen[i];
+      if (!rawP || typeof rawP !== 'object' || Array.isArray(rawP)) {
         throw createSchemaError(`heilmittel_positionen[${i}] muss ein Objekt sein`);
       }
+      const p = /** @type {Record<string, unknown>} */ (rawP);
       checkUnknownKeys(p, ['x', 'label', 'kat'], `heilmittel_positionen[${i}]`);
 
       if (!p.x || typeof p.x !== 'string' || !/^(?:X[0-9]{4}|[0-9]{5})$/.test(p.x)) {
@@ -466,7 +517,7 @@ function validateRezeptNormalizePayload(payload, { mode, allowFreeText }) {
         throw createSchemaError(`heilmittel_positionen[${i}].label muss ein String sein`);
       }
 
-      if (p.kat !== undefined && p.kat !== null && !['', 'vorrangig', 'ergänzend'].includes(p.kat)) throw createSchemaError('Unbekannte Katalogkategorie');
+      if (p.kat !== undefined && p.kat !== null && (typeof p.kat !== 'string' || !['', 'vorrangig', 'ergänzend'].includes(p.kat))) throw createSchemaError('Unbekannte Katalogkategorie');
 
       // Check label against known catalog labels
       const cleanLabel = p.label.trim().toLowerCase();
@@ -481,20 +532,26 @@ function validateRezeptNormalizePayload(payload, { mode, allowFreeText }) {
  * Top-level payload validation.
  *
  * @param {string} task
- * @param {Object} payload
- * @param {Object} [options]
- * @param {'aus'|'direkt'|'jeton'} [options.mode='aus']
- * @param {boolean} [options.allowFreeText=false]
+ * @param {unknown} rawPayload
+ * @param {{ mode?: 'aus'|'direkt'|'jeton', allowFreeText?: boolean }} [options={}]
+ * @returns {true}
  */
-export function validateTaskPayload(task, payload, options = {}) {
+export function validateTaskPayload(task, rawPayload, options = {}) {
   const { mode = 'aus', allowFreeText = false } = options;
 
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+  if (!rawPayload || typeof rawPayload !== 'object' || Array.isArray(rawPayload)) {
     throw createSchemaError('Payload muss ein Objekt sein');
   }
+  const payload = /** @type {Record<string, unknown>} */ (rawPayload);
 
   checkDepth(payload);
-  function checkBounds(obj) { for (const value of Object.values(obj)) { if (typeof value === 'string' && value.length > 5000) throw createSchemaError('String zu lang'); if (value && typeof value === 'object') checkBounds(value); } }
+  /** @param {Record<string, unknown> | unknown[]} obj */
+  function checkBounds(obj) {
+    for (const value of Object.values(obj)) {
+      if (typeof value === 'string' && value.length > 5000) throw createSchemaError('String zu lang');
+      if (value && typeof value === 'object') checkBounds(/** @type {Record<string, unknown> | unknown[]} */ (value));
+    }
+  }
   checkBounds(payload);
 
   // Validate reserved ki_confirmation if present
@@ -502,22 +559,24 @@ export function validateTaskPayload(task, payload, options = {}) {
     if (!payload.ki_confirmation || typeof payload.ki_confirmation !== 'object' || Array.isArray(payload.ki_confirmation)) {
       throw createSchemaError('ki_confirmation muss ein Objekt sein');
     }
-    checkUnknownKeys(payload.ki_confirmation, ['challengeId', 'choices'], 'ki_confirmation');
-    if (typeof payload.ki_confirmation.challengeId !== 'string') {
+    const conf = /** @type {Record<string, unknown>} */ (payload.ki_confirmation);
+    checkUnknownKeys(conf, ['challengeId', 'choices'], 'ki_confirmation');
+    if (typeof conf.challengeId !== 'string') {
       throw createSchemaError('ki_confirmation.challengeId muss ein String sein');
     }
-    if (!Array.isArray(payload.ki_confirmation.choices) || payload.ki_confirmation.choices.length > 5) {
+    if (!Array.isArray(conf.choices) || conf.choices.length > 5) {
       throw createSchemaError('ki_confirmation.choices muss ein Array sein');
     }
-    for (let i = 0; i < payload.ki_confirmation.choices.length; i++) {
-      const ch = payload.ki_confirmation.choices[i];
-      if (!ch || typeof ch !== 'object' || Array.isArray(ch)) {
+    for (let i = 0; i < conf.choices.length; i++) {
+      const rawCh = conf.choices[i];
+      if (!rawCh || typeof rawCh !== 'object' || Array.isArray(rawCh)) {
         throw createSchemaError(`ki_confirmation.choices[${i}] muss ein Objekt sein`);
       }
+      const ch = /** @type {Record<string, unknown>} */ (rawCh);
       checkUnknownKeys(ch, ['id', 'action'], `ki_confirmation.choices[${i}]`);
       if (!boundedString(ch.id, 100)) throw createSchemaError('Kandidaten-ID ungültig');
-      if (!['maskieren', 'kein_name'].includes(ch.action)) {
-        throw createSchemaError(`Ungültige Aktion in ki_confirmation.choices[${i}]: ${ch.action}`);
+      if (typeof ch.action !== 'string' || !['maskieren', 'kein_name'].includes(ch.action)) {
+        throw createSchemaError(`Ungültige Aktion in ki_confirmation.choices[${i}]: ${String(ch.action)}`);
       }
     }
   }

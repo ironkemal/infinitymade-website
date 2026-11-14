@@ -1,20 +1,32 @@
 /** Benötigte Raumausstattung: gemeinsamer Editor für freie und GKV-Leistungen. */
 import { raumDetails } from './raum-details.js';
 const editoren = new WeakMap();
-const esc = text => String(text ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const esc = (/** @type {any} */ text) => String(text ?? '').replace(/[&<>"']/g, c => /** @type {string} */ (({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]));
 
+/**
+ * @param {Array<{ausstattung?: string[]}> | null | undefined} raeume
+ * @param {string[]} [erforderlich]
+ */
 export function ausstattungsOptionen(raeume, erforderlich = []) {
   return [...new Set([...(erforderlich || []), ...(raeume || []).flatMap(r => r.ausstattung || [])])].sort((a, b) => a.localeCompare(b, 'de'));
 }
+/**
+ * @param {string[]} optionen
+ * @param {string[]} erforderlich
+ */
 export function anforderungenHtml(optionen, erforderlich) {
   return optionen.map(text => `<label style="display:flex;gap:8px;align-items:center;overflow-wrap:anywhere;"><input type="checkbox" value="${esc(text)}" ${erforderlich.includes(text) ? 'checked' : ''}>${esc(text)}</label>`).join('');
 }
 
+/**
+ * @param {{ form: HTMLElement | null | undefined, supabase: any, ownerId: string, anforderungen?: string[] }} p
+ */
 export function oeffneLeistungsRaum({ form, supabase, ownerId, anforderungen = [] }) {
   if (!form) return;
+  /** @type {{ verfuegbar: boolean, fehler: boolean, bereit?: Promise<void> }} */
   const state = { verfuegbar: false, fehler: false };
   editoren.set(form, state);
-  let feld = form.querySelector('.leistungs-raum');
+  let feld = /** @type {HTMLElement | null} */ (form.querySelector('.leistungs-raum'));
   if (!feld) {
     feld = document.createElement('fieldset');
     feld.className = 'leistungs-raum';
@@ -37,20 +49,20 @@ export function oeffneLeistungsRaum({ form, supabase, ownerId, anforderungen = [
       const optionen = ausstattungsOptionen(rooms.error ? [] : rooms.data, anforderungen);
       state.verfuegbar = true;
       feld.innerHTML = `<legend>Benötigte Raumausstattung</legend><p class="form-hint">Ein passender Raum muss alle angehakten Ausstattungen besitzen. Ohne Haken ist keine besondere Ausstattung nötig.</p><div class="leistungs-raum-optionen">${anforderungenHtml(optionen, anforderungen)}</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"><label style="flex:1;min-width:0;">Weitere benötigte Ausstattung<input class="form-input leistungs-raum-neu" maxlength="80" style="width:100%;box-sizing:border-box;"></label><button type="button" class="btn-ghost leistungs-raum-add">Hinzufügen</button></div><p class="leistungs-raum-status form-hint" role="status">${rooms.error ? 'Vorhandene Raumausstattung konnte nicht geladen werden. Eigene Punkte sind weiterhin möglich.' : 'Änderungen mit der Leistung speichern.'}</p>`;
-      feld.querySelector('.leistungs-raum-add').addEventListener('click', () => {
-        const input = feld.querySelector('.leistungs-raum-neu');
-        const status = feld.querySelector('.leistungs-raum-status');
+      /** @type {HTMLElement} */ (feld.querySelector('.leistungs-raum-add')).addEventListener('click', () => {
+        const input = /** @type {HTMLInputElement} */ (feld.querySelector('.leistungs-raum-neu'));
+        const status = /** @type {HTMLElement} */ (feld.querySelector('.leistungs-raum-status'));
         try {
-          const checks = [...feld.querySelectorAll('input[type="checkbox"]')];
+          const checks = /** @type {HTMLInputElement[]} */ ([...feld.querySelectorAll('input[type="checkbox"]')]);
           const wert = raumDetails('', [input.value]).ausstattung[0];
           const schon = checks.find(el => el.value === wert);
           if (schon) schon.checked = true;
           else {
             raumDetails('', [...checks.map(el => el.value), wert]);
-            feld.querySelector('.leistungs-raum-optionen').insertAdjacentHTML('beforeend', anforderungenHtml([wert], [wert]));
+            /** @type {HTMLElement} */ (feld.querySelector('.leistungs-raum-optionen')).insertAdjacentHTML('beforeend', anforderungenHtml([wert], [wert]));
           }
           input.value = ''; status.textContent = 'Änderungen mit der Leistung speichern.';
-        } catch (err) { status.textContent = err.message; }
+        } catch (err) { status.textContent = /** @type {any} */ (err).message; }
       });
     } catch {
       if (editoren.get(form) !== state) return;
@@ -60,6 +72,7 @@ export function oeffneLeistungsRaum({ form, supabase, ownerId, anforderungen = [
   })();
 }
 
+/** @param {HTMLElement} form */
 export async function leistungsRaumPayload(form) {
   const state = editoren.get(form);
   if (!state) return { ok: true, felder: {} };
@@ -67,7 +80,7 @@ export async function leistungsRaumPayload(form) {
   if (editoren.get(form) !== state || state.fehler) return { ok: false, meldung: 'Raumanforderungen nicht verfügbar. Leistung erneut öffnen.' };
   if (!state.verfuegbar) return { ok: true, felder: {} };
   try {
-    const liste = [...form.querySelectorAll('.leistungs-raum input[type="checkbox"]')].filter(el => el.checked).map(el => el.value);
+    const liste = /** @type {HTMLInputElement[]} */ ([...form.querySelectorAll('.leistungs-raum input[type="checkbox"]')]).filter(el => el.checked).map(el => el.value);
     return { ok: true, felder: { raum_ausstattung: raumDetails('', liste).ausstattung } };
-  } catch (err) { return { ok: false, meldung: err.message }; }
+  } catch (err) { return { ok: false, meldung: /** @type {any} */ (err).message }; }
 }

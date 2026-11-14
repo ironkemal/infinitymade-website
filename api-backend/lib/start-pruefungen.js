@@ -9,7 +9,7 @@
 // Neustart-Schleife enden. Keine Werte aus env im Log, nur Namen und Codes.
 
 /**
- * @param {{env?: object, kimlikVorhanden?: boolean, aiConfig?: {mode?: string, valid?: boolean, code?: string}}} p
+ * @param {{ env?: Record<string, string | undefined>, kimlikVorhanden?: boolean, aiConfig?: { mode?: string, valid?: boolean, code?: string } | null }} [p]
  * @returns {string[]}
  */
 export function startWarnungen({ env = process.env, kimlikVorhanden = false, aiConfig = null } = {}) {

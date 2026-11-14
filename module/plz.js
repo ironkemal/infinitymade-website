@@ -31,7 +31,9 @@
 
 'use strict';
 
+/** @type {any} */
 let daten = null;
+/** @type {any} */
 let ladend = null;
 
 /** @returns {Promise<Record<string, string|string[]>>} */
@@ -64,9 +66,12 @@ export async function orteZu(plz) {
   return Array.isArray(treffer) ? treffer : [treffer];
 }
 
+/** @type {any} */
 let blDaten = null;
+/** @type {any} */
 let blLadend = null;
 
+/** @returns {Promise<Record<string, string|string[]>>} */
 async function blLaden() {
   if (blDaten) return blDaten;
   if (blLadend) return blLadend;
@@ -109,9 +114,11 @@ export function attachPlzOrt(plzEl, ortEl) {
   if (!plzEl || !ortEl || plzEl.dataset.plzWired === '1') return;
   plzEl.dataset.plzWired = '1';
 
+  /** @type {HTMLDivElement | null} */
   let box = null;
   const boxZu = () => { if (box) { box.remove(); box = null; } };
 
+  /** @param {string[]} orte */
   const zeigeAuswahl = (orte) => {
     boxZu();
     box = document.createElement('div');
@@ -121,9 +128,9 @@ export function attachPlzOrt(plzEl, ortEl) {
          style="font-size:12px;padding:3px 9px;">${o.replace(/</g, '&lt;')}</button>`
     ).join('');
     box.addEventListener('click', e => {
-      const b = e.target.closest('[data-ort]');
+      const b = /** @type {HTMLElement | null} */ (/** @type {HTMLElement} */ (e.target).closest('[data-ort]'));
       if (!b) return;
-      ortEl.value = b.dataset.ort;
+      ortEl.value = /** @type {string} */ (b.dataset.ort);
       ortEl.dispatchEvent(new Event('input', { bubbles: true }));
       boxZu();
     });

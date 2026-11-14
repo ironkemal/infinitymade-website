@@ -62,17 +62,20 @@ export async function neuesterStand() {
     throw new Error('Kein Download-Link auf der GKV-Seite gefunden — Seitenstruktur geändert?');
   }
   const parsed = treffer.map(([, href, stand]) => ({ stand, href, datum: standZuDatum(stand) }));
-  parsed.sort((a, b) => b.datum - a.datum); // neueste zuerst, unabhängig von der Reihenfolge auf der Seite
+  parsed.sort((a, b) => b.datum.getTime() - a.datum.getTime()); // neueste zuerst, unabhängig von der Reihenfolge auf der Seite
   const top = parsed[0];
   return { stand: top.stand, url: new URL(top.href, BASIS_URL).href };
 }
 
+/** @param {string} stand */
 function standZuDatum(stand) {
   const [t, m, j] = stand.split('-').map(Number);
   return new Date(2000 + j, m - 1, t); // die Datei existiert erst seit 2025, 2-stelliges Jahr ist eindeutig
 }
 
-/** Lädt eine ZIP-URL und gibt den Inhalt der ersten .xml-Datei darin als String zurück. */
+/** Lädt eine ZIP-URL und gibt den Inhalt der ersten .xml-Datei darin als String zurück.
+ * @param {string} url
+ */
 export async function ladeXmlAusZip(url) {
   const res = await fetchWithTimeout(url, {}, 30000);
   if (!res.ok) throw new Error(`ZIP-Download fehlgeschlagen: HTTP ${res.status}`);
@@ -80,35 +83,43 @@ export async function ladeXmlAusZip(url) {
   return entpackeXml(buf);
 }
 
+/**
+ * @param {Buffer} buf
+ * @returns {Promise<string>}
+ */
 function entpackeXml(buf) {
   return new Promise((resolve, reject) => {
     yauzl.fromBuffer(buf, { lazyEntries: true }, (err, zip) => {
       if (err) return reject(err);
       let gefunden = false;
+      const z = /** @type {any} */ (zip);
       zip.readEntry();
-      zip.on('entry', (entry) => {
+      z.on('entry', (/** @type {any} */ entry) => {
         if (gefunden || !/\.xml$/i.test(entry.fileName)) { zip.readEntry(); return; }
         gefunden = true;
         zip.openReadStream(entry, (err, stream) => {
           if (err) return reject(err);
+          /** @type {Buffer[]} */
           const chunks = [];
           stream.on('data', (c) => chunks.push(c));
           stream.on('error', reject);
           stream.on('end', () => { zip.close(); resolve(Buffer.concat(chunks).toString('utf8')); });
         });
       });
-      zip.on('end', () => { if (!gefunden) reject(new Error('Keine .xml-Datei im ZIP gefunden')); });
-      zip.on('error', reject);
+      z.on('end', () => { if (!gefunden) reject(new Error('Keine .xml-Datei im ZIP gefunden')); });
+      z.on('error', reject);
     });
   });
 }
 
-/** Parst die Heilmittelpreisstammdatei-XML (Schema HMP4_V03.2) in Zeilen. */
+/** Parst die Heilmittelpreisstammdatei-XML (Schema HMP4_V03.2) in Zeilen.
+ * @param {string} xml
+ */
 export function parseXml(xml) {
   const zeilen = [];
   for (const block of xml.split('<HMP>').slice(1)) {
     const body = block.split('</HMP>')[0];
-    const val = (tag) => {
+    const val = (/** @type {string} */ tag) => {
       const m = body.match(new RegExp(`<${tag}>([^<]*)</${tag}>`));
       return m ? m[1] : '';
     };
@@ -128,6 +139,8 @@ export function parseXml(xml) {
  * Codedateien gepflegt (Ergo/Logo/Ernährungstherapie noch nicht — siehe Karte #213).
  *   Podologie:     X8010 → 78010  (Präfix 'X' → unser ZL-Präfix '7')
  *   Physiotherapie: X0501 → X0501, 20522 → 20522 (schon identisch zum HMP4-Code)
+ * @param {string} bereich
+ * @param {string} hmp4
  */
 function unserCode(bereich, hmp4) {
   if (bereich === 'Podologie') return '7' + hmp4.slice(1);
@@ -147,10 +160,11 @@ function unserCode(bereich, hmp4) {
  * ersten Testlauf passiert (18 Scheinabweichungen).
  */
 function unserePositionen() {
-  const podo = PODOLOGIE_PREISFENSTER.flatMap(f => f.positionen)
-    .map(p => ({ code: p.hpnr, bereich: 'podologie', preis: p.preis, label: p.label, gueltig_ab: p.gueltig_ab }));
-  const physio = PHYSIO_PREISFENSTER.flatMap(fenster =>
-    fenster.positionen.map(p => ({ code: p.x, bereich: 'physiotherapie', preis: p.preis, label: p.label, gueltig_ab: fenster.gueltig_ab })));
+  const podo = (/** @type {readonly any[]} */ (PODOLOGIE_PREISFENSTER))
+    .flatMap((/** @type {any} */ f) => /** @type {readonly any[]} */ (f.positionen))
+    .map((/** @type {any} */ p) => ({ code: String(p.hpnr), bereich: 'podologie', preis: Number(p.preis), label: String(p.label), gueltig_ab: String(p.gueltig_ab) }));
+  const physio = (/** @type {readonly any[]} */ (PHYSIO_PREISFENSTER)).flatMap((/** @type {any} */ fenster) =>
+    (/** @type {readonly any[]} */ (fenster.positionen)).map((/** @type {any} */ p) => ({ code: String(p.x), bereich: 'physiotherapie', preis: Number(p.preis), label: String(p.label), gueltig_ab: String(fenster.gueltig_ab) })));
   return [...podo, ...physio];
 }
 
@@ -158,26 +172,32 @@ function unserePositionen() {
  * Vergleicht unsere Codedateien gegen die geparste XML — angetrieben von der XML-Seite,
  * weil jede XML-Zeile die "gerade wahre" Kombination aus Code + Startdatum + Preis ist.
  *
+ * @param {Array<{ hmp4: string, bereich: string, preis: number, gueltig_ab: string, bezeichnung: string }>} zeilen
  * @returns {{
  *   ok: number,
- *   abweichend: object[],     // gleicher Code + gleiches gueltig_ab, anderer Preis — echtes Problem
- *   neuePreisrunde: object[], // XML kennt ein späteres gueltig_ab als unser bekanntestes Fenster — wir müssen nachziehen
- *   fehlt: object[],          // Code komplett unbekannt bei uns (z. B. §125a-Blanko-Positionen)
- *   neu: string[],            // Codes nur im XML (informativ, Teilmenge von "fehlt")
+ *   abweichend: Array<{ code: string, bereich: string, preis: number, label: string, gueltig_ab: string, xmlPreis: number, xmlGueltigAb: string }>,
+ *   neuePreisrunde: Array<{ code: string, bereich: string, label: string, xmlPreis: number, xmlGueltigAb: string, unserLetztesFenster: string }>,
+ *   fehlt: Array<{ code: string, bereich: string, preis: number, label: string }>,
+ *   neu: string[],
  *   gesamt: number,
  * }}
  */
 export function vergleiche(zeilen) {
   const unsere = unserePositionen();
+  /** @type {Map<string, Array<{ code: string, bereich: string, preis: number, label: string, gueltig_ab: string }>>} */
   const unsereByCode = new Map();
   for (const p of unsere) {
-    if (!unsereByCode.has(p.code)) unsereByCode.set(p.code, []);
-    unsereByCode.get(p.code).push(p);
+    let liste = unsereByCode.get(p.code);
+    if (!liste) { liste = []; unsereByCode.set(p.code, liste); }
+    liste.push(p);
   }
 
   let ok = 0;
+  /** @type {Array<{ code: string, bereich: string, preis: number, label: string, gueltig_ab: string, xmlPreis: number, xmlGueltigAb: string }>} */
   const abweichend = [];
+  /** @type {Array<{ code: string, bereich: string, label: string, xmlPreis: number, xmlGueltigAb: string, unserLetztesFenster: string }>} */
   const neuePreisrunde = [];
+  /** @type {Array<{ code: string, bereich: string, preis: number, label: string }>} */
   const fehlt = [];
 
   for (const z of zeilen) {
@@ -213,11 +233,12 @@ export function vergleiche(zeilen) {
   }
 
   const bekannteCodes = new Set(unsere.map(p => p.code));
-  const neu = [...new Set(zeilen.map(z => unserCode(z.bereich, z.hmp4)).filter(c => c && !bekannteCodes.has(c)))];
+  const neu = [...new Set(zeilen.map(z => unserCode(z.bereich, z.hmp4)).filter((/** @type {string | null} */ c) => Boolean(c) && !bekannteCodes.has(/** @type {string} */ (c))))];
 
-  return { ok, abweichend, neuePreisrunde, fehlt, neu, gesamt: unsere.length };
+  return { ok, abweichend, neuePreisrunde, fehlt, neu: /** @type {string[]} */ (neu), gesamt: unsere.length };
 }
 
+/** @param {{ ergebnis: ReturnType<typeof vergleiche>, stand?: string }} opts */
 function formatBericht({ ergebnis, stand }) {
   const zeilen = [];
   zeilen.push(`GKV-Stand geprüft: ${stand ?? '(lokale Datei)'}`);

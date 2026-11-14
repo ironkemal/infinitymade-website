@@ -36,17 +36,23 @@ import { resolvePreis } from '../preise/resolver.js';
 import { legsFuer, abrechnungscodeAusLegs, LEGS_BY_FACHBEREICH } from '../codes/legs.js';
 
 const router = express.Router();
+/** @type {import('@supabase/supabase-js').SupabaseClient<any>} */
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  /** @type {string} */ (process.env.SUPABASE_URL),
+  /** @type {string} */ (process.env.SUPABASE_SERVICE_ROLE_KEY),
   { auth: { persistSession: false } }
 );
 
+/** @param {number | string} v */
 const r2 = (v) => Math.round((+v + Number.EPSILON) * 100) / 100;
 
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 async function resolveAuth(req, res) {
-  const token = req.headers.authorization?.startsWith('Bearer ')
-    ? req.headers.authorization.slice(7) : null;
+  const authHdr = typeof req.headers.authorization === 'string' ? req.headers.authorization : '';
+  const token = authHdr.startsWith('Bearer ') ? authHdr.slice(7) : null;
   if (!token) { res.status(401).json({ error: 'Missing bearer token' }); return null; }
 
   const { data: u, error: uErr } = await supabase.auth.getUser(token);
@@ -60,14 +66,22 @@ async function resolveAuth(req, res) {
   return { user: u.user, profile, tenantId };
 }
 
-/** Fachbereich des Mandanten — beim Inhaber steht er, beim Angestellten nicht. */
+/**
+ * Fachbereich des Mandanten — beim Inhaber steht er, beim Angestellten nicht.
+ * @param {string} tenantId
+ * @param {string | null | undefined} eigenerSector
+ */
 async function sectorFuer(tenantId, eigenerSector) {
   if (eigenerSector) return eigenerSector;
   const { data } = await supabase.from('profiles').select('sector').eq('id', tenantId).maybeSingle();
   return data?.sector || 'physiotherapy';
 }
 
-/** Kassenbuch-Saldo eines Rezepts: was ist tatsaechlich gebucht? */
+/**
+ * Kassenbuch-Saldo eines Rezepts: was ist tatsaechlich gebucht?
+ * @param {string} tenantId
+ * @param {string} rxId
+ */
 async function saldoFuerRezept(tenantId, rxId) {
   const { data, error } = await supabase
     .from('belegliste')
@@ -91,20 +105,21 @@ async function saldoFuerRezept(tenantId, rxId) {
  * die ersten `einheiten` erbrachten Sitzungen (nach Datum sortiert) tragen ihr
  * eigenes Datum; fehlen Sitzungsdaten ganz (kein Join oder aeltere Verordnung),
  * faellt jede Einheit wie bisher auf das Ausstellungsdatum zurueck.
+ * @param {{ rx: any, lead: any, sector: string, einheiten: number }} p
  */
 function betragFuerEinheiten({ rx, lead, sector, einheiten }) {
   const bereich = sector === 'podologie' ? 'podologie' : 'physiotherapie';
-  const abrechnungscode = LEGS_BY_FACHBEREICH[sector]
+  const abrechnungscode = (/** @type {Record<string, any>} */ (LEGS_BY_FACHBEREICH))[sector]
     ? abrechnungscodeAusLegs(legsFuer(sector))
     : abrechnungscodeAusLegs(legsFuer('physiotherapy'));
 
   const hasItems = Array.isArray(rx.heilmittel_items) &&
     rx.heilmittel_items.length > 0 &&
-    rx.heilmittel_items.some(it => it && typeof it === 'object' && it.einheiten != null);
+    rx.heilmittel_items.some((/** @type {any} */ it) => it && typeof it === 'object' && it.einheiten != null);
 
   const doneSessions = (rx.prescription_sessions || [])
-    .filter(s => s.status === 'done' && s.done_at)
-    .sort((a, b) => (a.done_at || '').localeCompare(b.done_at || ''));
+    .filter((/** @type {any} */ s) => s.status === 'done' && s.done_at)
+    .sort((/** @type {any} */ a, /** @type {any} */ b) => (a.done_at || '').localeCompare(b.done_at || ''));
 
   const sessions = Array.from({ length: Math.max(0, einheiten) }, (_, i) => {
     let dateStr = rx.ausstellungsdatum || new Date().toISOString().slice(0, 10);
@@ -145,14 +160,14 @@ function betragFuerEinheiten({ rx, lead, sector, einheiten }) {
     };
   });
 
-  const totals = calcAbrechnungsfallZuzahlung({
+  const totals = /** @type {{ gesZuzahlung?: number }} */ (/** @type {unknown} */ (calcAbrechnungsfallZuzahlung({
     sessions,
     patient: { geburtsdatum: lead?.geburtsdatum, befreit_im_jahr: rx.zuzahlung_befreit },
     behandlungsende: new Date(),
     // Wie in abrechnung.routes.js: die 10-€-Pauschale haengt an der Verordnung,
     // nicht an der einzelnen Position.
     verordnung_zuzahlungsfrei: !!rx.zuzahlung_befreit,
-  });
+  })));
 
   return { betrag: r2(totals.gesZuzahlung ?? 0), preisProEinheit: sessions[0]?.preis_eur ?? 0 };
 }
@@ -160,7 +175,7 @@ function betragFuerEinheiten({ rx, lead, sector, einheiten }) {
 // ---------------------------------------------------------------------------
 // POST /zuzahlung/korrektur
 // ---------------------------------------------------------------------------
-router.post('/zuzahlung/korrektur', async (req, res) => {
+router.post('/zuzahlung/korrektur', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
@@ -190,7 +205,7 @@ router.post('/zuzahlung/korrektur', async (req, res) => {
       : pruefeEingabe({ einheiten, betrag: betragVorgabe, grund, grundCode: grund_code });
     if (!eingabe.ok) return res.status(400).json({ error: eingabe.fehler });
 
-    const { data: rx, error: rxErr } = await supabase
+    const { data: rxRaw, error: rxErr } = await supabase
       .from('prescriptions')
       .select('id, owner_id, patient_id, business_id, heilmittel_position, heilmittel_items, ausstellungsdatum, '
         + 'anzahl_einheiten, zuzahlung_eur, zuzahlung_befreit, abrechnung_status, belegnummer, '
@@ -199,11 +214,13 @@ router.post('/zuzahlung/korrektur', async (req, res) => {
       .eq('id', prescription_id)
       .maybeSingle();
     if (rxErr) return res.status(500).json({ error: rxErr.message });
-    if (!rx) return res.status(404).json({ error: 'Rezept nicht gefunden.' });
+    if (!rxRaw) return res.status(404).json({ error: 'Rezept nicht gefunden.' });
+    /** @type {any} */
+    const rx = rxRaw;
     if (rx.owner_id !== auth.tenantId) return res.status(403).json({ error: 'Kein Zugriff.' });
 
     const riegel = korrekturErlaubt(rx);
-    if (!riegel.erlaubt) return res.status(riegel.status).json({ error: riegel.grund });
+    if (!riegel.erlaubt) return res.status(riegel.status ?? 409).json({ error: riegel.grund });
 
     const sector = await sectorFuer(auth.tenantId, auth.profile.sector);
 
@@ -217,7 +234,7 @@ router.post('/zuzahlung/korrektur', async (req, res) => {
     if (betragVorgabe != null) {
       neuBetrag = r2(betragVorgabe);
     } else {
-      neuBetrag = gerechnet.betrag;
+      neuBetrag = /** @type {{ betrag: number, preisProEinheit: number }} */ (gerechnet).betrag;
     }
 
     const saldo = await saldoFuerRezept(auth.tenantId, rx.id);
@@ -309,14 +326,14 @@ router.post('/zuzahlung/korrektur', async (req, res) => {
     });
   } catch (e) {
     console.error('[zuzahlung/korrektur]', e);
-    return res.status(500).json({ error: 'Server-Fehler: ' + e.message });
+    return res.status(500).json({ error: 'Server-Fehler: ' + (e instanceof Error ? e.message : String(e)) });
   }
 });
 
 // ---------------------------------------------------------------------------
 // GET /zuzahlung/guthaben?patient_id=…
 // ---------------------------------------------------------------------------
-router.get('/zuzahlung/guthaben', async (req, res) => {
+router.get('/zuzahlung/guthaben', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
@@ -333,18 +350,18 @@ router.get('/zuzahlung/guthaben', async (req, res) => {
     const { data, error } = await q;
     if (error) return res.status(500).json({ error: error.message });
 
-    const summe = r2((data || []).reduce((s, g) => s + Number(g.rest_eur || 0), 0));
+    const summe = r2((data || []).reduce((/** @type {number} */ s, /** @type {any} */ g) => s + Number(g.rest_eur || 0), 0));
     return res.json({ guthaben: data || [], summe_eur: summe });
   } catch (e) {
     console.error('[zuzahlung/guthaben]', e);
-    return res.status(500).json({ error: 'Server-Fehler: ' + e.message });
+    return res.status(500).json({ error: 'Server-Fehler: ' + (e instanceof Error ? e.message : String(e)) });
   }
 });
 
 // ---------------------------------------------------------------------------
 // POST /zuzahlung/guthaben/:id/verrechnen
 // ---------------------------------------------------------------------------
-router.post('/zuzahlung/guthaben/:id/verrechnen', async (req, res) => {
+router.post('/zuzahlung/guthaben/:id/verrechnen', async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
@@ -364,14 +381,16 @@ router.post('/zuzahlung/guthaben/:id/verrechnen', async (req, res) => {
       return res.status(409).json({ error: 'Dieses Guthaben ist bereits aufgebraucht.' });
     }
 
-    const { data: ziel, error: zErr } = await supabase
+    const { data: zielRaw, error: zErr } = await supabase
       .from('prescriptions')
       .select('id, owner_id, patient_id, business_id, anzahl_einheiten, zuzahlung_eur, '
         + 'zuzahlung_befreit, abrechnung_status, belegnummer')
       .eq('id', prescription_id)
       .maybeSingle();
     if (zErr) return res.status(500).json({ error: zErr.message });
-    if (!ziel) return res.status(404).json({ error: 'Zielverordnung nicht gefunden.' });
+    if (!zielRaw) return res.status(404).json({ error: 'Zielverordnung nicht gefunden.' });
+    /** @type {any} */
+    const ziel = zielRaw;
     if (ziel.owner_id !== auth.tenantId) return res.status(403).json({ error: 'Kein Zugriff.' });
 
     // Das Guthaben gehoert dem Patienten. Es auf einen anderen zu buchen waere
@@ -384,7 +403,7 @@ router.post('/zuzahlung/guthaben/:id/verrechnen', async (req, res) => {
     }
 
     const riegel = korrekturErlaubt(ziel);
-    if (!riegel.erlaubt) return res.status(riegel.status).json({ error: riegel.grund });
+    if (!riegel.erlaubt) return res.status(riegel.status ?? 409).json({ error: riegel.grund });
 
     const plan = verrechnungsBetrag({ rest: gh.rest_eur, zielSoll: ziel.zuzahlung_eur });
     if (plan.betrag <= 0) {
@@ -443,7 +462,7 @@ router.post('/zuzahlung/guthaben/:id/verrechnen', async (req, res) => {
     });
   } catch (e) {
     console.error('[zuzahlung/guthaben/verrechnen]', e);
-    return res.status(500).json({ error: 'Server-Fehler: ' + e.message });
+    return res.status(500).json({ error: 'Server-Fehler: ' + (e instanceof Error ? e.message : String(e)) });
   }
 });
 

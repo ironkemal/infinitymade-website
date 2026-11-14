@@ -16,6 +16,7 @@ test('queryTokenErlaubt: only permits GET on whitelisted OAuth paths', () => {
 
 test('requireAuth: safe catch logging logs fixed code AUTH_CHECK_FAILED without leaking raw errors', async () => {
   const originalConsoleError = console.error;
+  /** @type {string[]} */
   const loggedErrors = [];
   console.error = (...args) => loggedErrors.push(args.join(' '));
 
@@ -23,6 +24,7 @@ test('requireAuth: safe catch logging logs fixed code AUTH_CHECK_FAILED without 
     // Malformed request where accessing headers throws an error containing sensitive details
     const sensitiveMessage = 'SENSITIVE_INTERNAL_DATABASE_OR_TOKEN_LEAK_SECRET';
     const explosiveReq = {
+      /** @returns {{ authorization?: string }} */
       get headers() {
         const err = new Error(sensitiveMessage);
         err.cause = 'Sensitive token cause';
@@ -30,13 +32,17 @@ test('requireAuth: safe catch logging logs fixed code AUTH_CHECK_FAILED without 
       }
     };
 
+    /** @type {number | null} */
     let responseStatus = null;
+    /** @type {unknown} */
     let responseJson = null;
 
     const res = {
+      /** @param {number} s */
       status(s) {
         responseStatus = s;
         return {
+          /** @param {unknown} j */
           json(j) {
             responseJson = j;
           }

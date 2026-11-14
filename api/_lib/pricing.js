@@ -5,6 +5,7 @@
 
 const USD_TO_EUR = 0.92;
 
+/** @type {Record<string, { input: number, output: number }>} */
 const MODEL_PRICES_USD_PER_MTOK = {
   // OpenAI
   'gpt-4o':            { input: 2.50,  output: 10.00 },
@@ -24,13 +25,20 @@ const MODEL_PRICES_USD_PER_MTOK = {
 
 // Strip the dated suffix some providers append, e.g.
 // "gpt-4.1-mini-2025-04-14" -> "gpt-4.1-mini"
+/** @param {unknown} model */
 function normalizeModel(model) {
   if (!model) return null;
   return String(model).toLowerCase().replace(/-\d{4}-\d{2}-\d{2}$/, '');
 }
 
+/**
+ * @param {unknown} model
+ * @param {number} [promptTokens]
+ * @param {number} [completionTokens]
+ */
 export function aiCallCostEUR(model, promptTokens, completionTokens) {
-  const prices = MODEL_PRICES_USD_PER_MTOK[normalizeModel(model)];
+  const normalized = normalizeModel(model);
+  const prices = normalized ? MODEL_PRICES_USD_PER_MTOK[normalized] : undefined;
   if (!prices) return 0;
   const usd = ((promptTokens || 0) / 1_000_000) * prices.input
             + ((completionTokens || 0) / 1_000_000) * prices.output;
@@ -39,12 +47,14 @@ export function aiCallCostEUR(model, promptTokens, completionTokens) {
 
 // Plan list price in EUR per month. Yearly subscriptions still report the
 // monthly-equivalent here (close enough for an MRR estimate).
+/** @type {Record<string, number>} */
 const PLAN_PRICE_EUR = {
   starter:      29,
   professional: 49,
   klinik:       99,
 };
 
+/** @param {string} plan */
 export function planMonthlyEUR(plan) {
   return PLAN_PRICE_EUR[plan] || 0;
 }

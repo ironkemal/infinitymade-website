@@ -5,9 +5,13 @@ import { validateBelegEntry, generateCsvString } from './belegliste/helper.js';
 import assert from 'node:assert/strict';
 
 let pass = 0, fail = 0;
+/**
+ * @param {string} name
+ * @param {() => void} fn
+ */
 function test(name, fn) {
   try { fn(); console.log('  ok   ' + name); pass++; }
-  catch (e) { console.log('  FAIL ' + name + '\n       ' + e.message); fail++; }
+  catch (e) { console.log('  FAIL ' + name + '\n       ' + (e instanceof Error ? e.message : String(e))); fail++; }
 }
 
 console.log('GoBD Belegliste validation checks');
@@ -24,7 +28,7 @@ test('validateBelegEntry: allows positive rechnung', () => {
 test('validateBelegEntry: lehnt neue barverkauf-Belege ab', () => {
   const res = validateBelegEntry('barverkauf', 25.50);
   assert.equal(res.isValid, false);
-  assert.ok(res.error.includes('Ungültiger oder fehlender Typ'));
+  assert.ok((res.error ?? '').includes('Ungültiger oder fehlender Typ'));
 });
 
 test('validateBelegEntry: allows positive zuzahlung', () => {
@@ -40,13 +44,13 @@ test('validateBelegEntry: allows negative storno', () => {
 test('validateBelegEntry: rejects negative zuzahlung', () => {
   const res = validateBelegEntry('zuzahlung', -10.00);
   assert.equal(res.isValid, false);
-  assert.ok(res.error.includes('positiven Betrag'));
+  assert.ok((res.error ?? '').includes('positiven Betrag'));
 });
 
 test('validateBelegEntry: rejects positive storno', () => {
   const res = validateBelegEntry('storno', 15.00);
   assert.equal(res.isValid, false);
-  assert.ok(res.error.includes('negativen Betrag'));
+  assert.ok((res.error ?? '').includes('negativen Betrag'));
 });
 
 test('validateBelegEntry: rejects zero amount', () => {
@@ -57,11 +61,11 @@ test('validateBelegEntry: rejects zero amount', () => {
 test('validateBelegEntry: rejects unknown type', () => {
   const res = validateBelegEntry('illegal_type', 10.00);
   assert.equal(res.isValid, false);
-  assert.ok(res.error.includes('Ungültiger oder fehlender Typ'));
+  assert.ok((res.error ?? '').includes('Ungültiger oder fehlender Typ'));
 });
 
 test('validateBelegEntry: rejects non-numeric amount', () => {
-  const res = validateBelegEntry('zuzahlung', 'not-a-number');
+  const res = validateBelegEntry('zuzahlung', /** @type {number} */ (/** @type {unknown} */ ('not-a-number')));
   assert.equal(res.isValid, false);
 });
 
@@ -80,7 +84,7 @@ test('validateBelegEntry: Zahlart bleibt optional (Altbelege vor v32)', () => {
 test('validateBelegEntry: weist unbekannte Zahlart ab', () => {
   const res = validateBelegEntry('zuzahlung', 13.50, 'bitcoin');
   assert.equal(res.isValid, false);
-  assert.ok(res.error.includes('Ungültige Zahlart'));
+  assert.ok((res.error ?? '').includes('Ungültige Zahlart'));
 });
 
 console.log('\nGoBD Belegliste CSV formatting checks');

@@ -11,8 +11,12 @@ process.env.SUPABASE_SERVICE_ROLE_KEY ||= 'synthetic-test-key';
 const { erinnerungsLauf } = await import('./terminerinnerung-job.js');
 const { fakeDb, basis, jetzt, ENV } = await import('./terminerinnerung-testdaten.js');
 
+/** @typedef {import('@supabase/supabase-js').SupabaseClient} SupabaseClient */
+/** @typedef {typeof import('./mail.js').createSMTPTransport} TransportFabrik */
+
 /** Mini-SMTP-Server. modus: 'ok' | 'greylist' (450 bei RCPT) | 'haengt_nach_daten' (nimmt Text, antwortet nie). */
 async function smtpServer(modus = 'ok') {
+  /** @type {string[]} */
   const empfangen = []; // vollstaendig uebertragene Nachrichten (DATA ... .)
   const state = { modus };
   const server = net.createServer(sock => {
@@ -29,7 +33,7 @@ async function smtpServer(modus = 'ok') {
         return;
       }
       zeilenpuffer += d.toString('latin1');
-      const zeilen = zeilenpuffer.split('\r\n'); zeilenpuffer = zeilen.pop();
+      const zeilen = zeilenpuffer.split('\r\n'); zeilenpuffer = zeilen.pop() ?? '';
       for (const z of zeilen) {
         const c = z.toUpperCase();
         if (c.startsWith('EHLO') || c.startsWith('HELO') || c.startsWith('MAIL')) sock.write('250 ok\r\n');
@@ -39,18 +43,47 @@ async function smtpServer(modus = 'ok') {
       }
     });
   });
-  await new Promise(r => server.listen(0, '127.0.0.1', r));
-  return { port: server.address().port, empfangen, state, close: () => new Promise(r => { server.closeAllConnections?.(); server.close(r); }) };
+  await new Promise(resolve => server.listen(0, '127.0.0.1', () => resolve(undefined)));
+  const addr = server.address();
+  if (!addr || typeof addr === 'string') throw new Error('SMTP-Testserver-Adresse fehlt');
+  return {
+    port: addr.port,
+    empfangen,
+    state,
+    close: () => new Promise(resolve => {
+      /** @type {net.Server & { closeAllConnections?: () => void }} */ (server).closeAllConnections?.();
+      server.close(() => resolve(undefined));
+    }),
+  };
 }
 
-const transportFuer = port => () => nodemailer.createTransport({
+/**
+ * @param {number} port
+ * @returns {TransportFabrik}
+ */
+const transportFuer = port => () => /** @type {ReturnType<TransportFabrik>} */ (/** @type {unknown} */ (nodemailer.createTransport({
   host: '127.0.0.1', port, secure: false, ignoreTLS: true, connectionTimeout: 800, greetingTimeout: 800, socketTimeout: 800,
-});
+})));
 
+/**
+ * @param {ReturnType<typeof fakeDb>} db
+ * @param {number} port
+ * @param {Record<string, any>} [extra]
+ */
 function lauf(db, port, extra = {}) {
+  /** @type {string[]} */
   const logs = [];
-  const log = { log: (...a) => logs.push(a.join(' ')), error: (...a) => logs.push(a.join(' ')), warn: (...a) => logs.push(a.join(' ')) };
-  return erinnerungsLauf(db, { jetzt, env: ENV, kutu: true, transportFabrik: transportFuer(port), log, ...extra }).then(r => ({ r, logs }));
+  /** @type {Pick<Console, 'log' | 'error' | 'warn'>} */
+  const log = {
+    /** @param {...unknown} a */
+    log: (...a) => logs.push(a.join(' ')),
+    /** @param {...unknown} a */
+    error: (...a) => logs.push(a.join(' ')),
+    /** @param {...unknown} a */
+    warn: (...a) => logs.push(a.join(' ')),
+  };
+  const client = /** @type {SupabaseClient} */ (/** @type {unknown} */ (db));
+  return erinnerungsLauf(client, { jetzt, env: ENV, kutu: true, transportFabrik: transportFuer(port), log, ...extra }).then(r => ({ r, logs }));
 }
 
 test('SMTP real: Nachricht kommt vollstaendig an (Empfaenger, Betreff, Text), Protokoll = gesendet, zweiter Lauf sendet nichts', async () => {

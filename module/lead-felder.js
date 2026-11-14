@@ -9,24 +9,33 @@
  * (Altbestand).
  */
 
-// Spalte gewinnt; Leerstring/null faellt auf metadata zurueck.
+/**
+ * Spalte gewinnt; Leerstring/null faellt auf metadata zurueck.
+ * @param {{ geburtsdatum?: string|null, metadata?: Record<string, any>|null }|null|undefined} lead
+ * @returns {string|null}
+ */
 export function leadGeburtsdatum(lead) {
   return lead?.geburtsdatum || lead?.metadata?.geburtsdatum || null;
 }
 
-// Die Spalte hat DEFAULT false: alte Zeilen tragen false in der Spalte und
-// true in metadata. Deshalb reicht ein true aus einer der beiden Quellen.
+/**
+ * Die Spalte hat DEFAULT false: alte Zeilen tragen false in der Spalte und
+ * true in metadata. Deshalb reicht ein true aus einer der beiden Quellen.
+ * @param {{ hausbesuch?: boolean|null, metadata?: Record<string, any>|null }|null|undefined} lead
+ * @returns {boolean}
+ */
 export function leadHausbesuch(lead) {
   return lead?.hausbesuch === true || lead?.metadata?.hausbesuch === true;
 }
 
 /**
  * Fuehrt metadata beim Speichern zusammen, statt es neu aufzubauen.
- * bestehend: aktuelle lead.metadata (oder null)
- * formAnteil: Schluessel, die das Formular verwaltet; null/undefined/'' = leeren
- * entferne: Schluessel, die jetzt in einer Spalte stehen (Altlast loeschen)
+ * @param {Record<string, any>|null|undefined} bestehend  aktuelle lead.metadata (oder null)
+ * @param {Record<string, any>|null|undefined} formAnteil Schluessel, die das Formular verwaltet; null/undefined/'' = leeren
+ * @param {string[]} [entferne] Schluessel, die jetzt in einer Spalte stehen (Altlast loeschen)
  * Unbekannte Schluessel (z. B. OCR-Felder) bleiben erhalten.
  * Gibt null zurueck, wenn nichts uebrig bleibt.
+ * @returns {Record<string, any>|null}
  */
 export function leadMetadataZusammenfuehren(bestehend, formAnteil, entferne = []) {
   const out = { ...(bestehend && typeof bestehend === 'object' ? bestehend : {}) };

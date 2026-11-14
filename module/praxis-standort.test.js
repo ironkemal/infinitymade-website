@@ -31,7 +31,8 @@ test('standortFuerCheckin: Schalter aus fragt nie; an + Fehler → ohne Standort
 });
 
 test('gpsSchalterLesen: liest Owner-Profil, Fehler → false; Hinweistext', async () => {
-  const sb = (ich, owner) => ({ from: () => { let id; const k = { select: () => k, eq: (_, v) => { id = v; return k; }, maybeSingle: async () => ({ data: id === 'emp' ? ich : owner }) }; return k; } });
+  /** @param {any} ich @param {any} owner */
+  const sb = (ich, owner) => ({ from: () => { /** @type {{ id: any }} */ const st = { id: null }; const k = { select: () => k, eq: (/** @type {string} */ _, /** @type {any} */ v) => { st.id = v; return k; }, maybeSingle: async () => ({ data: st.id === 'emp' ? ich : owner }) }; return k; } });
   assert.equal(await gpsSchalterLesen(sb({ role: 'employee', owner_id: 'own' }, { gps_checkin_pruefen: true }), 'emp'), true);
   assert.equal(await gpsSchalterLesen(sb({ role: 'employee', owner_id: 'own' }, { gps_checkin_pruefen: false }), 'emp'), false);
   assert.equal(await gpsSchalterLesen({ from: () => { throw new Error('x'); } }, 'emp'), false);

@@ -2,18 +2,21 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { leadAusAnfrage } from './lead-aus-anfrage.js';
 
+/** @param {any[]} leads */
 function fake(leads) {
+  /** @type {any[]} */
   const inserts = [];
   return {
     inserts,
     from() {
+      /** @type {Array<(r: any) => boolean>} */
       const f = [];
       const q = {
         select: () => q, limit: () => q,
-        eq: (k, v) => { f.push(r => r[k] === v); return q; },
-        ilike: (k, v) => { const s = v.replace(/\\/g, '').toLowerCase(); f.push(r => String(r[k]).toLowerCase() === s); return q; },
-        insert: (row) => { inserts.push(row); const neu = { id: 'neu', ...row }; leads.push(neu); return { select: () => ({ single: async () => ({ data: { id: 'neu' }, error: null }) }) }; },
-        then: (res) => Promise.resolve({ data: leads.filter(r => f.every(x => x(r))).map(r => ({ id: r.id })), error: null }).then(res),
+        eq: (/** @type {string} */ k, /** @type {any} */ v) => { f.push(r => r[k] === v); return q; },
+        ilike: (/** @type {string} */ k, /** @type {string} */ v) => { const s = v.replace(/\\/g, '').toLowerCase(); f.push(r => String(r[k]).toLowerCase() === s); return q; },
+        insert: (/** @type {any} */ row) => { inserts.push(row); const neu = { id: 'neu', ...row }; leads.push(neu); return { select: () => ({ single: async () => ({ data: { id: 'neu' }, error: null }) }) }; },
+        then: (/** @type {any} */ res) => Promise.resolve({ data: leads.filter(r => f.every(x => x(r))).map(r => ({ id: r.id })), error: null }).then(res),
       };
       return q;
     },
@@ -49,7 +52,7 @@ test('findeLeadNachNameGeburt: ohne Vornamen kein Treffer, Platzhalter wirken ni
   const leads = [{ id: 'x', owner_id: 'o', first_name: 'Anna', last_name: 'Muster', geburtsdatum: '1950-01-01' }];
   assert.equal(await findeLeadNachNameGeburt(fake(leads), { ownerId: 'o', vorname: '', nachname: 'Muster', geburtsdatum: '1950-01-01' }), null);
   assert.equal(await findeLeadNachNameGeburt(fake(leads), { ownerId: 'o', vorname: '%', nachname: 'Muster', geburtsdatum: '1950-01-01' }), null);
-  assert.equal((await findeLeadNachNameGeburt(fake(leads), { ownerId: 'o', vorname: 'anna', nachname: 'muster', geburtsdatum: '1950-01-01' })).id, 'x');
+  assert.equal((/** @type {any} */ (await findeLeadNachNameGeburt(fake(leads), { ownerId: 'o', vorname: 'anna', nachname: 'muster', geburtsdatum: '1950-01-01' }))).id, 'x');
   const zwei = [...leads, { ...leads[0], id: 'y' }];
   assert.equal(await findeLeadNachNameGeburt(fake(zwei), { ownerId: 'o', vorname: 'Anna', nachname: 'Muster', geburtsdatum: '1950-01-01' }), 'mehrdeutig');
 });

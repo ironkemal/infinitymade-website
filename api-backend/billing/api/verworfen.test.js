@@ -10,11 +10,16 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { verworfeneNummerFesthalten, formatiereVerwerfungsgrund } from './verworfen.js';
 
+/**
+ * @param {{ onInsert?: (payload: any) => void, error?: any, throws?: boolean }} p
+ */
 function erstelleMockDb({ onInsert, error = null, throws = false }) {
   return {
+    /** @param {string} table */
     from(table) {
       assert.equal(table, 'abrechnung');
       return {
+        /** @param {any} payload */
         async insert(payload) {
           if (onInsert) onInsert(payload);
           if (throws) throw new Error('DB-Netzwerkfehler');
@@ -58,6 +63,7 @@ test('0c. Parameterloser Aufruf wirft nicht', async () => {
 });
 
 test('1. Erfolgsfall schreibt die erwarteten Felder', async () => {
+  /** @type {any} */
   let geschriebeneZeile = null;
   const mockDb = erstelleMockDb({
     onInsert(payload) {
@@ -65,6 +71,7 @@ test('1. Erfolgsfall schreibt die erwarteten Felder', async () => {
     },
   });
 
+  /** @type {Error & { preflight?: any }} */
   const pfError = new Error('Preflight failed');
   pfError.preflight = {
     ok: false,
@@ -146,32 +153,33 @@ test('3. Fehlende Pflichtfelder führen nicht zum Wurf', async () => {
   const mockDb = erstelleMockDb({});
 
   // Gar keine Argumente
-  let res = await verworfeneNummerFesthalten({});
+  let res = await verworfeneNummerFesthalten(/** @type {any} */ ({}));
   assert.equal(res, null);
 
   // Ohne DB-Client
-  res = await verworfeneNummerFesthalten({
+  res = await verworfeneNummerFesthalten(/** @type {any} */ ({
     ownerId: 'owner-1',
     kostentraegerIk: '108018007',
-  });
+  }));
   assert.equal(res, null);
 
   // Ohne ownerId
-  res = await verworfeneNummerFesthalten({
+  res = await verworfeneNummerFesthalten(/** @type {any} */ ({
     db: mockDb,
     kostentraegerIk: '108018007',
-  });
+  }));
   assert.equal(res, null);
 
   // Ohne kostentraegerIk
-  res = await verworfeneNummerFesthalten({
+  res = await verworfeneNummerFesthalten(/** @type {any} */ ({
     db: mockDb,
     ownerId: 'owner-1',
-  });
+  }));
   assert.equal(res, null);
 });
 
 test('4. verwerfungsgrund enthält keine durchgereichte Freitext-Patientenangabe', async () => {
+  /** @type {any} */
   let geschriebeneZeile = null;
   const mockDb = erstelleMockDb({
     onInsert(payload) {
@@ -180,6 +188,7 @@ test('4. verwerfungsgrund enthält keine durchgereichte Freitext-Patientenangabe
   });
 
   // Preflight-Fehler mit vertraulichen Patientendaten im Fehlertext
+  /** @type {Error & { preflight?: any }} */
   const pfError = new Error(
     'Preflight failed (2 errors): [PFLICHT_NAME] prescriptions[0].patient.name: Max Mustermann; [PFLICHT_KVNR] prescriptions[0].patient.kvnr: X123456789 ungültig'
   );

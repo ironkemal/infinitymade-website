@@ -11,12 +11,17 @@ import { execSync } from 'node:child_process';
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
+/** @param {string} baselinePfad */
 export function leseBaseline(baselinePfad) {
   if (!existsSync(baselinePfad)) return new Set();
   const inhalt = readFileSync(baselinePfad, 'utf8');
   return new Set(inhalt.split('\n').map(z => z.trim()).filter(Boolean));
 }
 
+/**
+ * @param {string} tscOutput
+ * @param {((normDatei: string) => boolean) | null} [dateiFilter]
+ */
 export function parseNameErrors(tscOutput, dateiFilter = null) {
   const fehler = [];
   const zeilen = (tscOutput || '').split('\n');
@@ -41,10 +46,17 @@ export function parseNameErrors(tscOutput, dateiFilter = null) {
   return fehler;
 }
 
+/**
+ * @template {{ schluessel: string, meldung: string }} T
+ * @param {T[]} fehler
+ * @param {Set<string>} baselineSet
+ * @returns {T[]}
+ */
 export function filterGegenBaseline(fehler, baselineSet) {
   return fehler.filter(f => !baselineSet.has(f.schluessel) && !baselineSet.has(f.meldung));
 }
 
+/** @param {string[]} [args] */
 export function ermittleZuPruefendeDateien(args = []) {
   if (args.includes('--alle')) {
     const moduleDateien = readdirSync('module')
@@ -70,6 +82,7 @@ export function ermittleZuPruefendeDateien(args = []) {
   }
 }
 
+/** @param {string[]} dateien */
 export function fuehreTscAus(dateien) {
   if (!dateien.length) return '';
   const alle = ['module/globals.d.ts', ...dateien];
@@ -78,7 +91,7 @@ export function fuehreTscAus(dateien) {
   try {
     execSync(cmd, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'], maxBuffer: 15 * 1024 * 1024 });
     return '';
-  } catch (e) {
+  } catch (/** @type {any} */ e) {
     return (e.stdout || '') + '\n' + (e.stderr || '');
   }
 }

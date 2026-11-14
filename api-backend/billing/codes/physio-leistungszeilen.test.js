@@ -3,6 +3,10 @@ import assert from 'node:assert/strict';
 import { physioLeistungszeilen } from './physio-leistungszeilen.js';
 
 const rx = { id: 'rx-1', heilmittel_position: 'X0501', anzahl_einheiten: 6 };
+/**
+ * @param {string} id
+ * @param {Record<string, unknown>} [extra]
+ */
 const s = (id, extra = {}) => ({ id, done_at: `2026-11-0${id}T09:00:00Z`, ...extra });
 
 test('ausgewähltes Multi-Heilmittel ohne Position darf nicht Hauptposition abrechnen', () => {
@@ -10,12 +14,12 @@ test('ausgewähltes Multi-Heilmittel ohne Position darf nicht Hauptposition abre
     { code: 'X0501', einheiten: 2 }, { bezeichnung: 'MT', einheiten: 2 },
   ] };
   assert.throws(() => physioLeistungszeilen(r, [s('1', { heilmittel_index: 1 })]),
-    e => e.status === 422 && e.code === 'HEILMITTEL_POSITION_FEHLT');
+    /** @param {unknown} e */ e => typeof e === 'object' && e !== null && 'status' in e && e.status === 422 && 'code' in e && e.code === 'HEILMITTEL_POSITION_FEHLT');
 });
 
 test('Einzel-Heilmittel: zusätzliche Sitzung nach ausgeschöpfter Menge sperrt', () => {
   assert.throws(() => physioLeistungszeilen({ ...rx, anzahl_einheiten: 1 }, [s('1'), s('2')]),
-    e => e.status === 422 && e.code === 'HEILMITTEL_UEBER_MENGE');
+    /** @param {unknown} e */ e => typeof e === 'object' && e !== null && 'status' in e && e.status === 422 && 'code' in e && e.code === 'HEILMITTEL_UEBER_MENGE');
 });
 
 test('nur vorrangig: eine Zeile je Sitzung, Anzahl 1', () => {
@@ -37,13 +41,13 @@ test('ergänzend: eigene Zeile am selben Tag, nie doppelt', () => {
 });
 
 test('ergänzend ohne Position → 422', () => {
-  assert.throws(() => physioLeistungszeilen(rx, [s('1', { ergaenzend_erbracht: true })]), e => e.code === 'ERGAENZEND_POSITION_FEHLT' && e.status === 422);
+  assert.throws(() => physioLeistungszeilen(rx, [s('1', { ergaenzend_erbracht: true })]), /** @param {unknown} e */ e => typeof e === 'object' && e !== null && 'code' in e && e.code === 'ERGAENZEND_POSITION_FEHLT' && 'status' in e && e.status === 422);
 });
 
 test('ergänzend über verordneter Menge → 422', () => {
   const r = { ...rx, ergaenzend_position: 'X1302', ergaenzend_einheiten: 1 };
   assert.throws(() => physioLeistungszeilen(r, [s('1', { ergaenzend_erbracht: true }), s('2', { ergaenzend_erbracht: true })]),
-    e => e.code === 'ERGAENZEND_UEBER_MENGE');
+    /** @param {unknown} e */ e => typeof e === 'object' && e !== null && 'code' in e && e.code === 'ERGAENZEND_UEBER_MENGE');
 });
 
 test('Hausbesuch: Pauschale nur an Tagen mit Hausbesuch-Termin, Ort entscheidet', () => {
@@ -54,7 +58,9 @@ test('Hausbesuch: Pauschale nur an Tagen mit Hausbesuch-Termin, Ort entscheidet'
 
 test('Hausbesuch ohne Ort (Altbestand) → häuslich X9950', () => {
   const z = physioLeistungszeilen({ ...rx, hausbesuch: true }, [s('1', { bookings: { hausbesuch: true } })]);
-  assert.equal(z.find(x => x.art === 'hausbesuch').code, 'X9950');
+  const hb = z.find(x => x.art === 'hausbesuch');
+  assert.ok(hb);
+  assert.equal(hb.code, 'X9950');
 });
 
 test('Hausbesuch-Termin, Verordnung ohne „Hausbesuch: ja" → keine Pauschale', () => {
@@ -135,7 +141,7 @@ test('Multi-Heilmittel: HEILMITTEL_UEBER_MENGE wenn erbrachte > verordnet für e
 
   assert.throws(
     () => physioLeistungszeilen(multiRx, sessions),
-    e => e.code === 'HEILMITTEL_UEBER_MENGE' && e.status === 422
+    /** @param {unknown} e */ e => typeof e === 'object' && e !== null && 'code' in e && e.code === 'HEILMITTEL_UEBER_MENGE' && 'status' in e && e.status === 422
   );
 });
 
@@ -153,6 +159,6 @@ test('Multi-Heilmittel: HEILMITTEL_INDEX_UNBEKANNT wenn Sitzungsindex außerhalb
 
   assert.throws(
     () => physioLeistungszeilen(multiRx, sessions),
-    e => e.code === 'HEILMITTEL_INDEX_UNBEKANNT' && e.status === 422
+    /** @param {unknown} e */ e => typeof e === 'object' && e !== null && 'code' in e && e.code === 'HEILMITTEL_INDEX_UNBEKANNT' && 'status' in e && e.status === 422
   );
 });

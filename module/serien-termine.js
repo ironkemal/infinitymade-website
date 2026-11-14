@@ -27,13 +27,13 @@
 
 const WOCHENTAG_KURZ = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 
-export function isStrictInteger(v) {
+export function isStrictInteger(/** @type {any} */ v) {
   if (typeof v === 'number') return Number.isInteger(v);
   if (typeof v === 'string') return /^\d+$/.test(v.trim());
   return false;
 }
 
-export function isValidCalendarDate(ds) {
+export function isValidCalendarDate(/** @type {any} */ ds) {
   if (typeof ds !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(ds)) return false;
   const d = new Date(ds + 'T12:00:00Z');
   if (Number.isNaN(d.getTime())) return false;
@@ -41,7 +41,7 @@ export function isValidCalendarDate(ds) {
 }
 
 /** `YYYY-MM-DD` plus n Tage, wieder als `YYYY-MM-DD`. */
-export function plusTage(ds, tage) {
+export function plusTage(/** @type {string} */ ds, /** @type {number} */ tage) {
   const d = new Date(ds + 'T12:00:00Z');
   d.setUTCDate(d.getUTCDate() + tage);
   return d.toISOString().substring(0, 10);
@@ -55,20 +55,16 @@ export function plusTage(ds, tage) {
  * Zuordnung Tag→Wochentag muss trotzdem über Berlin laufen, sonst kippt sie an
  * den Rändern der Sommerzeit.
  */
-export function wochentag(ds) {
+export function wochentag(/** @type {string} */ ds) {
   const probe = new Date(ds + 'T12:00:00Z');
-  return WOCHENTAG_KURZ[new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Berlin', weekday: 'short' }).format(probe)];
+  const kurz = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Berlin', weekday: 'short' }).format(probe);
+  return (/** @type {Record<string, number>} */ (WOCHENTAG_KURZ))[kurz];
 }
 
 /**
  * Die Termintage einer Serie.
  *
- * @param {object} args
- * @param {string} args.startDatum    `YYYY-MM-DD`
- * @param {number} args.anzahl        wie viele Termine entstehen sollen
- * @param {number} args.intervalDays  Abstand der Wochenblöcke in Tagen (7, 14, …)
- * @param {boolean} args.taeglich     `recurrence === 'daily'` — Schrittweite 1 Tag
- * @param {number[]} args.wochentage  0=So … 6=Sa; leer → der Wochentag des Starts
+ * @param {Record<string, any>} [args]
  * @returns {string[]} `YYYY-MM-DD`, aufsteigend
  */
 export function serienDaten({
@@ -87,7 +83,7 @@ export function serienDaten({
 
   const rawCount = anzahl ?? count;
   if (!isStrictInteger(rawCount)) return [];
-  const zahl = parseInt(rawCount, 10);
+  const zahl = parseInt(String(rawCount), 10);
   if (zahl < 1) return [];
 
   const isDaily = taeglich === true || recurrence === 'daily';
@@ -96,7 +92,7 @@ export function serienDaten({
   }
 
   let schritt;
-  const parsedStep = parseInt(intervalDays, 10);
+  const parsedStep = parseInt(String(intervalDays), 10);
   if (isStrictInteger(intervalDays) && parsedStep >= 7 && parsedStep <= 84 && parsedStep % 7 === 0) {
     schritt = parsedStep;
   } else if (recurrence === 'biweekly') {
@@ -162,7 +158,7 @@ export function serienAnzahl(listeEl, offenGesamt) {
 }
 
 /** Beschriftung des Serienknopfs — nennt immer die Zahl, die gleich passiert. */
-export function serienKnopfText(anzahl, nurAuswahl) {
+export function serienKnopfText(/** @type {number} */ anzahl, /** @type {any} */ nurAuswahl) {
   const einheit = anzahl === 1 ? 'Einheit' : 'Einheiten';
   return nurAuswahl
     ? `🗓 ${anzahl} ausgewählte ${einheit} als Serie verteilen`
@@ -177,7 +173,7 @@ export function serienKnopfText(anzahl, nurAuswahl) {
  * Wochentage stehen unter ‚Mehr Optionen'", und die Praxis las daraus, sie
  * müsse jetzt alle N Tage festlegen (Ops 08fa9e2c).
  */
-export function anzahlHinweisText(anzahl, alsSerie) {
+export function anzahlHinweisText(/** @type {number} */ anzahl, /** @type {any} */ alsSerie) {
   if (anzahl <= 1) return '';
   return alsSerie
     ? `Alle ${anzahl} Termine jetzt als Serie verteilen (Wiederholung und Wochentage unter „Mehr Optionen").`
@@ -190,37 +186,37 @@ export function anzahlHinweisText(anzahl, alsSerie) {
  * ab Mittwoch lief dann montags (canli-test 20.10.2026). Mit Verordnung setzt
  * `uebernimmSerienfrequenzAusRx()` die Tage ohnehin aus der Frequenz.
  *
- * @param {Document} [doc]
+ * @param {any} [doc]
  */
 export function verdrahteSerienStarttag(doc = globalThis.document) {
   const wrap = doc?.getElementById('bkSeriesWeekdays');
   if (!wrap) return;
   let vonHand = false;
-  wrap.addEventListener('change', (e) => { if (e.isTrusted) vonHand = true; });
+  wrap.addEventListener('change', (/** @type {any} */ e) => { if (e.isTrusted) vonHand = true; });
   const setze = () => {
-    const v = doc.getElementById('bkStart')?.value;
+    const v = (/** @type {HTMLInputElement | null} */ (doc.getElementById('bkStart')))?.value;
     if (vonHand || !v || !isValidCalendarDate(v.substring(0, 10))) return;
     const tag = new Date(v.substring(0, 10) + 'T12:00:00Z').getUTCDay();
-    const boxen = [...wrap.querySelectorAll('input')];
+    const boxen = /** @type {HTMLInputElement[]} */ ([...wrap.querySelectorAll('input')]);
     if (boxen.filter(cb => cb.checked).length > 1) return;   // mehrere Tage = bewusst gewählt (z. B. aus der Frequenz)
     boxen.forEach(cb => { cb.checked = Number(cb.value) === tag; });
     boxen[0]?.dispatchEvent(new Event('change'));   // Vorschau nachziehen (nicht als Handeingabe gezählt)
   };
-  doc.getElementById('bkSeriesToggle')?.addEventListener('change', (e) => { if (e.target.checked) { vonHand = false; setze(); uebernimmAnzahl(); } });
+  doc.getElementById('bkSeriesToggle')?.addEventListener('change', (/** @type {any} */ e) => { if (e.target?.checked) { vonHand = false; setze(); uebernimmAnzahl(); } });
   doc.getElementById('bkStart')?.addEventListener('change', setze);
 
   // Eine Zahl, zwei Felder: „Anzahl" oben und „Anzahl der Termine" unter
   // „Mehr Optionen" liefen auseinander („Alle 6 Termine" über einer Vorschau
   // mit 3 — canli-test 20.10.2026). Beim Einschalten gilt die obere Zahl,
   // wer unten tippt, schreibt sie nach oben zurück.
-  const anzahl = doc.getElementById('bkAnzahl'), serie = doc.getElementById('bkSeriesCount');
+  const anzahl = /** @type {HTMLInputElement | null} */ (doc.getElementById('bkAnzahl')), serie = /** @type {HTMLInputElement | null} */ (doc.getElementById('bkSeriesCount'));
   function uebernimmAnzahl() {
-    const n = parseInt(anzahl?.value, 10);
+    const n = parseInt(anzahl?.value || '', 10);
     if (!serie || !(n > 1) || String(n) === serie.value) return;
     serie.value = String(n);
     serie.dispatchEvent(new Event('input'));
   }
-  serie?.addEventListener('input', (e) => {
+  serie?.addEventListener('input', (/** @type {any} */ e) => {
     if (!e.isTrusted || !anzahl) return;
     const n = parseInt(serie.value, 10);
     if (n > 1 && String(n) !== anzahl.value) { anzahl.value = String(n); anzahl.dispatchEvent(new Event('input')); }

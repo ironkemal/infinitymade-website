@@ -14,7 +14,12 @@
 
 const NEU_ERZEUGEN = 'Bitte die Abrechnung neu erzeugen (Storno + neue Abrechnung).';
 
-/** Meldungstexte einer Stufe, zu einem Satzblock verbunden. */
+/**
+ * Meldungstexte einer Stufe, zu einem Satzblock verbunden.
+ * @param {Array<Record<string, any>> | null | undefined} meldungen
+ * @param {string} [stufe]
+ * @returns {string}
+ */
 export function meldungsText(meldungen, stufe) {
   return (Array.isArray(meldungen) ? meldungen : [])
     .filter(m => m && (!stufe || m.stufe === stufe) && m.text)
@@ -22,7 +27,12 @@ export function meldungsText(meldungen, stufe) {
     .join(' ');
 }
 
-/** Fehlertext aus einer Backend-Antwort; bei Empfänger-Blocks mit Hinweis auf Neu-Erzeugen. */
+/**
+ * Fehlertext aus einer Backend-Antwort; bei Empfänger-Blocks mit Hinweis auf Neu-Erzeugen.
+ * @param {Record<string, any> | null | undefined} json
+ * @param {number} status
+ * @returns {string}
+ */
 export function empfaengerFehlerText(json, status) {
   const basis = json?.error || ('HTTP ' + status);
   const istEmpfaenger = status === 409 && /GEAENDERT|DATENANNAHMESTELLE|STICHTAG/.test(json?.code || '');
@@ -33,6 +43,10 @@ export function empfaengerFehlerText(json, status) {
 /**
  * Wirft bei !res.ok mit lesbarem Text; zeigt `stichtagWarnung` (nur Warnung, kein Block)
  * als Toast. Gibt das JSON zurück.
+ * @param {any} res
+ * @param {any} json
+ * @param {((msg: string, typ?: string) => void) | null | undefined} [showToast]
+ * @returns {any}
  */
 export function pruefeAntwort(res, json, showToast) {
   if (!res.ok) throw new Error(empfaengerFehlerText(json, res.status));
@@ -45,6 +59,14 @@ export function pruefeAntwort(res, json, showToast) {
  * Vorab-Prüfung vor Download/Signieren. Block → Error; Warnungen → Toast.
  * Fällt die Prüfung selbst aus (Netz, 500), wird nicht blockiert — dta-bytes prüft
  * serverseitig ohnehin noch einmal.
+ * @param {{
+ *   apiBase: string,
+ *   token: string,
+ *   abrechnungId: string,
+ *   showToast?: (msg: string, typ?: string) => void,
+ *   fetchFn?: typeof fetch | ((url: string, init?: any) => Promise<any>)
+ * }} params
+ * @returns {Promise<any>}
  */
 export async function empfaengerVorabPruefen({ apiBase, token, abrechnungId, showToast, fetchFn = fetch }) {
   let json;
@@ -69,6 +91,12 @@ export async function empfaengerVorabPruefen({ apiBase, token, abrechnungId, sho
 /**
  * B: Zertifikatsablauf-Warnung für den Inhaber (30-Tage-Grenze).
  * Aus dashboard.js:1059-1081 extrahiert (Konsey-Umzingelung / Dashboard-Größenlimit).
+ * @param {{
+ *   currentProfile?: Record<string, any> | null,
+ *   supabase?: any,
+ *   doc?: any,
+ *   now?: number
+ * }} [options]
  */
 export async function renderOwnerCertExpiryBanner({
   currentProfile,
@@ -137,28 +165,35 @@ export function resetDasGuideModalStateForTest() {
 /**
  * Rendert den Empfängerzertifikats-Metadatenblock sicher (textContent statt injected HTML).
  * Positiv NUR bei serverStatus === 'geprueft'.
+ * @param {any} containerEl
+ * @param {Record<string, any> | null | undefined} empfCert
+ * @param {{
+ *   isLoading?: boolean,
+ *   errorMsg?: string | null,
+ *   blockiert?: boolean,
+ *   meldungen?: Array<Record<string, any>>
+ * }} [options]
  */
 export function renderEmpfaengerCertMetadata(containerEl, empfCert, { isLoading = false, errorMsg = null, blockiert = false, meldungen = [] } = {}) {
   if (!containerEl) return;
   containerEl.replaceChildren();
 
-  const wrap = containerEl.ownerDocument
-    ? containerEl.ownerDocument.createElement('div')
-    : (typeof document !== 'undefined' ? document.createElement('div') : null);
-  if (!wrap) return;
+  const doc = containerEl.ownerDocument || (typeof document !== 'undefined' ? document : null);
+  if (!doc) return;
 
+  const wrap = doc.createElement('div');
   wrap.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
 
   // 1. Titelzeile + Status-Badge
-  const topRow = containerEl.ownerDocument.createElement('div');
+  const topRow = doc.createElement('div');
   topRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;';
 
-  const titleEl = containerEl.ownerDocument.createElement('strong');
+  const titleEl = doc.createElement('strong');
   titleEl.style.cssText = 'font-size:12px;color:var(--text-main);';
   titleEl.textContent = 'Empfängerzertifikat (§ 302 Verschlüsselung)';
   topRow.appendChild(titleEl);
 
-  const badgeEl = containerEl.ownerDocument.createElement('span');
+  const badgeEl = doc.createElement('span');
   badgeEl.className = 'dg-cert-status-badge';
   badgeEl.style.cssText = 'font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;display:inline-block;';
 
@@ -204,16 +239,20 @@ export function renderEmpfaengerCertMetadata(containerEl, empfCert, { isLoading 
   wrap.appendChild(topRow);
 
   // 2. Metadaten-Felder
-  const grid = containerEl.ownerDocument.createElement('div');
+  const grid = doc.createElement('div');
   grid.style.cssText = 'display:grid;grid-template-columns:auto 1fr;column-gap:10px;row-gap:3px;font-size:11.5px;color:var(--text-muted);margin-top:2px;';
 
+  /**
+   * @param {string} label
+   * @param {any} value
+   */
   function addField(label, value) {
-    const lblEl = containerEl.ownerDocument.createElement('span');
+    const lblEl = doc.createElement('span');
     lblEl.style.fontWeight = '600';
     lblEl.style.color = 'var(--text-main)';
     lblEl.textContent = label + ':';
 
-    const valEl = containerEl.ownerDocument.createElement('span');
+    const valEl = doc.createElement('span');
     valEl.style.fontFamily = label.includes('SHA') ? 'var(--mono, monospace)' : 'inherit';
     valEl.style.wordBreak = 'break-all';
     valEl.textContent = value || '—';
@@ -279,6 +318,20 @@ export function renderEmpfaengerCertMetadata(containerEl, empfCert, { isLoading 
 /**
  * Controller zum Öffnen des DAS-Guide-Modals mit Rennschutz (Generation Tracking)
  * und sauberem Sofort-Reset vor asynchronen Ladevorgängen.
+ * @param {{
+ *   abrechnungId: string,
+ *   forceStep?: number,
+ *   supabase?: any,
+ *   apiBase?: string,
+ *   state?: Record<string, any>,
+ *   kkMap?: any,
+ *   escapeHtml?: (s: any) => string,
+ *   dgStatusToStep?: (ab: any) => number,
+ *   dgRender?: (step: number) => void,
+ *   openModal?: (id: string) => void,
+ *   fetchFn?: typeof fetch | ((url: string, init?: any) => Promise<any>) | null,
+ *   doc?: any
+ * }} options
  */
 export async function openDasGuideModalController({
   abrechnungId,
@@ -356,7 +409,7 @@ export async function openDasGuideModalController({
   if (header) {
     const ik = ab.kostentraeger_ik || '—';
     const kk = kkMap?.get(ik)?.name || ik;
-    const esc = typeof escapeHtml === 'function' ? escapeHtml : (s) => String(s || '');
+    const esc = typeof escapeHtml === 'function' ? escapeHtml : (/** @type {any} */ s) => String(s || '');
     header.innerHTML = `<strong>${esc(ab.dateiname || abrechnungId)}</strong> · ${esc(kk)} · ${ab.prescription_count || 0} Rezepte`;
   }
 

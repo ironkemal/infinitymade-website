@@ -53,7 +53,7 @@ export { datumDe };
 /**
  * Darf am `datum` noch 78040 abgerechnet werden?
  *
- * @param {Array<{behandlungsdatum:string, hpnr_codes:?Array<string>}>} behandlungen
+ * @param {Array<{behandlungsdatum:string, hpnr_codes:?Array<string>, storniert_am?:?string}>} behandlungen
  *        alle `podologie_behandlungen` des Patienten — ueber ALLE seine
  *        Verordnungen hinweg, auch abgeschlossene. Reihenfolge egal, es wird
  *        hier sortiert.
@@ -169,11 +169,11 @@ const LEGACY_POSITIONEN = new Set([
  * Reine Entscheidung, kein DOM und keine Abfrage — die Historie wird
  * hereingereicht, damit die Regel testbar bleibt (wie `darf78040`).
  *
- * @param {object}   opt
- * @param {string}   opt.hpnr           HPNR der gewaehlten Leistung
- * @param {Array}    [opt.behandlungen] alle `podologie_behandlungen` des
+ * @param {object}   [opt]
+ * @param {string}   [opt.hpnr]           HPNR der gewaehlten Leistung
+ * @param {Array<{behandlungsdatum:string, hpnr_codes:?Array<string>, storniert_am?:?string, geplant?:?boolean}>} [opt.behandlungen] alle `podologie_behandlungen` des
  *        Patienten, ueber ALLE Verordnungen; leer = neuer Patient
- * @param {string}   opt.datum          geplanter Behandlungstag `YYYY-MM-DD`
+ * @param {string}   [opt.datum]          geplanter Behandlungstag `YYYY-MM-DD`
  * @param {boolean}  [opt.selbstzahler] Privat/ohne Verordnung → keine GKV-Position
  * @param {?boolean} [opt.podologieVor2023] war der Patient schon VOR dem
  *        01.11.2023 in podologischer Behandlung? `true` = ja (kein Anspruch),
@@ -192,14 +192,14 @@ const LEGACY_POSITIONEN = new Set([
  *   dem Abrechnen beantwortet sein muss.
  */
 export function befundungFuerLeistung({
-  hpnr,
+  hpnr = '',
   behandlungen = [],
-  datum,
+  datum = '',
   selbstzahler = false,
   podologieVor2023 = null,
   diagnosegruppen = null,
 } = {}) {
-  const nichts = (grund, hinweis = '') => ({
+  const nichts = (/** @type {string} */ grund, hinweis = '') => ({
     code: null, automatisch: false, grund, hinweis, rueckfrage: null,
   });
 
@@ -324,7 +324,7 @@ export function befundungFuerLeistung({
  * Beide Grenzen gelten nebeneinander und werden getrennt geprueft: diese hier
  * nur fuer 78100, jene fuer 78100 und 78110.
  *
- * @param {Array<{behandlungsdatum:string, hpnr_codes:?Array<string>}>} behandlungen
+ * @param {Array<{behandlungsdatum:string, hpnr_codes:?Array<string>, storniert_am?:?string}>} behandlungen
  *        alle `podologie_behandlungen` des Patienten, ueber alle Verordnungen
  * @param {string} datum  geplanter Behandlungstag, `YYYY-MM-DD`
  * @returns {{erlaubt:boolean, grund:string, schonAm:?string}}
@@ -436,7 +436,7 @@ export function nagelLabel(nagel) {
  * Beides ist teuer — aber nur die falsche Sperre trifft den Podologen sofort
  * und ohne dass er etwas dagegen tun koennte.
  *
- * @param {Array<{behandlungsdatum:string, hpnr_codes:?Array<string>}>} behandlungen
+ * @param {Array<{behandlungsdatum:string, hpnr_codes:?Array<string>, storniert_am?:?string}>} behandlungen
  *        Behandlungen DIESES Nagels, Reihenfolge egal
  * @param {?string} nagel  Nagel der Verordnung (`'U1 links'` …) oder leer
  * @param {string}  datum  geplanter Behandlungstag, `YYYY-MM-DD`

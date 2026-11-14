@@ -45,7 +45,7 @@ test('Upload-Ergebnis: Zusammenfassung, Warnung, gemeinsame Tabelle', () => {
 });
 
 test('escapeHtml wird auf alle Felder angewandt', () => {
-  const esc = (s) => String(s ?? '').replace(/</g, '&lt;');
+  const esc = (/** @type {any} */ s) => String(s ?? '').replace(/</g, '&lt;');
   const html = renderZaaFehlerTabelle([{ code: '<x>', beleg: '<b>', status: 'offen', fehler: '<f>', loesung: '<l>', rxId: null }], { escapeHtml: esc });
   assert.doesNotMatch(html, /<x>|<b>|<f>|<l>/);
 });

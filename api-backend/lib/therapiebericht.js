@@ -20,9 +20,91 @@ import { baueBefundBlock, befundBlockZeilen, filtereBefundeFuerVo } from './phys
 
 export { baueBefundBlock, befundBlockZeilen, filtereBefundeFuerVo };
 
+/**
+ * @typedef {import('./physio-befund-bericht.js').PhysioBefundRow} PhysioBefundRow
+ * @typedef {import('./physio-befund-bericht.js').PhysioMessungRow} PhysioMessungRow
+ * @typedef {import('./physio-befund-bericht.js').PhysioBefundBlock} PhysioBefundBlock
+ *
+ * @typedef {{
+ *   plz?: string | null,
+ *   zip?: string | null,
+ *   business_name?: string | null,
+ *   praxis_inhaber?: string | null,
+ *   owner_first_name?: string | null,
+ *   owner_last_name?: string | null,
+ *   street?: string | null,
+ *   house_number?: string | null,
+ *   city?: string | null,
+ *   phone?: string | null,
+ *   email?: string | null,
+ *   fax?: string | null,
+ * }} TherapieberichtProfilInput
+ *
+ * @typedef {{
+ *   id?: string | null,
+ *   therapie_bereich?: string | null,
+ *   patient_name?: string | null,
+ *   ausstellungsdatum?: string | null,
+ *   diagnosegruppe?: string | null,
+ *   icd10?: string | null,
+ *   icd10_2?: string | null,
+ *   diagnose_freitext?: string | null,
+ *   heilmittel?: string | null,
+ *   anzahl_einheiten?: number | null,
+ * }} TherapieberichtRxInput
+ *
+ * @typedef {{
+ *   first_name?: string | null,
+ *   last_name?: string | null,
+ *   title?: string | null,
+ *   geburtsdatum?: string | null,
+ * }} TherapieberichtLeadInput
+ *
+ * @typedef {{
+ *   arzt_name?: string | null,
+ *   praxis_name?: string | null,
+ *   adresse?: string | null,
+ *   lanr?: string | null,
+ *   fax?: string | null,
+ *   email?: string | null,
+ *   telefon?: string | null,
+ * }} TherapieberichtArztInput
+ *
+ * @typedef {{
+ *   behandlungsdatum?: string | null,
+ *   hpnr_codes?: string[] | null,
+ *   lokalisation?: string | null,
+ *   done_at?: string | null,
+ * }} TherapieberichtBehandlungInput
+ *
+ * @typedef {{
+ *   erstellt_am?: string | null,
+ *   wagner_grad?: number | string | null,
+ *   notiz?: string | null,
+ *   ist_aktuell?: boolean | null,
+ * }} TherapieberichtPodoBefundInput
+ *
+ * @typedef {{
+ *   datum: string,
+ *   wagner_grad: number | string | null,
+ *   notiz: string,
+ * }} PodoBefundKurz
+ *
+ * @typedef {{
+ *   v: number,
+ *   praxis: { name: string, inhaber: string, strasse: string, plzOrt: string, telefon: string, email: string, fax: string },
+ *   patient: { name: string, geburtsdatum: string },
+ *   arzt: { name: string, praxis: string, adresse: string, lanr: string, fax: string, email: string, telefon: string } | null,
+ *   verordnung: { bereich: string, ausstellungsdatum: string, diagnosegruppe: string, icd: string[], diagnose: string, heilmittel: string, einheiten_verordnet: number | null },
+ *   behandlungen: Array<{ datum: string, massnahmen: string[], lokalisation: string }>,
+ *   befund: { erster: PodoBefundKurz | null, letzter: PodoBefundKurz | null } | PhysioBefundBlock | null,
+ * }} TherapieberichtSnapshot
+ */
+
+/** @param {unknown} err */
 export function istSchemaFehler(err) {
   if (!err) return false;
-  const code = String(err.code || '');
+  const code = String((/** @type {{ code?: unknown } | null} */ (err))?.code || '');
   return code === '42P01' || code === 'PGRST205' || code === '42703' || code === 'PGRST204';
 }
 
@@ -37,8 +119,10 @@ export const BERICHT_ARTEN = Object.freeze({
   abschlussbericht: 'Abschlussbericht',
 });
 
+/** @param {unknown} w */
 const t = (w) => String(w ?? '').trim();
 
+/** @param {unknown} w */
 export function datumDE(w) {
   if (!w) return '';
   const s = String(w).slice(0, 10);
@@ -61,6 +145,18 @@ export function erzeugePasswort(laenge = 10) {
 
 /**
  * Die reine Umformung DB-Zeilen → Snapshot. Ohne Supabase testbar.
+ * @param {{
+ *   profil?: TherapieberichtProfilInput,
+ *   rx?: TherapieberichtRxInput,
+ *   lead?: TherapieberichtLeadInput | null,
+ *   arzt?: TherapieberichtArztInput | null,
+ *   behandlungen?: TherapieberichtBehandlungInput[],
+ *   befunde?: TherapieberichtPodoBefundInput[],
+ *   physioBefunde?: PhysioBefundRow[],
+ *   physioMessungen?: PhysioMessungRow[],
+ *   prescriptionId?: string | null,
+ * }} [daten]
+ * @returns {TherapieberichtSnapshot}
  */
 export function baueSnapshot({
   profil = {},
@@ -72,20 +168,24 @@ export function baueSnapshot({
   physioBefunde = [],
   physioMessungen = [],
   prescriptionId = rx?.id,
-}) {
+} = {}) {
   const plz = t(profil.plz) || t(profil.zip);
   const istPodo = rx.therapie_bereich === 'podo';
   const aktuell = befunde.filter(b => b && b.ist_aktuell !== false)
     .sort((a, b) => String(a.erstellt_am).localeCompare(String(b.erstellt_am)));
+  /**
+   * @param {TherapieberichtPodoBefundInput | undefined | null} b
+   * @returns {PodoBefundKurz | null}
+   */
   const befundKurz = (b) => b ? { datum: String(b.erstellt_am || '').slice(0, 10), wagner_grad: b.wagner_grad ?? null, notiz: t(b.notiz) } : null;
 
   const zeilen = behandlungen.map(b => istPodo
     ? {
         datum: String(b.behandlungsdatum || '').slice(0, 10),
-        massnahmen: (b.hpnr_codes || []).map(c => findPodologiePosition(c, b.behandlungsdatum)?.label || c),
+        massnahmen: (b.hpnr_codes || []).map(c => findPodologiePosition(c, b.behandlungsdatum ?? undefined)?.label || c),
         lokalisation: t(b.lokalisation),
       }
-    : { datum: String(b.done_at || '').slice(0, 10), massnahmen: [], lokalisation: '' })
+    : { datum: String(b.done_at || '').slice(0, 10), massnahmen: /** @type {string[]} */ ([]), lokalisation: '' })
     .filter(z => z.datum)
     .sort((a, b) => a.datum.localeCompare(b.datum));
 
@@ -131,6 +231,9 @@ export function baueSnapshot({
 
 /**
  * Alles für den Snapshot aus der DB holen. Wirft {status, message} bei fremder/fehlender VO.
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {string} tenantId
+ * @param {string} prescriptionId
  */
 export async function ladeSnapshot(supabase, tenantId, prescriptionId) {
   const { data: rx, error } = await supabase.from('prescriptions')
@@ -138,6 +241,7 @@ export async function ladeSnapshot(supabase, tenantId, prescriptionId) {
     .eq('id', prescriptionId).maybeSingle();
   if (error) throw error;
   if (!rx || rx.owner_id !== tenantId) {
+    /** @type {Error & { status?: number }} */
     const e = new Error('Verordnung nicht gefunden.'); e.status = 404; throw e;
   }
 
@@ -170,13 +274,14 @@ export async function ladeSnapshot(supabase, tenantId, prescriptionId) {
           .order('befund_datum', { ascending: true })
       : Promise.resolve({ data: [] }),
   ]);
-  for (const r of [profilR, leadR, arztR, behR, befR]) if (r.error) throw r.error;
-  if (physioBefR.error && !istSchemaFehler(physioBefR.error)) {
+  for (const r of [profilR, leadR, arztR, behR, befR]) if ('error' in r && r.error) throw r.error;
+  if ('error' in physioBefR && physioBefR.error && !istSchemaFehler(physioBefR.error)) {
     throw physioBefR.error;
   }
 
   const rohePhysioBefunde = physioBefR.data || [];
   const physioBefunde = filtereBefundeFuerVo(rohePhysioBefunde, rx.id);
+  /** @type {PhysioMessungRow[]} */
   let physioMessungen = [];
   const physioIds = physioBefunde.map(b => b.id).filter(Boolean);
   if (!istPodo && physioIds.length) {
@@ -210,6 +315,15 @@ export async function ladeSnapshot(supabase, tenantId, prescriptionId) {
 
 /**
  * PDF erzeugen. Mit `passwort` verschlüsselt (AES-256), sonst offen (Fax/Druck/Vorschau).
+ * @param {{
+ *   snapshot?: Partial<TherapieberichtSnapshot> | null,
+ *   art?: string,
+ *   verlauf?: string,
+ *   empfehlung?: string,
+ *   empfehlung_code?: string | null,
+ *   datum?: Date | string,
+ * }} daten
+ * @param {{ passwort?: string | null, faxDeckblatt?: boolean }} [opt]
  * @returns {Promise<Buffer>}
  */
 export function erzeugeBerichtPdf({ snapshot, art = 'zwischenbericht', verlauf = '', empfehlung = '', empfehlung_code = null, datum = new Date() }, { passwort = null, faxDeckblatt = false } = {}) {
@@ -223,11 +337,15 @@ export function erzeugeBerichtPdf({ snapshot, art = 'zwischenbericht', verlauf =
     });
   }
   const doc = new PDFDocument(opts);
+  const emitter = /** @type {NodeJS.EventEmitter} */ (/** @type {unknown} */ (doc));
+  /** @type {Buffer[]} */
   const teile = [];
-  doc.on('data', (b) => teile.push(b));
-  const fertig = new Promise((res, rej) => { doc.on('end', () => res(Buffer.concat(teile))); doc.on('error', rej); });
+  emitter.on('data', (b) => teile.push(b));
+  const fertig = new Promise((res, rej) => { emitter.on('end', () => res(Buffer.concat(teile))); emitter.on('error', rej); });
 
+  /** @type {Partial<TherapieberichtSnapshot>} */
   const s = snapshot || {};
+  /** @type {Partial<TherapieberichtSnapshot['praxis']>} */
   const p = s.praxis || {};
   const breite = doc.page.width - 124;
 
@@ -261,7 +379,7 @@ export function erzeugeBerichtPdf({ snapshot, art = 'zwischenbericht', verlauf =
     doc.moveDown(0.8);
 
     // Datum & Betreff
-    const dStr = datumDE(datum.toISOString ? datum.toISOString() : datum);
+    const dStr = datumDE(datum instanceof Date ? datum.toISOString() : datum);
     if (dStr) doc.text(`Datum: ${dStr}`);
     doc.font('Helvetica-Bold').fontSize(10).text('Betreff: ', { continued: true })
       .font('Helvetica').text('Therapiebericht');
@@ -290,19 +408,24 @@ export function erzeugeBerichtPdf({ snapshot, art = 'zwischenbericht', verlauf =
     if (s.arzt.praxis) doc.text(s.arzt.praxis);
     if (s.arzt.adresse) doc.text(s.arzt.adresse);
   }
-  doc.moveDown(1).fontSize(10).text(datumDE(datum.toISOString ? datum.toISOString() : datum), { align: 'right' });
+  doc.moveDown(1).fontSize(10).text(datumDE(datum instanceof Date ? datum.toISOString() : datum), { align: 'right' });
   doc.moveDown(1);
 
-  doc.font('Helvetica-Bold').fontSize(14).text(`Therapiebericht – ${BERICHT_ARTEN[art] || BERICHT_ARTEN.zwischenbericht}`);
+  /** @type {Record<string, string>} */
+  const BERICHT_ARTEN_MAP = BERICHT_ARTEN;
+  doc.font('Helvetica-Bold').fontSize(14).text(`Therapiebericht – ${BERICHT_ARTEN_MAP[art] || BERICHT_ARTEN.zwischenbericht}`);
   doc.moveDown(0.6);
 
+  /** @param {string} label @param {unknown} wert */
   const zeile = (label, wert) => {
     if (!t(wert)) return;
     doc.font('Helvetica-Bold').fontSize(10).text(`${label}: `, { continued: true })
       .font('Helvetica').text(String(wert));
   };
+  /** @type {Partial<TherapieberichtSnapshot['patient']>} */
   const pat = s.patient || {};
   zeile('Patient/in', [pat.name, pat.geburtsdatum && `geb. ${datumDE(pat.geburtsdatum)}`].filter(Boolean).join(', '));
+  /** @type {Partial<TherapieberichtSnapshot['verordnung']>} */
   const v = s.verordnung || {};
   zeile('Verordnung vom', datumDE(v.ausstellungsdatum));
   zeile('Diagnose', [v.icd?.join(', '), v.diagnosegruppe && `Diagnosegruppe ${v.diagnosegruppe}`, v.diagnose].filter(Boolean).join(' · '));
@@ -314,6 +437,7 @@ export function erzeugeBerichtPdf({ snapshot, art = 'zwischenbericht', verlauf =
     zeile('Behandlungszeitraum', `${zeitraum} (${menge})`);
   }
 
+  /** @param {string} titel */
   const abschnitt = (titel) => { doc.moveDown(0.9).font('Helvetica-Bold').fontSize(11).text(titel); doc.moveDown(0.2).font('Helvetica').fontSize(10); };
 
   if (beh.length && beh.some(b => b.massnahmen.length)) {
@@ -325,14 +449,15 @@ export function erzeugeBerichtPdf({ snapshot, art = 'zwischenbericht', verlauf =
   }
 
   const bf = s.befund;
-  if (bf && bf.erst) {
+  if (bf && 'erst' in bf && bf.erst) {
     abschnitt('Befund');
     const zeilen = befundBlockZeilen(bf);
     for (const z of zeilen) {
       doc.text(z, { width: breite });
     }
-  } else if (bf && (bf.erster || bf.letzter)) {
+  } else if (bf && 'erster' in bf && (bf.erster || bf.letzter)) {
     abschnitt('Befund');
+    /** @param {string} label @param {PodoBefundKurz | null | undefined} b */
     const befundZeile = (label, b) => {
       if (!b) return;
       const teile = [b.wagner_grad != null ? `Wagner-Grad ${b.wagner_grad}` : '', b.notiz].filter(Boolean).join(' · ');
@@ -344,7 +469,9 @@ export function erzeugeBerichtPdf({ snapshot, art = 'zwischenbericht', verlauf =
 
   if (t(verlauf)) { abschnitt('Verlauf / Besonderheiten'); doc.text(t(verlauf), { width: breite }); }
 
-  const empf = [empfehlung_code && EMPFEHLUNG_CODES[empfehlung_code], t(empfehlung)].filter(Boolean).join(' ');
+  /** @type {Record<string, string>} */
+  const EMPFEHLUNG_CODES_MAP = EMPFEHLUNG_CODES;
+  const empf = [empfehlung_code && EMPFEHLUNG_CODES_MAP[empfehlung_code], t(empfehlung)].filter(Boolean).join(' ');
   if (empf) { abschnitt('Empfehlung'); doc.text(empf, { width: breite }); }
 
   doc.moveDown(2).font('Helvetica').fontSize(10).text('Mit freundlichen kollegialen Grüßen');
@@ -357,8 +484,12 @@ export function erzeugeBerichtPdf({ snapshot, art = 'zwischenbericht', verlauf =
   return fertig;
 }
 
-/** Dateiname ohne Patientennamen — er steht im Anhang einer Mail, die durch Postfächer wandert. */
+/**
+ * Dateiname ohne Patientennamen — er steht im Anhang einer Mail, die durch Postfächer wandert.
+ * @param {unknown} snapshot
+ * @param {Date | string} [datum]
+ */
 export function berichtDateiname(snapshot, datum = new Date()) {
-  const d = (datum.toISOString ? datum.toISOString() : String(datum)).slice(0, 10);
+  const d = (datum instanceof Date ? datum.toISOString() : String(datum)).slice(0, 10);
   return `Therapiebericht_${d}.pdf`;
 }

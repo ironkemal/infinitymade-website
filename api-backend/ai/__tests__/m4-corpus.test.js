@@ -17,7 +17,7 @@ const fixtures = [
 for (const fixture of fixtures) test(`M4 corpus regression: ${fixture.file}`, async () => {
   const bytes = fs.readFileSync(new URL(`./fixtures/${fixture.file}`, import.meta.url));
   assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'), fixture.hash, 'Do not weaken the gate by changing the corpus');
-  const document = JSON.parse(bytes);
+  const document = JSON.parse(bytes.toString('utf8'));
   const { summary } = await evaluateCorpus(Array.isArray(document) ? document : document.cases, { maskFn: maskPII, scanFn: scanneReste });
   assert.equal(summary.cases, fixture.cases);
   assert.equal(summary.totalTruth, fixture.truth);

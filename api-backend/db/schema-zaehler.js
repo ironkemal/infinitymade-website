@@ -57,6 +57,8 @@ const RLS_KAPALI_TABLO_SQL = `SELECT t.tablename AS n FROM pg_tables t
 
 /**
  * Liest erwartete-zaehler.json. Rein, kein DB-Zugriff — testbar ohne Postgres.
+ * @param {string} verzeichnis
+ * @returns {{ bis_version: string, zaehler: Record<string, any> }}
  */
 export function erwarteteZaehlerLesen(verzeichnis) {
   const pfad = join(verzeichnis, 'erwartete-zaehler.json');
@@ -67,21 +69,22 @@ export function erwarteteZaehlerLesen(verzeichnis) {
  * Fuehrt alle Zaehl-Abfragen auf der uebergebenen (bereits verbundenen) `pg`-Client
  * aus und vergleicht gegen die erwarteten Werte.
  *
- * @param {import('pg').Client} client
- * @param {object} erwartet   Rueckgabe von erwarteteZaehlerLesen()
+ * @param {{ query: (sql: string) => Promise<{ rows: any[] }> }} client
+ * @param {{ bis_version: string, zaehler: Record<string, any> }} erwartet   Rueckgabe von erwarteteZaehlerLesen()
  * @param {string} [aktuelleVersion]  hoechste angewandte Migrationsversion (Buch) —
  *                                    ist sie NEUER als erwartet.bis_version, ist die
  *                                    Erwartung veraltet, nicht die Box: Ergebnis "grau"
  *                                    statt rot (onprem-Konsultation, Punkt (b)).
  */
 export async function zaehlerPruefen(client, erwartet, aktuelleVersion) {
+  /** @type {Record<string, any>} */
   const gemessen = {};
   for (const [name, sql] of Object.entries(SORGULAR)) {
     const { rows } = await client.query(sql);
     gemessen[name] = rows[0].n;
   }
   const { rows: rlsKapaliRows } = await client.query(RLS_KAPALI_TABLO_SQL);
-  const rlsKapaliTablolar = rlsKapaliRows.map((r) => r.n);
+  const rlsKapaliTablolar = rlsKapaliRows.map((/** @type {any} */ r) => r.n);
   gemessen.rls_kapali_tablolar = rlsKapaliTablolar;
 
   const erwartungVeraltet = !!aktuelleVersion && aktuelleVersion > erwartet.bis_version;
@@ -95,7 +98,7 @@ export async function zaehlerPruefen(client, erwartet, aktuelleVersion) {
 
   const erwarteteRlsKapali = erwartet.zaehler.rls_kapali_tablolar || [];
   const rlsKapaliFarki = rlsKapaliTablolar.length !== erwarteteRlsKapali.length
-    || rlsKapaliTablolar.some((t) => !erwarteteRlsKapali.includes(t));
+    || rlsKapaliTablolar.some((/** @type {string} */ t) => !erwarteteRlsKapali.includes(t));
   if (rlsKapaliFarki) {
     abweichungen.push({ name: 'rls_kapali_tablolar', soll: erwarteteRlsKapali, ist: rlsKapaliTablolar });
   }

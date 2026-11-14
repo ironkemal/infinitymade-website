@@ -35,7 +35,7 @@ import { VERORDNUNGSART_HEILMITTEL } from '../codes/anlage3_v22.js';
  * Reihenfolge ist Absicht: eine Blankoverordnung ist zuerst eine
  * Blankoverordnung. Waeren beide Haken gesetzt, gewinnt § 13a.
  *
- * @param {{is_blanko?:boolean, is_lhb_bvb?:boolean}} rx
+ * @param {{is_blanko?:boolean, is_lhb_bvb?:boolean} | null | undefined} rx
  * @returns {'03'|'04'|'05'}
  */
 export function verordnungsartFuer(rx) {
@@ -61,7 +61,7 @@ export function verordnungsartFuer(rx) {
  * anbieten (CLAUDE.md: Physio · Ergo · Logo · Podo). Taucht sie eines Tages
  * auf, faellt sie hier auf und nicht erst bei der Kasse.
  *
- * @param {string} sector  Wert aus `profiles.sector`
+ * @param {string | null | undefined} sector  Wert aus `profiles.sector`
  * @returns {'1'|'2'|'3'|'4'}
  */
 export function heilmittelBereichFuer(sector) {
@@ -101,7 +101,11 @@ export function therapiefrequenzFuer(sector, frequenz) {
   return frequenz;
 }
 
-/** Nur fuer Tests und Aufrufer, die den Klartext anzeigen wollen. */
+/**
+ * Nur fuer Tests und Aufrufer, die den Klartext anzeigen wollen.
+ * @param {string} schluessel
+ * @returns {string | null}
+ */
 export function verordnungsartText(schluessel) {
-  return VERORDNUNGSART_HEILMITTEL[schluessel] || null;
+  return /** @type {Record<string, string>} */ (VERORDNUNGSART_HEILMITTEL)[schluessel] || null;
 }

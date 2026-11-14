@@ -14,14 +14,22 @@ import {
 class FakeElement {
   constructor(tagName = 'div') {
     this.tagName = tagName.toUpperCase();
+    /** @type {Record<string, string>} */
     this.dataset = {};
+    /** @type {Record<string, string>} */
     this.attributes = {};
+    /** @type {Record<string, string>} */
     this.style = {};
+    /** @type {Record<string, Function[]>} */
     this.listeners = {};
+    /** @type {Set<string>} */
     this.classList = new Set();
+    /** @type {FakeElement[]} */
     this.children = [];
+    /** @type {FakeElement | null} */
     this.parentElement = null;
     this._value = '';
+    this.type = '';
     this.checked = false;
     this.disabled = false;
     this.isConnected = true;
@@ -32,10 +40,12 @@ class FakeElement {
   get value() {
     return this._value;
   }
+  /** @param {any} v */
   set value(v) {
     this._value = String(v ?? '');
   }
 
+  /** @param {string} name */
   getAttribute(name) {
     if (name.startsWith('data-')) {
       const key = name.slice(5).replace(/-([a-z])/g, (_, c) => c.toUpperCase());
@@ -44,6 +54,10 @@ class FakeElement {
     return this.attributes[name] ?? null;
   }
 
+  /**
+   * @param {string} name
+   * @param {any} val
+   */
   setAttribute(name, val) {
     this.attributes[name] = String(val);
     if (name.startsWith('data-')) {
@@ -52,6 +66,10 @@ class FakeElement {
     }
   }
 
+  /**
+   * @param {string} event
+   * @param {Function} fn
+   */
   addEventListener(event, fn) {
     if (!this.listeners[event]) this.listeners[event] = [];
     this.listeners[event].push(fn);
@@ -72,13 +90,23 @@ class FakeElement {
     }
   }
 
+  /**
+   * @param {string} selector
+   * @returns {FakeElement | null}
+   */
   querySelector(selector) {
     const res = this.querySelectorAll(selector);
     return res[0] || null;
   }
 
+  /**
+   * @param {string} selector
+   * @returns {FakeElement[]}
+   */
   querySelectorAll(selector) {
+    /** @type {FakeElement[]} */
     const results = [];
+    /** @param {FakeElement} node */
     function walk(node) {
       for (const child of node.children) {
         if (matches(child, selector)) {
@@ -91,6 +119,7 @@ class FakeElement {
     return results;
   }
 
+  /** @param {string} html */
   set innerHTML(html) {
     this._innerHTML = html;
     this.children = [];
@@ -103,6 +132,11 @@ class FakeElement {
   }
 }
 
+/**
+ * @param {FakeElement} el
+ * @param {string} selector
+ * @returns {boolean}
+ */
 function matches(el, selector) {
   if (selector.startsWith('.')) {
     return el.classList.has(selector.slice(1));
@@ -113,6 +147,10 @@ function matches(el, selector) {
   return el.tagName.toLowerCase() === selector.toLowerCase();
 }
 
+/**
+ * @param {string} html
+ * @param {FakeElement} root
+ */
 function parseHtmlInto(html, root) {
   const tagRegex = /<!--[\s\S]*?-->|<(\/?)([a-zA-Z0-9\-]+)([^>]*)>|([^<]+)/g;
   const stack = [root];
@@ -162,13 +200,18 @@ function parseHtmlInto(html, root) {
   }
 }
 
+/**
+ * @param {string | null} [role]
+ * @param {string | null} [token]
+ * @param {any} [overrides]
+ */
 function makeCtx(role = 'owner', token = 'mock-jwt-token', overrides = {}) {
   return {
     apiBase: 'https://api.test.example/api',
     getProfile: () => (role ? { role } : null),
     getOwnerId: () => 'owner-123',
     getSessionUserId: () => 'user-123',
-    escapeHtml: s => String(s ?? ''),
+    escapeHtml: (/** @type {any} */ s) => String(s ?? ''),
     showToast: () => {},
     supabase: {
       auth: {
@@ -179,6 +222,11 @@ function makeCtx(role = 'owner', token = 'mock-jwt-token', overrides = {}) {
   };
 }
 
+/**
+ * @param {any} beh
+ * @param {string} [status]
+ * @param {any} [extras]
+ */
 function makeNachweisFixture(beh, status = 'bestaetigt', extras = {}) {
   return {
     behandlung_id: beh.id,
@@ -307,8 +355,10 @@ test('Race condition: multiple loadStatus requests reject older responses', asyn
   const beh = { id: 'beh-race', hpnr_codes: ['78040'], behandlungsdatum: '2026-10-01' };
   const host = new FakeElement('div');
 
-  let resolveFirst;
-  let resolveSecond;
+  /** @type {any} */
+  let resolveFirst = null;
+  /** @type {any} */
+  let resolveSecond = null;
   let callCount = 0;
 
   const fetchFn = async () => {
@@ -384,7 +434,8 @@ test('Race condition: role rechecked after session await prevents POST if role c
   let role = 'owner';
   let postCalls = 0;
 
-  let resolveSession;
+  /** @type {any} */
+  let resolveSession = null;
   const ctx = {
     apiBase: 'https://api.test.example/api',
     getProfile: () => (role ? { role } : null),
@@ -399,7 +450,7 @@ test('Race condition: role rechecked after session await prevents POST if role c
 
   const beh = { id: 'beh-role-race', hpnr_codes: ['78040'], behandlungsdatum: '2026-10-01' };
   const host = new FakeElement('div');
-  mountEmpfangsnachweis(host, beh, ctx, async (url, opts) => {
+  mountEmpfangsnachweis(host, beh, ctx, async (/** @type {string} */ url, /** @type {any} */ opts) => {
     if (opts?.method === 'POST') {
       postCalls++;
       return { ok: true, status: 200, json: async () => ({ nachweis: makeNachweisFixture(beh, 'bestaetigt', { therapeuteninitialen: 'OK' }) }) };
@@ -411,12 +462,12 @@ test('Race condition: role rechecked after session await prevents POST if role c
   resolveSession();
   await new Promise(resolve => setTimeout(resolve, 0));
 
-  host.querySelector('.podo-nachweis-btn-start-confirm').click();
-  host.querySelector('.podo-nachweis-initials-input').value = 'OK';
-  host.querySelector('.podo-nachweis-checkbox').checked = true;
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-btn-start-confirm'))).click();
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-initials-input'))).value = 'OK';
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-checkbox'))).checked = true;
 
   // Click submit while owner
-  host.querySelector('.podo-nachweis-submit-confirm-btn').click();
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-submit-confirm-btn'))).click();
 
   // Role changes to 'employee' while awaiting session
   role = 'employee';
@@ -424,12 +475,13 @@ test('Race condition: role rechecked after session await prevents POST if role c
   await new Promise(resolve => setTimeout(resolve, 0));
 
   assert.equal(postCalls, 0, 'POST must not be sent if role changed away from owner during session await');
-  assert.match(host.querySelector('.podo-nachweis-form-error').textContent, /Nur Praxisinhaber dürfen den Nachweis erfassen/);
+  assert.match((/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-form-error'))).textContent, /Nur Praxisinhaber dürfen den Nachweis erfassen/);
 });
 
 test('Race condition: detached / stale mount during session await prevents POST', async () => {
   let postCalls = 0;
-  let resolveSession;
+  /** @type {any} */
+  let resolveSession = null;
   const ctx = {
     apiBase: 'https://api.test.example/api',
     getProfile: () => ({ role: 'owner' }),
@@ -444,7 +496,7 @@ test('Race condition: detached / stale mount during session await prevents POST'
 
   const beh = { id: 'beh-detach-race', hpnr_codes: ['78040'], behandlungsdatum: '2026-10-01' };
   const host = new FakeElement('div');
-  mountEmpfangsnachweis(host, beh, ctx, async (url, opts) => {
+  mountEmpfangsnachweis(host, beh, ctx, async (/** @type {string} */ url, /** @type {any} */ opts) => {
     if (opts?.method === 'POST') {
       postCalls++;
       return { ok: true, status: 200, json: async () => ({ nachweis: makeNachweisFixture(beh, 'bestaetigt', { therapeuteninitialen: 'OK' }) }) };
@@ -455,12 +507,12 @@ test('Race condition: detached / stale mount during session await prevents POST'
   resolveSession();
   await new Promise(resolve => setTimeout(resolve, 0));
 
-  host.querySelector('.podo-nachweis-btn-start-confirm').click();
-  host.querySelector('.podo-nachweis-initials-input').value = 'OK';
-  host.querySelector('.podo-nachweis-checkbox').checked = true;
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-btn-start-confirm'))).click();
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-initials-input'))).value = 'OK';
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-checkbox'))).checked = true;
 
   // Submit clicked
-  host.querySelector('.podo-nachweis-submit-confirm-btn').click();
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-submit-confirm-btn'))).click();
 
   // Host detached while awaiting session
   host.isConnected = false;
@@ -472,16 +524,18 @@ test('Race condition: detached / stale mount during session await prevents POST'
 
 test('Confirm workflow: max16 initials, checkbox validation, cancel and successful POST', async () => {
   let postCalls = 0;
+  /** @type {any} */
   let lastPostBody = null;
+  /** @type {any[]} */
   let toastMessages = [];
 
   const ctx = makeCtx('owner', 'mock-jwt-token', {
-    showToast: (msg) => toastMessages.push(msg),
+    showToast: (/** @type {any} */ msg) => toastMessages.push(msg),
   });
 
   const beh = { id: 'beh-conf-1', hpnr_codes: ['78040'], behandlungsdatum: '2026-10-01' };
 
-  const fetchFn = async (url, opts) => {
+  const fetchFn = async (/** @type {string} */ url, /** @type {any} */ opts) => {
     if (opts?.method === 'POST') {
       postCalls++;
       lastPostBody = JSON.parse(opts.body);
@@ -501,12 +555,12 @@ test('Confirm workflow: max16 initials, checkbox validation, cancel and successf
   mountEmpfangsnachweis(host, beh, ctx, fetchFn);
   await new Promise(resolve => setTimeout(resolve, 0));
 
-  host.querySelector('.podo-nachweis-btn-start-confirm').click();
-  const initialsInput = host.querySelector('.podo-nachweis-initials-input');
-  const checkbox = host.querySelector('.podo-nachweis-checkbox');
-  const submitBtn = host.querySelector('.podo-nachweis-submit-confirm-btn');
-  const cancelBtn = host.querySelector('.podo-nachweis-cancel-btn');
-  const errorEl = host.querySelector('.podo-nachweis-form-error');
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-btn-start-confirm'))).click();
+  const initialsInput = /** @type {FakeElement} */ (host.querySelector('.podo-nachweis-initials-input'));
+  const checkbox = /** @type {FakeElement} */ (host.querySelector('.podo-nachweis-checkbox'));
+  const submitBtn = /** @type {FakeElement} */ (host.querySelector('.podo-nachweis-submit-confirm-btn'));
+  const cancelBtn = /** @type {FakeElement} */ (host.querySelector('.podo-nachweis-cancel-btn'));
+  const errorEl = /** @type {FakeElement} */ (host.querySelector('.podo-nachweis-form-error'));
 
   // 1. Submit without initials -> validation error
   submitBtn.click();
@@ -533,10 +587,10 @@ test('Confirm workflow: max16 initials, checkbox validation, cancel and successf
   assert.match(host.innerHTML, /Papiernachweis: ungeprüft/);
 
   // 5. Valid confirm with max16 initials
-  host.querySelector('.podo-nachweis-btn-start-confirm').click();
-  host.querySelector('.podo-nachweis-initials-input').value = 'INITIALS-16CHAR';
-  host.querySelector('.podo-nachweis-checkbox').checked = true;
-  host.querySelector('.podo-nachweis-submit-confirm-btn').click();
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-btn-start-confirm'))).click();
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-initials-input'))).value = 'INITIALS-16CHAR';
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-checkbox'))).checked = true;
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-submit-confirm-btn'))).click();
   await new Promise(resolve => setTimeout(resolve, 0));
 
   assert.equal(postCalls, 1);
@@ -554,7 +608,7 @@ test('Malformed POST success response: fail with retry, no invented state, no to
     showToast: () => toastCalls++,
   });
 
-  const fetchFn = async (url, opts) => {
+  const fetchFn = async (/** @type {string} */ url, /** @type {any} */ opts) => {
     if (opts?.method === 'POST') {
       // Server returns HTTP 200 but missing or invalid nachweis payload
       return {
@@ -571,11 +625,11 @@ test('Malformed POST success response: fail with retry, no invented state, no to
   mountEmpfangsnachweis(host, beh, ctx, fetchFn);
   await new Promise(resolve => setTimeout(resolve, 0));
 
-  host.querySelector('.podo-nachweis-btn-start-confirm').click();
-  host.querySelector('.podo-nachweis-initials-input').value = 'XY';
-  host.querySelector('.podo-nachweis-checkbox').checked = true;
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-btn-start-confirm'))).click();
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-initials-input'))).value = 'XY';
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-checkbox'))).checked = true;
 
-  const submitBtn = host.querySelector('.podo-nachweis-submit-confirm-btn');
+  const submitBtn = /** @type {FakeElement} */ (host.querySelector('.podo-nachweis-submit-confirm-btn'));
   submitBtn.click();
   await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -584,16 +638,17 @@ test('Malformed POST success response: fail with retry, no invented state, no to
   // Must NOT invent confirmed state!
   assert.doesNotMatch(host.innerHTML, /Papiernachweis geprüft/);
   // Form remains open showing error and retry enabled
-  assert.match(host.querySelector('.podo-nachweis-form-error').textContent, /Fehler beim Speichern/);
+  assert.match((/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-form-error'))).textContent, /Fehler beim Speichern/);
   assert.equal(submitBtn.disabled, false);
 });
 
 test('Double click prevention sends only one POST', async () => {
   let postCalls = 0;
-  let resolvePost;
+  /** @type {any} */
+  let resolvePost = null;
   const beh = { id: 'beh-dc', hpnr_codes: ['78040'], behandlungsdatum: '2026-10-01' };
 
-  const fetchFn = async (url, opts) => {
+  const fetchFn = async (/** @type {string} */ url, /** @type {any} */ opts) => {
     if (opts?.method === 'POST') {
       postCalls++;
       return new Promise(resolve => {
@@ -612,11 +667,11 @@ test('Double click prevention sends only one POST', async () => {
   mountEmpfangsnachweis(host, beh, ctx, fetchFn);
   await new Promise(resolve => setTimeout(resolve, 0));
 
-  host.querySelector('.podo-nachweis-btn-start-confirm').click();
-  host.querySelector('.podo-nachweis-initials-input').value = 'DC';
-  host.querySelector('.podo-nachweis-checkbox').checked = true;
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-btn-start-confirm'))).click();
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-initials-input'))).value = 'DC';
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-checkbox'))).checked = true;
 
-  const submitBtn = host.querySelector('.podo-nachweis-submit-confirm-btn');
+  const submitBtn = /** @type {FakeElement} */ (host.querySelector('.podo-nachweis-submit-confirm-btn'));
   submitBtn.click();
   submitBtn.click(); // Immediate second click while pending
 
@@ -630,9 +685,10 @@ test('Double click prevention sends only one POST', async () => {
 });
 
 test('Withdrawal workflow: reason length validation, cancel, and POST withdrawal', async () => {
+  /** @type {any} */
   let lastPostBody = null;
   const beh = { id: 'beh-with', hpnr_codes: ['78040'], behandlungsdatum: '2026-10-01' };
-  const fetchFn = async (url, opts) => {
+  const fetchFn = async (/** @type {string} */ url, /** @type {any} */ opts) => {
     if (opts?.method === 'POST') {
       lastPostBody = JSON.parse(opts.body);
       return {
@@ -653,11 +709,11 @@ test('Withdrawal workflow: reason length validation, cancel, and POST withdrawal
   mountEmpfangsnachweis(host, beh, ctx, fetchFn);
   await new Promise(resolve => setTimeout(resolve, 0));
 
-  host.querySelector('.podo-nachweis-btn-start-widerruf').click();
-  const textarea = host.querySelector('.podo-nachweis-grund-input');
-  const submitWithdraw = host.querySelector('.podo-nachweis-submit-withdraw-btn');
-  const cancelBtn = host.querySelector('.podo-nachweis-cancel-btn');
-  const errorEl = host.querySelector('.podo-nachweis-form-error');
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-btn-start-widerruf'))).click();
+  const textarea = /** @type {FakeElement} */ (host.querySelector('.podo-nachweis-grund-input'));
+  const submitWithdraw = /** @type {FakeElement} */ (host.querySelector('.podo-nachweis-submit-withdraw-btn'));
+  const cancelBtn = /** @type {FakeElement} */ (host.querySelector('.podo-nachweis-cancel-btn'));
+  const errorEl = /** @type {FakeElement} */ (host.querySelector('.podo-nachweis-form-error'));
 
   // Reason empty / whitespace validation (1–500)
   textarea.value = '   ';
@@ -671,9 +727,9 @@ test('Withdrawal workflow: reason length validation, cancel, and POST withdrawal
   assert.match(host.innerHTML, /Papiernachweis geprüft \(MK\)/);
 
   // Valid reason submit
-  host.querySelector('.podo-nachweis-btn-start-widerruf').click();
-  host.querySelector('.podo-nachweis-grund-input').value = 'Originalbeleg unvollständig';
-  host.querySelector('.podo-nachweis-submit-withdraw-btn').click();
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-btn-start-widerruf'))).click();
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-grund-input'))).value = 'Originalbeleg unvollständig';
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-submit-withdraw-btn'))).click();
   await new Promise(resolve => setTimeout(resolve, 0));
 
   assert.deepEqual(lastPostBody, {
@@ -808,7 +864,7 @@ test('Regression: POST response rejecting contract violations fails with error a
 
   for (const badNachweis of violations) {
     const host = new FakeElement('div');
-    mountEmpfangsnachweis(host, beh, ctx, async (url, opts) => {
+    mountEmpfangsnachweis(host, beh, ctx, async (/** @type {string} */ url, /** @type {any} */ opts) => {
       if (opts?.method === 'POST') {
         return {
           ok: true,
@@ -820,31 +876,33 @@ test('Regression: POST response rejecting contract violations fails with error a
     });
     await new Promise(resolve => setTimeout(resolve, 0));
 
-    host.querySelector('.podo-nachweis-btn-start-confirm').click();
-    host.querySelector('.podo-nachweis-initials-input').value = 'XY';
-    host.querySelector('.podo-nachweis-checkbox').checked = true;
+    (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-btn-start-confirm'))).click();
+    (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-initials-input'))).value = 'XY';
+    (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-checkbox'))).checked = true;
 
-    const submitBtn = host.querySelector('.podo-nachweis-submit-confirm-btn');
+    const submitBtn = /** @type {FakeElement} */ (host.querySelector('.podo-nachweis-submit-confirm-btn'));
     submitBtn.click();
     await new Promise(resolve => setTimeout(resolve, 0));
 
     assert.equal(toastCalls, 0, 'No success toast on invalid contract');
     assert.doesNotMatch(host.innerHTML, /Papiernachweis geprüft/, 'Must not transition to confirmed UI');
-    assert.match(host.querySelector('.podo-nachweis-form-error').textContent, /Fehler beim Speichern/);
+    assert.match((/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-form-error'))).textContent, /Fehler beim Speichern/);
     assert.equal(submitBtn.disabled, false);
   }
 });
 
 test('Regression: POST after remount rejects stale response, blocks duplicate form.submit, resolves new POST', async () => {
   let postCalls = 0;
-  let resolveOldPost;
-  let resolveNewPost;
+  /** @type {any} */
+  let resolveOldPost = null;
+  /** @type {any} */
+  let resolveNewPost = null;
 
   const ctx = makeCtx('owner');
   const beh = { id: 'beh-remount', hpnr_codes: ['78040'], behandlungsdatum: '2026-10-01' };
   const host = new FakeElement('div');
 
-  const fetchFn = async (url, opts) => {
+  const fetchFn = async (/** @type {string} */ url, /** @type {any} */ opts) => {
     if (opts?.method === 'POST') {
       postCalls++;
       if (postCalls === 1) {
@@ -859,10 +917,10 @@ test('Regression: POST after remount rejects stale response, blocks duplicate fo
   mountEmpfangsnachweis(host, beh, ctx, fetchFn);
   await new Promise(resolve => setTimeout(resolve, 0));
 
-  host.querySelector('.podo-nachweis-btn-start-confirm').click();
-  host.querySelector('.podo-nachweis-initials-input').value = 'OLD';
-  host.querySelector('.podo-nachweis-checkbox').checked = true;
-  host.querySelector('.podo-nachweis-submit-confirm-btn').click();
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-btn-start-confirm'))).click();
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-initials-input'))).value = 'OLD';
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-checkbox'))).checked = true;
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-submit-confirm-btn'))).click();
   await new Promise(resolve => setTimeout(resolve, 0));
   assert.equal(postCalls, 1);
 
@@ -871,14 +929,14 @@ test('Regression: POST after remount rejects stale response, blocks duplicate fo
   await new Promise(resolve => setTimeout(resolve, 0));
 
   // 3. Start new pending POST
-  host.querySelector('.podo-nachweis-btn-start-confirm').click();
-  host.querySelector('.podo-nachweis-initials-input').value = 'NEW';
-  host.querySelector('.podo-nachweis-checkbox').checked = true;
-  host.querySelector('.podo-nachweis-submit-confirm-btn').click();
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-btn-start-confirm'))).click();
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-initials-input'))).value = 'NEW';
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-checkbox'))).checked = true;
+  (/** @type {FakeElement} */ (host.querySelector('.podo-nachweis-submit-confirm-btn'))).click();
   await new Promise(resolve => setTimeout(resolve, 0));
   assert.equal(postCalls, 2);
 
-  const activeSubmitBtn = host.querySelector('.podo-nachweis-submit-confirm-btn');
+  const activeSubmitBtn = /** @type {FakeElement} */ (host.querySelector('.podo-nachweis-submit-confirm-btn'));
   assert.equal(activeSubmitBtn.disabled, true);
 
   // 4. Resolve old POST -> must not corrupt active state

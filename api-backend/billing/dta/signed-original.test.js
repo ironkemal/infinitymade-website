@@ -16,8 +16,13 @@ cert.setSubject(certAttrs);
 cert.setIssuer(certAttrs);
 cert.sign(keys.privateKey, forge.md.sha256.create());
 
+/** @param {Buffer} buf */
 const sha256Hex = (buf) => createHash('sha256').update(buf).digest('hex');
 
+/**
+ * @param {Buffer} payload
+ * @param {{ detached?: boolean, signers?: number, contentType?: string }} [opts]
+ */
 function createSigned(payload, { detached = false, signers = 1, contentType = forge.pki.oids.data } = {}) {
   const p7 = forge.pkcs7.createSignedData();
   p7.content = forge.util.createBuffer(payload.toString('binary'));
@@ -43,14 +48,23 @@ const validDtaHash = sha256Hex(syntheticOriginal);
 const validSigned = createSigned(syntheticOriginal);
 const validSignedHash = sha256Hex(validSigned);
 
+/**
+ * @param {{
+ *   files?: Record<string, Buffer | string>,
+ *   errors?: Record<string, Error | { message?: string, status?: number | string, statusCode?: number | string }>,
+ * }} [opts]
+ */
 function createMockDb({ files = {}, errors = {} } = {}) {
+  /** @type {string[]} */
   const downloadCalls = [];
   return {
     downloadCalls,
     storage: {
+      /** @param {string} bucket */
       from: (bucket) => {
         assert.equal(bucket, 'abrechnungen');
         return {
+          /** @param {string} path */
           download: async (path) => {
             downloadCalls.push(path);
             if (errors[path]) {
@@ -59,6 +73,7 @@ function createMockDb({ files = {}, errors = {} } = {}) {
               return { data: null, error: err };
             }
             if (!(path in files)) {
+              /** @type {Error & { status?: number, statusCode?: number }} */
               const err = new Error(`Not found: ${path}`);
               err.status = 404;
               err.statusCode = 404;
@@ -66,7 +81,7 @@ function createMockDb({ files = {}, errors = {} } = {}) {
             }
             const val = files[path];
             const buf = Buffer.isBuffer(val) ? val : Buffer.from(val);
-            return { data: new Blob([buf]), error: null };
+            return { data: new Blob([new Uint8Array(buf)]), error: null };
           },
           upload: () => { throw new Error('DB write/upload forbidden'); },
           remove: () => { throw new Error('DB remove forbidden'); }
@@ -108,7 +123,7 @@ describe('pruefeSignedDta', () => {
   });
 
   it('rejects missing or invalid format expectedDtaSha256', async () => {
-    await assert.rejects(async () => pruefeSignedDta({ signedBytes: validSigned }));
+    await assert.rejects(async () => pruefeSignedDta(/** @type {Parameters<typeof pruefeSignedDta>[0]} */ (/** @type {unknown} */ ({ signedBytes: validSigned }))));
     await assert.rejects(async () => pruefeSignedDta({ signedBytes: validSigned, expectedDtaSha256: '' }));
     await assert.rejects(async () => pruefeSignedDta({ signedBytes: validSigned, expectedDtaSha256: 'not-a-hash' }));
     await assert.rejects(async () => pruefeSignedDta({ signedBytes: validSigned, expectedDtaSha256: validDtaHash.slice(0, 63) }));
@@ -123,7 +138,7 @@ describe('pruefeSignedDta', () => {
     await assert.rejects(async () => pruefeSignedDta({
       signedBytes: validSigned,
       expectedDtaSha256: validDtaHash,
-      expectedSignedSha256: null
+      expectedSignedSha256: /** @type {string} */ (/** @type {unknown} */ (null))
     }));
     await assert.rejects(async () => pruefeSignedDta({
       signedBytes: validSigned,
@@ -208,7 +223,7 @@ describe('ladeDtaOriginalbytes', () => {
     const db = createMockDb({ files: { 'owner123/signature.p7m': validSigned } });
     await assert.rejects(async () => ladeDtaOriginalbytes({
       db,
-      abrechnung: { ...baseAbrechnung, storage_path: 123 }
+      abrechnung: { ...baseAbrechnung, storage_path: /** @type {string} */ (/** @type {unknown} */ (123)) }
     }));
     assert.deepEqual(db.downloadCalls, []);
   });

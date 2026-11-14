@@ -12,21 +12,28 @@ if (!SUPABASE_URL) console.warn('[auth] SUPABASE_URL is not set');
 if (!SERVICE_ROLE_KEY) console.warn('[auth] SUPABASE_SERVICE_ROLE_KEY is not set');
 
 /**
+ * @typedef {import('node:http').IncomingMessage & { body?: any, query?: Record<string, any> }} VercelRequest
+ * @typedef {import('node:http').ServerResponse & { status: (code: number) => VercelResponse, json: (data: any) => void }} VercelResponse
+ */
+
+/**
  * Validate a Supabase user JWT from the Authorization header.
  * Returns { user, error }.
+ * @param {VercelRequest} req
  */
 export async function getAuthedUser(req) {
-  const authHeader = req.headers.authorization || req.headers.Authorization;
+  const rawAuth = req.headers.authorization || req.headers.Authorization;
+  const authHeader = Array.isArray(rawAuth) ? rawAuth[0] : rawAuth;
   if (!authHeader?.startsWith('Bearer ')) {
     return { user: null, error: 'Missing Authorization header' };
   }
   const token = authHeader.slice(7);
 
   const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    headers: {
+    headers: /** @type {HeadersInit} */ ({
       apikey: SUPABASE_ANON_KEY,
       Authorization: `Bearer ${token}`,
-    },
+    }),
   });
   if (!res.ok) return { user: null, error: 'Invalid token' };
   const user = await res.json();
@@ -35,17 +42,19 @@ export async function getAuthedUser(req) {
 
 /**
  * Service-role REST helper. Bypasses RLS — use with care.
+ * @param {string} path
+ * @param {RequestInit} [options]
  */
 export async function adminFetch(path, options = {}) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1${path}`, {
     ...options,
-    headers: {
+    headers: /** @type {HeadersInit} */ ({
       apikey: SERVICE_ROLE_KEY,
       Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
       'Content-Type': 'application/json',
       Prefer: 'return=representation',
       ...(options.headers || {}),
-    },
+    }),
   });
   const text = await res.text();
   let data = null;
@@ -55,6 +64,8 @@ export async function adminFetch(path, options = {}) {
 
 /**
  * Call a Postgres function via PostgREST RPC with service role.
+ * @param {string} fn
+ * @param {unknown} body
  */
 export async function adminRpc(fn, body) {
   const { ok, data, status } = await adminFetch(`/rpc/${fn}`, {
@@ -66,16 +77,18 @@ export async function adminRpc(fn, body) {
 
 /**
  * Service-role fetch for Supabase Auth Admin endpoints (e.g. /auth/v1/admin/users).
+ * @param {string} path
+ * @param {RequestInit} [options]
  */
 export async function adminAuthFetch(path, options = {}) {
   const res = await fetch(`${SUPABASE_URL}/auth/v1${path}`, {
     ...options,
-    headers: {
+    headers: /** @type {HeadersInit} */ ({
       apikey: SERVICE_ROLE_KEY,
       Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
       'Content-Type': 'application/json',
       ...(options.headers || {}),
-    },
+    }),
   });
   const text = await res.text();
   let data = null;
@@ -86,6 +99,7 @@ export async function adminAuthFetch(path, options = {}) {
 /**
  * Returns true if the given user.id exists in public.admin_users.
  * Uses service-role to bypass RLS — call only after getAuthedUser.
+ * @param {string | null | undefined} userId
  */
 export async function isAdmin(userId) {
   if (!userId) return false;
@@ -95,6 +109,9 @@ export async function isAdmin(userId) {
 
 /**
  * JSON response shortcut.
+ * @param {VercelResponse} res
+ * @param {number} status
+ * @param {unknown} body
  */
 export function json(res, status, body) {
   res.statusCode = status;

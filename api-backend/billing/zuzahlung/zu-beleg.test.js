@@ -93,7 +93,7 @@ test('baueZuBelegZeile: erzeugt INSERT-Objekt mit korrekten Pflichtfeldern und O
   assert.equal(zeile.invoice_number, undefined, 'invoice_number darf nicht im INSERT sein');
   assert.equal(zeile.rechnung_nr, undefined, 'rechnung_nr darf nicht im INSERT sein');
   assert.equal(zeile.issued_at, undefined, 'issued_at darf nicht im INSERT sein');
-  assert.equal(zeile.lead_id, undefined, 'lead_id darf nicht im INSERT sein (nur patient_id)');
+  assert.equal(/** @type {Record<string, unknown>} */ (zeile).lead_id, undefined, 'lead_id darf nicht im INSERT sein (nur patient_id)');
 
   // Status & Typ
   assert.equal(zeile.owner_id, tenantId);
@@ -123,10 +123,12 @@ test('baueZuBelegZeile: erzeugt INSERT-Objekt mit korrekten Pflichtfeldern und O
   assert.equal(zeile.line_items[0].quantity, 1);
 
   // Snapshots
+  assert.ok(zeile.aussteller_snapshot && zeile.aussteller_snapshot.zu);
   assert.equal(zeile.aussteller_snapshot.v, 1);
   assert.equal(zeile.aussteller_snapshot.zu.zahlungszielTage, 14);
   assert.equal(zeile.aussteller_snapshot.zu.bankverbindung, 'IBAN: DE123456789');
   assert.equal(zeile.aussteller_snapshot.zu.hinweisText, 'Hinweis gesetzliche Zuzahlung');
+  assert.ok(zeile.empfaenger_snapshot && zeile.empfaenger_snapshot.zu);
   assert.equal(zeile.empfaenger_snapshot.v, 1);
   assert.equal(zeile.empfaenger_snapshot.art, 'patient');
   assert.equal(zeile.empfaenger_snapshot.name, 'Erika Mustermann');
@@ -202,6 +204,7 @@ test('Rundreise: baueZuBelegZeile -> simulate DB -> zuDruckDaten liefert identis
   assert.equal(druck.rechnung.nummer, 'ZU-2026-0042');
   assert.equal(druck.rechnung.datum, '2026-10-10');
   // 2026-10-10 + 21 Tage = 2026-10-31
+  assert.ok(druck.rechnung.faelligkeit);
   const faellig = new Date(druck.rechnung.faelligkeit);
   assert.equal(faellig.getFullYear(), 2026);
   assert.equal(faellig.getMonth(), 9); // Oktober = 9 (0-indexed)
@@ -209,12 +212,12 @@ test('Rundreise: baueZuBelegZeile -> simulate DB -> zuDruckDaten liefert identis
 });
 
 test('zuBelegVeraltet: erkennt Änderungen der Sitzungsmenge oder des Betrags', () => {
-  const row = {
+  const row = /** @type {Parameters<typeof zuBelegVeraltet>[0]} */ (/** @type {unknown} */ ({
     kassenzuzahlung: 14.0,
     line_items: [
       { session_id: 's-1', brutto: 40.0, zuzahlung: 4.0 },
     ],
-  };
+  }));
 
   // 1. Gleich -> false
   assert.equal(
@@ -304,7 +307,7 @@ test('baueGegenbeleg: negiert alle Beträge, verweist auf storno_von und enthäl
     leistung_bis: '2026-10-03',
   };
 
-  const gegen = baueGegenbeleg(orig);
+  const gegen = baueGegenbeleg(/** @type {Parameters<typeof baueGegenbeleg>[0]} */ (/** @type {unknown} */ (orig)));
 
   assert.equal(gegen.owner_id, 'owner-1');
   assert.equal(gegen.patient_id, 'pat-1');
@@ -366,11 +369,13 @@ test('fremdeZuNummern: nur der aktive ZU-Beleg der Verordnung ist als Referenz z
 });
 
 test('ladeAktivenZuBeleg: filtert Gegenbeleg, Storno und Mandant', async () => {
+  /** @type {unknown[][]} */
   const calls = [];
   const q = new Proxy({}, {
-    get: (_, m) => (...a) => { calls.push([m, ...a]); return m === 'maybeSingle' ? Promise.resolve({ data: null, error: null }) : q; },
+    get: (_, m) => (/** @type {unknown[]} */ ...a) => { calls.push([m, ...a]); return m === 'maybeSingle' ? Promise.resolve({ data: null, error: null }) : q; },
   });
-  const r = await ladeAktivenZuBeleg({ from: (t) => { calls.push(['from', t]); return q; } }, { prescriptionId: 'rx1', tenantId: 'o1' });
+  const sb = /** @type {Parameters<typeof ladeAktivenZuBeleg>[0]} */ (/** @type {unknown} */ ({ from: (/** @type {string} */ t) => { calls.push(['from', t]); return q; } }));
+  const r = await ladeAktivenZuBeleg(sb, { prescriptionId: 'rx1', tenantId: 'o1' });
   assert.deepEqual(r, { data: null, error: null });
   assert.deepEqual(calls.map((c) => c.join(':')), [
     'from:invoices', 'select:*', 'eq:prescription_id:rx1', 'eq:invoice_type:zuzahlung',

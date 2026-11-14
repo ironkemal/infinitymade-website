@@ -27,10 +27,18 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const envPath = join(here, '..', '.env.ops');
 
+/**
+ * @typedef {{ id: string, display_name: string }} OpsMember
+ * @typedef {{ title: string, assignee?: string | null, priority?: string, notes?: string | null, category?: string | null, parent?: string | null }} TaskInput
+ * @typedef {{ id: string, title: string }} OpsTodoRef
+ * @typedef {{ title: string, notes: string | null, assignee: string | null, priority: string, category: string | null, source: string, meeting_date: string | boolean | null, sort_order: number, _parent: string | null }} PendingTodoRow
+ */
+
 function loadEnv() {
-  let raw;
+  let raw = '';
   try { raw = readFileSync(envPath, 'utf8'); }
   catch { die(`${envPath} yok. .env.ops.example'ı kopyalayıp doldur.`); }
+  /** @type {Record<string, string>} */
   const env = {};
   for (const line of raw.split('\n')) {
     const m = line.match(/^\s*([A-Z_]+)\s*=\s*(.*)\s*$/);
@@ -41,16 +49,30 @@ function loadEnv() {
   return env;
 }
 
+/**
+ * @param {string} msg
+ * @returns {never}
+ */
 const die = (msg) => { console.error('✗ ' + msg); process.exit(1); };
 
+/**
+ * @param {string} name
+ * @param {string | null} [fallback]
+ * @returns {string | boolean | null}
+ */
 const arg = (name, fallback = null) => {
   const i = process.argv.indexOf('--' + name);
-  return i === -1 ? fallback : (process.argv[i + 1]?.startsWith('--') ? true : process.argv[i + 1]);
+  return i === -1 ? fallback : (process.argv[i + 1]?.startsWith('--') ? true : process.argv[i + 1] ?? fallback);
 };
 
 const env = loadEnv();
 const dry = process.argv.includes('--dry');
 
+/**
+ * @param {string} path
+ * @param {RequestInit} [opts]
+ * @returns {Promise<any>}
+ */
 async function api(path, opts = {}) {
   const r = await fetch(`${env.SUPABASE_URL}/rest/v1/${path}`, {
     ...opts,
@@ -69,7 +91,12 @@ async function api(path, opts = {}) {
 
 // ── Görevleri ayrıştır ──────────────────────────────────────────────────
 
+/**
+ * @param {string} src
+ * @returns {TaskInput[]}
+ */
 function parseMarkdown(src) {
+  /** @type {TaskInput[]} */
   const out = [];
   for (const line of src.split('\n')) {
     const m = line.match(/^\s*[-*]\s+(?:\[([^\]]*)\]\s*)?(.+?)\s*$/);
@@ -88,27 +115,30 @@ const meetingDate = arg('meeting');
 const fileArg = arg('file');
 const jsonArg = arg('json');
 
-let tasks;
-if (jsonArg) tasks = JSON.parse(readFileSync(jsonArg, 'utf8'));
-else if (fileArg) tasks = parseMarkdown(readFileSync(fileArg, 'utf8'));
+/** @type {TaskInput[]} */
+let tasks = [];
+if (typeof jsonArg === 'string') tasks = JSON.parse(readFileSync(jsonArg, 'utf8'));
+else if (typeof fileArg === 'string') tasks = parseMarkdown(readFileSync(fileArg, 'utf8'));
 else die('--file veya --json ver.');
 
 if (!tasks.length) die('Görev bulunamadı.');
 
 // ── Üye adı → id ────────────────────────────────────────────────────────
 
+/** @type {OpsMember[]} */
 const members = await api('ops_members?select=id,display_name');
 const byName = new Map(members.map(m => [m.display_name.toLowerCase(), m.id]));
 
+/** @type {PendingTodoRow[]} */
 const rows = tasks.map(t => {
   const key = (t.assignee || '').toLowerCase();
   if (key && !byName.has(key)) die(`"${t.assignee}" ops_members'ta yok. Mevcut: ${members.map(m => m.display_name).join(', ')}`);
   return {
     title: t.title,
     notes: t.notes || null,
-    assignee: key ? byName.get(key) : null,       // boş → ortak havuz
+    assignee: key ? (byName.get(key) ?? null) : null,       // boş → ortak havuz
     priority: t.priority || 'normal',
-    category: t.category || arg('category') || null,
+    category: t.category || (typeof arg('category') === 'string' ? /** @type {string} */ (arg('category')) : null) || null,
     source: 'claude',
     meeting_date: meetingDate || null,
     sort_order: 0,
@@ -121,6 +151,7 @@ const rows = tasks.map(t => {
 
 // ── Aynı görev iki kez girmesin ─────────────────────────────────────────
 
+/** @type {OpsTodoRef[]} */
 const existing = await api('ops_todos?select=id,title&done=is.false');
 const seen = new Map(existing.map(e => [e.title.trim().toLowerCase(), e.id]));
 const fresh = rows.filter(r => !seen.has(r.title.trim().toLowerCase()));
@@ -128,7 +159,7 @@ const skipped = rows.length - fresh.length;
 
 console.log(`${rows.length} görev okundu · ${skipped} zaten açık · ${fresh.length} yazılacak`);
 for (const r of fresh) {
-  const who = r.assignee ? members.find(m => m.id === r.assignee).display_name : 'Gemeinsam';
+  const who = r.assignee ? (members.find(m => m.id === r.assignee)?.display_name ?? 'Gemeinsam') : 'Gemeinsam';
   console.log(`  ${r._parent ? '└─ ' : ''}[${who}] ${r.title}${r.priority !== 'normal' ? ` (${r.priority})` : ''}`);
 }
 
@@ -136,18 +167,21 @@ if (dry) { console.log('\n--dry: hiçbir şey yazılmadı.'); process.exit(0); }
 if (!fresh.length) { console.log('Yazılacak yeni görev yok.'); process.exit(0); }
 
 // Üst görevler önce yazılır, yoksa alt görev bağlanacak id'yi bulamaz.
+/** @param {PendingTodoRow} r */
 const strip = (r) => { const { _parent, ...row } = r; return row; };
 const parents = fresh.filter(r => !r._parent);
 const children = fresh.filter(r => r._parent);
 
 if (parents.length) {
+  /** @type {OpsTodoRef[]} */
   const written = await api('ops_todos', { method: 'POST', body: JSON.stringify(parents.map(strip)) });
   for (const w of written) seen.set(w.title.trim().toLowerCase(), w.id);
 }
 
 if (children.length) {
   const rows2 = children.map(r => {
-    const pid = seen.get(r._parent.trim().toLowerCase());
+    const parentTitle = r._parent || '';
+    const pid = seen.get(parentTitle.trim().toLowerCase());
     if (!pid) die(`Üst görev bulunamadı: "${r._parent}" (alt görev: "${r.title}")`);
     return { ...strip(r), parent_id: pid };
   });

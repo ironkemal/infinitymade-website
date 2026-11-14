@@ -4,9 +4,13 @@ import { pruefeAusfallFrist, uebersteuerungsNotiz, ABLEHNUNGSGRUND } from './fri
 import assert from 'node:assert/strict';
 
 let pass = 0, fail = 0;
+/**
+ * @param {string} name
+ * @param {() => void} fn
+ */
 function test(name, fn) {
   try { fn(); console.log('  ok   ' + name); pass++; }
-  catch (e) { console.log('  FAIL ' + name + '\n       ' + e.message); fail++; }
+  catch (e) { console.log('  FAIL ' + name + '\n       ' + (e instanceof Error ? e.message : String(e))); fail++; }
 }
 
 console.log('ausfall/frist');
@@ -20,7 +24,7 @@ test('Ausfallgebühr aus → abgelehnt', () => {
   const r = pruefeAusfallFrist({ enabled: false, reason: 'no_show', jetzt: JETZT });
   assert.equal(r.erlaubt, false);
   assert.equal(r.grund, ABLEHNUNGSGRUND.DEAKTIVIERT);
-  assert.ok(r.meldung.includes('Einstellungen'));
+  assert.ok((r.meldung ?? '').includes('Einstellungen'));
 });
 
 test('Ausfallgebühr aus schlägt auch no_show', () => {
@@ -44,7 +48,7 @@ test('no_show auch bei grossem Vorlauf erlaubt', () => {
 test('Absage 5 h vorher bei 24 h Frist → erlaubt', () => {
   const r = pruefeAusfallFrist({ enabled: true, reason: 'late_cancel', cutoffHours: 24, terminStart: in5h, jetzt: JETZT });
   assert.equal(r.erlaubt, true);
-  assert.ok(Math.abs(r.vorlaufStunden - 5) < 0.01);
+  assert.ok(Math.abs((r.vorlaufStunden ?? NaN) - 5) < 0.01);
 });
 
 test('Absage 30 h vorher bei 24 h Frist → abgelehnt (rechtzeitig)', () => {
@@ -68,7 +72,7 @@ test('bereits vergangener Termin → negativer Vorlauf, erlaubt', () => {
   const gestern = new Date('2026-08-09T10:00:00Z').toISOString();
   const r = pruefeAusfallFrist({ enabled: true, reason: 'late_cancel', cutoffHours: 24, terminStart: gestern, jetzt: JETZT });
   assert.equal(r.erlaubt, true);
-  assert.ok(r.vorlaufStunden < 0);
+  assert.ok((r.vorlaufStunden ?? NaN) < 0);
 });
 
 test('fehlendes Termindatum → abgelehnt, Frist nicht prüfbar', () => {
@@ -84,7 +88,7 @@ test('unlesbares Termindatum → abgelehnt', () => {
 });
 
 test('ungültige cutoffHours fallen auf 24 zurück', () => {
-  const r = pruefeAusfallFrist({ enabled: true, reason: 'late_cancel', cutoffHours: null, terminStart: in30h, jetzt: JETZT });
+  const r = pruefeAusfallFrist({ enabled: true, reason: 'late_cancel', cutoffHours: /** @type {number} */ (/** @type {unknown} */ (null)), terminStart: in30h, jetzt: JETZT });
   assert.equal(r.erlaubt, false, 'null → Vorgabe 24 h → 30 h ist rechtzeitig');
 });
 
@@ -120,8 +124,8 @@ test('uebersteuerungsNotiz nur bei Übersteuerung', () => {
     terminStart: in30h, jetzt: JETZT, override: true,
   });
   const notiz = uebersteuerungsNotiz(mit, new Date('2026-08-10T12:00:00Z'));
-  assert.ok(notiz.includes('rechtzeitig_abgesagt'));
-  assert.ok(notiz.includes('10.8.2026'));
+  assert.ok((notiz ?? '').includes('rechtzeitig_abgesagt'));
+  assert.ok((notiz ?? '').includes('10.8.2026'));
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

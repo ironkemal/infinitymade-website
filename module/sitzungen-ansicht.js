@@ -76,7 +76,7 @@ export function waehleSeite({ wunsch, offen, vergeben }) {
 /**
  * Zeichnet den Umschalter und zeigt die passende Seite.
  *
- * @param {{offen:number, vergeben:number}} stand  Anzahl der Einträge je Seite
+ * @param {{offen?:number, vergeben?:number}} [stand]  Anzahl der Einträge je Seite
  */
 export function zeigeSitzungsSeiten({ offen = 0, vergeben = 0 } = {}) {
   letzterStand = { offen, vergeben };
@@ -84,7 +84,7 @@ export function zeigeSitzungsSeiten({ offen = 0, vergeben = 0 } = {}) {
   if (!leiste) return;
 
   gewaehlt = waehleSeite({ wunsch: gewaehlt, offen, vergeben });
-  const anzahl = { unvergeben: offen, vergeben };
+  const anzahl = /** @type {Record<string, number>} */ ({ unvergeben: offen, vergeben });
 
   TABS.forEach(({ ziel, box, label }) => {
     const knopf = leiste.querySelector(`[data-ziel="${ziel}"]`);
@@ -112,9 +112,10 @@ export function verdrahteSitzungsUmschalter() {
   leiste.dataset.umschalterWired = '1';
 
   leiste.addEventListener('click', (e) => {
-    const knopf = e.target.closest('[data-ziel]');
+    const target = /** @type {HTMLElement|null} */ (e.target);
+    const knopf = target?.closest('[data-ziel]');
     if (!knopf) return;
-    gewaehlt = knopf.dataset.ziel;
+    gewaehlt = /** @type {HTMLElement} */ (knopf).dataset.ziel || 'unvergeben';
     zeigeSitzungsSeiten(letzterStand);
   });
 }

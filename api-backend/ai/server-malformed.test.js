@@ -9,16 +9,31 @@ const start=source.indexOf("const aiParser = express.json(");
 const end=source.indexOf('// ============================================================================',start);
 assert.ok(start>0&&end>start,'Production parser extraction boundary exists');
 const parserSource=source.slice(start,end);
+/** @returns {{ app: import('express').Express, logs: Array<string | unknown[]> }} */
 function appFactory(){
- const app=express();const logs=[];
- vm.runInNewContext(parserSource,{express,app,SyntaxError,console:{error:(...args)=>logs.push(args)}});
- app.post('/api/ai/fixture',(_req,res)=>res.json({ok:true}));app.post('/api/rezept/fixture',(_req,res)=>res.json({ok:true}));app.post('/api/normal',(_req,res)=>res.json({ok:true}));
- app.use((err,_req,res,_next)=>{logs.push(String(err));res.status(err.status || 500).json({leaked:true});});return {app,logs};
+ const app=express();
+ /** @type {Array<string | unknown[]>} */
+ const logs=[];
+ vm.runInNewContext(parserSource,{express,app,SyntaxError,console:{error:/** @param {...unknown} args */ (...args)=>logs.push(args)}});
+ /** @type {import('express').RequestHandler} */
+ const okHandler = (_req,res)=>res.json({ok:true});
+ app.post('/api/ai/fixture',okHandler);app.post('/api/rezept/fixture',okHandler);app.post('/api/normal',okHandler);
+ /** @type {import('express').ErrorRequestHandler} */
+ const errHandler = (err,_req,res,_next)=>{logs.push(String(err));res.status(err.status || 500).json({leaked:true});};
+ app.use(errHandler);return {app,logs};
 }
+/**
+ * @param {import('express').Express} app
+ * @param {string} path
+ * @param {string} payload
+ * @returns {Promise<{ status: number | undefined, body: Record<string, unknown> }>}
+ */
 async function send(app,path,payload){
  const server=app.listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));
+ const addr = server.address();
+ const port = addr && typeof addr === 'object' ? addr.port : 0;
  try{return await new Promise((resolve,reject)=>{
-  const req=http.request({hostname:'127.0.0.1',port:server.address().port,path,method:'POST',headers:{'content-type':'application/json','content-length':Buffer.byteLength(payload)}},res=>{let body='';res.on('data',d=>body+=d);res.on('end',()=>resolve({status:res.statusCode,body:JSON.parse(body)}));});req.on('error',reject);req.end(payload);
+  const req=http.request({hostname:'127.0.0.1',port,path,method:'POST',headers:{'content-type':'application/json','content-length':Buffer.byteLength(payload)}},res=>{let body='';res.on('data',d=>body+=d);res.on('end',()=>resolve({status:res.statusCode,body:JSON.parse(body)}));});req.on('error',reject);req.end(payload);
  });}finally{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
 }
 test('Production scoped parser returns fixed 400 for malformed AI and recipe JSON with zero downstream logs',async()=>{
@@ -38,6 +53,6 @@ test('Production parser accepts normal valid requests and preserves non-AI small
 test('Actual OCR upload handler stays closed before binary decode or storage, barcode routes remain',async()=>{
  const {app,logs}=appFactory();const start=source.indexOf("app.post('/api/rezept/upload'");const end=source.indexOf("app.post('/api/rezept/confirm'",start);
  const routeSource=source.slice(start,end);assert.ok(!routeSource.includes('Buffer.from'));assert.ok(!routeSource.includes('.storage'));assert.ok(source.includes("app.post('/api/rezept/save'"));
- vm.runInNewContext(routeSource,{app,requireAuthAI:(_req,_res,next)=>next()});
+ vm.runInNewContext(routeSource,{app,requireAuthAI:/** @type {import('express').RequestHandler} */ ((_req,_res,next)=>next())});
  const res=await send(app,'/api/rezept/upload',JSON.stringify({image_base64:'PATIENT_SENTINEL'}));assert.equal(res.status,503);assert.equal(res.body.code,'AI_OCR_DISABLED');assert.equal(logs.length,0);assert.ok(!JSON.stringify(res).includes('PATIENT_SENTINEL'));
 });

@@ -13,25 +13,23 @@
 //
 // Liegt ausserhalb von server.js, damit es testbar ist (wie from-request.js).
 
+/** @type {Record<string, string>} */
 const VERSICHERUNG = { gkv: 'gkv', pkv: 'privat' };   // leads.insurance_type CHECK: gkv | privat
 
-/** ilike-Muster ohne Platzhalter aus dem Namen. */
+/**
+ * ilike-Muster ohne Platzhalter aus dem Namen.
+ * @param {unknown} s
+ * @returns {string}
+ */
 const wortlich = (s) => String(s ?? '').trim().replace(/[\\%_]/g, (c) => '\\' + c);
 
-/**
- * @param {object} supabase  service-role-Client
- * @param {object} a
- * @param {string} a.ownerId
- * @param {?{vorname:string,nachname:string,geburtsdatum:string,email?:string,telefon?:string}} a.patient
- * @param {?string} [a.paymentType]   booking_requests.payment_type (gkv|pkv|selbstzahler|bg)
- * @param {?string} [a.krankenkasse]  Freitext der Anfrage
- * @returns {Promise<?string>} lead_id oder null (Patient unvollständig / mehrdeutig / Fehler)
- */
 /**
  * Die eine Akte zu Name + Geburtsdatum in dieser Praxis — oder null. Gemeinsam für
  * Anfrage-Annahme und POST /api/rezept/confirm (fonksiyon-ustasi 21.10.2026: dort
  * stand `.ilike('first_name', fn || '%')` — fehlte der Vorname, passte jeder, und
  * `%`/`_` im Namen wirkten als Platzhalter).
+ * @param {{ from: (table: string) => any }} supabase
+ * @param {{ ownerId?: string | null, vorname?: string | null, nachname?: string | null, geburtsdatum?: string | null }} a
  * @returns {Promise<{id:string, krankenkasse_ik:?string}|null|'mehrdeutig'>}
  */
 export async function findeLeadNachNameGeburt(supabase, { ownerId, vorname, nachname, geburtsdatum }) {
@@ -47,6 +45,15 @@ export async function findeLeadNachNameGeburt(supabase, { ownerId, vorname, nach
   return treffer.length > 1 ? 'mehrdeutig' : treffer[0];
 }
 
+/**
+ * @param {{ from: (table: string) => any }} supabase  service-role-Client
+ * @param {object} [a]
+ * @param {string | null} [a.ownerId]
+ * @param {?{vorname?:string|null,nachname?:string|null,geburtsdatum?:string|null,email?:string|null,telefon?:string|null}} [a.patient]
+ * @param {?string} [a.paymentType]   booking_requests.payment_type (gkv|pkv|selbstzahler|bg)
+ * @param {?string} [a.krankenkasse]  Freitext der Anfrage
+ * @returns {Promise<?string>} lead_id oder null (Patient unvollständig / mehrdeutig / Fehler)
+ */
 export async function leadAusAnfrage(supabase, { ownerId, patient, paymentType = null, krankenkasse = null } = {}) {
   const vor = String(patient?.vorname ?? '').trim();
   const nach = String(patient?.nachname ?? '').trim();
@@ -64,9 +71,9 @@ export async function leadAusAnfrage(supabase, { ownerId, patient, paymentType =
       last_name: nach,
       title: `${vor} ${nach}`,
       geburtsdatum: geb,
-      email: patient.email || null,
-      phone: patient.telefon || null,
-      insurance_type: VERSICHERUNG[paymentType] || null,
+      email: /** @type {{ email?: string | null }} */ (patient).email || null,
+      phone: /** @type {{ telefon?: string | null }} */ (patient).telefon || null,
+      insurance_type: VERSICHERUNG[/** @type {string} */ (paymentType)] || null,
       krankenkasse: krankenkasse || null,
       status: 'booked',
       metadata: { quelle: 'online-anfrage' },

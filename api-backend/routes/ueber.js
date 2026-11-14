@@ -30,6 +30,7 @@ const LIZENZ_DATEIEN = ['NOTICE-komponenten.md', 'THIRD-PARTY-NOTICES.txt'];
 
 // Die Dateien ändern sich nur mit dem Image → einmal lesen, danach aus dem Speicher
 // (kein wiederholtes readFileSync von ~1 MB im Event-Loop, guvenlik S-54).
+/** @type {string | null | undefined} */
 let lizenzText;
 function lizenzenLesen() {
   if (lizenzText === undefined) {
@@ -51,22 +52,25 @@ const ueberLimiter = rateLimit({
   message: { error: 'Zu viele Anfragen. Bitte warten Sie eine Minute.' },
 });
 
+/**
+ * @param {{ supabase?: any }} [opts]
+ */
 export function createUeberRouter({ supabase = null } = {}) {
 const router = Router();
 
-router.get('/ueber', (req, res) => {
+router.get('/ueber', (/** @type {unknown} */ req, /** @type {{ set: (k: string, v: string) => void, json: (b: unknown) => void }} */ res) => {
   res.set('Cache-Control', 'no-store');
   res.json({ version: process.env.IMAGE_VERSION || 'dev' });
 });
 
-router.get('/ueber/verbindungen', nurKutu, ueberLimiter, requireAuth, async (req, res) => {
+router.get('/ueber/verbindungen', nurKutu, ueberLimiter, requireAuth, async (/** @type {{ auth?: { tenantId?: string } }} */ req, /** @type {{ set: (k: string, v: string) => void, json: (b: unknown) => void }} */ res) => {
   res.set('Cache-Control', 'no-store');
   // Nur host/port/modus verlassen die Funktion — nie Benutzer oder Passwort.
   const z = await ladeMailEinstellung(supabase, req.auth?.tenantId);
   res.json(verbindungenListe(process.env, z ? { modus: z.modus, smtp_host: z.smtp_host, smtp_port: z.smtp_port } : null));
 });
 
-router.get('/ueber/lizenzen', nurKutu, ueberLimiter, requireAuth, (req, res) => {
+router.get('/ueber/lizenzen', nurKutu, ueberLimiter, requireAuth, (/** @type {unknown} */ req, /** @type {{ status: (c: number) => { json: (b: unknown) => unknown }, set: (k: string, v: string) => void, type: (t: string) => { send: (b: string) => void } }} */ res) => {
   try {
     const text = lizenzenLesen();
     if (!text) return res.status(404).json({ error: 'Lizenzliste in diesem Build nicht enthalten.' });

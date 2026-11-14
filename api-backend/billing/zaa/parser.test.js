@@ -3,6 +3,10 @@ import { parseZaaFile } from './parser.js';
 import { translateZaaCode } from './error-translations.js';
 
 let passed = 0, failed = 0;
+/**
+ * @param {unknown} cond
+ * @param {string} msg
+ */
 function ok(cond, msg) {
   if (cond) { console.log('  ok  ', msg); passed++; }
   else      { console.error(' FAIL ', msg); failed++; }
@@ -12,7 +16,9 @@ function ok(cond, msg) {
 const tr = translateZaaCode('101');
 ok(tr && tr.text.includes('Positionsnummer'), 'translate 101 → Positionsnummer text');
 ok(translateZaaCode('999') === null, 'unknown code → null');
-ok(translateZaaCode('1') && translateZaaCode('1').text === translateZaaCode('01').text,
+const tr1 = translateZaaCode('1');
+const tr01 = translateZaaCode('01');
+ok(tr1 && tr01 && tr1.text === tr01.text,
    'numeric → zero-padded fallback');
 
 // 2. EDIFACT FEHL
@@ -90,11 +96,11 @@ ok(r3.errors.length === 0, 'no errors when nothing matches');
 ok(r3.valid === false && r3.reason === 'unknown', 'unknown arbitrary text rejected as unknown (no success receipt inferred)');
 
 // 5. Fail-closed: null, blank, wrong types
-const rNull = parseZaaFile(null);
+const rNull = parseZaaFile(/** @type {string} */ (/** @type {unknown} */ (null)));
 ok(rNull.valid === false && rNull.reason === 'empty' && rNull.format === 'empty' && rNull.errors.length === 0,
    'null input rejected as empty');
 
-const rUndef = parseZaaFile(undefined);
+const rUndef = parseZaaFile(/** @type {string} */ (/** @type {unknown} */ (undefined)));
 ok(rUndef.valid === false && rUndef.reason === 'empty' && rUndef.format === 'empty' && rUndef.errors.length === 0,
    'undefined input rejected as empty');
 
@@ -106,15 +112,15 @@ const rEmptyStr = parseZaaFile('');
 ok(rEmptyStr.valid === false && rEmptyStr.reason === 'empty' && rEmptyStr.format === 'empty' && rEmptyStr.errors.length === 0,
    'empty string input rejected as empty');
 
-const rObj = parseZaaFile({ some: 'data' });
+const rObj = parseZaaFile(/** @type {string} */ (/** @type {unknown} */ ({ some: 'data' })));
 ok(rObj.valid === false && rObj.reason === 'invalid' && rObj.format === 'empty' && rObj.errors.length === 0,
    'object input rejected as invalid');
 
-const rArr = parseZaaFile(['FEHL+101+1-1+Test']);
+const rArr = parseZaaFile(/** @type {string} */ (/** @type {unknown} */ (['FEHL+101+1-1+Test'])));
 ok(rArr.valid === false && rArr.reason === 'invalid' && rArr.format === 'empty' && rArr.errors.length === 0,
    'array input rejected as invalid');
 
-const rNum = parseZaaFile(12345);
+const rNum = parseZaaFile(/** @type {string} */ (/** @type {unknown} */ (12345)));
 ok(rNum.valid === false && rNum.reason === 'invalid' && rNum.format === 'empty' && rNum.errors.length === 0,
    'number input rejected as invalid');
 

@@ -3,6 +3,11 @@ const berlinDatum = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit',
 });
 
+/**
+ * @param {string | number | Date} createdAt
+ * @param {number} [zahlungszielTage]
+ * @returns {string}
+ */
 export function ausfallFaelligAm(createdAt, zahlungszielTage = 14) {
   const created = new Date(createdAt);
   if (!Number.isFinite(created.getTime())) throw new Error('Ungültiges Rechnungsdatum');
@@ -19,6 +24,10 @@ export function ausfallFaelligAm(createdAt, zahlungszielTage = 14) {
   return target.toISOString().slice(0, 10);
 }
 
+/**
+ * @param {{ faellig_am?: unknown } | null | undefined} row
+ * @returns {Date | null}
+ */
 export function gespeicherteAusfallFaelligkeit(row) {
   const value = row?.faellig_am;
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
@@ -26,10 +35,15 @@ export function gespeicherteAusfallFaelligkeit(row) {
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value ? date : null;
 }
 
+/**
+ * @param {{ faellig_am?: unknown } | null | undefined} row
+ * @param {Date} [now]
+ * @returns {boolean}
+ */
 export function ausfallIstFaellig(row, now = new Date()) {
   const date = gespeicherteAusfallFaelligkeit(row);
   if (!date) return false; // Altbelege: ursprüngliches Zahlungsziel nicht nachgewiesen.
   const parts = Object.fromEntries(berlinDatum.formatToParts(now).map(p => [p.type, p.value]));
   // Mahnung erst nach Ablauf des gesamten Fälligkeitstages (Berliner Kalender).
-  return row.faellig_am < `${parts.year}-${parts.month}-${parts.day}`;
+  return String(row?.faellig_am) < `${parts.year}-${parts.month}-${parts.day}`;
 }

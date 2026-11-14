@@ -8,6 +8,7 @@
 // Vorher wurde "nicht geprüft" als false gespeichert und stand im Bericht als
 // ungültig (legal-de + guvenlik A-19, 30.09.2026).
 
+/** @param {unknown} v @returns {number | null} */
 function zahl(v) {
   if (v === null || v === undefined || v === '') return null;
   const n = Number(v);

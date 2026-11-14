@@ -59,12 +59,27 @@ test('ladeAbwesenheiten ohne Mitarbeiter fragt gar nicht erst an', async () => {
 });
 
 test('ladeAbwesenheiten filtert ueber employee_id und Zeitraum', async () => {
+  /** @type {any[]} */
   const aufrufe = [];
   const fake = {
+    /** @param {string} tabelle */
     from(tabelle) { aufrufe.push(['from', tabelle]); return this; },
+    /** @param {string} felder */
     select(felder) { aufrufe.push(['select', felder]); return this; },
+    /**
+     * @param {string} spalte
+     * @param {any} werte
+     */
     in(spalte, werte) { aufrufe.push(['in', spalte, werte]); return this; },
+    /**
+     * @param {string} spalte
+     * @param {any} wert
+     */
     lte(spalte, wert) { aufrufe.push(['lte', spalte, wert]); return this; },
+    /**
+     * @param {string} spalte
+     * @param {any} wert
+     */
     gte(spalte, wert) { aufrufe.push(['gte', spalte, wert]); return Promise.resolve({ data: EIN_TAG }); },
   };
   const result = await ladeAbwesenheiten(fake, { empIds: ['a'], vonISO: '2026-09-08T00:00:00Z', bisISO: '2026-09-14T23:59:59Z' });

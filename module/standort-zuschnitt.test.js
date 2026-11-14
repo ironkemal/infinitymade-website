@@ -5,6 +5,11 @@ import assert from 'node:assert/strict';
 import { standortZuschnitt, istPraxisweit } from './standort-zuschnitt.js';
 
 const A = 'biz-a', B = 'biz-b';
+/**
+ * @param {string} id
+ * @param {string | null} lead_id
+ * @param {string | null} business_id
+ */
 const zeile = (id, lead_id, business_id) => ({ id, lead_id, leads: lead_id ? { business_id } : null });
 
 const daten = [
@@ -56,6 +61,6 @@ test('Marke nur fuer Zeilen ohne Standortzuordnung', () => {
 
 test('leere und kaputte Eingaben werfen nicht', () => {
   assert.deepEqual(standortZuschnitt([], A).zeilen, []);
-  assert.deepEqual(standortZuschnitt(null, A).zeilen, []);
-  assert.equal(istPraxisweit(undefined), true, 'im Zweifel sichtbar, nicht verschwunden');
+  assert.deepEqual(standortZuschnitt(/** @type {typeof daten} */ (/** @type {unknown} */ (null)), A).zeilen, []);
+  assert.equal(istPraxisweit(/** @type {typeof daten[number]} */ (/** @type {unknown} */ (undefined))), true, 'im Zweifel sichtbar, nicht verschwunden');
 });

@@ -13,8 +13,9 @@
  */
 
 /**
- * @param {{start_time:string, end_time:string}[]} wh  aktive working_hours-Zeilen für den Wochentag
- * @param {Date} startDate  gewählter Termin-Zeitpunkt
+ * @param {object} params
+ * @param {{start_time:string, end_time:string}[] | null} [params.wh]  aktive working_hours-Zeilen für den Wochentag
+ * @param {Date} params.startDate  gewählter Termin-Zeitpunkt
  * @returns {{titel:string, meldung:string, notiz:string}|null}
  *          null = innerhalb der Arbeitszeit, keine Warnung nötig.
  */

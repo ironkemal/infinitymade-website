@@ -15,14 +15,26 @@ export const DEFAULT_VORLAGE_SEEDS = [
   { name: 'RZG-Quittung', vorlage_type: 'rzg_quittung', is_default: true, content_json: { unterschrift_label: 'Empfang bestätigt:', hinweis: '', fusszeile: '' } },
 ];
 
-// Saubere Zeilen fuer die fehlenden Typen (reine Funktion).
+/**
+ * Saubere Zeilen fuer die fehlenden Typen (reine Funktion).
+ * @param {string[]} missingTypes
+ * @param {string} ownerId
+ * @param {typeof DEFAULT_VORLAGE_SEEDS} [seeds]
+ * @returns {Array<typeof DEFAULT_VORLAGE_SEEDS[number] & { owner_id: string }>}
+ */
 export function fehlendeSeedZeilen(missingTypes, ownerId, seeds = DEFAULT_VORLAGE_SEEDS) {
   return seeds.filter(s => missingTypes.includes(s.vorlage_type)).map(s => ({ ...s, owner_id: ownerId }));
 }
 
-// Erst gesammelt einfuegen; schlaegt das fehl, Zeile fuer Zeile wiederholen, damit
-// ein ungueltiger Typ die uebrigen nicht mitreisst. Gibt die fehlgeschlagenen Typen zurueck.
-export async function seedeVorlagen(supabase, rows, melde = () => {}) {
+/**
+ * Erst gesammelt einfuegen; schlaegt das fehl, Zeile fuer Zeile wiederholen, damit
+ * ein ungueltiger Typ die uebrigen nicht mitreisst. Gibt die fehlgeschlagenen Typen zurueck.
+ * @param {{ from: (table: string) => any }} supabase
+ * @param {Array<{ vorlage_type: string, [key: string]: any }>} rows
+ * @param {(type: string, error: any) => void} [melde]
+ * @returns {Promise<string[]>}
+ */
+export async function seedeVorlagen(supabase, rows, melde = (_type, _err) => {}) {
   if (!rows.length) return [];
   const { error } = await supabase.from('document_vorlagen').insert(rows);
   if (!error) return [];

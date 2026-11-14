@@ -29,6 +29,10 @@ import { fileURLToPath } from 'node:url';
 
 export const STATUS_WERTE = new Set(['offen', 'in Arbeit', 'blockiert', 'wartet-Melih', 'fertig']);
 
+/**
+ * @param {string} text
+ * @param {string} kopf
+ */
 function abschnitt(text, kopf) {
   const start = text.indexOf(kopf);
   if (start < 0) return '';
@@ -37,7 +41,9 @@ function abschnitt(text, kopf) {
   return ende < 0 ? rest : rest.slice(0, ende);
 }
 
-/** Zeilen der Paketliste als Objekte. Spalten laut Tabellenkopf in STATUS.md. */
+/** Zeilen der Paketliste als Objekte. Spalten laut Tabellenkopf in STATUS.md.
+ * @param {string} text
+ */
 export function paketZeilen(text) {
   return abschnitt(text, '## 2 Paketliste')
     .split('\n')
@@ -55,6 +61,7 @@ export function paketZeilen(text) {
  * @returns {string[]} Fehlermeldungen (leer = gut)
  */
 export function pruefeStatus(text, { html, istInHead }) {
+  /** @type {string[]} */
   const fehler = [];
   const pakete = paketZeilen(text);
   if (!pakete.length) fehler.push('Paketliste fehlt oder ist leer (Abschnitt „## 2 Paketliste“).');
@@ -109,7 +116,7 @@ if (istHaupt) {
   const wurzel = join(dirname(fileURLToPath(import.meta.url)), '..');
   const text = readFileSync(join(wurzel, 'redesign', 'STATUS.md'), 'utf8');
   const html = readFileSync(join(wurzel, 'dashboard.html'), 'utf8');
-  const istInHead = (sha) => {
+  const istInHead = (/** @type {string} */ sha) => {
     try { execFileSync('git', ['merge-base', '--is-ancestor', sha, 'HEAD'], { cwd: wurzel, stdio: 'ignore' }); return true; }
     catch { return false; }
   };

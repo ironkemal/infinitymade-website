@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { hausbesuchRegeln } from './hausbesuch-regeln.js';
 
+/** @param {string[]} positionen */
 const tag = (positionen) => [{ datum: '2026-09-10', positionen }];
 
 test('Hausbesuch Ja + 79933 ist frei', () => {

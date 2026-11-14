@@ -50,6 +50,7 @@ test('M4 Privacy Regression', async (t) => {
     };
 
     const safeEvent = sanitizeEvent(rawEvent, {});
+    assert.ok(safeEvent);
     const eventStr = JSON.stringify(safeEvent);
     assert.ok(!eventStr.includes(sentinel), `Sentinel ${sentinel} should not be present in sanitized event`);
 
@@ -99,6 +100,7 @@ test('M4 Privacy Regression', async (t) => {
     };
 
     const safeTx = sanitizeTransaction(rawTx);
+    assert.ok(safeTx);
     const txStr = JSON.stringify(safeTx);
     assert.ok(!txStr.includes(sentinel), `Sentinel ${sentinel} should not be present in sanitized transaction`);
 
@@ -110,11 +112,14 @@ test('M4 Privacy Regression', async (t) => {
   await t.test('audit: model/error/source arbitrary fields do not contain sentinel strings', async () => {
     const sentinel = 'PATIENT123SECRET456';
 
+    /** @type {Record<string, unknown> | null} */
     let insertedRow = null;
     const fakeSupabaseClient = {
+      /** @param {string} table */
       from: (table) => {
         assert.equal(table, 'ai_audit_log');
         return {
+          /** @param {Record<string, unknown>} row */
           insert: (row) => {
             insertedRow = row;
             return { error: null };
@@ -123,6 +128,7 @@ test('M4 Privacy Regression', async (t) => {
       }
     };
 
+    /** @type {Error & { code?: string }} */
     const rawError = new Error(`Connection failed for ${sentinel}`);
     rawError.code = `CUSTOM_ERR_${sentinel}`;
 
@@ -135,16 +141,18 @@ test('M4 Privacy Regression', async (t) => {
       status: `error-${sentinel}`,
       error: rawError,
       requestHash: `hash-${sentinel}`
-    }, fakeSupabaseClient);
+    }, /** @type {import('@supabase/supabase-js').SupabaseClient} */ (/** @type {unknown} */ (fakeSupabaseClient)));
 
-    const rowStr = JSON.stringify(insertedRow);
+    const row = /** @type {Record<string, unknown> | null} */ (insertedRow);
+    assert.ok(row);
+    const rowStr = JSON.stringify(row);
 
     assert.ok(!rowStr.includes(sentinel), `Sentinel ${sentinel} should not be present in audit row`);
-    assert.equal(insertedRow.task, 'unknown');
-    assert.equal(insertedRow.model, null);
-    assert.equal(insertedRow.deployment, null);
-    assert.equal(insertedRow.status, 'unknown');
-    assert.equal(insertedRow.error, 'AI_UNAVAILABLE');
-    assert.equal(insertedRow.request_hash, null);
+    assert.equal(row.task, 'unknown');
+    assert.equal(row.model, null);
+    assert.equal(row.deployment, null);
+    assert.equal(row.status, 'unknown');
+    assert.equal(row.error, 'AI_UNAVAILABLE');
+    assert.equal(row.request_hash, null);
   });
 });

@@ -22,7 +22,7 @@ export const PNG_MAGIC_BYTES = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
  *   - Breite und Höhe je 1..4096 (readUInt32BE an 16 und 20)
  *   - Gesamtpixel (Breite * Höhe) <= 4.000.000
  *
- * @param {Buffer|Uint8Array|string} eingabe
+ * @param {Buffer|Uint8Array|string|null|undefined} eingabe
  * @returns {{ ok: true, buffer: Buffer, groesse_bytes: number } | { ok: false, fehler: string }}
  */
 export function pruefePng(eingabe) {
@@ -147,7 +147,7 @@ export function formatiereSignaturZeit(datum = new Date()) {
     hour12: false,
   }).formatToParts(d);
 
-  const get = (type) => teile.find((p) => p.type === type)?.value || '';
+  const get = (/** @type {string} */ type) => teile.find((p) => p.type === type)?.value || '';
   return `${get('day')}.${get('month')}.${get('year')} ${get('hour')}:${get('minute')}`;
 }
 
@@ -231,10 +231,11 @@ export async function bettePdfSignaturen(pdfBytes, felder, pngs, options = {}) {
 
     const box = prozentZuPunkte(f, seitenBreite, seitenHoehe);
 
-    let rawPng = pngs[i];
-    if (rawPng && typeof rawPng === 'object' && 'buffer' in rawPng && !Buffer.isBuffer(rawPng) && !(rawPng instanceof Uint8Array)) {
-      rawPng = rawPng.buffer;
-    }
+    const eintrag = pngs[i];
+    /** @type {Buffer|Uint8Array|string|undefined} */
+    const rawPng = eintrag && typeof eintrag === 'object' && !Buffer.isBuffer(eintrag) && !(eintrag instanceof Uint8Array)
+      ? eintrag.buffer
+      : eintrag;
     const check = pruefePng(rawPng);
     if (!check.ok) {
       throw new Error(`Signatur ${i}: ${check.fehler}`);

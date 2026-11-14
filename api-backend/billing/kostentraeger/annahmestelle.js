@@ -40,15 +40,35 @@ import { berlinHeute, istStichtag } from '../../lib/berlin-tag.js';
 // Stichtag-Fehler ist ein Rückgabewert statt eines Abfragefehlers.
 // ---------------------------------------------------------------------------
 
-/** Gilt die Zeile am Stichtag? NULL/undefined = offen. ISO-Strings vergleichen lexikografisch. */
+/**
+ * @typedef {{
+ *   partner_ik?: string | null,
+ *   verknuepfungsart?: string | null,
+ *   abrechnungscode?: string | null,
+ *   art_datenlieferung?: string | null,
+ *   bundesland?: string | null,
+ *   quelle?: string | null,
+ *   valid_from?: string | null,
+ *   valid_to?: string | null,
+ * }} VkgZeileInput
+ */
+
+/**
+ * Gilt die Zeile am Stichtag? NULL/undefined = offen. ISO-Strings vergleichen lexikografisch.
+ * @param {{ valid_from?: string | null, valid_to?: string | null } | null | undefined} zeile
+ * @param {string} stichtag
+ */
 export function giltAm(zeile, stichtag) {
   const von = zeile?.valid_from ?? null;
   const bis = zeile?.valid_to ?? null;
   return (von === null || String(von) <= stichtag) && (bis === null || String(bis) >= stichtag);
 }
 
-/** Die Kassenart steckt in den ersten zwei Zeichen des Quelldateinamens
- *  ('AO05Q326_KE3.txt' → 'AO'). null, wenn nicht ableitbar — nicht raten. */
+/**
+ * Die Kassenart steckt in den ersten zwei Zeichen des Quelldateinamens
+ * ('AO05Q326_KE3.txt' → 'AO'). null, wenn nicht ableitbar — nicht raten.
+ * @param {unknown} quelle
+ */
 export function kassenartAusQuelle(quelle) {
   const m = String(quelle ?? '').trim().match(/^(AO|EK|BK|IK|BN|LK|GK|SB)/i);
   return m ? m[1].toUpperCase() : null;
@@ -70,8 +90,8 @@ export const VERKNUEPFUNGSART_KETTE = Object.freeze(['03', '02']);
  * (71/72) NICHT mit ab — Anhang 03 § 8.14, Fussnote 4. Wer 20 hier
  * einreiht, schickt podologische Dateien an die Physio-Annahmestelle.
  *
- * @param {string} bereich  'podologie' | sonstiges
- * @param {string} eigenerCode  Abrechnungscode des Fachbereichs (z. B. '22')
+ * @param {string | undefined} bereich  'podologie' | sonstiges
+ * @param {string} [eigenerCode]  Abrechnungscode des Fachbereichs (z. B. '22')
  * @returns {string[][]}  Stufen; je Stufe die gleichwertigen Codes
  */
 export function abrechnungscodeKette(bereich, eigenerCode) {
@@ -86,19 +106,20 @@ export function abrechnungscodeKette(bereich, eigenerCode) {
  * Gemeinsamer Kern für elektronische Annahmestellen (03/02) und
  * Papierannahmestellen (09).
  *
- * @param {Array} zeilen  Rohzeilen aus `kostentraeger_annahmestellen`
- * @param {object} opts
- * @param {string[][]} opts.ketten        aus abrechnungscodeKette()
- * @param {string|null} [opts.bundeslandVkg]  2-stelliger VKG-Landesschlüssel, falls bekannt
- * @param {readonly string[]} [opts.arten]  erlaubte Arten der Datenlieferung
- * @param {readonly string[]} [opts.vkgKette]  Verknüpfungsarten in Vorzugsreihenfolge
+ * @param {VkgZeileInput[]} zeilen  Rohzeilen aus `kostentraeger_annahmestellen`
+ * @param {{
+ *   ketten?: string[][],
+ *   bundeslandVkg?: string | null,
+ *   arten?: readonly string[],
+ *   vkgKette?: readonly string[],
+ * }} [opts]
  * @returns {{
  *   partnerIk: string, verknuepfungsart: string, abrechnungscode: string,
  *   bundesland: string, kassenart: string|null, stufe: number, kandidaten: number
  * } | null}  null = nicht auflösbar
  */
 export function waehleAnnahmestelle(zeilen, {
-  ketten,
+  ketten = [],
   bundeslandVkg = null,
   arten = ELEKTRONISCHE_DATENLIEFERUNG,
   vkgKette = VERKNUEPFUNGSART_KETTE,
@@ -164,8 +185,15 @@ export function waehleAnnahmestelle(zeilen, {
  * Breit lesen, im Speicher filtern — je Kostenträger sind es im Schnitt gut
  * zwanzig Zeilen, und die Auswahllogik bleibt so an EINER testbaren Stelle.
  *
- * @param {string|null} [opts.stichtag]  YYYY-MM-DD (Rechnungsdatum/Übermittlungstag); Standard: Berliner Tag
- * @returns {{ ok: true, ik, name, treffer } | { ok: false, grund: string }}
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {{
+ *   kostentraegerIk?: string | null,
+ *   bereich?: string,
+ *   eigenerAbrechnungscode?: string,
+ *   bundeslandVkg?: string | null,
+ *   stichtag?: string | null,
+ * }} opts
+ * @returns {Promise<{ ok: true, ik: string, name: string, treffer: NonNullable<ReturnType<typeof waehleAnnahmestelle>> } | { ok: false, grund: string }>}
  */
 export async function ladeAnnahmestelle(supabase, {
   kostentraegerIk, bereich, eigenerAbrechnungscode, bundeslandVkg = null, stichtag = null,
@@ -198,9 +226,13 @@ export async function ladeAnnahmestelle(supabase, {
   return { ok: true, ik: treffer.partnerIk, name: partner?.name || '', treffer };
 }
 
-/** Einheitliche 412-Antwort. Ein stiller Rückfall auf die Kostenträger-IK
- *  wäre die teurere Variante: die Datei ginge an den falschen Empfänger und
- *  käme als Abweisung zurück — oder schlimmer, gar nicht. */
+/**
+ * Einheitliche 412-Antwort. Ein stiller Rückfall auf die Kostenträger-IK
+ * wäre die teurere Variante: die Datei ginge an den falschen Empfänger und
+ * käme als Abweisung zurück — oder schlimmer, gar nicht.
+ * @param {import('express').Response} res
+ * @param {{ ik: string, name?: string | null }} info
+ */
 export function annahmestelleFehlt(res, { ik, name }) {
   return res.status(412).json({
     error: `${name || 'Krankenkasse'} (IK ${ik}): Für diese Krankenkasse ist keine ` +
@@ -242,10 +274,8 @@ export const PAPIER_DATENLIEFERUNG = Object.freeze(['21', '24', '26', '28', '29'
  *
  * Liefert das schlankere 5-Felder-Ergebnis ohne verknuepfungsart und kassenart.
  *
- * @param {Array} zeilen  Rohzeilen aus `kostentraeger_annahmestellen`
- * @param {object} opts
- * @param {string[][]} opts.ketten        aus abrechnungscodeKette()
- * @param {string|null} [opts.bundeslandVkg]  2-stelliger VKG-Landesschluessel
+ * @param {VkgZeileInput[]} zeilen  Rohzeilen aus `kostentraeger_annahmestellen`
+ * @param {{ ketten?: string[][], bundeslandVkg?: string | null }} [opts]
  * @returns {{
  *   partnerIk: string, abrechnungscode: string,
  *   bundesland: string, stufe: number, kandidaten: number
@@ -278,19 +308,20 @@ export function waehlePapierannahmestelle(zeilen, { ketten, bundeslandVkg = null
  * fehlt die Tabelle noch (vor Migration), bleibt `anschrift` null und `ok: true` —
  * die Abrechnung darf dadurch nicht angehalten werden.
  *
- * @param {object} supabase
- * @param {object} opts
- * @param {string} opts.kostentraegerIk
- * @param {string} opts.bereich
- * @param {string} [opts.eigenerAbrechnungscode]
- * @param {string|null} [opts.bundeslandVkg]
- * @param {string|null} [opts.stichtag]  YYYY-MM-DD — derselbe wie bei ladeAnnahmestelle() derselben Abrechnung
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {{
+ *   kostentraegerIk?: string | null,
+ *   bereich?: string,
+ *   eigenerAbrechnungscode?: string,
+ *   bundeslandVkg?: string | null,
+ *   stichtag?: string | null,
+ * }} opts
  * @returns {Promise<{
  *   ok: true,
  *   ik: string,
  *   name: string,
  *   anschrift: { art: string, plz: string, ort: string, strasse: string } | null,
- *   treffer: object
+ *   treffer: NonNullable<ReturnType<typeof waehlePapierannahmestelle>>
  * } | { ok: false, grund: string }>}
  */
 export async function ladePapierannahmestelle(supabase, {
@@ -356,7 +387,7 @@ export async function ladePapierannahmestelle(supabase, {
       }
     }
   } catch (e) {
-    console.warn('[annahmestelle] Anschrift-Abfrage fehlgeschlagen:', e?.message || e);
+    console.warn('[annahmestelle] Anschrift-Abfrage fehlgeschlagen:', e instanceof Error ? e.message : e);
   }
 
   return { ok: true, ik: treffer.partnerIk, name: partner?.name || '', anschrift, treffer };

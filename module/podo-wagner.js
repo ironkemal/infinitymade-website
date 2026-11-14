@@ -58,14 +58,14 @@ export function wagnerRelevant({ dgs = [], icd10 = [] } = {}) {
 
 /**
  * Anzeigewert bestimmen: Befund vor Verordnung.
- * @param {{befund?:?{wagner_grad:*, erstellt_am:*}, vord?:?{wagner_grad:*, ausstellungsdatum:*}}} q
+ * @param {{befund?:?{wagner_grad?:*, erstellt_am?:*}, vord?:?{wagner_grad?:*, ausstellungsdatum?:*}}} [q]
  * @returns {?{grad:number, datum:string, quelle:'befund'|'verordnung'}}
  */
 export function wagnerAnzeige({ befund = null, vord = null } = {}) {
   const b = wagnerWert(befund?.wagner_grad);
-  if (b !== null) return { grad: b, datum: datumDe(befund.erstellt_am, ''), quelle: 'befund' };
+  if (b !== null && befund) return { grad: b, datum: datumDe(befund.erstellt_am, ''), quelle: 'befund' };
   const v = wagnerWert(vord?.wagner_grad);
-  if (v !== null) return { grad: v, datum: datumDe(vord.ausstellungsdatum, ''), quelle: 'verordnung' };
+  if (v !== null && vord) return { grad: v, datum: datumDe(vord.ausstellungsdatum, ''), quelle: 'verordnung' };
   return null;
 }
 
@@ -78,14 +78,15 @@ export function wagnerRozetHtml(a, esc) {
   if (!a) return '';
   const stufe = a.grad >= 3 ? 'rot' : a.grad >= 1 ? 'orange' : 'mehr';
   const text = `Wagner ${a.grad}${a.datum ? ` · ${a.datum}` : ''}`;
-  const titel = `${WAGNER_TEXT[a.grad]} — ${a.quelle === 'befund' ? 'aus dem Fußbefund' : 'aus der Verordnung (Altbestand)'}`;
+  const beschreibung = WAGNER_TEXT[/** @type {keyof typeof WAGNER_TEXT} */ (a.grad)] || '';
+  const titel = `${beschreibung} — ${a.quelle === 'befund' ? 'aus dem Fußbefund' : 'aus der Verordnung (Altbestand)'}`;
   return `<span class="anam-rozets" data-wagner-rozet><span class="anam-rozet anam-rozet--${stufe}" title="${esc(titel)}">${esc(text)}</span></span>`;
 }
 
 /**
  * Lädt, was das Rozet braucht, und liefert fertiges HTML ('' = nichts anzeigen).
  * Jeder Fehler → '' (ein Rozet darf nie den Bildschirm kippen).
- * @param {object} sb        Supabase-Client
+ * @param {{ from: (table: string) => any }} sb        Supabase-Client
  * @param {string} ownerId
  * @param {string} leadId
  * @param {(s:string)=>string} esc
@@ -99,10 +100,11 @@ export async function ladeWagnerRozet(sb, ownerId, leadId, esc) {
       .eq('patient_id', leadId)
       .order('ausstellungsdatum', { ascending: false, nullsFirst: false })
       .limit(30);
+    /** @type {Array<{ diagnosegruppe?: string, icd10?: string, icd10_2?: string, wagner_grad?: any, ausstellungsdatum?: any }>} */
     const liste = vs || [];
     const relevant = wagnerRelevant({
-      dgs: liste.map((v) => v.diagnosegruppe),
-      icd10: liste.flatMap((v) => [v.icd10, v.icd10_2]),
+      dgs: liste.map((v) => v.diagnosegruppe || ''),
+      icd10: liste.flatMap((v) => [v.icd10 || '', v.icd10_2 || '']),
     });
     if (!relevant) return '';
     const { data: befund } = await sb.from('pat_fussbefund')

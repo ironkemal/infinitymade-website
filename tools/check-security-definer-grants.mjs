@@ -336,6 +336,7 @@ export function pruefeDatei(dateiname, inhalt) {
   return bulgular;
 }
 
+/** @param {string} datei */
 function standardLeseFn(datei) {
   try {
     return execSync('git show :' + JSON.stringify(datei), { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] });
@@ -390,7 +391,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     console.error("  ✗ COMMIT REDDEDILDI — SECURITY DEFINER fonksiyonu eksik REVOKE ile yeniden yaratiliyor (S-04)");
     console.error('');
     for (const { datei, name, fehlend } of fehlendeRevokes) {
-      console.error('      ' + datei + '  →  ' + name + '()   eksik: ' + fehlend.join(', '));
+      console.error('      ' + datei + '  →  ' + name + '()   eksik: ' + (fehlend || []).join(', '));
     }
     console.error('');
     console.error("  CREATE (OR REPLACE) FUNCTION Postgres'te PUBLIC EXECUTE hakkini sifirlar.");

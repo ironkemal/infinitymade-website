@@ -70,16 +70,18 @@ test('hängende Prüfung → timeout statt Hänger', async () => {
 
 test('langsame DB (> 500 ms) → warnung', async () => {
   const p = gruen();
-  p.postgres = () => new Promise((ok) => setTimeout(() => ok({ buchMax: '0078' }), 550));
+  p.postgres = () => new Promise((ok) => setTimeout(() => ok({ buchMax: '0078', belegtBytes: 0 }), 550));
   const r = await statusSammeln(p, { log: still });
-  assert.equal(r.felder.db.postgres.status, 'warnung');
+  assert.equal(/** @type {{ postgres?: { status?: string } }} */ (r.felder.db).postgres?.status, 'warnung');
   assert.equal(r.gesamt, 'warnung');
 });
 
 test('schemaBewerten: Wartung, Abweichung, Zähler, unbekannt', () => {
-  assert.equal(schemaBewerten({ imageMax: '0078', buchMax: '0078', wartung: { art: 'sql', text: 'geheim' } }).status, 'fehler');
-  assert.ok(!JSON.stringify(schemaBewerten({ imageMax: '1', buchMax: '1', wartung: { art: 'sql', text: 'geheim' } })).includes('geheim'));
-  assert.equal(schemaBewerten({ imageMax: '0079', buchMax: '0078' }).code, 'abweichung');
+  assert.equal(schemaBewerten({ imageMax: '0078', buchMax: '0078', wartung: /** @type {{ art?: string | null }} */ ({ art: 'sql', text: 'geheim' }) }).status, 'fehler');
+  assert.ok(!JSON.stringify(schemaBewerten({ imageMax: '1', buchMax: '1', wartung: /** @type {{ art?: string | null }} */ ({ art: 'sql', text: 'geheim' }) })).includes('geheim'));
+  const abw = schemaBewerten({ imageMax: '0079', buchMax: '0078' });
+  if (!('code' in abw)) assert.fail();
+  assert.equal(abw.code, 'abweichung');
   assert.equal(schemaBewerten({ imageMax: '0078', buchMax: '0078', zaehler: { status: 'abweichung' } }).status, 'warnung');
   assert.equal(schemaBewerten({ imageMax: '0078', buchMax: null }).status, 'unbekannt');
 });
@@ -88,7 +90,9 @@ test('diskBewerten: 85 % warnung, 92 % fehler, 2× Belegung, Pfad fehlt', () => 
   assert.equal(diskBewerten({ status: 'ok', gesamtBytes: 100, freiBytes: 50 }, null).status, 'ok');
   assert.equal(diskBewerten({ status: 'ok', gesamtBytes: 100, freiBytes: 12 }, null).status, 'warnung');
   assert.equal(diskBewerten({ status: 'ok', gesamtBytes: 100, freiBytes: 7 }, null).status, 'fehler');
-  assert.equal(diskBewerten({ status: 'ok', gesamtBytes: 100, freiBytes: 40 }, 30).code, 'kein_platz_fuer_sicherung');
+  const d = diskBewerten({ status: 'ok', gesamtBytes: 100, freiBytes: 40 }, 30);
+  if (!('code' in d)) assert.fail();
+  assert.equal(d.code, 'kein_platz_fuer_sicherung');
   assert.equal(diskBewerten({ status: 'unbekannt' }, null).status, 'unbekannt');
 });
 
@@ -106,19 +110,19 @@ test('gesamtStatus: schlechtester gewinnt', () => {
 
 test('standardPruefungen: ohne DATABASE_URL kein postgres, Disk-Pfad fehlt → unbekannt, Schlüssel fehlt → fehler', async () => {
   const { standardPruefungen } = await import('./status.js');
-  const supabase = {
+  const supabase = /** @type {Parameters<typeof standardPruefungen>[0]['supabase']} */ (/** @type {unknown} */ ({
     from: () => ({ select: () => ({ limit: async () => ({ error: null }) }) }),
     storage: { listBuckets: async () => ({ data: [], error: { message: 'kaputt', status: 503 } }) },
-  };
+  }));
   const p = standardPruefungen({ supabase, env: {}, diskPfad: '/gibt/es/nicht/praxura' });
   assert.equal(p.postgres, null);
   assert.equal(p.auth, null);
   assert.equal(p.realtime, null);
   const r = await statusSammeln({ ...p, version: { version: 'x' }, schema: {} }, { log: still });
-  assert.equal(r.felder.db.rest.status, 'ok');
-  assert.equal(r.felder.db.postgres.status, 'unbekannt');
-  assert.equal(r.felder.storage.code, 'http_5xx');
-  assert.equal(r.felder.disk.status, 'unbekannt');
-  assert.equal(r.felder.data_key.code, 'fehlt');
+  assert.equal(/** @type {{ rest?: { status?: string } }} */ (r.felder.db).rest?.status, 'ok');
+  assert.equal(/** @type {{ postgres?: { status?: string } }} */ (r.felder.db).postgres?.status, 'unbekannt');
+  assert.equal(/** @type {{ code?: string }} */ (r.felder.storage).code, 'http_5xx');
+  assert.equal(/** @type {{ status?: string }} */ (r.felder.disk).status, 'unbekannt');
+  assert.equal(/** @type {{ code?: string }} */ (r.felder.data_key).code, 'fehlt');
   assert.ok(!JSON.stringify(r).includes('kaputt'));
 });

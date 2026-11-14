@@ -13,12 +13,18 @@ let gesperrtBis = 0;
 
 export function _planSperreZuruecksetzen() { gesperrtBis = 0; }
 
+/** @param {{ code?: unknown, message?: unknown } | null | undefined} error */
 function tabelleFehlt(error) {
   const t = `${error?.code || ''} ${error?.message || ''}`;
   return /42P01|PGRST205|does not exist|schema cache/i.test(t);
 }
 
-/** @returns {Promise<Array<{employee_id:string,business_id:string,weekday:?number,datum:?string}>>} */
+/**
+ * @param {import('@supabase/supabase-js').SupabaseClient | null | undefined} supabase
+ * @param {{ ownerId?: string, employeeIds?: string[] }} opts
+ * @param {number} [jetzt]
+ * @returns {Promise<Array<import('./standort-plan.js').StandortPlanZeile>>}
+ */
 export async function ladeStandortPlan(supabase, { ownerId, employeeIds }, jetzt = Date.now()) {
   if (!supabase || !ownerId || !Array.isArray(employeeIds) || !employeeIds.length) return [];
   if (jetzt < gesperrtBis) return [];
@@ -42,11 +48,17 @@ export async function ladeStandortPlan(supabase, { ownerId, employeeIds }, jetzt
 /**
  * true = Mitarbeiter darf an diesem Tag (und, mit `zeit`, in diesem Zeitraum) an diesem Standort eingeplant werden.
  * Ohne Plan/Standort immer true. `zeit` = { start: 'HH:MM' | vonMin, dauerMin } in Berliner Ortszeit (0109 Zeitfenster).
+ * @param {Array<import('./standort-plan.js').StandortPlanZeile> | null | undefined} zeilen
+ * @param {string | null | undefined} employeeId
+ * @param {string | null | undefined} datum
+ * @param {string | null | undefined} standortId
+ * @param {{ start?: string, vonMin?: number, dauerMin?: number } | null} [zeit=null]
+ * @returns {boolean}
  */
 export function planErlaubt(zeilen, employeeId, datum, standortId, zeit = null) {
   if (!standortId || !Array.isArray(zeilen) || !zeilen.length) return true;
-  const von = !zeit ? null : Number.isFinite(zeit.vonMin) ? zeit.vonMin : zeitInMinuten(zeit.start);
-  const bis = von !== null && Number.isFinite(Number(zeit.dauerMin)) ? von + Number(zeit.dauerMin) : null;
+  const von = !zeit ? null : Number.isFinite(zeit.vonMin) ? /** @type {number} */ (zeit.vonMin) : zeitInMinuten(zeit.start);
+  const bis = von !== null && Number.isFinite(Number(zeit?.dauerMin)) ? von + Number(zeit?.dauerMin) : null;
   return imZeitfenster(zeilen, employeeId, datum, standortId, von, bis, [standortId]);
 }
 

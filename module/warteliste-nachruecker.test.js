@@ -4,14 +4,20 @@ import { holeNachruecker, uebernimmSlot, machtWiederWartend } from './warteliste
 
 // ── Hilfsattrappen ─────────────────────────────────────────────────────────
 
-/** Minimaler Supabase-Ersatz: merkt sich, was eingefügt werden sollte. */
+/**
+ * Minimaler Supabase-Ersatz: merkt sich, was eingefügt werden sollte.
+ * @param {{ fehler?: { message?: string } | null }} [opts]
+ */
 function fakeSupabase({ fehler = null } = {}) {
+  /** @type {{ tabelle?: string, payload?: Record<string, unknown> }} */
   const gesehen = {};
   return {
     gesehen,
+    /** @param {string} tabelle */
     from(tabelle) {
       gesehen.tabelle = tabelle;
       return {
+        /** @param {Record<string, unknown>} payload */
         insert(payload) {
           gesehen.payload = payload;
           return {
@@ -27,19 +33,35 @@ function fakeSupabase({ fehler = null } = {}) {
   };
 }
 
+/**
+ * @typedef {{ ok?: boolean, status?: number, body?: Record<string, unknown> }} FakeResponse
+ * @typedef {((url: string, opts?: RequestInit) => Promise<{ ok: boolean, status: number, json: () => Promise<Record<string, unknown>> }>) & { rufe: Array<{ url: string, opts: RequestInit | undefined }> }} FakeFetch
+ */
+
+/**
+ * @param {Array<FakeResponse | Error>} antworten
+ * @returns {FakeFetch}
+ */
 function fakeFetch(antworten) {
+  /** @type {Array<{ url: string, opts: RequestInit | undefined }>} */
   const rufe = [];
-  const fn = async (url, opts) => {
-    rufe.push({ url, opts });
-    const a = antworten.shift();
-    if (a instanceof Error) throw a;
-    return {
-      ok: a.ok !== false,
-      status: a.status || 200,
-      json: async () => a.body || {},
-    };
-  };
-  fn.rufe = rufe;
+  /** @type {FakeFetch} */
+  const fn = Object.assign(
+    /** @param {string} url @param {RequestInit} [opts] */
+    async (url, opts) => {
+      rufe.push({ url, opts });
+      const a = antworten.shift();
+      if (!a) return { ok: true, status: 200, json: async () => ({}) };
+      if (a instanceof Error) throw a;
+      return {
+        ok: a.ok !== false,
+        status: a.status || 200,
+        json: async () => a.body || {},
+      };
+    },
+    { rufe },
+  );
+  global.fetch = /** @type {typeof fetch} */ (/** @type {unknown} */ (fn));
   return fn;
 }
 
@@ -62,17 +84,17 @@ const EINTRAG = {
 // ── holeNachruecker ────────────────────────────────────────────────────────
 
 test('holeNachruecker fragt die Match-Route mit der Termin-ID', async () => {
-  global.fetch = fakeFetch([{ body: { candidates: [EINTRAG], total: 1 } }]);
+  const mockFetch = fakeFetch([{ body: { candidates: [EINTRAG], total: 1 } }]);
   const r = await holeNachruecker({ apiBase: '/api', token: 'tok', bookingId: 'alt-1' });
   assert.equal(r.total, 1);
-  assert.equal(global.fetch.rufe[0].url, '/api/warteliste/match');
-  assert.deepEqual(JSON.parse(global.fetch.rufe[0].opts.body), { booking_id: 'alt-1' });
+  assert.equal(mockFetch.rufe[0].url, '/api/warteliste/match');
+  assert.deepEqual(JSON.parse(String(mockFetch.rufe[0].opts?.body)), { booking_id: 'alt-1' });
 });
 
 // Der Abgleich ist Zusatzhilfe. Fällt er aus, darf die Absage nicht daran
 // scheitern — der Aufrufer fängt, aber nur wenn hier auch wirklich geworfen wird.
 test('holeNachruecker wirft bei HTTP-Fehler', async () => {
-  global.fetch = fakeFetch([{ ok: false, status: 503 }]);
+  fakeFetch([{ ok: false, status: 503 }]);
   await assert.rejects(
     () => holeNachruecker({ apiBase: '/api', token: 'tok', bookingId: 'alt-1' }),
     /HTTP 503/,
@@ -83,7 +105,7 @@ test('holeNachruecker wirft bei HTTP-Fehler', async () => {
 
 test('der neue Termin erbt Fenster und Mitarbeiter:in des abgesagten', async () => {
   const supabase = fakeSupabase();
-  global.fetch = fakeFetch([{ body: {} }]);
+  fakeFetch([{ body: {} }]);
 
   const r = await uebernimmSlot({
     supabase, apiBase: '/api', token: 'tok',
@@ -93,7 +115,7 @@ test('der neue Termin erbt Fenster und Mitarbeiter:in des abgesagten', async () 
   assert.equal(r.ok, true);
   assert.equal(r.bookingId, 'neu-1');
   assert.equal(supabase.gesehen.tabelle, 'bookings');
-  const p = supabase.gesehen.payload;
+  const p = supabase.gesehen.payload || {};
   // Uhrzeit und Mitarbeiter:in dürfen NICHT abweichen, sonst kollidiert der
   // neue Termin mit dem nächsten im Kalender.
   assert.equal(p.user_id, 'mitarbeiter-7');
@@ -110,74 +132,74 @@ test('der neue Termin erbt Fenster und Mitarbeiter:in des abgesagten', async () 
 // nicht die des abgesagten Termins.
 test('Wunschleistung der Warteliste schlägt die des abgesagten Termins', async () => {
   const supabase = fakeSupabase();
-  global.fetch = fakeFetch([{ body: {} }]);
+  fakeFetch([{ body: {} }]);
   await uebernimmSlot({
     supabase, apiBase: '/api', token: 'tok',
     eintrag: { ...EINTRAG, service_id: 'leistung-wunsch' }, slot: SLOT, ownerId: 'owner-1',
   });
-  assert.equal(supabase.gesehen.payload.service_id, 'leistung-wunsch');
+  assert.equal(supabase.gesehen.payload?.service_id, 'leistung-wunsch');
 });
 
 test('ohne Wunschleistung bleibt die des abgesagten Termins', async () => {
   const supabase = fakeSupabase();
-  global.fetch = fakeFetch([{ body: {} }]);
+  fakeFetch([{ body: {} }]);
   await uebernimmSlot({
     supabase, apiBase: '/api', token: 'tok',
     eintrag: EINTRAG, slot: SLOT, ownerId: 'owner-1',
   });
-  assert.equal(supabase.gesehen.payload.service_id, 'leistung-praxis');
+  assert.equal(supabase.gesehen.payload?.service_id, 'leistung-praxis');
 });
 
 test('der Wartelisten-Eintrag wird auf matched gesetzt', async () => {
   const supabase = fakeSupabase();
-  global.fetch = fakeFetch([{ body: {} }]);
+  const mockFetch = fakeFetch([{ body: {} }]);
   await uebernimmSlot({
     supabase, apiBase: '/api', token: 'tok',
     eintrag: EINTRAG, slot: SLOT, ownerId: 'owner-1',
   });
-  const ruf = global.fetch.rufe[0];
+  const ruf = mockFetch.rufe[0];
   assert.equal(ruf.url, '/api/warteliste/wl-1');
-  assert.equal(ruf.opts.method, 'PATCH');
-  assert.deepEqual(JSON.parse(ruf.opts.body), { status: 'matched', matched_booking_id: 'neu-1' });
+  assert.equal(ruf.opts?.method, 'PATCH');
+  assert.deepEqual(JSON.parse(String(ruf.opts?.body)), { status: 'matched', matched_booking_id: 'neu-1' });
 });
 
 // Ein doppelt angebotener Wartender ist ärgerlich, ein verlorener Termin wäre
 // schlimmer: der Termin bleibt gültig, es gibt nur eine Warnung.
 test('scheitert nur das Abhaken, bleibt der Termin bestehen', async () => {
   const supabase = fakeSupabase();
-  global.fetch = fakeFetch([{ ok: false, status: 403 }]);
+  fakeFetch([{ ok: false, status: 403 }]);
   const r = await uebernimmSlot({
     supabase, apiBase: '/api', token: 'tok',
     eintrag: EINTRAG, slot: SLOT, ownerId: 'owner-1',
   });
   assert.equal(r.ok, true);
   assert.equal(r.bookingId, 'neu-1');
-  assert.match(r.warnung, /403/);
+  assert.match(r.warnung || '', /403/);
 });
 
 // Der häufigste echte Fehlschlag: der Platz ist inzwischen wieder belegt
 // (EXCLUDE-Constraint no_overlapping_bookings).
 test('belegter Platz meldet Fehler und hakt nichts ab', async () => {
   const supabase = fakeSupabase({ fehler: { message: 'no_overlapping_bookings' } });
-  global.fetch = fakeFetch([]);
+  const mockFetch = fakeFetch([]);
   const r = await uebernimmSlot({
     supabase, apiBase: '/api', token: 'tok',
     eintrag: EINTRAG, slot: SLOT, ownerId: 'owner-1',
   });
   assert.equal(r.ok, false);
-  assert.match(r.error.message, /no_overlapping_bookings/);
-  assert.equal(global.fetch.rufe.length, 0);
+  assert.match(r.error?.message || '', /no_overlapping_bookings/);
+  assert.equal(mockFetch.rufe.length, 0);
 });
 
 test('Wartender ohne hinterlegten Namen bekommt trotzdem einen Termin', async () => {
   const supabase = fakeSupabase();
-  global.fetch = fakeFetch([{ body: {} }]);
+  fakeFetch([{ body: {} }]);
   await uebernimmSlot({
     supabase, apiBase: '/api', token: 'tok',
     eintrag: { id: 'wl-2', lead_id: null, leads: null }, slot: SLOT, ownerId: 'owner-1',
   });
-  assert.equal(supabase.gesehen.payload.customer_name, 'Unbekannter Patient');
-  assert.equal(supabase.gesehen.payload.lead_id, null);
+  assert.equal(supabase.gesehen.payload?.customer_name, 'Unbekannter Patient');
+  assert.equal(supabase.gesehen.payload?.lead_id, null);
 });
 
 // ── Gruppentermine ─────────────────────────────────────────────────────────
@@ -188,36 +210,36 @@ test('Wartender ohne hinterlegten Namen bekommt trotzdem einen Termin', async ()
 // derselben Person — und die Datenbank wiese ihn gegen den Gruppentermin ab.
 test('ein frei gewordener Gruppenplatz bleibt ein Gruppenplatz', async () => {
   const supabase = fakeSupabase();
-  global.fetch = fakeFetch([{ body: {} }]);
+  fakeFetch([{ body: {} }]);
   await uebernimmSlot({
     supabase, apiBase: '/api', token: 'tok', eintrag: EINTRAG,
     slot: { ...SLOT, group_parent_id: 'gruppe-1' }, ownerId: 'owner-1',
   });
-  assert.equal(supabase.gesehen.payload.group_parent_id, 'gruppe-1');
+  assert.equal(supabase.gesehen.payload?.group_parent_id, 'gruppe-1');
 });
 
 test('ein normaler Termin bekommt kein group_parent_id angehaengt', async () => {
   const supabase = fakeSupabase();
-  global.fetch = fakeFetch([{ body: {} }]);
+  fakeFetch([{ body: {} }]);
   await uebernimmSlot({
     supabase, apiBase: '/api', token: 'tok', eintrag: EINTRAG, slot: SLOT, ownerId: 'owner-1',
   });
-  assert.equal('group_parent_id' in supabase.gesehen.payload, false);
+  assert.equal('group_parent_id' in (supabase.gesehen.payload || {}), false);
 });
 
 // ── Zurueck auf die Warteliste ─────────────────────────────────────────────
 
 test('machtWiederWartend setzt waiting und leert den Terminbezug', async () => {
-  global.fetch = fakeFetch([{ body: { id: 'wl-1', status: 'waiting' } }]);
+  const mockFetch = fakeFetch([{ body: { id: 'wl-1', status: 'waiting' } }]);
   await machtWiederWartend({ apiBase: '/api', token: 'tok', eintragId: 'wl-1' });
-  const ruf = global.fetch.rufe[0];
+  const ruf = mockFetch.rufe[0];
   assert.equal(ruf.url, '/api/warteliste/wl-1');
-  assert.equal(ruf.opts.method, 'PATCH');
-  assert.deepEqual(JSON.parse(ruf.opts.body), { status: 'waiting', matched_booking_id: null });
+  assert.equal(ruf.opts?.method, 'PATCH');
+  assert.deepEqual(JSON.parse(String(ruf.opts?.body)), { status: 'waiting', matched_booking_id: null });
 });
 
 test('machtWiederWartend wirft bei HTTP-Fehler', async () => {
-  global.fetch = fakeFetch([{ ok: false, status: 403 }]);
+  fakeFetch([{ ok: false, status: 403 }]);
   await assert.rejects(
     () => machtWiederWartend({ apiBase: '/api', token: 'tok', eintragId: 'wl-1' }),
     /HTTP 403/,

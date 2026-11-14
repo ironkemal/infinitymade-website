@@ -50,6 +50,7 @@ import {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+/** @type {Record<string, { datei: string, codeFeld: string, importName: string, autoWrite: boolean }>} */
 export const BEREICHE = {
   podologie: {
     datei: join(__dirname, 'billing/codes/podologie_positions.js'),
@@ -76,12 +77,17 @@ export const BEREICHE = {
 const ANKER_ERSTE_ZEILE =
   '  // ── AUTOUPDATE-ANKER: neue Fenster werden von preise_autoupdate.mjs genau HIER,';
 
+/** @param {string} isoDatum */
 function vortag(isoDatum) {
   const d = new Date(isoDatum + 'T00:00:00Z');
   d.setUTCDate(d.getUTCDate() - 1);
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * @param {string} schluessel
+ * @param {any} wert
+ */
 function formatWert(schluessel, wert) {
   if (wert === null || wert === undefined) return 'null';
   if (schluessel === 'preis' || schluessel === 'zuzahlung') return Number(wert).toFixed(2);
@@ -91,8 +97,12 @@ function formatWert(schluessel, wert) {
   return `'${String(wert).replace(/'/g, "\\'")}'`;
 }
 
-/** Baut EINE Zeile für eine Position — alle Felder vom Vorgänger, 4 überschrieben. */
+/** Baut EINE Zeile für eine Position — alle Felder vom Vorgänger, 4 überschrieben.
+ * @param {Record<string, any>} altesEntry
+ * @param {Record<string, any>} overrides
+ */
 function formatEntry(altesEntry, overrides) {
+  /** @type {Record<string, any>} */
   const merged = { ...altesEntry, ...overrides };
   const teile = Object.keys(merged).map(k => `${k}: ${formatWert(k, merged[k])}`);
   return `    { ${teile.join(', ')} },`;
@@ -102,6 +112,13 @@ function formatEntry(altesEntry, overrides) {
  * Prüft und baut das neue Fenster für EINEN Bereich. Gibt entweder
  * { ok: true, gueltig_ab, anzahl } oder { ok: false, grund } zurück.
  * Schreibt die Datei nur bei ok:true UND dryRun:false.
+ *
+ * @param {string} codeFeld
+ * @param {string} datei
+ * @param {Array<{ code: string, xmlPreis: number, xmlGueltigAb: string }>} neuePreisrundeEintraege
+ * @param {{ gueltig_ab: string, gueltig_bis: string, positionen: ReadonlyArray<Record<string, any>> }} aktuellesFenster
+ * @param {boolean} dryRun
+ * @returns {Promise<{ ok: true, gueltig_ab: string, anzahl: number, datei: string, geschrieben: boolean } | { ok: false, grund: string }>}
  */
 export async function versucheBereich(codeFeld, datei, neuePreisrundeEintraege, aktuellesFenster, dryRun) {
   const startdaten = [...new Set(neuePreisrundeEintraege.map(e => e.xmlGueltigAb))];
@@ -152,7 +169,7 @@ export async function versucheBereich(codeFeld, datei, neuePreisrundeEintraege, 
   }
 
   const neuePositionenZeilen = aktuellesFenster.positionen.map(p => {
-    const neuerPreis = preisByCode.get(p[codeFeld]);
+    const neuerPreis = /** @type {number} */ (preisByCode.get(p[codeFeld]));
     return formatEntry(p, {
       preis: neuerPreis,
       // Kaufmännische Rundung, NICHT .toFixed(2): `50.55 * 0.10` ist binär
@@ -208,6 +225,7 @@ async function main() {
   const zeilen = parseXml(xml);
   const ergebnis = vergleiche(zeilen);
 
+  /** @type {{ stand: string | null, changed: Array<{ bereich: string, ok: true, gueltig_ab: string, anzahl: number, datei: string, geschrieben: boolean }>, needsReview: Array<{ grund: string, details: any[] }>, fehltInfo?: number }} */
   const bericht = { stand: stand || null, changed: [], needsReview: [] };
 
   if (ergebnis.abweichend.length > 0) {
@@ -216,6 +234,7 @@ async function main() {
       details: ergebnis.abweichend,
     });
   } else {
+    /** @type {Record<string, Array<{ code: string, bereich: string, label: string, xmlPreis: number, xmlGueltigAb: string, unserLetztesFenster: string }>>} */
     const proBereich = {};
     for (const e of ergebnis.neuePreisrunde) {
       (proBereich[e.bereich] = proBereich[e.bereich] || []).push(e);
@@ -237,7 +256,7 @@ async function main() {
 
       const mod = await import(`${pathToFileURL(cfg.datei).href}?t=${Date.now()}`);
       const fenster = mod[cfg.importName];
-      const offene = fenster.filter(f => f.gueltig_bis === '9999-12-31');
+      const offene = fenster.filter((/** @type {any} */ f) => f.gueltig_bis === '9999-12-31');
       if (offene.length !== 1) {
         bericht.needsReview.push({ grund: `${bereich}: ${offene.length} offene Fenster statt genau 1`, details: eintraege });
         continue;

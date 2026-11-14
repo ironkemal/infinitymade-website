@@ -44,14 +44,27 @@ export const DATEINAME_RE = /^[A-Z]{2}\d{2}(Q\d|\d{2})\d{2}_KE\d\.txt$/;
 const MAX_BYTES = 5 * 1024 * 1024;
 const MAX_MSG = 3800;
 
-/** Nur druckbare Zeichen, gekürzt — für alles, was aus dem Netz in eine Nachricht geht. */
+/**
+ * @typedef {{ name: string, link: string, gueltigAb: string | null }} KtRssEintrag
+ * @typedef {{ name: string, gueltigAb: string }} KtAusgabeInfo
+ * @typedef {{ records: number, iks: Set<string>, vkg: number, ersatz: number, vkgLang: number, fehlPartner: Set<string>, papier: Map<string, string> }} KtAnalyse
+ */
+
+/** Nur druckbare Zeichen, gekürzt — für alles, was aus dem Netz in eine Nachricht geht.
+ * @param {unknown} s
+ * @param {number} [n]
+ */
 export function sauber(s, n = 120) {
   return String(s ?? '').replace(/[^\x20-\x7EÀ-ÿ]/g, '?').slice(0, n);
 }
 
-/** RSS-Text → { eintraege: [{name, gueltigAb, link}], unerwartet: [String] } — ohne XML-Bibliothek. */
+/** RSS-Text → { eintraege: [{name, gueltigAb, link}], unerwartet: [String] } — ohne XML-Bibliothek.
+ * @param {string} xml
+ */
 export function rssParsen(xml) {
+  /** @type {KtRssEintrag[]} */
   const eintraege = [];
+  /** @type {string[]} */
   const unerwartet = [];
   const items = String(xml).match(/<item>[\s\S]*?<\/item>/g) || [];
   for (const it of items) {
@@ -66,8 +79,11 @@ export function rssParsen(xml) {
   return { eintraege, unerwartet };
 }
 
-/** Bekannte Ausgaben: AUSGABEN-Liste (Text, kein Import — der Lader öffnet einen DB-Client) + wissensbank-Dateinamen. */
+/** Bekannte Ausgaben: AUSGABEN-Liste (Text, kein Import — der Lader öffnet einen DB-Client) + wissensbank-Dateinamen.
+ * @param {{ ladeText: string, wbNamen: string[] }} opts
+ */
 export function bekannteAusgaben({ ladeText, wbNamen }) {
+  /** @type {KtAusgabeInfo[]} */
   const ausgaben = [];
   for (const m of ladeText.matchAll(/datei:\s*'([^']+)'\s*,\s*gueltigAb:\s*'(\d{4}-\d{2}-\d{2})'/g)) {
     ausgaben.push({ name: m[1], gueltigAb: m[2] });
@@ -76,7 +92,11 @@ export function bekannteAusgaben({ ladeText, wbNamen }) {
   return { ausgaben, bekannt };
 }
 
-/** Heute gültige Ausgabe derselben Kassenart (neueste mit gültig-ab <= Stichtag). */
+/** Heute gültige Ausgabe derselben Kassenart (neueste mit gültig-ab <= Stichtag).
+ * @param {string} name
+ * @param {KtAusgabeInfo[]} ausgaben
+ * @param {string} heute
+ */
 export function basisFuer(name, ausgaben, heute) {
   const art = name.slice(0, 2);
   return ausgaben
@@ -84,14 +104,22 @@ export function basisFuer(name, ausgaben, heute) {
     .sort((a, b) => (a.gueltigAb < b.gueltigAb ? 1 : a.gueltigAb > b.gueltigAb ? -1 : 0))[0] || null;
 }
 
-/** Kennzahlen einer Datei (Text bereits dekodiert). */
+/** Kennzahlen einer Datei (Text bereits dekodiert).
+ * @param {string} text
+ * @returns {KtAnalyse}
+ */
 export function analysiere(text) {
-  const records = parseKostentraegerDatei(text);
+  const records = /** @type {Array<{ ik: string, name?: string, namensteile?: string[], datenannahmestellen: Array<{ verknuepfungsart?: string, partner_ik?: string, abrechnungsstelle_ik?: string }> }>} */ (
+    /** @type {unknown} */ (parseKostentraegerDatei(text))
+  );
   const iks = new Set(records.map(r => r.ik));
   let vkg = 0;
+  /** @type {Set<string>} */
   let fehlPartner = new Set();
+  /** @type {Map<string, string>} */
   const papier = new Map(); // IK → sortierte Partner-IKs der VKG-09-Zeilen
   for (const r of records) {
+    /** @type {string[]} */
     const p = [];
     for (const v of r.datenannahmestellen) {
       vkg++;
@@ -109,10 +137,20 @@ export function analysiere(text) {
   return { records: records.length, iks, vkg, ersatz, vkgLang, fehlPartner, papier };
 }
 
+/**
+ * @param {string[]} arr
+ * @param {number} [n]
+ */
 const zeige = (arr, n = 5) => arr.slice(0, n).join(', ') + (arr.length > n ? ` … (+${arr.length - n})` : '');
+/**
+ * @param {number} a
+ * @param {number} b
+ */
 const delta = (a, b) => `${a} (Basis ${b}, ${a - b >= 0 ? '+' : ''}${a - b})`;
 
-/** Abschnitt (Text) für EINE neue Datei; wirft nicht — Fehler werden zum Abschnitt. */
+/** Abschnitt (Text) für EINE neue Datei; wirft nicht — Fehler werden zum Abschnitt.
+ * @param {{ eintrag: KtRssEintrag & { heute?: string }, sha: string, neu: KtAnalyse, basis: KtAnalyse | null, basisName?: string }} opts
+ */
 export function berichtDatei({ eintrag, sha, neu, basis, basisName }) {
   const z = [];
   z.push(`== ${eintrag.name} — NEU (gültig ab ${eintrag.gueltigAb || '?'}) ==`);
@@ -149,7 +187,11 @@ export function berichtDatei({ eintrag, sha, neu, basis, basisName }) {
   return z.join('\n');
 }
 
-/** Abschnitte → Nachrichten ≤ MAX_MSG; Kopf vorn, Erinnerung hinten. */
+/** Abschnitte → Nachrichten ≤ MAX_MSG; Kopf vorn, Erinnerung hinten.
+ * @param {string[]} abschnitte
+ * @param {string} kopf
+ * @param {string} fuss
+ */
 export function nachrichten(abschnitte, kopf, fuss) {
   const out = [];
   let cur = kopf + '\n';
@@ -164,6 +206,11 @@ export function nachrichten(abschnitte, kopf, fuss) {
   return out;
 }
 
+/**
+ * @param {string} url
+ * @param {{ text?: boolean }} [opts]
+ * @returns {Promise<string | Buffer>}
+ */
 async function holen(url, { text = false } = {}) {
   let letzter;
   for (let v = 1; v <= 3; v++) {
@@ -181,7 +228,10 @@ async function holen(url, { text = false } = {}) {
   throw letzter;
 }
 
-export async function lauf({ out, vergiss = [], rssDatei = null, heute = null, ladeText = null, wbNamen = null } = {}) {
+/**
+ * @param {{ out?: string, vergiss?: string[], rssDatei?: string | null, heute?: string | null, ladeText?: string | null, wbNamen?: string[] | null }} [opts]
+ */
+export async function lauf({ out = '.', vergiss = [], rssDatei = null, heute = null, ladeText = null, wbNamen = null } = {}) {
   const stichtag = heute || berlinHeute();
   const { ausgaben, bekannt } = bekannteAusgaben({
     ladeText: ladeText ?? readFileSync(LADER, 'utf8'),
@@ -196,9 +246,9 @@ export async function lauf({ out, vergiss = [], rssDatei = null, heute = null, l
   // 1) RSS — nicht abrufbar/leer = der Wächter ist blind. Kein Zustand: jeden Tag erneut melden.
   let xml;
   try {
-    xml = rssDatei ? readFileSync(rssDatei, 'utf8') : await holen(RSS_URL, { text: true });
+    xml = rssDatei ? readFileSync(rssDatei, 'utf8') : /** @type {string} */ (await holen(RSS_URL, { text: true }));
   } catch (e) {
-    return { meldungen: [`Kostenträgerdatei-Wächter BLIND: RSS nicht abrufbar (${sauber(e.message, 80)}). Es wird täglich erneut gemeldet, bis der Feed wieder lädt — bis dahin neue Dateien manuell auf gkv-datenaustausch.de prüfen.`], neu: 0 };
+    return { meldungen: [`Kostenträgerdatei-Wächter BLIND: RSS nicht abrufbar (${sauber(e instanceof Error ? e.message : String(e), 80)}). Es wird täglich erneut gemeldet, bis der Feed wieder lädt — bis dahin neue Dateien manuell auf gkv-datenaustausch.de prüfen.`], neu: 0 };
   }
   const { eintraege, unerwartet } = rssParsen(xml);
   if (!eintraege.length) {
@@ -212,7 +262,7 @@ export async function lauf({ out, vergiss = [], rssDatei = null, heute = null, l
   // 2) jede neue Datei einzeln — ein Fehler unterdrückt die anderen nicht (O-130)
   for (const e of neue) {
     try {
-      const bytes = await holen(e.link);
+      const bytes = /** @type {Buffer} */ (await holen(e.link));
       const sha = createHash('sha256').update(bytes).digest('hex');
       mkdirSync(join(out, 'dl'), { recursive: true });
       const pfad = join(out, 'dl', e.name); // e.name ist streng validiert
@@ -225,7 +275,7 @@ export async function lauf({ out, vergiss = [], rssDatei = null, heute = null, l
       try { if (bs) basis = analysiere(leseKostentraegerDatei(join(WB_DIR, bs.name))); } catch { /* Basis nicht lesbar → ohne Vergleich */ }
       abschnitte.push(berichtDatei({ eintrag: { ...e, heute: stichtag }, sha, neu, basis, basisName: bs?.name }));
     } catch (err) {
-      abschnitte.push(`== ${e.name} — NEU, aber FEHLER ==\n${sauber(err.message, 200)}\nQuelle: ${e.link}`);
+      abschnitte.push(`== ${e.name} — NEU, aber FEHLER ==\n${sauber(err instanceof Error ? err.message : String(err), 200)}\nQuelle: ${e.link}`);
     }
   }
 
@@ -237,6 +287,7 @@ export async function lauf({ out, vergiss = [], rssDatei = null, heute = null, l
   return { meldungen: nachrichten(abschnitte, kopf, fuss), neu: neue.length };
 }
 
+/** @param {string} n */
 const arg = n => (process.argv.find(a => a.startsWith(`--${n}=`)) || '').slice(n.length + 3) || null;
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
@@ -253,7 +304,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     else console.log(`(${meldungen.length} Nachricht(en) in ${out}, neue Dateien: ${neu})`);
   } catch (e) {
     // Absturz des Wächters selbst: Nachricht schreiben (Workflow sendet sie), Job rot.
-    writeFileSync(join(out, 'msg-01.txt'), `Kostenträgerdatei-Wächter ABGESTÜRZT: ${sauber(e && e.message, 200)}. Actions-Log prüfen.`);
+    writeFileSync(join(out, 'msg-01.txt'), `Kostenträgerdatei-Wächter ABGESTÜRZT: ${sauber(e instanceof Error ? e.message : String(e), 200)}. Actions-Log prüfen.`);
     console.error(e);
     process.exit(1);
   }

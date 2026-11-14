@@ -13,7 +13,7 @@ import {
 } from './rechnung-steuer.js';
 
 let fehler = 0;
-function pruefe(name, ist, soll) {
+function pruefe(/** @type {any} */ name, /** @type {any} */ ist, /** @type {any} */ soll) {
   const a = JSON.stringify(ist), b = JSON.stringify(soll);
   if (a === b) { console.log(`  ✓ ${name}`); }
   else { console.error(`  ✗ ${name}\n      erwartet: ${b}\n      bekommen: ${a}`); fehler++; }

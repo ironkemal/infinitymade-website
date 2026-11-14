@@ -66,9 +66,14 @@ test('die Schleife endet auch bei 52 Terminen', () => {
 
 /* ── Ops 08fa9e2c: nur die angehakten Einheiten verteilen ─────────────────── */
 
+/**
+ * @param {number} anzahlAngehakt
+ * @param {number} gesamt
+ * @returns {any}
+ */
 function liste(anzahlAngehakt, gesamt) {
   return {
-    querySelectorAll(sel) {
+    querySelectorAll(/** @type {string} */ sel) {
       assert.equal(sel, '.rx-unv-cb:checked');
       return { length: anzahlAngehakt, _gesamt: gesamt };
     },
@@ -136,14 +141,16 @@ test('recurrence biweekly ohne intervalDays liefert 14 Tage Abstand', () => {
 
 test('verdrahteSerienStarttag: Starttag Mittwoch hakt Mi an, Handeingabe bleibt', async () => {
   const { verdrahteSerienStarttag } = await import('./serien-termine.js');
-  const box = (v, c) => ({ value: String(v), checked: c });
+  const box = (/** @type {any} */ v, /** @type {any} */ c) => ({ value: String(v), checked: c, dispatchEvent: () => {} });
   const boxen = [box(1, true), box(2, false), box(3, false), box(4, false), box(5, false), box(6, false), box(0, false)];
+  /** @type {Record<string, any[]>} */
   const hoerer = {};
-  const el = (id) => ({ id, value: id === 'bkStart' ? '2026-10-21T09:00' : '', addEventListener: (t, f) => { (hoerer[id + t] ||= []).push(f); } });
+  const el = (/** @type {any} */ id) => ({ id, value: id === 'bkStart' ? '2026-10-21T09:00' : '', addEventListener: (/** @type {any} */ t, /** @type {any} */ f) => { (hoerer[id + t] ||= []).push(f); } });
   const wrap = { ...el('bkSeriesWeekdays'), querySelectorAll: () => boxen };
+  /** @type {Record<string, any>} */
   const els = { bkSeriesWeekdays: wrap, bkStart: el('bkStart'), bkSeriesToggle: el('bkSeriesToggle') };
   boxen[0].dispatchEvent = () => {};
-  verdrahteSerienStarttag({ getElementById: (id) => els[id] });
+  verdrahteSerienStarttag(/** @type {any} */ ({ getElementById: (/** @type {any} */ id) => els[id] }));
   hoerer.bkSeriesTogglechange[0]({ target: { checked: true } });
   assert.deepEqual(boxen.filter(b => b.checked).map(b => b.value), ['3']);
   hoerer.bkSeriesWeekdayschange[0]({ isTrusted: true });   // Hand
@@ -155,11 +162,13 @@ test('verdrahteSerienStarttag: Starttag Mittwoch hakt Mi an, Handeingabe bleibt'
 
 test('verdrahteSerienStarttag: Anzahl oben und Serienanzahl bleiben gleich', async () => {
   const { verdrahteSerienStarttag } = await import('./serien-termine.js');
+  /** @type {Record<string, any[]>} */
   const hoerer = {};
-  const el = (id, value = '') => ({ id, value, dispatchEvent: (e) => (hoerer[id + e.type] || []).forEach(f => f(e)), addEventListener: (t, f) => { (hoerer[id + t] ||= []).push(f); } });
+  const el = (/** @type {any} */ id, value = '') => ({ id, value, dispatchEvent: (/** @type {any} */ e) => (hoerer[id + e.type] || []).forEach(f => f(e)), addEventListener: (/** @type {any} */ t, /** @type {any} */ f) => { (hoerer[id + t] ||= []).push(f); } });
+  /** @type {Record<string, any>} */
   const els = { bkSeriesWeekdays: { ...el('bkSeriesWeekdays'), querySelectorAll: () => [] }, bkStart: el('bkStart', '2026-10-21T09:00'),
     bkSeriesToggle: el('bkSeriesToggle'), bkAnzahl: el('bkAnzahl', '6'), bkSeriesCount: el('bkSeriesCount', '3') };
-  verdrahteSerienStarttag({ getElementById: (id) => els[id] });
+  verdrahteSerienStarttag(/** @type {any} */ ({ getElementById: (/** @type {any} */ id) => els[id] }));
   hoerer.bkSeriesTogglechange[0]({ target: { checked: true } });
   assert.equal(els.bkSeriesCount.value, '6');
   els.bkSeriesCount.value = '4';

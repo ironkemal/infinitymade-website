@@ -15,8 +15,18 @@ import { parseIsoDatum, pruefeBehandlungsbeginn } from './fristen.js';
 
 const MAX_WEEKS_PER_VERORDNUNG = 12;
 
+/**
+ * @typedef {import('./validate.js').RezeptEingabe} RezeptEingabe
+ * @typedef {import('./validate.js').ValidatorBefund} ValidatorBefund
+ */
+
+/**
+ * @param {RezeptEingabe} rezept
+ */
 export function validateLhbBvb(rezept) {
+  /** @type {ValidatorBefund[]} */
   const warnings = [];
+  /** @type {ValidatorBefund[]} */
   const blockers = [];
 
   const entry = lookupLhbBvb(rezept.icd10);
@@ -37,8 +47,9 @@ export function validateLhbBvb(rezept) {
   let hasDgMismatch = false;
   if (rezept.diagnosegruppe && !entry.diagnosegruppen.includes(rezept.diagnosegruppe)) {
     // Tolerate group prefix match (e.g. sub-specifier suffix like DF-a vs catalog DF)
-    const prefixHit = entry.diagnosegruppen.some(d =>
-      rezept.diagnosegruppe.startsWith(d) || d.startsWith(rezept.diagnosegruppe)
+    const dg = rezept.diagnosegruppe;
+    const prefixHit = entry.diagnosegruppen.some((/** @type {string} */ d) =>
+      dg.startsWith(d) || d.startsWith(dg)
     );
     if (!prefixHit) {
       hasDgMismatch = true;
@@ -128,8 +139,8 @@ export function validateLhbBvb(rezept) {
     behandlungsbeginn: rezept.behandlungsbeginn,
     isDringend: !!rezept.is_dringend
   });
-  blockers.push(...fristPruefung.blockers);
-  warnings.push(...fristPruefung.warnings);
+  blockers.push(.../** @type {ValidatorBefund[]} */ (fristPruefung.blockers));
+  warnings.push(.../** @type {ValidatorBefund[]} */ (fristPruefung.warnings));
 
   const lhbTyp = entry.physio ? 'lhb_bvb_physio' : (entry.ergo ? 'lhb_bvb_ergo' : 'lhb_bvb');
 

@@ -1,3 +1,6 @@
+/**
+ * @param {unknown} website
+ */
 export function validateHoneypot(website) {
   if (website === undefined || website === null) return { ok: true, trapped: false };
   if (typeof website !== 'string') return { ok: false, status: 400, error: 'Ungültige Anfrage' };
@@ -5,6 +8,10 @@ export function validateHoneypot(website) {
   return { ok: true, trapped: false };
 }
 
+/**
+ * @param {{ body?: { website?: unknown } } | null | undefined} req
+ * @param {{ status: (code: number) => { json: (body: unknown) => unknown } }} res
+ */
 export function checkHoneypot(req, res) {
   const website = req?.body?.website;
   const result = validateHoneypot(website);
@@ -19,11 +26,19 @@ export function checkHoneypot(req, res) {
   return false;
 }
 
+/**
+ * @param {{ owner_id?: string | null, user_id?: string | null } | null | undefined} service
+ * @returns {string | null}
+ */
 export function getCanonicalOwnerId(service) {
   if (!service || typeof service !== 'object') return null;
   return service.owner_id ?? service.user_id ?? null;
 }
 
+/**
+ * @param {{ from: (table: string) => any }} supabase
+ * @param {string | null | undefined} ownerId
+ */
 export async function validateOwnerProfile(supabase, ownerId) {
   if (!ownerId) return { ok: false, status: 400, error: 'Ungültige Praxis' };
   const { data, error } = await supabase.from('profiles').select('id, role, owner_id, is_active, email, business_name').eq('id', ownerId).maybeSingle();
@@ -34,6 +49,11 @@ export async function validateOwnerProfile(supabase, ownerId) {
   return { ok: true, profile: data };
 }
 
+/**
+ * @param {{ from: (table: string) => any }} supabase
+ * @param {string | null | undefined} therapistId
+ * @param {string | null | undefined} canonicalOwnerId
+ */
 export async function validateTherapist(supabase, therapistId, canonicalOwnerId) {
   if (!therapistId) return { ok: false, status: 400, error: 'Ungültiger Therapeut' };
   const { data, error } = await supabase.from('profiles').select('id, owner_id, is_active').eq('id', therapistId).maybeSingle();
@@ -43,6 +63,11 @@ export async function validateTherapist(supabase, therapistId, canonicalOwnerId)
   return { ok: true, profile: data };
 }
 
+/**
+ * @param {{ from: (table: string) => any }} supabase
+ * @param {string | null | undefined} serviceId
+ * @param {string | null} [expectedOwnerId=null]
+ */
 export async function validateService(supabase, serviceId, expectedOwnerId = null) {
   if (!serviceId) return { ok: false, status: 400, error: 'Service not found' };
   const { data, error } = await supabase.from('services').select('*').eq('id', serviceId).maybeSingle();
@@ -55,6 +80,11 @@ export async function validateService(supabase, serviceId, expectedOwnerId = nul
   return { ok: true, service: data, canonicalOwnerId };
 }
 
+/**
+ * @param {{ from: (table: string) => any }} supabase
+ * @param {string | null | undefined} leadId
+ * @param {string | null | undefined} canonicalOwnerId
+ */
 export async function validateLead(supabase, leadId, canonicalOwnerId) {
   if (!leadId) return { ok: true };
   const { data, error } = await supabase.from('leads').select('id, owner_id').eq('id', leadId).maybeSingle();
@@ -63,6 +93,11 @@ export async function validateLead(supabase, leadId, canonicalOwnerId) {
   return { ok: true, lead: data };
 }
 
+/**
+ * @param {{ from: (table: string) => any }} supabase
+ * @param {string | null | undefined} patientId
+ * @param {string | null | undefined} canonicalOwnerId
+ */
 export async function validatePatient(supabase, patientId, canonicalOwnerId) {
   if (!patientId) return { ok: true };
   const { data, error } = await supabase.from('patients').select('id, owner_id').eq('id', patientId).maybeSingle();

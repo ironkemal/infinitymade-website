@@ -9,6 +9,10 @@ import {
 } from './ki-bericht-schema.js';
 import { createJetonClient } from '../ai/ki-jeton.js';
 
+/**
+ * @param {Record<string, any>} [ueberschreibungen]
+ * @returns {any}
+ */
 function erzeugeGueltigenBericht(ueberschreibungen = {}) {
   return {
     reportId: 'rep_2026-10-08_box1',
@@ -77,8 +81,8 @@ test('Normalisierung: unterschiedliche Key-Reihenfolgen fuehren zum identischen 
     windowStart: '2026-10-08T00:00:00.000Z'
   };
 
-  const res1 = pruefeKiBericht(b1);
-  const res2 = pruefeKiBericht(b2);
+  const res1 = /** @type {{ ok: true, bericht: import('./ki-bericht-schema.js').KiBericht }} */ (pruefeKiBericht(b1));
+  const res2 = /** @type {{ ok: true, bericht: import('./ki-bericht-schema.js').KiBericht }} */ (pruefeKiBericht(b2));
 
   assert.equal(res1.ok, true);
   assert.equal(res2.ok, true);
@@ -180,6 +184,7 @@ test('Ablehnung: __proto__ als Task-Key', () => {
 });
 
 test('Ablehnung: mehr als 20 Tasks in taskTotals', () => {
+  /** @type {Record<string, any>} */
   const vieleTasks = {};
   for (let i = 1; i <= 21; i++) {
     vieleTasks[`task_${i}`] = { calls: 1, prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
@@ -255,7 +260,7 @@ test('grund enthaelt nie den Eingabewert (Information Leakage Schutz)', () => {
   const r1 = pruefeKiBericht(erzeugeGueltigenBericht({ reportId: `${geheimnis}!ungueltig` }));
   assert.equal(r1.ok, false);
   assert.equal(r1.grund, 'report_id');
-  assert.equal(r1.grund.includes(geheimnis), false);
+  assert.equal(/** @type {string} */ (r1.grund).includes(geheimnis), false);
 
   // Unbekannter Task mit Geheimwert
   const r2 = pruefeKiBericht(erzeugeGueltigenBericht({
@@ -265,7 +270,7 @@ test('grund enthaelt nie den Eingabewert (Information Leakage Schutz)', () => {
   }));
   assert.equal(r2.ok, false);
   assert.equal(r2.grund, 'tasks');
-  assert.equal(r2.grund.includes(geheimnis), false);
+  assert.equal(/** @type {string} */ (r2.grund).includes(geheimnis), false);
 });
 
 test('Paritaet mit createJetonClient.reportUsage aus ki-jeton.js', async () => {

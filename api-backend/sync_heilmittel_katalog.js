@@ -34,6 +34,7 @@ const SQL_ONLY = process.argv.includes('--sql');
 // Supabase-Client nur bauen, wenn er auch gebraucht wird — --sql läuft ohne
 // SUPABASE_URL/SERVICE_ROLE_KEY (genau der CI-Kontext, für den es gedacht ist),
 // createClient() wirft sofort, wenn die URL fehlt.
+/** @type {import('@supabase/supabase-js').SupabaseClient | null} */
 let supabase = null;
 if (!SQL_ONLY) {
   const [{ default: dotenv }, { createClient }] = await Promise.all([
@@ -42,8 +43,8 @@ if (!SQL_ONLY) {
   ]);
   dotenv.config();
   supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    /** @type {string} */ (process.env.SUPABASE_URL),
+    /** @type {string} */ (process.env.SUPABASE_SERVICE_ROLE_KEY),
     { auth: { persistSession: false } },
   );
 }
@@ -51,6 +52,7 @@ if (!SQL_ONLY) {
 // Verordnungs-Kürzel → X-Code. Ärzte schreiben "KG" auf das Rezept, nicht "X0501".
 // Gleiche Zuordnung wie in seed_tarifs.js; hier zentral, damit die Suche auch
 // auf das Kürzel anspringt.
+/** @type {Record<string, string>} */
 const KUERZEL = {
   X0501: 'KG',      X0502: 'KG',      X0710: 'KG-ZNS',  X0702: 'KG-MUKO',
   X1201: 'MT',      X0205: 'MLD',     X0201: 'MLD-45',  X0202: 'MLD-60',
@@ -60,7 +62,7 @@ const KUERZEL = {
 };
 
 function physioRows() {
-  return PHYSIO_POSITIONS.map((p, i) => ({
+  return (/** @type {readonly Record<string, any>[]} */ (PHYSIO_POSITIONS)).map((p, i) => ({
     code:            p.x,
     bereich:         'physiotherapy',
     label:           p.label,
@@ -85,7 +87,9 @@ function physioRows() {
 }
 
 function podoRows() {
-  const all = PODOLOGIE_PREISFENSTER.flatMap(f => f.positionen);
+  const all = (/** @type {readonly any[]} */ (PODOLOGIE_PREISFENSTER)).flatMap(
+    (/** @type {any} */ f) => /** @type {readonly Record<string, any>[]} */ (f.positionen)
+  );
   return all.map((p, i) => ({
     code:            p.hpnr,
     bereich:         'podologie',
@@ -110,7 +114,7 @@ function podoRows() {
   }));
 }
 
-const KEY = r => `${r.bereich}|${r.code}|${r.gueltig_ab}`;
+const KEY = (/** @type {Record<string, any>} */ r) => `${r.bereich}|${r.code}|${r.gueltig_ab}`;
 
 // Spaltenreihenfolge — muss mit db/migrations/0012_seed_heilmittel_katalog.sql
 // und den Objektschlüsseln in physioRows()/podoRows() übereinstimmen.
@@ -121,6 +125,7 @@ const SPALTEN = [
   'max_pro_termin', 'notiz', 'gruppe', 'telemed', 'sort',
 ];
 
+/** @param {any} v */
 function sqlWert(v) {
   if (v === null || v === undefined) return 'NULL';
   if (typeof v === 'boolean') return v ? "'t'" : "'f'";
@@ -128,7 +133,9 @@ function sqlWert(v) {
   return `'${String(v).replace(/'/g, "''")}'`;
 }
 
-/** Baut EXAKT dieselbe Form wie db/migrations/0012_seed_heilmittel_katalog.sql. */
+/** Baut EXAKT dieselbe Form wie db/migrations/0012_seed_heilmittel_katalog.sql.
+ * @param {Array<Record<string, any>>} rows
+ */
 function buildInsertSql(rows) {
   const zeilen = rows.map(r => `  (${SPALTEN.map(s => sqlWert(r[s])).join(',')})`).join(',\n');
   const setListe = SPALTEN
@@ -138,6 +145,7 @@ function buildInsertSql(rows) {
     + `ON CONFLICT (bereich, code, gueltig_ab) DO UPDATE SET\n  ${setListe};\n`;
 }
 
+/** @param {Record<string, any>} r */
 function normalise(r) {
   // Vergleichbare Form: Zahlen als Zahl, undefined → null
   return JSON.stringify({
@@ -153,7 +161,7 @@ async function main() {
   const dupes = want.length - new Set(want.map(KEY)).size;
   if (dupes) { console.error(`✗ ${dupes} doppelte Schlüssel in den Codedateien`); process.exit(1); }
 
-  if (SQL_ONLY) {
+  if (SQL_ONLY || !supabase) {
     // Kein DB-Zugriff — reiner Text aus den Codedateien. Der Aufrufer (CI oder
     // ein Mensch) leitet stdout in eine neue db/migrations/NNNN_*.sql-Datei um.
     process.stdout.write(buildInsertSql(want));
@@ -167,11 +175,12 @@ async function main() {
           + 'notiz,gruppe,telemed,sort');
   if (error) { console.error('✗ Lesen fehlgeschlagen:', error.message); process.exit(1); }
 
-  const haveMap = new Map((have || []).map(r => [KEY(r), r]));
+  const haveRows = /** @type {Array<Record<string, any>>} */ (have || []);
+  const haveMap = new Map(haveRows.map(r => [KEY(r), r]));
   const wantMap = new Map(want.map(r => [KEY(r), r]));
 
   const missing = want.filter(r => !haveMap.has(KEY(r)));
-  const extra   = (have || []).filter(r => !wantMap.has(KEY(r)));
+  const extra   = haveRows.filter(r => !wantMap.has(KEY(r)));
   const changed = want.filter(r => {
     const h = haveMap.get(KEY(r));
     return h && normalise(h) !== normalise(r);

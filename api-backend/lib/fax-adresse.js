@@ -6,7 +6,7 @@ export const FAX_MUSTER_RE = /^[A-Za-z0-9._+-]*\{nummer\}[A-Za-z0-9._+-]*@([A-Za
 /**
  * Prüft das Adressmuster eines Fax-Dienstes (z. B. {nummer}@fax.provider.de).
  * Dasselbe Regex steht als CHECK in Migration 0094.
- * @param {string} muster
+ * @param {unknown} muster
  * @returns {{ ok: true, muster: string } | { ok: false, fehler: string }}
  */
 export function pruefeFaxMuster(muster) {
@@ -48,7 +48,7 @@ export function pruefeFaxMuster(muster) {
  * Normalisiert eine Faxnummer auf reine Ziffern.
  * Führendes '+' wird zu '00', danach alle Nicht-Ziffern entfernt.
  * Gültige Länge: 6 bis 20 Ziffern, sonst null.
- * @param {string|number} roh
+ * @param {unknown} roh
  * @returns {string|null}
  */
 export function faxNummerNormalisieren(roh) {

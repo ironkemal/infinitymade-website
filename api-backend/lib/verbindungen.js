@@ -13,6 +13,7 @@
 
 import { istKutu } from './dagitim.js';
 
+/** @param {string} url @returns {string} */
 function host(url) {
   try { return new URL(url).host; } catch { return ''; }
 }
@@ -25,7 +26,15 @@ function host(url) {
  * @returns {{kutu: boolean, verbindungen: Array<{ziel:string, zweck:string, wann:string, inhalt:string, von:'Praxura'|'Betriebssystem'}>}}
  */
 export function verbindungenListe(env = process.env, postfach = null) {
+  /** @type {Array<{ziel:string, zweck:string, wann:string, inhalt:string, von:'Praxura'|'Betriebssystem'}>} */
   const v = [];
+  /**
+   * @param {string} ziel
+   * @param {string} zweck
+   * @param {string} wann
+   * @param {string} inhalt
+   * @param {'Praxura'|'Betriebssystem'} [von]
+   */
   const add = (ziel, zweck, wann, inhalt, von = 'Praxura') => v.push({ ziel, zweck, wann, inhalt, von });
 
   // Immer: Bezug der Programmteile. update.sh läuft jede Nacht (02:00 + bis 2 h

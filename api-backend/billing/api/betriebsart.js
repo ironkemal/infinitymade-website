@@ -31,10 +31,14 @@
 
 export const BETRIEBSARTEN = new Set(['test', 'erprobung', 'echt']);
 
-/** Vorgabewert aus `terapeut_zertifikat` (Migration 0028). Im Zweifel 'test'. */
+/**
+ * Vorgabewert aus `terapeut_zertifikat` (Migration 0028). Im Zweifel 'test'.
+ * @param {{ betriebsart?: string | null } | null | undefined} cert
+ * @returns {'test'|'erprobung'|'echt'}
+ */
 export function betriebsartAus(cert) {
   const b = String(cert?.betriebsart || '').trim();
-  return BETRIEBSARTEN.has(b) ? b : 'test';
+  return BETRIEBSARTEN.has(b) ? /** @type {'test'|'erprobung'|'echt'} */ (b) : 'test';
 }
 
 /**
@@ -43,8 +47,8 @@ export function betriebsartAus(cert) {
  * @param {object}  opts
  * @param {string}  opts.ownerId       Mandant
  * @param {string}  opts.empfaengerIk  IK der Datenannahmestelle DIESER Datei
- * @param {object}  opts.cert          Zeile aus `terapeut_zertifikat` (Vorgabewert)
- * @param {object}  opts.db            Supabase-Client — Pflicht, bewusst kein
+ * @param {{ betriebsart?: string | null, zulassung_referenz?: string | null, zulassung_datum?: string | null } | null | undefined} opts.cert          Zeile aus `terapeut_zertifikat` (Vorgabewert)
+ * @param {any}     opts.db            Supabase-Client — Pflicht, bewusst kein
  *                                     Vorgabewert: ein stillschweigend fehlender
  *                                     Client wuerde die Ausnahme ueberspringen.
  * @returns {Promise<'test'|'erprobung'|'echt'>}
@@ -61,6 +65,7 @@ export async function ladeBetriebsart({ ownerId, empfaengerIk, cert, db }) {
   // (Alle drei Erzeugungswege koennen hier nicht leer sein: `vergebeNummern()`
   //  lief vorher mit derselben IK und wirft bereits in der Datenbank.)
   if (!db || !ownerId || !empfaengerIk) {
+    /** @type {Error & { status?: number }} */
     const e = new Error(
       'ladeBetriebsart: db, ownerId und empfaengerIk sind Pflicht — '
       + 'ohne sie liesse sich die Betriebsart nur raten, und ein Fehlgriff '
@@ -71,6 +76,7 @@ export async function ladeBetriebsart({ ownerId, empfaengerIk, cert, db }) {
     throw e;
   }
 
+  /** @type {{ betriebsart?: string | null, zulassung_referenz?: string | null, zulassung_datum?: string | null } | null} */
   let zeile = null;
 
   {
@@ -95,6 +101,7 @@ export async function ladeBetriebsart({ ownerId, empfaengerIk, cert, db }) {
         // Jeder andere Datenbankfehler ist ein harter Abbruch. Ein stiller
         // Rueckfall auf 'test' erzeugte eine Datei, die keine Zahlung
         // ausloest — und niemand bemerkt es, weil auch keine Ablehnung kommt.
+        /** @type {Error & { status?: number }} */
         const e = new Error(
           `Fehler beim Lesen der Betriebsart für Datenannahmestelle ${empfaengerIk}: ${error.message}`
         );
@@ -106,12 +113,13 @@ export async function ladeBetriebsart({ ownerId, empfaengerIk, cert, db }) {
     }
   }
 
+  /** @type {'test'|'erprobung'|'echt'} */
   let gewaehlt;
   let zulassungReferenz;
   let zulassungDatum;
 
   if (zeile && BETRIEBSARTEN.has(String(zeile.betriebsart || '').trim())) {
-    gewaehlt = String(zeile.betriebsart).trim();
+    gewaehlt = /** @type {'test'|'erprobung'|'echt'} */ (String(zeile.betriebsart).trim());
     zulassungReferenz = zeile.zulassung_referenz;
     zulassungDatum = zeile.zulassung_datum;
   } else {
@@ -128,6 +136,7 @@ export async function ladeBetriebsart({ ownerId, empfaengerIk, cert, db }) {
     const datOk = Boolean(zulassungDatum && String(zulassungDatum).trim().length > 0);
     if (!refOk || !datOk) {
       const dasLabel = empfaengerIk ? `(IK ${empfaengerIk}) ` : '';
+      /** @type {Error & { status?: number }} */
       const e = new Error(
         `Für die Datenannahmestelle ${dasLabel}ist der Echtbetrieb gewählt, `
         + `es fehlt jedoch das Aktenzeichen und/oder das Datum der schriftlichen Zulassung zum Echtverfahren. `
@@ -152,6 +161,7 @@ export async function ladeBetriebsart({ ownerId, empfaengerIk, cert, db }) {
  * die Verordnung nach einem Probelauf fuer den Echtlauf verbrannt.
  * `erprobung` und `echt` schreiben fest wie bisher. Unbekannte Werte gelten
  * wie in `betriebsartAus` als 'test' (im Zweifel nichts festschreiben).
+ * @param {unknown} betriebsart
  */
 export function verordnungFestschreiben(betriebsart) {
   const b = String(betriebsart || '').trim();

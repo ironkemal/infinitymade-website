@@ -10,13 +10,18 @@
  * Legacy print/export guards can supply their existing 401 text contract.
  * SDK-internal logging is unchanged; this helper adds no logs.
  */
+/**
+ * @param {RequestInfo | URL} input
+ * @param {RequestInit} [options]
+ * @returns {Promise<Response>}
+ */
 export async function authTransportFetch(input, options) {
   const response = await globalThis.fetch(input, options);
   const target = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url);
   // auth-js may discard a 500 status when an upstream HTML/malformed body
   // cannot be parsed. Normalize only Auth GET /user infrastructure errors,
   // before SDK parsing; never touch successful users, token rejection or DB HTTP.
-  const method = options?.method || input?.method || 'GET';
+  const method = options?.method || (typeof input === 'object' && input !== null && 'method' in input ? input.method : undefined) || 'GET';
   if (method === 'GET' && target.pathname.endsWith('/auth/v1/user')
     && (response.status === 408 || response.status === 429 || response.status >= 500)) {
     await response.body?.cancel().catch(() => {});
@@ -28,13 +33,21 @@ export async function authTransportFetch(input, options) {
   return response;
 }
 
+/**
+ * @param {{ status: (code: number) => { send: (body: string) => unknown, json: (body: unknown) => unknown } }} res
+ * @param {unknown} error
+ * @param {string} [rejectedText]
+ */
 export function authFehlerAntwort(res, error, rejectedText) {
   // Same allowlisted marker/name contract as auth-js isAuthRetryableFetchError;
   // dependency-free so createClient-only router injection remains supported.
-  const unavailable = (error?.__isAuthError === true && error.name === 'AuthRetryableFetchError')
+  const errObj = error && typeof error === 'object'
+    ? /** @type {{ __isAuthError?: boolean, name?: string, status?: unknown }} */ (error)
+    : null;
+  const unavailable = (errObj?.__isAuthError === true && errObj.name === 'AuthRetryableFetchError')
     || error instanceof TypeError
-    || error?.status === 408 || error?.status === 429
-    || (typeof error?.status === 'number' && error.status >= 500 && error.status <= 599);
+    || errObj?.status === 408 || errObj?.status === 429
+    || (typeof errObj?.status === 'number' && errObj.status >= 500 && errObj.status <= 599);
   const unavailableText = 'Authentifizierungsdienst vorübergehend nicht verfügbar. Bitte später erneut versuchen.';
   if (rejectedText !== undefined) {
     return res.status(unavailable ? 503 : 401).send(unavailable ? unavailableText : rejectedText);

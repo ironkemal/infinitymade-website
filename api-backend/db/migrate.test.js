@@ -12,6 +12,7 @@ import { join } from 'node:path';
 
 import { migrationenLesen, pruefeVersionen, planErstellen, runMigrations, runMigrationsMitGeduld, istStartrennen } from './migrate.js';
 
+/** @param {Record<string, string>} dateien */
 function verzeichnisMit(dateien) {
   const dir = mkdtempSync(join(tmpdir(), 'praxura-migrate-'));
   for (const [name, inhalt] of Object.entries(dateien)) {
@@ -94,7 +95,7 @@ test('pruefeVersionen: doppelte Nummer wird abgelehnt', () => {
     { version: '0001', name: '0001_b.sql' }
   ];
   assert.equal(pruefeVersionen(doppelt).ok, false);
-  assert.match(pruefeVersionen(doppelt).grund, /doppelt/);
+  assert.match(/** @type {string} */ (pruefeVersionen(doppelt).grund), /doppelt/);
 });
 
 test('pruefeVersionen: Lücken sind erlaubt (verworfene Migration)', () => {
@@ -159,7 +160,7 @@ test('runMigrations: doppelte Version stoppt VOR jedem DB-Zugriff', async () => 
       log: () => {}
     });
     assert.equal(r.status, 'fehler');
-    assert.equal(r.fehler.art, 'reihenfolge');
+    assert.equal((/** @type {any} */ (r.fehler)).art, 'reihenfolge');
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -172,6 +173,10 @@ test('runMigrations: leeres Verzeichnis ist ok, kein Fehler', async () => {
 });
 
 // ── O-194: Startrennen nach Host-Neustart ───────────────────────────────────
+/**
+ * @param {string | null} code
+ * @param {any[]} [angewandt]
+ */
 const verbindung = (code, angewandt = []) => ({ status: 'fehler', angewandt, fehler: { art: 'verbindung', code, text: 'x' } });
 
 test('istStartrennen: nur Netz-/Startcodes ohne gelaufene Migration', () => {
@@ -187,6 +192,7 @@ test('istStartrennen: nur Netz-/Startcodes ohne gelaufene Migration', () => {
 
 test('MitGeduld: DB kommt beim dritten Versuch → ok, zwei Pausen', async () => {
   const antworten = [verbindung('ECONNREFUSED'), verbindung('57P03'), { status: 'ok', angewandt: [] }];
+  /** @type {number[]} */
   const pausen = [];
   let aufrufe = 0;
   const r = await runMigrationsMitGeduld({ log: () => {} }, {
@@ -202,7 +208,7 @@ test('MitGeduld: DB bleibt weg → nach allen Versuchen der Fehler, kein Wurf', 
   const r = await runMigrationsMitGeduld({ log: () => {} }, {
     pausenMs: [1, 1], lauf: async () => { aufrufe++; return verbindung('ECONNREFUSED'); }, warte: async () => {},
   });
-  assert.equal(r.fehler.art, 'verbindung');
+  assert.equal((/** @type {any} */ (r.fehler)).art, 'verbindung');
   assert.equal(aufrufe, 3);
 });
 
@@ -233,9 +239,9 @@ test('runMigrations: DB verschluckt Pakete → nach ~5 s verbindung/ETIMEDOUT, k
     const start = Date.now();
     const r = await runMigrations({ databaseUrl: 'postgres://u:p@10.255.255.1:5432/x', verzeichnis: dir, log: () => {} });
     assert.equal(r.status, 'fehler');
-    assert.equal(r.fehler.art, 'verbindung');
+    assert.equal((/** @type {any} */ (r.fehler)).art, 'verbindung');
     assert.ok(Date.now() - start < 9000, `dauerte ${Date.now() - start} ms`);
-    assert.equal(istStartrennen(r), true, `code ${r.fehler.code}`);
+    assert.equal(istStartrennen(r), true, `code ${(/** @type {any} */ (r.fehler)).code}`);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

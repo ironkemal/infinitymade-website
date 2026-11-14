@@ -44,16 +44,17 @@
  * protokolliert werden. Daher werden gezielt nur Regelcodes (z. B. F:03001,
  * PFLICHT_IK) extrahiert und Freitexte bereinigt.
  *
- * @param {Error|object|string} err
+ * @param {unknown} err
  * @returns {string}
  */
 export function formatiereVerwerfungsgrund(err) {
   if (!err) return 'Unbekannter Fehler';
+  const errObj = /** @type {{ preflight?: { errors?: Array<{ code?: string }> }, message?: string, code?: string }} */ (typeof err === 'object' ? err : {});
 
   // 1. Strukturierter Preflight-Fehler: Ausschließlich Regelcodes extrahieren
-  if (err.preflight && Array.isArray(err.preflight.errors)) {
-    const codes = [...new Set(err.preflight.errors.map(e => e?.code).filter(Boolean))];
-    const count = err.preflight.errors.length;
+  if (errObj.preflight && Array.isArray(errObj.preflight.errors)) {
+    const codes = [...new Set(errObj.preflight.errors.map(e => e?.code).filter(Boolean))];
+    const count = errObj.preflight.errors.length;
     if (codes.length > 0) {
       return `Preflight [${codes.join(', ')}] (${count} Fehler)`.slice(0, 500);
     }
@@ -70,7 +71,7 @@ export function formatiereVerwerfungsgrund(err) {
   // Monaten eine Luecke FALSCH erklaert. In einem GoBD-Feld ist eine
   // irrefuehrende Begruendung schlimmer als gar keine.
   // Die Regelcodes haben immer die Form BUCHSTABE:FUENF_ZIFFERN (F:03001).
-  const rawMsg = typeof err === 'string' ? err : (err.message || '');
+  const rawMsg = typeof err === 'string' ? err : (errObj.message || '');
   if (/^Preflight failed/.test(rawMsg)) {
     const codeMatches = rawMsg.match(/\[([A-Za-z]:\d{5})\]/g);
     if (codeMatches && codeMatches.length > 0) {
@@ -81,7 +82,7 @@ export function formatiereVerwerfungsgrund(err) {
   }
 
   // 3. Fehlercode vorhanden (z. B. Postgres / Node.js-Fehlercode)
-  const code = err.code ? String(err.code).trim() : '';
+  const code = errObj.code ? String(errObj.code).trim() : '';
 
   // 4. Sonstiger Fehlertext. Hier bleibt ein Restrisiko, und es gehoert benannt:
   // eine unerwartete Laufzeitmeldung KANN einen Klartextnamen enthalten. Voll
@@ -109,16 +110,16 @@ export function formatiereVerwerfungsgrund(err) {
 /**
  * Hält einen verworfenen Abrechnungsversuch in `abrechnung` fest.
  *
- * @param {object} opts
- * @param {object} opts.db                    Supabase-Client
- * @param {string} opts.ownerId               Mandanten-ID (auth.users)
- * @param {string} opts.kostentraegerIk       IK des Kostenträgers
+ * @param {object} [opts]
+ * @param {any} [opts.db]                    Supabase-Client
+ * @param {string} [opts.ownerId]               Mandanten-ID (auth.users)
+ * @param {string} [opts.kostentraegerIk]       IK des Kostenträgers
  * @param {string} [opts.sammelRechnungsnummer]
  * @param {number} [opts.datennummer]         UNB-Datenaustauschreferenz
  * @param {number} [opts.transfernummer]      Transfernummer (0..999)
  * @param {string} [opts.empfaengerIk]        IK der Datenannahmestelle
- * @param {Error|object|string} [opts.error]  Aufgetretener Fehler beim DTA-Bau
- * @returns {Promise<object|null>}
+ * @param {unknown} [opts.error]  Aufgetretener Fehler beim DTA-Bau
+ * @returns {Promise<any>}
  */
 // ⚠️ `= {}` ist kein Stil, sondern Teil der Zusage: ohne den Vorgabewert
 // stuerzt schon das Destructuring eines parameterlosen Aufrufs ab — und zwar
@@ -159,7 +160,7 @@ export async function verworfeneNummerFesthalten({
     if (res?.error) {
       console.warn(
         '[abrechnung/verworfen] Speichern der verworfenen Abrechnung in DB fehlgeschlagen '
-        + '(Migration 0033 möglicherweise noch ausstehend):',
+        + '(Migration 0033 möglicherweise noch aussteht):',
         res.error.message || res.error
       );
       return null;
@@ -171,7 +172,7 @@ export async function verworfeneNummerFesthalten({
     // Fehler niemals überlagern oder die Route abbrechen.
     console.warn(
       '[abrechnung/verworfen] Unerwarteter Fehler beim Protokollieren der verworfenen Abrechnung:',
-      err?.message || err
+      (err && typeof err === 'object' && 'message' in err ? err.message : null) || err
     );
     return null;
   }

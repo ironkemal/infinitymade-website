@@ -11,17 +11,20 @@ import {
 
 const still = () => {};
 const JETZT = Date.parse('2026-10-11T12:00:00Z');
+/** @param {number} ms */
 const sek = (ms) => Math.floor(ms / 1000);
 const STD = 3_600_000;
 const FP = '0123456789abcdef'; // secret-scan: ignore (Fake-Testwert)
 const FP2 = 'fedcba9876543210'; // secret-scan: ignore (Fake-Testwert)
 const DIGEST = `sha256:${'a'.repeat(64)}`; // secret-scan: ignore (Fake-Testwert)
 
+/** @param {{ after: (fn: () => void) => void }} t */
 function tmpDir(t) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'praxura-status-'));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
   return dir;
 }
+/** @param {string} dir @param {string} name @param {unknown} inhalt */
 const schreiben = (dir, name, inhalt) => fs.writeFileSync(path.join(dir, name), typeof inhalt === 'string' ? inhalt : JSON.stringify(inhalt));
 
 // ── backup ───────────────────────────────────────────────────────────────────
@@ -37,6 +40,7 @@ test('backup: 2 h alt, Ziel außerhalb → ok; lokal → warnung, nie ok', () =>
   const basis = { v: 1, letzte_ok_epoch: sek(JETZT - 2 * STD), sebep: 'nightly' };
   const ok = backupBewerten({ ...basis, ziel_ausserhalb: true }, { verzeichnis: true, jetztMs: JETZT });
   assert.equal(ok.status, 'ok');
+  if (!('alter_stunden' in ok)) assert.fail();
   assert.equal(ok.alter_stunden, 2);
   assert.equal(ok.anlass, 'nightly');
   const lokal = backupBewerten({ ...basis, ziel_ausserhalb: false }, { verzeichnis: true, jetztMs: JETZT });
@@ -63,6 +67,7 @@ test('backup: unbekannter Anlass und Fremdfelder werden nicht durchgereicht', ()
     { v: 1, letzte_ok_epoch: sek(JETZT - STD), sebep: '<script>', ziel_ausserhalb: 'ja', pfad: '/mnt/nas/geheim', alter_stunden: 0 },
     { verzeichnis: true, jetztMs: JETZT },
   );
+  if (!('anlass' in r)) assert.fail();
   assert.equal(r.anlass, null);
   assert.equal(r.ziel_ausserhalb, null);
   assert.ok(!JSON.stringify(r).includes('geheim'));
@@ -91,6 +96,7 @@ test('data_key: gleich · abweichung → fehler · null in der Künye → unbeka
   assert.equal(dataKeyVergleichen(feld, { v: 1, data_key_fingerprint: FP }, () => FP).vergleich, 'gleich');
   const ab = dataKeyVergleichen(feld, { v: 1, data_key_fingerprint: FP2 }, () => FP);
   assert.equal(ab.status, 'fehler');
+  if (!('code' in ab)) assert.fail();
   assert.equal(ab.code, 'schluessel_abweichung');
   assert.equal(ab.vergleich, 'abweichung');
   const nul = dataKeyVergleichen(feld, { v: 1, data_key_fingerprint: null }, () => FP);
@@ -107,6 +113,7 @@ test('data_key: _erst hält die Abweichung fest, auch wenn die letzte Sicherung 
 
 test('data_key: bestehender Fehler (Rundlauf) behält seinen Code; Abdruck nie in der Antwort', () => {
   const r = dataKeyVergleichen({ status: 'fehler', code: 'rundlauf', rundlauf: false }, { v: 1, data_key_fingerprint: FP2 }, () => FP);
+  if (!('code' in r)) assert.fail();
   assert.equal(r.code, 'rundlauf');
   assert.equal(r.vergleich, 'abweichung');
   const text = JSON.stringify(r);
@@ -152,7 +159,7 @@ test('lesen: Symlink wird nicht verfolgt (Linux) → backup unbekannt, kein Frem
   const r = await statusDateienLesen(dir);
   assert.equal(r.sicherung, null);
   const s = await statusSammeln({ dateien: () => statusDateienLesen(dir), version: {}, schema: {} }, { log: still });
-  assert.equal(s.felder.backup.status, 'unbekannt');
+  assert.equal(/** @type {{ status?: string }} */ (s.felder.backup).status, 'unbekannt');
   assert.ok(!JSON.stringify(s).includes('GEHEIMWERT'));
 });
 
@@ -176,10 +183,10 @@ test('statusSammeln: echte Dateien → backup ok, zeit ok, vergleich gleich, dig
     dataKey: async () => ({ rundlauf: true, vergleich: 'unbekannt' }),
     version: { version: '0.5.3' }, schema: {},
   }, { log: still, jetzt: () => jetzt });
-  assert.equal(r.felder.backup.status, 'ok');
-  assert.equal(r.felder.zeit.status, 'ok');
-  assert.equal(r.felder.data_key.vergleich, 'gleich');
-  assert.equal(r.felder.version.digest, DIGEST);
+  assert.equal(/** @type {{ status?: string }} */ (r.felder.backup).status, 'ok');
+  assert.equal(/** @type {{ status?: string }} */ (r.felder.zeit).status, 'ok');
+  assert.equal(/** @type {{ vergleich?: string }} */ (r.felder.data_key).vergleich, 'gleich');
+  assert.equal(/** @type {{ digest?: string | null }} */ (r.felder.version).digest, DIGEST);
   const text = JSON.stringify(r);
   assert.ok(!text.includes(FP));
   assert.ok(!text.includes(dir));
@@ -189,11 +196,11 @@ test('statusSammeln: echte Dateien → backup ok, zeit ok, vergleich gleich, dig
 test('statusSammeln: nie gesichert färbt gesamt gelb; Lesefehler der Dateien bricht nichts', async (t) => {
   const dir = tmpDir(t);
   const gelb = await statusSammeln({ dateien: () => statusDateienLesen(dir), version: {}, schema: {} }, { log: still });
-  assert.equal(gelb.felder.backup.code, 'keine');
+  assert.equal(/** @type {{ code?: string }} */ (gelb.felder.backup).code, 'keine');
   assert.equal(gelb.gesamt, 'warnung');
   const kaputt = await statusSammeln({ dateien: async () => { throw new Error('EIO /var/lib/praxura/status'); }, version: {}, schema: {} }, { log: still });
-  assert.equal(kaputt.felder.backup.status, 'unbekannt');
-  assert.equal(kaputt.felder.zeit.status, 'unbekannt');
+  assert.equal(/** @type {{ status?: string }} */ (kaputt.felder.backup).status, 'unbekannt');
+  assert.equal(/** @type {{ status?: string }} */ (kaputt.felder.zeit).status, 'unbekannt');
   assert.equal(kaputt.gesamt, 'ok');
   assert.ok(!JSON.stringify(kaputt).includes('/var/lib'));
 });
@@ -204,6 +211,6 @@ test('statusSammeln: alte Sicherung → gesamt fehler', async () => {
     dateien: async () => ({ verzeichnis: true, sicherung: { v: 1, letzte_ok_epoch: sek(JETZT - 50 * STD), ziel_ausserhalb: true } }),
     version: {}, schema: {},
   }, { log: still, jetzt: () => jetzt });
-  assert.equal(r.felder.backup.code, 'alt');
+  assert.equal(/** @type {{ code?: string }} */ (r.felder.backup).code, 'alt');
   assert.equal(r.gesamt, 'fehler');
 });

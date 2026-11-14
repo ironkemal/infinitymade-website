@@ -13,6 +13,7 @@ const FAKE_HOST = 'praxura-fake-central.services.ai.azure.com';
 const ALLOWED_HOSTS = [FAKE_HOST];
 const CONFIG = Object.freeze({ mode: 'jeton', activationReady: true, valid: true, allowedHosts: ALLOWED_HOSTS });
 
+/** @param {number} nowMs @param {string} [token] @returns {{ status: number, ok: boolean, json: Record<string, any> }} */
 function okToken(nowMs, token = 'm411-token-string-abcdef') { // secret-scan: ignore (Fake-Testwert)
   return {
     status: 200,
@@ -28,6 +29,7 @@ function okToken(nowMs, token = 'm411-token-string-abcdef') { // secret-scan: ig
   };
 }
 
+/** @param {number} nowMs @param {Record<string, unknown>} [extra] @returns {{ status: number, ok: boolean, json: Record<string, any> }} */
 function quota402(nowMs, extra = {}) {
   return { status: 402, ok: false, json: { code: 'AI_QUOTA_EXCEEDED', resetAt: Math.floor(nowMs / 1000) + 60, ...extra } };
 }
@@ -88,7 +90,10 @@ test('α: 429 (JSON oder Text) und 402 ohne Code sind vorübergehend — Token b
   // Ohne gültiges Token: 503 AI_JETON_UNAVAILABLE, trotzdem keine Sperre
   fakeNow += 3600_000;
   antwort = '429-text';
-  await assert.rejects(client.getToken(), (err) => err.code === 'AI_JETON_UNAVAILABLE' && err.status === 503);
+  await assert.rejects(client.getToken(), (/** @type {unknown} */ err) => {
+    const e = /** @type {{ code?: string, status?: number }} */ (err);
+    return e.code === 'AI_JETON_UNAVAILABLE' && e.status === 503;
+  });
   assert.equal(client.getState().tokenDisabled, false);
   antwort = 'ok';
   assert.ok((await client.getToken()).token);
@@ -109,9 +114,12 @@ test('β: 402-Sperre endet bei resetAt, ohne Zentrumsanfragen dazwischen, und he
     }
   });
 
-  await assert.rejects(client.getToken(), (err) => err.code === 'AI_QUOTA_EXCEEDED' && err.status === 503);
+  await assert.rejects(client.getToken(), (/** @type {unknown} */ err) => {
+    const e = /** @type {{ code?: string, status?: number }} */ (err);
+    return e.code === 'AI_QUOTA_EXCEEDED' && e.status === 503;
+  });
   assert.equal(client.getState().disabledUntil, resetAt * 1000);
-  await assert.rejects(client.getToken(), (err) => err.code === 'AI_QUOTA_EXCEEDED');
+  await assert.rejects(client.getToken(), (/** @type {unknown} */ err) => /** @type {{ code?: string }} */ (err).code === 'AI_QUOTA_EXCEEDED');
   assert.equal(aufrufe, 1);
 
   fakeNow = resetAt * 1000;
@@ -132,10 +140,10 @@ test('β: 402 mit ungültigem resetAt sperrt genau 6 Stunden', async () => {
     now: () => fakeNow,
     merkezFetchImpl: async () => (quota ? quota402(fakeNow, { resetAt: 'morgen' }) : okToken(fakeNow))
   });
-  await assert.rejects(client.getToken(), (err) => err.code === 'AI_QUOTA_EXCEEDED');
+  await assert.rejects(client.getToken(), (/** @type {unknown} */ err) => /** @type {{ code?: string }} */ (err).code === 'AI_QUOTA_EXCEEDED');
   assert.equal(client.getState().disabledUntil, fakeNow + 6 * 3600_000);
   fakeNow += 6 * 3600_000 - 1;
-  await assert.rejects(client.getToken(), (err) => err.code === 'AI_QUOTA_EXCEEDED');
+  await assert.rejects(client.getToken(), (/** @type {unknown} */ err) => /** @type {{ code?: string }} */ (err).code === 'AI_QUOTA_EXCEEDED');
   fakeNow += 1;
   quota = false;
   assert.ok((await client.getToken()).token);
@@ -144,26 +152,28 @@ test('β: 402 mit ungültigem resetAt sperrt genau 6 Stunden', async () => {
 for (const status of [200, 402]) {
   test(`γ: rejectedReportId verwirft den ausstehenden Bericht (${status}), Log nur mit ID`, async () => {
     const fakeNow = 1_700_000_000_000;
+    /** @type {any[]} */
     const gesendet = [];
     const client = createJetonClient({
       config: CONFIG,
       allowedHosts: ALLOWED_HOSTS,
       now: () => fakeNow,
       merkezFetchImpl: async (_pfad, opts) => {
-        gesendet.push(opts.body.report);
+        gesendet.push(/** @type {Record<string, any>} */ (opts?.body).report);
         const r = status === 200 ? okToken(fakeNow) : quota402(fakeNow);
         r.json.rejectedReportId = 'rep-m411';
         return r;
       }
     });
     const warn = console.warn;
+    /** @type {string[]} */
     const logs = [];
     console.warn = (...a) => logs.push(a.join(' '));
     try {
       await client.reportUsage({ ...BERICHT });
       assert.equal(client.getState().hasPendingReport, true);
       if (status === 200) await client.getToken();
-      else await assert.rejects(client.getToken(), (err) => err.code === 'AI_QUOTA_EXCEEDED');
+      else await assert.rejects(client.getToken(), (/** @type {unknown} */ err) => /** @type {{ code?: string }} */ (err).code === 'AI_QUOTA_EXCEEDED');
     } finally {
       console.warn = warn;
     }
@@ -185,7 +195,7 @@ test('402 quittiert den Bericht vor der Sperre (acknowledgedReportId)', async ()
     merkezFetchImpl: async () => quota402(fakeNow, { acknowledgedReportId: 'rep-m411' })
   });
   await client.reportUsage({ ...BERICHT });
-  await assert.rejects(client.getToken(), (err) => err.code === 'AI_QUOTA_EXCEEDED');
+  await assert.rejects(client.getToken(), (/** @type {unknown} */ err) => /** @type {{ code?: string }} */ (err).code === 'AI_QUOTA_EXCEEDED');
   assert.equal(client.getState().hasPendingReport, false);
 });
 

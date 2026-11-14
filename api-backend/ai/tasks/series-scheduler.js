@@ -1,6 +1,11 @@
 // Structured series ranking: only offered candidates can survive output validation.
 import { executeKiTask } from '../ki-gateway.js';
+/**
+ * @param {import('../ki-gateway.js').GatewayPayload} payload
+ * @param {import('../ki-gateway.js').GatewayContext} [context={}]
+ */
 export async function run(payload, context = {}) {
+  /** @type {Array<{ date: string, time: string, employeeId?: string }>} */
   let maskedCandidates = [];
   const {output,meta} = await executeKiTask({
     task:'series-scheduler',payload,context,
@@ -14,9 +19,10 @@ export async function run(payload, context = {}) {
       const dates = new Set();
       for (const s of p.selected) {
         if (!s || typeof s !== 'object' || Array.isArray(s) || Object.keys(s).sort().join(',') !== 'date,employeeId,time') return false;
-        if (![s.date,s.time,s.employeeId].every(v => typeof v === 'string') || dates.has(s.date)) return false;
-        if (!maskedCandidates.some(c => c.date === s.date && c.time === s.time && c.employeeId === s.employeeId)) return false;
-        dates.add(s.date);
+        const slot = /** @type {Record<string, unknown>} */ (s);
+        if (![slot.date,slot.time,slot.employeeId].every(v => typeof v === 'string') || dates.has(slot.date)) return false;
+        if (!maskedCandidates.some(c => c.date === slot.date && c.time === slot.time && c.employeeId === slot.employeeId)) return false;
+        dates.add(slot.date);
       }
       return true;
     },

@@ -26,6 +26,7 @@ function envLesen() {
   const envPath = join(REPO, 'api-backend', '.env');
   try {
     const text = readFileSync(envPath, 'utf8');
+    /** @type {Record<string, string>} */
     const env = {};
     for (const line of text.split(/\r?\n/)) {
       const m = line.match(/^([A-Z_]+)=(.*)$/);
@@ -33,14 +34,16 @@ function envLesen() {
     }
     return env;
   } catch (err) {
-    console.error(`Fehler beim Lesen von ${envPath}:`, err.message);
+    console.error(`Fehler beim Lesen von ${envPath}:`, err instanceof Error ? err.message : String(err));
     process.exit(1);
   }
 }
 
 function parseArgs() {
   const args = process.argv.slice(2);
+  /** @type {string | null} */
   let certPath = null;
+  /** @type {Record<string, string | boolean>} */
   const opts = {};
 
   for (let i = 0; i < args.length; i++) {
@@ -54,7 +57,7 @@ function parseArgs() {
     }
   }
 
-  if (opts.file) certPath = opts.file;
+  if (typeof opts.file === 'string') certPath = opts.file;
 
   return { certPath, opts };
 }
@@ -103,7 +106,7 @@ Fehlende Parameter:
   try {
     x509 = new crypto.X509Certificate(certDer);
   } catch (err) {
-    console.error(`Fehler: Datei "${certPath}" enthält kein gültiges X.509-Zertifikat: ${err.message}`);
+    console.error(`Fehler: Datei "${certPath}" enthält kein gültiges X.509-Zertifikat: ${err instanceof Error ? err.message : String(err)}`);
     process.exit(1);
   }
 
