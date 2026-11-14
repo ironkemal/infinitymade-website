@@ -1340,3 +1340,20 @@ aber nicht als generierte App-Funktionen ausgewiesen. Keine manuelle Indexergän
 - Eigene SVG-Map (:26). Gemeinsames Icon-Modul gibt es keins, gleiche Strichsprache wie `kopf-neu.js`/`startseite-ansicht.js`.
 - Temporär: Die Bereichspakete ersetzen die Zeichen später direkt im Quelltext. Danach wird dieses Modul überflüssig.
 - Status: geschrieben im Worktree `redesign-delta-20261112`, Commit und Kartentazeleme durch den Lead.
+
+### 14.11.2026 · V4.02p Gemeinsame Abschnittsnavigation im neuen Design (`module/formular-abschnitte.js`, commit 0fa4c535)
+- `navEintraege(zeilen)` (:8, rein, Port aus `rettung/design-wip-20261031` e611a15e `module/einstellungen-nav.js`) und
+  `montiereFormularAbschnitte({ uid, scope, panelId, art, selektor, titelVon, ariaLabel })` (:19). Test
+  `module/formular-abschnitte.test.js`.
+  - Niye: eine Abschnittsnavigation für alle Formulare im neuen Design (CSS `design/seiten.css:202ff`/`:255ff` hatte kein
+    Markup). Ersetzt den Anamnese-Sonderweg. Die Rettungs-Datei wurde bewusst nicht portiert, weil sie Alt nicht
+    wiederherstellt. `art: 'formular'` verschiebt Kinder mit Kommentar-Ankern und stellt bei Design=alt exakt zurück.
+    `art: 'einstellungen'` verschiebt nichts, weil `gehZuEinstellung` (`dashboard.js:757`) per Section-ID in denselben
+    Scrollcontainer springt.
+  - Nerede: `module/anamnese-abschnitte.js` ist jetzt ein dünner Aufruf (art 'formular'). Der Export
+    `montiereAnamneseAbschnitte` bleibt für `dashboard.js:14173` und die Quellwache `design-entscheidung.test.js:59`.
+    Dazu kommt `module/shell-ansicht.js:83` für `#panel-settings`, services und hours.
+- Kopplung: Einstellungen-Abschnitte, die später gerendert werden (`abschnittBauen` in fax/formular-editor/
+  mitarbeiter-app/praxis-rechtslinks, `mailversand.js`, `datev-einstellungen.js`), muss die Nav nachziehen. Wer
+  Section-IDs umbenennt, prüft `gehZuEinstellung` mit.
+- Status: geschrieben im Worktree `redesign-delta-20261112`, Commit und Kartentazeleme durch den Lead.
