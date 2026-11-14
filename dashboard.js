@@ -53,7 +53,7 @@ import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung } from './module/podologie-abrechnung.js?v=20261106'; import { renderZaaUploadResult, renderZaaFehlerTabelle, ladeZaaZeilen, verdrahteZaaBeheben } from './module/zaa-fehler.js?v=20261106'; import { verdrahtePhysioBefund } from './module/physio-befund.js?v=20261101b';
-import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261031b'; import { montiereVorgeschichte } from './module/podo-vorgeschichte-form.js?v=20261021y'; import { verdrahteDokumente } from './module/patient-dokumente.js?v=20261031b';
+import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261031b'; import { montiereVorgeschichte } from './module/podo-vorgeschichte-form.js?v=20261021y'; import { verdrahteDokumente } from './module/patient-dokumente.js?v=20261031b'; import { montiereAkteAktionen } from './module/akte-aktionen.js?v=20261114v702';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20261021n';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtZeilenReferenz } from './module/fahrtenbuch-regeln.js?v=20261014five1';
 import { exportFahrtenbuchCsv, exportAenderungsprotokollCsv, exportPatientenverzeichnisCsv } from './module/fahrtenbuch-export.js?v=20261014five1';
@@ -6841,7 +6841,7 @@ async function openPatientDetailModal(lead) {
   const leadId = lead.id;
   const isPhysio = isPraxisSector(getSector());
   const isPodo = getSector() === 'podologie';
-  setzeAkteReiter({ isPhysio, isPodo });   // Reiter je Fachbereich: Podologie 6, sonst wie bisher (module/akte-podo.js)
+  setzeAkteReiter({ isPhysio, isPodo }); montiereAkteAktionen({ kontext: () => ({ role: currentProfile?.role, uid: currentSession?.user?.id, ownerId: getOwnerId(), leadId: pdCurrentLeadId, businessId: currentBusiness?.id || null, sharing: dataSharing.patients, sector: getSector() }), darfPanel: id => currentProfile?.role !== 'employee' || !SIDEBAR_TO_MODULE[id] || hasModuleAccess(SIDEBAR_TO_MODULE[id]), oeffnen: (art, id) => { closeModal('patientDetailModal'); if (art === 'anamnese') return oeffneAnamneseFuer(id); if (art === 'fussbefund') return oeffneFussbefundEintrag(fussbefundCtx(), { leadId: id }); prefillNotesPatientId = id; return switchPanel('notizen'); }, fehler: () => showToast('Dokumentation konnte nicht geöffnet werden.', 'error') });   // Reiter je Fachbereich: Podologie 6, sonst wie bisher (module/akte-podo.js)
 
   const messPanel = document.getElementById('pdPanelMessreihen');
   if (messPanel) {
