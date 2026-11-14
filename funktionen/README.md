@@ -1326,3 +1326,17 @@ aber nicht als generierte App-Funktionen ausgewiesen. Keine manuelle Indexergän
 - Wer später Mahnstufen oder „bereit zur Abrechnung“ auf den Start holt, nutzt `billing/mahnwesen/stufe.js` und
   `billing/utils/behandlungstage.js` bzw. `offene-einheiten.js`, nicht die Branch-Dateien `lib/startseite/*`.
 - Status: geschrieben im Worktree `redesign-delta-20261112`, Commit und Kartentazeleme durch den Lead.
+
+### 14.11.2026 · V3.03 Keine führenden Emojis im neuen Design (`module/ohne-emoji.js`, commit a27b2048)
+- `emojisAus()` (:140), `emojisZurueck()` (:165); rein und getestet: `zerlege(text)` (:67), `nurText(text)` (:95). Test
+  `module/ohne-emoji.test.js`.
+  - Niye: Melih 26.10. „keine Emojis in der Oberfläche des neuen Designs“. Führende Emojis in sichtbaren Textknoten
+    werden zu monochromem SVG (`.px-sym`, Strich 1.7, CSS `design/shell.css:647`) oder fallen weg; ein MutationObserver
+    erfasst später gerenderte Knoten. Port aus `rettung/design-wip-20261031` (0d24bd9f). Neu dazu: `emojisZurueck()`
+    stellt beim Wechsel auf Alt alles wieder her (Muster `originale` aus `shell-ansicht.js`).
+  - Nerede: einziger Aufrufer `module/shell-ansicht.js` → `aktualisieren()` (an/aus), nicht `dashboard.js`.
+  - Ausnahmen: Fußbefund (`#panel-fussstatus`, `#pdPanelFussbefund`, `fbp-*`; die Marker in `module/fussbefund.js:108`
+    sind fachlich), `[data-px-emoji-roh]` und Eingaben.
+- Eigene SVG-Map (:26). Gemeinsames Icon-Modul gibt es keins, gleiche Strichsprache wie `kopf-neu.js`/`startseite-ansicht.js`.
+- Temporär: Die Bereichspakete ersetzen die Zeichen später direkt im Quelltext. Danach wird dieses Modul überflüssig.
+- Status: geschrieben im Worktree `redesign-delta-20261112`, Commit und Kartentazeleme durch den Lead.
