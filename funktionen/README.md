@@ -1357,3 +1357,14 @@ aber nicht als generierte App-Funktionen ausgewiesen. Keine manuelle Indexergän
   mitarbeiter-app/praxis-rechtslinks, `mailversand.js`, `datev-einstellungen.js`), muss die Nav nachziehen. Wer
   Section-IDs umbenennt, prüft `gehZuEinstellung` mit.
 - Status: geschrieben im Worktree `redesign-delta-20261112`, Commit und Kartentazeleme durch den Lead.
+
+### 14.11.2026 · V7.02p Doku-Aktionen in der Patientenakte (`module/akte-aktionen.js`, commit f0c0a002, neues Design)
+- `montiereAkteAktionen({ kontext, darfPanel, oeffnen, fehler }, doc)` (:40). Test `module/akte-aktionen.test.js`.
+  Port aus `rettung/design-wip-20261031` (4024addc) mit den guvenlik-Auflagen.
+  - Niye: Im neuen Design geht es aus der Patientenakte direkt ins vorhandene Doku-Formular: Anamnese, Notiz (nur
+    Inhaber) und Fußbefund (nur Podologie). Kein neues Formular. Ersetzt später die Menüzeilen (E7). Die Rechte kommen
+    wie bei `switchPanel` aus `SIDEBAR_TO_MODULE`/`hasModuleAccess`. Das Modul macht keine Abfragen. Eine Designwache
+    entfernt die Knöpfe beim Wechsel auf Alt.
+  - Nerede: einziger Aufrufer `dashboard.js:6844`, angehängt an `setzeAkteReiter`.
+- Kopplung: Wer die Rechteprüfung in `switchPanel` ändert, prüft `darfPanel` mit.
+- Status: geschrieben im Worktree `redesign-delta-20261112`, Commit und Kartentazeleme durch den Lead.
