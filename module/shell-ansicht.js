@@ -10,6 +10,7 @@ import { verdrahteSchublade } from './schublade-neu.js?v=20261113v212b';
 import { montierePatientensuche } from './kopf-suche-ansicht.js?v=20261114v209c';
 import { emojisAus, emojisZurueck } from './ohne-emoji.js?v=20261114v303';
 import { planeUmzug } from './leiste-zuordnung.js?v=20261112v205';
+import { montiereFormularAbschnitte } from './formular-abschnitte.js?v=20261114v402';
 
 const KURZ = { uebersicht: 'Heute', termine: 'Termine', patienten: 'Patienten', abrechnung: 'Abrechn.', team: 'Praxis', einstellungen: 'Einstell.' };
 let instanz = null;
@@ -73,6 +74,13 @@ export function montiereShellansicht(k) {
   const neu = verdrahteNeu(aktiv);
   const schublade = verdrahteSchublade(aktiv);
   const suche = montierePatientensuche(k.suche, aktiv);
+  const hoursTitel = el => el.querySelector('h3, h4, .hours-standort-header > span')?.textContent?.trim()
+    || (el.id === 'hoursGrid' ? 'Wochenarbeitszeiten' : el.classList.contains('hours-calendar-section') ? 'Sondertage' : '');
+  const abschnitte = [
+    { panelId: 'settings', art: 'einstellungen', selektor: '.settings-section', titelVon: el => el.querySelector('.settings-section-title')?.textContent?.trim(), ariaLabel: 'Abschnitte der Einstellungen' },
+    { panelId: 'services', art: 'formular', selektor: '#gkvCatalogSection, #servicesGrid .srv-gruppe[data-typ], #gkvServiceForm, #addServiceForm', ariaLabel: 'Abschnitte: Leistungen' },
+    { panelId: 'hours', art: 'formular', selektor: '#hoursStandortSection, #hoursGrid, .hours-calendar-section', titelVon: hoursTitel, ariaLabel: 'Abschnitte: Arbeitszeiten' },
+  ].map(a => { try { return montiereFormularAbschnitte({ uid: k.uid, scope: k.scope, ...a }); } catch (fehler) { console.error('[shell] abschnitte', fehler); return null; } }).filter(Boolean);
   const widgets = [marke, einklappen, profil?.wrap, neu?.wrap].filter(Boolean);
 
   function aktualisieren() {
@@ -128,7 +136,7 @@ export function montiereShellansicht(k) {
   sidebarObserver.observe(leiste, { attributes: true, attributeFilter: ['class'] });
   const panelObserver = new MutationObserver(() => { schliesseFlyout(); aktualisieren(); });
   main.querySelectorAll('.panel').forEach(panel => panelObserver.observe(panel, { attributes: true, attributeFilter: ['class'] }));
-  instanz = { aktualisieren, patientenAuffrischen: () => suche?.auffrischen(), deaktivieren() { gesperrt = true; aktualisieren(); } };
+  instanz = { aktualisieren, patientenAuffrischen: () => suche?.auffrischen(), deaktivieren() { gesperrt = true; aktualisieren(); for (const a of abschnitte) a.zerstoeren(); } };
   aktualisieren();
   return instanz;
 }
