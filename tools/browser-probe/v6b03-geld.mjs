@@ -71,3 +71,4 @@ try {
   console.log(JSON.stringify({ ok: false, fehler: e.message, ...erg }));
   process.exitCode = 1;
 } finally { await browser.close(); await server.close?.(); }
+process.exit(process.exitCode ?? 0); // offene Keep-alive-Verbindungen hielten den Prozess sonst am Leben (V3.03)
