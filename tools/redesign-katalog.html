@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="de" data-px-shell="v2">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Redesign-Katalog (nur Entwicklung)</title>
+  <!-- Dev-Seite: tools/ wird nicht ausgeliefert. Gleiche CSS-Kette wie dashboard.html:26-35.
+       Start: tools/redesign-katalog.html?design=neu&theme=dunkel  (Probe: tools/browser-probe/v301-bausteine.mjs) -->
+  <link rel="stylesheet" href="../dashboard.css" />
+  <link rel="stylesheet" href="../dashboard-feinschliff.css" />
+  <link rel="stylesheet" href="../praxura-design.css" />
+  <link rel="stylesheet" href="../design/shell.css" />
+  <link rel="stylesheet" href="../design/kalender.css" />
+  <link rel="stylesheet" href="../design/formulare.css" />
+  <link rel="stylesheet" href="../design/startseite.css" />
+  <link rel="stylesheet" href="../design/seiten.css" />
+  <link rel="stylesheet" href="../design/verwaltung.css" />
+  <link rel="stylesheet" href="../fonts/system-fonts.css" />
+  <style>
+    /* Nur Katalog-Rahmen, keine Baustein-Regeln. */
+    body { margin: 0; padding: 16px; background: var(--bg-main); color: var(--text-main); font-family: var(--font-sans, system-ui, sans-serif); }
+    .kat-leiste { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding: 8px 0 16px; }
+    .kat-leiste label { font-size: 13px; color: var(--text-muted); }
+    .kat-leiste select { min-height: 36px; }
+    .kat-sektion { margin: 0 0 28px; max-width: 760px; }
+    .kat-sektion > h3 { margin: 0 0 8px; font-size: 12px; font-weight: 500; color: var(--text-muted); }
+    .kat-reihe { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .kat-statisch { position: static !important; inset: auto !important; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="kat-leiste">
+    <label>Design
+      <select id="katDesign"><option value="alt">alt</option><option value="neu">neu</option></select>
+    </label>
+    <label>Theme
+      <select id="katTheme"><option value="hell">hell</option><option value="dunkel">dunkel</option></select>
+    </label>
+  </div>
+
+  <section class="kat-sektion" data-baustein="karte">
+    <h3>Karte (4)</h3>
+    <div class="card" data-mess="karte">
+      <div class="card-title">Heutige Termine</div>
+      <p>Erika Beispiel, 09:30 Uhr, Podologische Komplexbehandlung.</p>
+    </div>
+  </section>
+
+  <section class="kat-sektion" data-baustein="kennzahl">
+    <h3>Kennzahl-Karte (4)</h3>
+    <div class="kpi-card" data-mess="kennzahl">
+      <div class="kpi-label">Offene Rezepte</div>
+      <div class="kpi-value">12</div>
+    </div>
+  </section>
+
+  <section class="kat-sektion" data-baustein="knopf">
+    <h3>Knöpfe (5)</h3>
+    <div class="kat-reihe">
+      <button type="button" class="btn-primary" data-mess="knopf-primaer">Speichern</button>
+      <button type="button" class="btn-ghost" data-mess="knopf-zweit">Abbrechen</button>
+      <button type="button" class="btn-danger" data-mess="knopf-gefahr">Löschen</button>
+      <button type="button" class="btn-outline-sm" data-mess="knopf-umriss">Details</button>
+      <button type="button" class="btn-ghost-sm" data-mess="knopf-klein">Mehr</button>
+    </div>
+  </section>
+
+  <section class="kat-sektion" data-baustein="feld">
+    <h3>Felder (3.6)</h3>
+    <div class="form-group">
+      <label class="form-label" for="katName">Name</label>
+      <input class="form-input" id="katName" type="text" value="Erika Beispiel" data-mess="feld-text" />
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="katSel">Behandlung</label>
+      <select class="form-select" id="katSel" data-mess="feld-auswahl"><option>Fußpflege</option><option>Nagelspange</option></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="katNotiz">Notiz</label>
+      <textarea class="form-textarea" id="katNotiz" data-mess="feld-text-mehrzeilig">Beispielnotiz</textarea>
+    </div>
+  </section>
+
+  <section class="kat-sektion" data-baustein="tabelle">
+    <h3>Tabelle (3.7)</h3>
+    <div class="table-wrap" data-mess="tabelle">
+      <table class="data-table">
+        <thead><tr><th>Name</th><th>Termin</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Erika Beispiel</td><td class="td-muted">14.11.2026, 09:30</td><td>bestätigt</td></tr>
+          <tr><td>Max Muster</td><td class="td-muted">14.11.2026, 10:15</td><td>offen</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="kat-sektion" data-baustein="badge">
+    <h3>Badges (3.8)</h3>
+    <div class="kat-reihe">
+      <span class="badge badge-green" data-mess="badge-gruen">bestätigt</span>
+      <span class="badge badge-yellow" data-mess="badge-gelb">offen</span>
+      <span class="badge badge-blue" data-mess="badge-blau">neu</span>
+      <span class="badge badge-gray" data-mess="badge-grau">archiviert</span>
+    </div>
+  </section>
+
+  <section class="kat-sektion" data-baustein="modal">
+    <h3>Modal (3.9), statisch</h3>
+    <div class="modal kat-statisch" data-mess="modal">
+      <div class="modal-header"><div class="modal-title">Termin löschen?</div><button type="button" class="modal-close" aria-label="Schließen">&times;</button></div>
+      <div class="modal-body"><p>Dieser Termin von Erika Beispiel wird entfernt.</p></div>
+      <div class="modal-footer"><button type="button" class="btn-ghost">Abbrechen</button><button type="button" class="btn-danger">Löschen</button></div>
+    </div>
+  </section>
+
+  <section class="kat-sektion" data-baustein="filter-tabs">
+    <h3>Filter und Tabs (3.10)</h3>
+    <div class="kat-reihe">
+      <button type="button" class="filter-btn active" data-mess="filter-aktiv">Alle</button>
+      <button type="button" class="filter-btn" data-mess="filter">Offen</button>
+      <button type="button" class="tab-btn active" data-mess="tab-aktiv">Übersicht</button>
+      <button type="button" class="tab-btn" data-mess="tab">Verlauf</button>
+    </div>
+  </section>
+
+  <section class="kat-sektion" data-baustein="banner">
+    <h3>Banner (3.11) und V3.W-Hinweis</h3>
+    <div class="dash-banner welcome" data-mess="banner">
+      <div class="dash-banner-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="4"/></svg></div>
+      <div class="dash-banner-content"><strong>Willkommen</strong><p>Richten Sie Ihre Praxis in wenigen Schritten ein.</p></div>
+      <button type="button" class="dash-banner-action">Starten</button>
+    </div>
+    <div class="dash-banner trial" data-mess="hinweis-v3w">
+      <div class="dash-banner-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l10 18H2z"/></svg></div>
+      <div class="dash-banner-content"><strong>Testphase endet in 3 Tagen</strong><p>Wählen Sie ein Paket, um weiterzuarbeiten.</p></div>
+      <button type="button" class="dash-banner-action">Paket wählen</button>
+    </div>
+  </section>
+
+  <section class="kat-sektion" data-baustein="leer">
+    <h3>Leerzustand (3.12)</h3>
+    <div class="table-empty" data-mess="leer">Noch keine Einträge vorhanden.</div>
+  </section>
+
+  <section class="kat-sektion" data-baustein="toast">
+    <h3>Toast (3.13), statisch</h3>
+    <div class="toast success kat-statisch" data-mess="toast">Termin gespeichert.</div>
+  </section>
+
+  <section class="kat-sektion" data-baustein="skelett">
+    <h3>Skelett und Zustandskarte (Startseite)</h3>
+    <div class="card">
+      <div class="px-karte-zustand" data-mess="zustandskarte">
+        <div class="px-skelett" data-mess="skelett"></div>
+        <div class="px-skelett px-skelett--kurz"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="kat-sektion" data-baustein="minis">
+    <h3>Mini-Kennzahlen (Startseite)</h3>
+    <div class="card">
+      <div class="px-minis">
+        <div class="px-mini" data-mess="mini"><span class="zahl">4</span><span class="lbl">Heute</span></div>
+        <div class="px-mini px-ton-warn"><span class="zahl">2</span><span class="lbl">Bald fällig</span></div>
+        <div class="px-mini px-ton-bad"><span class="zahl">1</span><span class="lbl">Überfällig</span></div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Startzustand aus der URL: ?design=neu|alt & theme=dunkel|hell. Theme dunkel = data-theme="dark" (dashboard.js:873).
+    (function () {
+      var root = document.documentElement, p = new URLSearchParams(location.search);
+      var dSel = document.getElementById('katDesign'), tSel = document.getElementById('katTheme');
+      function setze(design, theme) {
+        if (design === 'neu') root.setAttribute('data-design', 'neu'); else root.removeAttribute('data-design');
+        if (theme === 'dunkel') root.setAttribute('data-theme', 'dark'); else root.removeAttribute('data-theme');
+        dSel.value = design; tSel.value = theme;
+      }
+      setze(p.get('design') === 'neu' ? 'neu' : 'alt', p.get('theme') === 'dunkel' ? 'dunkel' : 'hell');
+      dSel.addEventListener('change', function () { setze(dSel.value, tSel.value); });
+      tSel.addEventListener('change', function () { setze(dSel.value, tSel.value); });
+    })();
+  </script>
+</body>
+</html>
