@@ -636,8 +636,7 @@
       "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
       "zitat": "Höchstmenge je VO: - bis zu 10x/VO"
     },
-    "status": "bewusst",
-    "grund": "Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN."
+    "status": "aktiv"
   },
   {
     "id": "ERG-STD-002",
@@ -664,8 +663,7 @@
       "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
       "zitat": "Höchstmenge je VO: - bis zu 10x/VO"
     },
-    "status": "bewusst",
-    "grund": "Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN."
+    "status": "aktiv"
   },
   {
     "id": "ERG-STD-003",
@@ -690,8 +688,7 @@
       "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
       "zitat": "Höchstmenge je VO: - bis zu 20x/VO"
     },
-    "status": "bewusst",
-    "grund": "Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN."
+    "status": "aktiv"
   },
   {
     "id": "ERG-STD-004",
@@ -718,8 +715,7 @@
       "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
       "zitat": "Höchstmenge je VO: - bis zu 20x/VO"
     },
-    "status": "bewusst",
-    "grund": "Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN."
+    "status": "aktiv"
   },
   {
     "id": "ERG-STD-005",
@@ -849,8 +845,7 @@
       "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
       "zitat": "Höchstmenge je VO: - bis zu 10x/VO"
     },
-    "status": "bewusst",
-    "grund": "Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN."
+    "status": "aktiv"
   },
   {
     "id": "LOG-STD-002",
@@ -877,8 +872,7 @@
       "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
       "zitat": "Höchstmenge je VO: - bis zu 10x/VO"
     },
-    "status": "bewusst",
-    "grund": "Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN."
+    "status": "aktiv"
   },
   {
     "id": "LOG-STD-003",
@@ -903,8 +897,7 @@
       "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
       "zitat": "Höchstmenge je VO: - bis zu 20x/VO"
     },
-    "status": "bewusst",
-    "grund": "Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN."
+    "status": "aktiv"
   },
   {
     "id": "LOG-STD-004",
@@ -931,8 +924,7 @@
       "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
       "zitat": "Höchstmenge je VO: - bis zu 20x/VO"
     },
-    "status": "bewusst",
-    "grund": "Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN."
+    "status": "aktiv"
   },
   {
     "id": "LOG-STD-005",

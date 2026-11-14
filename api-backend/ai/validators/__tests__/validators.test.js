@@ -75,7 +75,7 @@ test('standard: 10 sessions on WS yields OVER_HOECHSTMENGE warning (not a blocke
   assert.equal(r.blockers.find(b => b.code === 'OVER_HOECHSTMENGE'), undefined);
   // Nur ein Hinweis → die Verordnung bleibt abrechenbar.
   assert.equal(r.ok, true);
-  const w = r.warnings.find(w => w.code === 'OVER_HOECHSTMENGE');
+  const w = /** @type {import('../validate.js').ValidatorBefund} */ (r.warnings.find(w => w.code === 'OVER_HOECHSTMENGE'));
   assert.equal(w.requires_confirmation, true);
   assert.equal(w.max_allowed, 6);
   assert.equal(w.requested, 10);
@@ -92,7 +92,7 @@ test('standard: dringend prescription with begin > 14 days yields START_AFTER_DE
   assert.ok(r.warnings.find(w => w.code === 'START_AFTER_DEADLINE'), JSON.stringify(r.warnings));
   assert.equal(r.blockers.find(b => b.code === 'START_AFTER_DEADLINE'), undefined);
   // 14-Tage-Frist bei "dringendem Behandlungsbedarf" → spätester Start 15.05.2026.
-  assert.equal(r.warnings.find(w => w.code === 'START_AFTER_DEADLINE').latest_allowed, '2026-05-15');
+  assert.equal(/** @type {import('../validate.js').ValidatorBefund} */ (r.warnings.find(w => w.code === 'START_AFTER_DEADLINE')).latest_allowed, '2026-05-15');
 });
 
 test('standard: non-dringend with begin in 25 days is OK (28 days limit)', () => {
@@ -195,8 +195,8 @@ test('blanko: 19 vorrangig units triggers red ampel + 9% Abschlag warning', () =
   });
   const w = r.warnings.find(x => x.code === 'BLANKO_RED_AMPEL');
   assert.ok(w);
-  assert.equal(w.ampel.abschlag_percent, 9);
-  assert.equal(r.computed.ampel.vorrangig.in_red, true);
+  assert.equal(/** @type {Record<string, any>} */ (w.ampel).abschlag_percent, 9);
+  assert.equal(/** @type {NonNullable<typeof r.computed.ampel>} */ (r.computed.ampel).vorrangig.in_red, true);
 });
 
 test('blanko: bonuses computed correctly (PD + Mehraufwand, no Bedarfsdiagnostik)', () => {
@@ -206,9 +206,10 @@ test('blanko: bonuses computed correctly (PD + Mehraufwand, no Bedarfsdiagnostik
     heilmittel_feld_text: 'BLANKOVERORDNUNG',
     ausstellungsdatum: '2026-05-10'
   });
-  assert.equal(r.computed.bonuses_eur.physiotherapeutische_diagnostik, 34.34);
-  assert.equal(r.computed.bonuses_eur.mehraufwandspauschale, 55);
-  assert.equal(r.computed.bonuses_eur.bedarfsdiagnostik, undefined);
+  const bonuses = /** @type {NonNullable<typeof r.computed.bonuses_eur>} */ (r.computed.bonuses_eur);
+  assert.equal(bonuses.physiotherapeutische_diagnostik, 34.34);
+  assert.equal(bonuses.mehraufwandspauschale, 55);
+  assert.equal(bonuses.bedarfsdiagnostik, undefined);
   assert.equal(r.computed.total_bonuses_eur, 89.34);
 });
 
@@ -594,8 +595,9 @@ test('fristen: parseIsoDatum, addDays, daysBetween, spaetesterBeginn (§ 15 Heil
   assert.equal(p.latestStartIso, '2026-03-16');
   assert.equal(p.blockers.length, 0);
   assert.equal(p.warnings.length, 1);
-  assert.equal(p.warnings[0].code, 'START_AFTER_DEADLINE');
-  assert.equal(p.warnings[0].requires_confirmation, true);
+  const w0 = /** @type {import('../validate.js').ValidatorBefund} */ (p.warnings[0]);
+  assert.equal(w0.code, 'START_AFTER_DEADLINE');
+  assert.equal(w0.requires_confirmation, true);
 });
 
 test('lhbBvb (LHB-021/022): Beginn am 29. Tag warnt, Tag 28 ok, Beginn vor Ausstellung blockiert', () => {
@@ -722,27 +724,27 @@ test('catalog (Paket C): KBV-Diagnoseliste vollständig & frei von Nachbarzeilen
   assert.equal(Object.keys(heilmittelCatalog.lhb_bvb).length, 416);
   assert.equal(Object.keys(heilmittelCatalog.blanko_physio_shoulder).length, 65);
 
-  const g60 = lookupLhbBvb('G60.0');
+  const g60 = /** @type {Record<string, any>} */ (lookupLhbBvb('G60.0'));
   assert.deepEqual(g60.diagnosegruppen, ['WS', 'EX', 'PN', 'SB2', 'EN3', 'SP3']);
   assert.equal(g60.hinweis, null);
 
-  const q66 = lookupLhbBvb('Q66.0');
+  const q66 = /** @type {Record<string, any>} */ (lookupLhbBvb('Q66.0'));
   assert.deepEqual(q66.diagnosegruppen, ['EX', 'SB2']);
 
-  assert.equal(lookupLhbBvb('G61.0').hinweis, null);
-  assert.match(lookupLhbBvb('G61.8').hinweis || '', /CIDP/);
-  assert.equal(lookupLhbBvb('R15').hinweis, 'ab vollendetem 70. Lebensjahr');
+  assert.equal(/** @type {Record<string, any>} */ (lookupLhbBvb('G61.0')).hinweis, null);
+  assert.match(/** @type {Record<string, any>} */ (lookupLhbBvb('G61.8')).hinweis || '', /CIDP/);
+  assert.equal(/** @type {Record<string, any>} */ (lookupLhbBvb('R15')).hinweis, 'ab vollendetem 70. Lebensjahr');
 
   // Zweit-ICDs bei Doppelcodes bleiben strukturiert erhalten
-  assert.deepEqual(lookupLhbBvb('M47.9-').second_icds, ['G99.2', 'G55.2']);
-  assert.deepEqual(lookupBlankoShoulder('M24.41').second_icds, [null, 'Z98.88']);
+  assert.deepEqual(/** @type {Record<string, any>} */ (lookupLhbBvb('M47.9-')).second_icds, ['G99.2', 'G55.2']);
+  assert.deepEqual(/** @type {Record<string, any>} */ (lookupBlankoShoulder('M24.41')).second_icds, [null, 'Z98.88']);
 });
 
 test('lhbBvb (Paket C / gkv-302): DG_MISMATCH_LHB steuert Höchstmenge & Standard-computed-Felder', () => {
-  // Unbekannte DG SB1 (nicht in diagnosegruppen.json): KEIN 6er-Fallback, KEINE OVER_HOECHSTMENGE
+  // Unbekannte DG LY2 (Alt-DG, nicht in diagnosegruppen.json): KEIN 6er-Fallback, KEINE OVER_HOECHSTMENGE
   const rUnknownDg = validateLhbBvb({
     icd10: 'Q66.0',
-    diagnosegruppe: 'SB1',
+    diagnosegruppe: 'LY2',
     anzahl_einheiten: 10,
     ausstellungsdatum: '2026-03-02'
   });
@@ -753,6 +755,25 @@ test('lhbBvb (Paket C / gkv-302): DG_MISMATCH_LHB steuert Höchstmenge & Standar
   assert.equal(rUnknownDg.computed.verordnung_typ, 'standard');
   assert.equal(rUnknownDg.computed.max_weeks_per_verordnung, null);
   assert.equal(rUnknownDg.computed.regulation_source, 'HeilM-RL § 7 Abs. 5 / § 8 Abs. 2 S. 1');
+
+  // Bekannte Ergo-DG SB1 (Regelhöchstmenge 10) inkl. Leerzeichen-Toleranz ('SB 1')
+  assert.equal(getDiagnosegruppe('SB 1')?.hoechstmenge, 10);
+  const rKnownErgoDg = validateLhbBvb({
+    icd10: 'Q66.0',
+    diagnosegruppe: 'SB1',
+    anzahl_einheiten: 10,
+    ausstellungsdatum: '2026-03-02'
+  });
+  assert.ok(rKnownErgoDg.warnings.find(w => w.code === 'DG_MISMATCH_LHB'));
+  assert.equal(rKnownErgoDg.warnings.find(w => w.code === 'OVER_HOECHSTMENGE'), undefined);
+  const rKnownErgoOver = validateLhbBvb({
+    icd10: 'Q66.0',
+    diagnosegruppe: 'SB1',
+    anzahl_einheiten: 12,
+    ausstellungsdatum: '2026-03-02'
+  });
+  assert.ok(rKnownErgoOver.warnings.find(w => w.code === 'DG_MISMATCH_LHB'));
+  assert.equal(rKnownErgoOver.warnings.find(w => w.code === 'OVER_HOECHSTMENGE')?.max_allowed, 10);
 
   // Bekannte Physio-DG CS (Regelhöchstmenge 6) bei 40 Einheiten: OVER_HOECHSTMENGE, aber KEINE OVER_12_WEEKS_HEURISTIC
   const rKnownDg = validateLhbBvb({
@@ -876,13 +897,13 @@ test('standard (Paket D): amtliche frequency_hint und orientierende_menge Werte 
     assert.equal(r.computed.frequency_hint, '1-3 x wöchentlich', `${dg} frequency_hint`);
   }
 
-  assert.equal(getDiagnosegruppe('WS').orientierende_menge, 18);
-  assert.equal(getDiagnosegruppe('WS').note, undefined);
-  assert.equal(getDiagnosegruppe('EX').orientierende_menge, 18);
-  assert.equal(getDiagnosegruppe('AT').orientierende_menge, 18);
-  assert.equal(getDiagnosegruppe('LY').orientierende_menge, 30);
-  assert.equal(getDiagnosegruppe('ZN').orientierende_menge, 30);
-  assert.equal(getDiagnosegruppe('SO5').orientierende_menge, 18);
+  assert.equal(/** @type {Record<string, any>} */ (getDiagnosegruppe('WS')).orientierende_menge, 18);
+  assert.equal(/** @type {Record<string, any>} */ (getDiagnosegruppe('WS')).note, undefined);
+  assert.equal(/** @type {Record<string, any>} */ (getDiagnosegruppe('EX')).orientierende_menge, 18);
+  assert.equal(/** @type {Record<string, any>} */ (getDiagnosegruppe('AT')).orientierende_menge, 18);
+  assert.equal(/** @type {Record<string, any>} */ (getDiagnosegruppe('LY')).orientierende_menge, 30);
+  assert.equal(/** @type {Record<string, any>} */ (getDiagnosegruppe('ZN')).orientierende_menge, 30);
+  assert.equal(/** @type {Record<string, any>} */ (getDiagnosegruppe('SO5')).orientierende_menge, 18);
 });
 
 

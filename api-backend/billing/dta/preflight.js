@@ -32,6 +32,9 @@ import { pruefeAusgabeStruktur } from './output-validator.js';
 import { isValidTwoDecimalPrecision } from './builder.js';
 import { istStichtag } from '../../lib/berlin-tag.js';
 import { hasKvnrChecksum, isDtaDecimal } from './strict-fields.js';
+import { DIAGNOSEGRUPPEN } from '../../ai/catalogs/rezept-optionen.js';
+
+const DIAGNOSEGRUPPEN_KODE_SET = new Set(/** @type {readonly string[]} */ (DIAGNOSEGRUPPEN));
 
 /**
  * @typedef {import('../../../module/typen/gkv.js').IK} IK
@@ -353,13 +356,14 @@ export function isValidIcd10(code) {
   return /^[A-Z]\d{2}(\.\d{1,2})?([GVZA]?[LRB]?|[LRB]?[GVZA]?)$/.test(bereinigt);
 }
 
-// Diagnosegruppe (Heilmittelkatalog): 2-4 chars (e.g. WS1, WS2, EX2a, PN, AT3).
+// Diagnosegruppe (Anlage 1 TP5 V21 Kap. 5.5.3.3 ZHE: ..4 AN M, inkl. ZÄ-Schlüssel wie CD2a/ZNSZ
+// und Ersatzwert 9999; Alt-/HeilM-RL-Prüfung gegen 44er-Katalog separat nur als Warnung V:01019).
 /**
  * @param {string | null | undefined} g
  * @returns {boolean}
  */
 export function isValidDiagnosegruppe(g) {
-  return /^[A-Z]{1,3}\d?[a-z]?$/.test(g || '') && (/** @type {string} */ (g)).length >= 2 && (/** @type {string} */ (g)).length <= 4;
+  return typeof g === 'string' && /^(?:9999|[A-Z][A-Za-z0-9]{1,3})$/.test(g);
 }
 
 // Tarifkennzeichen: 5 chars, pos 1-2 = valid Tarifbereich, pos 3-5 = Sondertarif.
@@ -726,6 +730,12 @@ export function preflight(input) {
 
     if (!isValidDiagnosegruppe(v.diagnosegruppe))
       E(errors, 'V:01003', `${at}.verordnung.diagnosegruppe`, `Diagnosegruppe "${v.diagnosegruppe}" ungültig`);
+    else if (v.diagnosegruppe === '9999')
+      W(warnings, 'V:01019', `${at}.verordnung.diagnosegruppe`,
+        'Diagnosegruppe "9999" (TP5-Ersatzwert ohne Diagnosegruppe) — außerhalb der 44 aktuellen HeilM-RL-Diagnosegruppen; bitte gegen den Urbeleg prüfen.');
+    else if (!DIAGNOSEGRUPPEN_KODE_SET.has(/** @type {string} */ (v.diagnosegruppe)))
+      W(warnings, 'V:01019', `${at}.verordnung.diagnosegruppe`,
+        `Diagnosegruppe "${v.diagnosegruppe}" steht nicht im 44er-HeilM-RL-Katalog (z. B. Alt-DG vor 2021 oder ZÄ-Indikationsschlüssel) — bitte gegen den Urbeleg prüfen.`);
 
     if (!VERORDNUNGSART_HEILMITTEL[/** @type {string} */ (v.verordnungsart)])
       E(errors, 'V:01004', `${at}.verordnung.verordnungsart`, `Verordnungsart "${v.verordnungsart}" nicht 03/04/05`);

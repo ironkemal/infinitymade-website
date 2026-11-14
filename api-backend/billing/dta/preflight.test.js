@@ -16,9 +16,13 @@ import {
 import assert from 'node:assert/strict';
 
 let pass = 0, fail = 0;
+/**
+ * @param {string} name
+ * @param {() => void} fn
+ */
 function test(name, fn) {
   try { fn(); console.log('  ok   ' + name); pass++; }
-  catch (e) { console.log('  FAIL ' + name + '\n       ' + e.message); fail++; }
+  catch (e) { console.log('  FAIL ' + name + '\n       ' + (e instanceof Error ? e.message : String(e))); fail++; }
 }
 
 console.log('atomic checks');
@@ -59,7 +63,12 @@ test('ICD-10 M54.123 3 Nachkommastellen ungültig', () => assert.equal(isValidIc
 
 test('Diagnosegruppe WS2 valid',       () => assert.equal(isValidDiagnosegruppe('WS2'), true));
 test('Diagnosegruppe EX2a valid',      () => assert.equal(isValidDiagnosegruppe('EX2a'), true));
+test('Diagnosegruppe CD2a valid (ZAe)',() => assert.equal(isValidDiagnosegruppe('CD2a'), true));
+test('Diagnosegruppe ZNSZ valid (ZAe)',() => assert.equal(isValidDiagnosegruppe('ZNSZ'), true));
+test('Diagnosegruppe 9999 valid (TP5)',() => assert.equal(isValidDiagnosegruppe('9999'), true));
 test('Diagnosegruppe X invalid',       () => assert.equal(isValidDiagnosegruppe('X'), false));
+test('Diagnosegruppe Leerzeichen invalid', () => assert.equal(isValidDiagnosegruppe('SB 1'), false));
+test('Diagnosegruppe Bindestrich invalid', () => assert.equal(isValidDiagnosegruppe('DF-a'), false));
 
 test('Tarifkennzeichen 02001 valid',   () => assert.equal(isValidTarifkennzeichen('02001'), true));
 test('Tarifkennzeichen 99001 invalid', () => assert.equal(isValidTarifkennzeichen('99001'), false));
@@ -97,6 +106,7 @@ test('valid prescription passes preflight', () => {
 
 test('totals computed', () => {
   const r = preflight(validInput);
+  assert.ok(r.totals);
   assert.equal(r.totals.brutto, 135.00);
   assert.equal(r.totals.zuzahlung, 23.50);
   assert.equal(r.totals.netto, 111.50);
@@ -106,11 +116,13 @@ test('totals computed', () => {
 
 console.log('preflight — failure modes');
 
+/** @param {unknown} o @returns {import('./preflight.js').DtaInput} */
 function clone(o) { return JSON.parse(JSON.stringify(o)); }
+/** @param {{ errors: Array<{ code: string }> }} r @param {string} code */
 function hasErr(r, code) { return r.errors.some(e => e.code === code); }
 
 test('catches missing absender IK', () => {
-  const i = clone(validInput); delete i.absender.ik;
+  const i = clone(validInput); delete /** @type {{ ik?: string }} */ (i.absender).ik;
   const r = preflight(i);
   assert.equal(r.ok, false);
   assert.ok(hasErr(r, 'F:01001'));
@@ -136,14 +148,14 @@ test('catches malformed KVNR', () => {
 });
 
 test('catches missing belegnummer', () => {
-  const i = clone(validInput); delete i.prescriptions[0].patient.belegnummer;
+  const i = clone(validInput); delete /** @type {{ belegnummer?: string }} */ (i.prescriptions[0].patient).belegnummer;
   const r = preflight(i);
   assert.ok(hasErr(r, 'P:01006'));
 });
 
 test('catches duplicate belegnummer in same Sammel', () => {
   const i = clone(validInput);
-  i.prescriptions.push(clone(i.prescriptions[0]));  // same belegnummer 0000001
+  i.prescriptions.push(structuredClone(i.prescriptions[0]));  // same belegnummer 0000001
   const r = preflight(i);
   assert.ok(hasErr(r, 'P:01007'));
 });
@@ -185,6 +197,36 @@ test('catches invalid Verordnungsart', () => {
   assert.ok(hasErr(r, 'V:01004'));
 });
 
+test('Diagnosegruppe außerhalb 44er-HeilM-RL-Katalog: V:01019 Warnung statt V:01003 Hartblock', () => {
+  // Alt-DG (WS2) und ZÄ-Schlüssel (CD2a) sowie TP5-Ersatzwert (9999) bleiben versandfähig (kein V:01003),
+  // lösen aber eine V:01019-Warnung zur Prüfung gegen den Urbeleg aus.
+  for (const dg of ['WS2', 'CD2a', '9999']) {
+    const i = clone(validInput);
+    i.prescriptions[0].verordnung.diagnosegruppe = dg;
+    const r = preflight(i);
+    assert.ok(!hasErr(r, 'V:01003'), `${dg}: darf nicht hart blockieren`);
+    assert.ok(r.warnings.some(w => w.code === 'V:01019'), `${dg}: erwartet V:01019 Warnung`);
+  }
+
+  // Aktuelle 44er-HeilM-RL-DGs lösen weder V:01003 noch V:01019 aus
+  for (const dg of ['WS', 'SB1', 'SP4', 'SAS', 'CF']) {
+    const i = clone(validInput);
+    i.prescriptions[0].verordnung.diagnosegruppe = dg;
+    const r = preflight(i);
+    assert.ok(!hasErr(r, 'V:01003'), `${dg}: kein V:01003`);
+    assert.ok(!r.warnings.some(w => w.code === 'V:01019'), `${dg}: keine V:01019`);
+  }
+
+  // TP5-Syntaxfehler (Leerzeichen, Sonderzeichen, 1 Zeichen, leer) blockieren weiterhin mit V:01003
+  for (const dg of ['', 'X', 'SB 1', 'DF-a', 'WS123']) {
+    const i = clone(validInput);
+    i.prescriptions[0].verordnung.diagnosegruppe = dg;
+    const r = preflight(i);
+    assert.ok(hasErr(r, 'V:01003'), `"${dg}": muss V:01003 auslösen`);
+    assert.ok(!r.warnings.some(w => w.code === 'V:01019'), `"${dg}": bei Syntaxfehler nicht doppelt mit V:01019 warnen`);
+  }
+});
+
 test('catches missing krankenkasseIk (V:01017)', () => {
   const i = clone(validInput);
   delete i.prescriptions[0].verordnung.krankenkasseIk;
@@ -210,6 +252,10 @@ test('catches 8-digit krankenkasseIk (V:01017)', () => {
 });
 
 // ── V:01018 ICD↔DG + S:01013 ein Behandlungstag je Tag (30.09.2026) ─────────
+/**
+ * @param {Record<string, unknown>} [verordnung]
+ * @param {Array<[string, string, number?]>} [sessions]
+ */
 const podoFall = (verordnung = {}, sessions) => {
   const i = clone(validInput);
   Object.assign(i.prescriptions[0].verordnung, { diagnosegruppe: 'DF', leitsymptomatik: '1000', ...verordnung });
@@ -217,6 +263,7 @@ const podoFall = (verordnung = {}, sessions) => {
     .map(([d, p, a = 1]) => ({ positionsnummer: p, datumLeistung: d, anzahl: a, einzelbetrag: 40, zuzahlungProPos: 4 }));
   return i;
 };
+/** @param {{ warnings: Array<{ code: string }> }} r @param {string} code */
 const hasWarn = (r, code) => r.warnings.some(w => w.code === code);
 
 test('V:01018: DF + L60.0 ohne Diagnosetext → Fehler', () => {
@@ -642,6 +689,7 @@ test('E11.7- mit icdTerminal {"E11.7": false} -> genau eine V:01016 Warnung', ()
 
 // ── S:01010/S:01012 Podologie (gkv-302 21.10.2026): 12 Kalenderwochen statt 14 Tage,
 //    kein Ablauf ab Ausstellung (Podologie-Vertrag § 7 Abs. 7; HeilM-RL § 16 Abs. 4 S. 5) ──
+/** @param {string[]} daten */
 const podoPause = (daten) => {
   const i = podoFall({ icd10: 'E11.74', ausstellungsdatum: '2026-01-02' }, daten.map(d => [d, '78010']));
   i.prescriptions[0].tarif.abrechnungscode = '71';
@@ -656,7 +704,9 @@ test('S:01010 Podologie: genau 84 Tage gültig, 85 Tage ungültig', () => {
   assert.ok(!hasErr(podoPause(['2026-01-05', '2026-03-30']), 'S:01010'));
   const r = podoPause(['2026-01-05', '2026-03-31']);
   assert.ok(hasErr(r, 'S:01010'));
-  assert.match(r.errors.find(e => e.code === 'S:01010').message || JSON.stringify(r.errors), /Podologie-Vertrag § 7 Abs\. 7/);
+  const err = r.errors.find(e => e.code === 'S:01010');
+  assert.ok(err);
+  assert.match(err.message || JSON.stringify(r.errors), /Podologie-Vertrag § 7 Abs\. 7/);
 });
 
 test('ICD-10 Kennzeichen/Strich hinter den Zusätzen gültig (cold review 01.10.2026)', () => {

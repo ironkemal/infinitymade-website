@@ -124,6 +124,7 @@ export const REGEL_SCHWERE = Object.freeze({
   'V:01017': { schwere: 'hart', kasse: 'unbekannt', quelle: "Anlage 1 TP5 V21, Kap. 5.5.2 S. 32 (SLGA-FKT) und 5.5.3.1 (SLLA-FKT); Feldart NK; Pflicht aus Erläuterung ('zwingend anzugeben')", hinweis: 'Karten-IK (IK der Krankenkasse von der Versichertenkarte) fehlt — kein Rückfall auf die Kostenträger-IK (gkv-302, 30.09.2026)' },
   // V:01018 / S:01013 — neue HARTE Regeln vom 30.09.2026, Zustimmung gkv-302 30.09.2026 (REGELN.md § 6).
   'V:01018': { schwere: 'hart', kasse: 'zeile', quelle: 'Podologie Anlage 3 i.d.F. 16.06.2025 Ziffer 5 k; HeilM-RL § 27 Abs. 1; SPEC-RULES „Podologie DF/NF/QF: ICD-Satz ohne therapierelevanten Kode"', hinweis: 'ICD passt nicht zur DG (mismatch) ohne Diagnosetext — Prüfstufe-4-Absetzung; DF/NF/QF mit Diagnosetext nur Warnung' },
+  'V:01019': { schwere: 'warnung', kasse: 'unbekannt', quelle: 'Anlage 1 TP5 V21, Kap. 5.5.3.3 (ZHE ..4 AN M, inkl. Ersatzwert 9999 / ZÄ); HeilM-RL 2025', hinweis: 'Diagnosegruppe TP5-konform, aber außerhalb der 44 aktuellen HeilM-RL-Diagnosegruppen (z. B. Alt-DG, ZÄ CD2a oder 9999) — Warnung statt Hartblock' },
 
   // ── Leistungen (SLLA.EHE / SLLA.BES) ─────────────────────────────────────
   'S:01001': { schwere: 'hart', kasse: 'datei', quelle: 'Anlage 1 TP5 V21, Kap. 5.5.3.2 (EHE, 1..n)', hinweis: 'Abrechnungsfall ohne Leistung' },

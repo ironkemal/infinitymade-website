@@ -61,9 +61,9 @@ Gesamt: **122 Fälle**.
 
 | Status | Fälle |
 |---|---|
-| aktiv | 111 |
+| aktiv | 119 |
 | befund | 0 |
-| bewusst | 11 |
+| bewusst | 3 |
 
 ## Aufbau eines Falls
 
@@ -109,7 +109,7 @@ Keine offenen `befund`-Fälle (0 Stück; mit Paket D wurden `LHB-006`, `PHY-STD-
 - **`lookupLhbBvb` / `lookupBlankoShoulder`** normalisieren Eingaben per `trim().toUpperCase()`
   inkl. Wildcards (`XXX.-`, `XXX.Y-`, `G73.6*`, `C00-C97`); kommaseparierte Listen (z. B.
   „G60.0, M54.5") werden jedoch nicht aufgesplittet.
-- **Veraltete Physio-Alt-DGs außerhalb von `diagnosegruppen.json`**: `api-backend/ai/catalogs/rezept-optionen.js` (`DIAGNOSEGRUPPEN`: jetzt die 44 gültigen HeilM-RL-Codes ab 2021/2025) und `module/verordnung-import.js` (`PHYSIO_FALLBACK_HOECHSTMENGE`: jetzt die 13 Physio-Codes inkl. `SO4`/`SO5`, ohne Alt- und Ergo-Codes) sind bereinigt. Offen außerhalb des Validators: `api-backend/db/migrations/0011_seed_diagnosegruppen.sql` (seedet noch 14 Alt-Codes + `'SM'` ohne `SAS`/`CF`) und `api-backend/billing/dta/preflight.js` (`isValidDiagnosegruppe` prüft bislang nur Syntax `/^[A-Z]{1,3}\d?[a-z]?$/`).
+- **Veraltete Physio-Alt-DGs außerhalb von `diagnosegruppen.json`**: `api-backend/ai/catalogs/rezept-optionen.js` (`DIAGNOSEGRUPPEN`: jetzt die 44 gültigen HeilM-RL-Codes ab 2021/2025), `module/verordnung-import.js` (`PHYSIO_FALLBACK_HOECHSTMENGE`: jetzt die 13 Physio-Codes inkl. `SO4`/`SO5`, ohne Alt- und Ergo-Codes) und `api-backend/billing/dta/preflight.js` (`isValidDiagnosegruppe` prüft TP5-Syntax `..4 AN M` inkl. ZÄ/Ersatzwert `'9999'`, Warnung `V:01019` bei Abweichung vom 44er-HeilM-RL-Katalog) sind bereinigt. Offen für die Live-DB (nach Live-SaaS-Ausführung per `onprem` O-129 / G7 nachzuführen): SQL-Entwurf [`db/entwuerfe/0122_diagnosegruppen_heilm_rl_bereinigen.sql`](../../../../../../db/entwuerfe/0122_diagnosegruppen_heilm_rl_bereinigen.sql) gegen `api-backend/db/migrations/0011_seed_diagnosegruppen.sql` (14 Alt-Codes + `'SM'`, ohne `SAS`/`CF`).
 
 ## Bewusste Abweichungen (kein Fehler)
 
@@ -117,15 +117,7 @@ Keine offenen `befund`-Fälle (0 Stück; mit Paket D wurden `LHB-006`, `PHY-STD-
 |---|---|---|---|
 | BLK-012 | Blanko: Ergotherapie SB1 mit Blanko-Kennzeichnung ist seit 01.04.2024 zulässig | Ergo-Blankoverordnung (seit 01.04.2024) ist im Validator bewusst nicht abgebildet (validate.js:33-39, Ratsbeschluss 2026-08-05; Ops-Dashboard → Teknik). | Abschnitt 2, Ergotherapie ab 1. April 2024 (Z. 1487) — „SB1 Erkrankungen der Wirbelsäule, Gelenke und Extremitäten" |
 | BLK-013 | Blanko: Ergotherapie PS4 mit Blanko-Kennzeichnung ist seit 01.04.2024 zulässig | Ergo-Blankoverordnung (seit 01.04.2024) ist im Validator bewusst nicht abgebildet (validate.js:33-39, Ratsbeschluss 2026-08-05; Ops-Dashboard → Teknik). | Abschnitt 2, Ergotherapie ab 1. April 2024 (Z. 1492) — „PS4 Dementielle Syndrome" |
-| ERG-STD-001 | Ergo: SB1 genau Höchstmenge (10) | Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN. | Heilmittelkatalog IV, Diagnosegruppe SB1 (Z. 4472–4473) — „Höchstmenge je VO: - bis zu 10x/VO" |
-| ERG-STD-002 | Ergo: SB1 eine Einheit über Höchstmenge (11) | Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN. | Heilmittelkatalog IV, Diagnosegruppe SB1 (Z. 4472–4473) — „Höchstmenge je VO: - bis zu 10x/VO" |
-| ERG-STD-003 | Ergo: PS2 genau Höchstmenge (20) | Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN. | Heilmittelkatalog IV, Diagnosegruppe PS2 (Z. 4973–4974) — „Höchstmenge je VO: - bis zu 20x/VO" |
-| ERG-STD-004 | Ergo: PS2 eine Einheit über Höchstmenge (21) | Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN. | Heilmittelkatalog IV, Diagnosegruppe PS2 (Z. 4973–4974) — „Höchstmenge je VO: - bis zu 20x/VO" |
-| LOG-STD-001 | Logo: SP1 genau Höchstmenge (10) | Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN. | Heilmittelkatalog III, Diagnosegruppe SP1 (Z. 3851–3852) — „Höchstmenge je VO: - bis zu 10x/VO" |
-| LOG-STD-002 | Logo: SP1 eine Einheit über Höchstmenge (11) | Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN. | Heilmittelkatalog III, Diagnosegruppe SP1 (Z. 3851–3852) — „Höchstmenge je VO: - bis zu 10x/VO" |
-| LOG-STD-003 | Logo: SP4 genau Höchstmenge (20) | Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN. | Heilmittelkatalog III, Diagnosegruppe SP4 (Z. 4027–4028) — „Höchstmenge je VO: - bis zu 20x/VO" |
-| LOG-STD-004 | Logo: SP4 eine Einheit über Höchstmenge (21) | Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN. | Heilmittelkatalog III, Diagnosegruppe SP4 (Z. 4027–4028) — „Höchstmenge je VO: - bis zu 20x/VO" |
-| POD-STD-039 | Podologie: DF ganz ohne Diagnose (weder ICD-10-Kode noch Klartext) | ICD ist im Validator bewusst optional (diagnosegruppen.json → _global.ICD_OPTIONAL); ohne Kode läuft keine Diagnoseprüfung. Laut Anlage 3 muss eine fehlende Diagnose ärztlich ergänzt werden. | Buchst. k Diagnose, Korrekturmöglichkeit (Z. 563–566) — „Fehlt die Angabe der Diagnose oder ist diese erkennbar nicht therapierelevant, ist diese mit einer erneuten Arztunterschrift und Datumsangabe zu ergänzen oder zu korrigieren." |
+| POD-STD-039 | Podologie: DF ganz ohne Diagnose (weder ICD-10-Kode noch Klartext) | ICD ist im Validator bewusst optional (diagnosegruppen.json → _global.ICD_OPTIONAL; vgl. Minimal-Konvention ohne `diagnosetext` in `validators.test.js`); ohne Kode läuft keine Diagnoseprüfung. Laut Anlage 3 muss eine fehlende Diagnose ärztlich ergänzt werden. Anm. (`gkv-302` 2026-11-14): `POD-STD-039.erwartet` führt historisch `ICD_DG_MISMATCH_STRENG`, obwohl kein ICD-Kode vorliegt. | Buchst. k Diagnose, Korrekturmöglichkeit (Z. 563–566) — „Fehlt die Angabe der Diagnose oder ist diese erkennbar nicht therapierelevant, ist diese mit einer erneuten Arztunterschrift und Datumsangabe zu ergänzen oder zu korrigieren." |
 
 ## Unsicher / offen
 

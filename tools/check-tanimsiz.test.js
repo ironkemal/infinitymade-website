@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { parseNameErrors, filterGegenBaseline, fuehreTscAus } from './check-tanimsiz.mjs';
-import { writeFileSync, unlinkSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { basename, join } from 'node:path';
 
 test('parseNameErrors: erkennt TS2304 und TS2552 Fehler korrekt', () => {
   const tscOut = `
@@ -30,14 +32,19 @@ test('filterGegenBaseline: ignoriert Fehler, die in der Baseline stehen', () => 
 });
 
 test('fuehreTscAus: findet undeklarierte Variable in Testdatei', () => {
-  const testDatei = 'module/temp-test-tanimsiz.js';
+  // Eigenes Temp-Verzeichnis außerhalb module/, damit parallele Repository-Scans
+  // (z. B. onprem-setup-kapi.test.js) keine transiente Datei treffen (R-21).
+  const tempDir = mkdtempSync(join(tmpdir(), 'praxura-tanimsiz-'));
+  const tempOrdnerName = basename(tempDir);
+  const testDatei = join(tempDir, 'temp-test-tanimsiz.js');
   try {
     writeFileSync(testDatei, 'export function foo() { const x = unbestimmterName123 + 1; return x; }\n', 'utf8');
     const out = fuehreTscAus([testDatei]);
-    const fehler = parseNameErrors(out, f => f === testDatei);
+    // tsc gibt Pfade außerhalb des Arbeitsverzeichnisses relativ (z. B. ../../../var/...) aus.
+    const fehler = parseNameErrors(out, (/** @type {string} */ f) => f.endsWith(`${tempOrdnerName}/temp-test-tanimsiz.js`));
     assert.ok(fehler.length > 0);
     assert.ok(fehler.some(f => f.meldung.includes('unbestimmterName123')));
   } finally {
-    try { unlinkSync(testDatei); } catch {}
+    rmSync(tempDir, { recursive: true, force: true });
   }
 });

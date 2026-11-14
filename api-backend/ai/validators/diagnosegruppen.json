@@ -2,7 +2,7 @@
   "_meta": {
     "source": "G-BA Heilmittel-Richtlinie 2025-05-15 (iK 2025-08-05), Anlage 1 Heilmittelkatalog",
     "note": "Höchstmenge je Verordnung im Regelfall. Bei LHB/BVB: bis zu 12 Wochen je Verordnung erlaubt. Bei Blanko: keine Mengenbegrenzung, aber Ampelsystem. Bezeichnungen entsprechen der HeilM-RL; autoritative Laufzeitquelle ist die Tabelle diagnosegruppen.",
-    "version": "2026-08-10-v3"
+    "version": "2026-11-14-v4"
   },
   "physio": {
     "WS": {
@@ -81,6 +81,154 @@
       "title": "Chronische Adnexitis, chronische Prostatitis",
       "hoechstmenge": 6,
       "orientierende_menge": 18,
+      "frequency_hint": "1-3 x wöchentlich"
+    }
+  },
+  "ergo": {
+    "SB1": {
+      "name": "Erkrankungen der Wirbelsäule, Gelenke und Extremitäten (mit motorisch-funktionellen Schädigungen)",
+      "hoechstmenge": 10,
+      "orientierende_menge": 20,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "SB2": {
+      "name": "Erkrankungen der Wirbelsäule, Gelenke und Extremitäten (mit motorisch-funktionellen und sensomotorisch-perzeptiven Schädigungen)",
+      "hoechstmenge": 10,
+      "orientierende_menge": 30,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "SB3": {
+      "name": "System- und Autoimmunerkrankungen mit Bindegewebe-, Muskel- und Gefäßbeteiligung (mit motorisch-funktionellen/ sensomotorisch-perzeptiven Schädigungen)",
+      "hoechstmenge": 10,
+      "orientierende_menge": 30,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "EN1": {
+      "name": "ZNS-Erkrankungen (Gehirn) / Entwicklungsstörungen",
+      "hoechstmenge": 10,
+      "orientierende_menge": 40,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "EN2": {
+      "name": "ZNS-Erkrankungen (Rückenmark)/ Neuromuskuläre Erkrankungen",
+      "hoechstmenge": 10,
+      "orientierende_menge": 40,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "EN3": {
+      "name": "Periphere Nervenläsionen/ Muskelerkrankungen",
+      "hoechstmenge": 10,
+      "orientierende_menge": 20,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "PS1": {
+      "name": "Entwicklungs-, Verhaltens- und emotionale Störungen mit Beginn in Kindheit und Jugend",
+      "hoechstmenge": 10,
+      "orientierende_menge": 40,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "PS2": {
+      "name": "Neurotische, Belastungs-, somatoforme und Persönlichkeitsstörungen",
+      "hoechstmenge": 20,
+      "orientierende_menge": 40,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "PS3": {
+      "name": "Wahnhafte und affektive Störungen/ Abhängigkeitserkrankungen",
+      "hoechstmenge": 20,
+      "orientierende_menge": 40,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "PS4": {
+      "name": "Dementielle Syndrome",
+      "hoechstmenge": 10,
+      "orientierende_menge": 40,
+      "frequency_hint": "1-3 x wöchentlich"
+    }
+  },
+  "logo": {
+    "ST1": {
+      "name": "Organisch bedingte Erkrankungen der Stimme",
+      "hoechstmenge": 10,
+      "orientierende_menge": 20,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "ST2": {
+      "name": "Funktionell bedingte Erkrankungen der Stimme",
+      "hoechstmenge": 10,
+      "orientierende_menge": 20,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "ST3": {
+      "name": "Psychogene Aphonie",
+      "hoechstmenge": 10,
+      "orientierende_menge": 10,
+      "frequency_hint": "täglich, bis zu mehreren Einheiten pro Tag"
+    },
+    "ST4": {
+      "name": "Psychogene Dysphonie",
+      "hoechstmenge": 10,
+      "orientierende_menge": 20,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "SP1": {
+      "name": "Störungen der Sprache vor Abschluss der Sprachentwicklung",
+      "hoechstmenge": 10,
+      "orientierende_menge": 60,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "SP2": {
+      "name": "Störungen der auditiven Wahrnehmung",
+      "hoechstmenge": 10,
+      "orientierende_menge": 20,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "SP3": {
+      "name": "Störungen der Artikulation, Dyslalie",
+      "hoechstmenge": 10,
+      "orientierende_menge": 30,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "SP4": {
+      "name": "Störungen des Sprechens/der Sprache bei hochgradiger Schwerhörigkeit oder Taubheit",
+      "hoechstmenge": 20,
+      "orientierende_menge": 50,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "SP5": {
+      "name": "Störungen der Sprache nach Abschluss der Sprachentwicklung",
+      "hoechstmenge": 20,
+      "orientierende_menge": 60,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "SP6": {
+      "name": "Störungen der Sprechmotorik",
+      "hoechstmenge": 20,
+      "orientierende_menge": 60,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "RE1": {
+      "name": "Störungen des Redeflusses (Stottern)",
+      "hoechstmenge": 10,
+      "orientierende_menge": 50,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "RE2": {
+      "name": "Störungen des Redeflusses (Poltern)",
+      "hoechstmenge": 10,
+      "orientierende_menge": 20,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "SF": {
+      "name": "Störungen der Stimm- und Sprechfunktion (Rhinophonie)",
+      "hoechstmenge": 10,
+      "orientierende_menge": 20,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "SC": {
+      "name": "Krankhafte Störungen des Schluckaktes",
+      "hoechstmenge": 10,
+      "orientierende_menge": 60,
       "frequency_hint": "1-3 x wöchentlich"
     }
   },
@@ -209,7 +357,7 @@
       "ZUSATZ_ICD_UNSCHAEDLICH": "Mehrere ICD-Kodes sind zulässig; nur einer muss therapierelevant sein. Eine Warnung je Kode ist falsch.",
       "UI3_EXISTIERT_NICHT": "Eine Diagnosegruppe UI3 gibt es nicht. Nagelschweregrad 3 wird über UI2 verordnet.",
       "KEINE_BLANKO_PODO": "Für Podologie besteht kein Blankoverordnungs-Vertrag nach § 125a SGB V.",
-      "NUR_PODOLOGIE": "Für die 52 Diagnosegruppen der Physio-/Logo-/Ergotherapie ist kein ICD-Pool hinterlegt. Dort bleibt die Prüfung still deaktiviert — kein Pool heißt keine Warnung."
+      "NUR_PODOLOGIE": "Für Diagnosegruppen der Physio-, Logo- und Ergotherapie ist kein ICD-Pool hinterlegt. Dort bleibt die Prüfung still deaktiviert — kein Pool heißt keine Warnung."
     }
   },
   "blanko_ampel": {

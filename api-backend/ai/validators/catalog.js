@@ -88,20 +88,29 @@ export function lookupBlankoShoulder(icd) {
 
 /**
  * Resolve Diagnosegruppe metadata.
- * Accepts e.g. "WS2", "EX", "ZN1", "DF", "DF-a", "UI1".
- * Strips trailing -a/-b/-c suffix before lookup.
- * Searches physio first, then podologie (skips _-prefixed meta keys).
+ * Accepts e.g. "WS2", "EX", "ZN1", "SB1", "SB 1", "SP4", "DF", "DF-a", "UI1".
+ * Normalizes whitespace and strips trailing -a/-b/-c suffix before lookup.
+ * Searches physio, podologie (skipping _-prefixed meta keys), ergo, and logo.
  * Returns hoechstmenge/orientierende_menge/frequency_hint or null.
  * @param {string | null | undefined} dg
  * @returns {Record<string, any> | null}
  */
 export function getDiagnosegruppe(dg) {
   if (!dg) return null;
-  // Suffix -a/-b/-c abschneiden (z. B. DF-a -> DF)
-  const key = dg.trim().replace(/-[abc]$/i, '');
-  if (diagnosegruppen.physio[key]) return diagnosegruppen.physio[key];
-  const podo = diagnosegruppen.podologie;
-  if (podo && !key.startsWith('_') && podo[key]) return podo[key];
+  // Leerzeichen normalisieren ("SB 1" -> "SB1") und Suffix -a/-b/-c abschneiden (z. B. DF-a -> DF)
+  const key = dg.trim().replace(/\s+/g, '').replace(/-[abc]$/i, '');
+  if (!key || key.startsWith('_')) return null;
+  const bereiche = [
+    diagnosegruppen.physio,
+    diagnosegruppen.podologie,
+    diagnosegruppen.ergo,
+    diagnosegruppen.logo,
+  ];
+  for (const bereich of bereiche) {
+    if (bereich && Object.prototype.hasOwnProperty.call(bereich, key)) {
+      return bereich[key];
+    }
+  }
   return null;
 }
 
