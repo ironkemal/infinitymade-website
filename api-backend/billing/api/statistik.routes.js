@@ -46,7 +46,8 @@ router.get('/statistik', async (req, res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
-    if (auth.profile.role !== 'owner') {
+    // guvenlik 14.11.2026: strenge Form — Rolle owner UND Mandant = eingeloggte Person.
+    if (auth.profile.role !== 'owner' || auth.tenantId !== auth.user.id) {
       return res.status(403).json({ error: 'Nur für Praxisinhaber verfügbar', code: 'NUR_INHABER' });
     }
     const { tenantId } = auth;
@@ -246,10 +247,8 @@ router.get('/statistik', async (req, res) => {
 
     const monatlich = [];
     for (let i = monate - 1; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(1); // avoid month-overflow edge cases
-      d.setMonth(d.getMonth() - i);
-      const key = d.toISOString().slice(0, 7);
+      // UTC wie die Schlüssel aus created_at.slice(0, 7); vorher Lokalzeit + toISOString (Review V6.B03, 14.11.2026).
+      const key = new Date(Date.UTC(nowForMonth.getUTCFullYear(), nowForMonth.getUTCMonth() - i, 1)).toISOString().slice(0, 7);
       monatlich.push({
         monat: key,
         umsatz: r2(umsatzByMonth[key]),    // alle Belegarten — Bedeutung wie bisher

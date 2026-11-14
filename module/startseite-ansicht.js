@@ -6,6 +6,7 @@ import { begruessung, heutigeTermine, alsNaechstes, abstandText, dauerMin, tages
 import { uhrzeitBerlin } from './termin-heute.js?v=20261004m113';
 import { alsBerlinDatum } from './berlin-datum.js';
 import { createHandlungsbedarfKarte, handlungsbedarfHtml } from './startseite-handlungsbedarf-karte.js?v=20261113f606';
+import { ladeGeld, geldHtml } from './startseite-geld.js?v=20261114b03';
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const SVG = (p, w = 18) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 const ICON = {
@@ -180,9 +181,11 @@ export function montiereStartansicht(k) {
  // Slots werden nur einmal angelegt. Insbesondere der Aufgabenslot ist keine Renderinsel.
  // V6.F07 (Melih 13.11.): DOM-Folge = Telefon-Folge (Verordnungen vor Termine heute), damit die Tab-Folge nicht zurückspringt.
  root.innerHTML = `<div data-start-insel="kopf"></div><div class="px-start-raster"><div data-start-insel="next" style="display:contents"></div><div data-start-insel="todo" style="display:contents"></div><section class="px-karte px-k-vo"><div class="px-karte-kopf"><h2>Verordnungen</h2></div>${voNeu ? '<div data-start-insel="bedarf"></div>' : '<div data-start-slot="vo"></div><p class="px-karte-zustand" data-start-vo-unbekannt>Verordnungszahlen sind noch nicht verfügbar.</p>'}</section><section class="px-karte px-k-list"><div data-start-insel="liste" style="display:contents"></div><details class="px-start-bestand"><summary>Kalenderansicht und Filter</summary><div data-start-slot="kalender"></div></details></section><section class="px-karte px-k-frei"><div class="px-karte-kopf"><h2>Freie Zeit</h2></div><div data-start-insel="frei" style="display:contents"></div><div class="px-frei-ziel" data-start-slot="frei"></div></section><div class="px-start-aufgaben" data-start-slot="aufgaben"></div></div>`;
+ // V6.B03: Zahlen nur, wenn Inhaberin = Mandant und eine API-Basis da ist (guvenlik 14.11.: owner, uid===ownerId, neues Design).
+ const geldNeu = voNeu && typeof k.api === 'function' && !!k.api();
  if(istOwner()){
   const finance=document.createElement('section');finance.className='px-karte px-k-geld';
-  finance.innerHTML='<div class="px-karte-kopf"><h2>Abrechnung</h2></div><div class="px-karte-zustand"><p>Finanzübersicht ist hier noch nicht verfügbar.</p></div><div class="px-karte-fuss"><button type="button" class="px-fuss-knopf" data-ziel="rechnungen">Rechnungen öffnen</button><button type="button" class="px-fuss-knopf" data-ziel="belegliste">Belegliste öffnen</button><button type="button" class="px-fuss-knopf" data-ziel="statistik">Statistik öffnen</button></div>';
+  finance.innerHTML='<div class="px-karte-kopf"><div><h2>Abrechnung</h2>'+(geldNeu?'<p>Alle Standorte</p>':'')+'</div></div>'+(geldNeu?'<div data-start-insel="geld"></div>':'<div class="px-karte-zustand"><p>Finanzübersicht ist hier noch nicht verfügbar.</p></div>')+'<div class="px-karte-fuss"><button type="button" class="px-fuss-knopf" data-ziel="rechnungen">Rechnungen öffnen</button><button type="button" class="px-fuss-knopf" data-ziel="belegliste">Belegliste öffnen</button><button type="button" class="px-fuss-knopf" data-ziel="statistik">Statistik öffnen</button></div>';
   root.querySelector('.px-start-raster').append(finance);
  }
  const moves = [ ['#startAufgaben','aufgaben'], ...(voNeu ? [] : [['#physioRezKpi','vo']]), ['.gaps-section','frei'], ['.today-section','kalender'] ].map(([sel,slot])=>{
@@ -204,6 +207,18 @@ export function montiereStartansicht(k) {
  };
  const bedarf = voNeu ? createHandlungsbedarfKarte({ kontext: bedarfKontext, heute: () => alsBerlinDatum(new Date()), zeichne: () => redraw() }) : null;
  bedarfLesen = bedarf ? () => bedarf.lesen() : null;
+ // V6.B03 Abrechnungskarte: Generation + Kontext nach dem await prüfen (guvenlik-Auflage 8); Ergebnis höchstens 5 Min alt.
+ let geld = { status: 'laden' }, geldNr = 0, geldAbbruch = null, geldStand = 0;
+ const geldKontextOk = () => istOwner() && k.uid?.() === hb.ownerId?.() && document.documentElement.dataset.design === 'neu' && (k.scope?.() || `${k.rolle?.()}:${k.uid?.()}`) === boundScope;
+ async function geldLaden({ erzwingen = false } = {}) {
+  if (!geldNeu || !geldKontextOk() || (!erzwingen && geld.status === 'ok' && Date.now() - geldStand < 300000)) return;
+  const nr = ++geldNr; geldAbbruch?.abort(); const c = new AbortController(); geldAbbruch = c;
+  geld = { status: 'laden' }; redraw();
+  const r = await ladeGeld({ supabase: hb.supabase, apiBase: k.api(), signal: c.signal });
+  if (nr !== geldNr || c.signal.aborted || !geldKontextOk()) return;
+  geld = r.status === 'ok' ? r : { status: 'fehler' }; geldStand = r.status === 'ok' ? Date.now() : 0; redraw();
+ }
+ const geldLeeren = () => { geldNr++; geldAbbruch?.abort(); geldAbbruch = null; geld = { status: 'laden' }; geldStand = 0; };
  const insel = (name,html) => { const e=root.querySelector(`[data-start-insel="${name}"]`); if(e.innerHTML!==html)e.innerHTML=html; };
  function redraw() {
   if(root.hidden)return;
@@ -217,6 +232,7 @@ export function montiereStartansicht(k) {
   insel('frei',freiHtml());
   if(bedarf)insel('bedarf',handlungsbedarfHtml(bedarf.lesen(),{erreichbar:!!inLeiste('verordnungen')}));
   else root.querySelector('[data-start-vo-unbekannt]').hidden=voKpiDa();
+  if(geldNeu)insel('geld',geldHtml(geldKontextOk()?geld:{status:'laden'}));
   if(focus && !focus.isConnected && key){const target=[...root.querySelectorAll('[data-termin],[data-aktion],[data-ziel]')].find(e=>e.dataset.termin===key||e.dataset.aktion===key||e.dataset.ziel===key);target?.focus({preventScroll:true});}
  }
  function toggle(neu = document.documentElement.dataset.design === 'neu') {
@@ -226,11 +242,13 @@ export function montiereStartansicht(k) {
   for(const l of voLbl)l.e.textContent=neu?l.neu:l.alt;
   redraw();
   if(bedarf){if(neu)bedarf.laden();else bedarf.leeren();}
+  if(geldNeu){if(neu)geldLaden();else geldLeeren();}
  }
  root.addEventListener('click', e=>{
   const b=e.target.closest('[data-aktion],[data-ziel]');if(!b||b.disabled)return;
   if(b.dataset.aktion==='neu-laden')k.neuLaden?.();
   else if(b.dataset.aktion==='bedarf-neu')bedarf?.laden({erzwingen:true});
+  else if(b.dataset.aktion==='geld-neu')geldLaden({erzwingen:true});
   else if(b.dataset.aktion==='akte')k.akte?.(b.dataset.lead);
   else {const target=b.dataset.ziel || (b.dataset.aktion==='kalender'?'calendar':null);if(target && inLeiste(target))k.springe?.(target);}
  });

@@ -35,6 +35,12 @@ const berlinTag = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Be
  */
 export const API_ANTWORTEN = {
   '/api/attendance/report': { records: [] },
+  // V6.B03 Abrechnungskarte (nur Inhaberin): erfundene Zahlen, Form wie billing/api/statistik.routes.js.
+  '/api/billing/statistik': {
+    monatlich: [{ monat: '2026-10', umsatz: 1230, bezahlt: 316.5, offen: 60 }],
+    offene_zuzahlungen: 4, offene_zuzahlungen_summe: 60, offen_gesamt_summe: 102, offen_ausserhalb_fenster: 0,
+    ausfallrechnungen: { offen: 1, offen_summe: 42, bezahlt: 0 }, mahnungen: { gesamt: 2, bezahlt: 0, offen: 2 },
+  },
 };
 
 /** Panels in der Reihenfolge von redesign/STATUS.md. */

@@ -1312,3 +1312,17 @@ aber nicht als generierte App-Funktionen ausgewiesen. Keine manuelle Indexergän
 - `dashboard.js` `loadRechnungen`: gibt jetzt die Liste zurück, bei Fehler `null` (vorher `undefined`). Die bisherigen
   Aufrufer (switchPanel, openInvEditor, saveInvoice, saveDataSharing, neuLaden) nutzen den Rückgabewert nicht.
 - `tools/redesign-harness.mjs`: Option `fixtureAnpassen`. Probe v209b setzt damit die Fixture-IDs auf UUID.
+
+### 14.11.2026 · V6.B03 Abrechnungskarte der neuen Startseite (nur Inhaberin, neues Design)
+- Neu `module/startseite-geld.js`: `geldAuswerten`, `ladeGeld`, `geldHtml`, `monatText`.
+  - Niye: Die Karte „Abrechnung“ zeigte nur „Finanzübersicht ist hier noch nicht verfügbar“. Sie soll gefüllt werden,
+    ohne die Forderungsregeln ein drittes Mal nachzurechnen. Der Rettungs-Branch `rettung/design-wip-20261031` hatte
+    `api-backend/lib/offene-forderungen.js` mit eigenem Saldo. Es wurde bewusst nicht portiert (Vorab-Prüfung 14.11.).
+  - Nerede: einziger Aufrufer `module/startseite-ansicht.js` (geldLaden/redraw). Liest nur
+    `GET /api/billing/statistik?monate=1`. Die Regeln bleiben in `billing/zuzahlung/bezahlt.js` und
+    `billing/api/statistik.routes.js`. Betrag über `fmtEur` aus `module/geld.js`. Kein eigener Euro-Formatierer.
+- `api-backend/lib/berlin-tag.js` `berlinMonatsgrenzen` (Port aus 758df107): noch ohne Aufrufer. Gedacht für das
+  spätere V6.B-Restpaket. Monatsgrenzen in Europe/Berlin kommen von hier, nicht aus einer zweiten Hilfsfunktion.
+- Wer später Mahnstufen oder „bereit zur Abrechnung“ auf den Start holt, nutzt `billing/mahnwesen/stufe.js` und
+  `billing/utils/behandlungstage.js` bzw. `offene-einheiten.js`, nicht die Branch-Dateien `lib/startseite/*`.
+- Status: geschrieben im Worktree `redesign-delta-20261112`, Commit und Kartentazeleme durch den Lead.
