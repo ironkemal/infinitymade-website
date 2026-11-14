@@ -9,6 +9,8 @@ tags: [sitzung, uebersicht]
 
 **Bei „Was ist noch offen?“:** [[2026-11-11_offene-punkte-wiederaufnahme]] zuerst lesen, dann neuere Belege und führende Restmatrix abgleichen. Enthält Restpunkte, Zuständigkeiten, externe Mitwirkung und Rückstellungen.
 
+Aktuelle Qualitätsoffensive: [[2026-11-14_qualitaetsoffensive-pruefstand-und-typecheck]] — Alle 16 Prüfstand-Befunde + 8 Ergo/Logo-Fälle behoben (`119 aktiv / 0 befund / 3 bewusst`, `122/122` Zitate), TP5-Warnregel `V:01019`, SQL-Entwurf `0122` und `checkJs`-Ratsche auf `682` Einträge (`0` Fehler) lokal in `main` committed (`c5dca0c8`, nicht gepusht).
+
 Aktuelle Ergänzung: [[2026-11-11_redesign-physio-testkonto-phase0-9]] — Redesign Phasen 0–9 lokal gebaut und geprüft; Live (Phase 10) wartet auf GO und Tenant-ID.
 
 Frühere Ergänzung: [[2026-11-10_feiertagshinweise-und-abnahmegrenzen]] — Berliner Datumsgrenzen und Fehlerrückmeldungen lokal geprüft; Live-Abnahme und erweiterte Veröffentlichung offen.
@@ -44,6 +46,7 @@ Hier steht das Wichtigste aus einzelnen Arbeitssitzungen (Claude Code, Melih/Kem
 
 | Datum | Ticket | Notiz | Stand beim Schreiben |
 |---|---|---|---|
+| 2026-11-14 | Qualitätsoffensive (Prüfstand & `checkJs`) | [[2026-11-14_qualitaetsoffensive-pruefstand-und-typecheck]] | 16 Befunde + 8 Ergo/Logo gelöst (`119/0/3`, `122/122`), `V:01019`, `checkJs` `682` Einträge (`0` Fehler), `npm test` `5555 pass` (`4` PG `SKIP`, `3` `TODO`); lokal committed (`c5dca0c8`), Push & SQL `0122` offen |
 | 2026-11-07 | Physio-Abrechnung | [[2026-11-07_physio-fertigstellung]] | Astra-Plan zur Umsetzung freigegeben; Quellen-/Sollfall- und Testinventur läuft; Veröffentlichungsschutz offen; keine Live-Abnahme |
 | 2026-11-07 | Zentrale Restabnahme | [[2026-11-07_restarbeiten-abnahme-und-koordination]] | Reihenfolge und Ownership abgeglichen; lokale Kettenbelege gegen 111 Originaldateien geprüft; P4 weiter seriell, Box/SMTP/F11/KI nicht pauschal abgenommen |
 | 2026-11-04 | Hetzner / Praxisserver / Ops #34/#340 | [[2026-11-04_hetzner-praxisserver-und-ops-abgleich]] | Gesprächsverlauf gesichert; Hardwarevorschlag ohne Kapazitätsabnahme; am 03.11. #34/#340 bereits abgehakt, #332/#334 offen; keine neuen Haken, kein Hetzner-/Docker-/Restore-Test |
