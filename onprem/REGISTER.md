@@ -6977,3 +6977,14 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Kutuda ne olur** | Nichts: Route läuft, die Box setzt die Variablen nicht (feste `api`-Env-Liste in `onprem/docker-compose.yml`), also immer Alt. Bewusst gilt das bis zum Ende des Redesigns. Nicht in `.env.template`/Compose eintragen. |
 | **Çözüm** | G1/G2/G3/G8 nicht verletzt. Nicht `nurKutu` (beide Umgebungen, G7). In `server.js` hinter Wartungsmodus/accessLogger (bei Wartung 503 → Alt, gewollt). |
 | **Durum** | `lokal gebaut` — Tests: `routes/design.test.js`, `module/design-entscheidung.test.js`, Browser `tools/browser-probe/p02-aktivierung.mjs`. SaaS-Aktivierung braucht eigenes GO (Env setzen = Live-Wirkung). |
+
+### O-246 — Startseiten-Backend aus `rettung/design-wip-20261031`: `GET /api/startseite/zusammenfassung` + Owner-Gate `GET /api/billing/statistik` (ön kontrol 14.11.2026) ✅ **GEÇER**
+
+| Alan | |
+|---|---|
+| **Ne** | Port nach main: `routes/startseite.js`, `lib/offene-forderungen.js`, `lib/startseite/{geld,mahnungen,abrechnung,finanzadapter}.js`, Mount in `server.js` (rettung: Import :38-41, Limiter :635-642), Owner-Gate an `billing/api/statistik.routes.js` (R-06) |
+| **Nerede** | Branch `rettung/design-wip-20261031`; gemessen in den 6 Dateien: 0 × `process.env`, 0 × `http(s)://`, 0 × `fetch(`, 0 × Timer/Cron. Imports nur aus `billing/*` und `lib/berlin-tag.js` |
+| **Tip** | G (Kutu — liest nur Mandantendaten aus der eigenen DB) · H nicht berührt (Rollengrenze owner/employee, kein Plan-/Lizenzcheck) |
+| **Kutuda ne olur** | Läuft gegen die lokale DB der Box, kein Ausgang, offline voll funktionsfähig; Daten verlassen die Box nicht (G1). Kein neues Secret (G2), kein n8n (G3), kein neuer Cloud-Pfad (G8 — Express statt Vercel). Image: `Dockerfile` kopiert `lib/` und `routes/` als ganze Verzeichnisse (:44, :46) → neue Dateien inkl. Unterordner `lib/startseite/` kommen ohne Änderung mit. `tools/onprem-manifest.mjs`/`onprem/manifest.json` betreffen nur Bundle-Dateien (compose/env), nicht api-Quellcode → keine Anpassung |
+| **Çözüm** | `unkritisch` für die Verteilung. **Port-Falle (Crash beider Deployments):** `lib/startseite/geld.js:1` importiert `berlinMonatsgrenzen` aus `lib/berlin-tag.js` — auf main **nicht exportiert** (main: 4 Exporte, rettung: 5, rettung :75). Ohne Mitportierung → SyntaxError beim Import → `server.js` startet nicht, Watchtower rollt es auf SaaS aus, Box bleibt nach Update unten. Später „freie Zeit/Wochenauslastung“ (`slot-nachweis.js`, `verfuegbarkeit*.js`) beobachtet `getAvailableSlots` inkl. Google-Freebusy (`verfuegbarkeit-engine.js:96,113`) → eigene Vorprüfung vor dem Port (Tip A bestehend, Box ohne Google-Verbindung muss sauber `nicht verbunden` liefern) |
+| **Durum** | `unkritisch` (nur Vorprüfung, nicht portiert) |
