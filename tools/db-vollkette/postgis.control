@@ -1,0 +1,5 @@
+comment = 'PRAXURA TEST STUB - not PostGIS. geography = domain over text, no spatial behaviour'
+default_version = '0.0.0'
+relocatable = false
+schema = public
+superuser = true
