@@ -95,7 +95,7 @@ import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20261101u';
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261021f';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261031a';
-import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261016patient2'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
+import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261115v701'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
 import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261103n';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl, bindeAnTerminNachAnlage } from './module/verordnung-anlegen.js?v=20261021v';
@@ -615,7 +615,7 @@ const SIDEBAR_TO_MODULE = {
   services: 'services',
   hours: 'hours',
   team: 'team',
-  notes: 'notes',
+  notes: 'notes', notizen: 'notes', // V7.01p (Melih 15.11.2026): Notizen-Panel folgt dem Recht 'notes' wie die Akte
   anamnese: 'anamnese',
   prescriptions: 'prescriptions',
   verordnungen: 'prescriptions',
@@ -14200,7 +14200,7 @@ async function init() {
     console.log('[init] invoices ok');
     initAnamnese({
       supabase, getOwnerId, getUserId: () => currentSession?.user?.id || null, getSector, getProfile: () => currentProfile,
-      showToast, displayNameWithBirth, loadAerzte, getAerzte: () => aerzteCache, wireArztFeld, isPraxisSector, printArea, closeModal, switchPanel,
+      showToast, displayNameWithBirth, loadAerzte, getAerzte: () => aerzteCache, wireArztFeld, isPraxisSector, printArea, closeModal, switchPanel, bizScope,
       // Hausbesuch: Termin gestartet (fahrt_return_pending) → Fahrt-beenden-Bildschirm zeigen
       nachSpeichern: () => { if (bkActionBookingCache?.hausbesuch && bkActionBookingCache?.fahrt_status === 'fahrt_return_pending') setTimeout(() => openBookingActionModal(bkActionBookingCache), 300); },
     });

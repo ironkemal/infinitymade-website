@@ -1,6 +1,6 @@
 # Funktionskarte
 
-> Üretim: 2026-11-14 · `node tools/funktionskarte.mjs`
+> Üretim: 2026-11-15 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
 **4691 fonksiyon** (4569 JS · 95 bash · 27 ps1) · 576 dosya · 42 sidebar modülü
@@ -604,7 +604,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `g` — dashboard.js:13225 · dashboard.js:13238 · dashboard.js:13411 · module/heilmittel-zeilen-ui.js:262 · module/rezept-barcode-bestaetigung.js:4 · module/rezept-barcode-dialog.js:6 · module/rezept-in-maske.js:40 · module/rezept-patientenkopf.js:4 · module/verordnung-anlegen.js:32 · module/verordnung-maske.js:460 · module/verordnung-nachweis.js:28
 - `r2` — api-backend/billing/api/abrechnung.routes.js:2541 · api-backend/billing/api/statistik.routes.js:180 · api-backend/billing/api/zuzahlung.routes.js:45 · api-backend/billing/dta/builder.js:63 · api-backend/billing/dta/preflight.js:815 · api-backend/billing/preise/resolver.js:43 · api-backend/billing/utils/abrechnung-zeilen.js:38 · api-backend/billing/zuzahlung/calculator.js:17 · api-backend/billing/zuzahlung/korrektur.js:16 · module/abrechnung-verlauf.js:128 · module/zuzahlung-rechnen.js:42
 - `fmtDate` — api-backend/billing/dta/encoding.js:85 · api-backend/billing/pdf/ausfallrechnung.template.js:19 · api-backend/billing/pdf/begleitzettel.template.js:29 · api-backend/billing/pdf/mahnung.template.js:6 · api-backend/billing/pdf/rechnung.template.js:11 · api-backend/billing/pdf/rezeptvorderseite.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:11 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:14 · dashboard.js:991 · ops/app.js:84
-- `t` — api-backend/lib/rechnung-pdf.js:16 · api-backend/lib/rechnung-snapshot.js:14 · api-backend/lib/therapiebericht.js:40 · api-backend/server.js:4236 · dashboard.js:525 · module/anamnese.js:386 · module/bg-angaben.js:36 · module/branding.js:28 · module/kiosk.js:58 · module/termin-rechtstexte.js:20
+- `t` — api-backend/lib/rechnung-pdf.js:16 · api-backend/lib/rechnung-snapshot.js:14 · api-backend/lib/therapiebericht.js:40 · api-backend/server.js:4236 · dashboard.js:525 · module/anamnese.js:393 · module/bg-angaben.js:36 · module/branding.js:28 · module/kiosk.js:58 · module/termin-rechtstexte.js:20
   - ayna: api-backend/lib/rechnung-snapshot.js:14 — Spiegel von `module/branding
 - `cleanup` — dashboard.js:5855 · dashboard.js:5942 · dashboard.js:17529 · merkez/test/dev-server.js:84 · module/absagegrund-modal.js:82 · module/bestaetigungs-dialog.js:20 · module/formular-editor.js:565 · module/formular-unterschreiben.js:201 · module/formular-unterschreiben.js:371
 - `run` — api-backend/ai/tasks/appointment-confirm-draft.js:11 · api-backend/ai/tasks/b2b-draft.js:62 · api-backend/ai/tasks/b2c-draft.js:62 · api-backend/ai/tasks/rezept-normalize.js:109 · api-backend/ai/tasks/rezept-ocr.js:19 · api-backend/ai/tasks/rezept-validate.js:8 · api-backend/ai/tasks/series-scheduler.js:3 · api-backend/ai/tasks/transkribieren.js:11 · merkez/db.js:125

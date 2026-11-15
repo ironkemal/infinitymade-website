@@ -277,16 +277,23 @@ async function bestaetigeUnveraendert(row, danach, istAktuell = () => true) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function loadAnamnese() {
-  const { data } = await d.supabase.from('leads')
+  // V7.01p (Melih 15.11.2026): Patientenliste nach Standort wie die Patientenliste (bizScope 'patients');
+  // ohne Standort oder bei geteilten Patienten unverändert.
+  let q = d.supabase.from('leads')
     .select('id,first_name,last_name,title,phone,email,metadata,geschlecht')
     .eq('owner_id', d.getOwnerId())
     .order('first_name', { ascending: true });
+  if (typeof d.bizScope === 'function') q = d.bizScope(q, 'patients');
+  const { data } = await q;
   const sel = $('anamPatientSelect');
   if (!sel) return;
   sel.innerHTML = '<option value="">-- Patient auswählen --</option>' +
     (data || []).map((l) => `<option value="${esc(l.id)}">${esc(d.displayNameWithBirth(l))}</option>`).join('');
   zeichneFormular();
-  if (vorwahl) {
+  // Vorwahl nur, wenn der Patient in dieser (standortgefilterten) Liste steht.
+  const vorwahlOk = vorwahl && (data || []).some((l) => l.id === vorwahl);
+  if (vorwahl && !vorwahlOk) { vorwahl = null; d.showToast?.('Dieser Patient gehört nicht zum gewählten Standort.', 'error'); }
+  if (vorwahlOk) {
     sel.value = vorwahl;
     const id = vorwahl; vorwahl = null;
     await fuelleFormular(id);
