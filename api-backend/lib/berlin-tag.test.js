@@ -89,10 +89,10 @@ test('berlinMonatsgrenzen: DST-Monatsende ist exklusiv und gehört bereits zum F
   ]) {
     const davor = berlinMonatsgrenzen(new Date(vorher));
     const danach = berlinMonatsgrenzen(new Date(grenze));
-    assert.equal(davor.monat, alterMonat);
-    assert.equal(davor.bisExklusiv, grenze);
-    assert.equal(danach.monat, neuerMonat);
-    assert.equal(danach.von, grenze);
+    assert.equal(davor?.monat, alterMonat);
+    assert.equal(davor?.bisExklusiv, grenze);
+    assert.equal(danach?.monat, neuerMonat);
+    assert.equal(danach?.von, grenze);
   }
 });
 
@@ -107,6 +107,6 @@ test('berlinMonatsgrenzen: Dezember rollt ins Folgejahr und Silvester 23:30 UTC 
 
 test('berlinMonatsgrenzen: ungültige Daten und falsche Typen liefern null ohne Throw', () => {
   for (const value of [new Date(''), new Date('ungueltig'), new Date(NaN), null, '', '2026-03-01', 0, NaN, true, [], {}, Symbol('datum'), 1n]) {
-    assert.doesNotThrow(() => assert.equal(berlinMonatsgrenzen(value), null));
+    assert.doesNotThrow(() => assert.equal(berlinMonatsgrenzen(/** @type {any} */ (value)), null));
   }
 });

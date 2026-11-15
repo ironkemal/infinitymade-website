@@ -67,7 +67,7 @@ export function berlinTagesgrenzen(tag) {
     }
     return null;
   });
-  return bounds.every(Boolean) ? { tag, von: bounds[0], bisExklusiv: bounds[1] } : null;
+  return bounds.every(Boolean) ? { tag, von: /** @type {string} */ (bounds[0]), bisExklusiv: /** @type {string} */ (bounds[1]) } : null;
 }
 
 /**

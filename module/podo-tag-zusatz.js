@@ -45,7 +45,7 @@ export const FOLGE_FRAGE = {
  *  - der Stand nicht belastbar ist: unbekannt, Ladefehler, nur geschätzt (keine
  *    dokumentierte Behandlung geladen) — derselbe Riegel wie `aufEuro`, plus Schätzung.
  *
- * @param {{stand:?object, zustand:?object, darf:boolean}} lage
+ * @param {{stand?:any, zustand?:any, darf?:boolean}} [lage]
  * @returns {null|{betrag:number, rest:boolean, text:string}}
  */
 export function kassierAngebot({ stand = null, zustand = null, darf = false } = {}) {
