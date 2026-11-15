@@ -1368,3 +1368,21 @@ aber nicht als generierte App-Funktionen ausgewiesen. Keine manuelle Indexergän
   - Nerede: einziger Aufrufer `dashboard.js:6844`, angehängt an `setzeAkteReiter`.
 - Kopplung: Wer die Rechteprüfung in `switchPanel` ändert, prüft `darfPanel` mit.
 - Status: geschrieben im Worktree `redesign-delta-20261112`, Commit und Kartentazeleme durch den Lead.
+
+### 15.11.2026 · V7.03p Zuzahlung kassieren in der Folgetermin-Frage (Podologie, Melih-GO 15.11.2026)
+- `module/rezeptinfo-geld.js`: `bildeGeldstand` (:541), `ladeGeldDaten` (:568, `nurGkv`), `ladeZahlerLead` (:594),
+  `ladeKassierstand` (:613), intern `tagesweiseGeteilt` (:523). Test `module/kassierstand-v703.test.js`.
+  - Niye: Der Stand der Geldzeile wird an EINER Stelle gebildet. So nutzt die Folgetermin-Frage denselben
+    Euro-Zustand (`euroZustand`) und rechnet nicht neu. Es gibt keinen neuen Schreibweg.
+  - Nerede: `verdrahteGeldzeile` (:444, umgebaut, keine Kopie) und `podologie-abrechnung.js` `kassierAngebotFuer` (:1343).
+- `module/podo-tag-zusatz.js` `kassierAngebot` (:51): reine Entscheidung (Recht + `euroZustand` „kassieren“ +
+  belastbarer Stand), ob der dritte Knopf „Zuzahlung kassieren (x €)“ erscheint. Nerede: `fragFolgetermin`
+  (`podologie-abrechnung.js:1302`).
+- `module/bestaetigungs-dialog.js` `zeigeBestaetigungsDialog`: optionales `extraText` zeigt den dritten Knopf
+  `#confirmModalExtra` (`dashboard.html`) und gibt `'extra'` zurück. Ohne `extraText` gibt er wie bisher true/false
+  zurück. Erster Nutzer: Folgetermin-Frage Podologie.
+- Verdrahtung: `podoCtx()` erhält `kassieren: kassiereZuzahlung`, `darfAbrechnung` (`hasModuleAccess('abrechnung')`,
+  Inhaber immer) und `ladePodoPositionen`. Angestellte mit dem Recht `abrechnung` sehen den Knopf ebenfalls.
+- Kopplung: Wer die Standbildung der Geldzeile oder `euroZustand` ändert, ändert damit auch die Folgetermin-Frage.
+  Weitere Aufrufer von `showConfirmModal` sind nicht betroffen, solange sie kein `extraText` übergeben.
+- Status: geschrieben im Worktree `redesign-delta-20261112`, Commit und Kartentazeleme durch den Lead.

@@ -109,7 +109,9 @@ import { behandlungsbeginnFrist, pruefeBehandlungsbeginn } from './heilmittel-fr
 import { zeigeFahrtBeenden, fahrtBeendenHinweisHtml } from './fahrt-beenden.js?v=20261001b';
 // Reform S4 Paket 2 (Konsey 30.09.2026, 1a/1b): aufklappbarer Fußbefund + Folgetermin-Frage.
 import { FOLGE_FRAGE, fussbefundBoxHtml, ladeLetzterBefund, ladeTagesTermin, folgeAusgangstermin, frageFolgetermin,
-  hatAnamnese, anamneseFehltNotizHtml, frageAnamnese78040, ANAMNESE_78040_FRAGE } from './podo-tag-zusatz.js?v=20261011c';
+  hatAnamnese, anamneseFehltNotizHtml, frageAnamnese78040, ANAMNESE_78040_FRAGE, kassierAngebot } from './podo-tag-zusatz.js?v=20261115v703';
+// V7.03p (Melih 15.11.2026): „Zuzahlung kassieren" in der Folgetermin-Frage — Stand wie die Geldzeile.
+import { ladeKassierstand, ladeZahlerLead } from './rezeptinfo-geld.js?v=20261115v703';
 import { ladeAktuelle } from './anamnese-daten.js?v=20261001r';
 import { rozetHtml } from './anamnese-rozet.js?v=20261001r';
 // Konsey S0 2a/2b (30.09.2026): Wagner-Rozet (salt-okunur) + Therapiezeit bei c) Komplexbehandlung.
@@ -1299,8 +1301,24 @@ async function loadPodologieBilling() {
  */
 async function fragFolgetermin({ vord, datum, bookingId }) {
   if (!ctx.folge || !vord?.lead_id) return;
-  const ja = await ctx.showConfirmModal({ ...FOLGE_FRAGE });
-  if (!ja) return;
+  // V7.03p: offene Zuzahlung + Recht → dritter Knopf. Sonst exakt die Zwei-Knopf-Frage wie bisher.
+  const angebot = await kassierAngebotFuer(vord);
+  let ja = await ctx.showConfirmModal(angebot ? { ...FOLGE_FRAGE, extraText: angebot.text } : { ...FOLGE_FRAGE });
+  if (ja === 'extra') {
+    // Vorhandener Kassierweg (dashboard.js `kassiereZuzahlung`): Zahlart-Dialog, Anspruch, Beleg.
+    let ok = false;
+    try {
+      ok = await ctx.kassieren({ rxId: angebot.rxId, patientId: angebot.patientId, patientName: angebot.patientName,
+        betragEur: angebot.betrag, rest: angebot.rest });
+    } catch (err) {
+      console.error('[pod-kassieren]', err?.message || 'Fehler');
+      ctx.showToast('Zuzahlung konnte nicht kassiert werden.', 'error');
+    }
+    if (ok !== true) return;
+    await loadPodologieBilling();
+    ja = await ctx.showConfirmModal({ ...FOLGE_FRAGE });   // „Folgetermin" geht nicht verloren
+  }
+  if (ja !== true) return;
   try {
     let buchung = null;
     if (bookingId) {
@@ -1312,6 +1330,36 @@ async function fragFolgetermin({ vord, datum, bookingId }) {
   } catch (err) {
     console.error('[pod-folgetermin]', err);
     ctx.showToast('Folgetermin konnte nicht vorbelegt werden.', 'error');
+  }
+}
+
+/**
+ * V7.03p: Soll die Folgetermin-Frage „Zuzahlung kassieren (x €)" anbieten? Recht zuerst
+ * (ohne Recht keine Abfrage), dann die Verordnung FRISCH (rohe `prescriptions`-Zeile wie in
+ * der Geldzeile — kassiert/befreit kann sich seit dem Laden der Liste geändert haben) und
+ * der Patient mit seinem Zahlerfeld. Stand und Zustand: `ladeKassierstand` (rechnet nicht
+ * neu), Entscheidung: `kassierAngebot`. Jeder Fehler → `null` = Dialog wie bisher.
+ */
+async function kassierAngebotFuer(vord) {
+  try {
+    const darf = !!ctx.darfAbrechnung?.();
+    if (!darf || typeof ctx.kassieren !== 'function' || !vord?.id) return null;
+    const sb = ctx.supabase;
+    const [{ data: rx, error }, lead] = await Promise.all([
+      sb.from(TOPF).select('*').eq('id', vord.id).maybeSingle(),
+      ladeZahlerLead(sb, vord.lead_id),
+    ]);
+    if (error || !rx) return null;
+    const { stand, zustand } = await ladeKassierstand({
+      sb, ownerId: ctx.getOwnerId(), rx, lead, sector: 'podologie',
+      katalog: ctx.GKV_LEISTUNGSKATALOG?.podologie || [], ladePodoPositionen: ctx.ladePodoPositionen,
+    });
+    const angebot = kassierAngebot({ stand, zustand, darf });
+    return angebot && { ...angebot, rxId: rx.id, patientId: rx.patient_id || vord.lead_id || null,
+      patientName: patientAnzeigename(vord) || '' };
+  } catch {
+    console.warn('[pod-kassieren] Zuzahlungsstand nicht ermittelbar');
+    return null;
   }
 }
 

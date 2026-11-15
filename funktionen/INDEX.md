@@ -3,7 +3,7 @@
 > Üretim: 2026-11-15 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4691 fonksiyon** (4569 JS · 95 bash · 27 ps1) · 576 dosya · 42 sidebar modülü
+**4698 fonksiyon** (4576 JS · 95 bash · 27 ps1) · 576 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -524,7 +524,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 
 **Yol 1 — `loadPodologieBilling()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
 - `behandlungStornieren()` — [module/podo-storno.js:91](module/podo-storno.js#L91-L166) · 76 satır · podologie_behandlungen:update
-- `loadPodologieBilling()` — [module/podologie-abrechnung.js:501](module/podologie-abrechnung.js#L501-L1294) · 794 satır · podologie_behandlungen:insert
+- `loadPodologieBilling()` — [module/podologie-abrechnung.js:503](module/podologie-abrechnung.js#L503-L1296) · 794 satır · podologie_behandlungen:insert
 
 **Yol 2 — `behandlungenVerknuepfen()`** · Ekran: _UI yolu çözülemedi_
 - `behandlungenVerknuepfen()` — [module/rechnung-bruecke.js:194](module/rechnung-bruecke.js#L194-L223) · 30 satır · podologie_behandlungen:update
@@ -606,11 +606,11 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `fmtDate` — api-backend/billing/dta/encoding.js:85 · api-backend/billing/pdf/ausfallrechnung.template.js:19 · api-backend/billing/pdf/begleitzettel.template.js:29 · api-backend/billing/pdf/mahnung.template.js:6 · api-backend/billing/pdf/rechnung.template.js:11 · api-backend/billing/pdf/rezeptvorderseite.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:11 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:14 · dashboard.js:991 · ops/app.js:84
 - `t` — api-backend/lib/rechnung-pdf.js:16 · api-backend/lib/rechnung-snapshot.js:14 · api-backend/lib/therapiebericht.js:40 · api-backend/server.js:4236 · dashboard.js:525 · module/anamnese.js:393 · module/bg-angaben.js:36 · module/branding.js:28 · module/kiosk.js:58 · module/termin-rechtstexte.js:20
   - ayna: api-backend/lib/rechnung-snapshot.js:14 — Spiegel von `module/branding
-- `cleanup` — dashboard.js:5855 · dashboard.js:5942 · dashboard.js:17529 · merkez/test/dev-server.js:84 · module/absagegrund-modal.js:82 · module/bestaetigungs-dialog.js:20 · module/formular-editor.js:565 · module/formular-unterschreiben.js:201 · module/formular-unterschreiben.js:371
+- `cleanup` — dashboard.js:5855 · dashboard.js:5942 · dashboard.js:17529 · merkez/test/dev-server.js:84 · module/absagegrund-modal.js:82 · module/bestaetigungs-dialog.js:30 · module/formular-editor.js:565 · module/formular-unterschreiben.js:201 · module/formular-unterschreiben.js:371
 - `run` — api-backend/ai/tasks/appointment-confirm-draft.js:11 · api-backend/ai/tasks/b2b-draft.js:62 · api-backend/ai/tasks/b2c-draft.js:62 · api-backend/ai/tasks/rezept-normalize.js:109 · api-backend/ai/tasks/rezept-ocr.js:19 · api-backend/ai/tasks/rezept-validate.js:8 · api-backend/ai/tasks/series-scheduler.js:3 · api-backend/ai/tasks/transkribieren.js:11 · merkez/db.js:125
 - `speichern` — cookie-consent.js:119 · module/arzt-register.js:294 · module/fax-einstellungen.js:112 · module/fussbefund.js:792 · module/mailversand.js:326 · module/physio-befund.js:906 · module/praxis-rechtslinks-einstellungen.js:102 · module/standort-plan.js:397 · module/verordnung-detail.js:959
 - `resolveAuth` — api-backend/billing/api/ausfall.routes.js:28 · api-backend/billing/api/mahnwesen.routes.js:24 · api-backend/billing/api/podo-empfangsnachweis.routes.js:12 · api-backend/billing/api/rechnung-zahlung.routes.js:85 · api-backend/billing/api/statistik.routes.js:19 · api-backend/billing/api/verordnung-status.routes.js:48 · api-backend/billing/api/warteliste.routes.js:24 · api-backend/billing/api/zuzahlung.routes.js:47
-- `zeichne` — module/abrechnung-auswahl.js:769 · module/abrechnungsstatus.js:609 · module/einrichtung-ring.js:44 · module/patienten-einwilligung.js:540 · module/patienten-import.js:394 · module/praxis-standort.js:115 · module/raum-auswahl.js:251 · module/rezeptinfo-geld.js:461
+- `zeichne` — module/abrechnung-auswahl.js:769 · module/abrechnungsstatus.js:609 · module/einrichtung-ring.js:44 · module/patienten-einwilligung.js:540 · module/patienten-import.js:394 · module/praxis-standort.js:115 · module/raum-auswahl.js:251 · module/rezeptinfo-geld.js:458
 - `zeile` — api-backend/lib/therapiebericht.js:299 · module/branding-ui.js:39 · module/fax-deckblatt.js:62 · module/rechnung-druck.js:33 · module/verordnung-detail.js:293 · module/verordnung-detail.js:428 · module/verordnung-detail.js:496 · module/verordnung-pruefen-knopf.js:122
 - `el` — module/arzt-register.js:253 · module/fussbefund.js:232 · module/mailversand.js:59 · module/patient-notizen.js:3 · module/termin-aktionsleiste.js:49 · module/termin-panel.js:39 · module/verordnung-maske.js:765
 - `fmtEur` — api-backend/billing/pdf/ausfallrechnung.template.js:15 · api-backend/billing/pdf/begleitzettel.template.js:28 · api-backend/billing/pdf/mahnung.template.js:5 · api-backend/billing/pdf/rechnung.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:10 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:13 · module/geld.js:48

@@ -6,7 +6,7 @@ import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js?v=202
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
 import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261103mail1';
 import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261103mail1';
-import { zeigeKiRueckfrageDialog } from './module/ki-rueckfrage.js?v=20261030k4';
+import { zeigeKiRueckfrageDialog } from './module/ki-rueckfrage.js?v=20261115v703';
 import { dsgvoVerdrahten } from './module/dsgvo-client.js?v=20261002';
 import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, verdrahteEinrichtungscodeKnoepfe, mitarbeiterEntfernen } from './module/mitarbeiter-zugang.js?v=20261005a';
 import { DEFAULT_VORLAGE_SEEDS, fehlendeSeedZeilen, seedeVorlagen } from './module/vorlagen-seed.js?v=20260929';
@@ -52,7 +52,7 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261031b'; import { renderMitarbeiterAppSettings } from './module/mitarbeiter-app-einstellungen.js?v=20261022';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung } from './module/podologie-abrechnung.js?v=20261106'; import { renderZaaUploadResult, renderZaaFehlerTabelle, ladeZaaZeilen, verdrahteZaaBeheben } from './module/zaa-fehler.js?v=20261106'; import { verdrahtePhysioBefund } from './module/physio-befund.js?v=20261101b';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung } from './module/podologie-abrechnung.js?v=20261115v703'; import { renderZaaUploadResult, renderZaaFehlerTabelle, ladeZaaZeilen, verdrahteZaaBeheben } from './module/zaa-fehler.js?v=20261106'; import { verdrahtePhysioBefund } from './module/physio-befund.js?v=20261101b';
 import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261031b'; import { montiereVorgeschichte } from './module/podo-vorgeschichte-form.js?v=20261021y'; import { verdrahteDokumente } from './module/patient-dokumente.js?v=20261031b'; import { montiereAkteAktionen } from './module/akte-aktionen.js?v=20261114v702';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20261021n';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtZeilenReferenz } from './module/fahrtenbuch-regeln.js?v=20261014five1';
@@ -69,7 +69,7 @@ import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeV
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20261004m113';
 import { pruefeBarcodeBestaetigung } from './module/rezept-barcode-bestaetigung.js?v=20261007m3';
 import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20261007m3';
-import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=20261007m3';
+import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=20261115v703';
 import { installiereModalEscape } from './module/modal-escape.js?v=20261007m3';
 import { belegnummerText } from './module/belegnummer.js?v=20260817';
 import { verordnungenListeLaden, oeffneVerordnungAusSuche } from './module/verordnung-liste.js?v=20261113v209b';
@@ -91,7 +91,7 @@ import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweis
 import { behandlungenVerknuepfen, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261010zc';
 import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './module/zuzahlung-befreiung.js?v=20261005a';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
-import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261102x';
+import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261115v703';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20261101u';
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261021f';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261031a';
@@ -17331,13 +17331,13 @@ function podoCtx() {
     getOwnerId,                      // als Funktion, nicht aufgerufen
     getSessionUserId: () => currentSession?.user?.id || null,   // Ops #252: podologie_behandlungen.employee_id
     switchPanel,
-    showToast,
+    showToast, kassieren: kassiereZuzahlung, darfAbrechnung: () => hasModuleAccess('abrechnung'),   // V7.03p: Zuzahlung in der Folgetermin-Frage
     showConfirmModal, showInputModal, openFahrtEndModal,   // showInputModal: Storno-Grund (module/podo-storno.js) · openFahrtEndModal: S3.13
     displayName,
     displayNameWithBirth,
     patientMatchesQuery,
     ensureLeadsCache,
-    GKV_LEISTUNGSKATALOG,
+    GKV_LEISTUNGSKATALOG, ladePodoPositionen: (datum) => ladePodoPositionen(supabase, datum),   // V7.03p: wie die Geldzeile
     frequenzOptionsHtml,
     loadKkList,
     resolveArzt, folge: folgeDeps, fussbefund: fussbefundCtx, oeffneAnamnese: oeffneAnamneseFuer,   // folge/fussbefund: Tagesbehandlung, Folgetermin-Frage + aufklappbarer Fussbefund (S4 P2)

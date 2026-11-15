@@ -1,5 +1,5 @@
 import { validateKiChallenge } from './ki-client.js?v=20261103mail1';
-import { zeigeBestaetigungsDialog } from './bestaetigungs-dialog.js?v=20261007m3';
+import { zeigeBestaetigungsDialog } from './bestaetigungs-dialog.js?v=20261115v703';
 
 export async function zeigeKiRueckfrageDialog(challenge, deps = {}) {
   const doc = deps.document || globalThis.document;

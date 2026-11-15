@@ -448,32 +448,17 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
     rechnungsEditorFuerPatient, frage, panelSchliessen, nachKassieren,
   } = deps;
 
-  let lead = null, position = null, privat = null, podo = null, rechnung = null, kassiert = null;
-  let standGkv = null, standPrivat = null, ladefehler = null;
-  // Ein Panelaufruf teilt auch fehlgeschlagene Tagesabfragen; kein stiller Retry.
-  const tagesabfragen = new Map();
-  const ladePodoPositionen = ladePodo && (datum => {
-    const tag = String(datum || '').slice(0, 10);
-    if (!tagesabfragen.has(tag)) tagesabfragen.set(tag, ladePodo(datum));
-    return tagesabfragen.get(tag);
-  });
+  let lead = null;
+  let standGkv = null, standPrivat = null;
+  // Nachgeladenes (Position, Privatsumme, Rechnung, Kassenbuch-Saldo, Podo-Zuzahlung) —
+  // `ladeGeldDaten` schreibt schrittweise hinein, `bildeGeldstand` liest es (V7.03p).
+  const daten = { position: null };
+  const ladePodoPositionen = tagesweiseGeteilt(ladePodo);
 
   const zeichne = () => {
     if (!el || !el.isConnected) return;
-    const zahler = zahlerTyp(lead, rx);
-    standGkv    = ermittleGeldstand({ rx, erbracht, zahler: 'gkv', position, podo, katalog });
-    // Podologie ohne dokumentierte Behandlung: der Betrag ist nur eine Schätzung über die Einheiten.
-    standGkv.geschaetzt = sector === 'podologie' && !podo;
-    standGkv.ladefehler = podo?.ladefehler || ladefehler;
-    // Auch ein vorhandener Frontendpreis macht den ausgefallenen Katalog nicht belastbar.
-    if (standGkv.ladefehler) standGkv.unbekannt = true;
-    standGkv.kassiert = kassiert;
-    standPrivat = ermittleGeldstand({ rx, erbracht, zahler: 'privat', privat });
-    standPrivat.rechnungOhneBetrag = sector === 'podologie' && !!rx?.id;
-    standPrivat.rechnung = rechnung;
-    const stand = zahler === 'privat' ? { ...standPrivat, zahler }
-                : zahler === 'gkv'    ? { ...standGkv, zahler }
-                : { ...standGkv, zahler: 'unbekannt' };
+    let stand;
+    ({ stand, standGkv, standPrivat } = bildeGeldstand({ rx, erbracht, lead, sector, katalog, daten }));
     rendereGeldzeile(el, { rx, stand, lead, aufEuro });
   };
 
@@ -520,27 +505,122 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
     if (ok) await nachKassieren(rx.id);
   }
 
-  position = findePosition(rx, { katalog });
+  daten.position = findePosition(rx, { katalog });
   zeichne();
 
   (async () => {
-    privat = sector === 'podologie'
-      // services darf eine Funktion sein: direkt nach dem Laden sind die Leistungen der Praxis noch nicht da (canli-test P2).
-      ? await ladePodoPrivatSumme({ sb, ownerId, rx, services: typeof services === 'function' ? await services() : services, katalogPodo: katalog })
-      : await ladePrivatSumme(sb, rx.id);
-    if (sector === 'podologie' && rx?.id) rechnung = await ladeRechnungZurVerordnung(sb, rx.id);
-    if (rx?.zuzahlung_kassiert_am && rx?.id) {   // Kassenbuch-Saldo (Zuzahlung + Storno negativ)
-      const { data: belege } = await sb.from('belegliste').select('amount_eur').eq('owner_id', ownerId).eq('prescription_id', rx.id);
-      if (belege?.length) kassiert = Math.round(belege.reduce((s, b) => s + (Number(b.amount_eur) || 0), 0) * 100) / 100;
-    }
-    if (sector === 'podologie' && ladePodoPositionen) {
-      const karte = await ladePodoPositionen(rx.ausstellungsdatum).catch(() => null);
-      ladefehler = karte?.ladefehler || null;
-      position = findePosition(rx, { podoKarte: karte, katalog }) || position;
-      podo = await ladePodoZuzahlung({ sb, ownerId, rx, ladePodoPositionen }).catch(() => null);
-    }
+    await ladeGeldDaten({ sb, ownerId, rx, sector, katalog, services, ladePodoPositionen }, daten);
     zeichne();
   })().catch(e => console.error('[verdrahteGeldzeile]', e));
 
   return { patientGesetzt: (l) => { lead = l; zeichne(); } };
+}
+
+/**
+ * Tagesabfragen der Podologie-Positionen teilen: je Aufruf (Panel, Kassierstand) eine Anfrage
+ * je Tag — auch eine fehlgeschlagene wird geteilt, kein stiller Retry. Ohne Lader bleibt es ohne.
+ */
+function tagesweiseGeteilt(ladePodo) {
+  if (!ladePodo) return ladePodo;
+  const tagesabfragen = new Map();
+  return (datum) => {
+    const tag = String(datum || '').slice(0, 10);
+    if (!tagesabfragen.has(tag)) tagesabfragen.set(tag, ladePodo(datum));
+    return tagesabfragen.get(tag);
+  };
+}
+
+/**
+ * Den Geldstand aus dem Geladenen bilden — die Rechnung der Geldzeile, an EINER Stelle
+ * (vorher inline in `verdrahteGeldzeile`; seit V7.03p auch vom Kassierstand benutzt).
+ *
+ * @param {object} args
+ * @param {object} args.daten  {position, privat, podo, rechnung, kassiert, ladefehler} — fehlendes = nicht geladen
+ * @returns {{stand:object, standGkv:object, standPrivat:object}}  `stand` = der des Zahlers
+ */
+export function bildeGeldstand({ rx, erbracht = 0, lead = null, sector, katalog = [], daten = {} }) {
+  const { position = null, privat = null, podo = null, rechnung = null, kassiert = null, ladefehler = null } = daten;
+  const zahler = zahlerTyp(lead, rx);
+  const standGkv = ermittleGeldstand({ rx, erbracht, zahler: 'gkv', position, podo, katalog });
+  // Podologie ohne dokumentierte Behandlung: der Betrag ist nur eine Schätzung über die Einheiten.
+  standGkv.geschaetzt = sector === 'podologie' && !podo;
+  standGkv.ladefehler = podo?.ladefehler || ladefehler;
+  // Auch ein vorhandener Frontendpreis macht den ausgefallenen Katalog nicht belastbar.
+  if (standGkv.ladefehler) standGkv.unbekannt = true;
+  standGkv.kassiert = kassiert;
+  const standPrivat = ermittleGeldstand({ rx, erbracht, zahler: 'privat', privat });
+  standPrivat.rechnungOhneBetrag = sector === 'podologie' && !!rx?.id;
+  standPrivat.rechnung = rechnung;
+  const stand = zahler === 'privat' ? { ...standPrivat, zahler }
+              : zahler === 'gkv'    ? { ...standGkv, zahler }
+              : { ...standGkv, zahler: 'unbekannt' };
+  return { stand, standGkv, standPrivat };
+}
+
+/**
+ * Nachladen, was die Geldzeile nach dem ersten Zeichnen braucht. Schreibt SCHRITTWEISE in
+ * `daten` (wie vorher die Closure-Variablen): bricht ein Schritt ab, bleibt das bis dahin
+ * Geladene stehen. `nurGkv` lässt Privatsumme und Rechnung weg — für den Kassierstand,
+ * der nur den GKV-Weg braucht (privat heißt nie „kassieren").
+ *
+ * @returns {Promise<object>} `daten`
+ */
+export async function ladeGeldDaten({ sb, ownerId, rx, sector, katalog = [], services = [], ladePodoPositionen, nurGkv = false }, daten = {}) {
+  if (!nurGkv) {
+    daten.privat = sector === 'podologie'
+      // services darf eine Funktion sein: direkt nach dem Laden sind die Leistungen der Praxis noch nicht da (canli-test P2).
+      ? await ladePodoPrivatSumme({ sb, ownerId, rx, services: typeof services === 'function' ? await services() : services, katalogPodo: katalog })
+      : await ladePrivatSumme(sb, rx.id);
+    if (sector === 'podologie' && rx?.id) daten.rechnung = await ladeRechnungZurVerordnung(sb, rx.id);
+  }
+  if (rx?.zuzahlung_kassiert_am && rx?.id) {   // Kassenbuch-Saldo (Zuzahlung + Storno negativ)
+    const { data: belege } = await sb.from('belegliste').select('amount_eur').eq('owner_id', ownerId).eq('prescription_id', rx.id);
+    if (belege?.length) daten.kassiert = Math.round(belege.reduce((s, b) => s + (Number(b.amount_eur) || 0), 0) * 100) / 100;
+  }
+  if (sector === 'podologie' && ladePodoPositionen) {
+    const karte = await ladePodoPositionen(rx.ausstellungsdatum).catch(() => null);
+    daten.ladefehler = karte?.ladefehler || null;
+    daten.position = findePosition(rx, { podoKarte: karte, katalog }) || daten.position || null;
+    daten.podo = await ladePodoZuzahlung({ sb, ownerId, rx, ladePodoPositionen }).catch(() => null);
+  }
+  return daten;
+}
+
+/**
+ * Zahlerangaben des Patienten für `zahlerTyp` — genau das Feld, das die Geldzeile liest.
+ * Wirft nie; ohne Treffer oder bei Fehler `null` (dann entscheidet allein die Verordnung,
+ * sonst „unbekannt" — und „unbekannt" kassiert nie).
+ */
+export async function ladeZahlerLead(sb, leadId) {
+  if (!sb || !leadId) return null;
+  try {
+    const { data, error } = await sb.from('leads').select('id, insurance_type').eq('id', leadId).maybeSingle();
+    return error ? null : (data || null);
+  } catch { return null; }
+}
+
+/**
+ * Kassierstand einer Verordnung ohne Geldzeile: derselbe Stand und derselbe Euro-Zustand,
+ * den die Geldzeile zeigen würde (V7.03p, Abschluss der Podologie-Behandlung). Rechnet
+ * NICHTS neu — `ladeGeldDaten` + `bildeGeldstand` + `euroZustand`, wie oben.
+ *
+ * Nur der GKV-Weg wird nachgeladen: „kassieren" gibt es nur dort (privat → Rechnung,
+ * unbekannt → Rückfrage). Ein Ladefehler liefert `{stand:null, zustand:null}` — wer
+ * kassieren anbieten will, bietet dann nichts an.
+ *
+ * @returns {Promise<{stand:?object, zustand:?object}>}
+ */
+export async function ladeKassierstand({ sb, ownerId, rx, lead = null, katalog = [], ladePodoPositionen, sector, erbracht = 0 }) {
+  if (!rx) return { stand: null, zustand: null };
+  const daten = { position: findePosition(rx, { katalog }) };
+  if (zahlerTyp(lead, rx) === 'gkv') {
+    try {
+      await ladeGeldDaten({ sb, ownerId, rx, sector, katalog, ladePodoPositionen: tagesweiseGeteilt(ladePodoPositionen), nurGkv: true }, daten);
+    } catch {
+      console.warn('[ladeKassierstand] Stand nicht ermittelbar');
+      return { stand: null, zustand: null };
+    }
+  }
+  const { stand } = bildeGeldstand({ rx, erbracht, lead, sector, katalog, daten });
+  return { stand, zustand: euroZustand(rx, stand, lead) };
 }

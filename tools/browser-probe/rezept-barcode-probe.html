@@ -86,7 +86,7 @@
       && g('rzAnzahl').value==='6' && g('rzAusstDate').value==='2026-10-07');
     check('Bestätigung zeigt fünf kritische Feldgruppen',g('rzBarcodeBestaetigungWrap').querySelectorAll('strong').length===6);
     document.getElementById('mask-host').append(document.importNode(doc.getElementById('confirmModal'),true));
-    const {zeigeBestaetigungsDialog}=await import('/module/bestaetigungs-dialog.js?v=20261007m3');
+    const {zeigeBestaetigungsDialog}=await import('/module/bestaetigungs-dialog.js?v=20261115v703');
     const dialogDeps={openModal:id=>{g(id).hidden=false;},closeModal:id=>{g(id).hidden=true;}};
     const closed=zeigeBestaetigungsDialog({message:'Synthetischer Abbruchtest'},dialogDeps);
     g('confirmModal').hidden=true;

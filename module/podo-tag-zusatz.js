@@ -31,6 +31,33 @@ export const FOLGE_FRAGE = {
 };
 
 /**
+ * Dritter Knopf derselben Frage: „Zuzahlung kassieren (x €)" (V7.03p, Melih 15.11.2026).
+ *
+ * Entscheidet nur — gerechnet wird hier NICHTS. Betrag und Text kommen aus dem
+ * Euro-Zustand der Geldzeile (`euroZustand` in module/rezeptinfo-geld.js, geladen über
+ * `ladeKassierstand`): `zustand.text` ist exakt, was die Geldzeile zeigt („12,34 €" bzw.
+ * „Rest 5,00 €"), `zustand.betrag` gibt es nur beim Nachkassieren des Rests — sonst gilt
+ * `stand.gesamt`, wie beim €-Knopf (`rendereGeldzeile` → `aufEuro`).
+ *
+ * Kein Angebot (→ Dialog wie bisher mit zwei Knöpfen), wenn
+ *  - das Recht fehlt (Inhaber oder Modulrecht `abrechnung`, `darf`),
+ *  - der Zustand nicht „kassieren" ist (befreit, kassiert, privat, Zahler unbekannt …),
+ *  - der Stand nicht belastbar ist: unbekannt, Ladefehler, nur geschätzt (keine
+ *    dokumentierte Behandlung geladen) — derselbe Riegel wie `aufEuro`, plus Schätzung.
+ *
+ * @param {{stand:?object, zustand:?object, darf:boolean}} lage
+ * @returns {null|{betrag:number, rest:boolean, text:string}}
+ */
+export function kassierAngebot({ stand = null, zustand = null, darf = false } = {}) {
+  if (!darf || !stand || !zustand || zustand.aktion !== 'kassieren') return null;
+  if (stand.zahler !== 'gkv' || stand.unbekannt || stand.ladefehler || stand.geschaetzt) return null;
+  const rest = zustand.betrag != null;
+  const betrag = Number(rest ? zustand.betrag : stand.gesamt);
+  if (!(betrag > 0) || !zustand.text) return null;
+  return { betrag, rest, text: `Zuzahlung kassieren (${zustand.text})` };
+}
+
+/**
  * Kopfzeile des Fußbefund-Abschnitts.
  *
  * @param {?string} letzterBefund  `pat_fussbefund.erstellt_am` des jüngsten gültigen Befunds, oder null
