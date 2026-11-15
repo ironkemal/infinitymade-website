@@ -193,6 +193,11 @@
   }
   [data-design="neu"] .btn.btn-secondary:hover { background: var(--bg-hover); }
 }
+/* V8.05: dieselbe Spezifität wie oben, sonst gewinnen die 36 px gegen die zentrale 44-px-Regel
+   (praxura-design.css, „V8.05 Fingerziele“). */
+@media screen and (max-width: 1024px) {
+  [data-design="neu"] :is(.btn.btn-primary, .btn.btn-secondary, #srvNeuBtn) { min-height: 44px; }
+}
 
 /* Patientenliste: Nummer nicht umbrechen („P-1008“). */
 @media screen {
@@ -257,6 +262,9 @@
   [data-design="neu"] :is(#panel-anamnese, #panel-services, #panel-hours) .px-formular-inhalt { min-width: 0; }
   [data-design="neu"] :is(#panel-anamnese, #panel-services, #panel-hours) .px-abschnitt { min-height: 44px; }
   [data-design="neu"] :is(#panel-anamnese, #panel-services, #panel-hours) .px-formular-inhalt [id] { scroll-margin-top: 16px; }
+  /* V8.05: der Vorlesetext .srv-sr (position: absolute) im Tabellenkopf hing am #mainArea statt am
+     eigenen Scrollkasten und schob den Inhalt bei 390 px um 300 px waagerecht. */
+  [data-design="neu"] #panel-services .srv-gruppe { position: relative; }
 }
 @media screen and (min-width: 1280px) {
   [data-design="neu"] :is(#panel-anamnese, #panel-services, #panel-hours).active.px-formular-nav {

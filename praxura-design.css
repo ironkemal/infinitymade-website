@@ -737,3 +737,33 @@
   }
   [data-design="neu"] #ik-missing-banner a { color: var(--primary) !important; }
 }
+
+/* ===== V8.05 Fingerziele bis 1024 px (Telefon/Tablet) ===== */
+/* Messung 14.11. (tools/browser-probe/v805-fingerziele.mjs, 27 Panels, Inhaberin/Mitarbeiterin):
+   Knöpfe 17–36 px, Felder 25–43 px, Filter 32 px, Schalter 38×22 px — 44 px galten nur für
+   Anamnese, Kopfleiste, Startseite und einzelne Seiten (seiten.css, verwaltung.css, kalender.css).
+   Einmal zentral für den Bausteinsatz (Panels, Dialoge, Katalog): nur die Trefferfläche wächst,
+   Farben/Schrift bleiben. Ausgenommen: Fußbefund-Zehenknöpfe (liegen auf der Skizze, würden
+   sich überdecken), Tabellenzeilen selbst, Kalenderraster (hat eigene 44-px-Regeln). */
+@media screen and (max-width: 1024px) {
+  [data-design="neu"] :is(.btn, .btn-primary, .btn-ghost, .btn-danger, .btn-secondary, .btn-outline,
+    .btn-outline-sm, .btn-ghost-sm, .btn-sm, .btn-icon, .filter-btn, .lead-status-btn, .vord-status-btn,
+    .fbp-tool-btn, .srv-del-btn, .btn-gkv-setup, .btn-gkv-edit) {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  [data-design="neu"] :is(.form-input, .form-select, .input-control, .search-input,
+    .konto-code, .konto-label, .konto-kategorie) {
+    min-height: 44px;
+  }
+  /* Auswahlfelder mit umschließendem Label: das Label ist die Trefferfläche. */
+  [data-design="neu"] label:has(> input:is([type="checkbox"], [type="radio"])) { min-height: 44px; }
+  /* Schalter: Fläche 44×44, sichtbare Bahn bleibt 38×22 (gleiches Muster wie #panel-anfragen, seiten.css). */
+  [data-design="neu"] .toggle-switch { width: 44px; height: 44px; }
+  [data-design="neu"] .toggle-switch .toggle-slider { inset: 11px 3px; }
+  [data-design="neu"] :is(.form-group > details, details.form-group) > summary { padding-block: 13px; }
+  /* Tabellenzeilen nicht aufblasen: die größere Trefferfläche ragt in den Zellenabstand
+     (.data-table td 12 px, .srv-tabelle td 8 px), die Zeilenhöhe bleibt etwa wie vorher. */
+  [data-design="neu"] .data-table td :is(.btn-icon, .lead-status-btn, .vord-status-btn) { margin-block: -9px; }
+  [data-design="neu"] .srv-tabelle td :is(.btn-gkv-setup, .btn-gkv-edit, .srv-del-btn) { margin-block: -6px; }
+}
