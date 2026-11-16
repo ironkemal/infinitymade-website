@@ -609,9 +609,9 @@ async function loadVisibilityMatrix() {
 
 // Sidebar item id'sini RBAC module key'ine eşle
 const SIDEBAR_TO_MODULE = {
-  overview: 'dashboard',
-  calendar: 'calendar',
-  customers: 'customers',
+  overview: 'dashboard', ueberblick: 'dashboard', // V9.01 (guvenlik S-68, 16.11.2026): Panel-IDs ohne Zuordnung folgen dem Recht ihres Bereichs
+  calendar: 'calendar', warteliste: 'calendar',
+  customers: 'customers', kunden: 'customers', doctors: 'prescriptions',
   services: 'services',
   hours: 'hours',
   team: 'team',

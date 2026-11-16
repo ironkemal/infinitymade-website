@@ -23,6 +23,13 @@ try {
     const aktivMit = await e.page.evaluate(() => document.getElementById('panel-notizen')?.classList.contains('active'));
     assert.equal(aktivMit, true, `${design}: mit notes Notizen-Panel erreichbar`);
     await e.kontext.close();
+    // V9.01 (S-68): ohne Recht customers ist auch das Patienten-Panel „kunden“ gesperrt
+    const k = await oeffne(design, { rolle: 'employee', fixtureAnpassen: (f) => f.replace("module !== 'abrechnung'", "module !== 'abrechnung' && module !== 'customers'") });
+    await k.page.evaluate(() => window.switchPanel('kunden')); await ruhe(k.page, 600);
+    const kundenOhne = await k.page.evaluate(() => document.getElementById('panel-kunden')?.classList.contains('active'));
+    assert.equal(kundenOhne, false, `${design}: ohne customers kein Patienten-Panel`);
+    await k.kontext.close();
+    erg[`${design}KundenOhneRecht`] = kundenOhne;
     // Inhaberin: Anamnese-Liste lädt, Patienten vorhanden
     const o = await oeffne(design, { rolle: 'owner' });
     await o.page.evaluate(() => window.switchPanel('anamnese')); await ruhe(o.page, 900);
