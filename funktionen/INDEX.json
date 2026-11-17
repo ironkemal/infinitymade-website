@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-17",
  "dateien": 581,
- "funktionen": 4726,
+ "funktionen": 4727,
  "module": [
   "abrechnung",
   "anamnese",
@@ -63447,7 +63447,8 @@
     "renderSidebar",
     "setCalendarView",
     "showMyBookingLink",
-    "showToast"
+    "showToast",
+    "zeigeRechnungsModus"
    ],
    "calledBy": [
     "(datei) dashboard.js",
@@ -197045,7 +197046,8 @@
     "closeInvView",
     "openInvEditor",
     "openInvView",
-    "saveInvoice"
+    "saveInvoice",
+    "switchPanel"
    ],
    "modules": [
     "abrechnung",
@@ -198383,6 +198385,29 @@
     "bindInvEvents",
     "dmrzExport"
    ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "setzeDmrzKnopf",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/rechnung-dmrz.js",
+   "start": 189,
+   "end": 193,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []

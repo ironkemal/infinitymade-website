@@ -817,7 +817,7 @@ async function switchPanel(id) {
   if (id === 'notizen') loadNotizen();
   if (id === 'beispielmodus') loadBeispielmodus();
   if (id === 'verordnungen') loadVerordnungen();
-  if (id === 'rechnungen') loadRechnungen();
+  if (id === 'rechnungen') { zeigeRechnungsModus('liste'); loadRechnungen(); }
   if (id === 'abrechnung') loadAbrechnung();
   if (id === 'podologie-billing') mountPodologieAbrechnung(podoCtx());
   if (id === 'fussstatus') mountFussbefund(fussbefundCtx());
