@@ -291,11 +291,10 @@ h1 em, h2 em, h3 em { font-style: normal; font-weight: inherit; color: var(--pri
 .dv-time-col .dv-slot--past .dv-time-label { opacity: 0.75; }
 .dv-time-label { font-size: 11.5px; }
 
-/* Eine einzige Behandlerspalte braucht keinen Spaltenkopf — der Name
-   wiederholt nur die Praxis. Ab zwei Spalten bleibt er. Die Zeitleiste hat
-   oben 44 px Platz für diesen Kopf; der fällt dann mit weg. */
-.day-view-grid:has(.dv-cols-wrap > .dv-col:only-child) .dv-col-header { display: none; }
-.day-view-grid:has(.dv-cols-wrap > .dv-col:only-child) .dv-time-col { padding-top: 0; }
+/* Bis 17.11.2026 verschwand der Spaltenkopf, wenn nur EINE Behandlerspalte übrig war. Seit der
+   Standortplan Spalten ausblendet, ist eine einzelne Spalte nicht mehr „die Praxis", sondern
+   „wer heute an diesem Standort arbeitet" — ohne Kopf sah die Tagesansicht leer aus
+   (QA TEST-Physio, Fund 4). Der Kopf bleibt deshalb immer stehen. */
 .day-view-grid { padding-top: 10px; }
 
 /* Inhalt der Blöcke (module/kalender-block.js): Patient · Leistung,
