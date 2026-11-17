@@ -29,6 +29,7 @@ import {
   ladeAktuelle, ladeAlleAktuellen, ladeVersionen, speichereNeu, bestaetige, markiereGeprueft, ladeAltrisiken,
 } from './anamnese-daten.js?v=20261001r';
 import { rozetHtml } from './anamnese-rozet.js?v=20261001r';
+import { verordnungStatusInfo } from './abrechnungsstatus.js?v=20261117f2';
 import { ladeWagnerRozet } from './podo-wagner.js?v=20261001z';
 
 let d = {};   // Abhängigkeiten aus dashboard.js
@@ -415,7 +416,7 @@ async function ladeRxKontext(patientId, nr) {
   if (!rx) { box.style.display = 'none'; return; }
 
   const typLabel = { standard: 'Standard', blanko: 'Blanko', lhb_bvb: 'LHB/BVB' }[rx.rezept_typ] || rx.rezept_typ;
-  const statusLabel = { parsed: 'Erfasst', confirmed: 'Bestätigt', in_therapy: 'In Therapie' }[rx.status] || rx.status;
+  const statusLabel = verordnungStatusInfo('physio', rx.status)?.label || rx.status;   // zentral statt Kopie „Erfasst/In Therapie" (17.11.2026)
   let farbe = '#15803d', notiz = '';
   if (rx.gueltig_bis) {
     const heute0 = new Date(); heute0.setHours(0, 0, 0, 0);

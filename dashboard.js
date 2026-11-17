@@ -95,7 +95,7 @@ import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20261101u';
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261117p33';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261031a';
-import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261115v701'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
+import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261117c5'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
 import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261103n';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl, bindeAnTerminNachAnlage } from './module/verordnung-anlegen.js?v=20261117p33';
@@ -6963,7 +6963,7 @@ async function loadPatientDetailRezepte(leadId) {
   }
 
   const typLabel = { standard: 'Standard', blanko: 'Blanko', lhb_bvb: 'LHB/BVB' };
-  const statusLabel = { parsed: 'Erfasst', confirmed: 'Bestätigt', in_therapy: 'In Therapie', completed: 'Abgeschlossen', billed: 'Abgerechnet', cancelled: 'Storniert' };
+  const statusLabel = (st) => verordnungStatusInfo('physio', st)?.label || st || '—';   // zentral (abrechnungsstatus.js, Angleichung 31.08.); vorher Kopie „Erfasst/In Therapie"
   const sessStatusLabel = { planned: 'geplant', done: 'erledigt', no_show: 'no_show', cancelled: 'storniert' };
   const sessStatusCls = { planned: 'badge-gray', done: 'badge-green', no_show: 'badge-red', cancelled: 'badge-gray' };
 
@@ -7064,7 +7064,7 @@ async function loadPatientDetailRezepte(leadId) {
         ${deadlineBannersHtml}
         <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">
           <span class="badge badge-blue">${typLabel[rx.rezept_typ] || rx.rezept_typ}</span>
-          <span class="badge badge-gray">${statusLabel[rx.status] || rx.status}</span>
+          <span class="badge badge-gray">${escapeHtml(statusLabel(rx.status))}</span>
           ${rx.zuzahlung_befreit ? '<span class="badge badge-green" title="Zuzahlungsbefreiung aktiv">Befreit</span>' : ''}
           ${dmrz}
           ${flags}

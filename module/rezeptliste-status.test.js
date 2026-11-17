@@ -16,3 +16,13 @@ test('Rezepttabelle: unbekannte Schlüssel bekommen das deutsche Etikett', () =>
     assert.equal(ctx.ergebnis.label, soll);
   }
 });
+
+test('Patientenakte Rezepte: Statuswörter aus der zentralen Liste', () => {
+  const start = quelle.indexOf("  const statusLabel = (st) => verordnungStatusInfo(");
+  assert.ok(start > 0, 'zentrale Ableitung vorhanden');
+  const z = quelle.slice(start, quelle.indexOf('\n', start));
+  const ctx = { verordnungStatusInfo };
+  vm.runInNewContext(`${z}\nthis.f = statusLabel;`, ctx);
+  assert.equal(ctx.f('parsed'), verordnungStatusInfo('physio', 'parsed').label);
+  assert.equal(ctx.f('in_therapy'), 'In Behandlung');
+});
