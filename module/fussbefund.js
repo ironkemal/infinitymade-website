@@ -920,7 +920,7 @@ function kurzBefund(row) {
 
   const haut = b.haut || {};
   if (haut.hornhaut) parts.push('Hornhaut');
-  if (haut.hallux_valgus) parts.push('Hallux Valgus');
+  if (haut.hallux_valgus) parts.push('Hallux valgus');
   if (haut.warzen) parts.push('Warzen');
   if (haut.hautpilz) parts.push('Hautpilz');
 
@@ -1340,7 +1340,7 @@ function kartenHtml(heute) {
           <div class="fbp-section-title">Haut-Befund</div>
           <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px;font-size:13px;margin-bottom:12px;">
             ${checkbox('fbp_haut_hornhaut', 'Hornhaut')}
-            ${checkbox('fbp_haut_hallux_valgus', 'Hallux Valgus')}
+            ${checkbox('fbp_haut_hallux_valgus', 'Hallux valgus')}
             ${checkbox('fbp_haut_warzen', 'Warzen')}
             ${checkbox('fbp_haut_hautpilz', 'Hautpilz')}
           </div>

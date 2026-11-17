@@ -9,7 +9,7 @@
  * Fehler = „nicht verfügbar“ statt altem Cache, Teilbestand sichtbar, kein Betrag in Treffern, keine Rohzeilen in Logs,
  * Öffner nur nach erneuter Prüfung. Mitarbeiterin: keine Quelle, kein Read.
  */
-import { ladeHandlungsbedarfScope } from './startseite-handlungsbedarf-karte.js?v=20261117v905';
+import { ladeHandlungsbedarfScope } from './startseite-handlungsbedarf-karte.js?v=20261117v906';
 
 const UUID = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 // PostgREST liefert ohne Bereich höchstens 1000 Zeilen; loadRechnungen setzt kein limit.

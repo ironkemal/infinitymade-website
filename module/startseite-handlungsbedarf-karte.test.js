@@ -139,6 +139,10 @@ test('Renderer: alle fünf bekannt und 0 ergibt „Alles im Plan“ statt Kachel
   const h = handlungsbedarfHtml({ daten: { kategorien: K5() } });
   assert.match(h, /Alles im Plan/); assert.doesNotMatch(h, /px-mini/);
 });
+test('Renderer V9.06: null geprüfte Verordnungen ergibt „Noch keine laufenden Verordnungen“, nicht „Alles im Plan“', () => {
+  const h = handlungsbedarfHtml({ daten: { geprueft: 0, kategorien: K5() } });
+  assert.match(h, /Noch keine laufenden Verordnungen/); assert.doesNotMatch(h, /Alles im Plan|px-mini/);
+});
 test('Renderer: Podo-Kacheln nur bei ohnePodo ausgeblendet, außer bei echtem Treffer', () => {
   const daten = { kategorien: K5({ beginnBald: { anzahl: 1, bekanntAnzahl: 1 } }) };
   assert.match(handlungsbedarfHtml({ daten }), /Pause droht/);

@@ -5,7 +5,7 @@
 import { begruessung, heutigeTermine, alsNaechstes, abstandText, dauerMin, tageszeile, zuErledigen, nutzbareLuecken } from './startseite-darstellung.js?v=20261113f603';
 import { uhrzeitBerlin } from './termin-heute.js?v=20261004m113';
 import { alsBerlinDatum } from './berlin-datum.js';
-import { createHandlungsbedarfKarte, handlungsbedarfHtml } from './startseite-handlungsbedarf-karte.js?v=20261117v905';
+import { createHandlungsbedarfKarte, handlungsbedarfHtml } from './startseite-handlungsbedarf-karte.js?v=20261117v906';
 import { ladeGeld, geldHtml } from './startseite-geld.js?v=20261114b03';
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const SVG = (p, w = 18) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
@@ -112,7 +112,7 @@ function todoHtml() {
       : `<div class="px-karte-zustand"><p>${fehlt.length ? `Nicht verfügbar: ${esc(fehlt.join(', '))}.` : 'Hinweise sind gerade nicht verfügbar.'}</p></div>`; // V9.03: benennen, was fehlt
   // V6.F02 (E8): der frühere „Überblick“ (Fristen, No-Shows, Abwesenheiten, Geburtstage) ist von hier aus erreichbar.
   const mehr = inLeiste('ueberblick')
-    ? `<div class="px-karte-fuss"><button type="button" class="px-fuss-knopf" data-ziel="ueberblick">Fristen, No-Shows und Abwesenheiten ${ICON.rechts}</button></div>` : '';
+    ? `<div class="px-karte-fuss"><button type="button" class="px-fuss-knopf" data-ziel="ueberblick">Fristen, Nichterscheinen und Abwesenheiten ${ICON.rechts}</button></div>` : '';
   return `<section class="px-karte px-k-todo" aria-labelledby="pxTodoTitel">
     <div class="px-karte-kopf"><div><h2 id="pxTodoTitel">Zu erledigen</h2><p>Was heute Aufmerksamkeit braucht</p></div></div>${rumpf}${mehr}</section>`;
 }

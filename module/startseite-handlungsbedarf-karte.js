@@ -1,5 +1,5 @@
 import { ladeHandlungsbedarfInput } from './startseite-handlungsbedarf-laden.js?v=20261113f602';
-import { berechneHandlungsbedarf } from './startseite-handlungsbedarf.js?v=20261117v905';
+import { berechneHandlungsbedarf } from './startseite-handlungsbedarf.js?v=20261117v906';
 
 const UUID = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const KATEGORIEN = [['beginnVerpasst', 'Beginn verpasst', 'bad'], ['pauseDroht', 'Pause droht', 'warn'], ['pauseVerpasst', 'Pause überschritten', 'bad'],
@@ -92,7 +92,8 @@ export function handlungsbedarfHtml(state = {}, { erreichbar = false, eigene = f
     // podoloji 13.11.: fünf Striche ohne einen einzigen bekannten Treffer sagen nichts und schieben auf dem Telefon
     // die Terminliste weg. Unbekannt bleibt sichtbar (nie 0), aber als eine Zeile.
     const nichtsBekannt = sichtbar.every(([id]) => !zahlOk(id) && !(kat[id]?.bekanntAnzahl > 0));
-    if (alleNull) rumpf = '<div class="px-karte-zustand px-karte-zustand--ruhig"><p>Alles im Plan</p></div>';
+    // V9.06 (physio-Bildabnahme 17.11.): „Alles im Plan“ bei null Verordnungen klingt nach Prüfung, die nicht stattfand.
+    if (alleNull) rumpf = `<div class="px-karte-zustand px-karte-zustand--ruhig"><p>${state.daten.geprueft === 0 ? 'Noch keine laufenden Verordnungen.' : 'Alles im Plan'}</p></div>`;
     else if (nichtsBekannt) rumpf = '<div class="px-karte-zustand"><p>Verordnungsprüfung gerade nicht möglich: Quellen unvollständig.</p></div>';
     else {
       rumpf = `<div class="px-minis px-handlungsbedarf">${sichtbar.map(([id, label, ton]) => {

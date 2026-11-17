@@ -135,5 +135,6 @@ export function berechneHandlungsbedarf(input) {
       unbekanntAnzahl: k.unbekannt.length, gruende: [...k.gruende].sort() };
   }
   const vollstaendig = Object.values(result).every(k => k.anzahl !== null);
-  return { version: 1, heute, vollstaendig, entwarnung: vollstaendig && Object.values(result).every(k => k.anzahl === 0), kategorien: result };
+  // V9.06: geprueft = Zahl der bewerteten VO, damit die Karte „keine laufenden Verordnungen“ von „Alles im Plan“ unterscheidet.
+  return { version: 1, heute, vollstaendig, geprueft: gesehen.size, entwarnung: vollstaendig && Object.values(result).every(k => k.anzahl === 0), kategorien: result };
 }

@@ -93,8 +93,9 @@ export function renderInvList() {
     const date = datumDe(inv.issued_at || inv.created_at);
     const total = d.formatEur(inv.total_patient || 0);
     const st = inv.status || 'draft';
+    // V9.06 (physio-Bildabnahme 17.11.2026): Belegstatus „Bezahlt“ und Zahlstatus „✓ Bezahlt“ nicht doppelt zeigen.
     const payBadge = inv.payment_status === 'paid'
-      ? `<span class="badge badge-green" title="${inv.payment_method || ''}" style="margin-left:4px;">✓ Bezahlt</span>`
+      ? (st === 'paid' ? '' : `<span class="badge badge-green" title="${inv.payment_method || ''}" style="margin-left:4px;">✓ Bezahlt</span>`)
       // Stornierte Belege und Gegenbelege (negativ) sind keine offene Forderung (canli-test 10.10.2026).
       : (inv.payment_status === 'pending' && st !== 'cancelled' && !inv.storno_von && !(Number(inv.total_patient) < 0)
           ? '<span class="badge badge-gray" style="margin-left:4px;">Offen</span>' : '');
