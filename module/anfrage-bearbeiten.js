@@ -298,3 +298,29 @@ export async function oeffneAnfrageBearbeiten(req) {
     },
   });
 }
+
+/** Lädt nur die Liste; eine abgewiesene Sitzung wird höchstens einmal erneuert. */
+export async function ladeAnfragenDaten({ auth, api, ownerId, status, fetchFn = fetch }) {
+  const sitzungsfehler = () => new Error('Sitzung abgelaufen, bitte neu anmelden.');
+  const gelesen = await auth.getSession();
+  let token = gelesen.error ? null : gelesen.data?.session?.access_token;
+  // Ohne Session gibt es nichts zu erneuern. Niemals einen leeren Bearer senden.
+  if (!token) throw sitzungsfehler();
+  for (let versuch = 0; versuch < 2; versuch++) {
+    let antwort;
+    try {
+      antwort = await fetchFn(`${api}/booking-request/list?owner_id=${encodeURIComponent(ownerId)}&status=${encodeURIComponent(status)}`, { headers: { Authorization: `Bearer ${token}` } });
+    } catch { throw new Error('Netzwerkfehler. Bitte Verbindung prüfen und erneut laden.'); }
+    if (antwort.status === 401) {
+      if (versuch) throw sitzungsfehler();
+      const erneuert = await auth.refreshSession();
+      token = erneuert.error ? null : erneuert.data?.session?.access_token;
+      if (!token) throw sitzungsfehler();
+      continue;
+    }
+    if (!antwort.ok) throw new Error('Serverfehler beim Laden der Anfragen. Bitte erneut versuchen.');
+    const json = await antwort.json();
+    if (!Array.isArray(json.requests)) throw new Error('Anfragen konnten nicht geladen werden.');
+    return json.requests;
+  }
+}

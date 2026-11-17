@@ -35,7 +35,7 @@ import { attachLeadKartenIk, pruefeLeadKartenIk } from './module/lead-karten-ik.
 import { renderPatientenkarte } from './module/patientenkarte.js?v=20261102w10';
 import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from './module/lead-felder.js?v=20260929a';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20261027p'; import { ermittleSitzungKuerzel, kuerzelAusKatalog } from './module/heilmittel-kuerzel.js?v=20261103q';
-import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage-bearbeiten.js?v=20261007a';
+import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten, ladeAnfragenDaten } from './module/anfrage-bearbeiten.js?v=20261117p11';
 import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
 // §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche (archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1). fmtEur kommt ab jetzt aus module/geld.js — die lokale Kopie hier ist mit dem alten Assistenten entfallen.
 import { fmtEur } from './module/geld.js?v=20260909';
@@ -17560,13 +17560,7 @@ async function loadAnfragen(status) {
   if (!ownerId) return;
 
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
-    const r = await fetch(`${API}/booking-request/list?owner_id=${ownerId}&status=${anfragenCurrentStatus}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const json = await r.json(); if (!r.ok || !Array.isArray(json.requests)) throw new Error('Anfragen konnten nicht geladen werden');
-    anfragenCurrentRequests = json.requests;
+    anfragenCurrentRequests = await ladeAnfragenDaten({ auth: supabase.auth, api: API, ownerId, status: anfragenCurrentStatus });
     renderAnfragenList(anfragenCurrentRequests);
     // Der Zähler zählt offene Anfragen. Er darf nur aus dem Tab "Offen" kommen —
     // sonst stünde er auf den Tabs "Bestätigt"/"Abgelehnt" fälschlich auf 0.
@@ -17574,7 +17568,7 @@ async function loadAnfragen(status) {
       updateAnfragenBadge(anfragenCurrentRequests.filter(r => r.status === 'pending').length);
     }
   } catch (e) {
-    list.innerHTML = '<p style="color:var(--danger);padding:16px">Fehler beim Laden.</p>'; if (anfragenCurrentStatus === 'pending') updateAnfragenBadge(null, 'fehler');
+    list.innerHTML = `<p style="color:var(--danger);padding:16px">${escapeHtml(e.message || 'Fehler beim Laden.')}</p>`; if (anfragenCurrentStatus === 'pending') updateAnfragenBadge(null, 'fehler');
     console.error('[anfragen]', e);
   }
 }

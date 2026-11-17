@@ -3,7 +3,7 @@
 > Üretim: 2026-11-17 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4723 fonksiyon** (4601 JS · 95 bash · 27 ps1) · 581 dosya · 42 sidebar modülü
+**4725 fonksiyon** (4603 JS · 95 bash · 27 ps1) · 581 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -34,7 +34,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `ensureBookingSlug()` — [dashboard.js:11675](dashboard.js#L11675-L11688) · 14 satır · profiles:update
 
 **Yol 8 — `initAnfragenPanel()`** · Ekran: ortak yardımcı — 37 modülden çağrılıyor
-- `initAnfragenPanel()` — [dashboard.js:17864](dashboard.js#L17864-L17921) · 58 satır · profiles:update
+- `initAnfragenPanel()` — [dashboard.js:17858](dashboard.js#L17858-L17915) · 58 satır · profiles:update
 
 **Yol 9 — `wireAbrechnungSettings()`** · Ekran: _UI yolu çözülemedi_
 - `wireAbrechnungSettings()` — [module/abrechnung-einstellungen.js:271](module/abrechnung-einstellungen.js#L271-L426) · 156 satır · profiles:update
