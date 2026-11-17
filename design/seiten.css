@@ -374,3 +374,15 @@
     font-weight: 500 !important;                 /* gegen Inline 600 */
   }
 }
+
+/* V9.07 Telefonlisten unter 600 px: Grundregeln für beide Designs stehen in dashboard.css („V9.07“).
+   Hier nur, was das neue Design sonst überstimmt: die 60-px-Zellen der Rechnungsliste (oben,
+   „#invListWrap … td { height: 60px }“) würden jede Rechnungskarte auf dreimal 60 px strecken,
+   und der Nachname in der Verordnungsliste darf umbrechen (oben „white-space: nowrap“).
+   Die Karte hat hier 16 px Rand (praxura-design.css, mit !important) → Tabelle 8 px hineinrücken. */
+@media screen and (max-width: 600px) {
+  [data-design="neu"] #panel-verordnungen > .card > .table-wrap:has(#vordTbody) { margin-inline: -8px; }
+  [data-design="neu"] #invListWrap .data-table td { height: auto; }
+  [data-design="neu"] #invListBody > tr:has(> td:not([colspan])) { border-bottom-color: var(--px-linie, var(--border)); }
+  [data-design="neu"] #vordTbody .vord-row td:first-child { white-space: normal; }
+}

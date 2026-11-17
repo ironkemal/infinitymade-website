@@ -8876,3 +8876,63 @@ button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(
   .mail-signatur-editor { padding-inline: 16px; }
   .mail-signatur-compose { padding-inline: 12px; }
 }
+
+/* V9.07 (Schlussabnahme 17.11.2026, podoloji + physio): Patienten-, Verordnungs- und Rechnungsliste
+   waren bei 390 px rechts abgeschnitten (Status, Einheiten, Betrag, Aktion nur per Wischen).
+   Ursache: `.data-table { min-width: 560px }` aus @media (max-width: 768px) oben + 7–10 Spalten.
+   Unter 600 px fallen hier nur Nebenspalten weg, die auch in Patientenkarte, Verordnungs- bzw.
+   Rechnungsdetail stehen; Nachname, Status, Einheiten, Betrag und Aktionsknöpfe bleiben.
+   Spalten per Position: die Standort-Spalte gibt es nur bei mehreren Standorten
+   (module/patientenliste.js), darum Patienten „4. bis drittletzte“ statt fester Nummern.
+   Lade-/Leerzeilen (`colspan`) sind ausgenommen. Gilt für altes und neues Design; die ID im
+   Selektor schlägt auch die 16-px-Polster aus praxura-design.css „Phase 3.7 Tabellen“. */
+@media (max-width: 600px) {
+  .data-table:has(> :is(#leadTableBody, #vordTbody, #invListBody)) { min-width: 0; }
+  .data-table:has(> :is(#leadTableBody, #vordTbody, #invListBody)) :is(th, td) { padding-inline: 6px; white-space: normal; }
+  /* Lange Einzelwörter im Kopf („Rechnungsnr.“, „Einheiten“) bestimmten sonst die Mindestbreite (lang="de"). */
+  .data-table:has(> :is(#leadTableBody, #vordTbody, #invListBody)) th { hyphens: auto; -webkit-hyphens: auto; letter-spacing: 0; }
+  :is(#leadTableBody, #vordTbody, #invListBody) .badge { white-space: normal; padding-inline: 6px; }
+  /* Kassen-Kürzel („GKV“, „PRIVAT“) darf unter den Nachnamen rutschen statt die Spalte zu verbreitern. */
+  #leadTableBody td:nth-child(2) > span { display: inline-block; }
+  /* Verordnungsliste: die Tabelle rückt in den Kartenrand (20 → 8 px), damit sie die Breite bekommt. */
+  #panel-verordnungen > .card > .table-wrap:has(#vordTbody) { margin-inline: -12px; }
+
+  /* Patienten: Nr., Geburtsdatum, Straße, PLZ, Ort, Standort aus → Nachname, Vorname, Status, Aktion */
+  .data-table:has(> #leadTableBody) :is(th, td:not([colspan])):is(:nth-child(1), :nth-child(n+4):nth-last-child(n+3)) { display: none; }
+  /* Verordnungen: Vorname, Belegnummer, Bereich aus → Nachname, Datum, Einheiten, Status */
+  .data-table:has(> #vordTbody) :is(th, td:not([colspan])):is(:nth-child(2), :nth-child(4), :nth-child(5)) { display: none; }
+  /* Rechnungen: als Spalten reichte es bei 360 px nicht (Nr. + Patient + Betrag + Status + Knöpfe
+     ≈ 350 px Mindestbreite). Darum je Rechnung eine Karte; die Werte sprechen ohne Kopfzeile für
+     sich (Nummer, €-Betrag, Status-Abzeichen, beschriftete Knöpfe). Rezept-Spalte aus (steht im Detail).
+       Nr.      | Betrag
+       Patient  | Status
+       Datum    | Ansehen · Zahlung */
+  .data-table:has(> #invListBody) > thead { display: none; }
+  #invListBody > tr:has(> td:not([colspan])) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "nr betrag" "patient status" "datum aktion";
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 4px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  #invListBody > tr:last-child { border-bottom: 0; }
+  #invListBody > tr:hover { background: var(--bg-hover); }
+  #invListBody > tr > td:not([colspan]) { display: block; padding: 0; border: 0; height: auto; min-width: 0; overflow-wrap: anywhere; }
+  #invListBody > tr > td:nth-child(1) { grid-area: nr; }
+  #invListBody > tr > td:nth-child(2) { grid-area: patient; }
+  #invListBody > tr > td:nth-child(3) { grid-area: datum; color: var(--text-muted); font-size: 12px; }
+  #invListBody > tr > td:nth-child(4) { grid-area: betrag; text-align: right; font-weight: 600; white-space: nowrap; }
+  #invListBody > tr > td:nth-child(5) { grid-area: status; text-align: right; }
+  #invListBody > tr > td:nth-child(6):not([colspan]) { display: none; }
+  #invListBody > tr > td:nth-child(7) { grid-area: aktion; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+
+  /* Fingerziele 44 px auch im alten Design (das neue hat sie seit V8.05, praxura-design.css). */
+  :is(#leadTableBody, #vordTbody, #invListBody) :is(.btn-icon, .btn-ghost-sm, .lead-status-btn, .vord-status-btn) {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  #invListBody .btn-ghost-sm { padding-inline: 6px; }
+}
