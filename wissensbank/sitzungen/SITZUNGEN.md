@@ -42,6 +42,8 @@ Hier steht das Wichtigste aus einzelnen Arbeitssitzungen (Claude Code, Melih/Kem
 
 ## Übersicht
 
+Aktuelle Bugfix-Übergabe: [[2026-11-17_praxura-bugfix-uebergabe]] — P1–P3 lokal geprüft und committed, drei Reviewkorrekturen erhalten; zuerst unabhängige Gegenprüfung, keine Live-Abnahme oder Veröffentlichung. Enthält vollständigen Claude-Prompt.
+
 **Offene M3-Abnahme:** [[2026-10-07_m3-offene-abnahme]] — echte Kamera, Handykamera auf HTTPS-Testbox, anschließend Abnahme dokumentieren.
 
 | Datum | Ticket | Notiz | Stand beim Schreiben |
