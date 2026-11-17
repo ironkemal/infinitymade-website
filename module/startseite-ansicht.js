@@ -109,7 +109,7 @@ function todoHtml() {
     }).join('')}</div>${unvollstaendig ? `<div class="px-karte-zustand"><p>Nicht verfügbar: ${esc(fehlt.join(', '))}.</p></div>` : ''}`
     : bekannt
       ? `<div class="px-karte-zustand px-karte-zustand--ruhig">${ICON.haken}<p>Nichts offen. Gute Arbeit.</p></div>`
-      : '<div class="px-karte-zustand"><p>Hinweise sind gerade nicht verfügbar.</p></div>';
+      : `<div class="px-karte-zustand"><p>${fehlt.length ? `Nicht verfügbar: ${esc(fehlt.join(', '))}.` : 'Hinweise sind gerade nicht verfügbar.'}</p></div>`; // V9.03: benennen, was fehlt
   // V6.F02 (E8): der frühere „Überblick“ (Fristen, No-Shows, Abwesenheiten, Geburtstage) ist von hier aus erreichbar.
   const mehr = inLeiste('ueberblick')
     ? `<div class="px-karte-fuss"><button type="button" class="px-fuss-knopf" data-ziel="ueberblick">Fristen, No-Shows und Abwesenheiten ${ICON.rechts}</button></div>` : '';
@@ -127,7 +127,7 @@ function freiHtml() {
   // Der Originallader folgt dem Kalendertag; zeigt er nicht heute, nichts Falsches als „heute“ ausgeben.
   if (titel && titel.textContent.trim() !== 'Freie Zeiten') return zustandP('Die Kalenderansicht zeigt gerade einen anderen Tag.');
   const leer = liste.querySelector('.gap-empty');
-  if (leer) return zustandP(leer.textContent.trim() || 'Heute keine freie Zeit.', true);
+  if (leer) return zustandP(leer.textContent.trim() || 'Heute keine freie Zeit.', !leer.classList.contains('gap-fehler'));
   const roh = [...liste.querySelectorAll('.gap-card-time')].map(e => { const [start, end] = e.textContent.split('-').map(s => s.trim()); return { start, end }; });
   const teile = new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'Europe/Berlin' }).formatToParts(new Date());
   const jetztMin = Number(teile.find(t => t.type === 'hour')?.value) * 60 + Number(teile.find(t => t.type === 'minute')?.value);

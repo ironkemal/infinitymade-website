@@ -60,6 +60,14 @@ try {
   assert.ok(fehl.stand.karte >= 1 || /nicht verfügbar|ungeklärt|nicht möglich/.test(fehl.stand.voText), 'b) Fehler/ungeklärt sichtbar');
   assert.ok(!fehl.stand.kachel.some(k => k.zahl === '0'), 'b) keine 0 bei Fehler');
   assert.ok(fehl.stand.next && fehl.stand.liste, 'b) Als Nächstes und Termine heute bleiben');
+  // V9.03 (podoloji 16.11.2026): scheitern die Termine, darf weder Alt-Liste noch Neu-Karte freie Zeit zeigen (Doppelbuchung)
+  const ZEITRAUM = /\d{2}:\d{2}\s*[–-]\s*\d{2}:\d{2}/;
+  for (const design of ['alt', 'neu']) {
+    const f = await lauf({ design, rolle: 'owner', szenario: 'fehler' }, page => page.evaluate(() => ({ gaps: document.getElementById('gapsList')?.textContent || '', karte: document.querySelector('.px-k-frei')?.textContent || '' })));
+    assert.ok(!ZEITRAUM.test(f.extra.gaps) && /nicht geladen/.test(f.extra.gaps), `V9.03 ${design}: keine freie Zeit bei Ladefehler (${f.extra.gaps.trim().slice(0, 80)})`);
+    if (design === 'neu') assert.ok(!ZEITRAUM.test(f.extra.karte) && /nicht geladen/.test(f.extra.karte), 'V9.03 neu: Karte nennt Ladefehler');
+    erg[`freiFehler_${design}`] = f.extra.gaps.trim().slice(0, 60);
+  }
   // c)
   const maNeu = await lauf({ design: 'neu', rolle: 'employee' }), maAlt = await lauf({ design: 'alt', rolle: 'employee' });
   assert.equal(maNeu.stand.karte, 0, 'c) keine Karte'); assert.equal(maNeu.stand.bedarfInDom, false, 'c) keine Insel');

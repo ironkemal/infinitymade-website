@@ -1161,10 +1161,10 @@ async function renderGapsForDate(date) {
     }
 
     const ownerId = getOwnerId();
-    const { data: whAll } = await supabase.from('working_hours')
+    const { data: whAll, error: whFehler } = await supabase.from('working_hours')
       .select('day_of_week,start_time,end_time,is_active')
       .eq('user_id', ownerId)
-      .eq('is_active', true);
+      .eq('is_active', true); if (whFehler) throw whFehler;
     const whMap = {};
     whAll?.forEach(r => whMap[r.day_of_week] = r);
 
@@ -1175,7 +1175,7 @@ async function renderGapsForDate(date) {
       .eq('user_id', currentSession.user.id)
       .gte('start_time', dayStart.toISOString()).lte('start_time', dayEndIso)
       .neq('status', 'cancelled').order('start_time');
-    const { data: bookings } = await q;
+    const { data: bookings, error: bookingsFehler } = await q; if (bookingsFehler) throw bookingsFehler; // V9.03 (podoloji 16.11.2026): Ladefehler nie als freie Zeit zeigen (Doppelbuchung)
 
     const totalEl = document.getElementById('gapsTotal');
     const wh = whMap[dayDow];
@@ -1214,7 +1214,7 @@ async function renderGapsForDate(date) {
         <div class="gap-card-time">${g.start} - ${g.end}</div>
       </div>`;
     }).join('');
-  } catch (e) { console.error('[renderGapsForDate]', e); }
+  } catch (e) { console.error('[renderGapsForDate]', e); const c = document.getElementById('gapsList'), t = document.getElementById('gapsTotal'); if (c) c.innerHTML = '<div class="gap-empty gap-fehler">Freie Zeiten konnten nicht geladen werden.</div>'; if (t) t.textContent = '–'; }
 }
 
 async function loadScheduleBookings(date) {
@@ -14164,7 +14164,7 @@ async function init() {
     await renderSidebar(); await loadTeam();
     if (await import('./module/design-entscheidung.js?v=20261111p2b').then(m => m.setzeDesign({ wunsch: window.__pxDesignWunsch, vorschau: DESIGN_VORSCHAU, apiBase: API, token: async () => (await supabase.auth.getSession()).data.session?.access_token, aktuell: async () => (await supabase.auth.getSession()).data.session?.user?.id })).catch(() => 'alt') === 'neu') {
       const ansichtKontext = { uid: () => currentSession?.user?.id, rolle: () => currentProfile?.role, scope: () => [currentSession?.user?.id, currentProfile?.role, getOwnerId(), currentBusiness?.id].join(':') };
-      startansicht = (await import('./module/startseite-ansicht.js?v=20261114b03')).montiereStartansicht({ ...ansichtKontext, sektor: getSector, api: () => API, springe: switchPanel, akte: id => window.openPatientDetail?.(id), neuLaden: loadTodayBookings, hb: { supabase, ownerId: () => getOwnerId(), businessId: () => currentBusiness?.id ?? null, patientsGemeinsam: () => dataSharing.patients === true } });
+      startansicht = (await import('./module/startseite-ansicht.js?v=20261116v903')).montiereStartansicht({ ...ansichtKontext, sektor: getSector, api: () => API, springe: switchPanel, akte: id => window.openPatientDetail?.(id), neuLaden: loadTodayBookings, hb: { supabase, ownerId: () => getOwnerId(), businessId: () => currentBusiness?.id ?? null, patientsGemeinsam: () => dataSharing.patients === true } });
       (await import('./module/anamnese-abschnitte.js?v=20261114v402')).montiereAnamneseAbschnitte(ansichtKontext); try { (await import('./module/shell-ansicht.js?v=20261117p33')).montiereShellansicht({ ...ansichtKontext, name: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', suche: { ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, oeffnePatient: id => window.openPatientDetail?.(id), dokumente: { kontext: () => ({ supabase, rolle: currentProfile?.role, uid: currentSession?.user?.id, ownerId: getOwnerId(), businessId: currentBusiness?.id ?? null, patientsGemeinsam: dataSharing.patients === true, financeGemeinsam: dataSharing.finance === true }), ladeRechnungen: loadRechnungen, oeffneRechnung: id => { switchPanel('rechnungen'); return openInvView(id); }, oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); const ok = oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API }); if (!ok) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); return ok; } } } }); } catch (e) { console.error('[init] shell', e); }
     }
     await renderOverview();
