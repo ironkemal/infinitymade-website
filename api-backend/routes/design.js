@@ -47,7 +47,6 @@ export function createDesignRouter({ auth = requireAuth, env = process.env } = {
     legacyHeaders: false,
     // Je Sitzung statt je IP: Mitarbeitende hinter einer Praxis-NAT teilen sich sonst das Limit und fielen bei 429 still auf Alt.
     keyGenerator: (req) => 'd:' + createHash('sha256').update(String(req.headers.authorization || '')).digest('hex').slice(0, 32),
-    validate: /** @type {any} */ ({ keyGeneratorIpFallback: false }),
     message: { error: 'Zu viele Anfragen. Bitte warten Sie eine Minute.' },
   });
   const router = Router();
