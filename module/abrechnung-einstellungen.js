@@ -295,7 +295,7 @@ export function wireAbrechnungSettings(deps) {
     const profil = deps.profile();
     if (profil) profil.ik_number = ik;
     const banner = document.getElementById('ik-missing-banner');
-    if (banner) banner.hidden = !!ik;
+    if (banner) banner.hidden = !!(ik || banner.dataset.zertifikatIk);
 
     // 2) terapeut_zertifikat upsert (§302-Sammelabrechnung-Route liest diese Tabelle)
     // ⚠ ik_nummer ist NOT NULL — Upsert ohne IK schlägt fehl. Genau dasselbe

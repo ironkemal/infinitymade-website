@@ -62498,6 +62498,7 @@
     "renderHoursMiniCal",
     "renderMonthView",
     "renderOtherStandortEmps",
+    "renderOverview",
     "renderOverviewMonthly",
     "renderOverviewWeekly",
     "renderSpecialDaysList",
@@ -64664,7 +64665,9 @@
    "end": 1093,
    "lines": 91,
    "spiegelHinweis": null,
-   "tables": [],
+   "tables": [
+    "terapeut_zertifikat"
+   ],
    "rpcs": [],
    "writes": [],
    "endpoints": [],
@@ -64690,6 +64693,7 @@
     "escapeHtml",
     "gehZuEinstellung",
     "get",
+    "getOwnerId",
     "loadActivityFeed",
     "loadPhysioRezKpis",
     "loadTodayBookings",
