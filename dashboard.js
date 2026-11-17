@@ -87,7 +87,7 @@ import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAu
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
 import { katalogNachladen } from './module/leistungskatalog.js?v=20260909';
 import { zahlartLabel as zahlartLabelBase, zahlartChipsHtml } from './module/zahlarten.js?v=20260910';
-import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20261117p22';
+import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart, editorLeistungsartVorschlag } from './module/rechnung-steuer.js?v=20261117c2';
 import { behandlungenVerknuepfen, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261010zc';
 import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './module/zuzahlung-befreiung.js?v=20261005a';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
@@ -12674,7 +12674,7 @@ function updateInvForInsuranceType() {
 
   // Zuzahlung section: visible for GKV, hidden for Privat
   const zuzRow = document.getElementById('invZuzahlungRow');
-  if (zuzRow) { zuzRow.style.display = isPrivat ? 'none' : ''; const bezug = !!(invPrescriptionId || invVerordnungId || verordnungAuswahl().prescriptionId); zuzRow.title = bezug ? '' : 'Zuzahlung erst mit zugeordneter GKV-Verordnung möglich.'; zuzRow.querySelectorAll('input').forEach(el => { el.disabled = !bezug; }); }
+  if (zuzRow) { zuzRow.style.display = isPrivat ? 'none' : ''; const bezug = !!(invPrescriptionId || invVerordnungId || verordnungAuswahl().prescriptionId); zuzRow.title = bezug ? '' : 'Zuzahlung erst mit zugeordneter GKV-Verordnung möglich.'; zuzRow.querySelectorAll('input').forEach(el => { el.disabled = !bezug && !(Number(el.value) > 0); }); }   // Altbeleg mit Betrag ohne Rezept: auf 0 korrigierbar (Review 17.11.)
 
   // USt-Wahl nur ausserhalb der GKV: eine Kassenzuzahlung wirft die Frage nicht auf.
   const artWrap = document.getElementById('invLeistungsartWrap');
@@ -12682,7 +12682,7 @@ function updateInvForInsuranceType() {
   if (!isGkv) {
     mountLeistungsart({
       profile: currentProfile,
-      vorschlag: invLines.length ? 'behalten' : (invVerordnungId || invPrescriptionId ? 'medizinisch' : 'offen'),
+      vorschlag: editorLeistungsartVorschlag({ gewaehlt: artWrap.querySelector('input[name="invLeistungsart"]:checked')?.value, zeilen: invLines, hatVerordnung: !!(invVerordnungId || invPrescriptionId || verordnungAuswahl().prescriptionId) }),
       getLines: () => invLines,
       onChange: (zeilen) => { invLines = zeilen; },
     });

@@ -8,7 +8,7 @@
  */
 import {
   berechneSteuer, steuerhinweisText, istKleinunternehmer,
-  leistungsartVorschlag, zeilenSteuerVon, leistungszeitraum,
+  leistungsartVorschlag, zeilenSteuerVon, leistungszeitraum, editorLeistungsartVorschlag,
   TAX_EXEMPT_OPTIONS,
 } from './rechnung-steuer.js';
 
@@ -107,5 +107,13 @@ console.log('\nleistungszeitraum');
   pruefe('ohne Daten', leistungszeitraum([{}]), { von: null, bis: null, gleich: true });
 }
 
+// Review 17.11.2026: Verordnung wählen leerte die Leistungsart und übersprang die Pflichtwahl.
+console.log('\neditorLeistungsartVorschlag');
+pruefe('getroffene Wahl bleibt', editorLeistungsartVorschlag({ gewaehlt: 'kosmetisch', zeilen: [{ ust_satz: 0 }] }), 'kosmetisch');
+pruefe('Verordnungszeilen ohne Steuer → medizinisch', editorLeistungsartVorschlag({ zeilen: [{ titel: 'KG' }], hatVerordnung: true }), 'medizinisch');
+pruefe('ohne Verordnung, ohne Steuer → offen (Pflichtwahl)', editorLeistungsartVorschlag({ zeilen: [{ titel: 'Pediküre' }] }), 'offen');
+pruefe('gespeicherte Zeilen mit Steuer → behalten', editorLeistungsartVorschlag({ zeilen: [{ ust_satz: 19 }, { ust_satz: 0 }] }), 'behalten');
+
 console.log(fehler === 0 ? '\n✅ alle Prüfungen bestanden\n' : `\n❌ ${fehler} Fehler\n`);
 process.exit(fehler === 0 ? 0 : 1);
+

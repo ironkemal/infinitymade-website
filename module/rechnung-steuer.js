@@ -125,6 +125,20 @@ export function leistungsartVorschlag({ verordnung, behandlung } = {}) {
 }
 
 /**
+ * Vorschlag für die Leistungsart-Wahl im Rechnungseditor (Review 17.11.2026, Nachtrag zu P2-2).
+ * Eine schon getroffene Wahl bleibt; „behalten" nur, wenn ALLE Zeilen bereits Steuerangaben
+ * tragen (gespeicherte Rechnung). Frisch aus einer Verordnung übernommene Zeilen haben keine —
+ * sonst übersprang das Speichern die Pflichtwahl und die Zeilen gingen ohne USt-Angabe raus.
+ * @param {{ gewaehlt?: string|null, zeilen?: Array<Record<string, unknown>>, hatVerordnung?: boolean }} p
+ * @returns {'medizinisch'|'kosmetisch'|'behalten'|'offen'}
+ */
+export function editorLeistungsartVorschlag({ gewaehlt, zeilen = [], hatVerordnung = false } = {}) {
+  if (gewaehlt === 'medizinisch' || gewaehlt === 'kosmetisch') return gewaehlt;
+  if (zeilen.length && zeilen.every(z => z?.ust_satz != null)) return 'behalten';
+  return hatVerordnung ? 'medizinisch' : 'offen';
+}
+
+/**
  * Steuerangaben einer Zeile aus der Leistungsart.
  * @param {string} art
  */
