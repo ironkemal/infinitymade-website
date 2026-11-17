@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-17",
- "dateien": 577,
- "funktionen": 4712,
+ "dateien": 578,
+ "funktionen": 4713,
  "module": [
   "abrechnung",
   "anamnese",
@@ -169202,6 +169202,33 @@
    ]
   },
   {
+   "name": "pruefePatientPflicht",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/patient-pflichtfelder.js",
+   "start": 17,
+   "end": 28,
+   "lines": 12,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "validateBirthDate"
+   ],
+   "calledBy": [
+    "(datei) dashboard.js"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "escapeHtml",
    "kind": "arrow",
    "lang": "js",
@@ -280498,6 +280525,7 @@
     "parseIsoDate"
    ],
    "calledBy": [
+    "pruefePatientPflicht",
     "pruefeSchritt3"
    ],
    "modules": [

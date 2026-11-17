@@ -44,7 +44,7 @@ import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnun
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20261004m116';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261005g';
 import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261004m116';
-import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261117f2';
+import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261117f2'; import { pruefePatientPflicht } from './module/patient-pflichtfelder.js?v=20261117f1';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
 import { ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261117f2';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261021c';
@@ -7797,7 +7797,7 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
   const lastName = document.getElementById('lead-last-name').value.trim();
   const geburtsdatum = document.getElementById('lead-geburtsdatum').value;
   if (!firstName || !lastName) { showToast('Vorname und Nachname sind erforderlich.', 'error'); return; }
-  if (!geburtsdatum) { showToast('Geburtsdatum ist erforderlich.', 'error'); return; }
+  { const pflicht = pruefePatientPflicht({ geburtsdatum, versicherungsart: document.querySelector('input[name="lead_insurance_type"]:checked')?.value, praxis: isPraxisSector(getSector()) }); if (pflicht) { showToast(pflicht, 'error'); return; } }   // Fund 1, QA 17.11.2026
 
   const sector = getSector();
   const city = document.getElementById('lead-city').value.trim();
