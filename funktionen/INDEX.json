@@ -90494,7 +90494,8 @@
     "escapeHtml",
     "fmtShort",
     "getOwnerId",
-    "openPatRxDetail"
+    "openPatRxDetail",
+    "verordnungStatusInfo"
    ],
    "calledBy": [
     "initPatTableView"
@@ -90564,7 +90565,8 @@
     "belegnummerText",
     "escapeHtml",
     "fmtShort",
-    "openPatRxDetail"
+    "openPatRxDetail",
+    "verordnungStatusInfo"
    ],
    "calledBy": [
     "berlin",
@@ -90647,7 +90649,8 @@
    "calls": [
     "belegnummerText",
     "escapeHtml",
-    "openPatRxDetail"
+    "openPatRxDetail",
+    "verordnungStatusInfo"
    ],
    "calledBy": [
     "fmt",
@@ -109141,6 +109144,9 @@
     "get"
    ],
    "calledBy": [
+    "fmt",
+    "fmtShort",
+    "loadPatRxTable",
     "openBookingActionModal",
     "rendereGeldzeile",
     "statusBadgeGross"

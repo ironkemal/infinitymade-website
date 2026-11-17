@@ -16959,7 +16959,7 @@ async function loadPatRxTable() {
   const fmtShort = d => d ? new Date(d).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'2-digit' }) : '—';
 
   tbody.innerHTML = data.map((rx, i) => {
-    const sc = statusColors[rx.status] || { bg: '#f3f4f6', color: '#374151', label: rx.status || '—' };
+    const sc = statusColors[rx.status] || { bg: 'transparent', color: 'var(--text-muted)', label: verordnungStatusInfo('physio', rx.status)?.label || '—' };   // in_therapy/cancelled standen roh da (Nachtrag Fund 6)
     const lastName = rx.leads?.last_name || '—';
     const firstName = rx.leads?.first_name || '—';
     const arztName = rx.aerzte?.name || '—';
