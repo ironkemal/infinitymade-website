@@ -89,7 +89,9 @@
              Haftungsfrage, die wir fuer ein Nice-to-have nicht aufmachen.
              Das Woerterbuch `T` in dashboard.js bleibt bestehen — es ist die Quelle
              der deutschen Texte, nicht nur der Uebersetzungen. -->
-        <a href="admin.html" class="topbar-admin-link" id="topbarAdminLink"
+        <!-- Fund 12 (QA 17.11.2026): unsichtbar, bis admin_users den Nutzer kennt — dann setzt dashboard.js
+             das Ziel. Das alte statische Ziel admin.html gibt es in der App nicht (404 → Login). -->
+        <a href="#" class="topbar-admin-link" id="topbarAdminLink"
           style="display:none;font-size:13px;color:var(--primary);text-decoration:none;font-weight:600;margin-right:8px;">Admin</a>
         <button class="logout-btn" id="logoutBtn" data-i18n="logout">Abmelden</button>
       </div>
