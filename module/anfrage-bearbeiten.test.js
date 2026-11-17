@@ -1,5 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import vm from 'node:vm';
 import { zeitwunschAus, ladeAnfragenDaten } from './anfrage-bearbeiten.js';
 
 test('Zeitwunsch: nur Zeit-, Dringlichkeits- und Erreichbarkeitszeilen, kein Freitext', () => {
@@ -36,3 +38,10 @@ test('Anfragen: Netzwerkfehler und Serverfehler unterscheidbar', async () => {
   await assert.rejects(ladeAnfragenDaten({ auth: auth('ok'), fetchFn: async () => { throw new TypeError('offline'); } }), /Netzwerkfehler/);
   await assert.rejects(ladeAnfragenDaten({ auth: auth('ok'), fetchFn: async () => ({ status: 500, ok: false }) }), /Serverfehler/);
 });
+
+ test('Anfragen: Mitarbeiter lädt mit Praxis-Owner statt eigener Profil-ID', async () => {
+  const s=readFileSync(new URL('../dashboard.js',import.meta.url),'utf8');
+  const code=s.slice(s.indexOf('async function loadAnfragen(status)'),s.indexOf('function renderAnfragenList'));
+  let gelesen; const c=vm.createContext({currentProfile:{id:'employee',owner_id:'owner'},getOwnerId:()=> 'owner',anfragenCurrentStatus:'pending',anfragenCurrentRequests:[],document:{getElementById:()=>({innerHTML:''})},updateAnfragenBadge(){},supabase:{auth:{}},API:'/api',ladeAnfragenDaten:async q=>{gelesen=q;return [];},renderAnfragenList(){},escapeHtml:String,console});
+  vm.runInContext(code,c);await vm.runInContext('loadAnfragen()',c);assert.equal(gelesen.ownerId,'owner');
+ });

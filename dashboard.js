@@ -17551,7 +17551,7 @@ async function loadAnfragen(status) {
   if (!list) return;
   list.innerHTML = '<div class="loading-spinner" style="margin:32px auto"></div>'; if (anfragenCurrentStatus === 'pending') updateAnfragenBadge(null, 'laden');
 
-  const ownerId = currentProfile?.id;
+  const ownerId = getOwnerId();
   if (!ownerId) return;
 
   try {

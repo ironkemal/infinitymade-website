@@ -62426,6 +62426,7 @@
     "loadActivityFeed",
     "loadAerzte",
     "loadAnamnese",
+    "loadAnfragen",
     "loadAusfallConfig",
     "loadB2B",
     "loadB2C",
@@ -91988,6 +91989,7 @@
    "calls": [
     "error",
     "escapeHtml",
+    "getOwnerId",
     "ladeAnfragenDaten",
     "renderAnfragenList",
     "updateAnfragenBadge"
