@@ -873,7 +873,7 @@ function applyTheme(theme) {
   if (theme === 'dark') root.setAttribute('data-theme', 'dark');
   else root.removeAttribute('data-theme');
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', theme === 'dark' ? '#14110C' : '#F8F3E8');
+  if (meta) meta.setAttribute('content', getComputedStyle(root).getPropertyValue('--bg-main').trim() || (theme === 'dark' ? '#111827' : '#F4F6F9'));
 }
 document.getElementById('themeToggle')?.addEventListener('click', () => {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';

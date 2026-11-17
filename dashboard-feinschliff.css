@@ -15,10 +15,11 @@
      • jede Regel hier ist ein bewusster Eingriff mit Grund, nicht ein
        Treffer irgendwo in 8.000 Zeilen.
 
-   Farben kommen aus dem Logo (logo.png, gemessen): Espresso #4F4136,
-   Bronze #A48565, Champagner #C4A381, Creme #F3E4D2. Die Leistungsfarben der
-   Terminblöcke bleiben unangetastet — die wählt die Praxis selbst
-   (module/kalender-farben.js).
+   Ursprüngliche Palette: Espresso, Bronze und Creme aus dem Logo. Seit
+   17.11.2026 verwendet die Bildschirmansicht auf Melihs Wunsch stattdessen
+   Weiß, kühles Grau und Graphit, passend zum bestätigten Gestaltungsvertrag.
+   Die ursprünglichen Werte bleiben für Druck unverändert. Leistungs- und
+   Signalfarben bleiben erhalten (module/kalender-farben.js).
 
    `!important` steht hier nur dort, wo dashboard.js oder ein späterer Block
    (Inline-Stil, `<style>` in dashboard.html, die „premium"-Regeln am Ende von
@@ -73,6 +74,89 @@
   --grid-hour: rgba(245, 240, 230, 0.10);
   --grid-half: rgba(245, 240, 230, 0.05);
   --grid-quarter: rgba(245, 240, 230, 0.03);
+}
+
+/* Bildschirm-Palette der bisherigen Oberfläche. Die Aktivierung des neuen
+   Designs bleibt separat; dessen Tokens und Druckfarben werden nicht berührt. */
+@media screen {
+  :root:not([data-design="neu"]):not([data-theme="dark"]) {
+    --bg-main: #F4F6F9;
+    --bg-card: #FFFFFF;
+    --bg-card-solid: #FFFFFF;
+    --bg-sidebar: #FFFFFF;
+    --bg-topbar: #FFFFFF;
+    --bg-input: #FFFFFF;
+    --bg-hover: #F2F4F7;
+    --bg-warm: #F2F4F7;
+    --primary: #0B0F17;
+    --primary-hover: #1F2633;
+    --primary-dim: #EEF0F3;
+    --text-main: #0B0F17;
+    --text-muted: #475467;
+    --text-faint: #667085;
+    --border: #E6E9EE;
+    --border-strong: #8A93A0;
+    --nav-active: #EEF0F3;
+    --accent: #2563EB;
+    --focus-ring: #2563EB;
+    --today: #2563EB;
+    --bronze: #475467;
+    --bronze-deep: #344054;
+    --emerald-deep: #0B0F17;
+    --highlight: #D0D5DD;
+    --primary-lux: var(--primary);
+    --bronze-lux: var(--bronze);
+    --dark-lux: #0B0F17;
+    --glass-bg-light: #FFFFFF;
+    --glass-bg-dark: #14171D;
+    --glass-border-light: #E6E9EE;
+    --glass-border-dark: #22262E;
+    --grid-hour: rgba(11, 15, 23, 0.10);
+    --grid-half: rgba(11, 15, 23, 0.05);
+    --grid-quarter: rgba(11, 15, 23, 0.035);
+  }
+
+  :root:not([data-design="neu"])[data-theme="dark"] {
+    --bg-main: #0B0D12;
+    --bg-card: #14171D;
+    --bg-card-solid: #14171D;
+    --bg-sidebar: #101318;
+    --bg-topbar: #14171D;
+    --bg-input: #101318;
+    --bg-hover: #1E232B;
+    --bg-warm: #1A1E25;
+    --primary: #F1F3F6;
+    --primary-hover: #D9DEE5;
+    --primary-dim: #22262F;
+    --text-main: #F1F3F6;
+    --text-muted: #A6AEBB;
+    --text-faint: #8A93A0;
+    --border: #22262E;
+    --border-strong: #6B7482;
+    --nav-active: #22262F;
+    --accent: #60A5FA;
+    --focus-ring: #60A5FA;
+    --today: #60A5FA;
+    --bronze: #A6AEBB;
+    --bronze-deep: #D9DEE5;
+    --emerald-deep: #F1F3F6;
+    --highlight: #344054;
+    --primary-lux: var(--primary);
+    --bronze-lux: var(--bronze);
+    --dark-lux: #0B0D12;
+    --glass-bg-light: #FFFFFF;
+    --glass-bg-dark: #14171D;
+    --glass-border-light: #E6E9EE;
+    --glass-border-dark: #22262E;
+    --grid-hour: rgba(241, 243, 246, 0.10);
+    --grid-half: rgba(241, 243, 246, 0.05);
+    --grid-quarter: rgba(241, 243, 246, 0.03);
+  }
+
+  :root:not([data-design="neu"]) .dv-col-highlight { background: var(--bg-hover); }
+  :root:not([data-design="neu"]) .dv-slot--past { background-color: var(--bg-hover); }
+  :root:not([data-design="neu"]) ::selection { color: var(--text-main); background: var(--nav-active); }
+  :root:not([data-design="neu"]) :is(input, textarea) { caret-color: var(--accent); }
 }
 
 /* Körnung über der ganzen Seite: kostet Kontrast und liest sich als Effekt. */
