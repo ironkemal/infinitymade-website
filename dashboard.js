@@ -82,12 +82,12 @@ import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261117p21';
 import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20261021zd';
 import { druckenMenueHtml, verdrahteDruckenMenue, oeffneRechnungZurVerordnung, bgSperreBeimSpeichern } from './module/rechnung-zur-verordnung.js?v=20261010zc';
-import { leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20261010zc';
+import { leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung, pruefeZuzahlungsBezug } from './module/rechnung-editor.js?v=20261117p22';
 import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren, verordnungVormerken } from './module/rechnung-verordnung.js?v=20261010zc';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
 import { katalogNachladen } from './module/leistungskatalog.js?v=20260909';
 import { zahlartLabel as zahlartLabelBase, zahlartChipsHtml } from './module/zahlarten.js?v=20260910';
-import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260816';
+import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20261117p22';
 import { behandlungenVerknuepfen, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261010zc';
 import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './module/zuzahlung-befreiung.js?v=20261005a';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
@@ -12674,7 +12674,7 @@ function updateInvForInsuranceType() {
 
   // Zuzahlung section: visible for GKV, hidden for Privat
   const zuzRow = document.getElementById('invZuzahlungRow');
-  if (zuzRow) zuzRow.style.display = (isPrivat) ? 'none' : '';
+  if (zuzRow) { zuzRow.style.display = isPrivat ? 'none' : ''; const bezug = !!(invPrescriptionId || invVerordnungId || verordnungAuswahl().prescriptionId); zuzRow.title = bezug ? '' : 'Zuzahlung erst mit zugeordneter GKV-Verordnung möglich.'; zuzRow.querySelectorAll('input').forEach(el => { el.disabled = !bezug; }); }
 
   // USt-Wahl nur ausserhalb der GKV: eine Kassenzuzahlung wirft die Frage nicht auf.
   const artWrap = document.getElementById('invLeistungsartWrap');
@@ -12682,7 +12682,7 @@ function updateInvForInsuranceType() {
   if (!isGkv) {
     mountLeistungsart({
       profile: currentProfile,
-      vorschlag: leistungsartVorschlag({ verordnung: invVerordnungId ? { id: invVerordnungId } : null }),
+      vorschlag: invLines.length ? 'behalten' : (invVerordnungId || invPrescriptionId ? 'medizinisch' : 'offen'),
       getLines: () => invLines,
       onChange: (zeilen) => { invLines = zeilen; },
     });
@@ -12767,7 +12767,7 @@ async function saveInvoice() {
     const patientId = patientSel.value;
     if (!patientId) { showToast('Bitte wählen Sie einen Patienten aus.', 'error'); return; }
     if (invLines.length === 0) { showToast('Bitte fügen Sie mindestens eine Leistung hinzu.', 'error'); return; } { const bgSperre = await bgSperreBeimSpeichern({ supabase, invoiceType: invPatientInsuranceType || null, prescriptionId: invPrescriptionId || invVerordnungId || verordnungAuswahl().prescriptionId || null }); if (bgSperre) { showToast(bgSperre, 'error'); return; } }
-    // Collapse duplicates so the printed invoice and the DB row stay tidy
+    const zuzFehler = await pruefeZuzahlungsBezug({ supabase, rezeptId: invPrescriptionId || invVerordnungId || verordnungAuswahl().prescriptionId, invoiceType: invPatientInsuranceType, betrag: Number(document.getElementById('invKasse').value) + Number(document.getElementById('invEigenPct').value) }); if (zuzFehler) { showToast(zuzFehler, 'error'); return; } const artWrap = document.getElementById('invLeistungsartWrap'); if (artWrap && !artWrap.hidden && !artWrap.querySelector('input:checked') && artWrap.dataset.steuerBehalten !== '1') { showToast('Bitte medizinische oder kosmetische Leistungsart wählen.', 'error'); return; }
     invLines = aggregateInvLines(invLines);
     renderInvLines(); calcInvTotals();
     const { sub: subtotal, eigenPct, eigenEur, kasse, total } = rechnungsSummen(invLines, invPatientInsuranceType, document.getElementById('invEigenPct').value, document.getElementById('invKasse').value);
@@ -12935,7 +12935,7 @@ function bindInvEvents() {
           // Verordnung gewählt → Termine abräumen
           checksWrap.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; });
           const wahl = verordnungAuswahl(); invLines = wahl.zeilen; if (invVerordnungId) invBehandlungIds = wahl.podoBehandlungIdsJe[invVerordnungId] || [];
-          renderInvLines(); calcInvTotals();
+          renderInvLines(); updateInvForInsuranceType();
         },
       });
     } else {

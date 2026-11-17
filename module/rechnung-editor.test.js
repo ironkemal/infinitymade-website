@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createClient } from '@supabase/supabase-js';
-import { terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung, preisAusService } from './rechnung-editor.js';
+import { terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung, preisAusService, pruefeZuzahlungsBezug } from './rechnung-editor.js';
 
 // Pinnt die Auslassung, die den Versichertentyp-Leck verursacht hat
 // (Ops-Meldung, 09.09.2026): nach einer Privatrechnung blieb
@@ -363,4 +363,12 @@ test('Echter Leistungskatalog-Ladepfad propagiert Supabase-Fehler', async () => 
   const context = vm.createContext(sandbox);
   vm.runInContext(extractFunctionDecl(dashboardSrc, 'loadServices') + '\n' + extractFunctionDecl(dashboardSrc, 'ensureLeistungskatalog') + '\nglobalThis.ensure = ensureLeistungskatalog;', context);
   await assert.rejects(context.ensure(), /catalog unavailable/);
+});
+
+test('P2-2b: Zuzahlung nur mit tatsächlich zugeordnetem GKV-Rezept', async()=>{
+  const sb=art=>({from:()=>({select(){return this;},eq(){return this;},maybeSingle:async()=>({data:{rezeptart:art}})})});
+  assert.match(await pruefeZuzahlungsBezug({supabase:sb('gkv'),rezeptId:null,invoiceType:'gkv',betrag:10}),/Verordnung/);
+  for(const art of ['privat','selbstzahler','bg']) assert.match(await pruefeZuzahlungsBezug({supabase:sb(art),rezeptId:'rx',invoiceType:'gkv',betrag:10}),/GKV/);
+  assert.equal(await pruefeZuzahlungsBezug({supabase:sb('gkv'),rezeptId:'rx',invoiceType:'gkv',betrag:10}),null);
+  assert.equal(await pruefeZuzahlungsBezug({supabase:sb('privat'),rezeptId:null,invoiceType:'privat',betrag:10}),null);
 });

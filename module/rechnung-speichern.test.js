@@ -236,6 +236,7 @@ function createTestEnvironment(customMocks = {}) {
     verordnungAuswahl: () => ({ prescriptionId: null, notizZeile: null }),
     // KHS §4 (10.10.2026): BG-Sperre beim Speichern (module/rechnung-zur-verordnung.js) — hier nur die Verdrahtung
     bgSperreBeimSpeichern: customMocks.bgSperreBeimSpeichern || (async () => null),
+    pruefeZuzahlungsBezug: customMocks.pruefeZuzahlungsBezug || (async () => null),
     steuerhinweisText: () => 'Kein Steuerausweis',
     behandlungenVerknuepfen: customMocks.behandlungenVerknuepfen || (async (sb, opts) => {
       behandlungenVerknuepfenCalls.push(opts);

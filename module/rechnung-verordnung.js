@@ -40,7 +40,7 @@
 
 import { belegnummerText } from './belegnummer.js?v=20260817';
 import { ausTopf } from './verordnung-topf.js?v=20260930c';
-import { terminLeistungen } from './rechnung-editor.js?v=20261010zc';
+import { terminLeistungen } from './rechnung-editor.js?v=20261117p22';
 import { rechnungsTitel, istNichtKasse } from './rechnung-anzeige.js?v=20261006q';
 import { privatpreisFuer } from './rechnung-bruecke.js?v=20261010zc';
 

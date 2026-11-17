@@ -273,7 +273,9 @@ export function mountLeistungsart({ profile, vorschlag, getLines, onChange }) {
   wrap.hidden = klein;
 
   const radios = wrap.querySelectorAll('input[name="invLeistungsart"]');
-  const art = vorschlag || 'medizinisch';
+  const behalten = vorschlag === 'behalten';
+  wrap.dataset.steuerBehalten = behalten ? '1' : '';
+  const art = (vorschlag === 'offen' || behalten) ? '' : (vorschlag || 'medizinisch');
   radios.forEach(r => { /** @type {HTMLInputElement} */ (r).checked = (/** @type {HTMLInputElement} */ (r).value === art); });
 
   const anwenden = (/** @type {any} */ gewaehlt) => {
@@ -292,7 +294,9 @@ export function mountLeistungsart({ profile, vorschlag, getLines, onChange }) {
     const r = /** @type {HTMLInputElement} */ (element);
     r.onchange = () => { if (r.checked) anwenden(r.value); };
   });
-  anwenden(art);
+  if (behalten) { if (hint) hint.textContent = 'Steuerangaben aus gespeicherten Positionen übernommen.'; }
+  else if (art) anwenden(art);
+  else if (hint) hint.textContent = 'Bitte Leistungsart wählen: medizinisch oder kosmetisch.';
 }
 
 // ── Einstellungen-Dropdown (aus dashboard.js hierher gezogen) ───────────────

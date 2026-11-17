@@ -5,6 +5,7 @@
  * Hier landen die Teile, die beim Live-Test vom 15.08.2026 aufgefallen sind.
  */
 
+import { istKasse } from './rezeptart.js?v=20261006a';
 import { verordnungenZuruecksetzen } from './rechnung-verordnung.js?v=20261010zc';
 import { preisAusService } from './rechnung-bruecke.js?v=20261010zc';
 
@@ -308,4 +309,15 @@ export function leererEditorZustand() {
     invBehandlungIds: [],
     invPatientInsuranceType: null,
   };
+}
+
+/** Prüft den Rezeptbezug, bevor Eigenanteil oder Kassenzuzahlung gespeichert werden.
+ * @param {{supabase:any,rezeptId?:string|null,invoiceType?:string|null,betrag:number}} opts
+ */
+export async function pruefeZuzahlungsBezug({ supabase, rezeptId, invoiceType, betrag }) {
+  if (!(betrag > 0) || ['privat', 'selbstzahler', 'bg'].includes(invoiceType)) return null;
+  if (!rezeptId) return 'Zuzahlung erfordert eine zugeordnete GKV-Verordnung. Bitte zuerst die Verordnung wählen.';
+  const { data, error } = await supabase.from('prescriptions').select('rezeptart').eq('id', rezeptId).maybeSingle();
+  if (error || !data) return 'GKV-Verordnung konnte nicht geprüft werden. Bitte erneut versuchen.';
+  return istKasse(data.rezeptart) ? null : 'Zuzahlung ist nur bei einer GKV-Verordnung möglich.';
 }
