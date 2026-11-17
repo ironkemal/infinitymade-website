@@ -8562,7 +8562,7 @@ document.getElementById('hoursEmpSelect').addEventListener('change', async () =>
 
 async function loadHoursPanel() {
   const { data: emps } = await supabase.from('profiles').select('id,business_name,email')
-    .eq('owner_id', getOwnerId());
+    .eq('owner_id', getOwnerId()).not('is_active', 'is', false);
   const all = currentProfile.role === 'owner'
     ? [{ id: currentSession.user.id, business_name: currentProfile.business_name || '', email: currentSession.user.email }, ...(emps || [])]
     : [{ id: currentSession.user.id, business_name: currentProfile.business_name || '', email: currentSession.user.email }];
