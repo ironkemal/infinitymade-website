@@ -11618,7 +11618,7 @@ document.getElementById('billingSaveBtn')?.addEventListener('click', async () =>
   };
   const { error } = await supabase.from('profiles').update(patch).eq('id', currentSession.user.id);
   if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
-  Object.assign(currentProfile, patch); document.dispatchEvent(new Event('praxis-profil:geaendert'));
+  Object.assign(currentProfile, patch); document.getElementById('ik-missing-banner')?.toggleAttribute('hidden', !!currentProfile.ik_number); document.dispatchEvent(new Event('praxis-profil:geaendert'));
   abrechnungsprofilCacheLeeren();   // sonst blockiert der Druck weiter mit dem alten Stand
   showToast('Rechnungsdaten gespeichert ✓');
 });
