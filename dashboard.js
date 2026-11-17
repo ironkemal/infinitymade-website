@@ -17466,7 +17466,7 @@ async function fetchAnwesenheitReport() {
               const { icon: gpsIcon, farbe: gpsColor, titel: gpsTitel } = gpsAnzeige(r);   // true ✓ · false ⚠ · NULL „nicht geprüft"
               return `
                 <tr style="border-bottom:1px solid var(--border-color);">
-                  <td style="padding:10px 12px;font-weight:600;">${name}</td>
+                  <td style="padding:10px 12px;font-weight:600;">${escapeHtml(name)}${r.business_id ? '' : '<small style="display:block;color:var(--text-muted);font-weight:400;">Ohne Standortzuordnung</small>'}</td>
                   <td style="padding:10px 8px;color:var(--text-muted);">${dateStr}</td>
                   <td style="padding:10px 8px;text-align:center;">${checkIn}</td>
                   <td style="padding:10px 8px;text-align:center;">${checkOut}</td>

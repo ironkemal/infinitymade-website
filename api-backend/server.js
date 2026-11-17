@@ -3959,10 +3959,12 @@ app.get('/api/attendance/report', requireAuthAI, async (req, res) => {
       return res.status(400).json({ error: 'date_from ve date_to zorunlu (YYYY-MM-DD)' });
     }
 
+    if (business_id && (typeof business_id !== 'string' || !UUID_RE.test(business_id))) return res.status(400).json({ error: 'Ungültiger Standort' });
+
     let query = supabase
       .from('attendance')
       .select(`
-        id, date, check_in_at, check_out_at, check_in_valid, status, note,
+        id, date, business_id, check_in_at, check_out_at, check_in_valid, status, note,
         profiles!employee_id (id, owner_first_name, owner_last_name, email, avatar_url)
       `)
       .eq('owner_id', userId)
@@ -3971,7 +3973,7 @@ app.get('/api/attendance/report', requireAuthAI, async (req, res) => {
       .order('date', { ascending: false })
       .order('check_in_at', { ascending: true });
 
-    if (business_id) query = query.eq('business_id', business_id);
+    if (business_id) query = query.or(`business_id.eq.${business_id},business_id.is.null`);
 
     const { data, error } = await query;
     if (error) return res.status(500).json({ error: 'Rapor sorgulanamadı' });
