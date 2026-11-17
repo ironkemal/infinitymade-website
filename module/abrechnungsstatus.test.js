@@ -66,3 +66,11 @@ test('ladeStatusJePatient: zählt alle Fachbereiche, Statuswechsel-Ziel nur podo
   assert.equal(karte.get('bernd').status, 'storniert');
   assert.equal(karte.get('clara').verordnungId, 'd1');
 });
+
+// QA TEST-Physio 17.11.2026, Fund 6: Termin-Seitenfenster zeigte „in_therapy" roh.
+test('verordnungStatusInfo: in_therapy und Entwurf werden deutsch', async () => {
+  const { verordnungStatusInfo } = await import('./abrechnungsstatus.js');
+  assert.equal(verordnungStatusInfo('physio', 'in_therapy').label, 'In Behandlung');
+  assert.equal(verordnungStatusInfo('physio', 'confirmed').label, 'Bestätigt');
+  assert.equal(verordnungStatusInfo('physio', 'cancelled')?.label !== 'cancelled', true);
+});

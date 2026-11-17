@@ -66896,6 +66896,7 @@
     "updateNoShowButton",
     "verdrahteFussbefundKnopf",
     "verdrahteGeldzeile",
+    "verordnungStatusInfo",
     "waehleVerordnungFuerPanel",
     "zahlartLabel",
     "zeichneAnamnese",
@@ -109004,6 +109005,7 @@
     "get"
    ],
    "calledBy": [
+    "openBookingActionModal",
     "rendereGeldzeile",
     "statusBadgeGross"
    ],

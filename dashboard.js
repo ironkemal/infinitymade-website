@@ -46,7 +46,7 @@ import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } fr
 import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261004m116';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261117f2'; import { pruefePatientPflicht } from './module/patient-pflichtfelder.js?v=20261117f1';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
-import { ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261117f2';
+import { ladeStatusJePatient, oeffneStatusDialogFuer, verordnungStatusInfo } from './module/abrechnungsstatus.js?v=20261117f2';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261021c';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001e';
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261031b'; import { renderMitarbeiterAppSettings } from './module/mitarbeiter-app-einstellungen.js?v=20261022';
@@ -2548,12 +2548,12 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
 
     const statusBadge = document.getElementById('bkRxStatusBadge');
     if (statusBadge) {
-      const statusMap = {
-        in_behandlung: { label: 'In Behandlung', bg: 'rgba(34,197,94,0.15)', color: '#4ade80', border: 'rgba(34,197,94,0.3)' },
-        completed:     { label: 'Abgeschlossen', bg: 'rgba(100,116,139,0.15)', color: '#94a3b8', border: 'rgba(100,116,139,0.3)' },
-        billed:        { label: 'Abgerechnet',   bg: 'rgba(59,130,246,0.15)', color: '#60a5fa', border: 'rgba(59,130,246,0.3)' },
-      };
-      const st = statusMap[rx.status] || { label: rx.status || '—', bg: 'rgba(177,137,27,0.15)', color: '#b1891b', border: 'rgba(177,137,27,0.3)' };
+      // Fund 6 (QA 17.11.2026): die lokale Karte kannte `in_behandlung`, gespeichert wird aber `in_therapy` —
+      // das Etikett zeigte den Rohschlüssel. Jetzt die zentrale Übersetzung (module/abrechnungsstatus.js),
+      // dieselbe wie in der Verordnungsliste.
+      const zi = verordnungStatusInfo('physio', rx.status);   // prescriptions.status = Bearbeitungsachse, in jedem Bereich
+      const st = zi ? { label: zi.label, bg: zi.bg, color: zi.farbe, border: zi.farbe } : { label: '—', bg: 'transparent', color: 'var(--text-muted)', border: 'var(--border)' };
+
       statusBadge.textContent = st.label;
       statusBadge.style.cssText = `font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:${st.bg};color:${st.color};border:1px solid ${st.border};`;
     }
