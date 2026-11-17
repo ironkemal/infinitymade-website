@@ -202,3 +202,12 @@ test('W15 P3: oeffnePatientenImport Link „Offene Verordnungen importieren (Ber
   }
 });
 
+
+test('P1-7: CSV-Geburtsdatum in Zukunft oder vor 1900 wird nicht importierbar', () => {
+  const zuo = ordneSpaltenZu(['Vorname', 'Nachname', 'Geburtsdatum']);
+  for (const datum of ['01.01.2030', '01.01.2031', '31.12.1899']) {
+    const r = zeileZuPatient(['Test', 'Person', datum], zuo);
+    assert.ok(r.fehler.some(f => /Geburtsdatum/.test(f)), datum);
+  }
+  assert.deepEqual(zeileZuPatient(['Test', 'Person', '01.01.1900'], zuo).fehler, []);
+});
