@@ -9708,7 +9708,7 @@ function openEmpDetail(empId) {
   const isOwn = m.id === currentSession.user.id;
   document.getElementById('empRemoveBtn').hidden = isOwn || currentProfile.role !== 'owner';
   document.getElementById('empRemoveBtn').onclick = async () => {
-    const okRemove = await showConfirmModal({ title: t('btn_remove'), message: t('btn_remove') + '?', confirmText: t('btn_remove'), cancelText: 'Abbrechen', variant: 'danger' });
+    const okRemove = await showConfirmModal({ title: t('btn_remove'), message: `${[m.owner_first_name, m.owner_last_name].filter(Boolean).join(' ') || m.business_name || m.email || 'Diese Person'} entfernen? Der Zugang wird gesperrt. Termine und Patienten bleiben erhalten. Bestehende Termine bitte prüfen und bei Bedarf neu zuordnen.`, confirmText: t('btn_remove'), cancelText: 'Abbrechen', variant: 'danger' });
     if (!okRemove) return;
     try { await mitarbeiterEntfernen(m.id, { token: (await supabase.auth.getSession()).data.session?.access_token }); } catch (e) { showToast(e.message, 'error'); return; }
     await loadTeam();
