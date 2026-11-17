@@ -489,3 +489,12 @@ h1 em, h2 em, h3 em { font-style: normal; font-weight: inherit; color: var(--pri
 .termin-hinweis { font-size: 10px; line-height: 1.5; padding: 0 6px; border-radius: 999px; border: 1px solid var(--border-strong, var(--border)); color: var(--text-muted); background: var(--bg-card-solid); white-space: nowrap; }
 .termin-hinweis--ohne-vo, .termin-hinweis--zuzahlung { border-color: var(--warning, #b54708); color: var(--warning-text, #b54708); }
 .dv-booking-block--compact .termin-hinweise { display: none; }
+
+/* Verfügbarkeit ohne gespeicherte Zeilen (QA 17.11.2026, Fund 3/6): die Maske zeigt Mo–Fr 09–17
+   als Vorschlag. Ohne Hinweis sah das wie gespeichert aus — Freie Zeiten und Arbeitszeitprüfung
+   meldeten dann „kein Arbeitstag". */
+#hoursGrid[data-vorschlag="1"]::before {
+  content: 'Noch nicht gespeichert — das ist nur ein Vorschlag. Bitte „Speichern" drücken, damit Kalender, Freie Zeiten und Online-Buchung diese Zeiten kennen.';
+  display: block; padding: 10px 14px; font-size: 13px; line-height: 1.45;
+  color: var(--warning-text, #b54708); background: var(--bg-card-solid); border-bottom: 1px solid var(--border);
+}

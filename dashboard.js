@@ -1185,7 +1185,7 @@ async function renderGapsForDate(date) {
     const totalEl = document.getElementById('gapsTotal');
     const wh = whMap[dayDow];
     if (!wh) {
-      container.innerHTML = '<div class="gap-empty">Keine Arbeitszeiten für diesen Tag.</div>';
+      container.innerHTML = `<div class="gap-empty">${whAll?.length ? 'Kein Arbeitstag laut Verfügbarkeit.' : 'Keine Arbeitszeiten gespeichert — unter Verfügbarkeit speichern.'}</div>`;   // Fund 3
       if (totalEl) totalEl.textContent = '0 min';
       return;
     }
@@ -1261,7 +1261,7 @@ async function loadScheduleBookings(date) {
     document.getElementById('kpi-today').textContent = countToday;
   }
 
-  if (displayBookings.length === 0) { emptyEl.hidden = false; return; }
+  if (displayBookings.length === 0) { const p = emptyEl.querySelector('p'); if (p) p.textContent = isToday && (bookings || []).length ? 'Keine weiteren Termine heute.' : t('upcoming_empty'); emptyEl.hidden = false; return; }   // Fund 3: KPI zählt den ganzen Tag, die Liste nur Kommendes
 
   const timeCol = document.getElementById('ovTimeCol');
   const colsWrap = document.getElementById('ovColsWrap');
@@ -8679,7 +8679,7 @@ async function renderHoursGrid() {
     supabase.from('working_hours').select('*').eq('user_id', hoursEmpId),
     supabase.from('breaks').select('*').eq('user_id', hoursEmpId)
   ]);
-  hoursBreaks = breaks || [];
+  hoursBreaks = breaks || []; document.getElementById('hoursGrid').dataset.vorschlag = hours?.length ? '' : '1';   // Fund 3/6: Vorschlag ≠ gespeichert
   const dayLabels = DAYS.de;
   const grid = document.getElementById('hoursGrid');
   grid.innerHTML = '';
@@ -8761,7 +8761,7 @@ document.getElementById('hoursSaveBtn').addEventListener('click', async () => {
   }
   const { error } = await supabase.from('working_hours').upsert(payload, { onConflict: 'user_id,day_of_week' });
   if (error) { showToast(t('err_generic'), 'error'); return; }
-  showToast(t('alert_hours_saved'));
+  showToast(t('alert_hours_saved')); document.getElementById('hoursGrid').dataset.vorschlag = '';
 });
 
 let hoursCalDate = new Date();
