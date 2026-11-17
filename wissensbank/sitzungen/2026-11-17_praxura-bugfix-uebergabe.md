@@ -53,3 +53,10 @@ Kein Push, Deploy, Env-Änderung, Migration oder Live-DB-Schreiben ohne gesonder
 ECHTE GERÄTE-/KONTOABNAHME bleibt separat:
 Passwort ändern; Google-Kalender-OAuth; Kamera-Scan; GPS-Check-in. Nicht als erledigt behaupten, wenn kein echter Zugriff/Nachweis vorliegt. Ursprünglich explizit menschliche Aufgaben. Live-Lesen ist keine Live-Abnahme. Am Ende kurz auf Deutsch: bestätigte Befunde, lokale Commits, Tests, offen/ungeprüft. Kein Push.
 ```
+
+## Kontrolle Claude (17.11.2026, nach Übergabe)
+
+- Gesamtlauf wiederholt: 5690 bestanden, 0 fehlgeschlagen, 4 übersprungen, 3 TODO; alle Gates grün.
+- Bestätigt: P1-1 (getOwnerId, 401-Pfade), P1-3 (Profil- ODER Zertifikat-IK), P1-6 (Owner-Grenze, Standort-UUID), P2-1a (nur Hinweis), P3-4 (kein „Verteiler" im Code).
+- Rest-Fehler behoben: `754b5455` — Banner kennt die beim Speichern unter Abrechnung ins Zertifikat geschriebene IK (`banner.dataset.zertifikatIk`).
+- Ungeprüft/offen: Live-Abnahme (nichts gepusht), Gerätetests (Passwort, Google-OAuth, Kamera, GPS), vier offene Entscheidungen.
