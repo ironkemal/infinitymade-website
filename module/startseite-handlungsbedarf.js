@@ -106,6 +106,11 @@ export function berechneHandlungsbedarf(input) {
           else if (!t.geplant) treffer('beginnBald', id);
         }
       }
+    } else if (tag(r.ausstellungsdatum) && typeof r.dringend === 'boolean') {
+      // V9.05 (gkv-302 17.11.2026, § 15 Abs. 2): verspäteter erster Beginn = VO war schon ungültig → weiter „Beginn verpasst“.
+      const erster = [r.behandlungsbeginn, ...h.erfolgt.map(b => b.behandlungsdatum)].filter(d => tag(d) && d <= heute).sort()[0];
+      const frist = behandlungsbeginnFrist(r.ausstellungsdatum + 'T12:00:00Z', r.dringend);
+      if (erster && tag(frist) && erster > frist) treffer('beginnVerpasst', id);
     }
     if (r.bereich === 'podologie') {
       if (!h.vollstaendig) unbekannt(['pauseDroht', 'pauseVerpasst'], id, 'BEHANDLUNGEN_UNVOLLSTAENDIG');

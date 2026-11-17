@@ -1655,19 +1655,19 @@ async function loadPhysioRezKpis() {
   const ownerId = getOwnerId();
   const { data, error } = await bizScope(supabase
     .from('prescriptions')
-    .select('id, status, gueltig_bis, patient_id, heilmittel')
+    .select('id, status, gueltig_bis, patient_id, heilmittel, behandlungsbeginn')
     .eq('owner_id', ownerId)
     .not('status', 'in', '(completed,billed,cancelled)'), 'patients');
   if (error) { console.warn('[rez-kpi]', error); block.dataset.pxStatus = 'fehler'; block.style.display = 'none'; return; }
-
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const soonCutoff = new Date(today); soonCutoff.setDate(today.getDate() + 7);
+  // V9.05 (gkv-302 17.11.2026, HeilM-RL § 15): Beginnfrist erledigt, wenn rechtzeitig begonnen; verspäteter Beginn bleibt überfällig. Kalendertage Europe/Berlin als Text.
+  const berlinTag = (d) => d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' }), today = berlinTag(new Date()), soonCutoff = berlinTag(new Date(Date.now() + 7 * 86400000));
 
   const overdue = [], soon = [], active = [];
   for (const rx of (data || [])) {
-    const gb = rx.gueltig_bis ? new Date(rx.gueltig_bis) : null;
-    if (gb && gb < today) overdue.push(rx);
-    else if (gb && gb <= soonCutoff) soon.push(rx);
+    const gb = typeof rx.gueltig_bis === 'string' ? rx.gueltig_bis.slice(0, 10) : null, bb = typeof rx.behandlungsbeginn === 'string' ? rx.behandlungsbeginn.slice(0, 10) : null;
+    const begonnen = !!bb && bb <= today, verspaetet = begonnen && !!gb && bb > gb;
+    if (gb && (verspaetet || (!begonnen && gb < today))) overdue.push(rx);
+    else if (gb && !begonnen && gb <= soonCutoff) soon.push(rx);
     if (rx.status === 'in_therapy') active.push(rx);
   }
   _rezKpiCache = { overdue, soon, active };
@@ -14164,8 +14164,8 @@ async function init() {
     await renderSidebar(); await loadTeam();
     if (await import('./module/design-entscheidung.js?v=20261111p2b').then(m => m.setzeDesign({ wunsch: window.__pxDesignWunsch, vorschau: DESIGN_VORSCHAU, apiBase: API, token: async () => (await supabase.auth.getSession()).data.session?.access_token, aktuell: async () => (await supabase.auth.getSession()).data.session?.user?.id })).catch(() => 'alt') === 'neu') {
       const ansichtKontext = { uid: () => currentSession?.user?.id, rolle: () => currentProfile?.role, scope: () => [currentSession?.user?.id, currentProfile?.role, getOwnerId(), currentBusiness?.id].join(':') };
-      startansicht = (await import('./module/startseite-ansicht.js?v=20261116v903')).montiereStartansicht({ ...ansichtKontext, sektor: getSector, api: () => API, springe: switchPanel, akte: id => window.openPatientDetail?.(id), neuLaden: loadTodayBookings, hb: { supabase, ownerId: () => getOwnerId(), businessId: () => currentBusiness?.id ?? null, patientsGemeinsam: () => dataSharing.patients === true } });
-      (await import('./module/anamnese-abschnitte.js?v=20261114v402')).montiereAnamneseAbschnitte(ansichtKontext); try { (await import('./module/shell-ansicht.js?v=20261117p33')).montiereShellansicht({ ...ansichtKontext, name: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', suche: { ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, oeffnePatient: id => window.openPatientDetail?.(id), dokumente: { kontext: () => ({ supabase, rolle: currentProfile?.role, uid: currentSession?.user?.id, ownerId: getOwnerId(), businessId: currentBusiness?.id ?? null, patientsGemeinsam: dataSharing.patients === true, financeGemeinsam: dataSharing.finance === true }), ladeRechnungen: loadRechnungen, oeffneRechnung: id => { switchPanel('rechnungen'); return openInvView(id); }, oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); const ok = oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API }); if (!ok) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); return ok; } } } }); } catch (e) { console.error('[init] shell', e); }
+      startansicht = (await import('./module/startseite-ansicht.js?v=20261117v905')).montiereStartansicht({ ...ansichtKontext, sektor: getSector, api: () => API, springe: switchPanel, akte: id => window.openPatientDetail?.(id), neuLaden: loadTodayBookings, anfragenLaden: () => loadAnfragen('pending'), hb: { supabase, ownerId: () => getOwnerId(), businessId: () => currentBusiness?.id ?? null, patientsGemeinsam: () => dataSharing.patients === true } });
+      (await import('./module/anamnese-abschnitte.js?v=20261114v402')).montiereAnamneseAbschnitte(ansichtKontext); try { (await import('./module/shell-ansicht.js?v=20261117v905')).montiereShellansicht({ ...ansichtKontext, name: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', suche: { ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, oeffnePatient: id => window.openPatientDetail?.(id), dokumente: { kontext: () => ({ supabase, rolle: currentProfile?.role, uid: currentSession?.user?.id, ownerId: getOwnerId(), businessId: currentBusiness?.id ?? null, patientsGemeinsam: dataSharing.patients === true, financeGemeinsam: dataSharing.finance === true }), ladeRechnungen: loadRechnungen, oeffneRechnung: id => { switchPanel('rechnungen'); return openInvView(id); }, oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); const ok = oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API }); if (!ok) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); return ok; } } } }); } catch (e) { console.error('[init] shell', e); }
     }
     await renderOverview();
     try { await renderGapsForDate(scheduleDate); dbg('[init] gapsForDate ok'); } catch (e) { console.error('[init] renderGapsForDate error', e); }

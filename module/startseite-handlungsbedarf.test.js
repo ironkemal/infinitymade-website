@@ -13,6 +13,11 @@ for (const [tag, name] of [['2026-10-22', 'beginnBald'], ['2026-10-28', 'beginnB
 test('Außerhalb Warnfenster keine Aufgabe', () => assert.equal(k(rechnen(rezept(), '2026-10-20'), 'beginnBald').anzahl, 0));
 test('Dringlich nutzt 14 statt28 Tage', () => assert.equal(k(rechnen(rezept({ dringend: true }), '2026-10-16'), 'beginnVerpasst').anzahl, 1));
 test('Erfolgter Beginn verhindert Beginnwarnung trotz alter Ausstellung', () => assert.equal(k(rechnen(rezept({ behandlungsbeginn: '2026-10-02' }), '2026-12-01'), 'beginnVerpasst').anzahl, 0));
+// V9.05 (gkv-302 17.11.2026): Frist 28 Tage ab 01.10. = 29.10.; Beginn am 29.10. rechtzeitig, am 30.10. verspätet (VO nach § 15 Abs. 2 ungültig).
+test('Beginn am Fristtag gilt als rechtzeitig', () => assert.equal(k(rechnen(rezept({ behandlungsbeginn: '2026-10-29' }), '2026-12-01'), 'beginnVerpasst').anzahl, 0));
+test('Verspäteter Beginn bleibt „Beginn verpasst“', () => assert.equal(k(rechnen(rezept({ behandlungsbeginn: '2026-10-30' }), '2026-12-01'), 'beginnVerpasst').anzahl, 1));
+test('Verspätete erste Behandlung ohne Beginnfeld zählt ebenso', () => assert.equal(k(rechnen(rezept({ behandlungen: quelle([{ behandlungsdatum: '2026-11-05', storniert_am: null }]) }), '2026-12-01'), 'beginnVerpasst').anzahl, 1));
+test('Dringlich: Beginn nach 14 Tagen ist verspätet', () => assert.equal(k(rechnen(rezept({ dringend: true, behandlungsbeginn: '2026-10-16' }), '2026-12-01'), 'beginnVerpasst').anzahl, 1));
 test('Heutige Behandlung verhindert falsche Pause und Beginnwarnung', () => {
   const r = rechnen(rezept({ behandlungen: quelle([{ behandlungsdatum: '2026-10-27', storniert_am: null }, { behandlungsdatum: '2026-01-01', storniert_am: null }]) }));
   for (const name of ['beginnVerpasst', 'beginnBald', 'pauseDroht', 'pauseVerpasst']) assert.equal(k(r, name).anzahl, 0);

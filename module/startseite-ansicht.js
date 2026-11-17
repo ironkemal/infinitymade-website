@@ -5,7 +5,7 @@
 import { begruessung, heutigeTermine, alsNaechstes, abstandText, dauerMin, tageszeile, zuErledigen, nutzbareLuecken } from './startseite-darstellung.js?v=20261113f603';
 import { uhrzeitBerlin } from './termin-heute.js?v=20261004m113';
 import { alsBerlinDatum } from './berlin-datum.js';
-import { createHandlungsbedarfKarte, handlungsbedarfHtml } from './startseite-handlungsbedarf-karte.js?v=20261113f606';
+import { createHandlungsbedarfKarte, handlungsbedarfHtml } from './startseite-handlungsbedarf-karte.js?v=20261117v905';
 import { ladeGeld, geldHtml } from './startseite-geld.js?v=20261114b03';
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const SVG = (p, w = 18) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
@@ -235,6 +235,7 @@ export function montiereStartansicht(k) {
   if(geldNeu)insel('geld',geldHtml(geldKontextOk()?geld:{status:'laden'}));
   if(focus && !focus.isConnected && key){const target=[...root.querySelectorAll('[data-termin],[data-aktion],[data-ziel]')].find(e=>e.dataset.termin===key||e.dataset.aktion===key||e.dataset.ziel===key);target?.focus({preventScroll:true});}
  }
+ let anfragenAngestossen=false;
  function toggle(neu = document.documentElement.dataset.design === 'neu') {
   root.hidden=!neu;
   for(const m of moves){if(neu)root.querySelector(`[data-start-slot="${m.slot}"]`).append(m.node);else m.anchor.after(m.node);}
@@ -243,6 +244,8 @@ export function montiereStartansicht(k) {
   redraw();
   if(bedarf){if(neu)bedarf.laden();else bedarf.leeren();}
   if(geldNeu){if(neu)geldLaden();else geldLeeren();}
+  // V9.05: Anfragen-Zähler lud bisher erst beim Öffnen von „Anfragen“ → „Zu erledigen“ blieb dauerhaft „nicht verfügbar“. Einmal je Seite, nur neu, nur wenn erreichbar.
+  if(neu && !anfragenAngestossen && inLeiste('anfragen') && typeof k.anfragenLaden==='function'){anfragenAngestossen=true;Promise.resolve().then(()=>k.anfragenLaden()).catch(()=>{});}
  }
  root.addEventListener('click', e=>{
   const b=e.target.closest('[data-aktion],[data-ziel]');if(!b||b.disabled)return;

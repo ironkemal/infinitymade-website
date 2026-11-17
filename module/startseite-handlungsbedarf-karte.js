@@ -1,5 +1,5 @@
 import { ladeHandlungsbedarfInput } from './startseite-handlungsbedarf-laden.js?v=20261113f602';
-import { berechneHandlungsbedarf } from './startseite-handlungsbedarf.js?v=20261113f602';
+import { berechneHandlungsbedarf } from './startseite-handlungsbedarf.js?v=20261117v905';
 
 const UUID = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const KATEGORIEN = [['beginnVerpasst', 'Beginn verpasst', 'bad'], ['pauseDroht', 'Pause droht', 'warn'], ['pauseVerpasst', 'Pause überschritten', 'bad'],

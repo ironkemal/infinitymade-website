@@ -68,6 +68,12 @@ try {
     if (design === 'neu') assert.ok(!ZEITRAUM.test(f.extra.karte) && /nicht geladen/.test(f.extra.karte), 'V9.03 neu: Karte nennt Ladefehler');
     erg[`freiFehler_${design}`] = f.extra.gaps.trim().slice(0, 60);
   }
+  // V9.05: Inhaberin neu lädt den Anfragen-Zähler beim Start (sonst „Zu erledigen“ dauerhaft „nicht verfügbar“); Alt unverändert ohne Abruf.
+  const badge = page => page.evaluate(() => document.getElementById('anfragenNavBadge')?.dataset.pxStatus ?? null);
+  const anfNeu = await lauf({ design: 'neu', rolle: 'owner' }, badge), anfAlt = await lauf({ design: 'alt', rolle: 'owner' }, badge);
+  assert.equal(anfNeu.extra, 'ok', 'V9.05 neu: Anfragen-Zähler geladen'); assert.equal(anfAlt.extra, null, 'V9.05 alt: kein zusätzlicher Abruf');
+  assert.ok(!/Nicht verfügbar: Online-Anfragen/.test(anfNeu.stand.voText + ''), 'V9.05 neu: keine Anfragen-Lücke');
+  erg.anfragen = { neu: anfNeu.extra, alt: anfAlt.extra };
   // c)
   const maNeu = await lauf({ design: 'neu', rolle: 'employee' }), maAlt = await lauf({ design: 'alt', rolle: 'employee' });
   assert.equal(maNeu.stand.karte, 0, 'c) keine Karte'); assert.equal(maNeu.stand.bedarfInDom, false, 'c) keine Insel');

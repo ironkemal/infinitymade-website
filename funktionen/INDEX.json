@@ -1,7 +1,7 @@
 {
- "erzeugt": "2026-11-17",
+ "erzeugt": "2026-11-18",
  "dateien": 581,
- "funktionen": 4729,
+ "funktionen": 4730,
  "module": [
   "abrechnung",
   "anamnese",
@@ -36025,6 +36025,7 @@
     "berechneSteuer",
     "bereinigeStorage",
     "berlin",
+    "berlinTag",
     "betroffene",
     "bewerteEmpfaengerWechsel",
     "bgEmpfaengerBlock",
@@ -41680,6 +41681,7 @@
    "calls": [],
    "calledBy": [
     "betroffene",
+    "loadPhysioRezKpis",
     "pruefeBehandlungsbeginn"
    ],
    "modules": [
@@ -65945,6 +65947,7 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
+    "berlinTag",
     "bizScope",
     "getOwnerId",
     "getSector",
@@ -65957,6 +65960,75 @@
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
+  },
+  {
+   "name": "berlinTag",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "dashboard.js",
+   "start": 1663,
+   "end": 1672,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "push"
+   ],
+   "calledBy": [
+    "betroffene",
+    "loadPhysioRezKpis",
+    "pruefeBehandlungsbeginn"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
   },
   {
    "name": "_doStripePortalRedirect",
@@ -87093,6 +87165,7 @@
     "installiereArztSperreBanner",
     "invalidate",
     "loadAerzte",
+    "loadAnfragen",
     "loadAusfallConfig",
     "loadDataSharing",
     "loadRechnungen",
@@ -92075,6 +92148,7 @@
    "calledBy": [
     "(datei) dashboard.js",
     "declineAnfrage",
+    "init",
     "initAnfragenPanel"
    ],
    "modules": [
@@ -145684,6 +145758,7 @@
    ],
    "calledBy": [
     "betroffene",
+    "loadPhysioRezKpis",
     "pruefeBehandlungsbeginn"
    ],
    "modules": [
@@ -154368,6 +154443,7 @@
     "montiereStartansicht",
     "redraw",
     "todoHtml",
+    "toggle",
     "z"
    ],
    "modules": [
@@ -155384,6 +155460,7 @@
     "montiereStartansicht",
     "redraw",
     "todoHtml",
+    "toggle",
     "z"
    ],
    "modules": [
@@ -223471,6 +223548,7 @@
     "montiereStartansicht",
     "redraw",
     "todoHtml",
+    "toggle",
     "z"
    ],
    "modules": [
@@ -224608,8 +224686,8 @@
    "lang": "js",
    "file": "module/startseite-ansicht.js",
    "start": 172,
-   "end": 269,
-   "lines": 98,
+   "end": 272,
+   "lines": 101,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -224648,6 +224726,7 @@
     "nichts",
     "ownerId",
     "redraw",
+    "resolve",
     "todoHtml",
     "toggle",
     "voKpiDa"
@@ -225050,9 +225129,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/startseite-ansicht.js",
-   "start": 238,
-   "end": 246,
-   "lines": 9,
+   "start": 239,
+   "end": 249,
+   "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -225065,9 +225144,11 @@
    "calls": [
     "geldLaden",
     "geldLeeren",
+    "inLeiste",
     "laden",
     "leeren",
-    "redraw"
+    "redraw",
+    "resolve"
    ],
    "calledBy": [
     "(datei) dashboard.js",
@@ -228756,8 +228837,8 @@
    "lang": "js",
    "file": "module/startseite-handlungsbedarf.js",
    "start": 70,
-   "end": 134,
-   "lines": 65,
+   "end": 139,
+   "lines": 70,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -228911,8 +228992,8 @@
    "lang": "js",
    "file": "module/startseite-handlungsbedarf.js",
    "start": 77,
-   "end": 125,
-   "lines": 49,
+   "end": 130,
+   "lines": 54,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -276312,6 +276393,7 @@
     "laufen",
     "loadNotizen",
     "montierePatientensuche",
+    "montiereStartansicht",
     "oeffneArztSchnellanlage",
     "oeffneBefreiungsFormular",
     "oeffneFolgetermin",
@@ -276333,6 +276415,7 @@
     "signaturePad",
     "starteDevServer",
     "statusSammeln",
+    "toggle",
     "upload",
     "waehleLeistung",
     "zeigeBestaetigungsDialog",
@@ -289979,6 +290062,15 @@
    "aynalar": []
   },
   {
+   "name": "berlinTag",
+   "orte": [
+    "api-backend/lib/sondertag-mitteilung.js:112",
+    "dashboard.js:1663",
+    "module/heilmittel-fristen.js:101"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "datumDE",
    "orte": [
     "api-backend/lib/rechnung-pdf.js:124",
@@ -290450,14 +290542,6 @@
    "orte": [
     "api-backend/lib/terminerinnerung.js:35",
     "module/startseite-ansicht.js:35"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "berlinTag",
-   "orte": [
-    "api-backend/lib/sondertag-mitteilung.js:112",
-    "module/heilmittel-fristen.js:101"
    ],
    "aynalar": []
   },
