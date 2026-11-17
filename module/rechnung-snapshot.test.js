@@ -143,8 +143,11 @@ test('praxisKopf (Server-Renderings): Praxis-E-Mail vor Ersatz, PLZ plz|zip, Hau
   assert.equal(server.praxisKopf(null).name, 'Praxis');
 });
 
-test('P2-1a: Hausnummer ohne Straße blockiert neuen Rechnungssnapshot', async () => {
-  let gelesen = false;
-  const result = await rechnungSnapshotsGeprueft({ from: () => { gelesen = true; throw new Error('vor DB prüfen'); } }, { profil: { ...PROFIL, street: '' } }, { bestaetige: async o => { assert.match(o.message, /Straße/); return true; } });
-  assert.equal(result, null); assert.equal(gelesen, false);
+test('P2-1a: fehlende Straße warnt, erhält aber Rechnungserstellung', async () => {
+  const supa = {from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:PATIENT})})})})};
+  for (const bestaetigung of [true,false]) {
+    let warnungen=0;
+    const result=await rechnungSnapshotsGeprueft(supa,{profil:{...PROFIL,street:''},patientId:'p1',invoiceType:'privat'},{bestaetige:async o=>{warnungen++;assert.match(o.message,/Straße/);return bestaetigung;}});
+    assert.ok(result?.empfaenger_snapshot);assert.equal(warnungen,1);
+  }
 });

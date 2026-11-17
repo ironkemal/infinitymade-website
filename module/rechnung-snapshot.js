@@ -55,8 +55,7 @@ async function snapshotsMitGrund(supabase, { profil, patientId, rezeptId, invoic
  */
 export async function rechnungSnapshotsGeprueft(supabase, q, { bestaetige } = {}) {
   if (!String(q.profil?.street || '').trim()) {
-    await bestaetige?.({ title: 'Praxisanschrift fehlt', message: 'Bitte Straße und Hausnummer unter Einstellungen ergänzen. Eine Hausnummer allein ist keine vollständige Praxisanschrift.', confirmText: 'Schließen', cancelText: 'Schließen', variant: 'warning' });
-    return null;
+    await bestaetige?.({ title: 'Praxisanschrift fehlt', message: 'Bitte Straße und Hausnummer unter Einstellungen ergänzen. Eine Hausnummer allein ist keine vollständige Praxisanschrift.', confirmText: 'Verstanden', cancelText: 'Schließen', variant: 'warning' });
   }
   const { snap, grund } = await snapshotsMitGrund(supabase, q);
   if (!grund) return snap;
