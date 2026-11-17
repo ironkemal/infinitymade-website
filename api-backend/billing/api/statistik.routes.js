@@ -6,6 +6,7 @@ import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { istZuzahlungBezahlt, saldoJeRezept } from '../zuzahlung/bezahlt.js';
 import { loadTherapeutenStatistik } from '../statistik/therapeuten.js';
+import { heilmittelSchluessel } from '../statistik/heilmittel-schluessel.js';
 
 const router = express.Router();
 /** @type {import('@supabase/supabase-js').SupabaseClient<any>} */
@@ -168,7 +169,7 @@ router.get('/statistik', async (/** @type {import('express').Request} */ req, /*
       //     der Auswertung, welches Feld die Heilmittel trägt.
       supabase
         .from('prescriptions')
-        .select('arzt_id, patient_id, patient_name, heilmittel, heilmittel_items, diagnosegruppe, ausstellungsdatum, therapie_bereich, aerzte:arzt_id(id, arzt_name, lanr, fachrichtung, telefon, email)')
+        .select('arzt_id, patient_id, patient_name, heilmittel, heilmittel_items, heilmittel_position, diagnosegruppe, ausstellungsdatum, therapie_bereich, aerzte:arzt_id(id, arzt_name, lanr, fachrichtung, telefon, email)')
         .eq('owner_id', tenantId)
         .not('arzt_id', 'is', null)
         .gte('ausstellungsdatum', cutoffDate),
@@ -369,12 +370,8 @@ router.get('/statistik', async (/** @type {import('express').Request} */ req, /*
 
     for (const rx of (aerztePrescriptionsResult?.error ? [] : (aerztePrescriptionsResult?.data || []))) {
       const istPodo = rx.therapie_bereich === 'podo';
-      // Podologie führt mehrere Heilmittel je Verordnung als JSON-Liste;
-      // Physio/Ergo/Logo ein einzelnes Textfeld.
-      const heilmittel = istPodo
-        ? (Array.isArray(rx.heilmittel_items) ? rx.heilmittel_items : [])
-            .map((/** @type {any} */ i) => i?.bezeichnung || i?.code).filter(Boolean)
-        : rx.heilmittel;
+      // Nach Positionsnummer gebündelt (Fund 8, QA 17.11.2026) — siehe heilmittel-schluessel.js.
+      const heilmittel = heilmittelSchluessel(rx);
       erfasseVerordnung({
         arzt:           rx.aerzte,
         arztId:         rx.arzt_id,

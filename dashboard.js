@@ -44,7 +44,7 @@ import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnun
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20261004m116';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261005g';
 import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261004m116';
-import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261117f2'; import { pruefePatientPflicht } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10';
+import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261117f2'; import { pruefePatientPflicht } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { fristenGruppieren, aktuelleAbwesenheiten, datumMitJahr, abwesenheitTyp } from './module/ueberblick-listen.js?v=20261117f8';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
 import { ladeStatusJePatient, oeffneStatusDialogFuer, verordnungStatusInfo } from './module/abrechnungsstatus.js?v=20261117f2';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261021c';
@@ -8852,7 +8852,7 @@ function renderSpecialDaysList() {
     const timeRange = d.start_time && d.end_time ? ` ${d.start_time.substring(0, 5)}–${d.end_time.substring(0, 5)}` : '';
     return `
     <div class="special-day-item">
-      <span class="sd-date">${d.date}</span>
+      <span class="sd-date">${datumDe(d.date)}</span>
       <span class="sd-badge ${d.type}">${d.type === 'closed' ? 'Geschlossen' : d.type === 'holiday' ? 'Feiertag' : 'Sondertermin'}${timeRange}</span>
       <span class="sd-note">${d.note || ''}</span>
       <button onclick="deleteSpecialDay('${d.id}')">×</button>
@@ -8980,7 +8980,7 @@ async function loadTeam() {
   // Primary: direct Supabase query (uses v20 tenant-scoped RLS).
   const { data: rows, error: tErr } = await supabase
     .from('profiles')
-    .select('id, email, business_name, role, booking_slug, avatar_url, anrede, owner_id')
+    .select('id, email, business_name, role, booking_slug, avatar_url, anrede, owner_id, owner_first_name, owner_last_name')
     .or(`id.eq.${ownerId},owner_id.eq.${ownerId}`).not('is_active', 'is', false)
     .order('role', { ascending: true })  // owner first, then employees
     .order('created_at', { ascending: true });
@@ -9050,7 +9050,7 @@ async function loadTeam() {
   const list = document.getElementById('employeeList');
   if (!list) return;
   list.innerHTML = data.map(m => {
-    const name = m.business_name || m.email?.split('@')[0] || '—';
+    const name = (m.role === 'owner' && [m.owner_first_name, m.owner_last_name].filter(Boolean).join(' ')) || m.business_name || m.email?.split('@')[0] || '—';   // Fund 8: Person, nicht Praxisname
     const initial = (name[0] || '?').toUpperCase();
     const avatar = m.avatar_url ? `<img src="${m.avatar_url}" alt="">` : initial;
     const bookingLink = buildBookingUrl(m);
@@ -17084,7 +17084,7 @@ async function loadUeberblickDeadlines(ownerId, todayStr) {
     return;
   }
 
-  el.innerHTML = alerts.map(a => `
+  el.innerHTML = fristenGruppieren(alerts).map(a => `
     <div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
       <span style="font-size:16px;">${a.type === 'danger' ? '🔴' : '🟡'}</span>
       <span style="font-size:13px;color:var(--text-main);">${a.text}</span>
@@ -17211,18 +17211,18 @@ async function loadUeberblickVacations(ownerId, todayStr) {
     }));
   }
 
-  if (!data || data.length === 0) {
+  data = aktuelleAbwesenheiten(data || [], todayStr); if (!data.length) {   // Fund 8: nur laufend/anstehend
     el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Keine aktuellen Abwesenheiten.</div>';
     return;
   }
 
   const typeEmoji = { urlaub: '🏖', krank: '🤒', frei: '📅', elternzeit: '👶' };
-  const fmt = d => d ? new Date(d).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit' }) : '—';
+  const fmt = datumMitJahr;   // Fund 8: mit Jahr
   el.innerHTML = data.map(v => {
     const empName = v.profiles?.business_name || v.profiles?.email?.split('@')[0] || '—';
     return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
       <span style="font-size:16px;">${typeEmoji[v.type] || '📅'}</span>
-      <span style="font-size:13px;color:var(--text-main);">${escapeHtml(empName)} — ${v.type} · ${fmt(v.start_date)} – ${fmt(v.end_date)}</span>
+      <span style="font-size:13px;color:var(--text-main);">${escapeHtml(empName)} — ${escapeHtml(abwesenheitTyp(v.type))} · ${fmt(v.start_date)} – ${fmt(v.end_date)}</span>
     </div>`;
   }).join('');
 }
