@@ -1,11 +1,12 @@
 /** V2.09b: Inhaber-Dokumentsuche (Verordnung/Rechnung) in der Kopfleiste, nur Neu-Design.
  *  Synthetische App ohne Login (redesign-harness), nur lesend. Hart: process.exitCode 1 bei Abweichung. Eine JSON-Zeile.
- *  Die gemeinsame Fixture erzeugt IDs mit 7-stelligem Kopf (keine UUID); die Suche verwirft solche Zeilen absichtlich.
- *  Diese Probe korrigiert das nur für sich (`fixtureAnpassen`), der Lauf ohne Korrektur prüft den Fehlerzustand. */
+ *  Seit V9.04 erzeugt die gemeinsame Fixture echte UUIDs. Für den Fehlerpfad bricht diese Probe sie gezielt
+ *  (`KAPUTT`: 7-stelliger Kopf); die Suche muss solche Zeilen verwerfen und „nicht geladen“ melden. */
 import assert from 'node:assert/strict';
 import { oeffneDashboard, starteBrowser, starteServer, ruhe } from '../redesign-harness.mjs';
 const server = await starteServer(); const browser = await starteBrowser();
-const UUIDS = t => t.replace('`${gruppe}000000-0000-4000-8000-', '`${gruppe}0000000-0000-4000-8000-');
+const UUIDS = undefined;
+const KAPUTT = t => { const neu = t.replace('`${gruppe}0000000-0000-4000-8000-', '`${gruppe}000000-0000-4000-8000-'); assert.notEqual(neu, t, 'Fixture-Anker uid fehlt'); return neu; };
 // Beträge der Fixture: 42 · 84 · 28,4 · 126 (in jeder Schreibweise), dazu €-Zeichen und deutsches Komma-Format.
 const BETRAG = /€|\d,\d{2}\b|\b28[.,]4\b|(?<![\d.-])(42|84|126)(?:[.,]0+)?(?![\d.-])/;
 const lies = page => page.evaluate(() => { const z = {}; for (const t of (window.__rsFixture?.reads || [])) z[t] = (z[t] || 0) + 1; return z; });
@@ -76,7 +77,7 @@ try {
   });
   assert.ok(handy.a && handy.a[0] >= handy.w[0] && handy.a[1] <= handy.w[1] && handy.a[2] >= 44, 'e) Suchbereich in der Zeile, ≥ 44 hoch'); assert.ok(handy.ueberlauf <= 0, 'e) kein Überlauf');
   // f) Fehlerpfade: Fixture ohne gültige UUIDs bzw. Szenario „fehler“ → Hinweis, kein Treffer aus altem Bestand
-  const kaputt = await lauf({ fixtureAnpassen: undefined }, async page => suchen(page, 'rechnung', 'RE'));
+  const kaputt = await lauf({ fixtureAnpassen: KAPUTT }, async page => suchen(page, 'rechnung', 'RE'));
   assert.match(kaputt.hinweis, /nicht geladen/, 'f) Fehlerhinweis'); assert.equal(kaputt.treffer.length, 0, 'f) keine Treffer bei Fehler');
   const fehl = await lauf({ szenario: 'fehler' }, async page => suchen(page, 'rechnung', 'RE'));
   assert.equal(fehl.treffer.length, 0, 'f) Szenario fehler: keine Treffer'); assert.match(fehl.hinweis, /nicht/, 'f) Szenario fehler: Hinweis');

@@ -11,12 +11,11 @@ process.env.REDESIGN_PORT ||= '18703';
 API_ANTWORTEN['/api/billing/positions/podologie'] = { positions: [{ hpnr: '78010', preis: 36.1, zuzahlung: 3.61 }] };
 API_ANTWORTEN['/api/billing/belegliste'] = { beleg_nr: 4711 };
 const server = await starteServer(); const browser = await starteBrowser();
-const VO = '5000000-0000-4000-8000-000000000002';   // uid('5', 2): Patient 2, 6 Einheiten, GKV
+const VO = '50000000-0000-4000-8000-000000000002';   // uid('5', 2): Patient 2, 6 Einheiten, GKV (V9.04: echte UUID)
 // Fixture-Anpassungen nur für diese Probe: laufende VO (abrechnung_status NULL), Arztangaben vollständig,
 // eine frühere Behandlung, Schreiben nur dort erlaubt, wo die Probe es ausdrücklich freigibt.
 const anpassen = (f) => {
   const ersetze = (alt, neu) => { assert.ok(f.includes(alt), `Fixture-Anker fehlt: ${alt.slice(0, 50)}`); f = f.replace(alt, neu); };
-  ersetze("abrechnung_status: status === 'abgeschlossen' ? 'bereit' : 'offen',", "abrechnung_status: status === 'abgeschlossen' ? 'bereit' : null,");
   ersetze("doctor_name: 'Dr. med. Erfunden',", "doctor_name: 'Dr. med. Erfunden', doctor_lanr: '999999900', unterschrift_vorhanden: true,");
   ersetze('leads, services, bookings, prescriptions, invoices, working_hours: workingHours,',
     "leads, services, bookings, prescriptions, invoices, working_hours: workingHours, podologie_behandlungen: [{ id: uid('9', 50), owner_id: OWNER, verordnung_id: uid('5', 2), lead_id: leads[1].id, behandlungsdatum: plusTage(-28), hpnr_codes: ['78010'], storniert_am: null, created_at: plusTage(-28) + 'T09:00:00Z' }],");

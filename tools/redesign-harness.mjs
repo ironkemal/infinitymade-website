@@ -35,12 +35,19 @@ const berlinTag = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Be
  */
 export const API_ANTWORTEN = {
   '/api/attendance/report': { records: [] },
+  // V9.04: Termin-Anfragen antworten leer statt gar nicht (vorher Konsolenfehler „Anfragen konnten nicht geladen werden“ in jedem Lauf).
+  '/api/booking-request/list': { requests: [] },
   // V6.B03 Abrechnungskarte (nur Inhaberin): erfundene Zahlen, Form wie billing/api/statistik.routes.js.
-  '/api/billing/statistik': {
+  // V9.04 (podoloji 16.11.): die leere Praxis bekommt Nullen, nicht die Zahlen der vollen.
+  '/api/billing/statistik': (o) => (o.szenario === 'leer' ? {
+    monatlich: [{ monat: '2026-10', umsatz: 0, bezahlt: 0, offen: 0 }],
+    offene_zuzahlungen: 0, offene_zuzahlungen_summe: 0, offen_gesamt_summe: 0, offen_ausserhalb_fenster: 0,
+    ausfallrechnungen: { offen: 0, offen_summe: 0, bezahlt: 0 }, mahnungen: { gesamt: 0, bezahlt: 0, offen: 0 },
+  } : {
     monatlich: [{ monat: '2026-10', umsatz: 1230, bezahlt: 316.5, offen: 60 }],
     offene_zuzahlungen: 4, offene_zuzahlungen_summe: 60, offen_gesamt_summe: 102, offen_ausserhalb_fenster: 0,
     ausfallrechnungen: { offen: 1, offen_summe: 42, bezahlt: 0 }, mahnungen: { gesamt: 2, bezahlt: 0, offen: 2 },
-  },
+  }),
 };
 
 /** Panels in der Reihenfolge von redesign/STATUS.md. */

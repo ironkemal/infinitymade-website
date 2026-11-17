@@ -26,7 +26,8 @@ const ROLLE = window.__rsRolle || 'owner';
 const OWNER = '10000000-0000-4000-8000-000000000001';
 const MITARB = '10000000-0000-4000-8000-000000000002';
 const BIZ = '10000000-0000-4000-8000-000000000003';
-const uid = (gruppe, n) => `${gruppe}000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
+// V9.04 (16.11.2026): echte UUID (8 Zeichen im ersten Block), sonst verwerfen strenge Lader (Handlungsbedarf, Dokumentsuche) jede Zeile.
+const uid = (gruppe, n) => `${gruppe}0000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 
 const log = window.__rsFixture = { reads: [], writes: [], rpc: [], storage: [], functions: [], unbekannt: [], tag: TAG };
 const clone = (v) => (v === undefined ? undefined : structuredClone(v));
@@ -74,7 +75,7 @@ const leads = PATIENTEN.map(([vn, nn, kk, geb], i) => ({
   name: `${vn} ${nn}`, title: `${vn} ${nn}`, phone: '+49 000 00000' + i, email: `patient${i + 1}@example.invalid`,
   geburtsdatum: geb, birth_date: geb, krankenkasse: kk, insurance_type: kk === 'privat' ? 'privat' : 'gkv',
   versichertennummer: 'X00000000' + i, krankenkasse_ik: '99999999' + i, kostentraeger_ik: '99999999' + i,
-  patientennummer: 'P-' + String(1001 + i), status: i % 3 ? 'aktiv' : 'neu', source: 'manuell', is_active: true,
+  patientennummer: 'P-' + String(1001 + i), status: i % 3 ? 'booked' : 'new', source: 'manuell', // V9.04: leads_status_check is_active: true,
   street: 'Musterweg ' + (i + 2), postal_code: '00000', city: 'Musterstadt', created_at: '2026-0' + (1 + (i % 8)) + '-10T09:00:00Z',
   notes: null, tags: [],
 }));
@@ -95,7 +96,8 @@ const TERMINE = [ // [patient, leistung, start, ende, status, mitarbeiter?]
   [6, 0, '15:00', '15:45', 'confirmed'], [7, 2, '11:00', '11:25', 'confirmed', MITARB], [1, 0, '13:30', '14:15', 'confirmed', MITARB],
 ];
 const bookingRow = ([p, s, von, bis, status, mitarb], i, tag = TAG) => ({
-  id: uid('4', i + 1 + (tag === TAG ? 0 : 100)), user_id: OWNER, owner_id: OWNER, business_id: null,
+  // V9.04: user_id = Behandlerin wie in der DB (no_overlapping_bookings gilt je user_id); vorher lagen Mitarbeiterinnen-Termine in der Inhaberspalte und überdeckten sich.
+  id: uid('4', i + 1 + (tag === TAG ? 0 : 100)), user_id: mitarb || OWNER, owner_id: OWNER, business_id: null,
   employee_id: mitarb || OWNER, staff_id: mitarb || OWNER, lead_id: leads[p].id, service_id: services[s].id,
   services: clone(services[s]), leads: clone(leads[p]), customer_name: leads[p].name, customer_phone: leads[p].phone,
   customer_email: leads[p].email, start_time: zeit(tag, von), end_time: zeit(tag, bis), status,
@@ -108,13 +110,15 @@ const bookings = [
   ...TERMINE.slice(2, 6).map((t, i) => bookingRow(t, i + 20, plusTage(-3))),
 ];
 
+// V9.04: Status/Abrechnungsstatus/Formfelder nur mit Werten, die db/SCHEMA.sql (prescriptions_*_check) zulässt.
 const VO = [ // [patient, gueltig_bis-Offset, einheiten gesamt, erledigt, status]
-  [0, -2, 6, 5, 'in_behandlung'], [1, 4, 6, 3, 'in_behandlung'], [2, 6, 3, 1, 'in_behandlung'],
-  [3, 21, 6, 0, 'confirmed'], [4, 40, 6, 6, 'abgeschlossen'], [6, 12, 4, 2, 'in_behandlung'],
+  [0, -2, 6, 5, 'in_therapy'], [1, 4, 6, 3, 'in_therapy'], [2, 6, 3, 1, 'in_therapy'],
+  [3, 21, 6, 0, 'confirmed'], [4, 40, 6, 6, 'completed'], [6, 12, 4, 2, 'in_therapy'],
 ];
 const prescriptions = VO.map(([p, off, ges, erl, status], i) => ({
   id: uid('5', i + 1), owner_id: OWNER, user_id: OWNER, patient_id: leads[p].id, lead_id: leads[p].id,
-  patient_name: leads[p].name, therapie_bereich: 'podo', status, abrechnung_status: status === 'abgeschlossen' ? 'bereit' : 'offen',
+  patient_name: leads[p].name, therapie_bereich: 'podo', status, abrechnung_status: status === 'completed' ? 'bereit' : null,
+  rezept_typ: 'standard', is_blanko: false, is_lhb_bvb: false,
   rezeptart: 'kassen', ausstellungsdatum: plusTage(off - 60), gueltig_bis: plusTage(off), behandlungsbeginn: plusTage(off - 55),
   heilmittel: 'Podologische Komplexbehandlung', heilmittel_position: '78010', heilmittel_items: [],
   anzahl_einheiten: ges, behandlungseinheiten: ges, einheiten_erledigt: erl, sessions_done: erl, frequenz: '1x alle 4 Wochen',
@@ -127,7 +131,9 @@ const prescriptions = VO.map(([p, off, ges, erl, status], i) => ({
 const invoices = [0, 1, 2, 3].map((i) => ({
   id: uid('6', i + 1), owner_id: OWNER, user_id: OWNER, lead_id: leads[i + 2].id, patient_name: leads[i + 2].name,
   invoice_number: 'RE-2026-' + String(101 + i), rechnungsnummer: 'RE-2026-' + String(101 + i),
-  total: [42, 84, 28.4, 126][i], amount: [42, 84, 28.4, 126][i], status: ['bezahlt', 'offen', 'offen', 'ueberfaellig'][i],
+  // V9.04: invoices_status_check (draft|sent|paid|cancelled) + payment_status; Beträge in total_patient/brutto_gesamt wie die App sie liest.
+  total: [42, 84, 28.4, 126][i], amount: [42, 84, 28.4, 126][i], total_patient: [42, 84, 28.4, 126][i], brutto_gesamt: [42, 84, 28.4, 126][i],
+  status: ['paid', 'sent', 'sent', 'sent'][i], payment_status: ['paid', 'pending', 'pending', 'pending'][i],
   invoice_date: plusTage(-10 * (i + 1)), due_date: plusTage(14 - 10 * (i + 1)), created_at: plusTage(-10 * (i + 1)) + 'T10:00:00Z',
 }));
 
@@ -202,8 +208,17 @@ class Abfrage {
   lt(k, v) { return this._f('lt', k, v); } lte(k, v) { return this._f('lte', k, v); }
   like(k, v) { return this._f('like', k, v); } ilike(k, v) { return this._f('ilike', k, v); }
   not(k, op, v) { return this._f(op, k, v, true); }
-  // or/filter/match/contains/textSearch: nicht ausgewertet, nachsichtig
-  or() { return this; } filter() { return this; } match() { return this; } contains() { return this; }
+  // V9.04: or() wertet die einfache Form „feld.op.wert,…“ aus (z. B. therapie_bereich.is.null,therapie_bereich.neq.podo);
+  // ohne das kamen Heilmittel- und Podologie-Liste beide ungefiltert und jede Verordnung stand doppelt. Klammern bleiben nachsichtig.
+  or(s) {
+    const teile = typeof s === 'string' && !/[()]/.test(s) ? s.split(',').map((t) => t.match(/^([\w.]+)\.(eq|neq|is|gt|gte|lt|lte|like|ilike)\.(.*)$/)) : null;
+    if (!teile || teile.some((m) => !m)) return this;
+    const wert = (v) => (v === 'null' ? null : v === 'true' ? true : v === 'false' ? false : v);
+    this.filter.push((r) => teile.some(([, k, op, v]) => (op === 'neq' ? wertAn(r, k) != null && String(wertAn(r, k)) !== v : vergleiche(r, k, op, op === 'is' ? wert(v) : v))));
+    return this;
+  }
+  // filter/match/contains/textSearch: nicht ausgewertet, nachsichtig
+  filter() { return this; } match() { return this; } contains() { return this; }
   containedBy() { return this; } overlaps() { return this; } textSearch() { return this; } abortSignal() { return this; }
   order(k, o = {}) { this.sort.push([k, o]); return this; }
   limit(n) { this.max = n; return this; } range(a, b) { this.ab = a; this.max = b - a + 1; return this; }
