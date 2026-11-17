@@ -50,7 +50,7 @@ import { ladeStatusJePatient, oeffneStatusDialogFuer, verordnungStatusInfo } fro
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261021c';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001e';
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261031b'; import { renderMitarbeiterAppSettings } from './module/mitarbeiter-app-einstellungen.js?v=20261022';
-import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261117r13';
+import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261117c1';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung } from './module/podologie-abrechnung.js?v=20261115v703'; import { renderZaaUploadResult, renderZaaFehlerTabelle, ladeZaaZeilen, verdrahteZaaBeheben } from './module/zaa-fehler.js?v=20261106'; import { verdrahtePhysioBefund } from './module/physio-befund.js?v=20261101b';
 import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261031b'; import { montiereVorgeschichte } from './module/podo-vorgeschichte-form.js?v=20261021y'; import { verdrahteDokumente } from './module/patient-dokumente.js?v=20261031b'; import { montiereAkteAktionen } from './module/akte-aktionen.js?v=20261114v702';

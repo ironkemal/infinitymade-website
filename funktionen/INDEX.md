@@ -37,7 +37,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `initAnfragenPanel()` — [dashboard.js:17853](dashboard.js#L17853-L17910) · 58 satır · profiles:update
 
 **Yol 9 — `wireAbrechnungSettings()`** · Ekran: _UI yolu çözülemedi_
-- `wireAbrechnungSettings()` — [module/abrechnung-einstellungen.js:271](module/abrechnung-einstellungen.js#L271-L428) · 158 satır · profiles:update
+- `wireAbrechnungSettings()` — [module/abrechnung-einstellungen.js:271](module/abrechnung-einstellungen.js#L271-L431) · 161 satır · profiles:update
 - `speichern()` — [module/fax-einstellungen.js:112](module/fax-einstellungen.js#L112-L134) · 23 satır · profiles:update
 - `verbindeMailSignaturen()` — [module/mail-signatur-anbindung.js:3](module/mail-signatur-anbindung.js#L3-L12) · 10 satır · profiles:update
 - `speichern()` — [module/praxis-rechtslinks-einstellungen.js:102](module/praxis-rechtslinks-einstellungen.js#L102-L125) · 24 satır · profiles:update

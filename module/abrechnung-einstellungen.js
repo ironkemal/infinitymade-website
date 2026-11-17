@@ -305,6 +305,9 @@ export function wireAbrechnungSettings(deps) {
         .from('terapeut_zertifikat')
         .upsert({ owner_id: ownerId, ik_nummer: ik }, { onConflict: 'owner_id' });
       if (zErr) console.warn('[ik/zertifikat-upsert]', zErr);
+      // Zertifikat trägt die IK jetzt auch: der Banner muss das wissen, sonst warnt er nach
+      // späterem Leeren der Profil-IK in derselben Sitzung fälschlich (Review 17.11.2026).
+      else if (banner) banner.dataset.zertifikatIk = ik;
     }
 
     deps.showToast(ik ? 'IK gespeichert ✓' : 'IK entfernt.');

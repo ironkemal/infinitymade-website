@@ -19,3 +19,14 @@ test('IK-Speichern in Rechnungsdaten aktualisiert Banner sofort', () => {
  const c={currentProfile:{},patch:{ik_number:'460000000'},Event:class {},document:{getElementById:()=>el,dispatchEvent(){}}};
  vm.runInNewContext(code,c);assert.equal(el.hidden,true);c.patch.ik_number=null;vm.runInNewContext(code,c);assert.equal(el.hidden,false);el.dataset.zertifikatIk="460000000";vm.runInNewContext(code,c);assert.equal(el.hidden,true);
 });
+
+test('IK-Speichern unter Abrechnung merkt sich die Zertifikat-IK für den Banner', async () => {
+  const quelle = readFileSync(new URL('./abrechnung-einstellungen.js', import.meta.url), 'utf8');
+  const start = quelle.indexOf("    const banner = document.getElementById('ik-missing-banner');");
+  const ende = quelle.indexOf("    deps.showToast(ik ? 'IK gespeichert ✓' : 'IK entfernt.');", start);
+  const el = { hidden: false, dataset: {} };
+  const deps = { supabase: { from: () => ({ upsert: async () => ({ error: null }) }) } };
+  await vm.runInNewContext(`(async () => {${quelle.slice(start, ende)}})()`, { ik: '460000000', ownerId: 'o', deps, document: { getElementById: () => el }, console });
+  assert.equal(el.dataset.zertifikatIk, '460000000');
+  assert.equal(el.hidden, true);
+});
