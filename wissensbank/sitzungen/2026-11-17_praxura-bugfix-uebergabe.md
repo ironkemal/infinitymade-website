@@ -60,3 +60,9 @@ Passwort ändern; Google-Kalender-OAuth; Kamera-Scan; GPS-Check-in. Nicht als er
 - Bestätigt: P1-1 (getOwnerId, 401-Pfade), P1-3 (Profil- ODER Zertifikat-IK), P1-6 (Owner-Grenze, Standort-UUID), P2-1a (nur Hinweis), P3-4 (kein „Verteiler" im Code).
 - Rest-Fehler behoben: `754b5455` — Banner kennt die beim Speichern unter Abrechnung ins Zertifikat geschriebene IK (`banner.dataset.zertifikatIk`).
 - Ungeprüft/offen: Live-Abnahme (nichts gepusht), Gerätetests (Passwort, Google-OAuth, Kamera, GPS), vier offene Entscheidungen.
+
+## /goal-Runde Claude (17.11.2026)
+
+- Neu behoben: `bd215485` (Leistungsart-Pflicht nach Verordnungswahl, Altbeleg-Zuzahlung korrigierbar), `9de47ba5` (Rezepttabelle Statusetikett), `a6be5ab9` (Schnellerfassung Geburtsdatum).
+- Geprüft: alle Gates, `npm run probe`, lokaler Lese-Rundgang 25 Bereiche ohne JS-Fehler/doppelte IDs/Schreibversuche.
+- Grenzen: Backend nur Unit-Tests; keine Live-Abnahme; Gerätetests und vier Entscheidungen offen.
