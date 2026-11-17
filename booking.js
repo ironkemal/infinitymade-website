@@ -1,7 +1,7 @@
 import { API_BASE, IST_KUTU } from './supabase-config.js';
 import { getPublicClient } from './module/public-supabase.js?v=20261009k15';
 import { ladeKennung } from './module/public-owner.js?v=20261102w7';
-import { praxisRechtstexteAnbringen, NICHT_EINGERICHTET } from './module/termin-rechtstexte.js?v=20261009k15c';
+import { praxisRechtstexteAnbringen, NICHT_EINGERICHTET } from './module/termin-rechtstexte.js?v=20261117f5';
 
 const supabase = await getPublicClient();
 const API = API_BASE; // O-01, 11.09.2026
@@ -28,6 +28,9 @@ function goStep(id) {
 
 function showError(msg) {
   document.getElementById('bizName').textContent = 'Fehler';
+  // Fund 5 (QA 17.11.2026): die Fehlerseite trug weiter die Überschrift „Person auswählen".
+  const titel = document.querySelector('#step-employees .step-title');
+  if (titel) titel.textContent = 'Seite nicht verfügbar';
   document.getElementById('empList').innerHTML = `<div style="color:#ef4444;font-size:14px;">${msg}</div>`;
 }
 
@@ -96,7 +99,7 @@ async function init() {
   }
 
   // K2b.15: Impressum/Datenschutz der Praxis; ohne Name + Anschrift keine Online-Buchung (legal-de 09.10.2026).
-  const recht = await praxisRechtstexteAnbringen({ sb: supabase, ownerId: state.ownerId, businessId: state.businessId, istKutu: IST_KUTU });
+  const recht = await praxisRechtstexteAnbringen({ sb: supabase, ownerId: state.ownerId, businessId: state.businessId, employeeId: state.employeeId, istKutu: IST_KUTU });
   if (!recht.vollstaendig) {
     const box = document.createElement('div');
     box.className = 'slots-empty';
@@ -391,12 +394,27 @@ document.getElementById('calPrevMonth').addEventListener('click', async () => {
   calMonth--;
   if (calMonth < 0) { calMonth = 11; calYear--; }
   await renderBookingCalendar(calYear, calMonth);
+  await ersterFreierTagImMonat();
 });
 document.getElementById('calNextMonth').addEventListener('click', async () => {
   calMonth++;
   if (calMonth > 11) { calMonth = 0; calYear++; }
   await renderBookingCalendar(calYear, calMonth);
+  await ersterFreierTagImMonat();
 });
+
+// Fund 5 (QA 17.11.2026): nach dem Monatswechsel stand rechts weiter „Heute, …" mit den Zeiten
+// von heute. Jetzt wird der erste buchbare Tag des angezeigten Monats gewählt; gibt es keinen,
+// sagt die rechte Spalte das für den Monat.
+async function ersterFreierTagImMonat() {
+  const grid = document.getElementById('bkCalGrid');
+  const erster = grid?.querySelector('.cal-cell.avail');
+  if (erster) { erster.click(); return; }
+  const monat = new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric' }).format(new Date(calYear, calMonth, 1));
+  document.getElementById('bkDateLabel').textContent = monat;
+  document.getElementById('bkSlotsList').innerHTML = '<div class="slots-empty">In diesem Monat sind keine Online-Termine frei.</div>';
+  state.selectedDate = null; state.selectedTime = null; updateSidebar();
+}
 
 async function mountBookingCalendar() {
   bkScheduleDate = new Date();

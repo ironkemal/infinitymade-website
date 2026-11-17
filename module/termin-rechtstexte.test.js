@@ -29,3 +29,19 @@ test('RPC: richtige Parameter, leere Antwort → null, Fehler wird geworfen', as
   await assert.rejects(ladePraxisAngaben(sb({ error: new Error('x') }), 'o1'));
   assert.equal(await ladePraxisAngaben(sb({}), null), null);
 });
+
+// QA TEST-Physio 17.11.2026, Fund 5: Inhaber ohne Straße, Standort mit Anschrift.
+test('Inhaber-/Mitarbeiterlink ohne Standort nutzt die Standortanschrift', async () => {
+  const { ladePraxisAngabenMitStandort } = await import('./termin-rechtstexte.js');
+  const ohneStrasse = { ...zeile, strasse: null, hausnummer: null };
+  const kette = (data) => { const k = { select: () => k, eq: () => k, not: () => k, order: async () => ({ data }), then: (r) => r({ data }) }; return k; };
+  const sb = {
+    rpc: async (_n, p) => ({ data: [p.p_business_id === 'b2' ? { ...zeile, strasse: 'Teststraße', hausnummer: '1' } : ohneStrasse] }),
+    from: (t) => kette(t === 'businesses' ? [{ id: 'b1' }, { id: 'b2' }] : [{ business_id: 'b2' }]),
+  };
+  const a = await ladePraxisAngabenMitStandort(sb, 'o1', null, null);
+  assert.equal(a.vollstaendig, true);
+  assert.equal(a.anschrift, 'Teststraße 1, 53721 Siegburg');
+  const mitStandortLink = await ladePraxisAngabenMitStandort(sb, 'o1', 'b1', null);
+  assert.equal(mitStandortLink.vollstaendig, false, 'Standortlink bleibt bei seinem Standort');
+});

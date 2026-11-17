@@ -56,6 +56,7 @@
       min-height: 100vh;
       min-height: 100dvh;
       display: flex;
+      flex-direction: column;   /* Fund 5: Fußzeile UNTER die Karte, nicht daneben */
       align-items: center;
       justify-content: center;
       padding: 24px;
@@ -388,13 +389,18 @@
       background: #000;
     }
 
+    /* Fund 5 (QA 17.11.2026): stand auf Weiß 18 % — Erbe des dunklen Themas, auf hellem Grund
+       unsichtbar. Lesbar, aber deutlich abgegraut; buchbare Tage tragen den Hintergrund (.avail). */
     .cal-cell.past {
-      color: rgba(255, 255, 255, 0.18);
+      color: var(--muted);
+      opacity: 0.4;
       pointer-events: none;
     }
 
     .cal-cell.unavailable {
-      color: rgba(255, 255, 255, 0.18);
+      color: var(--muted);
+      opacity: 0.55;
+      text-decoration: line-through;
       pointer-events: none;
     }
 
@@ -771,7 +777,7 @@
     </main>
   </div>
 
-  <script type="module" src="booking.js?v=20261110sondertag"></script>
+  <script type="module" src="booking.js?v=20261117f5"></script>
 <!-- K2b.15: Inhalt setzt module/termin-rechtstexte.js aus den Angaben der Praxis (Betreiberin). -->
 <footer class="praxis-rechtslinks" data-rechtslinks="praxis" style="text-align:center;padding:1.5rem 1rem;font-size:0.82rem;color:#999;border-top:1px solid #f0f0f0;margin-top:2rem;"></footer>
 <style>.praxis-rechtslinks a{color:#999;text-decoration:underline;margin:0 0.5rem;}</style>

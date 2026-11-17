@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-17",
  "dateien": 578,
- "funktionen": 4713,
+ "funktionen": 4715,
  "module": [
   "abrechnung",
   "anamnese",
@@ -36046,6 +36046,7 @@
     "ladeInBloecken",
     "ladeItsgTrustAnchors",
     "ladeLage",
+    "ladePraxisAngabenMitStandort",
     "ladeStatusJePatient",
     "ladeTabelle",
     "laden",
@@ -60021,8 +60022,8 @@
    "lang": "js",
    "file": "booking.js",
    "start": 29,
-   "end": 32,
-   "lines": 4,
+   "end": 35,
+   "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -60059,8 +60060,8 @@
    "kind": "function",
    "lang": "js",
    "file": "booking.js",
-   "start": 34,
-   "end": 62,
+   "start": 37,
+   "end": 65,
    "lines": 29,
    "spiegelHinweis": null,
    "tables": [],
@@ -60083,6 +60084,7 @@
     "add"
    ],
    "calledBy": [
+    "ersterFreierTagImMonat",
     "init",
     "loadBookingSlots",
     "loadServices"
@@ -60136,8 +60138,8 @@
    "kind": "function",
    "lang": "js",
    "file": "booking.js",
-   "start": 64,
-   "end": 174,
+   "start": 67,
+   "end": 177,
    "lines": 111,
    "spiegelHinweis": null,
    "tables": [
@@ -60192,8 +60194,8 @@
    "kind": "function",
    "lang": "js",
    "file": "booking.js",
-   "start": 176,
-   "end": 225,
+   "start": 179,
+   "end": 228,
    "lines": 50,
    "spiegelHinweis": null,
    "tables": [
@@ -60276,8 +60278,8 @@
    "kind": "function",
    "lang": "js",
    "file": "booking.js",
-   "start": 229,
-   "end": 300,
+   "start": 232,
+   "end": 303,
    "lines": 72,
    "spiegelHinweis": null,
    "tables": [],
@@ -60357,8 +60359,8 @@
    "kind": "function",
    "lang": "js",
    "file": "booking.js",
-   "start": 305,
-   "end": 388,
+   "start": 308,
+   "end": 391,
    "lines": 84,
    "spiegelHinweis": null,
    "tables": [
@@ -60437,12 +60439,45 @@
    ]
   },
   {
+   "name": "ersterFreierTagImMonat",
+   "kind": "function",
+   "lang": "js",
+   "file": "booking.js",
+   "start": 409,
+   "end": 417,
+   "lines": 9,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [
+    "bkCalGrid",
+    "bkDateLabel",
+    "bkSlotsList"
+   ],
+   "domRenderIds": [
+    "bkSlotsList"
+   ],
+   "domRender": true,
+   "calls": [
+    "updateSidebar"
+   ],
+   "calledBy": [
+    "(datei) booking.js"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "mountBookingCalendar",
    "kind": "function",
    "lang": "js",
    "file": "booking.js",
-   "start": 401,
-   "end": 407,
+   "start": 419,
+   "end": 425,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -61287,6 +61322,7 @@
     "erstelleApp",
     "init",
     "ladeHandlungsbedarfInput",
+    "ladePraxisAngabenMitStandort",
     "laden",
     "markiereNichtErschienen",
     "montiereStartansicht",
@@ -162448,6 +162484,7 @@
     "erstelleApp",
     "init",
     "ladeHandlungsbedarfInput",
+    "ladePraxisAngabenMitStandort",
     "laden",
     "markiereNichtErschienen",
     "montiereStartansicht",
@@ -195095,6 +195132,7 @@
     "erstelleApp",
     "init",
     "ladeHandlungsbedarfInput",
+    "ladePraxisAngabenMitStandort",
     "laden",
     "markiereNichtErschienen",
     "montiereStartansicht",
@@ -206453,6 +206491,7 @@
     "erstelleApp",
     "init",
     "ladeHandlungsbedarfInput",
+    "ladePraxisAngabenMitStandort",
     "laden",
     "markiereNichtErschienen",
     "montiereStartansicht",
@@ -226205,6 +226244,7 @@
     "erstelleApp",
     "init",
     "ladeHandlungsbedarfInput",
+    "ladePraxisAngabenMitStandort",
     "laden",
     "markiereNichtErschienen",
     "montiereStartansicht",
@@ -227351,6 +227391,7 @@
     "erstelleApp",
     "init",
     "ladeHandlungsbedarfInput",
+    "ladePraxisAngabenMitStandort",
     "laden",
     "markiereNichtErschienen",
     "montiereStartansicht",
@@ -236570,6 +236611,38 @@
     "rpc"
    ],
    "calledBy": [
+    "ladePraxisAngabenMitStandort"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "ladePraxisAngabenMitStandort",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/termin-rechtstexte.js",
+   "start": 53,
+   "end": 71,
+   "lines": 19,
+   "spiegelHinweis": null,
+   "tables": [
+    "employee_business_assignments",
+    "businesses"
+   ],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "ladePraxisAngaben",
+    "lesen",
+    "push"
+   ],
+   "calledBy": [
     "praxisRechtstexteAnbringen"
    ],
    "modules": [],
@@ -236581,8 +236654,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/termin-rechtstexte.js",
-   "start": 46,
-   "end": 80,
+   "start": 73,
+   "end": 107,
    "lines": 35,
    "spiegelHinweis": null,
    "tables": [],
@@ -236611,8 +236684,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/termin-rechtstexte.js",
-   "start": 87,
-   "end": 118,
+   "start": 114,
+   "end": 145,
    "lines": 32,
    "spiegelHinweis": null,
    "tables": [],
@@ -236626,7 +236699,7 @@
    "calls": [
     "dialogOeffnen",
     "error",
-    "ladePraxisAngaben",
+    "ladePraxisAngabenMitStandort",
     "rechtslinksFuerKutu"
    ],
    "calledBy": [
@@ -287853,6 +287926,32 @@
    ]
   },
   {
+   "id": "bkSlotsList",
+   "anzahl": 2,
+   "pfade": [
+    [
+     {
+      "name": "loadBookingSlots",
+      "file": "booking.js",
+      "start": 232,
+      "end": 303,
+      "uiPfad": [
+       "ortak yardımcı — 37 modülden çağrılıyor"
+      ]
+     }
+    ],
+    [
+     {
+      "name": "ersterFreierTagImMonat",
+      "file": "booking.js",
+      "start": 409,
+      "end": 417,
+      "uiPfad": []
+     }
+    ]
+   ]
+  },
+  {
    "id": "zaaResult",
    "anzahl": 2,
    "pfade": [
@@ -288249,7 +288348,7 @@
    "orte": [
     "attendance.js:299",
     "booking-request.js:1420",
-    "booking.js:64",
+    "booking.js:67",
     "cookie-consent.js:210",
     "dashboard.js:14137",
     "onboarding.js:77",
@@ -288888,7 +288987,7 @@
    "name": "loadServices",
    "orte": [
     "booking-request.js:529",
-    "booking.js:176",
+    "booking.js:179",
     "dashboard.js:7942"
    ],
    "aynalar": []

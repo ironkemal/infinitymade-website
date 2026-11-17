@@ -13,7 +13,7 @@
 import { API_BASE, IST_KUTU } from './supabase-config.js';
 import { getPublicClient } from './module/public-supabase.js?v=20261009k15';
 import { ladeKennung } from './module/public-owner.js?v=20261102w7';
-import { praxisRechtstexteAnbringen, NICHT_EINGERICHTET } from './module/termin-rechtstexte.js?v=20261009k15c';
+import { praxisRechtstexteAnbringen, NICHT_EINGERICHTET } from './module/termin-rechtstexte.js?v=20261117f5';
 import { anliegenFuerBereich, zahlungsartenFuer, hausbesuchFrageNoetig, anliegenNotiz, findAnliegen, WUNDE_HINWEIS, heilmittelFrage, behandlungsartFuer, patientenLeistungen } from './module/anfrage-anliegen.js?v=20261009k15c';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -1451,7 +1451,7 @@ async function init() {
       const { data: bereich } = await sb.rpc('public_praxis_sector', { p_owner_id: ownerId });
       state.bereich = bereich || null;
       // K2b.15: Impressum/Datenschutz der Praxis (legal-de 09.10.2026).
-      recht = await praxisRechtstexteAnbringen({ sb, ownerId, businessId: kn.businessId, istKutu: IST_KUTU });
+      recht = await praxisRechtstexteAnbringen({ sb, ownerId, businessId: kn.businessId, employeeId: kn.employeeId || null, istKutu: IST_KUTU });
     }
   } catch (e) {
     console.error('[booking-request] Praxis-Aufloesung:', e);

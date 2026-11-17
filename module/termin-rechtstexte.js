@@ -43,6 +43,33 @@ export async function ladePraxisAngaben(sb, ownerId, businessId = null) {
   return zeile ? praxisAngabenAus(zeile) : null;
 }
 
+/**
+ * Wie ladePraxisAngaben, aber ein Inhaber- oder Mitarbeiterlink ohne Standort fällt auf die
+ * Standortanschrift zurück, wenn im Inhaberprofil keine Straße steht (QA TEST-Physio 17.11.2026,
+ * Fund 5: ?u=<inhaber> und ?u=<mitarbeiter> waren „nicht eingerichtet", ?u=<standort> ging —
+ * die Anschrift stand nur am Standort). Gefragt wird dieselbe RPC mit der Standort-ID; sie gibt
+ * nur Standorte DIESES Inhabers mit booking_slug heraus. Mitarbeiter: zuerst seine Standorte.
+ */
+export async function ladePraxisAngabenMitStandort(sb, ownerId, businessId = null, employeeId = null) {
+  const angaben = await ladePraxisAngaben(sb, ownerId, businessId);
+  if (businessId || !ownerId || angaben?.vollstaendig) return angaben;
+  let ids = [];
+  if (employeeId) {
+    const { data } = await sb.from('employee_business_assignments').select('business_id').eq('employee_id', employeeId);
+    ids = (data || []).map(z => z.business_id).filter(Boolean);
+  }
+  // anon darf an `businesses` nur einzelne Spalten lesen (kein created_at) — Hauptstandort zuerst.
+  const { data: standorte } = await sb.from('businesses').select('id,is_default').eq('owner_id', ownerId)
+    .not('booking_slug', 'is', null).order('booking_slug', { ascending: true });
+  const sortiert = [...(standorte || [])].sort((a, b) => Number(!!b.is_default) - Number(!!a.is_default));
+  for (const s of sortiert) if (!ids.includes(s.id)) ids.push(s.id);
+  for (const id of ids) {
+    const kandidat = await ladePraxisAngaben(sb, ownerId, id);
+    if (kandidat?.vollstaendig) return kandidat;
+  }
+  return angaben;
+}
+
 function dialogOeffnen(doc, angaben, betrieb) {
   let dlg = doc.getElementById('datenschutzhinweise');
   if (!dlg) {
@@ -84,10 +111,10 @@ function dialogOeffnen(doc, angaben, betrieb) {
  * Hinweislinks ([data-datenschutz-link]) und Praxisnamen ([data-praxis-name]).
  * @returns {Promise<{vollstaendig:boolean, angaben:object|null, grund:'rpc'|'angaben'|null}>}
  */
-export async function praxisRechtstexteAnbringen({ sb, ownerId, businessId = null, istKutu = false, doc = globalThis.document }) {
+export async function praxisRechtstexteAnbringen({ sb, ownerId, businessId = null, employeeId = null, istKutu = false, doc = globalThis.document }) {
   let angaben = null;
   let grund = 'angaben';
-  try { angaben = await ladePraxisAngaben(sb, ownerId, businessId); } catch (e) {
+  try { angaben = await ladePraxisAngabenMitStandort(sb, ownerId, businessId, employeeId); } catch (e) {
     grund = 'rpc';   // fail-closed, aber unterscheidbar (onprem 09.10.): Box ohne 0073 / Netz
     console.error('[termin-rechtstexte] public_praxis_angaben fehlgeschlagen — Formular gesperrt:', e?.message || e);
   }
