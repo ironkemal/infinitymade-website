@@ -44,7 +44,7 @@ import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnun
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20261004m116';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261005g';
 import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261004m116';
-import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261117f2'; import { pruefePatientPflicht } from './module/patient-pflichtfelder.js?v=20261117f1';
+import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261117f2'; import { pruefePatientPflicht } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
 import { ladeStatusJePatient, oeffneStatusDialogFuer, verordnungStatusInfo } from './module/abrechnungsstatus.js?v=20261117f2';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261021c';
@@ -532,7 +532,7 @@ function getOwnerId() { return currentProfile.role === 'owner' ? currentSession.
 function getSector() {
   if (currentProfile.role === 'owner') return currentProfile.sector || 'default';
   const s = ownerProfile?.sector || currentProfile.sector || 'default';
-  console.log('[getSector]', s, { role: currentProfile.role, owner_id: currentProfile.owner_id, ownerProfile, currentProfileSector: currentProfile.sector });
+  dbg('[getSector]', s, { role: currentProfile.role, owner_id: currentProfile.owner_id, ownerProfile, currentProfileSector: currentProfile.sector });
   return s;
 }
 const PRAXIS_SECTORS = ['physiotherapy', 'logopaedie', 'ergotherapie', 'podologie', 'praxis'];
@@ -642,14 +642,14 @@ async function renderSidebar() {
       if (!currentProfile.sector || currentProfile.sector === 'default') {
         currentProfile.sector = owner.sector || 'default';
       }
-      console.log('[renderSidebar] fetched ownerProfile late', ownerProfile);
+      dbg('[renderSidebar] fetched ownerProfile late', ownerProfile);
     }
   }
 
   await loadModulePermissions();
   await loadVisibilityMatrix();
   const items = getSidebarItems();
-  console.log('[renderSidebar] items count=', items.length, items.map(i => i.id));
+  dbg('[renderSidebar] items count=', items.length, items.map(i => i.id));
 
   // Her modül için görünürlük kararı + sebep — hem filtre hem sağlık raporu bunu kullanır.
   // Öncelik: admin toggle (module_visibility) > registry roles default; plan ve RBAC ek VE-kapılarıdır.
@@ -2998,7 +2998,7 @@ async function handleSessionDrop(sessionId, timeStr, empId) {
 
 // Fahrtenbuch: bkActionModal'ı booking.hausbesuch + fahrt_status'a göre render eder
 async function renderBkActionFahrtState(booking, isOwn) {
-  console.log('[fahrtenbuch] renderBkActionFahrtState', { id: booking?.id, hausbesuch: booking?.hausbesuch, fahrt_status: booking?.fahrt_status, isOwn });
+  dbg('[fahrtenbuch] renderBkActionFahrtState', { id: booking?.id, hausbesuch: booking?.hausbesuch, fahrt_status: booking?.fahrt_status, isOwn });
   const hbInfo = document.getElementById('bkActionHbInfo');
   const fahrtStartGroup = document.getElementById('bkActionFahrtStartedGroup');
   const arrivedGroup = document.getElementById('bkActionArrivedGroup');
@@ -14136,7 +14136,7 @@ async function loadDataSharing() {
 
 async function init() {
   try {
-    console.log('[init] start');
+    dbg('[init] start');
     mountRechnungsansicht({ // vor renderSidebar() — sonst trifft ein früher Klick d===null
       supabase, apiBasis: API,
       token: async () => (await supabase.auth.getSession()).data.session?.access_token,
@@ -14149,15 +14149,15 @@ async function init() {
     });
     bindInvEvents();
     await ensureCompanyCode();
-    console.log('[init] companyCode ok');
+    dbg('[init] companyCode ok');
     await ensureBookingSlug();
-    console.log('[init] bookingSlug ok');
+    dbg('[init] bookingSlug ok');
     applyI18n();
-    console.log('[init] i18n ok');
+    dbg('[init] i18n ok');
     await loadDataSharing();
-    console.log('[init] dataSharing ok');
+    dbg('[init] dataSharing ok');
     await bootBusinessSwitcher();
-    console.log('[init] bizSwitcher ok');
+    dbg('[init] bizSwitcher ok');
     // Ausfallgebühr-Config (Owner-Level) laden + Einstellungsbereich rendern.
     // Unabhängig vom bizSwitcher, da Einzelpraxen keine businesses-Zeile haben.
     await loadAusfallConfig();
@@ -14173,7 +14173,7 @@ async function init() {
       (await import('./module/anamnese-abschnitte.js?v=20261114v402')).montiereAnamneseAbschnitte(ansichtKontext); try { (await import('./module/shell-ansicht.js?v=20261114v402')).montiereShellansicht({ ...ansichtKontext, name: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', suche: { ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, oeffnePatient: id => window.openPatientDetail?.(id), dokumente: { kontext: () => ({ supabase, rolle: currentProfile?.role, uid: currentSession?.user?.id, ownerId: getOwnerId(), businessId: currentBusiness?.id ?? null, patientsGemeinsam: dataSharing.patients === true, financeGemeinsam: dataSharing.finance === true }), ladeRechnungen: loadRechnungen, oeffneRechnung: id => { switchPanel('rechnungen'); return openInvView(id); }, oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); const ok = oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API }); if (!ok) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); return ok; } } } }); } catch (e) { console.error('[init] shell', e); }
     }
     await renderOverview();
-    try { await renderGapsForDate(scheduleDate); console.log('[init] gapsForDate ok'); } catch (e) { console.error('[init] renderGapsForDate error', e); }
+    try { await renderGapsForDate(scheduleDate); dbg('[init] gapsForDate ok'); } catch (e) { console.error('[init] renderGapsForDate error', e); }
     setupScheduleNav();
     await bootScheduleViewToggle();
 
@@ -14190,14 +14190,14 @@ async function init() {
         table: 'bookings',
         filter: `owner_id=eq.${ownerId}`
       }, (payload) => {
-        console.log('[realtime] booking change detected:', payload.eventType, payload.new?.id ?? payload.old?.id);
+        dbg('[realtime] booking change detected:', payload.eventType, payload.new?.id ?? payload.old?.id);
         emit('bookings:changed', { id: payload.new?.id ?? payload.old?.id, quelle: 'realtime' });
       })
       .subscribe()); if (!(() => { try { return sessionStorage.getItem('praxura.kiosk.aktiv') === '1'; } catch { return false; } })()) neuerBkKanal();   // Kiosk nach F5: Kanal erst beim Verlassen (kiosk.js)
 
     await handleGmailCallback();
-    console.log('[init] gmail ok');
-    console.log('[init] invoices ok');
+    dbg('[init] gmail ok');
+    dbg('[init] invoices ok');
     initAnamnese({
       supabase, getOwnerId, getUserId: () => currentSession?.user?.id || null, getSector, getProfile: () => currentProfile,
       showToast, displayNameWithBirth, loadAerzte, getAerzte: () => aerzteCache, wireArztFeld, isPraxisSector, printArea, closeModal, switchPanel, bizScope,
@@ -14205,7 +14205,7 @@ async function init() {
       nachSpeichern: () => { if (bkActionBookingCache?.hausbesuch && bkActionBookingCache?.fahrt_status === 'fahrt_return_pending') setTimeout(() => openBookingActionModal(bkActionBookingCache), 300); },
     });
     bindAnamneseEvents();
-    console.log('[init] anamnese ok');
+    dbg('[init] anamnese ok');
     document.getElementById('aeAddBtn')?.addEventListener('click', addAerzte);
     document.getElementById('rzSaveBtn')?.addEventListener('click', saveRezept);
     // Podologie-Feinschliff der Muster-13-Maske (greift nur bei Bereich "podo").
@@ -15003,7 +15003,7 @@ function fbActivateTab(tabName) {
 }
 
 // Fahrtenbuch version stamp + global namespace (cache problem teşhisi için)
-console.log('[fahrtenbuch] module loaded v=20260522f');
+dbg('[fahrtenbuch] module loaded v=20260522f');
 window.__fbVersion = '20260522f';
 // Module-level addEventListener'lara güvenmiyoruz çünkü DOM hazır olmadan koşulan
 // query'ler veya hot reload sırasında binding'ler kaçabilir.
@@ -16487,9 +16487,9 @@ function initDruckeinstellungen() {
           currentProfile.sector = owner.sector || 'default';
         }
       }
-      console.log('[boot] owner_id=', currentProfile.owner_id, 'ownerProfile=', ownerProfile, 'currentProfile.sector=', currentProfile.sector);
+      dbg('[boot] owner_id=', currentProfile.owner_id, 'ownerProfile=', ownerProfile, 'currentProfile.sector=', currentProfile.sector);
     } else {
-      console.log('[boot] skipping owner fetch. role=', currentProfile.role, 'owner_id=', currentProfile.owner_id);
+      dbg('[boot] skipping owner fetch. role=', currentProfile.role, 'owner_id=', currentProfile.owner_id);
     }
 
     // Plan enforcement — canceled/expired accounts see a reactivation wall
