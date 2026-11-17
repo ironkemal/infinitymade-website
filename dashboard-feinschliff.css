@@ -498,3 +498,7 @@ h1 em, h2 em, h3 em { font-style: normal; font-weight: inherit; color: var(--pri
   display: block; padding: 10px 14px; font-size: 13px; line-height: 1.45;
   color: var(--warning-text, #b54708); background: var(--bg-card-solid); border-bottom: 1px solid var(--border);
 }
+
+/* Patientendialog (QA 17.11.2026, Fund 9): `.form-group:last-child { margin-bottom: 0 }` nahm
+   einspaltigen Zeilen (Versicherungsart, Arzt, Hausbesuch) den Abstand — das Folgefeld klebte. */
+#leadModal .form-row > .form-group:last-child { margin-bottom: 16px; }

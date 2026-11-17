@@ -24,7 +24,7 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <link rel="stylesheet" href="dashboard.css?v=20261113r19" />
-  <link rel="stylesheet" href="dashboard-feinschliff.css?v=20261117f3" />
+  <link rel="stylesheet" href="dashboard-feinschliff.css?v=20261117f9" />
   <link rel="stylesheet" href="praxura-design.css?v=20261114v805" />
   <link rel="stylesheet" href="design/shell.css?v=20261114v209c">
   <link rel="stylesheet" href="design/kalender.css?v=20261110p01touch">
@@ -4521,11 +4521,7 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Geburtsdatum <span class="req">*</span></label>
-            <input class="form-input" id="lead-geburtsdatum" type="date" required />
-          </div>
-          <div class="form-group">
-            <label class="form-label" data-i18n="lead_city">Stadt</label>
-            <input class="form-input" id="lead-city" type="text" />
+            <input class="form-input" id="lead-geburtsdatum" type="date" required min="1900-01-01" />
           </div>
         </div>
         <!-- Der frühere CRM-Status (Neu/Kontaktiert/Termin/Gewonnen/Verloren) stand
@@ -4587,14 +4583,19 @@
               </select>
             </div>
           </div>
-          <div class="form-row" id="lead-physio-row2" style="display:none; grid-template-columns: 2fr 1fr;">
+          <!-- Fund 9 (QA 17.11.2026): „Ort" stand neben dem Geburtsdatum. Reihenfolge jetzt Straße · PLZ · Ort. -->
+          <div class="form-row" id="lead-physio-row2" style="display:none; grid-template-columns: 2fr 1fr 1.5fr;">
             <div class="form-group">
-              <label class="form-label">Strasse + Hausnummer <span class="req" id="lead-street-req" hidden>*</span></label>
+              <label class="form-label">Straße + Hausnummer <span class="req" id="lead-street-req" hidden>*</span></label>
               <input class="form-input" id="lead-street" type="text" placeholder="z.B. Hauptstraße 12" />
             </div>
             <div class="form-group">
               <label class="form-label">PLZ <span class="req" id="lead-plz-req" hidden>*</span></label>
               <input class="form-input" id="lead-plz" type="text" placeholder="53721" maxlength="5" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lead_city">Ort</label>
+              <input class="form-input" id="lead-city" type="text" />
             </div>
           </div>
           <div class="form-row" id="lead-hausbesuch-row" style="display:none;">
@@ -5885,7 +5886,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261117f7"></script>
+  <script type="module" src="dashboard.js?v=20261117f9"></script>
 </body>
 
 </html>

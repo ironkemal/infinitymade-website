@@ -4736,7 +4736,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   let notes = document.getElementById('bkNotes').value.trim();
 
   // Validation: Required fields
-  if (!empId) { terminFehler('Bitte einen Mitarbeiter auswählen.'); return; }
+  if (!(document.getElementById('bkIsGroup')?.checked) && !custId && !cust && !(document.getElementById('bkCustomerSearch')?.value || '').trim()) { terminFehler('Bitte einen Patienten aus der Liste auswählen.'); return; } if (!empId) { terminFehler('Bitte einen Mitarbeiter auswählen.'); return; }   // Fund 9: erst Patient, dann Leistung, dann Zeit
   if (!srvId) { terminFehler('Bitte eine Leistung auswählen.'); return; }
   if (!startV) { terminFehler('Bitte Datum und Uhrzeit auswählen.'); return; }
 
@@ -4782,7 +4782,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   }
   const isGroup = document.getElementById('bkIsGroup')?.checked || false;
   if (!isGroup) {
-    if (!cust || !custId) { terminFehler('Bitte einen Kunden aus der Liste auswählen.'); return; }
+    if (!cust || !custId) { terminFehler('Bitte einen Patienten aus der Liste auswählen.'); return; }
   }
 
   const startDate = new Date(startV);
