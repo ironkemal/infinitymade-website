@@ -3,7 +3,7 @@
 // Rezept-Fristen: eine Patientin mit fünf Verordnungen gleichen Datums stand fünfmal wortgleich
 // da („bis 01.12.2026"). Gleiche Meldungen werden jetzt zu einer Zeile mit Anzahl zusammengefasst.
 // Abwesenheiten: zeigte alles mit Ende ab heute — auch Juli im Folgejahr — und Datum ohne Jahr.
-// Jetzt nur laufende oder in den nächsten 30 Tagen beginnende, Datum TT.MM.JJJJ.
+// Jetzt nur laufende oder in den nächsten 14 Tagen beginnende, Datum TT.MM.JJJJ.
 import { datumDe } from './datum.js?v=20261001a';
 
 /**
@@ -35,7 +35,7 @@ export function abwesenheitTyp(typ) {
  * @param {number} [tageVoraus]
  * @returns {T[]}
  */
-export function aktuelleAbwesenheiten(zeilen, heute, tageVoraus = 30) {
+export function aktuelleAbwesenheiten(zeilen, heute, tageVoraus = 14) {
   const bis = new Date(`${heute}T12:00:00Z`);
   bis.setUTCDate(bis.getUTCDate() + tageVoraus);
   const grenze = bis.toISOString().slice(0, 10);
