@@ -276,6 +276,7 @@
     "importiere",
     "init",
     "initAnfragenPanel",
+    "initBeleglisteUI",
     "initBkGroupPatientAutocomplete",
     "initDruckeinstellungen",
     "initLeadSuche",
@@ -64067,6 +64068,7 @@
     "importiere",
     "init",
     "initAnfragenPanel",
+    "initBeleglisteUI",
     "initBkGroupPatientAutocomplete",
     "initDruckeinstellungen",
     "initLeadSuche",
@@ -89158,6 +89160,7 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
+    "showToast",
     "stand"
    ],
    "calledBy": [
@@ -123775,6 +123778,7 @@
    "calledBy": [
     "berlinHeute",
     "berlinTag",
+    "erstelleZahlungsjournalLader",
     "feiertageKnopf",
     "geplanteAlsBehandlungen",
     "heute",
@@ -151571,6 +151575,7 @@
     "importiere",
     "init",
     "initAnfragenPanel",
+    "initBeleglisteUI",
     "initBkGroupPatientAutocomplete",
     "initDruckeinstellungen",
     "initLeadSuche",
@@ -260910,9 +260915,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/zahlungsjournal-laden.js",
-   "start": 20,
-   "end": 103,
-   "lines": 84,
+   "start": 21,
+   "end": 112,
+   "lines": 92,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -260930,6 +260935,7 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
+    "alsBerlinDatum",
     "escapeHtml",
     "fmtEur",
     "json",

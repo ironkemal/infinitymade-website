@@ -63,3 +63,22 @@ test('Bereits stornierter Originalbeleg bekommt keinen Storno-Knopf', async () =
   assert.ok(f.rows[1].innerHTML.includes('bl-storno-btn'));
   assert.ok(!f.rows[2].innerHTML.includes('bl-storno-btn'));
 });
+
+test('P2-6: erstes Öffnen setzt laufenden Berlin-Monat; Nutzerfilter bleiben erhalten',async()=>{
+  const f=fixture(); const loading=f.load();await tick();
+  const heute=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin'}).format(new Date());
+  assert.equal(f.dom.blFilterFrom.value,heute.slice(0,7)+'-01');
+  assert.ok(f.dom.blFilterTo.value.startsWith(heute.slice(0,7)));
+  f.requests[0].resolve(response([]));await loading;
+  f.dom.blFilterFrom.value='2026-01-01';const next=f.load();await tick();
+  assert.equal(f.requests[1].url.searchParams.get('from'),'2026-01-01');f.requests[1].resolve(response([]));await next;
+});
+test('P2-6: CSV öffnet Export mit Zeitraum und sichtbarer Rückmeldung',async()=>{
+  const source=fs.readFileSync(new URL('../dashboard.js',import.meta.url),'utf8');
+  const fn=source.slice(source.indexOf('function initBeleglisteUI()'),source.indexOf('// Mahnwesen (Dunning) UI'));
+  let click,url;const toasts=[];
+  const dom={blExportCsvBtn:{addEventListener:(name,fn)=>{click=fn;}},blFilterFrom:{value:'2026-11-01',addEventListener(){}},blFilterTo:{value:'2026-11-30',addEventListener(){}}};
+  const c=vm.createContext({document:{getElementById:id=>dom[id]||null},loadBelegliste(){},supabase:{auth:{getSession:async()=>({data:{session:{access_token:'synthetic'}}})}},API:'/api',location:{origin:'https://qa.invalid'},URL,window:{open:u=>{url=u;return {}; }},showToast:(...a)=>toasts.push(a)});
+  vm.runInContext(fn+'\ninitBeleglisteUI()',c);await click();
+  assert.equal(new URL(url).searchParams.get('from'),'2026-11-01');assert.ok(toasts.some(t=>/CSV-Export/.test(t[0])));
+});

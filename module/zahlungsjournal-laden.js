@@ -1,3 +1,4 @@
+import { alsBerlinDatum } from './berlin-datum.js';
 /** Anzeige der Belegart (belegliste.type, CHECK in db/SCHEMA.sql) — vorher stand „zuzahlung" roh da (canli-test 20.10.2026). */
 /** @type {Record<string, string>} */
 const BELEGART = { zuzahlung: 'Zuzahlung', barverkauf: 'Barverkauf', storno: 'Storno', ausfall: 'Ausfallhonorar', rechnung: 'Rechnung' };
@@ -20,6 +21,7 @@ const BELEGART = { zuzahlung: 'Zuzahlung', barverkauf: 'Barverkauf', storno: 'St
 export function erstelleZahlungsjournalLader({ document, supabase, API, location, fetch,
   escapeHtml, zahlartLabel, fmtEur, getUserId, showToast, triggerStorno }) {
   let generation = 0;
+  let zeitraumInitialisiert = false;
 return async function loadBelegliste() {
   const request = ++generation;
   const tbody = document.getElementById('beleglisteBody');
@@ -27,6 +29,13 @@ return async function loadBelegliste() {
   if (!tbody) return;
   tbody.innerHTML = '';
 
+  if (!zeitraumInitialisiert) {
+    const heute = alsBerlinDatum(new Date());
+    const von = document.getElementById('blFilterFrom'), bis = document.getElementById('blFilterTo');
+    if (von && !von.value) von.value = heute.slice(0, 7) + '-01';
+    if (bis && !bis.value) bis.value = new Date(Date.UTC(Number(heute.slice(0, 4)), Number(heute.slice(5, 7)), 0)).toISOString().slice(0, 10);
+    zeitraumInitialisiert = true;
+  }
   const from = document.getElementById('blFilterFrom')?.value || '';
   const to = document.getElementById('blFilterTo')?.value || '';
   const type = document.getElementById('blFilterType')?.value || 'all';

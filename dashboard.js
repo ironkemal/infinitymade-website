@@ -131,7 +131,7 @@ import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWarte
 import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20261105sperre';
 import { offerAusfallrechnung as offerAusfallrechnungModal } from './module/ausfallrechnung.js?v=20260904';
 import { erstelleNotizenController } from './module/patient-notizen.js?v=20261014a';
-import { erstelleZahlungsjournalLader } from './module/zahlungsjournal-laden.js?v=20261021g';
+import { erstelleZahlungsjournalLader } from './module/zahlungsjournal-laden.js?v=20261117p26';
 import { wartelisteZeitfensterGueltig } from './module/warteliste-zeitfenster.js?v=20261014a';
 import { rendereWarteliste, wartelisteStatus, setzeWartelisteStatus } from './module/warteliste-ansicht.js?v=20260926';
 import {
@@ -15574,7 +15574,7 @@ function initBeleglisteUI() {
     if (from) url.searchParams.append('from', from);
     if (to) url.searchParams.append('to', to);
 
-    window.open(url.toString(), '_blank');
+    const fenster = window.open(url.toString(), '_blank'); showToast(fenster ? 'CSV-Export geöffnet. Bitte Download prüfen.' : 'CSV-Export blockiert. Bitte Pop-ups für diese Seite zulassen.', fenster ? 'success' : 'error');
   });
 }
 
