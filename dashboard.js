@@ -16001,7 +16001,7 @@ async function loadStatistik() {
       }
 
       const lbl = document.createElement('div');
-      lbl.style.cssText = 'font-size:9px;color:var(--text-muted);text-align:center;margin-top:4px;';
+      lbl.style.cssText = 'font-size:12px;color:var(--text-muted);text-align:center;margin-top:4px;';
       lbl.textContent = label;
 
       col.appendChild(stack);
@@ -16009,14 +16009,14 @@ async function loadStatistik() {
       chartEl.appendChild(col);
 
       const leg = document.createElement('span');
-      leg.style.cssText = 'font-size:11px;color:var(--text-muted);';
+      leg.style.cssText = 'font-size:12px;color:var(--text-muted);';
       leg.textContent = `${label}: ${fmtEur(bezahlt)}${offen > 0 ? ` (+ ${fmtEur(offen)} offen)` : ''}`;
       legendEl.appendChild(leg);
     });
 
     // Farblegende, damit Grün und Gelb erklärt sind
     const legHead = document.createElement('span');
-    legHead.style.cssText = 'font-size:11px;color:var(--text-muted);display:inline-flex;align-items:center;gap:10px;width:100%;margin-bottom:2px;';
+    legHead.style.cssText = 'font-size:12px;color:var(--text-muted);display:inline-flex;align-items:center;gap:10px;width:100%;margin-bottom:2px;';
     legHead.innerHTML =
       `<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--success);display:inline-block;"></span>${escapeHtml(t('stat_bezahlt'))}</span>`
       + `<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--warning);display:inline-block;"></span>${escapeHtml(t('stat_offen'))}</span>`;
