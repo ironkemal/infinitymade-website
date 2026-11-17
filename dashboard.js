@@ -783,7 +783,7 @@ async function switchPanel(id) {
   if (id !== 'calendar' && moveBooking) cancelMoveBooking();
   if (activePanel === 'calendar' && id !== 'calendar') closeBkActionPanel();
   if (id !== 'notizen') notizenController.invalidate();
-  activePanel = id;
+  if (id === 'b2b' || id === 'b2c') document.querySelectorAll((id === 'b2c' ? '#b2cAiMessages' : '#aiMessages') + ' [data-mail-feedback]').forEach(el => el.remove()); activePanel = id;
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   const target = document.getElementById('panel-' + id);
   if (target) target.classList.add('active');
@@ -10369,7 +10369,7 @@ document.getElementById('b2bConfigSaveBtn').addEventListener('click', async () =
 });
 
 function openComposeModal(draft) {
-  currentDraftContactId = draft.contact_id || null;
+  currentDraftContactId = draft.contact_id || null; document.getElementById('composeSendBtn').dataset.feedbackContainer = activePanel === 'b2c' ? 'b2cAiMessages' : activePanel === 'b2b' ? 'aiMessages' : '';
   document.getElementById('composeToName').value = draft.to_name || '';
   document.getElementById('composeToEmail').value = draft.to_email || '';
   document.getElementById('composeSubject').value = draft.subject || '';
@@ -10380,7 +10380,7 @@ function openComposeModal(draft) {
 
 document.getElementById('composeDiscardBtn').addEventListener('click', () => {
   closeModal('emailComposeModal');
-  aiAddMsg('Entwurf verworfen.', 'ai');
+  const ziel = document.getElementById('composeSendBtn').dataset.feedbackContainer; if (ziel) aiAddMsg('Entwurf verworfen.', 'ai', ziel, true);
   if (typeof window._composePostFlow === 'function') {
     const fn = window._composePostFlow; window._composePostFlow = null; fn();
   }
@@ -10414,7 +10414,7 @@ document.getElementById('composeSendBtn').addEventListener('click', async () => 
 
   const signatur = getMailSignaturen().auswahl();
 
-  const btn = document.getElementById('composeSendBtn');
+  const btn = document.getElementById('composeSendBtn'), feedbackContainer = btn.dataset.feedbackContainer;
   btn.disabled = true; btn.textContent = '⏳';
   const gmailToken = (await supabase.auth.getSession()).data.session?.access_token;
   try {
@@ -10456,7 +10456,7 @@ document.getElementById('composeSendBtn').addEventListener('click', async () => 
       subject, body, status: 'sent'
     });
     closeModal('emailComposeModal');
-    aiAddMsg('E-Mail gesendet an ' + toEmail + ' ✓', 'ai');
+    if (feedbackContainer) aiAddMsg('E-Mail gesendet an ' + toEmail + ' ✓', 'ai', feedbackContainer, true);
     showToast('E-Mail gesendet ✓');
     if (typeof window._composePostFlow === 'function') {
       const fn = window._composePostFlow; window._composePostFlow = null; fn();
@@ -10467,11 +10467,11 @@ document.getElementById('composeSendBtn').addEventListener('click', async () => 
   btn.disabled = false; btn.textContent = '✉ Senden';
 });
 
-function aiAddMsg(text, role, containerId = 'aiMessages') {
+function aiAddMsg(text, role, containerId = 'aiMessages', feedback = false) {
   const container = document.getElementById(containerId);
   if (!container) return;
   const div = document.createElement('div');
-  div.className = 'msg-bubble ' + role;
+  div.className = 'msg-bubble ' + role; if (feedback) div.dataset.mailFeedback = '1';
   div.textContent = text;
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;

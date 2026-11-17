@@ -79308,6 +79308,7 @@
    "domIds": [
     "composeBody",
     "composeFromDisplay",
+    "composeSendBtn",
     "composeSubject",
     "composeToEmail",
     "composeToName"
