@@ -347,7 +347,7 @@
           <div class="panel-header">
             <div>
               <h2 data-i18n="nav_kunden">Kunden Info</h2>
-              <p class="panel-sub" data-i18n="kunden_sub">Leads & Kundeninformationen</p>
+              <p class="panel-sub" data-i18n="kunden_sub">Patienten & Stammdaten</p>
             </div>
             <div class="panel-actions">
               <button class="btn-ghost" id="patTableViewToggle" title="Tabellenansicht umschalten" style="padding:7px 10px;">
@@ -1054,8 +1054,8 @@
                   <span class="ai-from-badge" id="aiFromBadge"></span>
                 </div>
                 <div class="ai-messages" id="aiMessages">
-                  <div class="msg-bubble ai">Hallo! Beschreiben Sie was Sie tun möchten, z.B.: "Bestelle 50 Stück
-                    Produkt X bei Firma Muster GmbH und frage nach der Lieferzeit."</div>
+                  <div class="msg-bubble ai">Hallo! Beschreiben Sie, was Sie tun möchten, z. B.: „Bitte Dr. Muster um
+                    eine Folgeverordnung KG für unsere gemeinsame Patientin und frage nach dem Befundbericht."</div>
                 </div>
                 <div class="ai-input-row">
                   <button class="btn-icon" id="aiVoiceBtn" disabled title="Spracheingabe"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
@@ -2408,7 +2408,7 @@
             </div>
           </div>
           <div class="body-map-wrap" id="zygoteWrap"></div>
-          <div class="body-info-card" id="bodyInfoCard">
+          <div class="body-info-card" id="bodyInfoCard" hidden><!-- Fund 7 (QA 17.11.2026): doppelt zu loadBeispielmodus(), dort steht derselbe Text -->
             <div class="body-info-title" id="bodyInfoTitle">3D-Anatomie — Zygote Body</div>
             <div class="body-info-text" id="bodyInfoText">Externe Anatomie-Anwendung. Zygote Body wird in einem neuen Tab geöffnet. Für die Nutzung gelten die Bedingungen des Anbieters.</div>
           </div>
@@ -5885,7 +5885,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261117f3"></script>
+  <script type="module" src="dashboard.js?v=20261117f7"></script>
 </body>
 
 </html>

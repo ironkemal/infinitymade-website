@@ -182,15 +182,15 @@ const T = {
     today_bookings: 'Heutige Termine', upcoming_empty: 'Heute keine Termine.', features_title: 'Paketinhalt',
     calendar_sub: 'Termine verwalten & buchen',
     btn_add_leave: 'Abwesenheit eintragen', btn_add_booking: '+ Termin', btn_copy_booking_link: 'Buchungslink', btn_cal_today: 'Heute',
-    kunden_sub: 'Leads & Kundeninformationen', leads_import: 'CSV importieren', leads_add: '+ Neuer Patient',
+    kunden_sub: 'Patienten & Stammdaten', leads_import: 'CSV importieren', leads_add: '+ Neuer Patient',
     apify_label: 'Google Maps Scraper:', apify_run: 'Suchen',
     lf_all: 'Alle', lf_abrechenbar: 'Bereit zur Abrechnung', lf_abgerechnet: 'Abgerechnet', lf_teilabsetzung: 'Teilabsetzung', lf_abgesetzt: 'Absetzung', lf_storniert: 'Storniert',
     lead_title: 'Name', lead_city: 'Ort', lead_phone: 'Telefon', lead_rating: 'Bewertung', lead_standort: 'Standort',
     lead_festnetz: 'Festnetz', lead_handy: 'Handy', lead_geschlecht: 'Geschlecht', lead_geburtsdatum: 'Geburtsdatum', lead_patientennr: 'Nr.',
     lead_status: 'Status', lead_notes: 'Notizen', lead_email: 'E-Mail', lead_website: 'Website',
     lead_country_code: 'Land', lead_google_url: 'Google Maps URL', lead_category_name: 'Kategorie',
-    leads_empty: 'Noch keine Leads.', lead_modal_new: 'Neuer Patient', lead_modal_edit: 'Lead bearbeiten',
-    lead_save: 'Speichern', lead_cancel: 'Abbrechen', lead_delete: 'Löschen', lead_confirm_delete: 'Lead wirklich löschen?',
+    leads_empty: 'Noch keine Patienten.', lead_modal_new: 'Neuer Patient', lead_modal_edit: 'Patient bearbeiten',
+    lead_save: 'Speichern', lead_cancel: 'Abbrechen', lead_delete: 'Löschen', lead_confirm_delete: 'Patient wirklich löschen?',
     services_sub: 'Angebotene Leistungen verwalten',
     lbl_add_service: 'Neue Leistung', lbl_srv_title: 'Name', lbl_srv_dur: 'Dauer (Min)',
     lbl_srv_price: 'Preis (€)', lbl_srv_emps: 'Mitarbeiter', btn_srv_save: 'Speichern',
@@ -15926,7 +15926,7 @@ async function loadStatistik() {
       if (aeSum) {
         const patGesamt = liste.reduce((s, a) => s + (a.patienten || 0), 0);
         aeSum.textContent = liste.length
-          ? `${liste.length} Ärzte · ${patGesamt} Patienten im Zeitraum`
+          ? `${liste.length} ${liste.length === 1 ? 'Arzt' : 'Ärzte'} · ${patGesamt} ${patGesamt === 1 ? 'Patient' : 'Patienten'} im Zeitraum`
           : '';
       }
       if (!liste.length) {
