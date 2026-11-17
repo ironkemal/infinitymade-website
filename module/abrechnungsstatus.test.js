@@ -42,3 +42,27 @@ test('Dialog: ab 1 Behandlung oder unbekannt → Verhalten wie bisher (kein Plat
     assert.match(overlay.html, /<option value="abrechenbar">/);
   }
 });
+
+// QA TEST-Physio 17.11.2026, Fund 2: Physio-Verordnungen fehlten in der Patientenliste.
+test('ladeStatusJePatient: zählt alle Fachbereiche, Statuswechsel-Ziel nur podologisch', async () => {
+  const { ladeStatusJePatient } = await import('./abrechnungsstatus.js');
+  const aufrufe = [];
+  const zeilen = [
+    { id: 'p1', patient_id: 'anna', abrechnung_status: null, therapie_bereich: 'physio', status: 'in_therapy' },
+    { id: 'p2', patient_id: 'anna', abrechnung_status: 'bereit', therapie_bereich: 'physio', status: 'completed' },
+    { id: 'p3', patient_id: 'bernd', abrechnung_status: null, therapie_bereich: 'physio', status: 'cancelled' },
+    { id: 'd1', patient_id: 'clara', abrechnung_status: 'bereit', therapie_bereich: 'podo', status: 'confirmed' },
+  ];
+  const kette = {
+    select() { return kette; },
+    eq(spalte, wert) { aufrufe.push(['eq', spalte, wert]); return kette; },
+    not() { return Promise.resolve({ data: zeilen, error: null }); },
+  };
+  const karte = await ladeStatusJePatient({ from: () => kette }, 'owner-1');
+  assert.ok(!aufrufe.some(([, spalte]) => spalte === 'therapie_bereich'), 'kein Fachbereichsfilter');
+  assert.equal(karte.get('anna').status, 'abrechenbar');
+  assert.equal(karte.get('anna').verordnungId, null, 'Physio: kein Statuswechsel aus der Liste');
+  assert.equal(karte.get('anna').anzahl, 2);
+  assert.equal(karte.get('bernd').status, 'storniert');
+  assert.equal(karte.get('clara').verordnungId, 'd1');
+});

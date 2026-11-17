@@ -404,11 +404,14 @@ export async function ladeStatusJePatient(supabase, ownerId) {
   const karte = new Map();
   if (!ownerId) return karte;
 
+  // Alle Fachbereiche: bis 17.11.2026 stand hier `.eq('therapie_bereich', 'podo')`,
+  // dadurch zeigte die Physio-Patientenliste bei JEDEM Patienten „keine Verordnung"
+  // (QA TEST-Physio, Fund 2). Die Abrechnungsachse `abrechnung_status` ist in beiden
+  // Bereichen dieselbe; nur der Statuswechsel aus der Liste ist serverseitig podologisch.
   const { data, error } = await supabase
     .from(TOPF)
-    .select('id, patient_id, abrechnung_status')
+    .select('id, patient_id, abrechnung_status, therapie_bereich, status')
     .eq('owner_id', ownerId)
-    .eq('therapie_bereich', 'podo')
     .not('patient_id', 'is', null);
 
   if (error) {
@@ -419,6 +422,8 @@ export async function ladeStatusJePatient(supabase, ownerId) {
   const gruppen = new Map();
   for (const roh of (data || [])) {
     const row = ausTopf(roh);
+    // Physio: eine stornierte Verordnung steht in `status`, nicht in `abrechnung_status`.
+    if (roh.status === 'cancelled' && roh.abrechnung_status == null) row.status = 'storniert';
     if (!gruppen.has(row.lead_id)) gruppen.set(row.lead_id, []);
     gruppen.get(row.lead_id).push(row);
   }
@@ -427,7 +432,9 @@ export async function ladeStatusJePatient(supabase, ownerId) {
     karte.set(leadId, {
       status: massgebend?.status ?? null,
       // Für die Änderung aus der Liste heraus: DIESE Verordnung ist gemeint.
-      verordnungId: massgebend?.id ?? null,
+      // Nur podologisch — PATCH /billing/verordnung/:id/abrechnungsstatus weist
+      // andere Bereiche mit 400 ab, dort bleibt das Etikett reine Anzeige.
+      verordnungId: massgebend?.therapie_bereich === 'podo' ? (massgebend?.id ?? null) : null,
       anzahl: rows.length,
       // „offen" = macht noch Arbeit. Archiviert und storniert zählen nicht mit.
       offen:  rows.filter(r => !['archiviert', 'storniert'].includes(r.status)).length,

@@ -30,7 +30,7 @@
 
 'use strict';
 
-import { statusBadge } from './abrechnungsstatus.js?v=20261003c';
+import { statusBadge } from './abrechnungsstatus.js?v=20261117f2';
 import { datumDe } from './datum.js?v=20261001a';
 
 /**
@@ -102,9 +102,11 @@ export function renderPatientenliste(ctx) {
     // Ein blosser Strich sah aber aus, als wäre die Schaltfläche kaputt. Also
     // sagt die Zelle, woran es liegt.
     const st = statusJePatient.get(r.id);
+    // Physio/Ergo/Logo: Status sichtbar, aber ohne Knopf (Wechsel läuft dort über die Abrechnung).
     const statusZelle = st?.verordnungId
       ? `<button class="lead-status-btn" data-vord-id="${st.verordnungId}" title="Abrechnungsstatus ändern"
            style="background:none;border:0;padding:0;cursor:pointer;">${statusBadge(st.status, { kurz: true })}</button>`
+      : st?.status ? statusBadge(st.status, { kurz: true })
       : `<span title="Der Status gehört zur Verordnung. Sobald dieser Patient eine Verordnung hat, steht er hier."
            style="color:var(--text-muted);font-size:11px;">keine Verordnung</span>`;
 

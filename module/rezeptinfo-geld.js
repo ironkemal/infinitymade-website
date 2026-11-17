@@ -63,7 +63,7 @@
  */
 
 import { berechneZuzahlung, wirksameEinheiten, zuzahlungFuerPodoVerordnung, zuzahlungFuerRezept } from './zuzahlung-rechnen.js?v=20260920s';
-import { verordnungStatusInfo } from './abrechnungsstatus.js?v=20261003c';
+import { verordnungStatusInfo } from './abrechnungsstatus.js?v=20261117f2';
 import { statusAusTopf } from './verordnung-topf.js?v=20260930c';
 import { preisAusService, offeneBehandlungen, zeilenAusBehandlungen } from './rechnung-bruecke.js?v=20261010zc';
 import { ladeRechnungZurVerordnung } from './rechnung-zur-verordnung.js?v=20261010zc';
