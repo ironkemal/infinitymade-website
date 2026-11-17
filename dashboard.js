@@ -50,7 +50,7 @@ import { ladeStatusJePatient, oeffneStatusDialogFuer, verordnungStatusInfo } fro
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261021c';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001e';
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261031b'; import { renderMitarbeiterAppSettings } from './module/mitarbeiter-app-einstellungen.js?v=20261022';
-import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
+import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261117p13';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung } from './module/podologie-abrechnung.js?v=20261115v703'; import { renderZaaUploadResult, renderZaaFehlerTabelle, ladeZaaZeilen, verdrahteZaaBeheben } from './module/zaa-fehler.js?v=20261106'; import { verdrahtePhysioBefund } from './module/physio-befund.js?v=20261101b';
 import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261031b'; import { montiereVorgeschichte } from './module/podo-vorgeschichte-form.js?v=20261021y'; import { verdrahteDokumente } from './module/patient-dokumente.js?v=20261031b'; import { montiereAkteAktionen } from './module/akte-aktionen.js?v=20261114v702';
@@ -1074,15 +1074,10 @@ async function renderOverview() {
   // C: §302 profile completeness warning
   (async function renderIkMissingBanner() {
     if (currentProfile.role !== 'owner') return;
-    const ownerId = currentProfile.id;
-    const { data: cert } = await supabase
-      .from('terapeut_zertifikat')
-      .select('ik_nummer')
-      .eq('owner_id', ownerId)
-      .maybeSingle();
-    if (cert?.ik_nummer) return; // IK is set, no warning needed
     const el = document.getElementById('ik-missing-banner');
     if (!el) return;
+    el.hidden = !!currentProfile.ik_number;
+    if (el.hidden) return;
     el.innerHTML = `
       <div style="margin:8px 0;padding:12px 14px;border-radius:8px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.28);font-size:13px;line-height:1.5;color:var(--text-main);">
         <strong>IK-Nummer fehlt</strong> — §302 GKV-Abrechnung ist nicht möglich.
