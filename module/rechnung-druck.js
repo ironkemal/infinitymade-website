@@ -1,3 +1,4 @@
+import { datumDe } from './datum.js?v=20261001a';
 /**
  * rechnung-druck.js — was auf dem Beleg des Patienten stehen darf.
  *
@@ -85,7 +86,7 @@ export function fuelleBelegPositionen(inv, { formatEur, escapeHtml, aggregateInv
   // (`podoloji`, 16.08.2026 — die Tabelle soll auf A5 passen).
   const daten = [...new Set(lines.map(l => l.leistungsdatum).filter(Boolean))];
   const zeigeDatum = daten.length > 1;
-  const datumDE = iso => { try { return new Date(iso).toLocaleDateString('de-DE'); } catch { return iso; } };
+  const datumDE = iso => { try { return datumDe(iso); } catch { return iso; } };
 
   const body = document.getElementById('invvLineBody');
   if (body) {

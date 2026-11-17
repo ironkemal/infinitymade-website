@@ -4,7 +4,7 @@
  */
 import { attachPatientSearch } from '../patient-suche.js?v=20260906';
 import { createDokumentSuche, dokumenteErlaubt, dokumentHinweis, dokumentScopeKey, mitFehlerMelder } from './kopf-dokumente.js?v=20261114v209c';
-import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20261021f';
+import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20261117p33';
 
 const ART_TEXT = { patient: 'Patient', verordnung: 'Verordnung', rechnung: 'Rechnung' };
 const ART_PLATZ = { patient: 'Patient suchen', verordnung: 'Verordnung suchen (Nummer oder Name)', rechnung: 'Rechnung suchen (Nummer oder Name)' };

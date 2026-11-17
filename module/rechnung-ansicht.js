@@ -1,3 +1,4 @@
+import { datumDe } from './datum.js?v=20261001a';
 /**
  * rechnung-ansicht.js — Rechnungsliste + Druckansicht, und der Umschalter
  * zwischen Liste / Editor / Ansicht.
@@ -89,7 +90,7 @@ export function renderInvList() {
   const statusMap = { draft: 'Entwurf', sent: 'Gesendet', paid: 'Bezahlt', cancelled: 'Storniert' };
   const statusCls = { draft: 'badge-gray', sent: 'badge-blue', paid: 'badge-green', cancelled: 'badge-red' };
   tbody.innerHTML = invListCache.map(inv => {
-    const date = new Date(inv.issued_at || inv.created_at).toLocaleDateString('de-DE');
+    const date = datumDe(inv.issued_at || inv.created_at);
     const total = d.formatEur(inv.total_patient || 0);
     const st = inv.status || 'draft';
     const payBadge = inv.payment_status === 'paid'
@@ -210,7 +211,7 @@ export async function openInvView(invoiceId) {
 
   // Meta (top-right)
   document.getElementById('invvNumber').textContent = inv.invoice_number || '—';
-  document.getElementById('invvDate').textContent = new Date(inv.issued_at || inv.created_at).toLocaleDateString('de-DE');
+  document.getElementById('invvDate').textContent = datumDe(inv.issued_at || inv.created_at);
   const statusMap = { draft: 'Entwurf', sent: 'Gesendet', paid: 'Bezahlt', cancelled: 'Storniert' };
   const zahlung = document.getElementById('invvPaymentTerms');
   if (zahlung) zahlung.textContent = inv.status === 'paid' || inv.payment_status === 'paid'
@@ -226,7 +227,7 @@ export async function openInvView(invoiceId) {
   // Die alte Reihenfolge kannte nur die Termine — und weil die am Podologie-Topf
   // gar nicht hängen, blieb die Zeile dort immer leer.
   const zr = d.leistungszeitraum(inv.line_items || []);
-  const fmt = date => new Date(date).toLocaleDateString('de-DE');
+  const fmt = date => datumDe(date);
   let von = inv.leistung_von || zr.von, bis = inv.leistung_bis || zr.bis;
   if (!von) {
     const bd = (bookingsRes.data || []).map(r => r.bookings?.start_time).filter(Boolean).sort();
@@ -254,7 +255,7 @@ export async function openInvView(invoiceId) {
     if (patient.street) patientLines.push(escapeHtml(patient.street));
     const pc = [patient.plz, patient.city].filter(Boolean).join(' ');
     if (pc) patientLines.push(escapeHtml(pc));
-    if (patient.geburtsdatum) patientLines.push('Geboren: ' + new Date(patient.geburtsdatum).toLocaleDateString('de-DE'));
+    if (patient.geburtsdatum) patientLines.push('Geboren: ' + datumDe(patient.geburtsdatum));
     if (patient.krankenkasse && mitKassenfeldern(inv.invoice_type)) patientLines.push('Krankenkasse: ' + escapeHtml(patient.krankenkasse));
     if (patient.versichertennummer && mitKassenfeldern(inv.invoice_type)) patientLines.push('Versichertennr.: ' + escapeHtml(patient.versichertennummer));
   } else {
@@ -284,7 +285,7 @@ export async function openInvView(invoiceId) {
     patientLines.push(`<strong>${escapeHtml(emp.name)}</strong>`);
     if (emp.strasse) patientLines.push(escapeHtml(emp.strasse));
     if (emp.plzOrt) patientLines.push(escapeHtml(emp.plzOrt));
-    if (emp.geburtsdatum) patientLines.push('Geboren: ' + new Date(emp.geburtsdatum).toLocaleDateString('de-DE'));
+    if (emp.geburtsdatum) patientLines.push('Geboren: ' + datumDe(emp.geburtsdatum));
     if (emp.krankenkasse) patientLines.push('Krankenkasse: ' + escapeHtml(emp.krankenkasse));
     if (emp.versichertennummer) patientLines.push('Versichertennr.: ' + escapeHtml(emp.versichertennummer));
   }
@@ -295,7 +296,7 @@ export async function openInvView(invoiceId) {
     document.getElementById('invvRx').innerHTML = [
       `<div>Heilmittel: <strong>${escapeHtml(rx.heilmittel || '—')}</strong></div>`,
       rx.icd10 && !istBg && emp?.art !== 'bg' ? `<div>ICD-10: ${escapeHtml(rx.icd10)}${rx.diagnosegruppe ? ' · Diagnosegruppe ' + escapeHtml(rx.diagnosegruppe) : ''}</div>` : '',
-      rx.ausstellungsdatum ? `<div>Ausgestellt: ${new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE')}${rx.gueltig_bis ? ' · Gültig bis: ' + new Date(rx.gueltig_bis).toLocaleDateString('de-DE') : ''}</div>` : '',
+      rx.ausstellungsdatum ? `<div>Ausgestellt: ${datumDe(rx.ausstellungsdatum)}${rx.gueltig_bis ? ' · Gültig bis: ' + datumDe(rx.gueltig_bis) : ''}</div>` : '',
       rx.frequenz ? `<div>Frequenz: ${escapeHtml(rx.frequenz)}</div>` : '',
       arzt?.arzt_name
         ? `<div>Verordnender Arzt: ${escapeHtml(arzt.arzt_name)}${arzt.lanr ? ' · LANR ' + escapeHtml(arzt.lanr) : ''}${arzt.bsnr ? ' · BSNR ' + escapeHtml(arzt.bsnr) : ''}</div>`

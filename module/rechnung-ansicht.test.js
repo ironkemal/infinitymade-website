@@ -94,10 +94,12 @@ test('renderInvList: blendet fuer ZU den Zahlungsknopf aus', () => {
 test('P2-1: bezahlter Beleg ohne Frist, Bankblock leer ausgeblendet, IK nur Praxis', async () => {
   const nodes = new Map();
   global.document = { getElementById: id => { if (!nodes.has(id)) nodes.set(id, { textContent:'', innerHTML:'', hidden:false, style:{}, parentElement:{style:{}},removeAttribute(){},addEventListener(){} }); return nodes.get(id); } };
-  const inv = { id:'inv', patient_id:'patient', invoice_type:'privat', status:'paid', paid_at:'2026-11-17T16:00:00Z', created_at:'2026-11-17', line_items:[], aussteller_snapshot:{name:'Testpraxis',strasse:'Weg 1',plzOrt:'12345 Ort',ik:'123456789',bank:{}} };
+  const inv = { id:'inv', patient_id:'patient', invoice_type:'privat', status:'paid', issued_at:'2026-01-03', empfaenger_snapshot:{art:'patient',name:'Test Person',geburtsdatum:'1950-01-03'}, paid_at:'2026-11-17T16:00:00Z', created_at:'2026-11-17', line_items:[], aussteller_snapshot:{name:'Testpraxis',strasse:'Weg 1',plzOrt:'12345 Ort',ik:'123456789',bank:{}} };
   const q = { select(){return this;},eq(){return this;},maybeSingle:async()=>({data:null}) };
   mountRechnungsansicht({liste:()=>[inv],profile:()=>({}),escapeHtml:s=>s,supabase:{from:()=>q},leistungszeitraum:()=>({}),fuelleBelegPositionen(){},merkeRechnung(){},showToast(){}});
   await openInvView('inv');
+  assert.equal(nodes.get('invvDate').textContent,'03.01.2026');
+  assert.match(nodes.get('invvPatient').innerHTML,/03.01.1950/);
   assert.equal(nodes.get('invvPaymentTerms').textContent,'Bezahlt am 17.11.2026');
   assert.equal(nodes.get('invvFooterBank').parentElement.style.display,'none');
   assert.doesNotMatch(nodes.get('invvFooterTax').textContent,/IK:/);

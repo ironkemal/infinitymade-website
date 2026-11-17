@@ -32,7 +32,7 @@ import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
 import { attachKrankenkasseSuche, verwerfeKassenCache, kartenIkHinweise, kasseAbrechnungsbereit, kartenIkNormalisieren, tazeleIkHinweis } from './module/krankenkasse-suche.js?v=20261003e';
 import { attachLeadKartenIk, pruefeLeadKartenIk } from './module/lead-karten-ik.js?v=20261003e';
-import { renderPatientenkarte } from './module/patientenkarte.js?v=20261102w10';
+import { renderPatientenkarte } from './module/patientenkarte.js?v=20261117p33';
 import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from './module/lead-felder.js?v=20260929a';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20261027p'; import { ermittleSitzungKuerzel, kuerzelAusKatalog } from './module/heilmittel-kuerzel.js?v=20261103q';
 import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten, ladeAnfragenDaten } from './module/anfrage-bearbeiten.js?v=20261117p11';
@@ -58,28 +58,28 @@ import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, t
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtZeilenReferenz } from './module/fahrtenbuch-regeln.js?v=20261014five1';
 import { exportFahrtenbuchCsv, exportAenderungsprotokollCsv, exportPatientenverzeichnisCsv } from './module/fahrtenbuch-export.js?v=20261014five1';
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } from './module/fahrt-beenden.js?v=20261001b';
-import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261021v';
-import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e'; import { oeffnePatientenImport } from './module/patienten-import.js?v=20261103s'; import { oeffneVerordnungImport } from './module/verordnung-import.js?v=20261107imp';
+import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261117p33';
+import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e'; import { oeffnePatientenImport } from './module/patienten-import.js?v=20261103s'; import { oeffneVerordnungImport } from './module/verordnung-import.js?v=20261117p33';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20261026p';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20261027p';
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261021f';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, pruefeSertHeilmittelFehler, istPatientNeu, scanHerkunft, nurIcdKode, vorauswahlArtAusPatient, bgHinweiseAusMaske, maskeIstKasse }
-  from './module/verordnung-maske.js?v=20261110chip'; import { istKasse } from './module/rezeptart.js?v=20261006a'; import { feiertageKnopf } from './module/feiertage-knopf.js?v=20261110fn';
+  from './module/verordnung-maske.js?v=20261117p33'; import { istKasse } from './module/rezeptart.js?v=20261006a'; import { feiertageKnopf } from './module/feiertage-knopf.js?v=20261110fn';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20261004m113';
 import { pruefeBarcodeBestaetigung } from './module/rezept-barcode-bestaetigung.js?v=20261007m3';
 import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20261007m3';
 import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=20261115v703';
 import { installiereModalEscape } from './module/modal-escape.js?v=20261007m3';
 import { belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden, oeffneVerordnungAusSuche } from './module/verordnung-liste.js?v=20261113v209b';
-import { zeigeVerordnungDetail, multiHeilmittelTitel } from './module/verordnung-detail.js?v=20261109';
+import { verordnungenListeLaden, oeffneVerordnungAusSuche } from './module/verordnung-liste.js?v=20261117p33';
+import { zeigeVerordnungDetail, multiHeilmittelTitel } from './module/verordnung-detail.js?v=20261117p33';
 import { downloadDmrzForInvoice, setzeDmrzKnopf } from './module/rechnung-dmrz.js?v=20261117p24';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909'; import { renderDatevSettings, verdrahteDatevExport } from './module/datev-einstellungen.js?v=20261022a'; import { renderTerminerinnerungSettings } from './module/terminerinnerung-einstellung.js?v=20261109'; import { renderMailversandSettings } from './module/mailversand.js?v=20261109';
-import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261117p24'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261117p21'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261022q'; import { mountStartAufgaben } from './module/start-aufgaben.js?v=20261101st';
+import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261117p33'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261117p21'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261022q'; import { mountStartAufgaben } from './module/start-aufgaben.js?v=20261101st';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20261014fix1'; import { markiereZuBelegBezahlt } from './module/rechnung-zahlung.js?v=20261010w';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20261103b';
-import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261117p21';
+import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261117p33';
 import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20261021zd';
 import { druckenMenueHtml, verdrahteDruckenMenue, oeffneRechnungZurVerordnung, bgSperreBeimSpeichern } from './module/rechnung-zur-verordnung.js?v=20261010zc';
 import { leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung, pruefeZuzahlungsBezug } from './module/rechnung-editor.js?v=20261117p22';
@@ -93,17 +93,17 @@ import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
 import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261115v703';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20261101u';
-import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261021f';
+import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261117p33';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261031a';
 import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261115v701'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
 import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261103n';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
-import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl, bindeAnTerminNachAnlage } from './module/verordnung-anlegen.js?v=20261021v';
-import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261021v';
-import { initBarcodeDialog } from './module/rezept-barcode-dialog.js?v=20261031live';
+import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl, bindeAnTerminNachAnlage } from './module/verordnung-anlegen.js?v=20261117p33';
+import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261117p33';
+import { initBarcodeDialog } from './module/rezept-barcode-dialog.js?v=20261117p33';
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
 import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen, schlageBefundungVor } from './module/termin-leistungen.js?v=20261021v';
-import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261102a';
+import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261117p33';
 import { oeffneMailAngebotModal, istPodoOhneRechnung } from './module/termin-mail-angebot.js?v=20260929a';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20261026p';
@@ -138,7 +138,7 @@ import {
   BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
   verteileOffeneSitzungen, zeichneRezeptFortschritt, uebernimmSerienfrequenzAusRx, setFreqValue,
-} from './module/termin-aktionen.js?v=20261021w';
+} from './module/termin-aktionen.js?v=20261117p33';
 import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261021w'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
 import { gleicheSitzungenAb, terminZielToplam } from './module/sitzung-abgleich.js?v=20261103q';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20261103q';
@@ -4522,7 +4522,7 @@ function refreshBkHausbesuchPanel() {
   if (lead.distance_km != null && lead.duration_min != null) {
     document.getElementById('bkHbKm').textContent = `${Number(lead.distance_km).toFixed(1)} km`;
     document.getElementById('bkHbMin').textContent = `${lead.duration_min} min`;
-    const when = lead.route_calculated_at ? new Date(lead.route_calculated_at).toLocaleDateString('de-DE') : '';
+    const when = lead.route_calculated_at ? datumDe(lead.route_calculated_at) : '';
     cached.textContent = when ? `(gespeichert ${when})` : '';
     result.style.display = '';
     const seance = getBkServiceDurationMin();
@@ -5215,7 +5215,7 @@ async function loadRxSessionsPanel(booking, rxId = null) {
           data-lead-id="${booking.lead_id || ''}"
           data-service-id="${booking.service_id || ''}"
           style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;cursor:grab;font-size:12px;user-select:none;"
-          title="${ausgefallen.has(s.id) ? `Ausgefallen am ${new Date(ausgefallen.get(s.id)).toLocaleDateString('de-DE')} — Nachholtermin nötig. ` : ''}Auf den Kalender ziehen, um einen neuen Termin zu erstellen. Mehrere per Checkbox auswählen → gemeinsamer Termin.">
+          title="${ausgefallen.has(s.id) ? `Ausgefallen am ${new Date(ausgefallen.get(s.id)).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })} — Nachholtermin nötig. ` : ''}Auf den Kalender ziehen, um einen neuen Termin zu erstellen. Mehrere per Checkbox auswählen → gemeinsamer Termin.">
           <input type="checkbox" class="rx-unv-cb" style="flex-shrink:0;cursor:pointer;accent-color:var(--primary);margin:0;" title="Für Kombi-Termin auswählen">
           <span style="color:var(--text-muted);font-size:11px;min-width:16px;">#${s.session_number}</span>
           <span style="font-weight:700;color:var(--primary);min-width:28px;">${escapeHtml(getHmKuerzel(s.heilmittel_index ?? 0))}</span>
@@ -6998,9 +6998,9 @@ async function loadPatientDetailRezepte(leadId) {
       else if (days <= 10) validColor = 'color:#f59e0b;';
     }
     const valid = rx.gueltig_bis
-      ? `<span style="${validColor}">${new Date(rx.gueltig_bis).toLocaleDateString('de-DE')}</span>`
+      ? `<span style="${validColor}">${datumDe(rx.gueltig_bis)}</span>`
       : '—';
-    const issued = rx.ausstellungsdatum ? new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE') : '—';
+    const issued = rx.ausstellungsdatum ? datumDe(rx.ausstellungsdatum) : '—';
     const dmrz = rx.dmrz_exported_at
       ? `<span class="badge badge-green" title="${new Date(rx.dmrz_exported_at).toLocaleString('de-DE')}">DMRZ ✓</span>`
       : `<span class="badge badge-gray">DMRZ offen</span>`;
@@ -7010,7 +7010,7 @@ async function loadPatientDetailRezepte(leadId) {
     ].filter(Boolean).join(' ');
 
     const sessionPills = sessions.map(s => {
-      const date = s.done_at ? new Date(s.done_at).toLocaleDateString('de-DE') : '';
+      const date = s.done_at ? datumDe(s.done_at) : '';
       const title = `Sitzung ${s.session_number}${date ? ' · ' + date : ''}`;
       return `<span class="badge ${sessStatusCls[s.status] || 'badge-gray'}" title="${title}">${s.session_number} · ${sessStatusLabel[s.status] || s.status}</span>`;
     }).join(' ');
@@ -7049,7 +7049,7 @@ async function loadPatientDetailRezepte(leadId) {
         ? ` · ${t('kass_beleg')} ${String(belegNr).padStart(6, '0')}`
         : '';
       paidButton = rx.zuzahlung_kassiert_am
-        ? `<span class="badge badge-green" title="Kassiert am ${escapeHtml(new Date(rx.zuzahlung_kassiert_am).toLocaleDateString('de-DE'))}">${escapeHtml(t('kass_bezahlt'))}${rx.zuzahlung_zahlart ? ' · ' + escapeHtml(zahlartLabel(rx.zuzahlung_zahlart)) : ''}${escapeHtml(belegTxt)}</span>
+        ? `<span class="badge badge-green" title="Kassiert am ${escapeHtml(datumDe(rx.zuzahlung_kassiert_am))}">${escapeHtml(t('kass_bezahlt'))}${rx.zuzahlung_zahlart ? ' · ' + escapeHtml(zahlartLabel(rx.zuzahlung_zahlart)) : ''}${escapeHtml(belegTxt)}</span>
            <button class="btn-ghost btn-sm rx-open-rechnung" data-id="${rx.id}" title="${escapeHtml(t('kass_rechnung'))}">${escapeHtml(t('kass_rechnung'))}</button>`
         : `<button class="btn-ghost btn-sm rx-mark-paid" data-id="${rx.id}" data-betrag="${rx.zuzahlung_eur}" style="color:var(--success);font-weight:600;" title="${escapeHtml(t('kass_title'))}"><span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;margin-right:4px;color:var(--success);">${ICON.checkCircle}</span>${escapeHtml(t('kass_btn'))} · ${escapeHtml(fmtEur(rx.zuzahlung_eur))}</button>`;
     }
@@ -7170,7 +7170,7 @@ function renderBefreiungCard(leadId, befreiungen) {
   const current = befreiungen.find(b => b.jahr === currentYear);
   const others = befreiungen.filter(b => b.jahr !== currentYear);
 
-  const fmt = (d) => d ? new Date(d).toLocaleDateString('de-DE') : '—';
+  const fmt = (d) => d ? datumDe(d) : '—';
   // „Ändern" fehlte hier: eine eingetragene Befreiung liess sich nur noch
   // entfernen und neu anlegen — dabei ging das eingetragene „ab"-Datum
   // verloren. Beide Knöpfe öffnen dasselbe Formular wie das Termin-Panel.
@@ -7326,7 +7326,7 @@ async function refreshMessreihen(leadId) {
       <div class="mess-table">
         ${points.map(p => `
           <div class="mess-row">
-            <span class="mess-date">${new Date(p.gemessen_am).toLocaleDateString('de-DE')}</span>
+            <span class="mess-date">${datumDe(p.gemessen_am)}</span>
             <span class="mess-val" style="color:${color};font-weight:700;">${p.wert}</span>
             <span class="mess-unit">${escapeHtml(p.einheit || MESS_UNITS[typ] || '')}</span>
             ${p.notiz ? `<span class="mess-note">${escapeHtml(p.notiz)}</span>` : '<span></span>'}
@@ -7383,7 +7383,7 @@ function renderMessreihenChart(points, maxY, color, lowerBetter) {
     const cx = xOf(new Date(p.gemessen_am).getTime());
     const cy = yOf(p.wert);
     return `<circle cx="${cx}" cy="${cy}" r="4" fill="${color}" stroke="var(--bg-card-solid)" stroke-width="1.5">
-      <title>${new Date(p.gemessen_am).toLocaleDateString('de-DE')}: ${p.wert}</title>
+      <title>${datumDe(p.gemessen_am)}: ${p.wert}</title>
     </circle>`;
   }).join('');
 
@@ -12535,7 +12535,7 @@ async function loadFeedbacks() {
     const priorityColors = { low: 'badge-gray', medium: 'badge-yellow', high: 'badge-red', critical: 'badge-red' };
     const st = f.status || 'open';
     const pr = f.priority || 'medium';
-    const date = new Date(f.created_at).toLocaleDateString('de-DE');
+    const date = datumDe(f.created_at);
     return `<div class="feedback-item">
       <div class="feedback-header">
         <span class="feedback-title">${f.title}</span>
@@ -14165,7 +14165,7 @@ async function init() {
     if (await import('./module/design-entscheidung.js?v=20261111p2b').then(m => m.setzeDesign({ wunsch: window.__pxDesignWunsch, vorschau: DESIGN_VORSCHAU, apiBase: API, token: async () => (await supabase.auth.getSession()).data.session?.access_token, aktuell: async () => (await supabase.auth.getSession()).data.session?.user?.id })).catch(() => 'alt') === 'neu') {
       const ansichtKontext = { uid: () => currentSession?.user?.id, rolle: () => currentProfile?.role, scope: () => [currentSession?.user?.id, currentProfile?.role, getOwnerId(), currentBusiness?.id].join(':') };
       startansicht = (await import('./module/startseite-ansicht.js?v=20261114b03')).montiereStartansicht({ ...ansichtKontext, sektor: getSector, api: () => API, springe: switchPanel, akte: id => window.openPatientDetail?.(id), neuLaden: loadTodayBookings, hb: { supabase, ownerId: () => getOwnerId(), businessId: () => currentBusiness?.id ?? null, patientsGemeinsam: () => dataSharing.patients === true } });
-      (await import('./module/anamnese-abschnitte.js?v=20261114v402')).montiereAnamneseAbschnitte(ansichtKontext); try { (await import('./module/shell-ansicht.js?v=20261114v402')).montiereShellansicht({ ...ansichtKontext, name: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', suche: { ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, oeffnePatient: id => window.openPatientDetail?.(id), dokumente: { kontext: () => ({ supabase, rolle: currentProfile?.role, uid: currentSession?.user?.id, ownerId: getOwnerId(), businessId: currentBusiness?.id ?? null, patientsGemeinsam: dataSharing.patients === true, financeGemeinsam: dataSharing.finance === true }), ladeRechnungen: loadRechnungen, oeffneRechnung: id => { switchPanel('rechnungen'); return openInvView(id); }, oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); const ok = oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API }); if (!ok) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); return ok; } } } }); } catch (e) { console.error('[init] shell', e); }
+      (await import('./module/anamnese-abschnitte.js?v=20261114v402')).montiereAnamneseAbschnitte(ansichtKontext); try { (await import('./module/shell-ansicht.js?v=20261117p33')).montiereShellansicht({ ...ansichtKontext, name: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', suche: { ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, oeffnePatient: id => window.openPatientDetail?.(id), dokumente: { kontext: () => ({ supabase, rolle: currentProfile?.role, uid: currentSession?.user?.id, ownerId: getOwnerId(), businessId: currentBusiness?.id ?? null, patientsGemeinsam: dataSharing.patients === true, financeGemeinsam: dataSharing.finance === true }), ladeRechnungen: loadRechnungen, oeffneRechnung: id => { switchPanel('rechnungen'); return openInvView(id); }, oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); const ok = oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API }); if (!ok) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); return ok; } } } }); } catch (e) { console.error('[init] shell', e); }
     }
     await renderOverview();
     try { await renderGapsForDate(scheduleDate); dbg('[init] gapsForDate ok'); } catch (e) { console.error('[init] renderGapsForDate error', e); }
@@ -14914,7 +14914,7 @@ async function runSignAbrechnung() {
     const certSerial = cert.serialNumber || null;
 
     if (cert.validity?.notAfter && cert.validity.notAfter < new Date()) {
-      throw new Error(`Zertifikat abgelaufen (${cert.validity.notAfter.toLocaleDateString('de-DE')}).`);
+      throw new Error(`Zertifikat abgelaufen (${cert.validity.notAfter.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}).`);
     }
 
     stat.textContent = 'Erzeuge PKCS#7 SignedData…';
@@ -15642,7 +15642,7 @@ async function loadMahnwesen() {
       tr.innerHTML = `
         <td><strong>${pname}</strong><br>${artBadge}</td>
         <td style="text-align:right;font-weight:600;color:var(--danger);">${fmtEur(r.zuzahlung_eur)}</td>
-        <td style="font-size:12px;color:var(--text-muted);">${lm ? new Date(lm.sent_at).toLocaleDateString('de-DE') : '—'}</td>
+        <td style="font-size:12px;color:var(--text-muted);">${lm ? datumDe(lm.sent_at) : '—'}</td>
         <td><span style="color:${levelColor};font-weight:600;font-size:12px;">${levelLabel}</span></td>
         <td>${statusBadge}</td>
         <td style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -15752,7 +15752,7 @@ async function loadAusfallrechnungen() {
     empty.hidden = rows.length > 0;
     if (!rows.length) return;
 
-    const fmtD = d => d ? new Date(d).toLocaleDateString('de-DE') : '—';
+    const fmtD = d => d ? datumDe(d) : '—';
     const STATUS_BADGE = {
       offen: '<span class="badge badge-gray">Offen</span>',
       bezahlt: '<span class="badge badge-green">Bezahlt</span>',
@@ -15934,7 +15934,7 @@ async function loadStatistik() {
             .map(h => `${escapeHtml(h.wert)} <span style="color:var(--text-muted);">(${h.anzahl})</span>`)
             .join(', ') || '—';
           const letzte = a.letzte_verordnung
-            ? new Date(a.letzte_verordnung).toLocaleDateString('de-DE')
+            ? datumDe(a.letzte_verordnung)
             : '—';
           const kontakt = [
             a.telefon ? escapeHtml(a.telefon) : null,
@@ -16097,7 +16097,7 @@ function initSchnellerfassung() {
       if (exactMatch) {
         saveBtn.disabled = false;
         saveBtn.textContent = '⚡ Speichern & in Termin eintragen';
-        const dobStr = geburt ? ` (geb. ${new Date(geburt).toLocaleDateString('de-DE')})` : '';
+        const dobStr = geburt ? ` (geb. ${datumDe(geburt)})` : '';
         const proceed = await showConfirmModal({
           title: 'Mögliches Duplikat gefunden',
           message: `Ein Patient mit dem Namen "${vorname} ${nachname}"${dobStr} existiert bereits.\n\nTrotzdem einen neuen Datensatz anlegen?`,
@@ -16793,7 +16793,7 @@ function showPlanWall(lastPlan) {
           border-radius: 8px; padding: 0.6rem 1rem;
           display: inline-block; margin-bottom: 1.25rem;
         ">
-          &#x26A0;&#xFE0F; Ihre Daten werden am <strong>${new Date(currentProfile.deletion_scheduled_at).toLocaleDateString('de-DE')}</strong> gelöscht.
+          &#x26A0;&#xFE0F; Ihre Daten werden am <strong>${datumDe(currentProfile.deletion_scheduled_at)}</strong> gelöscht.
         </p>
         ` : ''}
         <div style="margin-bottom: 1.75rem;">
@@ -17587,11 +17587,11 @@ function renderAnfragenList(requests) {
     // gespeichert. Ohne escapeHtml wuerde ein Patient Markup in das Dashboard des
     // Praxisinhabers schreiben koennen — inklusive Zugriff auf dessen Sitzung.
     const patName = pat ? escapeHtml(`${pat.vorname} ${pat.nachname}`) : '—';
-    const patDob = pat?.geburtsdatum ? new Date(pat.geburtsdatum).toLocaleDateString('de-DE') : '';
+    const patDob = pat?.geburtsdatum ? datumDe(pat.geburtsdatum) : '';
     const svcName = escapeHtml(req.services?.title || '—');
     const badge = escapeHtml(paymentBadge[req.payment_type] || req.payment_type?.toUpperCase() || '');
     const badgeColor = paymentColor[req.payment_type] || '#6b7280';
-    const prefDate = req.preferred_date ? new Date(req.preferred_date).toLocaleDateString('de-DE') : '—';
+    const prefDate = req.preferred_date ? datumDe(req.preferred_date) : '—';
     const prefTime = req.preferred_time ? req.preferred_time.substring(0,5) + ' Uhr' : '';
     const createdAt = new Date(req.created_at).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'2-digit' });
 
@@ -17636,7 +17636,7 @@ function showAnfrageDetail(requestId) {
   const pat = req.patients;
   // Siehe renderAnfragenList: diese Werte stammen aus dem oeffentlichen Formular.
   const patName = pat ? escapeHtml(`${pat.vorname} ${pat.nachname}`) : '—';
-  const prefDate = req.preferred_date ? new Date(req.preferred_date).toLocaleDateString('de-DE') : '—';
+  const prefDate = req.preferred_date ? datumDe(req.preferred_date) : '—';
   const prefTime = req.preferred_time ? req.preferred_time.substring(0,5) + ' Uhr' : '';
   const paymentLabel = { gkv: 'GKV – Kassenpatient', pkv: 'PKV – Privatpatient', selbstzahler: 'Selbstzahler', bg: 'BG – Berufsgenossenschaft' };
 
@@ -17644,7 +17644,7 @@ function showAnfrageDetail(requestId) {
   if (req.payment_type === 'gkv') {
     if (req.krankenkasse) extraFields.push(['Krankenkasse', req.krankenkasse]);
     if (req.arzt_name) extraFields.push(['Arzt', req.arzt_name]);
-    if (req.verordnung_datum) extraFields.push(['Verordnungsdatum', new Date(req.verordnung_datum).toLocaleDateString('de-DE')]);
+    if (req.verordnung_datum) extraFields.push(['Verordnungsdatum', datumDe(req.verordnung_datum)]);
     if (req.behandlungsart) extraFields.push(['Behandlungsart', req.behandlungsart]);
     if (req.verordnung_sitzungen) extraFields.push(['Verordnete Sitzungen', req.verordnung_sitzungen]);
     if (req.frequenz) extraFields.push(['Frequenz', req.frequenz]);
@@ -17658,7 +17658,7 @@ function showAnfrageDetail(requestId) {
   } else if (req.payment_type === 'bg') {
     if (req.bg_aktenzeichen) extraFields.push(['Aktenzeichen', req.bg_aktenzeichen]);
     if (req.bg_name) extraFields.push(['Berufsgenossenschaft', req.bg_name]);
-    if (req.unfalldatum) extraFields.push(['Unfalldatum', new Date(req.unfalldatum).toLocaleDateString('de-DE')]);
+    if (req.unfalldatum) extraFields.push(['Unfalldatum', datumDe(req.unfalldatum)]);
     if (req.durchgangsarzt) extraFields.push(['Durchgangsarzt', req.durchgangsarzt]);
     if (req.behandlungsart) extraFields.push(['Behandlungsart', req.behandlungsart]);
   }
@@ -17668,7 +17668,7 @@ function showAnfrageDetail(requestId) {
 
   showHtmlModal({ title: tl.anfragen_detail_title, html: `
     <div class="anfragen-detail">
-      <div class="detail-row"><span class="detail-label">${tl.anfragen_patient}</span><span>${patName}${pat?.geburtsdatum ? ' · ' + new Date(pat.geburtsdatum).toLocaleDateString('de-DE') : ''}</span></div>
+      <div class="detail-row"><span class="detail-label">${tl.anfragen_patient}</span><span>${patName}${pat?.geburtsdatum ? ' · ' + datumDe(pat.geburtsdatum) : ''}</span></div>
       <div class="detail-row"><span class="detail-label">${tl.anfragen_payment}</span><span>${paymentLabel[req.payment_type] || req.payment_type}</span></div>
       <div class="detail-row"><span class="detail-label">${tl.anfragen_service}</span><span>${escapeHtml(req.services?.title || '—')} · ${Number(req.session_count) || 1} Sitzung(en)</span></div>
       <div class="detail-row"><span class="detail-label">${tl.anfragen_date}</span><span>${prefDate}${prefTime ? ' um ' + prefTime : ''}</span></div>

@@ -1,3 +1,4 @@
+import { datumDe } from './datum.js?v=20261001a';
 /**
  * verordnung-podo.js — Podologie-Feinschliff der Muster-13-Maske (`rezeptModal`).
  *
@@ -621,7 +622,7 @@ function fristHinweis() {
   const tage = dringend ? BEHANDLUNGSBEGINN_TAGE.dringend : BEHANDLUNGSBEGINN_TAGE.normal;
   return {
     farbe: dringend ? 'var(--warning,#f59e0b)' : 'var(--text-muted)',
-    text: `Behandlungsbeginn spätestens am ${new Date(frist).toLocaleDateString('de-DE')} `
+    text: `Behandlungsbeginn spätestens am ${datumDe(frist)} `
         + `(${tage} Kalendertage ab Ausstellung)${dringend ? ' — dringlicher Behandlungsbedarf' : ''}. `
         + 'Wird die Frist versäumt, verliert die Verordnung ihre Gültigkeit.',
   };

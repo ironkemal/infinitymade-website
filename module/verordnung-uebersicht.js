@@ -1,3 +1,4 @@
+import { datumDe } from './datum.js?v=20261001a';
 /**
  * verordnung-uebersicht.js — die aktiven Verordnungen eines Patienten,
  * nebeneinander, jede mit eigenem Sitzungszähler.
@@ -109,7 +110,7 @@ export const PODO_AKTIV = ['aktiv', 'abrechenbar', 'abgesetzt', 'teilabsetzung']
 const DE = (iso) => {
   if (!iso) return '—';
   const d = new Date(iso);
-  return isNaN(d) ? '—' : d.toLocaleDateString('de-DE');
+  return isNaN(d) ? '—' : datumDe(iso, '—');
 };
 
 function esc(s) {

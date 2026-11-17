@@ -1,3 +1,4 @@
+import { datumDe } from './datum.js?v=20261001a';
 /**
  * verordnung-liste.js — die obere Hälfte der Seite „Verordnungen".
  *
@@ -43,10 +44,10 @@
  * dieselbe Zusammenführung steht.
  */
 
-import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20261021f';
+import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20261117p33';
 import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261117f2';
-import { zeigeVerordnungDetail } from './verordnung-detail.js?v=20261109';
-import { maskeHeimschicken, istVeraendert } from './verordnung-maske.js?v=20261110chip';
+import { zeigeVerordnungDetail } from './verordnung-detail.js?v=20261117p33';
+import { maskeHeimschicken, istVeraendert } from './verordnung-maske.js?v=20261117p33';
 import { on } from './signal.js?v=20260813';
 
 const SPALTEN = 7;
@@ -159,7 +160,7 @@ export async function verordnungenListeLaden(ctx) {
 }
 
 function zeileHtml(v, esc) {
-  const datum = v.datum ? new Date(v.datum).toLocaleDateString('de-DE') : '—';
+  const datum = v.datum ? datumDe(v.datum) : '—';
   const gewaehlt = _auswahl && _auswahl.id === v.id && _auswahl.quelle === v.quelle;
   // Ops-Kart #269: Verordnungen mit offenen „Bitte prüfen"-Befunden (siehe
   // module/verordnung-uebersicht.js `pruefeZeile`) fallen als Zeile auf.

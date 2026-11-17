@@ -16,7 +16,7 @@
 'use strict';
 
 import { attachHeilmittelSearch } from '../katalog-suche.js?v=20261001a';
-import { heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './verordnung-podo.js?v=20261021v';
+import { heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './verordnung-podo.js?v=20261117p33';
 import { normalizeBereich } from './heilmittel-zeilen.js';
 
 let _tableEl = null;
