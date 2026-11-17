@@ -89868,6 +89868,7 @@
     "getOwnerId",
     "name",
     "normalisiereGeschlecht",
+    "pruefePatientPflicht",
     "showConfirmModal",
     "showToast"
    ],
@@ -169768,7 +169769,8 @@
     "validateBirthDate"
    ],
    "calledBy": [
-    "(datei) dashboard.js"
+    "(datei) dashboard.js",
+    "initSchnellerfassung"
    ],
    "modules": [],
    "gemeinsam": false,

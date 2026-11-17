@@ -16066,7 +16066,7 @@ function initSchnellerfassung() {
       document.getElementById('sfVorname')?.focus();
       return;
     }
-    const geburt = document.getElementById('sfGeburt')?.value || null;
+    const geburt = document.getElementById('sfGeburt')?.value || null; { const gebFehler = geburt ? pruefePatientPflicht({ geburtsdatum: geburt, praxis: false }) : null; if (gebFehler) { errorEl.textContent = gebFehler; errorEl.style.display = 'block'; document.getElementById('sfGeburt')?.focus(); return; } }   // P1-7 auch in der Schnellerfassung
     const telefon = (document.getElementById('sfTelefon')?.value || '').trim() || null;
     const geschlecht = normalisiereGeschlecht(document.getElementById('sfGeschlecht')?.value);
 
