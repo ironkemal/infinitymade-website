@@ -1,3 +1,4 @@
+import { setzeDmrzKnopf } from './rechnung-dmrz.js';
 import { rechnungsSummen } from './rechnung-summen.js';
 import test, { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -232,6 +233,7 @@ function createTestEnvironment(customMocks = {}) {
     rechnungSnapshotsGeprueft: customMocks.rechnungSnapshotsGeprueft || (async (_sb, q) => ({ aussteller_snapshot: { v: 1, quelle: q.profil === null ? 'leer' : 'profil' }, empfaenger_snapshot: { v: 1, art: 'patient', patientId: q.patientId } })),
     showConfirmModal: async () => true,
     rechnungsSummen,
+    setzeDmrzKnopf,
     invListCache: [],
     verordnungAuswahl: () => ({ prescriptionId: null, notizZeile: null }),
     // KHS §4 (10.10.2026): BG-Sperre beim Speichern (module/rechnung-zur-verordnung.js) — hier nur die Verdrahtung

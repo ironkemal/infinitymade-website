@@ -25,6 +25,7 @@
 
 import { bgEmpfaengerBlock, bgAusZeile, mitKassenfeldern } from './bg-angaben.js?v=20261010zc';
 import { brandingAus, ausstellerSnapshot } from './branding.js?v=20261022q';
+import { setzeDmrzKnopf } from './rechnung-dmrz.js?v=20261117p24';
 import { typKennzeichen } from './rechnung-summen.js?v=20261010b';
 import { ladeStempelDataUrl } from './stempel.js?v=20261006g';
 import { belegDruckUrl } from './beleg-druck.js?v=20261021zd';
@@ -352,6 +353,7 @@ export async function openInvView(invoiceId) {
   ].filter(Boolean).join('\n');
   document.getElementById('invvFooterTax').textContent = tax || '—';
 
+  setzeDmrzKnopf(document.getElementById('invvDmrzBtn'), inv);
   d.merkeRechnung(inv.id);
   merkeRechnungFuerMail(inv);
   zeigeRechnungsModus('ansicht');

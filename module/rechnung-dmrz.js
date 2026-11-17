@@ -184,3 +184,10 @@ export async function downloadDmrzForInvoice(deps) {
     showToast('Fehler: ' + e.message, 'error');
   }
 }
+
+/** @param {HTMLButtonElement|null|any} knopf @param {any} inv */
+export function setzeDmrzKnopf(knopf, inv) {
+  if (!knopf) return;
+  knopf.disabled = !inv?.prescription_id || ['privat', 'selbstzahler', 'bg'].includes(inv?.invoice_type);
+  knopf.title = knopf.disabled ? 'DMRZ XML nur für Rechnungen mit exportierbarer GKV-Verordnung.' : 'DMRZ XML herunterladen';
+}

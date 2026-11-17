@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildDmrzXml } from './rechnung-dmrz.js';
+import { buildDmrzXml, setzeDmrzKnopf } from './rechnung-dmrz.js';
 
 const minimal = {
   invoice: { invoice_number: 'INV-2026-0001', line_items: [] },
@@ -95,4 +95,11 @@ test('buildDmrzXml: Hausbesuch/Dringend werden als true/false ausgegeben, nicht 
 test('buildDmrzXml: Geburtsdatum kommt aus leads.geburtsdatum', () => {
   const xml = buildDmrzXml({ ...minimal, patient: { first_name: 'Anna', geburtsdatum: '1950-03-04' } });
   assert.match(xml, /<Geburtsdatum>1950-03-04<\/Geburtsdatum>/);
+});
+
+test('P2-4: DMRZ-Knopf ohne exportierbaren GKV-Rezeptbezug gesperrt',()=>{
+  for(const inv of [{},{invoice_type:'privat',prescription_id:'rx'},{verordnung_id:'podo'}]){
+    const button={disabled:false,title:''};setzeDmrzKnopf(button,inv);assert.equal(button.disabled,true);assert.match(button.title,/GKV/);
+  }
+  const button={};setzeDmrzKnopf(button,{invoice_type:'gkv',prescription_id:'rx'});assert.equal(button.disabled,false);
 });

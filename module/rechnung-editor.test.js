@@ -1,3 +1,4 @@
+import { setzeDmrzKnopf } from './rechnung-dmrz.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createClient } from '@supabase/supabase-js';
@@ -160,6 +161,7 @@ function createEditorHarness({
     leereTerminAuswahl() { events.push('leereTerminAuswahl'); },
     setzeSpeichernText(btn, isUpdate) { events.push(`setzeSpeichernText:${isUpdate}`); },
     calcInvTotals() { events.push('calcInvTotals'); },
+    setzeDmrzKnopf,
     zeigeRechnungsModus(modus) {
       events.push(`zeigeRechnungsModus:${modus}`);
       dom.invEditor.hidden = (modus !== 'editor');
