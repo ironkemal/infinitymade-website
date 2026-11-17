@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { rechnungsModus, zeigeRechnungsModus, renderRezeptBadges, mountRechnungsansicht, renderInvList } from './rechnung-ansicht.js';
+import { rechnungsModus, zeigeRechnungsModus, renderRezeptBadges, mountRechnungsansicht, renderInvList, openInvView } from './rechnung-ansicht.js';
 
 // Regressionstest für Bug 1 (Ops-Meldung, 09.09.2026): "Rechnung speichern
 // schliesst den Editor nicht — es wirkt, als wäre nichts passiert." Die Regel
@@ -90,3 +90,16 @@ test('renderInvList: blendet fuer ZU den Zahlungsknopf aus', () => {
   assert.ok(innerHTML.includes('data-id="gkv-1" title="Zahlungseingang verbuchen"'), 'GKV muss Zahlungsknopf haben');
 });
 
+
+test('P2-1: bezahlter Beleg ohne Frist, Bankblock leer ausgeblendet, IK nur Praxis', async () => {
+  const nodes = new Map();
+  global.document = { getElementById: id => { if (!nodes.has(id)) nodes.set(id, { textContent:'', innerHTML:'', hidden:false, style:{}, parentElement:{style:{}},removeAttribute(){},addEventListener(){} }); return nodes.get(id); } };
+  const inv = { id:'inv', patient_id:'patient', invoice_type:'privat', status:'paid', paid_at:'2026-11-17T16:00:00Z', created_at:'2026-11-17', line_items:[], aussteller_snapshot:{name:'Testpraxis',strasse:'Weg 1',plzOrt:'12345 Ort',ik:'123456789',bank:{}} };
+  const q = { select(){return this;},eq(){return this;},maybeSingle:async()=>({data:null}) };
+  mountRechnungsansicht({liste:()=>[inv],profile:()=>({}),escapeHtml:s=>s,supabase:{from:()=>q},leistungszeitraum:()=>({}),fuelleBelegPositionen(){},merkeRechnung(){},showToast(){}});
+  await openInvView('inv');
+  assert.equal(nodes.get('invvPaymentTerms').textContent,'Bezahlt am 17.11.2026');
+  assert.equal(nodes.get('invvFooterBank').parentElement.style.display,'none');
+  assert.doesNotMatch(nodes.get('invvFooterTax').textContent,/IK:/);
+  assert.match(nodes.get('invvBizMeta').textContent,/IK: 123456789/);
+});

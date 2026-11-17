@@ -211,6 +211,12 @@ export async function openInvView(invoiceId) {
   document.getElementById('invvNumber').textContent = inv.invoice_number || '—';
   document.getElementById('invvDate').textContent = new Date(inv.issued_at || inv.created_at).toLocaleDateString('de-DE');
   const statusMap = { draft: 'Entwurf', sent: 'Gesendet', paid: 'Bezahlt', cancelled: 'Storniert' };
+  const zahlung = document.getElementById('invvPaymentTerms');
+  if (zahlung) zahlung.textContent = inv.status === 'paid' || inv.payment_status === 'paid'
+    ? (inv.paid_at ? 'Bezahlt am ' + new Date(inv.paid_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Europe/Berlin' }) : 'Bezahlt · Zahldatum nicht hinterlegt')
+    : 'Zahlbar binnen 14 Tagen ohne Abzug unter Angabe der Rechnungsnummer.';
+  if (!inv.invoice_type && !rezeptId) d.showToast('Belegart nicht hinterlegt; kein Rezept zugeordnet. Angezeigt werden gespeicherte Rechnungswerte.', 'warning');
+  if (!aus.strasse || /^\d+\w*$/.test(aus.strasse.trim())) d.showToast('Praxisanschrift unvollständig: Straße in Einstellungen ergänzen; ausgestellten Beleg prüfen.', 'warning');
   document.getElementById('invvStatus').textContent = (statusMap[inv.status] || inv.status || '—')
     + (inv.aussteller_snapshot ? '' : ' · Altbeleg ohne Snapshot');
 
@@ -332,7 +338,9 @@ export async function openInvView(invoiceId) {
     aus.bank?.iban ? 'IBAN: ' + aus.bank.iban : '',
     aus.bank?.bic ? 'BIC: ' + aus.bank.bic : ''
   ].filter(Boolean).join('\n');
-  document.getElementById('invvFooterBank').textContent = bank || '—';
+  const bankEl = document.getElementById('invvFooterBank');
+  bankEl.textContent = bank;
+  if (bankEl.parentElement) bankEl.parentElement.style.display = bank ? '' : 'none';
 
   // Ebenfalls Snapshot mit Profil-Fallback: die Steuernummer der Praxis kann
   // sich ändern, die einmal gedruckte Rechnung nicht (§ 14 Abs. 4 Nr. 2 UStG).
@@ -340,8 +348,7 @@ export async function openInvView(invoiceId) {
   const ustId = inv.ust_id_snapshot ?? currentProfile.ust_id;
   const tax = [
     stNr ? 'Steuernr.: ' + stNr : '',
-    ustId ? 'USt-IdNr.: ' + ustId : '',
-    aus.ik ? 'IK: ' + aus.ik : ''
+    ustId ? 'USt-IdNr.: ' + ustId : ''
   ].filter(Boolean).join('\n');
   document.getElementById('invvFooterTax').textContent = tax || '—';
 

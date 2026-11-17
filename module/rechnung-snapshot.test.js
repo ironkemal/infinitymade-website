@@ -142,3 +142,9 @@ test('praxisKopf (Server-Renderings): Praxis-E-Mail vor Ersatz, PLZ plz|zip, Hau
   assert.equal(server.praxisKopf({ email: '' }).email, '');
   assert.equal(server.praxisKopf(null).name, 'Praxis');
 });
+
+test('P2-1a: Hausnummer ohne Straße blockiert neuen Rechnungssnapshot', async () => {
+  let gelesen = false;
+  const result = await rechnungSnapshotsGeprueft({ from: () => { gelesen = true; throw new Error('vor DB prüfen'); } }, { profil: { ...PROFIL, street: '' } }, { bestaetige: async o => { assert.match(o.message, /Straße/); return true; } });
+  assert.equal(result, null); assert.equal(gelesen, false);
+});

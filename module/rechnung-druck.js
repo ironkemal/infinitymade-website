@@ -75,7 +75,7 @@ function fuelleSteuerbloecke(inv, { formatEur }) {
  * @returns {boolean} ob Preise gezeigt werden (für Tests/Aufrufer)
  */
 export function fuelleBelegPositionen(inv, { formatEur, escapeHtml, aggregateInvLines }) {
-  const zeigePreise = !(Number(inv.kassenzuzahlung || 0) > 0);
+  const zeigePreise = !summenAnzeige(inv).kasseZeigen || !(inv.prescription_id || inv.verordnung_id) || !(Number(inv.kassenzuzahlung || 0) > 0);
 
   const lines = aggregateInvLines(inv.line_items || []);
 
