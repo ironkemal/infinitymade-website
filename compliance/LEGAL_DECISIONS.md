@@ -910,3 +910,7 @@ Neubewertung wie am 03.09.: Rolle Empfang, mehrere Standorte.
 **Nachtrag 11.11.2026 (guvenlik S-65, behoben):** `PATCH /verordnung/:id/abrechnungsstatus` hatte keine Rollenprüfung; jeder Angestellte konnte den Abrechnungsstatus
 (auch Storno, Archiv, Absetzung) ändern. Seitdem: Inhaber oder Mitarbeiter mit dem Modulrecht `abrechnung` (gemeinsame Prüfung `lib/modulrecht.js`, wie bei Rechnungen);
 bestehende Mitarbeiter behalten den Zugriff durch die Freigabe aus Migration 0121. Das TOM sagt deshalb „nur über das Backend“ bzw. „mit Modulrecht“, nicht „nur der Inhaber“.
+
+## 2026-11-17 · Termin-Seiten: Standortanschrift als Ersatz (fa68d746)
+
+ok mit Auflage (legal-de): Name, Anschrift und Inhaber aus einem Datensatz (erfüllt: `ladePraxisAngabenMitStandort` übernimmt den ganzen Standort-Datensatz, module/termin-rechtstexte.js); nur Standorte derselben Rechtsperson — Standort mit anderem Träger (z. B. GmbH statt Einzelpraxis) braucht ein getrenntes Konto. Grundlage Art. 13 Abs. 1 lit. a DSGVO, § 5 Abs. 1 Nr. 1 DDG. Kosten 0 €.
