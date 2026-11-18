@@ -3790,10 +3790,10 @@ app.post('/api/attendance/check-in', attendanceLimiter, requireAuthAI, async (re
       .select('owner_id, role')
       .eq('id', userId)
       .single();
-    if (profErr || !profile) return res.status(404).json({ error: 'Profil bulunamadı' });
+    if (profErr || !profile) return res.status(404).json({ error: 'Profil nicht gefunden' });
 
     const ownerId = profile.role === 'owner' ? userId : profile.owner_id;
-    if (!ownerId) return res.status(400).json({ error: 'Owner bulunamadı' });
+    if (!ownerId) return res.status(400).json({ error: 'Praxisinhaber nicht gefunden' });
 
     // Owner-Einstellungen + Praxiskoordinate der Einzelpraxis stehen in profiles
     // (CLAUDE.md: Owner-Ebene nie in businesses).
@@ -3814,7 +3814,7 @@ app.post('/api/attendance/check-in', attendanceLimiter, requireAuthAI, async (re
         .eq('id', business_id)
         .eq('owner_id', ownerId)
         .maybeSingle();
-      if (bizErr || !biz) return res.status(404).json({ error: 'İşyeri bulunamadı' });
+      if (bizErr || !biz) return res.status(404).json({ error: 'Standort nicht gefunden' });
       if (biz.clinic_lat != null && biz.clinic_lng != null) {
         praxisLat = biz.clinic_lat;
         praxisLng = biz.clinic_lng;
@@ -3839,7 +3839,7 @@ app.post('/api/attendance/check-in', attendanceLimiter, requireAuthAI, async (re
       .maybeSingle();
 
     if (existing) {
-      return res.status(409).json({ error: 'Bugün zaten check-in yapıldı', check_in_at: existing.check_in_at });
+      return res.status(409).json({ error: 'Heute bereits eingecheckt', check_in_at: existing.check_in_at });
     }
 
     // Check-in zamanına göre durum: 09:00 Berlin saatinden sonraysa "late"
@@ -3878,7 +3878,7 @@ app.post('/api/attendance/check-in', attendanceLimiter, requireAuthAI, async (re
 
     if (insertErr) {
       console.error('[attendance/check-in]', insertErr);
-      return res.status(500).json({ error: 'Check-in kaydedilemedi' });
+      return res.status(500).json({ error: 'Check-in konnte nicht gespeichert werden' });
     }
 
     return res.json({
@@ -3890,7 +3890,7 @@ app.post('/api/attendance/check-in', attendanceLimiter, requireAuthAI, async (re
     });
   } catch (err) {
     console.error('[attendance/check-in] unexpected:', err);
-    return res.status(500).json({ error: 'Sunucu hatası' });
+    return res.status(500).json({ error: 'Serverfehler' });
   }
 });
 
@@ -3908,9 +3908,9 @@ app.post('/api/attendance/check-out', attendanceLimiter, requireAuthAI, async (r
       .eq('date', today)
       .maybeSingle();
 
-    if (findErr) return res.status(500).json({ error: 'Kayıt sorgulanamadı' });
-    if (!record) return res.status(404).json({ error: 'Bugün check-in bulunamadı' });
-    if (record.check_out_at) return res.status(409).json({ error: 'Zaten check-out yapıldı', check_out_at: record.check_out_at });
+    if (findErr) return res.status(500).json({ error: 'Eintrag konnte nicht gelesen werden' });
+    if (!record) return res.status(404).json({ error: 'Heute noch nicht eingecheckt' });
+    if (record.check_out_at) return res.status(409).json({ error: 'Bereits ausgecheckt', check_out_at: record.check_out_at });
 
     const nowTs = new Date().toISOString();
 
@@ -3919,12 +3919,12 @@ app.post('/api/attendance/check-out', attendanceLimiter, requireAuthAI, async (r
       .update({ check_out_at: nowTs })
       .eq('id', record.id);
 
-    if (updateErr) return res.status(500).json({ error: 'Check-out kaydedilemedi' });
+    if (updateErr) return res.status(500).json({ error: 'Check-out konnte nicht gespeichert werden' });
 
     return res.json({ ok: true, check_out_at: nowTs });
   } catch (err) {
     console.error('[attendance/check-out] unexpected:', err);
-    return res.status(500).json({ error: 'Sunucu hatası' });
+    return res.status(500).json({ error: 'Serverfehler' });
   }
 });
 
@@ -3941,10 +3941,10 @@ app.get('/api/attendance/today', requireAuthAI, async (req, res) => {
       .eq('date', today)
       .maybeSingle();
 
-    if (error) return res.status(500).json({ error: 'Sorgu hatası' });
+    if (error) return res.status(500).json({ error: 'Abfrage fehlgeschlagen' });
     return res.json({ today, record: data || null });
   } catch (err) {
-    return res.status(500).json({ error: 'Sunucu hatası' });
+    return res.status(500).json({ error: 'Serverfehler' });
   }
 });
 
@@ -3956,7 +3956,7 @@ app.get('/api/attendance/report', requireAuthAI, async (req, res) => {
     const { business_id, date_from, date_to } = req.query;
 
     if (!date_from || !date_to) {
-      return res.status(400).json({ error: 'date_from ve date_to zorunlu (YYYY-MM-DD)' });
+      return res.status(400).json({ error: 'date_from und date_to sind erforderlich (JJJJ-MM-TT)' });
     }
 
     if (business_id && (typeof business_id !== 'string' || !UUID_RE.test(business_id))) return res.status(400).json({ error: 'Ungültiger Standort' });
@@ -3976,12 +3976,12 @@ app.get('/api/attendance/report', requireAuthAI, async (req, res) => {
     if (business_id) query = query.or(`business_id.eq.${business_id},business_id.is.null`);
 
     const { data, error } = await query;
-    if (error) return res.status(500).json({ error: 'Rapor sorgulanamadı' });
+    if (error) return res.status(500).json({ error: 'Bericht konnte nicht gelesen werden' });
 
     return res.json({ records: data || [] });
   } catch (err) {
     console.error('[attendance/report]', err);
-    return res.status(500).json({ error: 'Sunucu hatası' });
+    return res.status(500).json({ error: 'Serverfehler' });
   }
 });
 
@@ -3997,7 +3997,7 @@ app.patch('/api/attendance/:id/note', requireAuthAI, async (req, res) => {
     if (status && ['present', 'late', 'incomplete', 'absent'].includes(status)) {
       updateFields.status = status;
     }
-    if (!Object.keys(updateFields).length) return res.status(400).json({ error: 'Güncellenecek alan yok' });
+    if (!Object.keys(updateFields).length) return res.status(400).json({ error: 'Keine Änderung angegeben' });
 
     const { error } = await supabase
       .from('attendance')
@@ -4005,10 +4005,10 @@ app.patch('/api/attendance/:id/note', requireAuthAI, async (req, res) => {
       .eq('id', id)
       .eq('owner_id', userId);
 
-    if (error) return res.status(500).json({ error: 'Güncelleme başarısız' });
+    if (error) return res.status(500).json({ error: 'Speichern fehlgeschlagen' });
     return res.json({ ok: true });
   } catch (err) {
-    return res.status(500).json({ error: 'Sunucu hatası' });
+    return res.status(500).json({ error: 'Serverfehler' });
   }
 });
 

@@ -27,3 +27,9 @@ test('Anwesenheit: Bis-Tag und nicht zugeordnete Einträge, keine fremden Owner/
 test('Anwesenheit: manipulierte Standortfilter vor DB abweisen',async()=>{
   const r=await run('x),owner_id.neq.x');assert.equal(r.status,400);assert.equal(r.calls,0);
 });
+test('Anwesenheit: Fehlermeldungen an die App sind deutsch (attendance.js zeigt data.error direkt an)', () => {
+  const block = source.slice(source.indexOf("app.post('/api/attendance/check-in'"), source.indexOf('// ---- Gece 23:55 auto-close'));
+  assert.ok(block.length > 1000);
+  const fremd = [...block.matchAll(/error: '([^']*)'/g)].map(m => m[1]).filter(t => /[ıİğĞşŞ]|bulunamad|zorunlu|yapıldı|kaydedilemedi|sorgulanamad|hatası|Güncellenecek/.test(t));
+  assert.deepEqual(fremd, []);
+});
