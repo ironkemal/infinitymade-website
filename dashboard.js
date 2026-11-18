@@ -15563,18 +15563,18 @@ function initBeleglisteUI() {
 
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token || '';
-
-    // Directly trigger a browser download for the CSV file
+    // Token nur im Header: das Backend lehnt ?token= seit f4a12669 (08.06.2026, Sicherheit) ab — der Knopf lieferte seitdem 401 (Live-Test 18.11.2026).
     const url = new URL(`${API}/billing/belegliste/export`, location.origin); // Box: API="/api"
-    url.searchParams.append('token', token);
     if (type !== 'all') url.searchParams.append('type', type);
-    // Ohne das exportierte man mehr, als auf dem Schirm stand (§146 AO) —
-    // derselbe Filter, den loadBelegliste() schon an /belegliste schickt.
+    // Ohne das exportierte man mehr, als auf dem Schirm stand (§146 AO) — derselbe Filter wie loadBelegliste().
     if (zahlart !== 'all') url.searchParams.append('zahlart', zahlart);
     if (from) url.searchParams.append('from', from);
     if (to) url.searchParams.append('to', to);
-
-    const fenster = window.open(url.toString(), '_blank'); showToast(fenster ? 'CSV-Export geöffnet. Bitte Download prüfen.' : 'CSV-Export blockiert. Bitte Pop-ups für diese Seite zulassen.', fenster ? 'success' : 'error');
+    try {
+      const res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } }); if (!res.ok) { showToast('CSV-Export: ' + await apiFehlertext(res), 'error'); return; }
+      const a = document.createElement('a'); a.href = URL.createObjectURL(await res.blob()); a.download = `zahlungsjournal${from ? '_' + from : ''}${to ? '_' + to : ''}.csv`;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    } catch { showToast('CSV-Export fehlgeschlagen. Bitte Verbindung prüfen.', 'error'); }
   });
 }
 

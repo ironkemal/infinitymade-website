@@ -89357,6 +89357,7 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
+    "apiFehlertext",
     "showToast",
     "stand"
    ],
@@ -119794,6 +119795,7 @@
    ],
    "calledBy": [
     "fetchAnwesenheitReport",
+    "initBeleglisteUI",
     "lesbar",
     "loadAusfallrechnungen",
     "loadMahnwesen",

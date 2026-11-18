@@ -73,12 +73,25 @@ test('P2-6: erstes Öffnen setzt laufenden Berlin-Monat; Nutzerfilter bleiben er
   f.dom.blFilterFrom.value='2026-01-01';const next=f.load();await tick();
   assert.equal(f.requests[1].url.searchParams.get('from'),'2026-01-01');f.requests[1].resolve(response([]));await next;
 });
-test('P2-6: CSV öffnet Export mit Zeitraum und sichtbarer Rückmeldung',async()=>{
+test('P2-6/18.11.: CSV lädt per Header-Token mit Zeitraum herunter, nie ?token= in der URL',async()=>{
   const source=fs.readFileSync(new URL('../dashboard.js',import.meta.url),'utf8');
   const fn=source.slice(source.indexOf('function initBeleglisteUI()'),source.indexOf('// Mahnwesen (Dunning) UI'));
-  let click,url;const toasts=[];
-  const dom={blExportCsvBtn:{addEventListener:(name,fn)=>{click=fn;}},blFilterFrom:{value:'2026-11-01',addEventListener(){}},blFilterTo:{value:'2026-11-30',addEventListener(){}}};
-  const c=vm.createContext({document:{getElementById:id=>dom[id]||null},loadBelegliste(){},supabase:{auth:{getSession:async()=>({data:{session:{access_token:'synthetic'}}})}},API:'/api',location:{origin:'https://qa.invalid'},URL,window:{open:u=>{url=u;return {}; }},showToast:(...a)=>toasts.push(a)});
-  vm.runInContext(fn+'\ninitBeleglisteUI()',c);await click();
-  assert.equal(new URL(url).searchParams.get('from'),'2026-11-01');assert.ok(toasts.some(t=>/CSV-Export/.test(t[0])));
+  const lauf=async(status)=>{
+    let click;const toasts=[],aufrufe=[],links=[];
+    const dom={blExportCsvBtn:{addEventListener:(name,fn)=>{click=fn;}},blFilterFrom:{value:'2026-11-01',addEventListener(){}},blFilterTo:{value:'2026-11-30',addEventListener(){}}};
+    const doc={getElementById:id=>dom[id]||null,createElement:()=>{const a={click(){links.push(a);},remove(){}};return a;},body:{appendChild(){}}};
+    const fetchFn=async(url,opts)=>{aufrufe.push({url:new URL(url),auth:opts?.headers?.Authorization});return new Response(status===200?'Beleg-Nr.;Datum':'{"error":"Invalid token"}',{status});};
+    const UrlMitBlob=class extends URL{static createObjectURL(){return 'blob:x';} static revokeObjectURL(){}};
+    const c=vm.createContext({document:doc,loadBelegliste(){},supabase:{auth:{getSession:async()=>({data:{session:{access_token:'synthetic'}}})}},API:'/api',location:{origin:'https://qa.invalid'},URL:UrlMitBlob,fetch:fetchFn,setTimeout:()=>{},apiFehlertext:async()=>'Ihre Anmeldung ist nicht mehr gültig.',showToast:(...a)=>toasts.push(a)});
+    vm.runInContext(fn+'\ninitBeleglisteUI()',c);await click();
+    return {toasts,aufrufe,links};
+  };
+  const ok=await lauf(200);
+  assert.equal(ok.aufrufe.length,1);assert.equal(ok.aufrufe[0].url.searchParams.get('from'),'2026-11-01');
+  assert.equal(ok.aufrufe[0].url.searchParams.has('token'),false,'Token nie in der URL (Backend lehnt das ab)');
+  assert.equal(ok.aufrufe[0].auth,'Bearer synthetic');
+  assert.equal(ok.links.length,1);assert.match(ok.links[0].download,/zahlungsjournal_2026-11-01_2026-11-30\.csv/);
+  const fehler=await lauf(401);
+  assert.equal(fehler.links.length,0);assert.ok(fehler.toasts.some(t=>/CSV-Export: Ihre Anmeldung/.test(t[0])&&t[1]==='error'));
+  assert.ok(!fehler.toasts.some(t=>/[{}]/.test(t[0])),'kein rohes JSON');
 });
