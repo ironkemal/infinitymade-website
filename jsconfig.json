@@ -28,6 +28,7 @@
     "supabase-config.js",
     "module/globals.d.ts",
     "module/typen/**/*.js",
+    "module/akte-aktionen.js",
     "api/_lib/auth.js",
     "api/_lib/mail-html.js",
     "api/_lib/mail-rate-limit.js",

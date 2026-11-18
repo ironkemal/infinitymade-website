@@ -11,14 +11,35 @@
  *  3. „Notiz schreiben“ nur für Inhaber (Datenbank-Policy erlaubt Angestellten keine Notizen).
  *  4. Keine neuen Abfragen/Schreibwege.
  */
+/**
+ * @typedef {'anamnese' | 'notizen' | 'fussbefund'} AkteAktionsart
+ * @typedef {'anamnese' | 'notizen' | 'fussstatus'} AkteAktionsziel
+ * @typedef {object} AkteAktionskontext
+ * @property {string | null | undefined} role
+ * @property {string | null | undefined} uid
+ * @property {string | null | undefined} ownerId
+ * @property {string | null | undefined} leadId
+ * @property {string | null} businessId
+ * @property {boolean} sharing
+ * @property {string} sector
+ * @typedef {object} AkteAktion
+ * @property {AkteAktionsart} art
+ * @property {string} panel
+ * @property {AkteAktionsziel} ziel
+ * @property {string} text
+ * @property {boolean} [nurOwner]
+ * @property {boolean} [podo]
+ */
+/** @type {AkteAktion[]} */
 const AKTIONEN = [
   { art: 'anamnese', panel: 'pdPanelAnamnese', ziel: 'anamnese', text: 'Anamnese bearbeiten' },
   { art: 'notizen', panel: 'pdPanelNotes', ziel: 'notizen', text: 'Notiz schreiben', nurOwner: true },
   { art: 'fussbefund', panel: 'pdPanelFussbefund', ziel: 'fussstatus', text: 'Fußbefund erfassen', podo: true },
 ];
 
+/** @param {AkteAktionskontext | null | undefined} k */
 function kontextSchluessel(k) {
-  if (!k || !['owner', 'employee'].includes(k.role) || !k.uid || !k.ownerId || !k.leadId) return null;
+  if (!k || !/** @type {readonly unknown[]} */ (['owner', 'employee']).includes(k.role) || !k.uid || !k.ownerId || !k.leadId) return null;
   return JSON.stringify([k.role, k.uid, k.ownerId, k.leadId, k.businessId, k.sharing, k.sector]);
 }
 
@@ -27,8 +48,12 @@ function kontextSchluessel(k) {
  * kontext(): {role,uid,ownerId,leadId,businessId,sharing,sector}; darfPanel(panelId): boolean (wie switchPanel).
  * oeffnen(art, leadId) verwendet vorhandenen Öffner; fehler() zeigt festen Hinweis.
  */
+/** @type {MutationObserver | null} */
 let designWache = null;
-/** Wechsel auf Alt bei offener Akte: Knöpfe sofort entfernen (sonst stünden sie ungestylt im Alt-Design). */
+/**
+ * Wechsel auf Alt bei offener Akte: Knöpfe sofort entfernen (sonst stünden sie ungestylt im Alt-Design).
+ * @param {Document} doc
+ */
 function wacheDesign(doc) {
   if (designWache || typeof MutationObserver === 'undefined') return;
   designWache = new MutationObserver(() => {
@@ -37,6 +62,14 @@ function wacheDesign(doc) {
   designWache.observe(doc.documentElement, { attributes: true, attributeFilter: ['data-design'] });
 }
 
+/**
+ * @param {object} deps
+ * @param {() => AkteAktionskontext} deps.kontext
+ * @param {(panelId: AkteAktionsziel) => boolean} deps.darfPanel
+ * @param {(art: AkteAktionsart, leadId: AkteAktionskontext['leadId']) => unknown} deps.oeffnen
+ * @param {() => void} [deps.fehler]
+ * @param {Document} [doc]
+ */
 export function montiereAkteAktionen({ kontext, darfPanel, oeffnen, fehler }, doc = document) {
   for (const zeile of doc.querySelectorAll('.px-akte-aktionen')) zeile.remove();
   if (doc.documentElement.dataset.design !== 'neu') return;
@@ -45,6 +78,7 @@ export function montiereAkteAktionen({ kontext, darfPanel, oeffnen, fehler }, do
   try { snapshot = kontext(); } catch { return; }
   const schluessel = kontextSchluessel(snapshot);
   if (!schluessel) return;
+  /** @param {AkteAktion} a */
   const erlaubt = a => {
     if (a.nurOwner && snapshot.role !== 'owner') return false;
     try { return darfPanel(a.ziel) === true; } catch { return false; }

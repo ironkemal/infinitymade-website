@@ -32,7 +32,8 @@ kapsar. Sebep ölçüm:
 | `module/` tamamı (2026-08-14) | **191** |
 | **Başlangıç kapsamı (2026-08-14)** | **4 giriş, 0 hata** |
 | **Ara kapsam (2026-11-14 başı)** | **74 giriş (73 dosya + 1 glob), 0 hata** |
-| **Güncel kapsam (2026-11-14 sonu)** | **682 giriş (681 dosya + 1 glob), 0 hata** |
+| **Ara kapsam (2026-11-14 sonu)** | **682 giriş (681 dosya + 1 glob), 0 hata** |
+| **Güncel kapsam (2026-11-18)** | **683 giriş (682 dosya + 1 glob), 0 hata** |
 
 > **682 giriş dağılımı (`2026-11-14`):** `root: 4` · `module: 205` (`203` dosya + `globals.d.ts` + `typen/**/*.js`) · `api: 17` (`%100`) · `api-backend: 391` (`ai: 51`, `billing: 172`, `booking: 24`, `db: 10`, `dsgvo: 6`, `lib: 69`, `merkez-istemci: 11`, `routes: 24`, `setup: 8`, `tools: 2`, `_lib + kök: 14`) · `ops: 5` · `tools: 60`.
 > **Bilinçli ertelenenler (`jsconfig.json` dışında):** (1) Dev monolith/karmaşık route'lar: `api-backend/server.js`, `api-backend/billing/api/abrechnung.routes.js`, `api-backend/billing/api/zuzahlungsforderung.routes.js` ve bunları doğrudan çeken 6 test/harness dosyası (`billing-auth-contract.test.js`, `empfaenger-pruefung.test.js`, `upload-signed-verschluesselung.test.js`, `zuzahlungsforderung.routes.test.js`, `podo-empfangsnachweis-gates.harness.mjs`, `billing/kostentraeger/stichtag-pruefung.test.js`); (2) `?v=` cache-buster göreceli import'larına veya `vendor/` modüllerine bağlı tarayıcı dosyaları (`dashboard.js`, sayfa giriş dosyaları, `ops/{app,board,decisions,fahrtenbuch,files,finance,meetings,wissen}.js`, `?v=` çeken kalan `module/` dosyaları ve `api-backend/ai/{router.test.js,__tests__/m4-corpus.test.js}`); (3) Playwright/tarayıcı harness araçları (`tools/browser-probe/`, `tools/box-abnahme-mail/`, `tools/db-vollkette/`, `tools/redesign-{geometrie,harness,kontaktbogen,shots,smoke,zustaende}.mjs`, `tools/funktionskarte.mjs`).
@@ -40,6 +41,11 @@ kapsar. Sebep ölçüm:
 191 hatalı bir liste kırmızı bir duvardır; duvar görmezden gelinir, görmezden
 gelinen araç ölür. Bu yüzden kapsam sıfır hatayla başlar ve **dosya temizlendikçe
 büyür.**
+
+18.11.2026: `module/akte-aktionen.js` eklendi. Hasta bağlamı, aksiyon/panel
+anahtarları, callback'ler ve DOM gözlemcisi JSDoc ile tanımlandı; çalışma zamanı
+kodu değişmedi. Önceden gerçek derleyici dosya listesinde de yoktu; bu adım
+yalnızca zaten import edilen bir dosyayı listeye yazmak değildir.
 
 ### Bir dosyayı listeye ekleme
 
