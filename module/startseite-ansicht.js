@@ -32,6 +32,8 @@ const inLeiste = panel => document.querySelector(`#sidebarNav .sidebar-item[data
 const zahlAus = id => { const e = document.getElementById(id); const n = Number(e?.textContent); return e && Number.isFinite(n) ? n : null; };
 const voKpiDa = () => { const e = document.getElementById('physioRezKpi'); return !!e && e.dataset.pxStatus === 'ok' && e.style.display !== 'none' && !e.hidden; };
 const istOwner = () => kontext()?.rolle?.() === 'owner';
+// V9.08 (physio-Bildabnahme 17.11.2026): bei mehreren Behandlern heute nennt jede Zeile, bei wem der Termin ist (Empfang).
+const behandlerVon = b => { if (!istOwner() || new Set(zustand.liste.map(x => x?.user_id).filter(Boolean)).size < 2) return ''; return (kontext()?.behandler?.() || []).find(m => m?.id === b?.user_id)?.name || ''; };
 const berlinStunde = d => Number(new Intl.DateTimeFormat('de-DE', {hour:'numeric',hourCycle:'h23',timeZone:'Europe/Berlin'}).formatToParts(d).find(x=>x.type==='hour')?.value);
 const datumLang = d => new Intl.DateTimeFormat('de-DE',{weekday:'long',day:'numeric',month:'long',timeZone:'Europe/Berlin'}).format(d);
 const leistung = b => b.services?.title || 'Termin';
@@ -58,7 +60,7 @@ function naechstesHtml() {
         <div class="px-naechstes-rumpf"><div class="px-aktionen"><button type="button" class="px-knopf" data-aktion="kalender">${ICON.kalender}<span>Zum Kalender</span></button></div></div>`;
     } else {
       const d = dauerMin(termin);
-      const sub = [esc(leistung(termin)), d ? `${d} Min` : '', termin.hausbesuch ? `${ICON.haus}Hausbesuch` : ''].filter(Boolean).map((x) => `<span>${x}</span>`).join('');
+      const sub = [esc(leistung(termin)), d ? `${d} Min` : '', esc(behandlerVon(termin)), termin.hausbesuch ? `${ICON.haus}Hausbesuch` : ''].filter(Boolean).map((x) => `<span>${x}</span>`).join('');
       const danachHtml = danach.length
         ? `<div class="px-danach"><h3>Danach</h3><ul>${danach.map((b) => `<li><span class="t">${esc(uhrzeitBerlin(b.start_time))}</span><span class="n">${esc(b.customer_name || 'Ohne Namen')} · ${esc(leistung(b))}</span>${b.hausbesuch ? '<span class="px-pille">Hausbesuch</span>' : '<span></span>'}</li>`).join('')}</ul></div>`
         : '<div class="px-danach"><h3>Danach</h3><p class="px-leise">Keine weiteren Termine heute.</p></div>';
@@ -158,7 +160,7 @@ function listeHtml() {
         const klick = (b.lead_id ? `data-aktion="akte" data-lead="${esc(b.lead_id)}"` : 'disabled') + (b.id ? ` data-termin="${esc(b.id)}"` : '');
         return `<li><button type="button" class="px-termin${b.zustand === 'vorbei' ? ' ist-vorbei' : ''}${b === naechster ? ' ist-naechster' : ''}" ${klick}>
           <span class="t">${esc(uhrzeitBerlin(b.start_time))}</span>
-          <span class="mitte"><span class="n">${esc(b.customer_name || 'Ohne Namen')}${b.hausbesuch ? ICON.haus : ''}</span><span class="s">${esc(leistung(b))}</span></span>
+          <span class="mitte"><span class="n">${esc(b.customer_name || 'Ohne Namen')}${b.hausbesuch ? ICON.haus : ''}</span><span class="s">${esc(leistung(b))}${behandlerVon(b) ? ` · ${esc(behandlerVon(b))}` : ''}</span></span>
           <span class="ende">${ende}</span></button></li>`;
       }).join('')}</ul>`;
   }

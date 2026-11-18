@@ -74,6 +74,12 @@ try {
   assert.equal(anfNeu.extra, 'ok', 'V9.05 neu: Anfragen-Zähler geladen'); assert.equal(anfAlt.extra, null, 'V9.05 alt: kein zusätzlicher Abruf');
   assert.ok(!/Nicht verfügbar: Online-Anfragen/.test(anfNeu.stand.voText + ''), 'V9.05 neu: keine Anfragen-Lücke');
   erg.anfragen = { neu: anfNeu.extra, alt: anfAlt.extra };
+  // V9.08: Inhaberin sieht bei zwei Behandlern heute den Namen je Zeile; Mitarbeiterin (nur eigene Termine) nicht.
+  const zeilen = page => page.evaluate(() => [...document.querySelectorAll('.px-k-list .px-termin .s')].map(e => e.textContent));
+  const behO = await lauf({ design: 'neu', rolle: 'owner' }, zeilen), behM = await lauf({ design: 'neu', rolle: 'employee' }, zeilen);
+  assert.ok(behO.extra.length > 0 && behO.extra.every(t => / · \S/.test(t)), `V9.08 Inhaberin: Behandler je Zeile (${behO.extra[0]})`);
+  assert.ok(behM.extra.every(t => !/ · /.test(t)), 'V9.08 Mitarbeiterin: kein Behandlername');
+  erg.behandler = behO.extra.length;
   // c)
   const maNeu = await lauf({ design: 'neu', rolle: 'employee' }), maAlt = await lauf({ design: 'alt', rolle: 'employee' });
   assert.equal(maNeu.stand.karte, 0, 'c) keine Karte'); assert.equal(maNeu.stand.bedarfInDom, false, 'c) keine Insel');
