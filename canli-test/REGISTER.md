@@ -2359,3 +2359,14 @@ Negative Schrittweite als mögliche Endlosschleife im Quellcode bestätigt; Rout
 - [x] B mit Leistung (Vorschlag-Pfad): ohne Zeit → „Raumvorschlag folgt, sobald eine Startzeit gewählt ist." (auch nach manueller Raumwahl) · Zeit 16.11. 10:00 → „Raumvorschlag: TEST-Raum 1" · Zeit geleert → wieder „Raumvorschlag folgt …". Der alte Satz „Kein freier geeigneter Raum …" kommt ohne Zeit nicht mehr.
 - [x] Maske über ✕ ohne Speichern geschlossen. Konsole 0 Fehler/Warnungen, keine HTTP ≥400, kein fehlgeschlagener Request. §3 #3/#4/#6 nicht gesehen.
 - [ ] Nicht geprüft: ob „TEST-Raum 1, TEST-Raum 2 frei" am 16.11. 10:00 dem Bestand entspricht (nicht gegen DB abgeglichen; Vorschlag „TEST-Raum 1" im B-Pfad ist damit konsistent). Bearbeiten eines bestehenden Termins, Mitarbeitersicht, Mobil. Uhrzeit per Skript gesetzt (`input`/`change`-Ereignis), nicht per Tastatur im Datumsfeld.
+
+### Bugfix-Runde QA Physio 17.11. nach Push `a70b65d6` — TEST-Physio QA, Inhaber — Live 18.11.2026 (Claude, Playwright, schreibende Anfragen hart blockiert) — GEÇTİ
+**Kapılar:** canlı `dashboard.js?v=20261117c5` = Commit-Stand · Backend neu (attendance/report mit ungültiger Standort-ID → 400 „Ungültiger Standort", vorher 500) · 0 schreibende Anfragen im ganzen Lauf.
+- [x] Rundgang alle 25 Bereiche + Kalender Tag/Woche/Monat + Patientendialog: 0 pageerror, 0 console.error aus der App, 0 doppelte IDs, keine `[renderSidebar]/[init]/[boot]`-Logs.
+- [x] Patientenliste: Patienten mit Verordnung zeigen „In Behandlung" (vorher überall „keine Verordnung"); ohne Verordnung weiter „keine Verordnung".
+- [x] Tagesansicht Therapeut: Spaltenköpfe sichtbar (TEST-Physio QA, QA Testtherapeut).
+- [x] Termin-Anfragen: lädt („Keine Anfragen."); API live alle drei Tabs 200 (vorher 401).
+- [x] IK-Banner aus (IK hinterlegt). Team: Inhaber als „TEST-Inhaber QA (Sie)". Überblick: Abwesenheiten nur 14 Tage (keine fällig), Fristen mit Jahr.
+- [x] API live: Anwesenheit 16.–17.11. liefert den Eintrag vom 17.11. (ohne Standort); Statistik X0501 einmal (12), X1201 (5).
+- [x] booking.html: `?u=test-physio-qa` (Personenwahl), `-qa-testtherapeut` und `-mitte` (Leistungen) ohne „nicht eingerichtet"; Tage lesbar; Dezember → „Dienstag, 1. Dezember"; Fußzeile unter Karte; unbekannter Slug → „Seite nicht verfügbar". Nichts gebucht.
+- [ ] Nicht geprüft (Speichern nötig oder menschlich): Patient speichern mit Fehleingabe bis zur Meldung, Rechnungsdruck einer bestehenden Rechnung, Passwort, Google-OAuth, Kamera, GPS.
