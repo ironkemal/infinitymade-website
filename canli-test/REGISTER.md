@@ -2369,4 +2369,6 @@ Negative Schrittweite als mögliche Endlosschleife im Quellcode bestätigt; Rout
 - [x] IK-Banner aus (IK hinterlegt). Team: Inhaber als „TEST-Inhaber QA (Sie)". Überblick: Abwesenheiten nur 14 Tage (keine fällig), Fristen mit Jahr.
 - [x] API live: Anwesenheit 16.–17.11. liefert den Eintrag vom 17.11. (ohne Standort); Statistik X0501 einmal (12), X1201 (5).
 - [x] booking.html: `?u=test-physio-qa` (Personenwahl), `-qa-testtherapeut` und `-mitte` (Leistungen) ohne „nicht eingerichtet"; Tage lesbar; Dezember → „Dienstag, 1. Dezember"; Fußzeile unter Karte; unbekannter Slug → „Seite nicht verfügbar". Nichts gebucht.
-- [ ] Nicht geprüft (Speichern nötig oder menschlich): Patient speichern mit Fehleingabe bis zur Meldung, Rechnungsdruck einer bestehenden Rechnung, Passwort, Google-OAuth, Kamera, GPS.
+- [x] Neuer Patient (Schreibanfragen blockiert, 0 Versuche): Geburtsdatum 01.01.2030 → „Das Geburtsdatum darf nicht in der Zukunft liegen."; ohne Versicherungsart → „Bitte die Versicherungsart wählen (GKV oder privat)."; Dialog bleibt offen, mit ✕ geschlossen.
+- [x] Rechnungen: Menü öffnet Liste; INV-2026-0003 ansehen → „Bezahlt am 17.11.2026" (keine Zahlungsfrist), Datum 17.11.2026, Bankblock ausgeblendet (leer), IK in Praxisdaten, Spalten Einzelpreis/Betrag, DMRZ-Knopf deaktiviert (Privatrechnung). 0 pageerror.
+- [ ] Nicht geprüft (menschlich/Geräte): Passwort ändern, Google-OAuth, Kamera-Scan, GPS-Check-in.
