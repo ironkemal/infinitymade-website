@@ -21,6 +21,18 @@ test('RSS: gültige Links → Dateinamen, Datum', () => {
   assert.ok(r.eintraege.every(e => DATEINAME_RE.test(e.name)));
 });
 
+test('RSS: doppelter Schrägstrich nach dem Host (Feed seit 11/2026) wird erkannt, Link normalisiert', () => {
+  const doppelt = P.replace('.de/media/', '.de//media/');
+  const r = rssParsen(`<rss>${item(doppelt + 'AO05Q426.ke2', 'g&uuml;ltig ab dem 01.11.2026- nicht barrierefrei -')}</rss>`);
+  assert.deepEqual(r.eintraege.map(e => e.name), ['AO05Q426_KE2.txt']);
+  assert.equal(r.eintraege[0].link, P + 'AO05Q426.ke2');
+  assert.equal(r.eintraege[0].gueltigAb, '2026-11-01');
+  assert.deepEqual(r.unerwartet, []);
+  const bös = rssParsen(`<rss>${item('https://evil.example//media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/kostentraegerdateien_1/AO05Q426.ke0')}${item('https://www.gkv-datenaustausch.de//evil/AO05Q426.ke0')}</rss>`);
+  assert.equal(bös.eintraege.length, 0);
+  assert.equal(bös.unerwartet.length, 2);
+});
+
 test('RSS: fremde Hosts, Traversal, Injection werden verworfen', () => {
   const bös = [
     'https://evil.example/media/AO05Q426.ke0',

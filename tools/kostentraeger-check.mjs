@@ -68,7 +68,10 @@ export function rssParsen(xml) {
   const unerwartet = [];
   const items = String(xml).match(/<item>[\s\S]*?<\/item>/g) || [];
   for (const it of items) {
-    const guid = (it.match(/<guid[^>]*>\s*(?:<!\[CDATA\[)?\s*([^<\]\s]+)/) || [])[1] || '';
+    const roh = (it.match(/<guid[^>]*>\s*(?:<!\[CDATA\[)?\s*([^<\]\s]+)/) || [])[1] || '';
+    // Seit ca. 11/2026 liefert der Feed "…datenaustausch.de//media/…" (doppelter Schrägstrich):
+    // nur direkt nach dem festen Host auf einen zusammenziehen, alles andere bleibt streng.
+    const guid = roh.replace(/^(https:\/\/www\.gkv-datenaustausch\.de)\/{2,}/, '$1/');
     const m = LINK_RE.exec(guid);
     if (!m) { unerwartet.push(sauber(guid) || '(leer)'); continue; }
     const name = `${m[1]}_${m[2].toUpperCase()}.txt`;
