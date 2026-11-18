@@ -1,8 +1,9 @@
 // node --test tools/kostentraeger-check.test.mjs  (offline, kein Netz)
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { rssParsen, bekannteAusgaben, basisFuer, analysiere, nachrichten, lauf, DATEINAME_RE } from './kostentraeger-check.mjs';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -85,4 +86,49 @@ test('lauf: RSS nicht lesbar → BLIND-Meldung; nichts Neues → Stille; Fehler 
   const rss = join(dir, 'r.xml'); writeFileSync(rss, `<rss>${item(P + 'AO05Q426.ke0')}</rss>`);
   const still = await lauf({ ...ohne, rssDatei: rss, wbNamen: ['AO05Q426_KE0.txt'] });
   assert.deepEqual(still.meldungen, []);
+});
+
+test('Telegram-Workflow: jede Nachricht versuchen und Teilfehler melden', {
+  skip: process.platform === 'win32' && 'Der Workflow läuft unter Linux-Bash.',
+}, () => {
+  const workflow = readFileSync(new URL('../.github/workflows/kostentraeger-check.yml', import.meta.url), 'utf8');
+  const schritt = workflow.split('      - name: Telegram senden (falls Nachrichten vorliegen)\n')[1];
+  const shell = schritt?.match(/^        run: \|\n((?:^ {10}[^\n]*\n?)+)/m)?.[1];
+  assert.ok(shell, 'Telegram-Shellschritt fehlt');
+  const fakeCurl = [
+    'curl() {',
+    '  local datei="${!#}"',
+    '  datei="${datei##*/}"',
+    '  printf "%s\\n" "$datei"',
+    '  if [[ "$datei" == "$FAIL_FILE" ]]; then return 22; fi',
+    '}',
+  ].join('\n');
+
+  const ordner = mkdtempSync(join(tmpdir(), 'kt-workflow-'));
+  try {
+    const bericht = join(ordner, 'kt');
+    mkdirSync(bericht);
+    const dateien = ['msg-01.txt', 'msg-02.txt'];
+    const faelle = [
+      { erwartet: [], fehler: '' },
+      { erwartet: dateien, fehler: '' },
+      { erwartet: dateien, fehler: dateien[0] },
+      { erwartet: dateien, fehler: dateien[1] },
+    ];
+    for (const { erwartet, fehler } of faelle) {
+      for (const datei of erwartet) writeFileSync(join(bericht, datei), 'Synthetischer Bericht');
+      /** @type {import('node:child_process').SpawnSyncReturns<string>} */
+      const ergebnis = spawnSync('/bin/bash', ['--noprofile', '--norc', '-e', '-c', fakeCurl + '\n' + shell], {
+        env: { PATH: '/dev/null', RUNNER_TEMP: ordner, FAIL_FILE: fehler },
+        encoding: 'utf8',
+        timeout: 5000,
+      });
+      assert.ifError(ergebnis.error);
+      assert.deepEqual(ergebnis.stdout.trim().split('\n').filter(Boolean), erwartet, fehler);
+      assert.equal(ergebnis.status, fehler ? 1 : 0, ergebnis.stderr);
+      assert.equal(ergebnis.stderr.trim(), fehler ? 'Telegram-Versand fehlgeschlagen: ' + fehler : '');
+    }
+  } finally {
+    rmSync(ordner, { recursive: true, force: true });
+  }
 });
