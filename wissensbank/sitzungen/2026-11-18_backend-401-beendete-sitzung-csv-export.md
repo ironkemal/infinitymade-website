@@ -61,6 +61,7 @@ Nicht bewiesen, welcher Abmeldevorgang es konkret war (keine Auth-Logs gelesen).
   (ohne Verordnung mit Leistung 0,00 €; mit Verordnung 6,52 € + 10,00 € = 16,52 €).
 
 ## Offen
+Vollständige Liste mit Zuständigkeiten: [[2026-11-11_offene-punkte-wiederaufnahme]] → „Nachtrag 18.11.2026“.
 - Mitarbeiter anlegen/entfernen live nicht geschrieben (nur lesend geprüft); Bestätigung nennt den Namen (Code `dashboard.js` Entfernen-Dialog).
 - Praxisstraße im QA-Konto ist leer — Datenpflege, kein Codefehler.
 

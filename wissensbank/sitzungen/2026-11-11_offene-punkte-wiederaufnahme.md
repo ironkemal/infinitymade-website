@@ -22,6 +22,22 @@ Nutzerauftrag: Bei „Was ist noch offen?“ diesen Stand finden, gegen neuere O
 | Dokumentation und Gesamtabschluss | O-242 im tatsächlichen Releasekanal, aktuelle Matrix und Anforderungs-/Belegabgleich | Integrator |
 | Kontext-/Limitautomatik | Steuerbare Kontextschwelle und automatische Limit-Reset-Erkennung nicht nachgewiesen. Native Kompaktierung nicht als vollständige Automatik ausgeben | Integrator; dokumentierte Werkzeugfähigkeiten zuerst prüfen |
 
+## Nachtrag 18.11.2026 — Backend-401 / Zahlungsjournal / Rechnung
+
+Herkunft: [[2026-11-18_backend-401-beendete-sitzung-csv-export]] (Fixes `0e6552d1`, `daa56924` live). Erledigt und nicht erneut öffnen: Wächter für beendete Sitzung, `signOut` lokal im Dashboard, lesbare Fehlertexte, CSV-Export, Zuzahlung nur mit Verordnung + Leistung, Straße ohne Hausnummer-Rest, Kachel „nur GKV“.
+
+| Thema | Noch fehlend / nächster Schritt | Verantwortlich |
+|---|---|---|
+| Mitarbeiter anlegen/entfernen | Live **schreibend** im QA-Mandanten prüfen (anlegen → Einrichtungscode, entfernen → Bestätigung nennt Namen, Zugang gesperrt). Bisher nur lesend + Code; auch der schreibende Lauf vom 18.11. (`write-live.mjs`) deckte das nicht ab | Melih (Lauf), Integrator |
+| Auslöser der beendeten Sitzung | Nicht bewiesen, welcher Abmeldevorgang am 17./18.11. die Sitzung beendet hat. Optional in den Supabase-Auth-Logs nach `logout` für das betroffene Konto suchen | Melih (Supabase-Dashboard) |
+| Weitere `signOut()` ohne `scope` | `onboarding.js`, `admin-login.js`, `admin.js` beenden weiter alle Geräte. Entscheiden, ob auch dort `{ scope: 'local' }`; `dsgvo-client.js` (Kontolöschung) bleibt bewusst global | Integrator, `guvenlik` kurz fragen |
+| Rohtexte außerhalb des Dashboards | Der Wächter und `fehlertextAus` wirken nur in `dashboard.js` und den genannten Modulen. `booking-request.js` (`apiFetch`) reicht `body.error` ungefiltert durch; andere Seiten (`kalender.html` u. a.) nicht geprüft | Integrator, Vorab `fonksiyon-ustasi` |
+| QA-Konto Datenpflege | Einstellungen → Praxis: Straße + Nr. eintragen. Einstellungen → DATEV: Berater- und Mandantennummer (DATEV-Export antwortet sonst 409 `DATEV_ANGABEN_FEHLEN`) | Melih |
+| Praxiseinnahmen inkl. Bar | Falls gewünscht: eigene Kachel/Reihe für alle Einnahmen (Belegliste inkl. Barzahlungen). Heute nur Beschriftung „nur GKV“; wäre eine neue Funktion | Entscheidung Melih/Kemal |
+| Ops-Dashboard | Diese Punkte im Ops-Dashboard (Kategorie Teknik/Launch) anlegen; hier nur gespeichert | Melih oder lokale Sitzung mit `ops/.env.ops` |
+
+Bewusst **kein** Handlungsbedarf: INV-2026-0003 druckt im Kopf weiter „1“ — eingefrorener `aussteller_snapshot` (§ 147 AO), nicht nachträglich ändern. Neue Rechnungen sind korrekt (INV-2026-0004 `strasse = ""`).
+
 ## Externe Mitwirkung
 
 - Nutzer: sichere autorisierte QA-Mitarbeitersitzung, Bestätigung sicheren Passwortwechsels nach früherer Offenlegung; getrenntes KI-GO, wenn Kostenbegrenzung belegt.
