@@ -8938,4 +8938,4 @@ button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(
 }
 
 /* V9.12: Telefonzeile in der Patientenliste gehört zum neuen Design (design/seiten.css); im alten bleibt alles wie bisher. */
-.pat-tel { display: none; }
+.pat-tel, .pat-next { display: none; }

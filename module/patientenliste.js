@@ -112,7 +112,7 @@ export function renderPatientenliste(ctx) {
 
     return `<tr class="lead-row" data-lead-id="${r.id}" style="cursor:pointer;">
       <td style="color:var(--text-muted);font-size:12px;font-variant-numeric:tabular-nums;">${r.patientennummer ?? '—'}</td>
-      <td>${escapeHtml(r.last_name || '')}${insBadge}${(r.phone || r.handy) ? `<small class="pat-tel">${escapeHtml(r.phone || r.handy)}</small>` : ''}</td>${/* V9.12 (physio 17.11.): Telefon für den Empfang, sichtbar nur im neuen Design (design/seiten.css), im alten per dashboard.css aus */ ''}
+      <td>${escapeHtml(r.last_name || '')}${insBadge}${(r.phone || r.handy) ? `<small class="pat-tel">${escapeHtml(r.phone || r.handy)}</small>` : ''}<small class="pat-next" data-lead="${r.id}"></small></td>${/* V9.12 (physio 17.11.): Telefon für den Empfang, sichtbar nur im neuen Design (design/seiten.css), im alten per dashboard.css aus */ ''}
       <td>${escapeHtml(r.first_name || '')}</td>
       <td>${datumDe(bd, '—')}</td>
       <td>${escapeHtml(r.street || '—')}</td>
@@ -144,6 +144,27 @@ export function renderPatientenliste(ctx) {
       ctx.aktionen.bearbeite(btn.dataset.leadId);
     });
   });
+  naechsteTermineEintragen(tbody, alle, ctx.helfer.naechsteTermine);
+}
+
+// V9.14: „Nächster Termin“ unter dem Namen — nur neues Design, nur wenn der Aufrufer einen Lader gibt
+// (dashboard.js: nur Inhaberin). Ein Abruf für alle Patienten, 60 s zwischengespeichert, damit Suche/Filter
+// nicht bei jedem Tastendruck neu fragen. Fehler bleiben still (Zeile ohne Termin statt falscher Angabe).
+let _naechsteCache = { zeit: 0, schluessel: '', karte: /** @type {Map<string,string>|null} */ (null) };
+async function naechsteTermineEintragen(tbody, alle, lader) {
+  if (typeof lader !== 'function' || document.documentElement.dataset.design !== 'neu') return;
+  const ids = (alle || []).map(r => r.id).filter(Boolean);
+  const schluessel = ids.length + ':' + (ids[0] || '') + ':' + (ids[ids.length - 1] || '');
+  if (!_naechsteCache.karte || _naechsteCache.schluessel !== schluessel || Date.now() - _naechsteCache.zeit > 60000) {
+    const { naechste, error } = await lader(ids);
+    if (error) return;
+    _naechsteCache = { zeit: Date.now(), schluessel, karte: naechste };
+  }
+  const fmt = new Intl.DateTimeFormat('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' });
+  for (const el of tbody.querySelectorAll('.pat-next[data-lead]')) {
+    const start = _naechsteCache.karte?.get(el.dataset.lead);
+    el.textContent = start ? `Nächster Termin ${fmt.format(new Date(start))}` : '';
+  }
 }
 
 /**

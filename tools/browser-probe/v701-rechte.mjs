@@ -42,6 +42,11 @@ try {
     const tel = await o.page.evaluate(() => [...document.querySelectorAll('#leadTableBody .pat-tel')].filter(e => e.offsetHeight > 0).length);
     if (design === 'neu') assert.ok(tel > 0, 'V9.12 neu: Telefon sichtbar'); else assert.equal(tel, 0, 'V9.12 alt: Telefon unsichtbar');
     erg[`${design}Telefon`] = tel;
+    // V9.14: „Nächster Termin“ für die Inhaberin nur im neuen Design
+    await ruhe(o.page, 600);
+    const naechst = await o.page.evaluate(() => [...document.querySelectorAll('#leadTableBody .pat-next')].filter(e => e.offsetHeight > 0 && /Nächster Termin/.test(e.textContent)).length);
+    if (design === 'neu') assert.ok(naechst > 0, 'V9.14 neu: nächster Termin sichtbar'); else assert.equal(naechst, 0, 'V9.14 alt: kein nächster Termin');
+    erg[`${design}NaechsterTermin`] = naechst;
     await o.kontext.close();
     erg[design] = { ohneNotesPanel: aktivOhne, ohneNotesMenue: menueOhne, mitNotesPanel: aktivMit, anamneseOptionen: optionen };
   }

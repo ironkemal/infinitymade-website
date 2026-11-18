@@ -44,7 +44,7 @@ import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnun
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20261004m116';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261005g';
 import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261004m116';
-import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261118v912'; import { pruefePatientPflicht } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { fristenGruppieren, aktuelleAbwesenheiten, datumMitJahr, abwesenheitTyp } from './module/ueberblick-listen.js?v=20261117p32';
+import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261118v914'; import { pruefePatientPflicht } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { fristenGruppieren, aktuelleAbwesenheiten, datumMitJahr, abwesenheitTyp } from './module/ueberblick-listen.js?v=20261117p32';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
 import { ladeStatusJePatient, oeffneStatusDialogFuer, verordnungStatusInfo } from './module/abrechnungsstatus.js?v=20261117f2';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261117v906';
@@ -111,7 +111,7 @@ import { pruefeArbeitszeit } from './module/arbeitszeit-pruefung.js?v=20260928';
 import { migrierePhysioAltlast, ZERTIFIKAT_PFLICHT, zertifikateMitDeckung, PHYSIO_KATALOG_ERGAENZUNG } from './module/physio-katalog-migration.js?v=20261030k11';
 import { bucheErgaenzendMit } from './module/ergaenzend-mitbuchen.js?v=20261027p';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
-import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
+import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817'; import { ladeNaechsteTermineJePatient } from './module/naechste-termine.js?v=20261118v914';
 import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschlecht.js?v=20260816';
 import { DV_SLOT_MIN, DV_SLOT_PX, WV_SLOT_PX, moveVersatzMinuten, zeitPlusMinuten, rasterStunden } from './module/kalender-raster.js?v=20261021p';
 import { blockInhalt } from './module/kalender-block.js?v=20261021p';
@@ -6776,7 +6776,7 @@ function renderLeads() {
   renderPatientenliste({
     daten: () => ({ rows: leadsCache, meta: leadsMeta, statusJePatient: leadAbrStatus,
                     filter: leadFilter, suche: leadSearchVal, businesses: myBusinesses }),
-    helfer: { displayName, geburtsdatum: leadBirthDate, passtZurSuche: patientMatchesQuery, escapeHtml, icons: ICON },
+    helfer: { displayName, geburtsdatum: leadBirthDate, passtZurSuche: patientMatchesQuery, escapeHtml, icons: ICON, naechsteTermine: currentProfile?.role === 'owner' ? (ids) => ladeNaechsteTermineJePatient(supabase, { ownerId: getOwnerId(), leadIds: ids }) : null },
     aktionen: {
       oeffneKarte: (id) => { const l = leadsCache.find(x => x.id === id); if (l) openPatientDetailModal(l); },
       bearbeite:   (id) => { const l = leadsCache.find(x => x.id === id); if (l) openLeadModal(l); },

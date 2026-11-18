@@ -393,5 +393,6 @@
   [data-design="neu"] .vord-suche input { flex: 1 1 260px; min-width: 0; min-height: 44px; border: 1px solid var(--border-input); border-radius: var(--radius-sm); background: var(--bg-input); color: var(--text-main); padding: 8px 12px; font: inherit; }
   [data-design="neu"] .vord-suche-info { color: var(--text-muted); font-size: 13px; }
   /* V9.12 Telefon unter dem Nachnamen (Empfang ruft zurück, ohne die Akte zu öffnen). */
+  [data-design="neu"] #leadTableBody .pat-next:not(:empty) { display: block; margin-top: 2px; color: var(--text-main); font-size: 12px; white-space: nowrap; }
   [data-design="neu"] #leadTableBody .pat-tel { display: block; margin-top: 2px; color: var(--text-muted); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 }
