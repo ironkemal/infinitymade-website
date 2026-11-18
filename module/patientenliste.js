@@ -112,7 +112,7 @@ export function renderPatientenliste(ctx) {
 
     return `<tr class="lead-row" data-lead-id="${r.id}" style="cursor:pointer;">
       <td style="color:var(--text-muted);font-size:12px;font-variant-numeric:tabular-nums;">${r.patientennummer ?? '—'}</td>
-      <td>${escapeHtml(r.last_name || '')}${insBadge}</td>
+      <td>${escapeHtml(r.last_name || '')}${insBadge}${(r.phone || r.handy) ? `<small class="pat-tel">${escapeHtml(r.phone || r.handy)}</small>` : ''}</td>${/* V9.12 (physio 17.11.): Telefon für den Empfang, sichtbar nur im neuen Design (design/seiten.css), im alten per dashboard.css aus */ ''}
       <td>${escapeHtml(r.first_name || '')}</td>
       <td>${datumDe(bd, '—')}</td>
       <td>${escapeHtml(r.street || '—')}</td>

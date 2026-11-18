@@ -38,6 +38,10 @@ try {
     // fremde Vorwahl wird nicht übernommen
     await o.page.evaluate(() => window.switchPanel('kunden')); await ruhe(o.page, 300);
     assert.deepEqual(o.protokoll.seitenfehler, [], `${design}: keine Seitenfehler (Inhaberin)`);
+    // V9.12: Telefon unter dem Nachnamen nur im neuen Design sichtbar
+    const tel = await o.page.evaluate(() => [...document.querySelectorAll('#leadTableBody .pat-tel')].filter(e => e.offsetHeight > 0).length);
+    if (design === 'neu') assert.ok(tel > 0, 'V9.12 neu: Telefon sichtbar'); else assert.equal(tel, 0, 'V9.12 alt: Telefon unsichtbar');
+    erg[`${design}Telefon`] = tel;
     await o.kontext.close();
     erg[design] = { ohneNotesPanel: aktivOhne, ohneNotesMenue: menueOhne, mitNotesPanel: aktivMit, anamneseOptionen: optionen };
   }
