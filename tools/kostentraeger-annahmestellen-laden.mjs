@@ -65,6 +65,11 @@ const AUSGABEN = [
   { datei: 'BK05Q426_KE0.txt', gueltigAb: '2026-10-01' },
   { datei: 'IK05Q426_KE0.txt', gueltigAb: '2026-10-01' },
   { datei: 'EK05Q426_KE1.txt', gueltigAb: '2026-10-01' },
+  // Nachlieferungen Q4/2026 (18.11.2026 byte-exakt, gemeldet vom RSS-Wächter O-138; gültig-ab laut
+  // Herausgeber-RSS). EK KE2 trägt dasselbe Datum wie KE1 → gleiches Datum: höherer Dateiname gewinnt.
+  { datei: 'EK05Q426_KE2.txt', gueltigAb: '2026-10-01' },
+  { datei: 'AO05Q426_KE2.txt', gueltigAb: '2026-11-01' },
+  { datei: 'EK05Q426_KE3.txt', gueltigAb: '2026-12-01' },
   // Unverändert gültig
   { datei: 'BN050526_KE0.txt', gueltigAb: '2026-05-01' },
   { datei: 'LK05Q226_KE0.txt', gueltigAb: '2025-08-26' },

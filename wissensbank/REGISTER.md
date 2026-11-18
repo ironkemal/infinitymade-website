@@ -938,6 +938,22 @@ Kassenart'lar arası ortak Verband/DAS kayıtları (ör. BKK ∩ vdek = 16 IK). 
 "son yazan kazanır" davranışı burada **yanlış** sonuç verir — birleştirme kuralı geçerlilik
 tarihine göre olmalı, dosya sırasına göre değil.
 
+#### 18.11 partisi — Q4/2026-Nachlieferungen, byte-exakt (`curl`, keine KI)
+
+Gemeldet vom RSS-Wächter (O-138), der seit ca. 11/2026 wegen `de//media`-Links blind war (Fix `e8f3b885`).
+Herausgeber-Zeitstempel aller drei: `Last-Modified: 18.11.2026 09:45 GMT`. ISO-8859-1/CRLF, U+FFFD 0.
+
+| # | Dosya (bizde) | Yayıncı adı | gültig ab (RSS) | Absender-IK | Dateidatum (UNB) | Bayt | sha256 | Kayıt | Tekil IK | VKG | Öncül |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 12 | `EK05Q426_KE2.txt` | `EK05Q426.ke2` | **01.10.2026** | 109979990 | 30.09.2026 14:30 | 73.931 | `e0f9cc107485d2506d31b0931d0b12a79305d8b00934694cbe3fbec88e6e7142` | 261 | 261 | 715 | #11 |
+| 13 | `AO05Q426_KE2.txt` | `AO05Q426.ke2` | **01.11.2026** | 109910000 | 04.11.2026 11:30 | 68.104 | `168306732290f65e0048a68e8992fd1e86b6c5db9f87aa331699231aa4661c61` | 187 | 187 | 758 | #8 |
+| 14 | `EK05Q426_KE3.txt` | `EK05Q426.ke3` | **01.12.2026** | 109979990 | 05.11.2026 10:00 | 74.005 | `ded608f2fdd92381c313300a632fe22e410b3bc13c2353f140a8e914d79612ca` | 261 | 261 | 717 | #12 |
+
+- #12 trägt dasselbe gültig-ab wie #11 → im Lader gewinnt bei gleichem Datum der höhere Dateiname (KE2). Gegenüber #11: 0 neue/weggefallene IK, VKG 726 → 715; 25 VKG-Zeilen mit >10 Feldern (Parser liest 10, W-01 #12).
+- #13 gegenüber #8: +1 IK `661400222`, VKG 764 → 758, **eine neue Papierannahmestelle (VKG 09)** — vor dem Laden geprüft vom Wächterbericht, Urbelege-Postweg beachten.
+- #14 (ab 01.12.) läuft im Lader als „kommend“ (nur Enddaten), wird am 01.12. automatisch die gültige vdek-Ausgabe.
+- Lader: `AUSGABEN` in `tools/kostentraeger-annahmestellen-laden.mjs` ergänzt (18.11.2026). DB-Stand: siehe `fortschritte/2026-11-18.md`.
+
 #### Tazelik taraması 30.09.2026 (Q4/2026 geçişinden bir gün önce — yalnız gözlem, indirme/yükleme YAPILMADI)
 
 Kaynak: yayıncı sayfası + sayfanın kendi RSS'i (aşağıda), 30.09.2026 ~12:10 MESZ okundu.
