@@ -110,7 +110,7 @@ function todoHtml() {
         <span class="zahl">${z.zahl}</span><span class="pfeil">${ziel ? ICON.pfeil : ''}</span></button>`;
     }).join('')}</div>${unvollstaendig ? `<div class="px-karte-zustand"><p>Nicht verfügbar: ${esc(fehlt.join(', '))}.</p></div>` : ''}`
     : bekannt
-      ? `<div class="px-karte-zustand px-karte-zustand--ruhig">${ICON.haken}<p>Nichts offen. Gute Arbeit.</p></div>`
+      ? `<div class="px-karte-zustand px-karte-zustand--ruhig">${ICON.haken}<p>Keine Beginnfristen oder Anfragen offen.</p></div>` // V9.09: genau sagen, was geprüft ist (Verordnungen-Karte zählt Folgetermine/Pausen eigens)
       : `<div class="px-karte-zustand"><p>${fehlt.length ? `Nicht verfügbar: ${esc(fehlt.join(', '))}.` : 'Hinweise sind gerade nicht verfügbar.'}</p></div>`; // V9.03: benennen, was fehlt
   // V6.F02 (E8): der frühere „Überblick“ (Fristen, No-Shows, Abwesenheiten, Geburtstage) ist von hier aus erreichbar.
   const mehr = inLeiste('ueberblick')
