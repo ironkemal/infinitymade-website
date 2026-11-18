@@ -3,7 +3,7 @@
 > Üretim: 2026-11-18 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4731 fonksiyon** (4609 JS · 95 bash · 27 ps1) · 581 dosya · 42 sidebar modülü
+**4733 fonksiyon** (4611 JS · 95 bash · 27 ps1) · 581 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -630,8 +630,8 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `datumDe` — api-backend/lib/mail-entwurf.js:29 · module/datum.js:78 · module/ehemalige-mitarbeiter.js:27 · module/kopf-dokumente.js:35 · module/standort-plan.js:394
 - `feld` — module/abrechnung-auswahl.js:985 · module/datev-einstellungen.js:71 · module/fussbefund.js:307 · module/mailversand.js:287 · module/rezeptinfo-geld.js:385
 - `main` — api-backend/check_diagnosegruppen_icd.js:101 · api-backend/merkez-istemci/kayit.js:230 · api-backend/preise_autoupdate.mjs:211 · api-backend/preise_pruefen.mjs:261 · api-backend/sync_heilmittel_katalog.js:159
-- `markiere` — module/kalender-auswahl.js:46 · module/leistung-farbwahl.js:51 · module/planung-bruecke.js:134 · module/verordnung-liste.js:268 · widget/booking-widget.js:107
-- `oeffne` — module/kalender-kontextmenue.js:120 · module/kopf-suche-ansicht.js:122 · module/leiste-flyout.js:64 · module/leistungen-liste.js:190 · module/verordnung-liste.js:220
+- `markiere` — module/kalender-auswahl.js:46 · module/leistung-farbwahl.js:51 · module/planung-bruecke.js:134 · module/verordnung-liste.js:301 · widget/booking-widget.js:107
+- `oeffne` — module/kalender-kontextmenue.js:120 · module/kopf-suche-ansicht.js:122 · module/leiste-flyout.js:64 · module/leistungen-liste.js:190 · module/verordnung-liste.js:253
 - `oeffnen` — dashboard.js:7206 · module/fussbefund.js:1078 · module/kopf-dokumente.js:108 · module/raum-auswahl.js:273 · module/rechnung-mail.js:63
 - `tag` — module/podo-vorgeschichte.js:22 · module/rechnung-dmrz.js:38 · module/rezeptinfo-geld.js:257 · module/startseite-handlungsbedarf-laden.js:13 · module/startseite-handlungsbedarf.js:7
 

@@ -135,6 +135,7 @@ export async function verordnungenListeLaden(ctx) {
   tbody.innerHTML = liste.map(v => zeileHtml(v, escapeHtml)).join('');
   tbody.style.opacity = '';
   tbody.dataset.geladen = '1';
+  sucheMontieren(tbody);
 
   tbody.querySelectorAll('.vord-row').forEach(row => {
     row.addEventListener('click', () => {
@@ -208,6 +209,38 @@ function zeileHtml(v, esc) {
  * Höchstens vier Punkte — ein Tooltip mit zehn Zeilen wird nicht gelesen, und
  * die vollständige Liste steht ohnehin unten an den Feldern.
  */
+// V9.11 (physio-Bildabnahme 17.11.2026: „Suche und Filter gibt es nicht“): Suche nur im neuen Design.
+// Filtert die gezeichneten Zeilen nach ihrem sichtbaren Text (Name, Datum, Belegnummer, Status) —
+// keine zweite Suchregel neben der Kopfsuche. Der Begriff überlebt das Neuladen nach `verordnungen:changed`.
+let _suche = '';
+function sucheAnwenden(tbody) {
+  const q = _suche.trim().toLowerCase();
+  let treffer = 0;
+  for (const tr of tbody.querySelectorAll('tr.vord-row')) {
+    const passt = !q || tr.textContent.toLowerCase().includes(q);
+    tr.hidden = !passt;
+    if (passt) treffer++;
+  }
+  const info = document.getElementById('vordSucheInfo');
+  if (info) info.textContent = q ? (treffer ? `${treffer} Treffer` : 'Keine Verordnung passt zur Suche.') : '';
+}
+function sucheMontieren(tbody) {
+  if (document.documentElement.dataset.design !== 'neu') return;
+  let feld = document.getElementById('vordSuche');
+  if (!feld) {
+    const wrap = tbody.closest('.table-wrap');
+    if (!wrap) return;
+    const box = document.createElement('div');
+    box.className = 'vord-suche';
+    box.innerHTML = '<input type="search" id="vordSuche" placeholder="Suchen: Name, Datum oder Nummer" aria-label="Verordnungen durchsuchen" autocomplete="off"><span id="vordSucheInfo" class="vord-suche-info" aria-live="polite"></span>';
+    wrap.before(box);
+    feld = /** @type {HTMLInputElement} */ (box.querySelector('input'));
+    feld.value = _suche;
+    feld.addEventListener('input', () => { _suche = feld.value; sucheAnwenden(tbody); });
+  }
+  sucheAnwenden(tbody);
+}
+
 function pruefTitel(pruefung) {
   const befunde = Array.isArray(pruefung?.befunde) ? pruefung.befunde : [];
   if (!befunde.length) return 'Bitte prüfen — zum Öffnen klicken.';

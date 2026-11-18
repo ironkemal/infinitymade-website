@@ -386,3 +386,10 @@
   [data-design="neu"] #invListBody > tr:has(> td:not([colspan])) { border-bottom-color: var(--px-linie, var(--border)); }
   [data-design="neu"] #vordTbody .vord-row td:first-child { white-space: normal; }
 }
+
+/* V9.11 Suche in der Verordnungsliste (Feld entsteht nur im neuen Design, module/verordnung-liste.js). */
+@media screen {
+  [data-design="neu"] .vord-suche { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 12px; }
+  [data-design="neu"] .vord-suche input { flex: 1 1 260px; min-width: 0; min-height: 44px; border: 1px solid var(--border-input); border-radius: var(--radius-sm); background: var(--bg-input); color: var(--text-main); padding: 8px 12px; font: inherit; }
+  [data-design="neu"] .vord-suche-info { color: var(--text-muted); font-size: 13px; }
+}

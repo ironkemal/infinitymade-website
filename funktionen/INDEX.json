@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-18",
  "dateien": 581,
- "funktionen": 4731,
+ "funktionen": 4733,
  "module": [
   "abrechnung",
   "anamnese",
@@ -249202,8 +249202,8 @@
    "lang": "js",
    "file": "module/verordnung-liste.js",
    "start": 74,
-   "end": 160,
-   "lines": 87,
+   "end": 161,
+   "lines": 88,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -249231,6 +249231,7 @@
     "oeffneStatusDialogFuer",
     "on",
     "setzeStatus",
+    "sucheMontieren",
     "zeileHtml"
    ],
    "calledBy": [
@@ -249285,8 +249286,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-liste.js",
-   "start": 162,
-   "end": 203,
+   "start": 163,
+   "end": 204,
    "lines": 42,
    "spiegelHinweis": null,
    "tables": [],
@@ -249352,12 +249353,148 @@
    ]
   },
   {
+   "name": "sucheAnwenden",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/verordnung-liste.js",
+   "start": 216,
+   "end": 226,
+   "lines": 11,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [
+    "vordSucheInfo"
+   ],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [
+    "sucheMontieren"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "sucheMontieren",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/verordnung-liste.js",
+   "start": 227,
+   "end": 242,
+   "lines": 16,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [
+    "vordSuche"
+   ],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "sucheAnwenden"
+   ],
+   "calledBy": [
+    "verordnungenListeLaden"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "pruefTitel",
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-liste.js",
-   "start": 211,
-   "end": 217,
+   "start": 244,
+   "end": 250,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -249424,8 +249561,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-liste.js",
-   "start": 220,
-   "end": 237,
+   "start": 253,
+   "end": 270,
    "lines": 18,
    "spiegelHinweis": null,
    "tables": [],
@@ -249500,8 +249637,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-liste.js",
-   "start": 245,
-   "end": 249,
+   "start": 278,
+   "end": 282,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -249528,8 +249665,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-liste.js",
-   "start": 251,
-   "end": 266,
+   "start": 284,
+   "end": 299,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -249604,8 +249741,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-liste.js",
-   "start": 268,
-   "end": 274,
+   "start": 301,
+   "end": 307,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -289806,7 +289943,7 @@
     "module/kalender-auswahl.js:46",
     "module/leistung-farbwahl.js:51",
     "module/planung-bruecke.js:134",
-    "module/verordnung-liste.js:268",
+    "module/verordnung-liste.js:301",
     "widget/booking-widget.js:107"
    ],
    "aynalar": []
@@ -289818,7 +289955,7 @@
     "module/kopf-suche-ansicht.js:122",
     "module/leiste-flyout.js:64",
     "module/leistungen-liste.js:190",
-    "module/verordnung-liste.js:220"
+    "module/verordnung-liste.js:253"
    ],
    "aynalar": []
   },
@@ -290456,7 +290593,7 @@
    "orte": [
     "module/abrechnung-detail.js:353",
     "module/fussbefund.js:1757",
-    "module/verordnung-liste.js:162"
+    "module/verordnung-liste.js:163"
    ],
    "aynalar": []
   },
@@ -291442,7 +291579,7 @@
   {
    "name": "pruefTitel",
    "orte": [
-    "module/verordnung-liste.js:211",
+    "module/verordnung-liste.js:244",
     "module/verordnung-uebersicht.js:515"
    ],
    "aynalar": [

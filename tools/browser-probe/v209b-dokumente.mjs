@@ -85,6 +85,17 @@ try {
   const voFehl = await lauf({ szenario: 'fehler' }, async page => suchen(page, 'verordnung', 'a'));
   assert.equal(voFehl.treffer.length, 0, 'f) VO-Fehler: keine Treffer'); assert.match(voFehl.hinweis, /nicht/, `f) VO-Fehler: Hinweis (${voFehl.hinweis})`);
   for (const [n, l] of Object.entries({ rg, vo, ma, alt, handy, kaputt, fehl, voFehl })) { assert.deepEqual(l.fehler, [], `g) ${n}: 0 Seitenfehler`); assert.equal(l.writes, 0, `g) ${n}: 0 Schreibversuche`); }
+  // V9.11: Suche in der Verordnungsliste nur im neuen Design; filtert sichtbare Zeilen, schreibt nichts.
+  const listenSuche = async page => {
+    await page.evaluate(() => window.switchPanel('verordnungen')); await ruhe(page, 900);
+    const feld = await page.locator('#vordSuche').count(), vorher = await page.locator('#vordTbody tr.vord-row:not([hidden])').count();
+    if (feld) { await page.fill('#vordSuche', 'testmann'); await ruhe(page, 200); }
+    return { feld, vorher, nachher: await page.locator('#vordTbody tr.vord-row:not([hidden])').count() };
+  };
+  const lsNeu = await lauf({}, listenSuche), lsAlt = await lauf({ design: 'alt' }, listenSuche);
+  assert.equal(lsNeu.feld, 1, 'V9.11 neu: Suchfeld da'); assert.ok(lsNeu.nachher >= 1 && lsNeu.nachher < lsNeu.vorher, `V9.11 neu: Suche filtert (${lsNeu.vorher} → ${lsNeu.nachher})`);
+  assert.equal(lsAlt.feld, 0, 'V9.11 alt: kein Suchfeld'); assert.equal(lsNeu.writes + lsAlt.writes, 0, 'V9.11: 0 Schreibversuche');
+  erg.listenSuche = `${lsNeu.vorher}→${lsNeu.nachher}`;
   erg.ok = true; erg.rechnungen = rg.s.treffer.length; erg.verordnungen = vo.s.treffer.length; erg.maReads = ma.reads; erg.fehlerHinweis = kaputt.hinweis;
   console.log(JSON.stringify(erg));
 } catch (e) { console.error(JSON.stringify({ ok: false, fehler: String(e.message).slice(0, 400) })); process.exitCode = 1; }

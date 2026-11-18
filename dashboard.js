@@ -72,7 +72,7 @@ import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20
 import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=20261115v703';
 import { installiereModalEscape } from './module/modal-escape.js?v=20261007m3';
 import { belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden, oeffneVerordnungAusSuche } from './module/verordnung-liste.js?v=20261117p33';
+import { verordnungenListeLaden, oeffneVerordnungAusSuche } from './module/verordnung-liste.js?v=20261118v911';
 import { zeigeVerordnungDetail, multiHeilmittelTitel } from './module/verordnung-detail.js?v=20261117p33';
 import { downloadDmrzForInvoice, setzeDmrzKnopf } from './module/rechnung-dmrz.js?v=20261117p24';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909'; import { renderDatevSettings, verdrahteDatevExport } from './module/datev-einstellungen.js?v=20261022a'; import { renderTerminerinnerungSettings } from './module/terminerinnerung-einstellung.js?v=20261109'; import { renderMailversandSettings } from './module/mailversand.js?v=20261109';
