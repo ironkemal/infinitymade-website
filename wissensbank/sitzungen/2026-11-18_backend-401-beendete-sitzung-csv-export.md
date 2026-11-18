@@ -63,3 +63,16 @@ Nicht bewiesen, welcher Abmeldevorgang es konkret war (keine Auth-Logs gelesen).
 ## Offen
 - Mitarbeiter anlegen/entfernen live nicht geschrieben (nur lesend geprüft); Bestätigung nennt den Namen (Code `dashboard.js` Entfernen-Dialog).
 - Praxisstraße im QA-Konto ist leer — Datenpflege, kein Codefehler.
+
+## Lernpunkte
+- **„Supabase-REST 200“ beweist keine gültige Sitzung.** PostgREST prüft nur das JWT. Ob die Sitzung
+  noch existiert, sagt nur `/auth/v1/user`. Diagnose künftig: frisches Token gegen das Backend testen,
+  dann `/auth/v1/user` mit dem fraglichen Token.
+- **`signOut()` ohne `scope` ist global.** Bei geteilten Praxis-Konten (PC, Handy, Kiosk-Tablet) wirft
+  ein Abmelden alle anderen Geräte hinaus. Im Dashboard immer `{ scope: 'local' }`.
+- **Ein grüner Test kann kaputtes Verhalten festschreiben.** `zahlungsjournal-laden.test.js` prüfte
+  `window.open` mit `?token=`, nachdem das Backend genau das abgelehnt hatte. Tests für Knöpfe, die
+  Backend-Routen aufrufen, sollen den Vertrag der Route prüfen (Header, Status), nicht die alte Umsetzung.
+- **Live-Rundgang nach Push lohnt sich:** Der CSV-Fehler war fünf Monate unentdeckt und fiel nur beim
+  echten Klick auf. Lesender Playwright-Rundgang (QA-Konto, keine Schreibaufrufe) dauert < 2 Minuten.
+- **Eingefrorene Belege:** Branding-Korrekturen wirken nur auf neue Rechnungen (`aussteller_snapshot`).
