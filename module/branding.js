@@ -44,7 +44,8 @@ export const httpsUrl = (/** @type {any} */ w) => {
  */
 export function brandingAus(p) {
   const x = p || {};
-  const strasse = [t(x.street), t(x.house_number)].filter(Boolean).join(' ');
+  // Hausnummer nur mit Straße: sonst druckte der Rechnungskopf nur „1“ (Live-Test 18.11.2026).
+  const strasse = t(x.street) ? [t(x.street), t(x.house_number)].filter(Boolean).join(' ') : '';
   const plz = t(x.plz) || t(x.zip);   // beide Spalten existieren (Altlast)
   const ort = t(x.city);
   const pfad = t(x.praxis_stempel_path);

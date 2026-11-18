@@ -76,6 +76,7 @@
     "module/blanko-hinweis.js",
     "module/blanko-hinweis.test.js",
     "module/branding.js",
+    "module/api-sitzung.js",
     "module/branding.test.js",
     "module/buchungskonten.js",
     "module/buchungskonten.test.js",

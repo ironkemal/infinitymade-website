@@ -24,15 +24,19 @@ const zahl = (w) => { const n = parseFloat(w); return Number.isFinite(n) ? n : 0
  * @param {string | null | undefined} invoiceType
  * @param {any} [eigenPctEingabe]
  * @param {any} [kasseEingabe]
- * @returns {{sub:number, eigenPct:number, eigenEur:number, kasse:number, total:number}}
+ * @param {{ mitRezept?: boolean }} [opts] mitRezept=false: keine GKV-Verordnung zugeordnet
+ * @returns {{sub:number, eigenPct:number, eigenEur:number, kasse:number, total:number, zuzahlungAktiv:boolean}}
  */
-export function rechnungsSummen(zeilen, invoiceType, eigenPctEingabe, kasseEingabe) {
+export function rechnungsSummen(zeilen, invoiceType, eigenPctEingabe, kasseEingabe, { mitRezept = true } = {}) {
   const sub = (zeilen || []).reduce((/** @type {number} */ s, /** @type {RechnungsZeile} */ l) => s + (l.quantity || 1) * (l.unit_price || 0), 0);
   const ohne = !!invoiceType && OHNE_ZUZAHLUNG.includes(invoiceType);
-  const eigenPct = ohne ? 0 : zahl(eigenPctEingabe);
+  // Zuzahlung nur mit zugeordneter GKV-Verordnung UND mindestens einer Leistung (Live-Test 18.11.2026:
+  // Patient ohne Verordnung/Leistung zeigte "Zu zahlen 10,00 €" aus den Standardfeldern 10 % + 10 €).
+  const zuzahlungAktiv = !ohne && mitRezept && (zeilen || []).length > 0;
+  const eigenPct = zuzahlungAktiv ? zahl(eigenPctEingabe) : 0;
   const eigenEur = sub * (eigenPct / 100);
-  const kasse = ohne ? 0 : zahl(kasseEingabe);
-  return { sub, eigenPct, eigenEur, kasse, total: ohne ? sub : eigenEur + kasse };
+  const kasse = zuzahlungAktiv ? zahl(kasseEingabe) : 0;
+  return { sub, eigenPct, eigenEur, kasse, total: ohne ? sub : eigenEur + kasse, zuzahlungAktiv };
 }
 
 /**

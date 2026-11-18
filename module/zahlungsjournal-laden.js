@@ -1,4 +1,5 @@
 import { alsBerlinDatum } from './berlin-datum.js';
+import { fehlertextAus } from './api-sitzung.js?v=20261118s1';
 /** Anzeige der Belegart (belegliste.type, CHECK in db/SCHEMA.sql) — vorher stand „zuzahlung" roh da (canli-test 20.10.2026). */
 /** @type {Record<string, string>} */
 const BELEGART = { zuzahlung: 'Zuzahlung', barverkauf: 'Barverkauf', storno: 'Storno', ausfall: 'Ausfallhonorar', rechnung: 'Rechnung' };
@@ -61,8 +62,8 @@ return async function loadBelegliste() {
     });
 
     if (!res.ok) {
-      const errData = await res.json();
-      throw new Error(errData.error || 'Serverfehler');
+      const errData = await res.json().catch(() => null);
+      throw new Error(fehlertextAus(res.status, errData, 'Zahlungsjournal konnte nicht geladen werden.'));
     }
 
     const rows = await res.json();
@@ -105,7 +106,7 @@ return async function loadBelegliste() {
     });
   } catch (err) {
     if (request !== generation) return;
-    showToast('Zahlungsjournal Fehler: ' + /** @type {any} */ (err).message, 'error');
+    showToast('Zahlungsjournal: ' + /** @type {any} */ (err).message, 'error');
   }
 }
 

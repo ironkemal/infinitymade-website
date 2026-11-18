@@ -522,6 +522,6 @@ async function handleKioskPinForgot() {
   if (!window.confirm(t('kiosk_forgot_confirm'))) return;
 
   auditKiosk('forgot_signout');
-  try { await supabase.auth.signOut(); } catch { /* trotzdem weiter */ }
+  try { await supabase.auth.signOut({ scope: 'local' }); } catch { /* trotzdem weiter */ } // nur das Tablet, nicht den Praxis-PC (18.11.2026)
   window.location.href = 'login.html';
 }

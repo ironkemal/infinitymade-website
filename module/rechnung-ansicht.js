@@ -25,9 +25,9 @@ import { datumDe } from './datum.js?v=20261001a';
  */
 
 import { bgEmpfaengerBlock, bgAusZeile, mitKassenfeldern } from './bg-angaben.js?v=20261010zc';
-import { brandingAus, ausstellerSnapshot } from './branding.js?v=20261022q';
+import { brandingAus, ausstellerSnapshot } from './branding.js?v=20261118s1';
 import { setzeDmrzKnopf } from './rechnung-dmrz.js?v=20261117p24';
-import { typKennzeichen } from './rechnung-summen.js?v=20261010b';
+import { typKennzeichen } from './rechnung-summen.js?v=20261118s1';
 import { ladeStempelDataUrl } from './stempel.js?v=20261006g';
 import { belegDruckUrl } from './beleg-druck.js?v=20261021zd';
 import { mountRechnungMail, merkeRechnungFuerMail } from './rechnung-mail.js?v=20261109';

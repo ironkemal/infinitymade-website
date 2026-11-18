@@ -22,6 +22,11 @@ test('brandingAus: ein einheitliches Objekt, getrimmt, plz/zip-Drift aufgelöst'
   assert.equal(z.plzOrt, '50667 Köln', 'zip statt plz');
 });
 
+test('brandingAus: Hausnummer ohne Straße druckt nichts (Rechnungskopf zeigte nur „1“, 18.11.2026)', () => {
+  assert.equal(brandingAus({ street: '', house_number: '1', plz: '53721', city: 'Siegburg' }).strasse, '');
+  assert.equal(brandingAus({ street: 'Hauptstr. 12', house_number: null }).strasse, 'Hauptstr. 12');
+});
+
 test('brandingAus: leeres/fehlendes Profil wirft nicht, alles leer', () => {
   for (const p of [null, undefined, {}]) {
     const b = brandingAus(p);

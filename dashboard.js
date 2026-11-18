@@ -8,7 +8,7 @@ import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261103mai
 import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261103mail1';
 import { zeigeKiRueckfrageDialog } from './module/ki-rueckfrage.js?v=20261115v703';
 import { dsgvoVerdrahten } from './module/dsgvo-client.js?v=20261002';
-import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, verdrahteEinrichtungscodeKnoepfe, mitarbeiterEntfernen } from './module/mitarbeiter-zugang.js?v=20261005a';
+import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, verdrahteEinrichtungscodeKnoepfe, mitarbeiterEntfernen } from './module/mitarbeiter-zugang.js?v=20261118s1';
 import { DEFAULT_VORLAGE_SEEDS, fehlendeSeedZeilen, seedeVorlagen } from './module/vorlagen-seed.js?v=20260929';
 import { aktiveSitzungszeilen } from './module/sitzung-aktiv.js?v=20260914';
 import { storniereTermin } from './module/termin-storno.js?v=20260908';
@@ -35,7 +35,7 @@ import { attachLeadKartenIk, pruefeLeadKartenIk } from './module/lead-karten-ik.
 import { renderPatientenkarte } from './module/patientenkarte.js?v=20261117p33';
 import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from './module/lead-felder.js?v=20260929a';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20261027p'; import { ermittleSitzungKuerzel, kuerzelAusKatalog } from './module/heilmittel-kuerzel.js?v=20261103q';
-import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten, ladeAnfragenDaten } from './module/anfrage-bearbeiten.js?v=20261117p11';
+import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten, ladeAnfragenDaten } from './module/anfrage-bearbeiten.js?v=20261118s1';
 import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
 // §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche (archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1). fmtEur kommt ab jetzt aus module/geld.js — die lokale Kopie hier ist mit dem alten Assistenten entfallen.
 import { fmtEur } from './module/geld.js?v=20260909';
@@ -76,7 +76,7 @@ import { verordnungenListeLaden, oeffneVerordnungAusSuche } from './module/veror
 import { zeigeVerordnungDetail, multiHeilmittelTitel } from './module/verordnung-detail.js?v=20261117p33';
 import { downloadDmrzForInvoice, setzeDmrzKnopf } from './module/rechnung-dmrz.js?v=20261117p24';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909'; import { renderDatevSettings, verdrahteDatevExport } from './module/datev-einstellungen.js?v=20261022a'; import { renderTerminerinnerungSettings } from './module/terminerinnerung-einstellung.js?v=20261109'; import { renderMailversandSettings } from './module/mailversand.js?v=20261109';
-import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261117v906'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261117r21'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261022q'; import { mountStartAufgaben } from './module/start-aufgaben.js?v=20261101st';
+import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261118s1'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261118s1'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261118s1'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261118s1'; import { mountStartAufgaben } from './module/start-aufgaben.js?v=20261101st';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20261014fix1'; import { markiereZuBelegBezahlt } from './module/rechnung-zahlung.js?v=20261010w';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20261103b';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261117p33';
@@ -94,7 +94,7 @@ import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzu
 import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261115v703';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20261101u';
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261117p33';
-import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261031a';
+import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261118s1';
 import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261117c5'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
 import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261103n';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
@@ -131,7 +131,7 @@ import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWarte
 import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20261105sperre';
 import { offerAusfallrechnung as offerAusfallrechnungModal } from './module/ausfallrechnung.js?v=20260904';
 import { erstelleNotizenController } from './module/patient-notizen.js?v=20261014a';
-import { erstelleZahlungsjournalLader } from './module/zahlungsjournal-laden.js?v=20261117p26';
+import { erstelleZahlungsjournalLader } from './module/zahlungsjournal-laden.js?v=20261118s1';
 import { wartelisteZeitfensterGueltig } from './module/warteliste-zeitfenster.js?v=20261014a';
 import { rendereWarteliste, wartelisteStatus, setzeWartelisteStatus } from './module/warteliste-ansicht.js?v=20260926';
 import {
@@ -148,11 +148,11 @@ import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-
 // Einheiten-Hauptbuch (Begründung: module/verordnung-termine.js). Jeder Aufruf
 // von gleicheSitzungenAb() muss diese Bremse respektieren, sonst legt er
 // podologischen Verordnungen ein Sitzungsbuch an, das niemand pflegt.
-import { fuehrtSitzungsbuch } from './module/verordnung-topf.js?v=20260930c';
+import { fuehrtSitzungsbuch } from './module/verordnung-topf.js?v=20260930c'; import { sitzungsWaechterInstallieren, apiFehlertext, MELDUNG_SITZUNG_BEENDET } from './module/api-sitzung.js?v=20261118s1';
 import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261102w10'; import { planSpalten, termineDesStandorts } from './module/standort-plan-laden.js?v=20261103planung';
 import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20261031a';
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY); sitzungsWaechterInstallieren({ auth: supabase.auth, apiBase: API_BASE, beiBeendet: () => { showToast(MELDUNG_SITZUNG_BEENDET, 'error'); supabase.auth.signOut({ scope: 'local' }).catch(() => {}).finally(() => setTimeout(() => { location.href = 'login.html'; }, 3000)); } }); // serverseitig beendete Sitzung → neu anmelden statt roher 401 (18.11.)
 // Einzige Quelle seit O-01 (11.09.2026, kommt aus /api/config via supabase-config.js).
 const API = API_BASE;
 
@@ -883,7 +883,7 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
 });
 
 document.getElementById('logoutBtn').addEventListener('click', async () => {
-  await supabase.auth.signOut();
+  await supabase.auth.signOut({ scope: 'local' }); // 'global' (Standard) beendete alle Geräte desselben Kontos (18.11.2026)
   window.location.href = 'login.html';
 });
 
@@ -12708,8 +12708,8 @@ function updateInvForInsuranceType() {
 
 function calcInvTotals() {
   // Eine Stelle für Editor UND Speichern: module/rechnung-summen.js (Privat/Selbstzahler/BG ohne Zuzahlungsabzug).
-  const r = rechnungsSummen(invLines, invPatientInsuranceType, document.getElementById('invEigenPct').value, document.getElementById('invKasse').value);
-  document.getElementById('invSubtotal').textContent = formatEur(r.sub);
+  const r = rechnungsSummen(invLines, invPatientInsuranceType, document.getElementById('invEigenPct').value, document.getElementById('invKasse').value, { mitRezept: !!(invPrescriptionId || invVerordnungId || verordnungAuswahl().prescriptionId) });
+  document.getElementById('invSubtotal').textContent = formatEur(r.sub); const zuzZeile = document.getElementById('invZuzahlungRow'); if (zuzZeile) zuzZeile.style.display = r.zuzahlungAktiv ? '' : 'none'; // ohne GKV-Verordnung oder Leistung keine Zuzahlungszeilen (18.11.)
   document.getElementById('invEigenEur').textContent = formatEur(r.eigenEur);
   document.getElementById('invKasseDisplay').textContent = formatEur(r.kasse);
   document.getElementById('invTotalPatient').textContent = formatEur(r.total);
@@ -12767,10 +12767,10 @@ async function saveInvoice() {
     const patientId = patientSel.value;
     if (!patientId) { showToast('Bitte wählen Sie einen Patienten aus.', 'error'); return; }
     if (invLines.length === 0) { showToast('Bitte fügen Sie mindestens eine Leistung hinzu.', 'error'); return; } { const bgSperre = await bgSperreBeimSpeichern({ supabase, invoiceType: invPatientInsuranceType || null, prescriptionId: invPrescriptionId || invVerordnungId || verordnungAuswahl().prescriptionId || null }); if (bgSperre) { showToast(bgSperre, 'error'); return; } }
-    const zuzFehler = await pruefeZuzahlungsBezug({ supabase, rezeptId: invPrescriptionId || invVerordnungId || verordnungAuswahl().prescriptionId, invoiceType: invPatientInsuranceType, betrag: Number(document.getElementById('invKasse').value) + Number(document.getElementById('invEigenPct').value) }); if (zuzFehler) { showToast(zuzFehler, 'error'); return; } const artWrap = document.getElementById('invLeistungsartWrap'); if (artWrap && !artWrap.hidden && !artWrap.querySelector('input:checked') && artWrap.dataset.steuerBehalten !== '1') { showToast('Bitte medizinische oder kosmetische Leistungsart wählen.', 'error'); return; }
+    const zuzFehler = await pruefeZuzahlungsBezug({ supabase, rezeptId: invPrescriptionId || invVerordnungId || verordnungAuswahl().prescriptionId, invoiceType: invPatientInsuranceType, betrag: (r0 => r0.kasse + r0.eigenEur)(rechnungsSummen(invLines, invPatientInsuranceType, document.getElementById('invEigenPct').value, document.getElementById('invKasse').value, { mitRezept: !!(invPrescriptionId || invVerordnungId || verordnungAuswahl().prescriptionId) })) }); if (zuzFehler) { showToast(zuzFehler, 'error'); return; } const artWrap = document.getElementById('invLeistungsartWrap'); if (artWrap && !artWrap.hidden && !artWrap.querySelector('input:checked') && artWrap.dataset.steuerBehalten !== '1') { showToast('Bitte medizinische oder kosmetische Leistungsart wählen.', 'error'); return; }
     invLines = aggregateInvLines(invLines);
     renderInvLines(); calcInvTotals();
-    const { sub: subtotal, eigenPct, eigenEur, kasse, total } = rechnungsSummen(invLines, invPatientInsuranceType, document.getElementById('invEigenPct').value, document.getElementById('invKasse').value);
+    const { sub: subtotal, eigenPct, eigenEur, kasse, total } = rechnungsSummen(invLines, invPatientInsuranceType, document.getElementById('invEigenPct').value, document.getElementById('invKasse').value, { mitRezept: !!(invPrescriptionId || invVerordnungId || verordnungAuswahl().prescriptionId) });
     const ownerId = getOwnerId();
     const patientName = patientSel.options[patientSel.selectedIndex].text;
     // Nummer NICHT hier vergeben: das macht der Trigger set_invoice_nummer()
@@ -15597,7 +15597,7 @@ async function loadMahnwesen() {
     const res = await fetch(`${API}/billing/mahnwesen/offene`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) throw new Error(await apiFehlertext(res));
     const rows = await res.json();
 
     tbody.innerHTML = '';
@@ -15745,7 +15745,7 @@ async function loadAusfallrechnungen() {
     const res = await fetch(`${API}/billing/ausfall/list`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) throw new Error(await apiFehlertext(res));
     const rows = await res.json();
 
     tbody.innerHTML = '';
@@ -15846,7 +15846,7 @@ async function loadStatistik() {
     const res = await fetch(`${API}/billing/statistik?monate=${monate}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) throw new Error(await apiFehlertext(res));
     const d = await res.json();
 
     // KPI
@@ -16853,7 +16853,7 @@ function showPlanWall(lastPlan) {
     render();
   };
   window.__pwSignOut = async function() {
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: 'local' });
     location.href = 'login.html';
   };
 
@@ -17405,7 +17405,7 @@ async function fetchAnwesenheitReport() {
     const res = await fetch(`${API}/attendance/report?${params}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) throw new Error('Bericht konnte nicht geladen werden');
+    if (!res.ok) throw new Error('Bericht konnte nicht geladen werden: ' + await apiFehlertext(res));
     const { records } = await res.json();
 
     if (!records.length) {

@@ -10,7 +10,7 @@
 // Spaltenrecht dort auch Mitarbeiterzeilen öffnen würde (guvenlik S-56, Vorabbewertung K2b.15).
 // Alles Fremde geht mit textContent bzw. esc() in die Seite (guvenlik: Praxisname auf anon-Seite).
 
-import { httpsUrl } from './branding.js?v=20261022q';
+import { httpsUrl } from './branding.js?v=20261118s1';
 import { renderTerminDatenschutz } from './einwilligung-texte.js?v=20261030k4';
 import { rechtslinksFuerKutu } from './ueber.js?v=20261009k15';
 

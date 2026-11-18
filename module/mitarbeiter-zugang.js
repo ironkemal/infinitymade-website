@@ -1,4 +1,5 @@
 import { API_BASE } from '../supabase-config.js';
+import { fehlertextAus } from './api-sitzung.js?v=20261118s1';
 
 const AMBIGUOUS_OR_INVALID_CHARS = /[^ABCDEFGHJKLMNPQRSTUVWXYZ23456789]/;
 
@@ -87,7 +88,7 @@ export async function mitarbeiterAnlegen({ vorname, nachname, email, anrede, tel
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.error || 'Mitarbeiter konnte nicht angelegt werden.');
+    throw new Error(fehlertextAus(res.status, data, 'Mitarbeiter konnte nicht angelegt werden.'));
   }
   return data;
 }
@@ -120,7 +121,7 @@ export async function neuerEinrichtungscode(mitarbeiterId, options = {}) {
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.error || 'Einrichtungscode konnte nicht erzeugt werden.');
+    throw new Error(fehlertextAus(res.status, data, 'Einrichtungscode konnte nicht erzeugt werden.'));
   }
   return data;
 }
@@ -153,7 +154,7 @@ export async function mitarbeiterEntfernen(mitarbeiterId, options = {}) {
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.error || 'Mitarbeiter konnte nicht entfernt werden.');
+    throw new Error(fehlertextAus(res.status, data, 'Mitarbeiter konnte nicht entfernt werden.'));
   }
   return data;
 }

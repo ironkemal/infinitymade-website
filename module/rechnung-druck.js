@@ -26,7 +26,7 @@ import { datumDe } from './datum.js?v=20261001a';
  * die Sache tatsächlich hängt.
  */
 
-import { summenAnzeige } from './rechnung-summen.js?v=20261010b';
+import { summenAnzeige } from './rechnung-summen.js?v=20261118s1';
 
 /** Sichtbarkeit über style.display, nicht über das hidden-Attribut:
  *  `.invoice-print-total-row` setzt `display:flex` und würde `hidden`

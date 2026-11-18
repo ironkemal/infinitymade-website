@@ -26,13 +26,21 @@ for (const status of ['pending', 'confirmed', 'declined']) {
     assert.deepEqual(rows, []); assert.deepEqual(headers, ['Bearer alt', 'Bearer neu']);
   });
 }
-test('Anfragen: fehlende Session sendet keinen Request und zeigt Sitzungsfehler', async () => {
-  await assert.rejects(ladeAnfragenDaten({ auth: auth(null, null), fetchFn: () => assert.fail('kein Fetch') }), /Sitzung abgelaufen/);
+test('Anfragen: fehlende Session sendet keinen Request und zeigt Anmeldehinweis', async () => {
+  await assert.rejects(ladeAnfragenDaten({ auth: auth(null, null), fetchFn: () => assert.fail('kein Fetch') }), /Nicht angemeldet/);
 });
 test('Anfragen: dauerhafter 401 ohne Endlosschleife', async () => {
   let calls = 0;
-  await assert.rejects(ladeAnfragenDaten({ auth: auth('alt', 'neu'), fetchFn: async () => { calls++; return { status: 401 }; } }), /Sitzung abgelaufen/);
+  await assert.rejects(ladeAnfragenDaten({ auth: auth('alt', 'neu'), fetchFn: async () => { calls++; return { status: 401 }; } }), /nicht angenommen/);
   assert.equal(calls, 2);
+});
+test('Anfragen: "Anmeldung beendet" nur, wenn Supabase die Sitzung ablehnt (18.11.2026)', async () => {
+  let refresh = 0;
+  const beendet = { ...auth('alt', 'neu'), refreshSession: async () => { refresh++; return session('neu'); }, getUser: async () => ({ data: { user: null }, error: { status: 403, code: 'session_not_found' } }) };
+  await assert.rejects(ladeAnfragenDaten({ auth: beendet, fetchFn: async () => ({ status: 401 }) }), /Anmeldung wurde beendet/);
+  assert.equal(refresh, 0, 'beendete Sitzung wird nicht erneuert');
+  const gueltig = { ...auth('alt', null), getUser: async () => ({ data: { user: { id: 'u' } }, error: null }) };
+  await assert.rejects(ladeAnfragenDaten({ auth: gueltig, fetchFn: async () => ({ status: 401 }) }), (e) => !/Sitzung abgelaufen/.test(e.message));
 });
 test('Anfragen: Netzwerkfehler und Serverfehler unterscheidbar', async () => {
   await assert.rejects(ladeAnfragenDaten({ auth: auth('ok'), fetchFn: async () => { throw new TypeError('offline'); } }), /Netzwerkfehler/);

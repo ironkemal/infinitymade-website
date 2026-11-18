@@ -30,6 +30,15 @@ test('Leere/ungültige Eingaben werden 0, nie NaN', () => {
   assert.equal(rechnungsSummen([], 'privat', '', '').total, 0);
 });
 
+test('GKV ohne Verordnung oder ohne Leistung: keine Zuzahlung, zu zahlen 0,00 € (Live-Test 18.11.2026)', () => {
+  const ohneLeistung = rechnungsSummen([], 'gkv', '10', '10');
+  assert.deepEqual([ohneLeistung.eigenEur, ohneLeistung.kasse, ohneLeistung.total, ohneLeistung.zuzahlungAktiv], [0, 0, 0, false]);
+  const ohneRezept = rechnungsSummen([{ quantity: 1, unit_price: 100 }], 'gkv', '10', '10', { mitRezept: false });
+  assert.deepEqual([ohneRezept.eigenEur, ohneRezept.kasse, ohneRezept.total, ohneRezept.zuzahlungAktiv], [0, 0, 0, false]);
+  const mitBeidem = rechnungsSummen([{ quantity: 1, unit_price: 100 }], 'gkv', '10', '10', { mitRezept: true });
+  assert.deepEqual([mitBeidem.kasse, mitBeidem.total, mitBeidem.zuzahlungAktiv], [10, 20, true]);
+});
+
 test('Anzeige in der Rechnungsansicht: Privat/Selbstzahler ohne Kassenzeilen, BG mit Empfänger-Beschriftung', () => {
   const p = summenAnzeige({ invoice_type: 'privat', kassenzuzahlung: 0 });
   assert.deepEqual([p.eigenZeigen, p.kasseZeigen, p.label], [false, false, 'Rechnungsbetrag']);
