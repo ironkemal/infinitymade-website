@@ -166,3 +166,16 @@
   [data-design="neu"] #panel-calendar .cal-emp-chip:hover { border-color: var(--border-strong); background: var(--bg-hover); }
   [data-design="neu"] #panel-calendar .cal-emp-chip.active { border-color: var(--text-main); background: var(--nav-active); }
 }
+
+/* ── V9.13 Tagesansicht am Handy: lesbare Behandlerspalten ───────────────────
+   Ab drei Behandlern wurden die Spalten bei 390 px auf 120 px gequetscht (Name im Block „Testmann, …“).
+   Bis 600 px: ab der dritten Spalte jede mindestens 140 px, das Raster (#dayViewGrid, schon
+   overflow-x: auto in dashboard.css) scrollt dann waagerecht in sich, die Seite nicht.
+   Mit 1–2 Behandlern greift die Breitenregel nicht — dort bleibt alles wie bisher.
+   Die Zeitleiste bleibt beim Wischen links stehen (sticky im Scroller); z-index 3 liegt über
+   Blöcken (1) und Spaltenköpfen (2), unter der Jetzt-Linie (4), deren Uhrzeit-Pille über der
+   Zeitleiste sitzt. Breite, Slot-Höhen und Kopf 44 px bleiben unberührt. */
+@media screen and (max-width: 600px) {
+  [data-design="neu"] #panel-calendar #dvColsWrap:has(> .dv-col:nth-child(3)) > .dv-col { min-width: 140px; }
+  [data-design="neu"] #panel-calendar #dayViewGrid > .dv-time-col { position: sticky; left: 0; z-index: 3; }
+}
