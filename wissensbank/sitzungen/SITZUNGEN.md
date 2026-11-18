@@ -48,6 +48,7 @@ Aktuelle Bugfix-Übergabe: [[2026-11-17_praxura-bugfix-uebergabe]] — P1–P3 l
 
 | Datum | Ticket | Notiz | Stand beim Schreiben |
 |---|---|---|---|
+| 2026-11-18 | QA und O-138 | [[2026-11-18_dmrz-termin-anfragen-und-kostentraeger-waechter]] | Zwei lokale Browserproben grün, Telegram-Zustellung bestätigt, Live-Dateien entsprechen `0e6552d1`. Externer DMRZ-Import offen. |
 | 2026-11-14 | Qualitätsoffensive (Prüfstand & `checkJs`) | [[2026-11-14_qualitaetsoffensive-pruefstand-und-typecheck]] | 16 Befunde + 8 Ergo/Logo gelöst (`119/0/3`, `122/122`), `V:01019`, `checkJs` `682` Einträge (`0` Fehler), `npm test` `5555 pass` (`4` PG `SKIP`, `3` `TODO`); lokal committed (`c5dca0c8`), Push & SQL `0122` offen |
 | 2026-11-07 | Physio-Abrechnung | [[2026-11-07_physio-fertigstellung]] | Astra-Plan zur Umsetzung freigegeben; Quellen-/Sollfall- und Testinventur läuft; Veröffentlichungsschutz offen; keine Live-Abnahme |
 | 2026-11-07 | Zentrale Restabnahme | [[2026-11-07_restarbeiten-abnahme-und-koordination]] | Reihenfolge und Ownership abgeglichen; lokale Kettenbelege gegen 111 Originaldateien geprüft; P4 weiter seriell, Box/SMTP/F11/KI nicht pauschal abgenommen |
