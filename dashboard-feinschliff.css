@@ -155,22 +155,34 @@
 
   /* Tagesübersicht: Karten vom Arbeitsbereich absetzen und die aktive
      Navigation auch bei kleinen Displays klar kennzeichnen. */
-  :root:not([data-design="neu"]):not([data-theme="dark"]) body:has(#panel-overview.active) {
-    --bg-main: #E3E8EF;
-    --border: #B7C1CE;
-    --border-strong: #707E90;
-    --text-muted: #37465A;
-    --nav-active: #CDD7E4;
+  :root:not([data-theme="dark"]) body:has(#panel-overview.active) {
+    --bg-main: #F4F2EF;
+    --border: #CEC8BF;
+    --border-strong: #84796C;
+    --text-muted: #58524C;
+    --nav-active: #E9E4DD;
   }
 
   :root:not([data-design="neu"]) body:has(#panel-overview.active) #sidebarNav .sidebar-item.active::before {
     box-shadow: inset 3px 0 var(--text-main);
   }
+  #panel-overview {
+    --overview-head-bg: #FFFDFA;
+    --overview-head-text: #302C28;
+    --overview-head-muted: #60584E;
+    --overview-head-border: #C9BEB0;
+  }
+  [data-theme="dark"] #panel-overview {
+    --overview-head-bg: #302C28;
+    --overview-head-text: #FAF7F2;
+    --overview-head-muted: #DAD2C8;
+    --overview-head-border: #73695D;
+  }
   #panel-overview #welcomeOverview {
-    --primary: #F6F8FC;
+    --primary: var(--overview-head-text);
     --text-main: var(--primary);
-    background: #233750;
-    border-color: #536C89;
+    background: var(--overview-head-bg);
+    border-color: var(--overview-head-border);
   }
 
   :root:not([data-design="neu"]) #startAufgabeForm :is(input, select, #startAufgabePatientToggle) {

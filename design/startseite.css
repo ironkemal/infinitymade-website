@@ -13,11 +13,12 @@
 
   [data-design="neu"] .px-start { display: flex; flex-direction: column; gap: 24px; }
   [data-design="neu"] .px-start-kopf {
-    --text-main: #F6F8FC;
-    --text-muted: #DCE5F1;
+    --text-main: var(--overview-head-text);
+    --text-muted: var(--overview-head-muted);
     padding: 18px 22px;
     border-radius: var(--radius);
-    background: #233750;
+    background: var(--overview-head-bg);
+    border: 1px solid var(--overview-head-border);
   }
   [data-design="neu"] .px-start-kopf h1 {
     margin: 0;
