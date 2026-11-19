@@ -1,20 +1,24 @@
 /* ============================================================================
-   design/ueberblick.css — Neu gestalteter Praxis-Überblick (Praxis-Radar)
+   design/ueberblick.css — Praxis-Überblick v2 (ruhiges, dichtes Cockpit)
    ============================================================================
-   Gilt für #panel-ueberblick in beiden Dashboard-Designs (Standard & data-design="neu")
-   sowie im Hell- und Dunkelmodus. Nutzt ausschließlich CSS-Variablen des Systems
-   (keine festen Hex-Werte für Flächen/Text, keine Emojis).
+   Gestaltungsprinzip:
+   - Viel Inhalt, minimale Optik-Unruhe: keine verschachtelten Boxen, keine
+     runden Buchstaben-Avatare, keine 12 gerahmten Knöpfe je Liste, keine Emojis.
+   - Ein einziges durchgehendes Kennzahlen-Band statt doppelter KPI-Karten.
+   - Klare Spaltenachsen, Unterstrich-Reiter, ruhige Hover-Aktionen und
+     Farbe nur dort, wo sie echten Handlungsbedarf signalisiert.
+   - Ausschließlich Praxura-CSS-Variablen (Hell, Dunkel, Standard & Redesign).
    ========================================================================== */
 
 @media screen {
-  /* ── Kopfzeile mit Suche & Aktualisieren ── */
+  /* ── Kopfzeile ── */
   #panel-ueberblick .ubl-header {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 14px 20px;
-    margin-bottom: 20px;
+    gap: 12px 20px;
+    margin-bottom: 16px;
   }
 
   #panel-ueberblick .ubl-header-title {
@@ -23,17 +27,17 @@
 
   #panel-ueberblick .ubl-header-title h2 {
     margin: 0;
-    font-size: 22px;
-    line-height: 28px;
+    font-size: 21px;
+    line-height: 26px;
     font-weight: 600;
     letter-spacing: -0.02em;
     color: var(--text-main);
   }
 
   #panel-ueberblick .ubl-header-sub {
-    margin: 4px 0 0;
-    font-size: 13px;
-    line-height: 18px;
+    margin: 3px 0 0;
+    font-size: 12.5px;
+    line-height: 17px;
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
   }
@@ -41,7 +45,7 @@
   #panel-ueberblick .ubl-toolbar {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     flex-wrap: wrap;
   }
 
@@ -49,14 +53,13 @@
     position: relative;
     display: flex;
     align-items: center;
-    min-width: 268px;
-    max-width: 340px;
-    flex: 1 1 268px;
+    width: 264px;
+    max-width: 100%;
   }
 
   #panel-ueberblick .ubl-search-icon {
     position: absolute;
-    left: 12px;
+    left: 11px;
     display: inline-flex;
     color: var(--text-muted);
     pointer-events: none;
@@ -64,8 +67,8 @@
 
   #panel-ueberblick .ubl-search-input {
     width: 100%;
-    height: 38px;
-    padding: 0 34px 0 36px;
+    height: 36px;
+    padding: 0 30px 0 34px;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm, 8px);
     background: var(--bg-card-solid);
@@ -88,12 +91,12 @@
 
   #panel-ueberblick .ubl-search-clear {
     position: absolute;
-    right: 6px;
+    right: 5px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
     border: 0;
     border-radius: 6px;
     background: transparent;
@@ -114,17 +117,17 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 7px;
-    height: 38px;
-    padding: 0 14px;
+    gap: 6px;
+    height: 36px;
+    padding: 0 12px;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm, 8px);
     background: var(--bg-card-solid);
     color: var(--text-main);
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 140ms ease, border-color 140ms ease;
+    transition: background-color 130ms ease, border-color 130ms ease;
   }
 
   #panel-ueberblick #ueberblickRefreshBtn:hover {
@@ -149,116 +152,53 @@
   #panel-ueberblick #ueberblickContent {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 16px;
   }
 
-  /* ── 4-Spalten KPI-Leiste ── */
-  #panel-ueberblick .ubl-kpi-grid {
+  /* ── EIN durchgehendes Kennzahlen-Band (5 Spalten mit Haarlinien) ── */
+  #panel-ueberblick .ubl-metric-bar {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 14px;
-  }
-
-  #panel-ueberblick .ubl-kpi {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    padding: 16px 18px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     border: 1px solid var(--border);
     border-radius: var(--radius, 12px);
     background: var(--bg-card-solid);
+    overflow: hidden;
+  }
+
+  #panel-ueberblick .ubl-metric {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 0;
+    padding: 14px 18px;
+    border: 0;
+    border-right: 1px solid var(--border);
+    background: transparent;
     color: var(--text-main);
     font: inherit;
     text-align: left;
     cursor: pointer;
-    overflow: hidden;
-    transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+    transition: background-color 120ms ease;
   }
 
-  #panel-ueberblick .ubl-kpi:hover {
-    border-color: var(--border-strong);
-    background: var(--bg-card-solid);
-    box-shadow: var(--shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.04));
-    transform: translateY(-1px);
+  #panel-ueberblick .ubl-metric:last-child {
+    border-right: 0;
   }
 
-  #panel-ueberblick .ubl-kpi:focus-visible {
+  #panel-ueberblick .ubl-metric:hover {
+    background: var(--bg-hover);
+  }
+
+  #panel-ueberblick .ubl-metric:focus-visible {
     outline: 2px solid var(--focus-ring, var(--accent));
-    outline-offset: 2px;
+    outline-offset: -2px;
   }
 
-  #panel-ueberblick .ubl-kpi::before {
-    content: '';
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: 3px;
-    background: transparent;
-    transition: background-color 150ms ease;
-  }
-
-  #panel-ueberblick .ubl-kpi.is-danger::before {
-    background: var(--danger);
-  }
-
-  #panel-ueberblick .ubl-kpi.is-accent::before {
-    background: var(--accent);
-  }
-
-  #panel-ueberblick .ubl-kpi-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    gap: 8px;
-  }
-
-  #panel-ueberblick .ubl-kpi-label {
-    font-size: 12.5px;
-    line-height: 17px;
+  #panel-ueberblick .ubl-metric-lbl {
+    font-size: 11.5px;
+    line-height: 15px;
     font-weight: 500;
-    color: var(--text-muted);
-  }
-
-  #panel-ueberblick .ubl-kpi-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    background: var(--bg-sunken, var(--bg-hover));
-    color: var(--text-muted);
-    flex-shrink: 0;
-  }
-
-  #panel-ueberblick .ubl-kpi.is-danger .ubl-kpi-icon {
-    background: var(--danger-dim);
-    color: var(--danger);
-  }
-
-  #panel-ueberblick .ubl-kpi.is-accent .ubl-kpi-icon {
-    background: var(--bg-warm, var(--bg-hover));
-    color: var(--accent);
-  }
-
-  #panel-ueberblick .ubl-kpi-value {
-    font-size: 28px;
-    line-height: 32px;
-    font-weight: 600;
-    letter-spacing: -0.025em;
-    font-variant-numeric: tabular-nums;
-    color: var(--text-main);
-  }
-
-  #panel-ueberblick .ubl-kpi.is-danger .ubl-kpi-value {
-    color: var(--danger);
-  }
-
-  #panel-ueberblick .ubl-kpi-meta {
-    font-size: 12px;
-    line-height: 16px;
     color: var(--text-muted);
     white-space: nowrap;
     overflow: hidden;
@@ -266,96 +206,51 @@
     max-width: 100%;
   }
 
-  /* ── Praxis-Eingänge Leiste (Anfragen · Warteliste · Therapieberichte) ── */
-  #panel-ueberblick .ubl-eingang-strip {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px 10px;
-    padding: 10px 14px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius, 12px);
-    background: var(--bg-card-solid);
-  }
-
-  #panel-ueberblick .ubl-eingang-strip[hidden] {
-    display: none;
-  }
-
-  #panel-ueberblick .ubl-eingang-prefix {
-    font-size: 12px;
+  #panel-ueberblick .ubl-metric-val {
+    font-size: 24px;
+    line-height: 29px;
     font-weight: 600;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-right: 4px;
-  }
-
-  #panel-ueberblick .ubl-eingang-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 32px;
-    padding: 4px 12px;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    background: var(--bg-sunken, var(--bg-hover));
-    color: var(--text-main);
-    font: inherit;
-    font-size: 12.5px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 140ms ease, border-color 140ms ease;
-  }
-
-  #panel-ueberblick .ubl-eingang-chip:hover {
-    background: var(--bg-hover);
-    border-color: var(--border-strong);
-  }
-
-  #panel-ueberblick .ubl-eingang-chip.has-items {
-    background: var(--bg-warm, var(--bg-hover));
-    border-color: var(--border-strong);
-  }
-
-  #panel-ueberblick .ubl-eingang-num {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 6px;
-    border-radius: 999px;
-    background: var(--bg-card-solid);
-    border: 1px solid var(--border);
-    font-size: 11.5px;
-    font-weight: 600;
+    letter-spacing: -0.025em;
     font-variant-numeric: tabular-nums;
+    color: var(--text-main);
+    white-space: nowrap;
+  }
+
+  #panel-ueberblick .ubl-metric.is-danger .ubl-metric-val {
+    color: var(--danger);
+  }
+
+  #panel-ueberblick .ubl-metric.is-accent .ubl-metric-val {
+    color: var(--accent);
+  }
+
+  #panel-ueberblick .ubl-metric-sub {
+    font-size: 11.5px;
+    line-height: 15px;
     color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 
-  #panel-ueberblick .ubl-eingang-chip.has-items .ubl-eingang-num {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: var(--bg-card-solid);
-  }
-
-  /* ── Asymmetrischer 2-Spalten-Arbeitsbereich ── */
-  #panel-ueberblick .ubl-workspace {
+  /* ── Haupt-Raster: 62 % links (Auslastung · Fristen · Vorgänge) / 38 % rechts (Patienten & Team) ── */
+  #panel-ueberblick .ubl-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.55fr) minmax(320px, 1fr);
-    gap: 18px;
+    grid-template-columns: minmax(0, 1.38fr) minmax(360px, 1fr);
+    gap: 16px;
     align-items: start;
   }
 
-  #panel-ueberblick .ubl-rail {
+  #panel-ueberblick .ubl-col {
     display: flex;
     flex-direction: column;
     gap: 16px;
     min-width: 0;
   }
 
-  /* ── Karten-Grundform ── */
+  /* ── Ruhige Karten-Grundform ── */
   #panel-ueberblick .ubl-card {
     display: flex;
     flex-direction: column;
@@ -369,198 +264,282 @@
   }
 
   [data-design="neu"] #panel-ueberblick .ubl-card,
-  [data-design="neu"] #panel-ueberblick .ubl-kpi,
-  [data-design="neu"] #panel-ueberblick .ubl-eingang-strip {
+  [data-design="neu"] #panel-ueberblick .ubl-metric-bar {
     box-shadow: var(--shadow-e1);
   }
 
-  #panel-ueberblick .ubl-card-head {
+  #panel-ueberblick .ubl-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 10px 12px;
-    padding: 15px 18px;
+    gap: 8px 12px;
+    padding: 13px 18px;
     border-bottom: 1px solid var(--border);
   }
 
-  #panel-ueberblick .ubl-card-title-wrap {
+  #panel-ueberblick .ubl-head--flush {
+    border-bottom: 0;
+    padding-bottom: 6px;
+  }
+
+  #panel-ueberblick .ubl-head-left {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    align-items: baseline;
+    gap: 8px;
     min-width: 0;
   }
 
-  #panel-ueberblick .ubl-card-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    background: var(--bg-sunken, var(--bg-hover));
-    color: var(--text-muted);
-    flex-shrink: 0;
-  }
-
-  #panel-ueberblick .ubl-card-head h3 {
+  #panel-ueberblick .ubl-head h3 {
     margin: 0;
-    font-size: 14.5px;
+    font-size: 14px;
     line-height: 20px;
     font-weight: 600;
+    letter-spacing: -0.01em;
     color: var(--text-main);
   }
 
-  #panel-ueberblick .ubl-count-pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 22px;
-    height: 20px;
-    padding: 0 7px;
-    border-radius: 999px;
-    background: var(--bg-sunken, var(--bg-hover));
+  #panel-ueberblick .ubl-head-count {
+    font-size: 12.5px;
+    font-weight: 500;
     color: var(--text-muted);
-    font-size: 11.5px;
-    font-weight: 600;
     font-variant-numeric: tabular-nums;
   }
 
-  #panel-ueberblick .ubl-count-pill.is-danger {
-    background: var(--danger-dim);
+  #panel-ueberblick .ubl-head-count.is-danger {
     color: var(--danger);
+    font-weight: 600;
   }
 
-  #panel-ueberblick .ubl-card-controls {
+  #panel-ueberblick .ubl-head-right {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     flex-wrap: wrap;
   }
 
-  #panel-ueberblick .ubl-head-link {
+  #panel-ueberblick .ubl-nav-link {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
+    gap: 3px;
+    padding: 2px 0;
     border: 0;
-    border-radius: 6px;
     background: transparent;
-    color: var(--accent);
+    color: var(--text-muted);
     font: inherit;
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 120ms ease;
+    transition: color 120ms ease;
   }
 
-  #panel-ueberblick .ubl-head-link:hover {
-    background: var(--bg-hover);
+  #panel-ueberblick .ubl-nav-link:hover {
+    color: var(--accent);
   }
 
-  #panel-ueberblick .ubl-head-link[hidden] {
+  #panel-ueberblick .ubl-nav-link[hidden] {
     display: none;
   }
 
-  /* ── Segment-Filter (Fristen-Tabs & Horizont-Umschalter) ── */
-  #panel-ueberblick .ubl-filter-bar {
+  /* Ruhiger Text-Umschalter für Zeithorizonte (14 T. / 30 T.) ohne Box-in-Box */
+  #panel-ueberblick .ubl-horiz {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  #panel-ueberblick .ubl-horiz-btn {
+    padding: 3px 6px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 11.5px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition: background-color 120ms ease, color 120ms ease;
+  }
+
+  #panel-ueberblick .ubl-horiz-btn:hover {
+    color: var(--text-main);
+    background: var(--bg-hover);
+  }
+
+  #panel-ueberblick .ubl-horiz-btn.is-active {
+    background: var(--bg-sunken, var(--bg-hover));
+    color: var(--text-main);
+    font-weight: 600;
+  }
+
+  /* ── Unterstrich-Tabs (Linear-Stil, null Pillen-Unruhe) ── */
+  #panel-ueberblick .ubl-tabs {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 6px;
-    padding: 10px 18px;
+    gap: 18px;
+    padding: 0 18px;
     border-bottom: 1px solid var(--border);
-    background: var(--bg-sunken, var(--bg-hover));
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  #panel-ueberblick .ubl-tabs::-webkit-scrollbar {
+    display: none;
   }
 
   #panel-ueberblick .ubl-tab {
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    height: 30px;
-    padding: 0 11px;
-    border: 1px solid transparent;
-    border-radius: 999px;
+    padding: 9px 0 10px;
+    border: 0;
     background: transparent;
     color: var(--text-muted);
     font: inherit;
     font-size: 12.5px;
     font-weight: 500;
+    white-space: nowrap;
     cursor: pointer;
-    transition: background-color 130ms ease, color 130ms ease, border-color 130ms ease;
+    transition: color 120ms ease;
   }
 
   #panel-ueberblick .ubl-tab:hover {
-    background: var(--bg-hover);
     color: var(--text-main);
   }
 
   #panel-ueberblick .ubl-tab.is-active {
-    background: var(--bg-card-solid);
-    border-color: var(--border);
     color: var(--text-main);
     font-weight: 600;
-    box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.04));
   }
 
-  #panel-ueberblick .ubl-tab-count {
-    font-size: 11px;
+  #panel-ueberblick .ubl-tab.is-active::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background: var(--primary);
+    border-radius: 2px 2px 0 0;
+  }
+
+  #panel-ueberblick .ubl-tab-n {
+    font-size: 11.5px;
     font-variant-numeric: tabular-nums;
-    opacity: 0.8;
+    color: var(--text-muted);
   }
 
-  #panel-ueberblick .ubl-tab.is-danger-dot .ubl-tab-count {
+  #panel-ueberblick .ubl-tab.is-danger-n .ubl-tab-n {
     color: var(--danger);
     font-weight: 600;
+  }
+
+  /* ── 7-Tage-Auslastung (kompaktes Balkendiagramm) ── */
+  #panel-ueberblick .ubl-week-body {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+    padding: 14px 18px 14px;
+  }
+
+  #panel-ueberblick .ubl-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 4px 6px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-main);
+    font: inherit;
+    cursor: pointer;
+    transition: background-color 120ms ease;
+  }
+
+  #panel-ueberblick .ubl-day:hover {
+    background: var(--bg-hover);
+  }
+
+  #panel-ueberblick .ubl-day.is-today {
+    background: var(--bg-warm, var(--bg-hover));
+  }
+
+  #panel-ueberblick .ubl-day-num {
+    font-size: 13px;
+    line-height: 16px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-main);
+  }
+
+  #panel-ueberblick .ubl-day.is-zero .ubl-day-num {
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  #panel-ueberblick .ubl-day-track {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    width: 100%;
+    max-width: 24px;
+    height: 40px;
+    padding-bottom: 1px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  #panel-ueberblick .ubl-day-bar {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    background: var(--border-strong);
+    opacity: 0.45;
+    transition: height 200ms ease, opacity 120ms ease;
+  }
+
+  #panel-ueberblick .ubl-day.is-today .ubl-day-bar {
+    background: var(--primary);
     opacity: 1;
   }
 
-  /* Kompakter Horizont-Switch im Kartenkopf (7T / 14T / 30T) */
-  #panel-ueberblick .ubl-seg {
-    display: inline-flex;
-    align-items: center;
-    padding: 2px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--bg-sunken, var(--bg-hover));
+  #panel-ueberblick .ubl-day.is-busy:not(.is-today) .ubl-day-bar {
+    background: var(--accent);
+    opacity: 0.85;
   }
 
-  #panel-ueberblick .ubl-seg-btn {
-    height: 24px;
-    padding: 0 8px;
-    border: 0;
-    border-radius: 6px;
-    background: transparent;
+  #panel-ueberblick .ubl-day:hover .ubl-day-bar {
+    opacity: 1;
+  }
+
+  #panel-ueberblick .ubl-day-lbl {
+    font-size: 11px;
+    line-height: 14px;
     color: var(--text-muted);
-    font: inherit;
-    font-size: 11.5px;
-    font-weight: 500;
-    cursor: pointer;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
 
-  #panel-ueberblick .ubl-seg-btn.is-active {
-    background: var(--bg-card-solid);
+  #panel-ueberblick .ubl-day.is-today .ubl-day-lbl {
     color: var(--text-main);
     font-weight: 600;
-    box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
   }
 
-  /* ── Listen & Zeilen ── */
+  /* ── Klare Listen & Tabellen-Rhythmus ── */
   #panel-ueberblick .ubl-list {
     display: flex;
     flex-direction: column;
   }
 
   #panel-ueberblick .ubl-row {
-    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 14px;
-    padding: 13px 18px;
+    padding: 10px 18px;
     border-bottom: 1px solid var(--border);
-    transition: background-color 120ms ease;
+    transition: background-color 110ms ease;
   }
 
   #panel-ueberblick .ubl-row:last-child {
@@ -571,7 +550,7 @@
     background: var(--bg-hover);
   }
 
-  /* Feine Dringlichkeitslinie links (3px) statt farbiger Emojis */
+  /* Dringlichkeits-Linie NUR bei echten Problem-/Eilfällen */
   #panel-ueberblick .ubl-row--danger {
     box-shadow: inset 3px 0 0 var(--danger);
   }
@@ -580,52 +559,19 @@
     box-shadow: inset 3px 0 0 var(--accent);
   }
 
-  #panel-ueberblick .ubl-row--neutral {
-    box-shadow: inset 3px 0 0 var(--border-strong);
-  }
-
   #panel-ueberblick .ubl-row-main {
     display: flex;
-    align-items: center;
-    gap: 12px;
+    flex-direction: column;
+    gap: 2px;
     min-width: 0;
     flex: 1 1 auto;
   }
 
-  #panel-ueberblick .ubl-avatar {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    background: var(--bg-sunken, var(--bg-hover));
-    color: var(--text-main);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    flex-shrink: 0;
-  }
-
-  #panel-ueberblick .ubl-avatar.is-today {
-    background: var(--bg-warm, var(--nav-active));
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  #panel-ueberblick .ubl-row-text {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    min-width: 0;
-  }
-
-  #panel-ueberblick .ubl-row-title-line {
+  #panel-ueberblick .ubl-row-top {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 6px 8px;
+    gap: 5px 8px;
     min-width: 0;
   }
 
@@ -635,9 +581,9 @@
     background: transparent;
     color: var(--text-main);
     font: inherit;
-    font-size: 14px;
-    line-height: 20px;
-    font-weight: 600;
+    font-size: 13.5px;
+    line-height: 19px;
+    font-weight: 500;
     text-align: left;
     cursor: pointer;
     overflow: hidden;
@@ -652,218 +598,203 @@
   }
 
   #panel-ueberblick .ubl-name-plain {
-    font-size: 14px;
-    line-height: 20px;
-    font-weight: 600;
+    font-size: 13.5px;
+    line-height: 19px;
+    font-weight: 500;
     color: var(--text-main);
-  }
-
-  #panel-ueberblick .ubl-sub {
-    font-size: 12.5px;
-    line-height: 17px;
-    color: var(--text-muted);
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  /* ── Semantische Status-Badges (ruhig, kein Emoji) ── */
-  #panel-ueberblick .ubl-badge {
-    display: inline-flex;
-    align-items: center;
-    height: 21px;
-    padding: 0 8px;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    background: var(--bg-sunken, var(--bg-hover));
-    color: var(--text-muted);
-    font-size: 11.5px;
+  #panel-ueberblick .ubl-meta {
+    font-size: 12px;
     line-height: 16px;
-    font-weight: 500;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
-    font-variant-numeric: tabular-nums;
   }
 
-  #panel-ueberblick .ubl-badge--danger {
+  /* Kleine, leise Inline-Markierungen (nur wo wirklich nötig) */
+  #panel-ueberblick .ubl-tag {
+    display: inline-flex;
+    align-items: center;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: 4px;
+    background: var(--bg-sunken, var(--bg-hover));
+    color: var(--text-muted);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  #panel-ueberblick .ubl-tag--danger {
     background: var(--danger-dim);
-    border-color: transparent;
     color: var(--danger);
     font-weight: 600;
   }
 
-  #panel-ueberblick .ubl-badge--accent {
+  #panel-ueberblick .ubl-tag--accent {
     background: var(--bg-warm, var(--bg-hover));
-    border-color: var(--border);
     color: var(--accent);
     font-weight: 600;
   }
 
-  #panel-ueberblick .ubl-badge--ok {
-    background: var(--bg-sunken, var(--bg-hover));
-    border-color: var(--border);
-    color: var(--success);
-    font-weight: 600;
-  }
-
-  /* ── Rechte Seite der Fristzeile (Zeitstrahl + Aktionen) ── */
-  #panel-ueberblick .ubl-row-side {
+  /* Rechte Spalte in Zeilen: tabellarische Werte + stille Text-Aktionen */
+  #panel-ueberblick .ubl-row-right {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
     flex-shrink: 0;
   }
 
-  #panel-ueberblick .ubl-deadline-meta {
+  #panel-ueberblick .ubl-val-col {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 4px;
-    min-width: 132px;
+    gap: 1px;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
   }
 
-  #panel-ueberblick .ubl-date-sub {
+  #panel-ueberblick .ubl-val-primary {
+    font-size: 12.5px;
+    line-height: 17px;
+    font-weight: 500;
+    color: var(--text-main);
+    white-space: nowrap;
+  }
+
+  #panel-ueberblick .ubl-val-primary.is-danger {
+    color: var(--danger);
+    font-weight: 600;
+  }
+
+  #panel-ueberblick .ubl-val-primary.is-accent {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  #panel-ueberblick .ubl-val-sub {
     font-size: 11.5px;
     line-height: 15px;
     color: var(--text-muted);
-    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
 
-  #panel-ueberblick .ubl-progress {
-    width: 96px;
-    height: 3px;
-    border-radius: 999px;
-    background: var(--border);
-    overflow: hidden;
-  }
-
-  #panel-ueberblick .ubl-progress > span {
-    display: block;
-    height: 100%;
-    border-radius: inherit;
-    background: var(--text-muted);
-  }
-
-  #panel-ueberblick .ubl-progress.is-danger > span {
-    background: var(--danger);
-  }
-
-  #panel-ueberblick .ubl-progress.is-warning > span {
-    background: var(--accent);
-  }
-
-  #panel-ueberblick .ubl-row-actions {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  #panel-ueberblick .ubl-act-btn {
+  /* Ruhige Text-Aktionen ohne Kasten-Wand */
+  #panel-ueberblick .ubl-links {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    height: 30px;
-    padding: 0 10px;
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    background: var(--bg-card-solid);
-    color: var(--text-main);
+    gap: 2px;
+  }
+
+  #panel-ueberblick .ubl-link {
+    padding: 4px 7px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-muted);
     font: inherit;
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
     white-space: nowrap;
-    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+    transition: background-color 110ms ease, color 110ms ease;
   }
 
-  #panel-ueberblick .ubl-act-btn:hover {
-    background: var(--bg-warm, var(--bg-hover));
-    border-color: var(--border-strong);
+  #panel-ueberblick .ubl-row:hover .ubl-link {
     color: var(--text-main);
   }
 
-  #panel-ueberblick .ubl-act-btn:focus-visible {
+  #panel-ueberblick .ubl-link:hover {
+    background: var(--bg-sunken, var(--bg-warm));
+    color: var(--accent) !important;
+  }
+
+  #panel-ueberblick .ubl-link:focus-visible {
     outline: 2px solid var(--focus-ring, var(--accent));
-    outline-offset: 2px;
+    outline-offset: 1px;
   }
 
-  /* ── Ruhige Leer- & Ladezustände ── */
-  #panel-ueberblick .ubl-empty {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 16px 18px;
-    color: var(--text-muted);
-    font-size: 13px;
-    line-height: 19px;
+  #panel-ueberblick .ubl-dot-sep {
+    color: var(--border-strong);
+    font-size: 11px;
+    user-select: none;
   }
 
-  #panel-ueberblick .ubl-empty--ok {
-    color: var(--text-main);
-  }
-
-  #panel-ueberblick .ubl-empty-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
+  /* Statuspunkt für laufende Abwesenheiten / heute */
+  #panel-ueberblick .ubl-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    background: var(--bg-sunken, var(--bg-hover));
-    color: var(--text-muted);
+    background: var(--accent);
     flex-shrink: 0;
   }
 
-  #panel-ueberblick .ubl-empty--ok .ubl-empty-icon {
-    color: var(--success);
+  #panel-ueberblick .ubl-dot--danger {
+    background: var(--danger);
+  }
+
+  /* ── Ruhige Fußzeile & Leerzustände ── */
+  #panel-ueberblick .ubl-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 18px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-sunken, var(--bg-hover));
+    font-size: 11.5px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  #panel-ueberblick .ubl-foot[hidden] {
+    display: none;
+  }
+
+  #panel-ueberblick .ubl-empty {
+    padding: 14px 18px;
+    font-size: 12.5px;
+    line-height: 18px;
+    color: var(--text-muted);
   }
 
   #panel-ueberblick .ubl-skeleton-wrap {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding: 16px 18px;
+    gap: 8px;
+    padding: 14px 18px;
   }
 
   #panel-ueberblick .ubl-skeleton {
-    height: 14px;
-    border-radius: 6px;
+    height: 13px;
+    border-radius: 5px;
     background: var(--bg-sunken, var(--bg-hover));
     width: 100%;
   }
 
   #panel-ueberblick .ubl-skeleton--short {
-    width: 58%;
+    width: 55%;
   }
 
-  #panel-ueberblick .ubl-card-foot {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 10px 18px;
-    border-top: 1px solid var(--border);
-    background: var(--bg-sunken, var(--bg-hover));
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-
-  /* ── Responsive Breakpoints ── */
-  @media (max-width: 1179px) {
-    #panel-ueberblick .ubl-kpi-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* ── Responsive ── */
+  @media (max-width: 1199px) {
+    #panel-ueberblick .ubl-metric-bar {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    #panel-ueberblick .ubl-workspace {
+    #panel-ueberblick .ubl-metric {
+      border-bottom: 1px solid var(--border);
+    }
+
+    #panel-ueberblick .ubl-grid {
       grid-template-columns: minmax(0, 1fr);
-    }
-  }
-
-  @media (max-width: 1024px) {
-    #panel-ueberblick .ubl-tab,
-    #panel-ueberblick .ubl-act-btn,
-    #panel-ueberblick .ubl-eingang-chip,
-    #panel-ueberblick .ubl-head-link,
-    #panel-ueberblick #ueberblickRefreshBtn {
-      min-height: 40px;
     }
   }
 
@@ -877,58 +808,83 @@
     }
 
     #panel-ueberblick .ubl-search {
-      min-width: 0;
-      max-width: none;
-      flex: 1 1 100%;
+      width: auto;
+      flex: 1 1 200px;
     }
 
-    #panel-ueberblick .ubl-kpi {
-      padding: 14px;
+    #panel-ueberblick .ubl-metric-bar {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    #panel-ueberblick .ubl-kpi-value {
-      font-size: 24px;
-      line-height: 28px;
-    }
-
-    #panel-ueberblick #ublDeadlinesSection .ubl-row {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 10px;
-      padding: 13px 14px;
-    }
-
-    #panel-ueberblick #ublDeadlinesSection .ubl-row-side {
-      justify-content: space-between;
-      width: 100%;
-      padding-top: 4px;
-    }
-
-    #panel-ueberblick .ubl-rail .ubl-row {
+    #panel-ueberblick .ubl-metric {
       padding: 12px 14px;
-      gap: 10px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
     }
 
-    #panel-ueberblick .ubl-deadline-meta {
-      align-items: flex-start;
-      min-width: 0;
+    #panel-ueberblick .ubl-metric:nth-child(2n) {
+      border-right: 0;
     }
 
-    #panel-ueberblick .ubl-card-head,
-    #panel-ueberblick .ubl-filter-bar,
+    #panel-ueberblick .ubl-metric:last-child:nth-child(odd) {
+      grid-column: 1 / -1;
+      border-right: 0;
+      border-bottom: 0;
+    }
+
+    #panel-ueberblick .ubl-metric-val {
+      font-size: 21px;
+      line-height: 26px;
+    }
+
+    #panel-ueberblick .ubl-head,
+    #panel-ueberblick .ubl-tabs,
+    #panel-ueberblick .ubl-week-body,
+    #panel-ueberblick .ubl-row,
     #panel-ueberblick .ubl-empty,
-    #panel-ueberblick .ubl-card-foot {
+    #panel-ueberblick .ubl-foot {
       padding-left: 14px;
       padding-right: 14px;
+    }
+
+    #panel-ueberblick .ubl-week-body {
+      gap: 4px;
+    }
+
+    #panel-ueberblick #ublDeadlinesSection .ubl-row,
+    #panel-ueberblick #ublVorgaengeSection .ubl-row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+    }
+
+    #panel-ueberblick #ublDeadlinesSection .ubl-row-right,
+    #panel-ueberblick #ublVorgaengeSection .ubl-row-right {
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    #panel-ueberblick #ublDeadlinesSection .ubl-val-col,
+    #panel-ueberblick #ublVorgaengeSection .ubl-val-col {
+      align-items: flex-start;
+      text-align: left;
+    }
+
+    #panel-ueberblick .ubl-meta {
+      white-space: normal;
+    }
+
+    #panel-ueberblick .ubl-tab,
+    #panel-ueberblick .ubl-link,
+    #panel-ueberblick .ubl-horiz-btn,
+    #panel-ueberblick #ueberblickRefreshBtn {
+      min-height: 38px;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
     #panel-ueberblick #ueberblickRefreshBtn.is-loading svg {
       animation: none;
-    }
-    #panel-ueberblick .ubl-kpi {
-      transition: none;
     }
   }
 }

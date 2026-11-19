@@ -32,7 +32,7 @@
   <link rel="stylesheet" href="design/startseite.css?v=20261119warmweiss1">
   <link rel="stylesheet" href="design/seiten.css?v=20261118v914">
   <link rel="stylesheet" href="design/verwaltung.css?v=20261111p3">
-  <link rel="stylesheet" href="design/ueberblick.css?v=20261119ubl1">
+  <link rel="stylesheet" href="design/ueberblick.css?v=20261119ubl2">
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <!-- Cropper.js lokal statt cdnjs (27.08.2026) — gleiche Datei, gleiche Version,
        Pruefsumme gegen unpkg verglichen. Grund: dies ist die eingeloggte App, in der
@@ -243,71 +243,97 @@
 
         </section>
 
-        <!-- ===== PANEL: ÜBERBLICK (Praxis-Radar) ===== -->
+        <!-- ===== PANEL: ÜBERBLICK (Praxis-Cockpit) ===== -->
         <section class="panel" id="panel-ueberblick">
           <div class="ubl-header">
             <div class="ubl-header-title">
               <h2>Überblick</h2>
-              <p class="ubl-header-sub" id="ublHeaderSub" aria-live="polite">Fristen, Nicht-Erscheiner, Abwesenheiten und Geburtstage</p>
+              <p class="ubl-header-sub" id="ublHeaderSub" aria-live="polite">Praxis-Überblick</p>
             </div>
             <div class="ubl-toolbar">
               <div class="ubl-search">
                 <span class="ubl-search-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
                 </span>
-                <input type="search" id="ublSearchInput" class="ubl-search-input" placeholder="Patient, Team, Frist suchen" aria-label="Überblick durchsuchen" autocomplete="off" />
+                <input type="search" id="ublSearchInput" class="ubl-search-input" placeholder="Suchen …" aria-label="Überblick durchsuchen" autocomplete="off" />
                 <button type="button" id="ublSearchClear" class="ubl-search-clear" aria-label="Suche leeren" hidden>
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </button>
               </div>
               <button type="button" class="btn-ghost" id="ueberblickRefreshBtn" title="Aktualisieren">
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
                 <span>Aktualisieren</span>
               </button>
             </div>
           </div>
 
           <div id="ueberblickContent">
-            <div id="ublKpiBar" class="ubl-kpi-grid" aria-label="Kennzahlen im Überblick"></div>
+            <div id="ublKpiBar" class="ubl-metric-bar" aria-label="Kennzahlen im Überblick"></div>
 
-            <div id="ublEingangStrip" class="ubl-eingang-strip" hidden aria-label="Offene Praxis-Eingänge"></div>
-
-            <div class="ubl-workspace">
-              <article id="ublDeadlinesSection" class="card ubl-card">
-                <div class="ubl-card-head">
-                  <div class="ubl-card-title-wrap">
-                    <span class="ubl-card-icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-                    </span>
-                    <h3>Rezept-Fristen</h3>
-                    <span id="ublDeadlinesCount" class="ubl-count-pill">0</span>
-                  </div>
-                  <div class="ubl-card-controls">
-                    <button type="button" id="ublDeadlinesAllLink" class="ubl-head-link" data-ubl-panel="verordnungen">
-                      <span>Alle Verordnungen</span>
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-                    </button>
-                  </div>
-                </div>
-                <div id="ublDeadlineFilters" class="ubl-filter-bar" role="group" aria-label="Fristen filtern"></div>
-                <div id="ublDeadlinesList" class="ubl-list">Lade…</div>
-                <div id="ublDeadlinesFoot" class="ubl-card-foot" hidden></div>
-              </article>
-
-              <div class="ubl-rail">
-                <article id="ublNoShowSection" class="card ubl-card">
-                  <div class="ubl-card-head">
-                    <div class="ubl-card-title-wrap">
-                      <span class="ubl-card-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M17 8l5 5M22 8l-5 5"/></svg>
-                      </span>
-                      <h3>Nicht erschienen</h3>
-                      <span id="ublNoShowCount" class="ubl-count-pill">0</span>
+            <div class="ubl-grid">
+              <div class="ubl-col">
+                <article id="ublWeekSection" class="card ubl-card">
+                  <div class="ubl-head">
+                    <div class="ubl-head-left">
+                      <h3>Nächste 7 Tage</h3>
+                      <span id="ublWeekSum" class="ubl-head-count"></span>
                     </div>
-                    <div class="ubl-card-controls">
-                      <button type="button" id="ublNoShowCalLink" class="ubl-head-link" data-ubl-panel="calendar">
+                    <div class="ubl-head-right">
+                      <button type="button" id="ublWeekCalLink" class="ubl-nav-link" data-ubl-panel="calendar">
+                        <span>Terminkalender</span>
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div id="ublWeekBody"></div>
+                </article>
+
+                <article id="ublDeadlinesSection" class="card ubl-card">
+                  <div class="ubl-head ubl-head--flush">
+                    <div class="ubl-head-left">
+                      <h3>Rezept-Fristen & Berichte</h3>
+                      <span id="ublDeadlinesCount" class="ubl-head-count">0</span>
+                    </div>
+                    <div class="ubl-head-right">
+                      <button type="button" id="ublDeadlinesAllLink" class="ubl-nav-link" data-ubl-panel="verordnungen">
+                        <span>Verordnungen</span>
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div id="ublDeadlineFilters" class="ubl-tabs" role="tablist" aria-label="Fristen filtern"></div>
+                  <div id="ublDeadlinesList" class="ubl-list">Lade…</div>
+                  <div id="ublDeadlinesFoot" class="ubl-foot" hidden></div>
+                </article>
+              </div>
+
+              <div class="ubl-col">
+                <article id="ublVorgaengeSection" class="card ubl-card">
+                  <div class="ubl-head ubl-head--flush">
+                    <div class="ubl-head-left">
+                      <h3>Vorgänge & Eingänge</h3>
+                    </div>
+                    <div class="ubl-head-right">
+                      <button type="button" id="ublVorgaengeLink" class="ubl-nav-link" data-ubl-panel="anfragen">
+                        <span>Alle öffnen</span>
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div id="ublVorgaengeTabs" class="ubl-tabs" role="tablist" aria-label="Vorgänge wechseln"></div>
+                  <div id="ublVorgaengeList" class="ubl-list">Lade…</div>
+                </article>
+
+                <article id="ublNoShowSection" class="card ubl-card">
+                  <div class="ubl-head">
+                    <div class="ubl-head-left">
+                      <h3>Nicht erschienen</h3>
+                      <span id="ublNoShowCount" class="ubl-head-count">0</span>
+                    </div>
+                    <div class="ubl-head-right">
+                      <button type="button" id="ublNoShowCalLink" class="ubl-nav-link" data-ubl-panel="calendar">
                         <span>Kalender</span>
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                       </button>
                     </div>
                   </div>
@@ -315,22 +341,19 @@
                 </article>
 
                 <article id="ublVacationSection" class="card ubl-card">
-                  <div class="ubl-card-head">
-                    <div class="ubl-card-title-wrap">
-                      <span class="ubl-card-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M9.5 14.5l5 5M14.5 14.5l-5 5"/></svg>
-                      </span>
+                  <div class="ubl-head">
+                    <div class="ubl-head-left">
                       <h3>Abwesenheiten</h3>
-                      <span id="ublVacationCount" class="ubl-count-pill">0</span>
+                      <span id="ublVacationCount" class="ubl-head-count">0</span>
                     </div>
-                    <div class="ubl-card-controls">
-                      <div class="ubl-seg" role="group" aria-label="Zeitraum Abwesenheiten">
-                        <button type="button" class="ubl-seg-btn is-active" data-ubl-abw-tage="14" aria-pressed="true">14 T.</button>
-                        <button type="button" class="ubl-seg-btn" data-ubl-abw-tage="30" aria-pressed="false">30 T.</button>
+                    <div class="ubl-head-right">
+                      <div class="ubl-horiz" role="group" aria-label="Zeitraum Abwesenheiten">
+                        <button type="button" class="ubl-horiz-btn is-active" data-ubl-abw-tage="14" aria-pressed="true">14 T.</button>
+                        <button type="button" class="ubl-horiz-btn" data-ubl-abw-tage="30" aria-pressed="false">30 T.</button>
                       </div>
-                      <button type="button" id="ublVacationTeamLink" class="ubl-head-link" data-ubl-panel="team">
+                      <button type="button" id="ublVacationTeamLink" class="ubl-nav-link" data-ubl-panel="team">
                         <span>Team</span>
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                       </button>
                     </div>
                   </div>
@@ -338,19 +361,16 @@
                 </article>
 
                 <article id="ublBirthdaysSection" class="card ubl-card">
-                  <div class="ubl-card-head">
-                    <div class="ubl-card-title-wrap">
-                      <span class="ubl-card-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v8H4v-8"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
-                      </span>
+                  <div class="ubl-head">
+                    <div class="ubl-head-left">
                       <h3>Geburtstage</h3>
-                      <span id="ublBirthdaysCount" class="ubl-count-pill">0</span>
+                      <span id="ublBirthdaysCount" class="ubl-head-count">0</span>
                     </div>
-                    <div class="ubl-card-controls">
-                      <div class="ubl-seg" role="group" aria-label="Zeitraum Geburtstage">
-                        <button type="button" class="ubl-seg-btn is-active" data-ubl-geb-tage="7" aria-pressed="true">7 T.</button>
-                        <button type="button" class="ubl-seg-btn" data-ubl-geb-tage="14" aria-pressed="false">14 T.</button>
-                        <button type="button" class="ubl-seg-btn" data-ubl-geb-tage="30" aria-pressed="false">30 T.</button>
+                    <div class="ubl-head-right">
+                      <div class="ubl-horiz" role="group" aria-label="Zeitraum Geburtstage">
+                        <button type="button" class="ubl-horiz-btn is-active" data-ubl-geb-tage="7" aria-pressed="true">7 T.</button>
+                        <button type="button" class="ubl-horiz-btn" data-ubl-geb-tage="14" aria-pressed="false">14 T.</button>
+                        <button type="button" class="ubl-horiz-btn" data-ubl-geb-tage="30" aria-pressed="false">30 T.</button>
                       </div>
                     </div>
                   </div>
@@ -5964,7 +5984,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261119ubl1"></script>
+  <script type="module" src="dashboard.js?v=20261119ubl2"></script>
 </body>
 
 </html>

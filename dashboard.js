@@ -44,7 +44,7 @@ import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnun
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20261004m116';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261005g';
 import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261004m116';
-import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261118v914'; import { pruefePatientPflicht } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { ladeUeberblickAnsicht } from './module/ueberblick-ansicht.js?v=20261119ubl1';
+import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261118v914'; import { pruefePatientPflicht } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { ladeUeberblickAnsicht } from './module/ueberblick-ansicht.js?v=20261119ubl2';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
 import { ladeStatusJePatient, oeffneStatusDialogFuer, verordnungStatusInfo } from './module/abrechnungsstatus.js?v=20261117f2';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261117v906';
@@ -16967,20 +16967,18 @@ async function openPatRxDetail(rxId, leadId) {
   });
 }
 
-// ===== Überblick (Praxis-Radar → module/ueberblick-ansicht.js) =====
-
+// ===== Überblick (Praxis-Cockpit → module/ueberblick-ansicht.js) =====
 async function loadUeberblick() {
   return ladeUeberblickAnsicht({
-    supabase,
-    getOwnerId,
-    bizScope,
-    escapeHtml,
+    supabase, getOwnerId, bizScope, escapeHtml,
+    istOwner: () => currentProfile?.role === 'owner',
     oeffnePatient: (leadId) => window.openPatientDetail?.(leadId),
     oeffneVerordnung: (quelle, rxId) => {
       switchPanel('verordnungen');
       const ok = oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id: rxId, rolle: currentProfile?.role, apiBase: API });
       if (!ok) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info');
     },
+    oeffneRechnung: (invId) => { switchPanel('rechnungen'); return openInvView(invId); },
     wechslePanel: (panelId) => switchPanel(panelId),
   });
 }

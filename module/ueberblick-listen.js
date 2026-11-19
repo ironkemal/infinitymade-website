@@ -1,10 +1,10 @@
-// Überblick-Datenaufbereitung (Fristen, Geburtstage, Nicht-Erscheiner, Abwesenheiten).
+// Überblick-Datenaufbereitung (Praxis-Cockpit: Wochenauslastung, Fristen & Berichte,
+// Vorgänge/Eingänge, Nicht-Erscheiner, Team-Abwesenheiten, Geburtstage).
 //
-// Reine Funktionen ohne DOM- oder Supabase-Abhängigkeit, damit sämtliche Regeln
-// (Gruppierung Fund 8, Dringlichkeits-Sortierung, Zeithorizonte, Filter) direkt
-// mit node --test geprüft werden können.
+// Reine Funktionen ohne DOM- oder Supabase-Abhängigkeit, vollständig unit-testbar.
 import { datumDe } from './datum.js?v=20261001a';
 import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20261004m113';
+import { alsBerlinDatum } from './berlin-datum.js';
 
 /**
  * Legacy-Helfer (Fund 8, QA TEST-Physio 17.11.2026):
@@ -73,7 +73,7 @@ export function addiereTageIso(iso, tage) {
 }
 
 /**
- * Differenz in Kalendertagen: `zielIso - basisIso` (positiv = in der Zukunft, negativ = überfällig).
+ * Differenz in Kalendertagen: `zielIso - basisIso` (positiv = Zukunft, negativ = überfällig).
  * @param {string} basisIso
  * @param {string} zielIso
  * @returns {number|null}
@@ -88,7 +88,7 @@ export function tageDifferenzIso(basisIso, zielIso) {
 }
 
 /**
- * Extrahiert 1–2 Initialen für ruhige Monogramm-Badges (kein Emoji).
+ * Extrahiert 1–2 Initialen (Hilfsfunktion).
  * @param {string|null|undefined} name
  * @returns {string}
  */
@@ -100,7 +100,7 @@ export function initialen(name) {
 }
 
 /**
- * Diakritika-tolerante Teilstringsuche über beliebige Textfelder.
+ * Fallunabhängige Teilstringsuche über beliebige Textfelder.
  * @param {string} suche
  * @param {(string|null|undefined)[]} felder
  * @returns {boolean}
@@ -110,6 +110,81 @@ export function suchePasst(suche, felder) {
   if (!q) return true;
   const heuhaufen = (felder || []).filter(Boolean).join(' ').toLowerCase();
   return heuhaufen.includes(q);
+}
+
+const WOCHENTAGE_KURZ = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+const MONATE_KURZ = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+const MONATE_DE = [
+  'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+  'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember',
+];
+
+/**
+ * Erzeugt die 7-Tage-Auslastung ab `heuteIso` (heute + 6 Folgetage).
+ *
+ * @param {Array<{start_time?:string|null, status?:string|null, hausbesuch?:boolean|null}>} bookings
+ * @param {string} heuteIso 'YYYY-MM-DD'
+ * @param {Date} [jetzt]
+ */
+export function wochenAuslastungAufbereiten(bookings, heuteIso, jetzt = new Date()) {
+  const tage = [];
+  const nachTag = new Map();
+  for (let i = 0; i < 7; i++) {
+    const iso = addiereTageIso(heuteIso, i);
+    if (!iso) continue;
+    const [j, m, t] = iso.split('-').map(Number);
+    const wd = new Date(Date.UTC(j, m - 1, t)).getUTCDay();
+    const eintrag = {
+      tagIso: iso,
+      wochentag: WOCHENTAGE_KURZ[wd],
+      tagKurz: `${t}.`,
+      istHeute: i === 0,
+      istWochenende: wd === 0 || wd === 6,
+      anzahl: 0,
+      hausbesuche: 0,
+      offenHeute: 0,
+      prozent: 0,
+    };
+    tage.push(eintrag);
+    nachTag.set(iso, eintrag);
+  }
+
+  const jetztMs = jetzt.getTime();
+  let gesamt7 = 0;
+  let hausbesuche7 = 0;
+
+  for (const b of bookings || []) {
+    if (!b?.start_time) continue;
+    if (b.status === 'cancelled') continue;
+    const tagIso = alsBerlinDatum(b.start_time);
+    const slot = nachTag.get(tagIso);
+    if (!slot) continue;
+    slot.anzahl += 1;
+    gesamt7 += 1;
+    if (b.hausbesuch) {
+      slot.hausbesuche += 1;
+      hausbesuche7 += 1;
+    }
+    if (slot.istHeute && b.status !== 'completed' && b.status !== 'no_show') {
+      const ms = Date.parse(b.start_time);
+      if (Number.isNaN(ms) || ms >= jetztMs - 15 * 60000) slot.offenHeute += 1;
+    }
+  }
+
+  const maxTag = Math.max(1, ...tage.map(t => t.anzahl));
+  for (const t of tage) {
+    t.prozent = t.anzahl > 0 ? Math.max(14, Math.round((t.anzahl / maxTag) * 100)) : 0;
+  }
+
+  const heute = tage[0] || { anzahl: 0, hausbesuche: 0, offenHeute: 0 };
+  return {
+    tage,
+    heuteGesamt: heute.anzahl,
+    heuteOffen: heute.offenHeute,
+    heuteHausbesuche: heute.hausbesuche,
+    gesamt7,
+    hausbesuche7,
+  };
 }
 
 /**
@@ -138,10 +213,6 @@ const KATEGORIE_RANG = { ueberfaellig: 0, bald: 1, geplant: 2, abrechnung: 3 };
 /**
  * Wertet offene Verordnungen aus `prescriptions` zu strukturierten, gruppierten
  * und nach Dringlichkeit sortierten Frist-Einträgen aus.
- *
- * - Unbegonnene Verordnungen: 14 Tage (dringlich) / 28 Tage (regulär) ab Ausstellungsdatum (§ 15 HeilM-RL)
- * - Begonnene Verordnungen: 9-Monats-Abrechnungsfrist (274 Tage), angezeigt ab ≤ 60 Tagen Restzeit
- * - Gruppierung (Fund 8): gleiche (Patient, Art, Stichtag, Dringlichkeit) → 1 Zeile mit `anzahl`
  *
  * @param {Array<Record<string, any>>} rezepte
  * @param {string} heuteIso 'YYYY-MM-DD'
@@ -247,7 +318,7 @@ export function fristenAuswerten(rezepte, heuteIso) {
               stichtagDe: datumDe(frist9m, '—'),
               tageDiff: diff,
               fristLabel,
-              artLabel: 'Abrechnungsfrist (9 Monate)',
+              artLabel: 'Abrechnungsfrist (9 Mon.)',
               kontextMeta,
               fortschrittProzent,
               anzahl: 1,
@@ -266,10 +337,156 @@ export function fristenAuswerten(rezepte, heuteIso) {
   });
 }
 
-const MONATE_DE = [
-  'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
-  'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember',
-];
+/**
+ * Filtert offene angeforderte Therapieberichte aus bereits geladenen Verordnungen.
+ * @param {Array<Record<string, any>>} rezepte
+ */
+export function therapieberichteAufbereiten(rezepte) {
+  return (rezepte || [])
+    .filter(rx => rx?.bericht_angefordert && rx?.bericht_status === 'offen')
+    .map(rx => {
+      const lead = rx?.leads || null;
+      const patientName = [lead?.first_name, lead?.last_name].filter(Boolean).join(' ').trim() || 'Ohne Namen';
+      const kontextMeta = [rx?.heilmittel, rx?.diagnosegruppe].map(s => String(s || '').trim()).filter(Boolean).join(' · ');
+      return {
+        rxId: rx?.id || null,
+        patientId: rx?.patient_id || lead?.id || null,
+        quelle: rx?.therapie_bereich === 'podo' ? 'podologie' : 'physio',
+        patientName,
+        kontextMeta: kontextMeta || 'Verordnung',
+        ausgestelltDe: rx?.ausstellungsdatum ? datumMitJahr(rx.ausstellungsdatum) : '—',
+      };
+    })
+    .sort((a, b) => a.patientName.localeCompare(b.patientName, 'de-DE'));
+}
+
+const ZAHLUNG_LABEL = {
+  gkv: 'GKV',
+  pkv: 'PKV',
+  privat: 'Privat',
+  selbstzahler: 'Selbstzahler',
+  bg: 'BG',
+};
+
+/**
+ * Bereitet offene Online-Terminanfragen (`booking_requests`) auf.
+ * @param {Array<Record<string, any>>} anfragen
+ * @param {string} heuteIso
+ */
+export function anfragenAufbereiten(anfragen, heuteIso) {
+  return (anfragen || []).map(a => {
+    const p = a?.patients || null;
+    const name = [p?.vorname, p?.nachname].filter(Boolean).join(' ').trim() || 'Anfrage';
+    const wunschDatum = a?.preferred_date ? datumMitJahr(a.preferred_date) : 'Flexibel';
+    const wunschZeit = a?.preferred_time ? String(a.preferred_time).slice(0, 5) : '';
+    const art = ZAHLUNG_LABEL[/** @type {keyof typeof ZAHLUNG_LABEL} */ (String(a?.payment_type || '').toLowerCase())] || String(a?.payment_type || '');
+    const erstelltTag = a?.created_at ? alsBerlinDatum(a.created_at) : '';
+    const diff = erstelltTag ? tageDifferenzIso(erstelltTag, heuteIso) : null;
+    const alterLabel = diff === null ? '' : diff <= 0 ? 'Heute' : diff === 1 ? 'Gestern' : `vor ${diff} T.`;
+    return {
+      id: a?.id || null,
+      name,
+      wunsch: wunschZeit ? `${wunschDatum} · ${wunschZeit}` : wunschDatum,
+      art,
+      leistung: String(a?.behandlungsart || '').trim(),
+      alterLabel,
+    };
+  });
+}
+
+/**
+ * Bereitet wartende Einträge der `warteliste` auf (höchste Priorität zuerst).
+ * @param {Array<Record<string, any>>} eintraege
+ * @param {string} heuteIso
+ */
+export function wartelisteAufbereiten(eintraege, heuteIso) {
+  return (eintraege || [])
+    .map(w => {
+      const lead = w?.leads || null;
+      const name = [lead?.first_name, lead?.last_name].filter(Boolean).join(' ').trim() || 'Patient';
+      const prio = Number(w?.priority) || 1;
+      const prioLabel = prio >= 3 ? 'Dringend' : prio === 2 ? 'Erhöht' : 'Normal';
+      const erstelltTag = w?.created_at ? alsBerlinDatum(w.created_at) : '';
+      const diff = erstelltTag ? tageDifferenzIso(erstelltTag, heuteIso) : null;
+      const wartetLabel = diff === null ? '' : diff <= 0 ? 'Seit heute' : diff === 1 ? 'Seit 1 Tag' : `Seit ${diff} Tagen`;
+      return {
+        id: w?.id || null,
+        leadId: w?.lead_id || lead?.id || null,
+        name,
+        leistung: String(w?.services?.title || '').trim(),
+        prio,
+        prioLabel,
+        wartetLabel,
+      };
+    })
+    .sort((a, b) => b.prio - a.prio || a.name.localeCompare(b.name, 'de-DE'));
+}
+
+/**
+ * Bereitet offene `praxis_aufgaben` auf (überfällige und fällige zuerst).
+ * @param {Array<Record<string, any>>} aufgaben
+ * @param {string} heuteIso
+ */
+export function aufgabenAufbereiten(aufgaben, heuteIso) {
+  return (aufgaben || [])
+    .map(a => {
+      const lead = a?.leads || null;
+      const patientName = [lead?.first_name, lead?.last_name].filter(Boolean).join(' ').trim();
+      const faelligIso = a?.faellig_am ? String(a.faellig_am).slice(0, 10) : '';
+      const diff = faelligIso ? tageDifferenzIso(heuteIso, faelligIso) : null;
+      const ueberfaellig = diff !== null && diff < 0;
+      const faelligLabel = !faelligIso
+        ? 'Ohne Datum'
+        : diff === 0
+          ? 'Heute'
+          : diff === 1
+            ? 'Morgen'
+            : diff !== null && diff < 0
+              ? `${Math.abs(diff)} T. überfällig`
+              : datumMitJahr(faelligIso);
+      return {
+        id: a?.id || null,
+        leadId: a?.lead_id || lead?.id || null,
+        patientName,
+        text: String(a?.text || '').trim() || 'Aufgabe',
+        faelligIso,
+        faelligLabel,
+        ueberfaellig,
+        sortRang: ueberfaellig ? 0 : diff === 0 ? 1 : faelligIso ? 2 : 3,
+      };
+    })
+    .sort((a, b) => a.sortRang - b.sortRang || (a.faelligIso || '9999').localeCompare(b.faelligIso || '9999'));
+}
+
+/**
+ * Bereitet offene gesendete Rechnungen (`invoices`) für Inhaber auf.
+ * @param {Array<Record<string, any>>} rechnungen
+ * @param {string} heuteIso
+ */
+export function rechnungenAufbereiten(rechnungen, heuteIso) {
+  let summeEur = 0;
+  let ueberfaelligAnzahl = 0;
+  const liste = (rechnungen || []).map(r => {
+    const betrag = Number(r?.brutto_gesamt ?? r?.total_patient ?? 0) || 0;
+    summeEur += betrag;
+    const datumIso = r?.issued_at ? String(r.issued_at).slice(0, 10) : '';
+    const tageOffen = datumIso ? (tageDifferenzIso(datumIso, heuteIso) ?? 0) : 0;
+    const ueberfaellig = tageOffen > 14;
+    if (ueberfaellig) ueberfaelligAnzahl += 1;
+    return {
+      id: r?.id || null,
+      leadId: r?.lead_id || null,
+      nummer: String(r?.invoice_number || '').trim() || 'Rechnung',
+      patientName: String(r?.patient_name || '').trim() || 'Ohne Namen',
+      betrag,
+      datumDe: datumIso ? datumMitJahr(datumIso) : '—',
+      tageOffen,
+      ueberfaellig,
+      offenLabel: tageOffen <= 0 ? 'Heute gestellt' : `Offen seit ${tageOffen} T.`,
+    };
+  });
+  return { liste, summeEur, ueberfaelligAnzahl };
+}
 
 /**
  * Berechnet anstehende Geburtstage in den nächsten `tageVoraus` Tagen (DST-sicher, inkl. Alter).
@@ -292,7 +509,6 @@ export function geburtstageAufbereiten(leads, heuteIso, tageVoraus = 7) {
     const gebTag = Number(mGeb[3]);
     if (gebMonat < 1 || gebMonat > 12 || gebTag < 1 || gebTag > 31) continue;
 
-    // 29.02. in Nicht-Schaltjahren auf 28.02. abbilden
     const tagInJahr = (j) => {
       const schalt = (j % 4 === 0 && j % 100 !== 0) || j % 400 === 0;
       const t = gebMonat === 2 && gebTag === 29 && !schalt ? 28 : gebTag;
@@ -311,12 +527,13 @@ export function geburtstageAufbereiten(leads, heuteIso, tageVoraus = 7) {
 
     const name = [p.first_name, p.last_name].filter(Boolean).join(' ').trim() || 'Ohne Namen';
     const alterWird = gebJahr > 1900 && zielJahr >= gebJahr ? zielJahr - gebJahr : null;
-    const abstandLabel = diff === 0 ? 'Heute' : diff === 1 ? 'Morgen' : `In ${diff} Tagen`;
+    const abstandLabel = diff === 0 ? 'Heute' : diff === 1 ? 'Morgen' : `In ${diff} T.`;
     out.push({
       patientId: p.id || null,
       name,
       initialen: initialen(name),
       datumKurz: `${String(gebTag).padStart(2, '0')}. ${MONATE_DE[gebMonat - 1]}`,
+      datumKompakt: `${gebTag}. ${MONATE_KURZ[gebMonat - 1]}`,
       alterWird,
       tageBis: diff,
       istHeute: diff === 0,
@@ -350,8 +567,8 @@ export function abwesenheitenAufbereiten(zeilen, heuteIso, tageVoraus = 14) {
       const endDe = datumMitJahr(endIso);
       const zeitraum = startIso === endIso ? startDe : `${startDe} – ${endDe}`;
       const statusLabel = istAktiv
-        ? (tageBisEnde === 0 ? 'Heute letzter Tag' : 'Aktiv')
-        : (tageBisStart === 1 ? 'Ab morgen' : `In ${tageBisStart} Tagen`);
+        ? (tageBisEnde === 0 ? 'Letzter Tag' : 'Aktiv')
+        : (tageBisStart === 1 ? 'Ab morgen' : `In ${tageBisStart} T.`);
       return {
         id: v?.id || null,
         name: empName,
@@ -389,9 +606,7 @@ export function nichtErscheinerAufbereiten(bookings, heuteIso) {
     const zeitText = gueltig
       ? d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' })
       : '';
-    const tagIso = gueltig
-      ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(d)
-      : '';
+    const tagIso = gueltig ? alsBerlinDatum(d) : '';
     const diff = tagIso ? tageDifferenzIso(tagIso, heuteIso) : null;
     const vorText = diff === null
       ? ''
@@ -399,7 +614,7 @@ export function nichtErscheinerAufbereiten(bookings, heuteIso) {
         ? 'Heute'
         : diff === 1
           ? 'Gestern'
-          : `vor ${diff} Tagen`;
+          : `vor ${diff} T.`;
     const name = String(b?.customer_name || '').trim() || 'Ohne Namen';
     const leistung = b?.services?.title ? String(b.services.title).trim() : '';
     return {

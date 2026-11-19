@@ -1,38 +1,36 @@
 /**
- * module/ueberblick-ansicht.js — Neugestalteter Praxis-Überblick (Praxis-Radar).
+ * module/ueberblick-ansicht.js — Praxis-Überblick v2 (ruhiges, dichtes Praxis-Cockpit).
  *
- * Ersetzt die früheren vier lose gestapelten Emoji-Karten aus dashboard.js:
- *  - 4-Spalten KPI-Leiste mit direktem Sprung & Filterfokus
- *  - Kompakte Praxis-Eingänge-Leiste (offene Termin-Anfragen, Warteliste, Therapieberichte)
- *  - Asymmetrischer 2-Spalten-Arbeitsbereich:
- *      Links:  Rezept-Fristen mit Segment-Filtern (Alle · Überfällig · ≤ 7 T. · 8–28 T. · Abrechnung),
- *              Dringlichkeits-Fortschritt und direktem Sprung in Patientenakte / Verordnung
- *      Rechts: Nicht-Erscheiner, Team-Abwesenheiten (14/30 Tage), Geburtstage (7/14/30 Tage)
- *  - Live-Suche über alle Bereiche, einmalige Event-Delegation, Rennbedingungs-Schutz (`laufNr`)
- *  - Null Emojis: ausschließlich feine monochrome SVG-Symbole und System-Farbvariablen
+ * Struktur:
+ *  1. Durchgehendes 5-Spalten-Kennzahlenband (Termine heute · Fristen & Berichte ·
+ *     Eingänge · Offene Posten bzw. Nicht erschienen · Team & Aufgaben)
+ *  2. Linke Hauptspalte (62 %):
+ *     - Nächste 7 Tage (kompakte Balken-Auslastung)
+ *     - Rezept-Fristen & Therapieberichte (Unterstrich-Tabs, ruhige Spalten, Direktaktionen)
+ *     - Vorgänge & Eingänge (echte Listen für Termin-Anfragen, Warteliste, Aufgaben, Offene Rechnungen)
+ *  3. Rechte Spalte (38 %, Patienten & Team):
+ *     - Nicht erschienen · Team-Abwesenheiten (14/30 T.) · Geburtstage (7/14/30 T.)
+ *
+ * Null Emojis. Einmalige Event-Delegation, Rennbedingungs-Schutz (`laufNr`),
+ * Mandanten- und Standort-Scope (`bizScope`) sowie strikte Rollen-/Sichtbarkeitsprüfung.
  */
 
 import {
+  addiereTageIso,
+  wochenAuslastungAufbereiten,
   fristenAuswerten,
+  therapieberichteAufbereiten,
+  anfragenAufbereiten,
+  wartelisteAufbereiten,
+  aufgabenAufbereiten,
+  rechnungenAufbereiten,
   geburtstageAufbereiten,
   abwesenheitenAufbereiten,
   nichtErscheinerAufbereiten,
   suchePasst,
-} from './ueberblick-listen.js?v=20261119ubl1';
-import { alsBerlinDatum } from './berlin-datum.js';
-
-const SVG = (pfad, groesse = 16) =>
-  `<svg viewBox="0 0 24 24" width="${groesse}" height="${groesse}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${pfad}</svg>`;
-
-const ICON = {
-  uhr: SVG('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
-  nutzerX: SVG('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M17 8l5 5M22 8l-5 5"/>'),
-  kalenderOff: SVG('<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M9.5 14.5l5 5M14.5 14.5l-5 5"/>'),
-  stern: SVG('<path d="M20 12v8H4v-8"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>'),
-  haken: SVG('<path d="M20 6L9 17l-5-5"/>', 15),
-  pfeilRechts: SVG('<path d="M9 6l6 6-6 6"/>', 14),
-  info: SVG('<circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/>', 15),
-};
+} from './ueberblick-listen.js?v=20261119ubl2';
+import { alsBerlinDatum, berlinTagesgrenzen } from './berlin-datum.js';
+import { fmtEur } from './geld.js?v=20260909';
 
 const escStandard = (s) =>
   String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -41,37 +39,63 @@ const escStandard = (s) =>
  *   heuteIso: string,
  *   geladenUm: string,
  *   laedt: boolean,
+ *   istOwner: boolean,
  *   suche: string,
- *   fristFilter: 'alle'|'ueberfaellig'|'bald'|'geplant'|'abrechnung',
+ *   fristTab: 'alle'|'ueberfaellig'|'bald'|'geplant'|'abrechnung'|'berichte',
+ *   vorgangTab: 'anfragen'|'warteliste'|'aufgaben'|'rechnungen'|null,
+ *   vorgangManuell: boolean,
  *   abwesenheitTage: 14|30,
  *   geburtstagTage: 7|14|30,
+ *   woche: any,
+ *   wocheFehler: boolean,
  *   fristen: any[],
+ *   berichte: any[],
  *   fristenFehler: boolean,
+ *   anfragen: any[],
+ *   anfragenFehler: boolean,
+ *   warteliste: any[],
+ *   wartelisteFehler: boolean,
+ *   aufgaben: any[],
+ *   aufgabenFehler: boolean,
+ *   rechnungen: { liste: any[], summeEur: number, ueberfaelligAnzahl: number },
+ *   rechnungenFehler: boolean,
  *   noShows: any[],
  *   noShowsFehler: boolean,
  *   abwesenheitenRoh: any[],
  *   abwesenheitenFehler: boolean,
  *   geburtstageRoh: any[],
  *   geburtstageFehler: boolean,
- *   eingang: { anfragen: number|null, warteliste: number|null, berichte: number|null },
  * }} */
 const state = {
   heuteIso: '',
   geladenUm: '',
   laedt: false,
+  istOwner: false,
   suche: '',
-  fristFilter: 'alle',
+  fristTab: 'alle',
+  vorgangTab: null,
+  vorgangManuell: false,
   abwesenheitTage: 14,
   geburtstagTage: 7,
+  woche: null,
+  wocheFehler: false,
   fristen: [],
+  berichte: [],
   fristenFehler: false,
+  anfragen: [],
+  anfragenFehler: false,
+  warteliste: [],
+  wartelisteFehler: false,
+  aufgaben: [],
+  aufgabenFehler: false,
+  rechnungen: { liste: [], summeEur: 0, ueberfaelligAnzahl: 0 },
+  rechnungenFehler: false,
   noShows: [],
   noShowsFehler: false,
   abwesenheitenRoh: [],
   abwesenheitenFehler: false,
   geburtstageRoh: [],
   geburtstageFehler: false,
-  eingang: { anfragen: null, warteliste: null, berichte: null },
 };
 
 let laufNr = 0;
@@ -87,136 +111,209 @@ function uhrzeitJetztBerlin() {
   }).format(new Date());
 }
 
+function datumKopfBerlin() {
+  return new Intl.DateTimeFormat('de-DE', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    timeZone: 'Europe/Berlin',
+  }).format(new Date());
+}
+
 function skelettHtml(zeilen = 3) {
   return `<div class="ubl-skeleton-wrap">${Array.from({ length: zeilen }, (_, i) =>
     `<div class="ubl-skeleton${i === zeilen - 1 ? ' ubl-skeleton--short' : ''}"></div>`
   ).join('')}</div>`;
 }
 
-function leerHtml(text, ok = false) {
-  return `<div class="ubl-empty${ok ? ' ubl-empty--ok' : ''}">
-    <span class="ubl-empty-icon">${ok ? ICON.haken : ICON.info}</span>
-    <span>${escStandard(text)}</span>
-  </div>`;
+function leerHtml(text) {
+  return `<div class="ubl-empty">${escStandard(text)}</div>`;
+}
+
+function verfuegbareVorgangTabs() {
+  const tabs = [];
+  if (state.istOwner && inLeiste('anfragen')) tabs.push('anfragen');
+  if (inLeiste('warteliste')) tabs.push('warteliste');
+  tabs.push('aufgaben');
+  if (state.istOwner && inLeiste('rechnungen')) tabs.push('rechnungen');
+  return tabs;
+}
+
+function waehleVorgangTab() {
+  const verfuegbar = verfuegbareVorgangTabs();
+  if (state.vorgangManuell && state.vorgangTab && verfuegbar.includes(state.vorgangTab)) {
+    return state.vorgangTab;
+  }
+  const anzahlFuer = {
+    anfragen: state.anfragen.length,
+    warteliste: state.warteliste.length,
+    aufgaben: state.aufgaben.length,
+    rechnungen: state.rechnungen.liste.length,
+  };
+  const mitDaten = verfuegbar.find(t => anzahlFuer[/** @type {keyof typeof anzahlFuer} */ (t)] > 0);
+  state.vorgangTab = /** @type {any} */ (mitDaten || verfuegbar[0] || 'aufgaben');
+  return state.vorgangTab;
 }
 
 function renderKopfSub() {
   const sub = document.getElementById('ublHeaderSub');
   if (!sub) return;
+  const datum = datumKopfBerlin();
   if (state.laedt && !state.geladenUm) {
-    sub.textContent = 'Praxisdaten werden aktualisiert …';
+    sub.textContent = `${datum} · Daten werden geladen …`;
     return;
   }
-  const abw = abwesenheitenAufbereiten(state.abwesenheitenRoh, state.heuteIso, state.abwesenheitTage);
-  const ueberfaellig = state.fristen.filter(f => f.kategorie === 'ueberfaellig').length;
-  const teile = [];
-  if (state.geladenUm) teile.push(`Stand ${state.geladenUm} Uhr`);
-  if (ueberfaellig > 0) teile.push(`${ueberfaellig} überfällige ${ueberfaellig === 1 ? 'Frist' : 'Fristen'}`);
-  else teile.push(`${state.fristen.length} aktive ${state.fristen.length === 1 ? 'Frist' : 'Fristen'}`);
-  teile.push(`${state.noShows.length} Nicht-Erscheiner`);
-  teile.push(`${abw.length} ${abw.length === 1 ? 'Abwesenheit' : 'Abwesenheiten'}`);
-  sub.textContent = teile.join(' · ');
+  sub.textContent = state.geladenUm ? `${datum} · Stand ${state.geladenUm} Uhr` : datum;
 }
 
-function renderKpis() {
+function renderMetricBar() {
   const el = document.getElementById('ublKpiBar');
   if (!el) return;
 
+  const initLoad = state.laedt && !state.geladenUm;
+  const val = (v, fehler) => (initLoad || fehler ? '–' : String(v));
+
+  // 1. Termine heute
+  const w = state.woche;
+  const heuteSub = state.wocheFehler
+    ? 'Nicht verfügbar'
+    : w
+      ? [
+          `${w.heuteOffen} offen`,
+          w.heuteHausbesuche > 0 ? `${w.heuteHausbesuche} Hausbesuch${w.heuteHausbesuche === 1 ? '' : 'e'}` : `${w.gesamt7} in 7 T.`,
+        ].join(' · ')
+      : '—';
+
+  // 2. Rezept-Fristen & Berichte (Farbe NUR bei echten Überfälligkeiten)
   const ueberfaellig = state.fristen.filter(f => f.kategorie === 'ueberfaellig').length;
   const bald = state.fristen.filter(f => f.kategorie === 'bald').length;
+  const fristTon = ueberfaellig > 0 ? ' is-danger' : '';
+  const fristSub = state.fristenFehler
+    ? 'Nicht verfügbar'
+    : [
+        ueberfaellig > 0 ? `${ueberfaellig} überfällig` : bald > 0 ? `${bald} in ≤ 7 T.` : 'Im Plan',
+        state.berichte.length > 0 ? `${state.berichte.length} ${state.berichte.length === 1 ? 'Bericht' : 'Berichte'}` : '',
+      ].filter(Boolean).join(' · ');
+
+  // 3. Eingänge (Anfragen + Warteliste)
+  const hatAnf = state.istOwner && inLeiste('anfragen');
+  const hatWl = inLeiste('warteliste');
+  const eingangGesamt = (hatAnf ? state.anfragen.length : 0) + (hatWl ? state.warteliste.length : 0);
+  const eingangTeile = [];
+  if (hatAnf) eingangTeile.push(`${state.anfragen.length} Anfragen`);
+  if (hatWl) eingangTeile.push(`${state.warteliste.length} Warteliste`);
+  const eingangSub = eingangTeile.length ? eingangTeile.join(' · ') : `${state.aufgaben.length} offene Aufgaben`;
+  const eingangWert = eingangTeile.length ? eingangGesamt : state.aufgaben.length;
+  const eingangLabel = eingangTeile.length ? 'Eingänge' : 'Aufgaben';
+
+  // 4. Offene Posten (Inhaber mit Rechnungen) oder Nicht erschienen
+  const zeigtFinanz = state.istOwner && inLeiste('rechnungen');
+  const m4Label = zeigtFinanz ? 'Offene Posten' : 'Nicht erschienen';
+  const m4Val = zeigtFinanz
+    ? (initLoad || state.rechnungenFehler ? '–' : fmtEur(state.rechnungen.summeEur))
+    : val(state.noShows.length, state.noShowsFehler);
+  const m4Ton = '';
+  const m4Sub = zeigtFinanz
+    ? (state.rechnungenFehler
+      ? 'Nicht verfügbar'
+      : state.rechnungen.liste.length === 0
+        ? 'Keine offenen Rechnungen'
+        : `${state.rechnungen.liste.length} offen${state.rechnungen.ueberfaelligAnzahl > 0 ? ` · ${state.rechnungen.ueberfaelligAnzahl} > 14 T.` : ''}`)
+    : (state.noShowsFehler ? 'Nicht verfügbar' : state.noShows.length > 0 ? 'Nachfassen empfohlen' : 'Keine Ausfälle');
+  const m4Focus = zeigtFinanz ? 'rechnungen' : 'noshows';
+
+  // 5. Team & Aufgaben
   const abw = abwesenheitenAufbereiten(state.abwesenheitenRoh, state.heuteIso, state.abwesenheitTage);
   const aktivAbw = abw.filter(a => a.istAktiv).length;
-  const geb = geburtstageAufbereiten(state.geburtstageRoh, state.heuteIso, state.geburtstagTage);
-  const heuteGeb = geb.filter(g => g.istHeute).length;
-
-  const fristTon = ueberfaellig > 0 ? ' is-danger' : bald > 0 ? ' is-accent' : '';
-  const fristMeta = state.fristenFehler
-    ? 'Nicht verfügbar'
-    : ueberfaellig > 0
-      ? `${ueberfaellig} überfällig${bald > 0 ? ` · ${bald} in ≤ 7 T.` : ''}`
-      : bald > 0
-        ? `${bald} in den nächsten 7 Tagen`
-        : state.fristen.length > 0
-          ? `${state.fristen.length} im Blick`
-          : 'Alle Fristen im Plan';
-
-  const noShowTon = state.noShows.length > 0 ? ' is-accent' : '';
-  const noShowMeta = state.noShowsFehler
-    ? 'Nicht verfügbar'
-    : state.noShows.length > 0
-      ? 'Nachfassen empfohlen'
-      : 'Keine Ausfälle zuletzt';
-
-  const abwTon = aktivAbw > 0 ? ' is-accent' : '';
-  const abwMeta = state.abwesenheitenFehler
-    ? 'Nicht verfügbar'
+  const ueberfAufg = state.aufgaben.filter(a => a.ueberfaellig).length;
+  const m5Val = initLoad
+    ? '–'
     : aktivAbw > 0
-      ? `${aktivAbw} heute abwesend`
+      ? `${aktivAbw} abwesend`
       : abw.length > 0
-        ? `Geplant (${state.abwesenheitTage} Tage)`
-        : 'Vollständiges Team';
-
-  const gebTon = heuteGeb > 0 ? ' is-accent' : '';
-  const gebMeta = state.geburtstageFehler
-    ? 'Nicht verfügbar'
-    : heuteGeb > 0
-      ? `${heuteGeb} heute`
-      : `Nächste ${state.geburtstagTage} Tage`;
-
-  const zahl = (wert, fehler) => (state.laedt && !state.geladenUm ? '–' : fehler ? '–' : String(wert));
+        ? `${abw.length} geplant`
+        : 'Vollzählig';
+  const m5Ton = '';
+  const m5Sub = state.aufgabenFehler
+    ? `${abw.length} Abwesenheiten`
+    : state.aufgaben.length > 0
+      ? `${state.aufgaben.length} ${state.aufgaben.length === 1 ? 'Aufgabe' : 'Aufgaben'}${ueberfAufg > 0 ? ` (${ueberfAufg} fällig)` : ''}`
+      : 'Keine offenen Aufgaben';
 
   el.innerHTML = `
-    <button type="button" class="ubl-kpi${fristTon}" data-ubl-focus="deadlines">
-      <span class="ubl-kpi-top"><span class="ubl-kpi-label">Rezept-Fristen</span><span class="ubl-kpi-icon">${ICON.uhr}</span></span>
-      <span class="ubl-kpi-value">${zahl(state.fristen.length, state.fristenFehler)}</span>
-      <span class="ubl-kpi-meta">${escStandard(fristMeta)}</span>
+    <button type="button" class="ubl-metric" data-ubl-panel="calendar">
+      <span class="ubl-metric-lbl">Termine heute</span>
+      <span class="ubl-metric-val">${val(w?.heuteGesamt ?? 0, state.wocheFehler)}</span>
+      <span class="ubl-metric-sub">${escStandard(heuteSub)}</span>
     </button>
-    <button type="button" class="ubl-kpi${noShowTon}" data-ubl-focus="noshows">
-      <span class="ubl-kpi-top"><span class="ubl-kpi-label">Nicht erschienen</span><span class="ubl-kpi-icon">${ICON.nutzerX}</span></span>
-      <span class="ubl-kpi-value">${zahl(state.noShows.length, state.noShowsFehler)}</span>
-      <span class="ubl-kpi-meta">${escStandard(noShowMeta)}</span>
+    <button type="button" class="ubl-metric${fristTon}" data-ubl-focus="deadlines">
+      <span class="ubl-metric-lbl">Rezept-Fristen</span>
+      <span class="ubl-metric-val">${val(state.fristen.length, state.fristenFehler)}</span>
+      <span class="ubl-metric-sub">${escStandard(fristSub)}</span>
     </button>
-    <button type="button" class="ubl-kpi${abwTon}" data-ubl-focus="vacations">
-      <span class="ubl-kpi-top"><span class="ubl-kpi-label">Abwesenheiten</span><span class="ubl-kpi-icon">${ICON.kalenderOff}</span></span>
-      <span class="ubl-kpi-value">${zahl(abw.length, state.abwesenheitenFehler)}</span>
-      <span class="ubl-kpi-meta">${escStandard(abwMeta)}</span>
+    <button type="button" class="ubl-metric" data-ubl-focus="vorgaenge">
+      <span class="ubl-metric-lbl">${escStandard(eingangLabel)}</span>
+      <span class="ubl-metric-val">${val(eingangWert, false)}</span>
+      <span class="ubl-metric-sub">${escStandard(eingangSub)}</span>
     </button>
-    <button type="button" class="ubl-kpi${gebTon}" data-ubl-focus="birthdays">
-      <span class="ubl-kpi-top"><span class="ubl-kpi-label">Geburtstage</span><span class="ubl-kpi-icon">${ICON.stern}</span></span>
-      <span class="ubl-kpi-value">${zahl(geb.length, state.geburtstageFehler)}</span>
-      <span class="ubl-kpi-meta">${escStandard(gebMeta)}</span>
+    <button type="button" class="ubl-metric${m4Ton}" data-ubl-focus="${m4Focus}">
+      <span class="ubl-metric-lbl">${escStandard(m4Label)}</span>
+      <span class="ubl-metric-val">${escStandard(m4Val)}</span>
+      <span class="ubl-metric-sub">${escStandard(m4Sub)}</span>
+    </button>
+    <button type="button" class="ubl-metric${m5Ton}" data-ubl-focus="vacations">
+      <span class="ubl-metric-lbl">Team & Aufgaben</span>
+      <span class="ubl-metric-val">${escStandard(m5Val)}</span>
+      <span class="ubl-metric-sub">${escStandard(m5Sub)}</span>
     </button>
   `;
 }
 
-function renderEingangStrip() {
-  const el = document.getElementById('ublEingangStrip');
-  if (!el) return;
+function renderWeekStrip() {
+  const bodyEl = document.getElementById('ublWeekBody');
+  const sumEl = document.getElementById('ublWeekSum');
+  const calLink = document.getElementById('ublWeekCalLink');
+  if (!bodyEl) return;
 
-  const chips = [];
-  if (inLeiste('anfragen') && state.eingang.anfragen !== null) {
-    chips.push({ panel: 'anfragen', label: 'Offene Termin-Anfragen', zahl: state.eingang.anfragen });
-  }
-  if (inLeiste('warteliste') && state.eingang.warteliste !== null) {
-    chips.push({ panel: 'warteliste', label: 'Warteliste', zahl: state.eingang.warteliste });
-  }
-  if (inLeiste('verordnungen') && state.eingang.berichte !== null) {
-    chips.push({ panel: 'verordnungen', label: 'Offene Therapieberichte', zahl: state.eingang.berichte });
-  }
+  if (calLink) calLink.hidden = !inLeiste('calendar');
 
-  if (!chips.length) {
-    el.hidden = true;
-    el.innerHTML = '';
+  if (state.laedt && !state.geladenUm) {
+    bodyEl.innerHTML = skelettHtml(2);
     return;
   }
 
-  el.hidden = false;
-  el.innerHTML = `<span class="ubl-eingang-prefix">Praxis-Eingänge</span>` + chips.map(c => `
-    <button type="button" class="ubl-eingang-chip${c.zahl > 0 ? ' has-items' : ''}" data-ubl-panel="${escStandard(c.panel)}">
-      <span>${escStandard(c.label)}</span>
-      <span class="ubl-eingang-num">${c.zahl}</span>
-    </button>
-  `).join('');
+  if (state.wocheFehler || !state.woche) {
+    if (sumEl) sumEl.textContent = '';
+    bodyEl.innerHTML = leerHtml('Terminauslastung konnte gerade nicht geladen werden.');
+    return;
+  }
+
+  const { tage, gesamt7, hausbesuche7 } = state.woche;
+  if (sumEl) {
+    sumEl.textContent = `${gesamt7} ${gesamt7 === 1 ? 'Termin' : 'Termine'}${hausbesuche7 > 0 ? ` · ${hausbesuche7} HB` : ''}`;
+  }
+
+  const maxAnz = Math.max(1, ...tage.map(t => t.anzahl));
+  bodyEl.innerHTML = `<div class="ubl-week-body">${tage.map(t => {
+    const busy = t.anzahl > 0 && t.anzahl >= Math.max(4, maxAnz * 0.8);
+    const klassen = [
+      'ubl-day',
+      t.istHeute ? 'is-today' : '',
+      t.anzahl === 0 ? 'is-zero' : '',
+      busy ? 'is-busy' : '',
+    ].filter(Boolean).join(' ');
+    const label = t.istHeute ? 'Heute' : `${t.wochentag} ${t.tagKurz}`;
+    const titel = `${t.wochentag} ${t.tagKurz}: ${t.anzahl} Termine${t.hausbesuche > 0 ? `, davon ${t.hausbesuche} Hausbesuche` : ''}`;
+    return `
+      <button type="button" class="${klassen}" data-ubl-panel="calendar" title="${escStandard(titel)}">
+        <span class="ubl-day-num">${t.anzahl}</span>
+        <span class="ubl-day-track" aria-hidden="true">
+          ${t.prozent > 0 ? `<span class="ubl-day-bar" style="height:${t.prozent}%"></span>` : ''}
+        </span>
+        <span class="ubl-day-lbl">${escStandard(label)}</span>
+      </button>
+    `;
+  }).join('')}</div>`;
 }
 
 function renderDeadlines() {
@@ -229,38 +326,43 @@ function renderDeadlines() {
 
   if (linkEl) linkEl.hidden = !inLeiste('verordnungen');
 
-  const durchSuche = state.fristen.filter(f =>
+  const fristenSuche = state.fristen.filter(f =>
     suchePasst(state.suche, [f.patientName, f.artLabel, f.kontextMeta, f.stichtagDe, f.fristLabel])
   );
+  const berichteSuche = state.berichte.filter(b =>
+    suchePasst(state.suche, [b.patientName, b.kontextMeta, b.ausgestelltDe, 'Therapiebericht'])
+  );
 
-  const zaehler = {
-    alle: durchSuche.length,
-    ueberfaellig: durchSuche.filter(f => f.kategorie === 'ueberfaellig').length,
-    bald: durchSuche.filter(f => f.kategorie === 'bald').length,
-    geplant: durchSuche.filter(f => f.kategorie === 'geplant').length,
-    abrechnung: durchSuche.filter(f => f.kategorie === 'abrechnung').length,
+  const z = {
+    alle: fristenSuche.length,
+    ueberfaellig: fristenSuche.filter(f => f.kategorie === 'ueberfaellig').length,
+    bald: fristenSuche.filter(f => f.kategorie === 'bald').length,
+    geplant: fristenSuche.filter(f => f.kategorie === 'geplant').length,
+    abrechnung: fristenSuche.filter(f => f.kategorie === 'abrechnung').length,
+    berichte: berichteSuche.length,
   };
 
   if (countEl) {
     countEl.textContent = String(state.fristen.length);
-    countEl.classList.toggle('is-danger', zaehler.ueberfaellig > 0);
+    countEl.classList.toggle('is-danger', z.ueberfaellig > 0);
   }
 
   if (filterEl) {
     const tabs = [
-      { id: 'alle', label: 'Alle', n: zaehler.alle },
-      { id: 'ueberfaellig', label: 'Überfällig', n: zaehler.ueberfaellig, danger: zaehler.ueberfaellig > 0 },
-      { id: 'bald', label: '≤ 7 Tage', n: zaehler.bald },
-      { id: 'geplant', label: '8–28 Tage', n: zaehler.geplant },
-      { id: 'abrechnung', label: 'Abrechnung', n: zaehler.abrechnung },
+      { id: 'alle', label: 'Alle', n: z.alle },
+      { id: 'ueberfaellig', label: 'Überfällig', n: z.ueberfaellig, danger: z.ueberfaellig > 0 },
+      { id: 'bald', label: '≤ 7 Tage', n: z.bald },
+      { id: 'geplant', label: '8–28 Tage', n: z.geplant },
+      { id: 'abrechnung', label: 'Abrechnung', n: z.abrechnung },
+      { id: 'berichte', label: 'Therapieberichte', n: z.berichte },
     ];
     filterEl.innerHTML = tabs.map(t => `
       <button type="button"
-        class="ubl-tab${state.fristFilter === t.id ? ' is-active' : ''}${t.danger ? ' is-danger-dot' : ''}"
+        class="ubl-tab${state.fristTab === t.id ? ' is-active' : ''}${t.danger ? ' is-danger-n' : ''}"
         data-ubl-frist-filter="${t.id}"
-        aria-pressed="${state.fristFilter === t.id ? 'true' : 'false'}">
+        aria-pressed="${state.fristTab === t.id ? 'true' : 'false'}">
         <span>${t.label}</span>
-        <span class="ubl-tab-count">${t.n}</span>
+        <span class="ubl-tab-n">${t.n}</span>
       </button>
     `).join('');
   }
@@ -277,62 +379,94 @@ function renderDeadlines() {
     return;
   }
 
-  const sichtbar = state.fristFilter === 'alle'
-    ? durchSuche
-    : durchSuche.filter(f => f.kategorie === state.fristFilter);
+  const kannVerordnung = inLeiste('verordnungen');
+  const esc = aktiverKontext?.escapeHtml || escStandard;
+
+  if (state.fristTab === 'berichte') {
+    if (!berichteSuche.length) {
+      listEl.innerHTML = leerHtml(
+        state.suche.trim() ? 'Keine Therapieberichte passend zur Suche.' : 'Keine offenen Therapieberichte angefordert.'
+      );
+      if (footEl) footEl.hidden = true;
+      return;
+    }
+    listEl.innerHTML = berichteSuche.map(b => {
+      const nameHtml = b.patientId
+        ? `<button type="button" class="ubl-name-btn" data-ubl-patient="${esc(b.patientId)}">${esc(b.patientName)}</button>`
+        : `<span class="ubl-name-plain">${esc(b.patientName)}</span>`;
+      const aktionen = [
+        b.patientId ? `<button type="button" class="ubl-link" data-ubl-patient="${esc(b.patientId)}">Akte</button>` : '',
+        kannVerordnung && b.rxId ? `<button type="button" class="ubl-link" data-ubl-rx="${esc(b.rxId)}" data-ubl-quelle="${esc(b.quelle)}">Rezept</button>` : '',
+      ].filter(Boolean).join('<span class="ubl-dot-sep" aria-hidden="true">·</span>');
+      return `
+        <div class="ubl-row">
+          <div class="ubl-row-main">
+            <div class="ubl-row-top">
+              ${nameHtml}
+              <span class="ubl-tag ubl-tag--accent">Bericht offen</span>
+            </div>
+            <div class="ubl-meta">${esc(b.kontextMeta)}</div>
+          </div>
+          <div class="ubl-row-right">
+            <div class="ubl-val-col">
+              <span class="ubl-val-primary">Angefordert</span>
+              <span class="ubl-val-sub">vom ${esc(b.ausgestelltDe)}</span>
+            </div>
+            ${aktionen ? `<div class="ubl-links">${aktionen}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+    if (footEl) {
+      footEl.hidden = false;
+      footEl.innerHTML = `<span>${berichteSuche.length} offene ${berichteSuche.length === 1 ? 'Therapiebericht' : 'Therapieberichte'}</span><span>Vor Abrechnung freigeben</span>`;
+    }
+    return;
+  }
+
+  const sichtbar = state.fristTab === 'alle'
+    ? fristenSuche
+    : fristenSuche.filter(f => f.kategorie === state.fristTab);
 
   if (!sichtbar.length) {
     const text = state.suche.trim()
       ? 'Keine Rezept-Fristen passend zur Suche.'
-      : state.fristFilter !== 'alle'
+      : state.fristTab !== 'alle'
         ? 'In dieser Kategorie liegen aktuell keine Fristen.'
         : 'Keine dringenden Fristen. Alle laufenden Verordnungen sind im Plan.';
-    listEl.innerHTML = leerHtml(text, !state.suche.trim());
+    listEl.innerHTML = leerHtml(text);
     if (footEl) footEl.hidden = true;
     return;
   }
 
-  const kannVerordnung = inLeiste('verordnungen');
-  const esc = aktiverKontext?.escapeHtml || escStandard;
-
   listEl.innerHTML = sichtbar.map(f => {
-    const badgeKlasse = f.schwere === 'danger'
-      ? 'ubl-badge ubl-badge--danger'
-      : f.schwere === 'warning'
-        ? 'ubl-badge ubl-badge--accent'
-        : 'ubl-badge';
-    const progressKlasse = f.schwere === 'danger'
-      ? 'ubl-progress is-danger'
-      : f.schwere === 'warning'
-        ? 'ubl-progress is-warning'
-        : 'ubl-progress';
+    const rowKlasse = f.schwere === 'danger' ? ' ubl-row--danger' : f.schwere === 'warning' ? ' ubl-row--warning' : '';
+    const valKlasse = f.schwere === 'danger' ? ' is-danger' : f.schwere === 'warning' ? ' is-accent' : '';
     const nameHtml = f.patientId
       ? `<button type="button" class="ubl-name-btn" data-ubl-patient="${esc(f.patientId)}">${esc(f.patientName)}</button>`
       : `<span class="ubl-name-plain">${esc(f.patientName)}</span>`;
     const metaZeile = [f.artLabel, f.kontextMeta].filter(Boolean).join(' · ');
+    const aktionen = [
+      f.patientId ? `<button type="button" class="ubl-link" data-ubl-patient="${esc(f.patientId)}">Akte</button>` : '',
+      kannVerordnung && f.rxId ? `<button type="button" class="ubl-link" data-ubl-rx="${esc(f.rxId)}" data-ubl-quelle="${esc(f.quelle)}">Rezept</button>` : '',
+    ].filter(Boolean).join('<span class="ubl-dot-sep" aria-hidden="true">·</span>');
 
     return `
-      <div class="ubl-row ubl-row--${f.schwere}">
+      <div class="ubl-row${rowKlasse}">
         <div class="ubl-row-main">
-          <div class="ubl-row-text">
-            <div class="ubl-row-title-line">
-              ${nameHtml}
-              ${f.dringend ? '<span class="ubl-badge ubl-badge--danger">Dringend</span>' : ''}
-              ${f.anzahl > 1 ? `<span class="ubl-badge">${f.anzahl} Verordnungen</span>` : ''}
-            </div>
-            <div class="ubl-sub">${esc(metaZeile)}</div>
+          <div class="ubl-row-top">
+            ${nameHtml}
+            ${f.dringend ? '<span class="ubl-tag ubl-tag--danger">Dringend</span>' : ''}
+            ${f.anzahl > 1 ? `<span class="ubl-tag">${f.anzahl}×</span>` : ''}
           </div>
+          <div class="ubl-meta">${esc(metaZeile)}</div>
         </div>
-        <div class="ubl-row-side">
-          <div class="ubl-deadline-meta">
-            <span class="${badgeKlasse}">${esc(f.fristLabel)}</span>
-            <span class="ubl-date-sub">bis ${esc(f.stichtagDe)}</span>
-            <span class="${progressKlasse}" aria-hidden="true"><span style="width:${f.fortschrittProzent}%"></span></span>
+        <div class="ubl-row-right">
+          <div class="ubl-val-col">
+            <span class="ubl-val-primary${valKlasse}">${esc(f.fristLabel)}</span>
+            <span class="ubl-val-sub">bis ${esc(f.stichtagDe)}</span>
           </div>
-          <div class="ubl-row-actions">
-            ${f.patientId ? `<button type="button" class="ubl-act-btn" data-ubl-patient="${esc(f.patientId)}">Akte</button>` : ''}
-            ${kannVerordnung && f.rxId ? `<button type="button" class="ubl-act-btn" data-ubl-rx="${esc(f.rxId)}" data-ubl-quelle="${esc(f.quelle)}">Rezept</button>` : ''}
-          </div>
+          ${aktionen ? `<div class="ubl-links">${aktionen}</div>` : ''}
         </div>
       </div>
     `;
@@ -342,6 +476,162 @@ function renderDeadlines() {
     const gesamtRezepte = sichtbar.reduce((s, f) => s + f.anzahl, 0);
     footEl.hidden = false;
     footEl.innerHTML = `<span>${sichtbar.length} ${sichtbar.length === 1 ? 'Eintrag' : 'Einträge'} (${gesamtRezepte} ${gesamtRezepte === 1 ? 'Verordnung' : 'Verordnungen'})</span><span>HeilM-RL § 15 · 14/28 Tage Beginnfrist</span>`;
+  }
+}
+
+function renderVorgaenge() {
+  const tabsEl = document.getElementById('ublVorgaengeTabs');
+  const listEl = document.getElementById('ublVorgaengeList');
+  const linkEl = document.getElementById('ublVorgaengeLink');
+  if (!tabsEl || !listEl) return;
+
+  const verfuegbar = verfuegbareVorgangTabs();
+  const aktiv = waehleVorgangTab();
+
+  const anfSuche = state.anfragen.filter(a => suchePasst(state.suche, [a.name, a.wunsch, a.art, a.leistung]));
+  const wlSuche = state.warteliste.filter(w => suchePasst(state.suche, [w.name, w.leistung, w.prioLabel]));
+  const aufgSuche = state.aufgaben.filter(a => suchePasst(state.suche, [a.text, a.patientName, a.faelligLabel]));
+  const rechSuche = state.rechnungen.liste.filter(r => suchePasst(state.suche, [r.nummer, r.patientName, r.datumDe]));
+
+  const metaTabs = {
+    anfragen: { label: 'Termin-Anfragen', n: anfSuche.length, panel: 'anfragen', linkText: 'Alle Anfragen' },
+    warteliste: { label: 'Warteliste', n: wlSuche.length, panel: 'warteliste', linkText: 'Zur Warteliste' },
+    aufgaben: { label: 'Aufgaben', n: aufgSuche.length, panel: 'overview', linkText: 'Zum Dashboard' },
+    rechnungen: { label: 'Offene Rechnungen', n: rechSuche.length, panel: 'rechnungen', linkText: 'Alle Rechnungen' },
+  };
+
+  tabsEl.innerHTML = verfuegbar.map(id => {
+    const m = metaTabs[/** @type {keyof typeof metaTabs} */ (id)];
+    const warn = id === 'aufgaben' && state.aufgaben.some(a => a.ueberfaellig);
+    return `
+      <button type="button"
+        class="ubl-tab${aktiv === id ? ' is-active' : ''}${warn ? ' is-danger-n' : ''}"
+        data-ubl-vorgang-tab="${id}"
+        aria-pressed="${aktiv === id ? 'true' : 'false'}">
+        <span>${m.label}</span>
+        <span class="ubl-tab-n">${m.n}</span>
+      </button>
+    `;
+  }).join('');
+
+  const aktivMeta = metaTabs[/** @type {keyof typeof metaTabs} */ (aktiv)];
+  if (linkEl && aktivMeta) {
+    linkEl.hidden = !inLeiste(aktivMeta.panel);
+    linkEl.setAttribute('data-ubl-panel', aktivMeta.panel);
+    const span = linkEl.querySelector('span');
+    if (span) span.textContent = aktivMeta.linkText;
+  }
+
+  if (state.laedt && !state.geladenUm) {
+    listEl.innerHTML = skelettHtml(3);
+    return;
+  }
+
+  const esc = aktiverKontext?.escapeHtml || escStandard;
+
+  if (aktiv === 'anfragen') {
+    if (state.anfragenFehler) { listEl.innerHTML = leerHtml('Termin-Anfragen konnten nicht geladen werden.'); return; }
+    if (!anfSuche.length) {
+      listEl.innerHTML = leerHtml(state.suche.trim() ? 'Keine Anfragen passend zur Suche.' : 'Keine offenen Online-Terminanfragen.');
+      return;
+    }
+    listEl.innerHTML = anfSuche.slice(0, 6).map(a => `
+      <div class="ubl-row">
+        <div class="ubl-row-main">
+          <div class="ubl-row-top">
+            <span class="ubl-name-plain">${esc(a.name)}</span>
+            ${a.art ? `<span class="ubl-tag">${esc(a.art)}</span>` : ''}
+          </div>
+          <div class="ubl-meta">${esc([a.wunsch, a.leistung].filter(Boolean).join(' · '))}</div>
+        </div>
+        <div class="ubl-row-right">
+          <div class="ubl-val-col">
+            <span class="ubl-val-sub">${esc(a.alterLabel || 'Offen')}</span>
+          </div>
+          <div class="ubl-links">
+            <button type="button" class="ubl-link" data-ubl-panel="anfragen">Prüfen</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+    return;
+  }
+
+  if (aktiv === 'warteliste') {
+    if (state.wartelisteFehler) { listEl.innerHTML = leerHtml('Warteliste konnte nicht geladen werden.'); return; }
+    if (!wlSuche.length) {
+      listEl.innerHTML = leerHtml(state.suche.trim() ? 'Keine Wartelisten-Einträge passend zur Suche.' : 'Aktuell wartet niemand auf der Warteliste.');
+      return;
+    }
+    listEl.innerHTML = wlSuche.slice(0, 6).map(w => {
+      const nameHtml = w.leadId
+        ? `<button type="button" class="ubl-name-btn" data-ubl-patient="${esc(w.leadId)}">${esc(w.name)}</button>`
+        : `<span class="ubl-name-plain">${esc(w.name)}</span>`;
+      const prioTag = w.prio >= 3 ? '<span class="ubl-tag ubl-tag--danger">Dringend</span>' : w.prio === 2 ? '<span class="ubl-tag ubl-tag--accent">Erhöht</span>' : '';
+      return `
+        <div class="ubl-row">
+          <div class="ubl-row-main">
+            <div class="ubl-row-top">${nameHtml}${prioTag}</div>
+            <div class="ubl-meta">${esc(w.leistung || 'Allgemeiner Terminwunsch')}</div>
+          </div>
+          <div class="ubl-row-right">
+            <div class="ubl-val-col"><span class="ubl-val-sub">${esc(w.wartetLabel)}</span></div>
+            ${w.leadId ? `<div class="ubl-links"><button type="button" class="ubl-link" data-ubl-patient="${esc(w.leadId)}">Akte</button></div>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+    return;
+  }
+
+  if (aktiv === 'aufgaben') {
+    if (state.aufgabenFehler) { listEl.innerHTML = leerHtml('Aufgaben konnten nicht geladen werden.'); return; }
+    if (!aufgSuche.length) {
+      listEl.innerHTML = leerHtml(state.suche.trim() ? 'Keine Aufgaben passend zur Suche.' : 'Keine offenen Praxis-Aufgaben.');
+      return;
+    }
+    listEl.innerHTML = aufgSuche.slice(0, 6).map(a => `
+      <div class="ubl-row${a.ueberfaellig ? ' ubl-row--danger' : ''}">
+        <div class="ubl-row-main">
+          <div class="ubl-row-top">
+            <span class="ubl-name-plain">${esc(a.text)}</span>
+          </div>
+          ${a.patientName ? `<div class="ubl-meta">Patient: ${esc(a.patientName)}</div>` : ''}
+        </div>
+        <div class="ubl-row-right">
+          <div class="ubl-val-col">
+            <span class="ubl-val-primary${a.ueberfaellig ? ' is-danger' : ''}">${esc(a.faelligLabel)}</span>
+          </div>
+          ${a.leadId ? `<div class="ubl-links"><button type="button" class="ubl-link" data-ubl-patient="${esc(a.leadId)}">Akte</button></div>` : ''}
+        </div>
+      </div>
+    `).join('');
+    return;
+  }
+
+  if (aktiv === 'rechnungen') {
+    if (state.rechnungenFehler) { listEl.innerHTML = leerHtml('Offene Rechnungen konnten nicht geladen werden.'); return; }
+    if (!rechSuche.length) {
+      listEl.innerHTML = leerHtml(state.suche.trim() ? 'Keine Rechnungen passend zur Suche.' : 'Keine offenen Rechnungen.');
+      return;
+    }
+    listEl.innerHTML = rechSuche.slice(0, 6).map(r => `
+      <div class="ubl-row${r.ueberfaellig ? ' ubl-row--warning' : ''}">
+        <div class="ubl-row-main">
+          <div class="ubl-row-top">
+            <span class="ubl-name-plain">${esc(r.patientName)}</span>
+            <span class="ubl-tag">${esc(r.nummer)}</span>
+          </div>
+          <div class="ubl-meta">${esc(r.datumDe)} · ${esc(r.offenLabel)}</div>
+        </div>
+        <div class="ubl-row-right">
+          <div class="ubl-val-col">
+            <span class="ubl-val-primary${r.ueberfaellig ? ' is-accent' : ''}">${esc(fmtEur(r.betrag))}</span>
+          </div>
+          ${r.id ? `<div class="ubl-links"><button type="button" class="ubl-link" data-ubl-inv="${esc(r.id)}">Öffnen</button></div>` : ''}
+        </div>
+      </div>
+    `).join('');
   }
 }
 
@@ -359,46 +649,31 @@ function renderNoShows() {
 
   if (countEl) countEl.textContent = String(state.noShows.length);
 
-  if (state.laedt && !state.geladenUm) {
-    listEl.innerHTML = skelettHtml(2);
-    return;
-  }
-
-  if (state.noShowsFehler) {
-    listEl.innerHTML = leerHtml('Nicht-Erscheiner konnten gerade nicht geladen werden.');
-    return;
-  }
-
+  if (state.laedt && !state.geladenUm) { listEl.innerHTML = skelettHtml(2); return; }
+  if (state.noShowsFehler) { listEl.innerHTML = leerHtml('Nicht-Erscheiner konnten nicht geladen werden.'); return; }
   if (!gefiltert.length) {
-    listEl.innerHTML = leerHtml(
-      state.suche.trim() ? 'Keine Nicht-Erscheiner passend zur Suche.' : 'Niemand ist zuletzt nicht erschienen.',
-      !state.suche.trim()
-    );
+    listEl.innerHTML = leerHtml(state.suche.trim() ? 'Keine Treffer.' : 'Niemand ist zuletzt nicht erschienen.');
     return;
   }
 
   const esc = aktiverKontext?.escapeHtml || escStandard;
-  listEl.innerHTML = gefiltert.map(n => {
-    const subTeile = [
-      n.datumDe + (n.zeitDe ? ` · ${n.zeitDe} Uhr` : ''),
-      n.leistung,
-    ].filter(Boolean).join(' · ');
+  listEl.innerHTML = gefiltert.slice(0, 6).map(n => {
     const nameHtml = n.leadId
       ? `<button type="button" class="ubl-name-btn" data-ubl-patient="${esc(n.leadId)}">${esc(n.name)}</button>`
       : `<span class="ubl-name-plain">${esc(n.name)}</span>`;
     return `
       <div class="ubl-row">
         <div class="ubl-row-main">
-          <span class="ubl-avatar" aria-hidden="true">${esc(n.initialen)}</span>
-          <div class="ubl-row-text">
-            <div class="ubl-row-title-line">
-              ${nameHtml}
-              ${n.vorText ? `<span class="ubl-badge">${esc(n.vorText)}</span>` : ''}
-            </div>
-            <div class="ubl-sub">${esc(subTeile)}</div>
-          </div>
+          <div class="ubl-row-top">${nameHtml}</div>
+          <div class="ubl-meta">${esc(n.leistung || n.datumDe)}</div>
         </div>
-        ${n.leadId ? `<div class="ubl-row-actions"><button type="button" class="ubl-act-btn" data-ubl-patient="${esc(n.leadId)}">Akte</button></div>` : ''}
+        <div class="ubl-row-right">
+          <div class="ubl-val-col">
+            <span class="ubl-val-primary">${esc(n.vorText || n.datumDe)}</span>
+            <span class="ubl-val-sub">${esc(n.datumDe)}${n.zeitDe ? ` · ${esc(n.zeitDe)}` : ''}</span>
+          </div>
+          ${n.leadId ? `<div class="ubl-links"><button type="button" class="ubl-link" data-ubl-patient="${esc(n.leadId)}">Akte</button></div>` : ''}
+        </div>
       </div>
     `;
   }).join('');
@@ -419,54 +694,37 @@ function renderVacations() {
   });
 
   const liste = abwesenheitenAufbereiten(state.abwesenheitenRoh, state.heuteIso, state.abwesenheitTage);
-  const gefiltert = liste.filter(v =>
-    suchePasst(state.suche, [v.name, v.typLabel, v.zeitraum, v.statusLabel])
-  );
+  const gefiltert = liste.filter(v => suchePasst(state.suche, [v.name, v.typLabel, v.zeitraum, v.statusLabel]));
 
   if (countEl) countEl.textContent = String(liste.length);
 
-  if (state.laedt && !state.geladenUm) {
-    listEl.innerHTML = skelettHtml(2);
-    return;
-  }
-
-  if (state.abwesenheitenFehler) {
-    listEl.innerHTML = leerHtml('Abwesenheiten konnten gerade nicht geladen werden.');
-    return;
-  }
-
+  if (state.laedt && !state.geladenUm) { listEl.innerHTML = skelettHtml(2); return; }
+  if (state.abwesenheitenFehler) { listEl.innerHTML = leerHtml('Abwesenheiten konnten nicht geladen werden.'); return; }
   if (!gefiltert.length) {
     listEl.innerHTML = leerHtml(
-      state.suche.trim()
-        ? 'Keine Abwesenheiten passend zur Suche.'
-        : `Keine laufenden oder geplanten Abwesenheiten (${state.abwesenheitTage} Tage).`,
-      !state.suche.trim()
+      state.suche.trim() ? 'Keine Treffer.' : `Keine Abwesenheiten in den nächsten ${state.abwesenheitTage} Tagen.`
     );
     return;
   }
 
   const esc = aktiverKontext?.escapeHtml || escStandard;
-  listEl.innerHTML = gefiltert.map(v => {
-    const typKlasse = v.typKey === 'krank' ? 'ubl-badge ubl-badge--danger' : 'ubl-badge';
-    const statusKlasse = v.istAktiv ? 'ubl-badge ubl-badge--accent' : 'ubl-badge';
-    return `
-      <div class="ubl-row">
-        <div class="ubl-row-main">
-          <span class="ubl-avatar${v.istAktiv ? ' is-today' : ''}" aria-hidden="true">${esc(v.initialen)}</span>
-          <div class="ubl-row-text">
-            <div class="ubl-row-title-line">
-              <span class="ubl-name-plain">${esc(v.name)}</span>
-              <span class="${typKlasse}">${esc(v.typLabel)}</span>
-            </div>
-            <div class="ubl-sub">${esc(v.zeitraum)}</div>
-          </div>
+  listEl.innerHTML = gefiltert.map(v => `
+    <div class="ubl-row">
+      <div class="ubl-row-main">
+        <div class="ubl-row-top">
+          ${v.istAktiv ? `<span class="ubl-dot${v.typKey === 'krank' ? ' ubl-dot--danger' : ''}" aria-hidden="true"></span>` : ''}
+          <span class="ubl-name-plain">${esc(v.name)}</span>
+          <span class="ubl-tag${v.typKey === 'krank' ? ' ubl-tag--danger' : ''}">${esc(v.typLabel)}</span>
         </div>
-        <div class="ubl-row-side">
-          <span class="${statusKlasse}">${esc(v.statusLabel)}</span>
+        <div class="ubl-meta">${esc(v.zeitraum)}</div>
+      </div>
+      <div class="ubl-row-right">
+        <div class="ubl-val-col">
+          <span class="ubl-val-primary${v.istAktiv ? ' is-accent' : ''}">${esc(v.statusLabel)}</span>
         </div>
       </div>
-    `;
-  }).join('');
+    </div>
+  `).join('');
 }
 
 function renderBirthdays() {
@@ -481,27 +739,15 @@ function renderBirthdays() {
   });
 
   const liste = geburtstageAufbereiten(state.geburtstageRoh, state.heuteIso, state.geburtstagTage);
-  const gefiltert = liste.filter(g =>
-    suchePasst(state.suche, [g.name, g.datumKurz, g.abstandLabel])
-  );
+  const gefiltert = liste.filter(g => suchePasst(state.suche, [g.name, g.datumKurz, g.abstandLabel]));
 
   if (countEl) countEl.textContent = String(liste.length);
 
-  if (state.laedt && !state.geladenUm) {
-    listEl.innerHTML = skelettHtml(2);
-    return;
-  }
-
-  if (state.geburtstageFehler) {
-    listEl.innerHTML = leerHtml('Geburtstage konnten gerade nicht geladen werden.');
-    return;
-  }
-
+  if (state.laedt && !state.geladenUm) { listEl.innerHTML = skelettHtml(2); return; }
+  if (state.geburtstageFehler) { listEl.innerHTML = leerHtml('Geburtstage konnten nicht geladen werden.'); return; }
   if (!gefiltert.length) {
     listEl.innerHTML = leerHtml(
-      state.suche.trim()
-        ? 'Keine Geburtstage passend zur Suche.'
-        : `Keine Geburtstage in den nächsten ${state.geburtstagTage} Tagen.`
+      state.suche.trim() ? 'Keine Treffer.' : `Keine Geburtstage in den nächsten ${state.geburtstagTage} Tagen.`
     );
     return;
   }
@@ -511,18 +757,20 @@ function renderBirthdays() {
     const nameHtml = g.patientId
       ? `<button type="button" class="ubl-name-btn" data-ubl-patient="${esc(g.patientId)}">${esc(g.name)}</button>`
       : `<span class="ubl-name-plain">${esc(g.name)}</span>`;
-    const sub = g.alterWird ? `${g.datumKurz} · wird ${g.alterWird} Jahre` : g.datumKurz;
     return `
       <div class="ubl-row">
         <div class="ubl-row-main">
-          <span class="ubl-avatar${g.istHeute ? ' is-today' : ''}" aria-hidden="true">${esc(g.initialen)}</span>
-          <div class="ubl-row-text">
-            <div class="ubl-row-title-line">${nameHtml}</div>
-            <div class="ubl-sub">${esc(sub)}</div>
+          <div class="ubl-row-top">
+            ${g.istHeute ? '<span class="ubl-dot" aria-hidden="true"></span>' : ''}
+            ${nameHtml}
           </div>
+          <div class="ubl-meta">${g.alterWird ? `wird ${g.alterWird} Jahre` : esc(g.datumKurz)}</div>
         </div>
-        <div class="ubl-row-side">
-          <span class="ubl-badge${g.istHeute ? ' ubl-badge--accent' : ''}">${esc(g.abstandLabel)}</span>
+        <div class="ubl-row-right">
+          <div class="ubl-val-col">
+            <span class="ubl-val-primary${g.istHeute ? ' is-accent' : ''}">${esc(g.abstandLabel)}</span>
+            <span class="ubl-val-sub">${esc(g.datumKompakt)}</span>
+          </div>
         </div>
       </div>
     `;
@@ -531,9 +779,10 @@ function renderBirthdays() {
 
 function renderAlles() {
   renderKopfSub();
-  renderKpis();
-  renderEingangStrip();
+  renderMetricBar();
+  renderWeekStrip();
   renderDeadlines();
+  renderVorgaenge();
   renderNoShows();
   renderVacations();
   renderBirthdays();
@@ -544,34 +793,31 @@ function verdrahteEinmal() {
   if (!panel || panel.dataset.ublVerdrahtet === '1') return;
   panel.dataset.ublVerdrahtet = '1';
 
-  const refreshBtn = document.getElementById('ueberblickRefreshBtn');
-  refreshBtn?.addEventListener('click', () => {
+  document.getElementById('ueberblickRefreshBtn')?.addEventListener('click', () => {
     if (aktiverKontext) ladeUeberblickAnsicht(aktiverKontext);
   });
 
   const searchInput = /** @type {HTMLInputElement|null} */ (document.getElementById('ublSearchInput'));
   const searchClear = document.getElementById('ublSearchClear');
+  const sucheAnwenden = () => {
+    renderDeadlines();
+    renderVorgaenge();
+    renderNoShows();
+    renderVacations();
+    renderBirthdays();
+  };
   if (searchInput) {
     searchInput.addEventListener('input', () => {
       state.suche = searchInput.value;
       if (searchClear) searchClear.hidden = !state.suche;
-      renderDeadlines();
-      renderNoShows();
-      renderVacations();
-      renderBirthdays();
+      sucheAnwenden();
     });
   }
   searchClear?.addEventListener('click', () => {
     state.suche = '';
-    if (searchInput) {
-      searchInput.value = '';
-      searchInput.focus();
-    }
+    if (searchInput) { searchInput.value = ''; searchInput.focus(); }
     searchClear.hidden = true;
-    renderDeadlines();
-    renderNoShows();
-    renderVacations();
-    renderBirthdays();
+    sucheAnwenden();
   });
 
   panel.addEventListener('click', (ev) => {
@@ -581,9 +827,20 @@ function verdrahteEinmal() {
     const filterBtn = target.closest('[data-ubl-frist-filter]');
     if (filterBtn) {
       const f = filterBtn.getAttribute('data-ubl-frist-filter');
-      if (f === 'alle' || f === 'ueberfaellig' || f === 'bald' || f === 'geplant' || f === 'abrechnung') {
-        state.fristFilter = f;
+      if (f === 'alle' || f === 'ueberfaellig' || f === 'bald' || f === 'geplant' || f === 'abrechnung' || f === 'berichte') {
+        state.fristTab = f;
         renderDeadlines();
+      }
+      return;
+    }
+
+    const vorgangBtn = target.closest('[data-ubl-vorgang-tab]');
+    if (vorgangBtn) {
+      const t = vorgangBtn.getAttribute('data-ubl-vorgang-tab');
+      if (t === 'anfragen' || t === 'warteliste' || t === 'aufgaben' || t === 'rechnungen') {
+        state.vorgangTab = t;
+        state.vorgangManuell = true;
+        renderVorgaenge();
       }
       return;
     }
@@ -593,8 +850,7 @@ function verdrahteEinmal() {
       const t = Number(abwBtn.getAttribute('data-ubl-abw-tage'));
       if (t === 14 || t === 30) {
         state.abwesenheitTage = t;
-        renderKopfSub();
-        renderKpis();
+        renderMetricBar();
         renderVacations();
       }
       return;
@@ -605,7 +861,6 @@ function verdrahteEinmal() {
       const t = Number(gebBtn.getAttribute('data-ubl-geb-tage'));
       if (t === 7 || t === 14 || t === 30) {
         state.geburtstagTage = t;
-        renderKpis();
         renderBirthdays();
       }
       return;
@@ -614,20 +869,22 @@ function verdrahteEinmal() {
     const focusBtn = target.closest('[data-ubl-focus]');
     if (focusBtn) {
       const ziel = focusBtn.getAttribute('data-ubl-focus');
-      const map = {
-        deadlines: 'ublDeadlinesSection',
-        noshows: 'ublNoShowSection',
-        vacations: 'ublVacationSection',
-        birthdays: 'ublBirthdaysSection',
-      };
       if (ziel === 'deadlines') {
-        const hatUeberfaellig = state.fristen.some(f => f.kategorie === 'ueberfaellig');
-        state.fristFilter = hatUeberfaellig && state.fristFilter !== 'ueberfaellig' ? 'ueberfaellig' : 'alle';
+        const hatUeberf = state.fristen.some(f => f.kategorie === 'ueberfaellig');
+        state.fristTab = hatUeberf && state.fristTab !== 'ueberfaellig' ? 'ueberfaellig' : 'alle';
         renderDeadlines();
-      }
-      const zielId = ziel ? map[/** @type {keyof typeof map} */ (ziel)] : null;
-      if (zielId) {
-        document.getElementById(zielId)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        document.getElementById('ublDeadlinesSection')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else if (ziel === 'vorgaenge') {
+        document.getElementById('ublVorgaengeSection')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else if (ziel === 'rechnungen') {
+        state.vorgangTab = 'rechnungen';
+        state.vorgangManuell = true;
+        renderVorgaenge();
+        document.getElementById('ublVorgaengeSection')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else if (ziel === 'noshows') {
+        document.getElementById('ublNoShowSection')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else if (ziel === 'vacations') {
+        document.getElementById('ublVacationSection')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
       return;
     }
@@ -644,6 +901,13 @@ function verdrahteEinmal() {
       const rxId = rxBtn.getAttribute('data-ubl-rx');
       const quelle = rxBtn.getAttribute('data-ubl-quelle') || 'physio';
       if (rxId) aktiverKontext?.oeffneVerordnung?.(quelle, rxId);
+      return;
+    }
+
+    const invBtn = target.closest('[data-ubl-inv]');
+    if (invBtn) {
+      const invId = invBtn.getAttribute('data-ubl-inv');
+      if (invId) aktiverKontext?.oeffneRechnung?.(invId);
       return;
     }
 
@@ -692,10 +956,12 @@ async function ladeAbwesenheitenRoh(supabase, ownerId, heuteIso) {
  * @param {object} ctx
  * @param {any} ctx.supabase
  * @param {() => string} ctx.getOwnerId
+ * @param {() => boolean} [ctx.istOwner]
  * @param {(q: any, cat: string) => any} [ctx.bizScope]
  * @param {(s: string) => string} [ctx.escapeHtml]
  * @param {(leadId: string) => void} [ctx.oeffnePatient]
  * @param {(quelle: string, rxId: string) => void} [ctx.oeffneVerordnung]
+ * @param {(invId: string) => void} [ctx.oeffneRechnung]
  * @param {(panelId: string) => void} [ctx.wechslePanel]
  */
 export async function ladeUeberblickAnsicht(ctx) {
@@ -707,8 +973,14 @@ export async function ladeUeberblickAnsicht(ctx) {
   if (!ownerId || !supabase) return;
 
   const meineNr = ++laufNr;
-  const heuteIso = alsBerlinDatum(new Date());
+  const jetzt = new Date();
+  const heuteIso = alsBerlinDatum(jetzt);
+  const endeTagIso = addiereTageIso(heuteIso, 6) || heuteIso;
+  const startGrenze = berlinTagesgrenzen(heuteIso)?.von || `${heuteIso}T00:00:00Z`;
+  const endGrenze = berlinTagesgrenzen(endeTagIso)?.bisExklusiv || `${addiereTageIso(heuteIso, 7)}T00:00:00Z`;
+
   state.heuteIso = heuteIso;
+  state.istOwner = typeof ctx.istOwner === 'function' ? !!ctx.istOwner() : true;
   state.laedt = true;
 
   const refreshBtn = document.getElementById('ueberblickRefreshBtn');
@@ -716,6 +988,18 @@ export async function ladeUeberblickAnsicht(ctx) {
   renderAlles();
 
   const scope = (q, cat) => (typeof bizScope === 'function' ? bizScope(q, cat) : q);
+
+  const wochePromise = scope(
+    supabase
+      .from('bookings')
+      .select('id, start_time, status, hausbesuch')
+      .eq('owner_id', ownerId)
+      .gte('start_time', startGrenze)
+      .lt('start_time', endGrenze)
+      .neq('status', 'cancelled')
+      .limit(400),
+    'patients'
+  );
 
   const rxPromise = scope(
     supabase
@@ -750,42 +1034,83 @@ export async function ladeUeberblickAnsicht(ctx) {
 
   const abwPromise = ladeAbwesenheitenRoh(supabase, ownerId, heuteIso);
 
-  const anfragenPromise = inLeiste('anfragen')
+  const anfragenPromise = (state.istOwner && inLeiste('anfragen'))
     ? supabase
         .from('booking_requests')
-        .select('id', { count: 'exact', head: true })
+        .select('id, preferred_date, preferred_time, payment_type, behandlungsart, created_at, patients!patient_id(vorname, nachname)')
         .eq('owner_id', ownerId)
         .eq('status', 'pending')
-    : Promise.resolve({ count: null, error: null });
+        .order('created_at', { ascending: false })
+        .limit(15)
+    : Promise.resolve({ data: [], error: null });
 
   const wartelistePromise = inLeiste('warteliste')
     ? supabase
         .from('warteliste')
-        .select('id', { count: 'exact', head: true })
+        .select('id, lead_id, priority, created_at, leads!lead_id(id, first_name, last_name), services(title)')
         .eq('owner_id', ownerId)
         .eq('status', 'waiting')
-    : Promise.resolve({ count: null, error: null });
+        .order('priority', { ascending: false })
+        .limit(15)
+    : Promise.resolve({ data: [], error: null });
 
-  const [rxRes, gebRes, noShowRes, abwRes, anfRes, wlRes] = await Promise.allSettled([
+  const aufgabenPromise = scope(
+    supabase
+      .from('praxis_aufgaben')
+      .select('id, lead_id, text, faellig_am, created_at, leads!lead_id(id, first_name, last_name)')
+      .eq('owner_id', ownerId)
+      .is('erledigt_at', null)
+      .order('faellig_am', { ascending: true })
+      .limit(15),
+    'patients'
+  );
+
+  const rechnungenPromise = (state.istOwner && inLeiste('rechnungen'))
+    ? scope(
+        supabase
+          .from('invoices')
+          .select('id, invoice_number, patient_name, lead_id, status, payment_status, issued_at, brutto_gesamt, total_patient')
+          .eq('owner_id', ownerId)
+          .eq('status', 'sent')
+          .neq('payment_status', 'paid')
+          .is('storno_von', null)
+          .order('issued_at', { ascending: true })
+          .limit(40),
+        'finance'
+      )
+    : Promise.resolve({ data: [], error: null });
+
+  const [wocheRes, rxRes, gebRes, noShowRes, abwRes, anfRes, wlRes, aufgRes, rechRes] = await Promise.allSettled([
+    wochePromise,
     rxPromise,
     gebPromise,
     noShowPromise,
     abwPromise,
     anfragenPromise,
     wartelistePromise,
+    aufgabenPromise,
+    rechnungenPromise,
   ]);
 
   if (meineNr !== laufNr) return;
 
+  if (wocheRes.status === 'fulfilled' && !wocheRes.value?.error) {
+    state.woche = wochenAuslastungAufbereiten(wocheRes.value?.data || [], heuteIso, jetzt);
+    state.wocheFehler = false;
+  } else {
+    state.woche = null;
+    state.wocheFehler = true;
+  }
+
   if (rxRes.status === 'fulfilled' && !rxRes.value?.error) {
     const rows = rxRes.value?.data || [];
     state.fristen = fristenAuswerten(rows, heuteIso);
+    state.berichte = therapieberichteAufbereiten(rows);
     state.fristenFehler = false;
-    state.eingang.berichte = rows.filter(r => r.bericht_angefordert && r.bericht_status === 'offen').length;
   } else {
     state.fristen = [];
+    state.berichte = [];
     state.fristenFehler = true;
-    state.eingang.berichte = null;
   }
 
   if (gebRes.status === 'fulfilled' && !gebRes.value?.error) {
@@ -812,15 +1137,37 @@ export async function ladeUeberblickAnsicht(ctx) {
     state.abwesenheitenFehler = true;
   }
 
-  state.eingang.anfragen =
-    anfRes.status === 'fulfilled' && !anfRes.value?.error && typeof anfRes.value?.count === 'number'
-      ? anfRes.value.count
-      : null;
+  if (anfRes.status === 'fulfilled' && !anfRes.value?.error) {
+    state.anfragen = anfragenAufbereiten(anfRes.value?.data || [], heuteIso);
+    state.anfragenFehler = false;
+  } else {
+    state.anfragen = [];
+    state.anfragenFehler = true;
+  }
 
-  state.eingang.warteliste =
-    wlRes.status === 'fulfilled' && !wlRes.value?.error && typeof wlRes.value?.count === 'number'
-      ? wlRes.value.count
-      : null;
+  if (wlRes.status === 'fulfilled' && !wlRes.value?.error) {
+    state.warteliste = wartelisteAufbereiten(wlRes.value?.data || [], heuteIso);
+    state.wartelisteFehler = false;
+  } else {
+    state.warteliste = [];
+    state.wartelisteFehler = true;
+  }
+
+  if (aufgRes.status === 'fulfilled' && !aufgRes.value?.error) {
+    state.aufgaben = aufgabenAufbereiten(aufgRes.value?.data || [], heuteIso);
+    state.aufgabenFehler = false;
+  } else {
+    state.aufgaben = [];
+    state.aufgabenFehler = true;
+  }
+
+  if (rechRes.status === 'fulfilled' && !rechRes.value?.error) {
+    state.rechnungen = rechnungenAufbereiten(rechRes.value?.data || [], heuteIso);
+    state.rechnungenFehler = false;
+  } else {
+    state.rechnungen = { liste: [], summeEur: 0, ueberfaelligAnzahl: 0 };
+    state.rechnungenFehler = true;
+  }
 
   state.laedt = false;
   state.geladenUm = uhrzeitJetztBerlin();
