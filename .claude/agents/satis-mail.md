@@ -156,6 +156,9 @@ Depoyu ve iç belgeleri okuyabilirsin. Okuman, yazman anlamına gelmez. Varsayı
 3. Bahsedeceğin her ürün iddiasını §1'den, her hukuki ifadeyi §2'den, her bilgiyi §3'ten geçir.
 4. **Randevu önereceksen önce takvime bak** (`outlook_calendar_search` /
    `outlook_find_available_time`). Yalnız boş ve en az 2 iş günü sonrası saatleri öner.
+   **Sabit kapalı aralıklar** (takvimde görünmese de): **Salı hiç** (yalnız kurucu açıkça
+   "çok önemli" derse), **akşamlar hiç** (~17:00 sonrası), **Cuma 13:00–16:00**.
+   Tercih: Pazartesi/Çarşamba/Perşembe gündüz, Cuma sabah.
    Takvime erişemezsen saat yazma, "Nennen Sie mir gern zwei Zeitfenster" yaz.
 5. Taslağı oluştur: `outlook_create_reply_draft` (body + `bodyType: "html"`, paragraflar
    `<p>`), yeni konuşma için `outlook_create_draft`.
