@@ -153,6 +153,27 @@
     --grid-quarter: rgba(241, 243, 246, 0.03);
   }
 
+  /* Tagesübersicht: Karten vom Arbeitsbereich absetzen und die aktive
+     Navigation auch bei kleinen Displays klar kennzeichnen. */
+  :root:not([data-design="neu"]):not([data-theme="dark"]) body:has(#panel-overview.active) {
+    --bg-main: #E3E8EF;
+    --border: #B7C1CE;
+    --border-strong: #707E90;
+    --text-muted: #37465A;
+    --nav-active: #CDD7E4;
+  }
+
+  :root:not([data-design="neu"]) body:has(#panel-overview.active) #sidebarNav .sidebar-item.active::before {
+    box-shadow: inset 3px 0 var(--text-main);
+  }
+  :root:not([data-design="neu"]) #startAufgabeInput {
+    --border: var(--border-strong);
+  }
+  :root:not([data-design="neu"]) #startAufgabeInput::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
+  }
+
   :root:not([data-design="neu"]) .dv-col-highlight { background: var(--bg-hover); }
   :root:not([data-design="neu"]) .dv-slot--past { background-color: var(--bg-hover); }
   :root:not([data-design="neu"]) ::selection { color: var(--text-main); background: var(--nav-active); }
