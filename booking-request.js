@@ -170,10 +170,15 @@ const BEKANNTE_500 = new Set([
 
 async function apiFetch(path, options = {}) {
   const url = `${API_BASE}${path}`;
-  const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
-    ...options,
-  });
+  let res;
+  try {
+    res = await fetch(url, {
+      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+      ...options,
+    });
+  } catch {
+    throw new Error('Verbindung zum Server fehlgeschlagen');
+  }
   if (!res.ok) {
     const body = await res.clone().json().catch(() => null);
     const meldung = res.status === 500 && typeof body?.error === 'string' && BEKANNTE_500.has(body.error.trim())

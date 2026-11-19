@@ -342,8 +342,14 @@ function bindAccount() {
       if (mode === 'signup') {
         // Check for duplicate email before proceeding
         const checkRes = await fetch(`/api/onboarding/check-email?email=${encodeURIComponent(email)}`);
-        const checkData = await checkRes.json();
-        if (checkData.exists) {
+        const checkData = await checkRes.json().catch(() => null);
+        if (!checkRes.ok) {
+          showError(fehlertextAus(checkRes.status, checkData, 'E-Mail-Prüfung fehlgeschlagen. Bitte versuchen Sie es erneut.'));
+          submit.disabled = false;
+          submit.textContent = orig;
+          return;
+        }
+        if (checkData?.exists) {
           showError('Diese E-Mail-Adresse ist bereits registriert. Bitte melden Sie sich stattdessen an.');
           submit.disabled = false;
           submit.textContent = orig;
@@ -378,7 +384,13 @@ function bindAccount() {
         goToStep(STEPS.indexOf('business'));
       }
     } catch (err) {
-      showError(err.message || 'Anmeldung fehlgeschlagen');
+      const roh = String(err?.message || '').toLowerCase();
+      const meldung = roh.includes('invalid login credentials')
+        ? 'E-Mail oder Passwort ist falsch.'
+        : roh.includes('email not confirmed')
+          ? 'Bitte bestätigen Sie zuerst Ihre E-Mail-Adresse.'
+          : (err instanceof TypeError ? 'Verbindung zum Server fehlgeschlagen. Bitte versuchen Sie es erneut.' : 'Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.');
+      showError(meldung);
       submit.disabled = false;
       submit.textContent = orig;
     }

@@ -498,7 +498,10 @@ document.getElementById('bookingForm').addEventListener('submit', async e => {
       goStep('success');
     }
   } catch (err) {
-    alert('Fehler: ' + err.message);
+    const meldung = err instanceof TypeError
+      ? 'Verbindung zum Server fehlgeschlagen. Bitte versuchen Sie es erneut.'
+      : (err?.message || 'Buchung fehlgeschlagen. Bitte versuchen Sie es erneut.');
+    alert('Fehler: ' + meldung);
     btn.disabled = false; btn.textContent = 'Termin verbindlich buchen';
   }
 });
