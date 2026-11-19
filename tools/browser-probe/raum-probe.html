@@ -157,7 +157,11 @@
     document.getElementById('dayViewDateLabel').textContent = '23.12.2026';
     tabellen.custom_days.push({ owner_id: OWNER, date: tagDatum, type: 'closed' });
     umschalter.querySelector('[data-modus="raum"]').click();
-    await warte(300);
+    // Raumraster und Schließtag werden unabhängig neu gezeichnet. Den aktuellen Block nach jedem Zeichnen neu suchen.
+    const frist = performance.now() + 4000;
+    while (!rasterHost.querySelector('[data-raum-id="r1"] [data-sondertag="geschlossen"]') && performance.now() < frist) {
+      await warte(25);
+    }
     pruefe('Raum-Modus blendet die Therapeutenansicht aus', rasterHost.classList.contains('raum-sichtbar') && getComputedStyle(document.getElementById('dayViewGrid')).display === 'none');
     const kopfzeilen = [...rasterHost.querySelectorAll('.dv-col-header')].map(k => k.textContent);
     pruefe('Eine Spalte je aktivem Raum plus Ohne Raum', kopfzeilen.join('|') === 'Behandlungsraum 1|Wärme (2 Plätze)|Gerätefläche (3 Plätze)|Ohne Raum');
