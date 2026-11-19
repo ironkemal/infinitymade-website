@@ -9,6 +9,8 @@ tags: [sitzung, uebersicht]
 
 **Bei „Was ist noch offen?“:** [[2026-11-11_offene-punkte-wiederaufnahme]] zuerst lesen, dann neuere Belege und führende Restmatrix abgleichen. Enthält Restpunkte, Zuständigkeiten, externe Mitwirkung und Rückstellungen.
 
+Aktuelle Ergänzung (19.11.): [[2026-11-19_physio-launch-stufe1-sitzung-auth-raeume-ueberblick]] — Physio-Launch Stufe 1 gehärtet (`sitzung-abschliessen.js` Rollback-Fix + 8 Tests, `?v=`-Cache-Buster, `signOut` lokal + deutsche Fehlertexte auf allen Nebenseiten, echter Postgres-17.11-Parallel-Nachweis `0104`, `0081` über `0120`/`0121` komplett als live bestätigt, `dashboard-ueberblick.css` aus `design/` gelöst, `npm test` 100 % grün, `b4009e27` gepusht); 15-Min-Live-Checkliste in `canli-test/2026-11-19-physio-launch-checkliste.md`; AZE-Satz `TSOL0101–0105` (Betreff = nur IK) verschickt.
+
 Aktuelle Ergänzung (18.11.): [[2026-11-18_backend-401-beendete-sitzung-csv-export]] — Backend-401 „Invalid token“ = serverseitig beendete Supabase-Sitzung (REST 200, `/auth/v1/user` 403); Wächter `module/api-sitzung.js`, `signOut` nur lokal, CSV-Export (seit 08.06. kaputt) repariert, Zuzahlung nur mit Verordnung + Leistung. Live geprüft und gepusht.
 
 Aktuelle Qualitätsoffensive: [[2026-11-14_qualitaetsoffensive-pruefstand-und-typecheck]] — Alle 16 Prüfstand-Befunde + 8 Ergo/Logo-Fälle behoben (`119 aktiv / 0 befund / 3 bewusst`, `122/122` Zitate), TP5-Warnregel `V:01019`, SQL-Entwurf `0122` und `checkJs`-Ratsche auf `682` Einträge (`0` Fehler) lokal in `main` committed (`c5dca0c8`, nicht gepusht).
@@ -50,6 +52,7 @@ Aktuelle Bugfix-Übergabe: [[2026-11-17_praxura-bugfix-uebergabe]] — P1–P3 l
 
 | Datum | Ticket | Notiz | Stand beim Schreiben |
 |---|---|---|---|
+| 2026-11-19 | Physio-Launch Stufe 1 / AZE | [[2026-11-19_physio-launch-stufe1-sitzung-auth-raeume-ueberblick]] | `b4009e27` gepusht, `npm test` komplett grün (`3.031`/`0`/`355`/`109`), 0081 über `0120`/`0121` komplett zu, Raum-Concurrency `0104` auf Postgres 17.11 bewiesen, 15-Min-Live-Checkliste bereit, AZE-Antwort & Box `L1–L7` offen. |
 | 2026-11-18 | QA und O-138 | [[2026-11-18_dmrz-termin-anfragen-und-kostentraeger-waechter]] | Zwei lokale Browserproben grün, Telegram-Zustellung bestätigt, Live-Dateien entsprechen `0e6552d1`. Externer DMRZ-Import offen. |
 | 2026-11-14 | Qualitätsoffensive (Prüfstand & `checkJs`) | [[2026-11-14_qualitaetsoffensive-pruefstand-und-typecheck]] | 16 Befunde + 8 Ergo/Logo gelöst (`119/0/3`, `122/122`), `V:01019`, `checkJs` `682` Einträge (`0` Fehler), `npm test` `5555 pass` (`4` PG `SKIP`, `3` `TODO`); lokal committed (`c5dca0c8`), Push & SQL `0122` offen |
 | 2026-11-07 | Physio-Abrechnung | [[2026-11-07_physio-fertigstellung]] | Astra-Plan zur Umsetzung freigegeben; Quellen-/Sollfall- und Testinventur läuft; Veröffentlichungsschutz offen; keine Live-Abnahme |

@@ -38,6 +38,20 @@ Herkunft: [[2026-11-18_backend-401-beendete-sitzung-csv-export]] (Fixes `0e6552d
 
 Bewusst **kein** Handlungsbedarf: INV-2026-0003 druckt im Kopf weiter „1“ — eingefrorener `aussteller_snapshot` (§ 147 AO), nicht nachträglich ändern. Neue Rechnungen sind korrekt (INV-2026-0004 `strasse = ""`).
 
+## Nachtrag 19.11.2026 — Physio-Launch Stufe 1, 0081, Raum-Concurrency & AZE
+
+Herkunft: [[2026-11-19_physio-launch-stufe1-sitzung-auth-raeume-ueberblick]] (`b4009e27` auf `origin/main` gepusht). **Erledigt und nicht erneut öffnen:**
+- **Rechnungsrechte / 0081** (alle 3 Teilpunkte: inaktive Mitarbeiter, Modulrecht `abrechnung`, Storno- & Wartelistenreferenzen) — über `0120`/`0121` seit 11.11.2026 live, in `Physio/LAUNCH-P1.md` (`92bf589d`) abgehakt.
+- **Weitere `signOut()` ohne `scope`** (`admin-login.js`, `admin.js`, `onboarding.js`) → `{ scope: 'local' }` (`f159d224`).
+- **Rohtexte außerhalb des Dashboards** (`booking-request.js`, `booking.js`, `login.js`, `onboarding.js`) → `api-sitzung.js` + deutsche Netzwerk-/Login-Fehler (`f159d224`, `4b9ced90`).
+- **Räume (gleichzeitige Buchung letzter automatischer Kapazität)** → lokal auf `postgres:17.11` bewiesen (`0104-raum-kapazitaet-concurrency-proof.mjs`, `748148ef`).
+- **Überblick-CSS (`redesign-wachen`)** → nach `dashboard-ueberblick.css` verschoben (`b4009e27`), `npm test` 100 % grün.
+
+**Verbleibend für Physio-Launch Stufe 1:**
+- Melih: `canli-test/2026-11-19-physio-launch-checkliste.md` (15-Minuten-Live-Checkliste: Gerätetests, QA-Datenpflege Straße/DATEV, Feiertag, Mitarbeiter anlegen/F11/entfernen, Physio-Kernfluss).
+- Kemal: Box `L1–L7` und 4 Partnerfragen (`#13`, `#14`, `#1`, `#22`) laut `Physio/LAUNCH-P1.md`.
+- Stufe 2 / extern: AZE-Antwort auf `TSOL0101–0105` (Betreff `590537440`) abwarten; Entlassmanagement-Freigabe (`0112–0115`) + Tages-Zuzahlung (`#22`).
+
 ## Externe Mitwirkung
 
 - Nutzer: sichere autorisierte QA-Mitarbeitersitzung, Bestätigung sicheren Passwortwechsels nach früherer Offenlegung; getrenntes KI-GO, wenn Kostenbegrenzung belegt.
