@@ -24598,8 +24598,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/dta/ta-validator-satz-physio.mjs",
-   "start": 65,
-   "end": 72,
+   "start": 70,
+   "end": 77,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -24626,8 +24626,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/dta/ta-validator-satz-physio.mjs",
-   "start": 85,
-   "end": 139,
+   "start": 90,
+   "end": 144,
    "lines": 55,
    "spiegelHinweis": null,
    "tables": [],
@@ -295876,7 +295876,7 @@
   {
    "name": "patient",
    "orte": [
-    "api-backend/billing/dta/ta-validator-satz-physio.mjs:65",
+    "api-backend/billing/dta/ta-validator-satz-physio.mjs:70",
     "api-backend/billing/dta/ta-validator-satz.mjs:67"
    ],
    "aynalar": []

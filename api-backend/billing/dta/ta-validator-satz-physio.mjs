@@ -22,6 +22,11 @@
 //
 // ⛔ Nur SYNTHETISCHE Daten. Namen, KVNR, Arzt-Nummern sind erfunden.
 // Testindikator 0 (kind 'test'). Versand an AZE/Validator nur mit GO (rote Linie „Senden").
+//
+// AZE-Versand (inbox@tp5.arz-emmendingen.de), gelernt 19.11.2026: je Mail genau EIN
+// Paar TSOLnnnn + TSOLnnnn.AUF, und der Betreff ist NUR die Absender-IK („590537440").
+// Jeder Zusatz im Betreff → automatische „Ablehnung 107436557 … Betreffzeile fehlt das
+// Institutionskennzeichen" (Antworten kommen gesammelt alle 15 Minuten).
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';

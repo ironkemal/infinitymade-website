@@ -17,8 +17,9 @@ Erprobungsverfahren, nur valide Dateien. Rechnet P1 über ein Abrechnungszentrum
 #1), gilt das nicht automatisch.
 
 Stand Stufe 2 (19.11.): Erste Physio-Testdateien (TSOL0101–0105, synthetisch) an das AZE-Testpostfach
-geschickt. Erste Runde formal abgelehnt, weil der Betreff nur die Absender-IK enthalten darf.
-Inhaltliches Ergebnis steht aus. Erzeugung: `node api-backend/billing/dta/ta-validator-satz-physio.mjs <ordner> --aze`.
+geschickt. Die erste Runde wurde formal abgelehnt, weil der Betreff **nur** die Absender-IK enthalten
+darf. Um 20:50/21:16 Uhr wurde mit Betreff `590537440` erneut geschickt. Zwei Runden lang kam keine
+Ablehnung, der Betreff ist also angenommen. Das inhaltliche Ergebnis steht aus (geht an Melih + CC Kemal). Erzeugung: `node api-backend/billing/dta/ta-validator-satz-physio.mjs <ordner> --aze`.
 
 ## Kritischer Pfad Stufe 1 (ohne diese Punkte kein Start)
 
