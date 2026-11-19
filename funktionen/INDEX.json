@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-19",
- "dateien": 586,
- "funktionen": 4768,
+ "dateien": 587,
+ "funktionen": 4769,
  "module": [
   "abrechnung",
   "anamnese",
@@ -34737,6 +34737,36 @@
    "uiPfad": []
   },
   {
+   "name": "proveConcurrentRoomCapacity",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/db/tests/0104-raum-kapazitaet-concurrency-proof.mjs",
+   "start": 63,
+   "end": 170,
+   "lines": 108,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "all",
+    "count",
+    "log",
+    "raumBuchungsFehler"
+   ],
+   "calledBy": [
+    "(datei) api-backend/db/tests/0104-raum-kapazitaet-concurrency-proof.mjs"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "geheimnisseAusblenden",
    "kind": "function",
    "lang": "js",
@@ -40034,7 +40064,8 @@
    "domRender": false,
    "calls": [],
    "calledBy": [
-    "(datei) api-backend/server.js"
+    "(datei) api-backend/server.js",
+    "proveConcurrentRoomCapacity"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -51398,6 +51429,7 @@
     "mountCalendar",
     "mountEinwilligung",
     "mountKiEinstellungen",
+    "proveConcurrentRoomCapacity",
     "proveConcurrentWrites",
     "runMigrations",
     "runMigrationsMitGeduld",
@@ -97525,6 +97557,7 @@
     "openInvEditor",
     "openInvView",
     "podoPositionsFinder",
+    "proveConcurrentRoomCapacity",
     "proveConcurrentWrites",
     "pruefeEmpfaenger",
     "pruefeVerordnungsfortschritt",
@@ -273549,6 +273582,7 @@
     "(datei) module/sitzungsfortschritt.js",
     "(datei) ops/tools/exec-ops-sql.mjs",
     "boardNotice",
+    "proveConcurrentRoomCapacity",
     "proveConcurrentWrites",
     "renderCatBar",
     "withTimeout"
@@ -279120,6 +279154,7 @@
     "(datei) api-backend/billing/dta/dump.js",
     "(datei) api-backend/billing/dta/ta-validator-satz-physio.mjs",
     "(datei) api-backend/billing/dta/ta-validator-satz.mjs",
+    "(datei) api-backend/db/tests/0104-raum-kapazitaet-concurrency-proof.mjs",
     "(datei) api-backend/lib/arzt-registry.js",
     "(datei) api-backend/server.js",
     "(datei) api-backend/tools/lizenzen-erzeugen.mjs",
