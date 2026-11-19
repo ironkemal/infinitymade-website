@@ -153,24 +153,56 @@
     --grid-quarter: rgba(241, 243, 246, 0.03);
   }
 
-  /* Tagesübersicht: Karten vom Arbeitsbereich absetzen und die aktive
-     Navigation auch bei kleinen Displays klar kennzeichnen. */
-  :root:not([data-theme="dark"]) body:has(#panel-overview.active) {
-    --bg-main: #F4F2EF;
-    --border: #CEC8BF;
-    --border-strong: #84796C;
-    --text-muted: #58524C;
-    --nav-active: #E9E4DD;
+  /* Gemeinsame Bildschirmfarben für alle Panels beider Dashboard-Designs. */
+  :root:not([data-theme="dark"]) body {
+    --bg-main: #F6F3EF;
+    --bg-hover: #F5EDE6;
+    --bg-warm: #FBF1E8;
+    --bg-sunken: #F0EBE5;
+    --border: #D4CBC2;
+    --border-color: var(--border);
+    --border-strong: #85786B;
+    --border-input: var(--border-strong);
+    --text-main: #302B27;
+    --text-muted: #60564F;
+    --text-sub: var(--text-muted);
+    --primary: #573B30;
+    --primary-hover: #442E25;
+    --accent: #944D33;
+    --focus-ring: var(--accent);
+    --focus-halo: rgba(148, 77, 51, 0.22);
+    --nav-active: #F1DCCC;
+    --primary-dim: var(--bg-warm);
   }
 
-  :root:not([data-design="neu"]) body:has(#panel-overview.active) #sidebarNav .sidebar-item.active::before {
-    box-shadow: inset 3px 0 var(--text-main);
+  :root[data-theme="dark"] body {
+    --bg-main: #181614;
+    --bg-card: #24211F;
+    --bg-card-solid: var(--bg-card);
+    --bg-topbar: var(--bg-card);
+    --bg-sidebar: #201D1B;
+    --bg-input: #1E1B19;
+    --bg-elevated: #302B28;
+    --bg-sunken: var(--bg-input);
+    --bg-hover: #362F2A;
+    --bg-warm: #392F28;
+    --border: #4A4039;
+    --border-color: var(--border);
+    --accent: #E6A989;
+    --focus-ring: var(--accent);
+    --focus-halo: rgba(230, 169, 137, 0.24);
+    --nav-active: #50382C;
+    --primary-dim: var(--bg-warm);
+  }
+
+  :root:not([data-design="neu"]) #sidebarNav .sidebar-item.active::before {
+    box-shadow: inset 3px 0 var(--accent);
   }
   #panel-overview {
-    --overview-head-bg: #FFFDFA;
+    --overview-head-bg: #FBF1E8;
     --overview-head-text: #302C28;
     --overview-head-muted: #60584E;
-    --overview-head-border: #C9BEB0;
+    --overview-head-border: #CEB6A3;
   }
   [data-theme="dark"] #panel-overview {
     --overview-head-bg: #302C28;
