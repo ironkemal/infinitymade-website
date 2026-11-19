@@ -12,7 +12,13 @@
 | **2 — §302 in Praxura** | Physio-DTA, Entlassmanagement-Freigabe, Tages-Zuzahlung (#22) | parallel testen, dann umstellen |
 
 Folge: **§302 liegt NICHT auf dem kritischen Pfad.** AZE 03.11.: Freigabe hängt am IK, nicht an
-der Software → P1 braucht kein neues Erprobungsverfahren, nur valide Dateien.
+der Software → **wenn** P1 heute schon selbst elektronisch abrechnet, braucht es kein neues
+Erprobungsverfahren, nur valide Dateien. Rechnet P1 über ein Abrechnungszentrum ab (Partnerfrage
+#1), gilt das nicht automatisch.
+
+Stand Stufe 2 (19.11.): Erste Physio-Testdateien (TSOL0101–0105, synthetisch) an das AZE-Testpostfach
+geschickt. Erste Runde formal abgelehnt, weil der Betreff nur die Absender-IK enthalten darf.
+Inhaltliches Ergebnis steht aus. Erzeugung: `node api-backend/billing/dta/ta-validator-satz-physio.mjs <ordner> --aze`.
 
 ## Kritischer Pfad Stufe 1 (ohne diese Punkte kein Start)
 
@@ -22,7 +28,7 @@ der Software → P1 braucht kein neues Erprobungsverfahren, nur valide Dateien.
 | L2 | Backup in Storage Box + **Wiederherstellung geübt** + Schlüssel an Praxis (I2, KURULUM §5) | Kemal | L1 |
 | L3 | Alarm-Mail + externer Uptime-Check (I3) | Kemal | L1 |
 | L4 | Update-Kanal einmal Ende-zu-Ende (I4) | Kemal | L1 |
-| L5 | Mehrstandort in installierter Box (M3, `tools/box-standort-abnahme.md`) | Melih/Kemal | GO + VM oder L1-Box |
+| L5 | Mehrstandort in installierter Box (M3, `tools/box-standort-abnahme.md`) — Melih 19.11.: „später“, am liebsten zusammen mit L1 | Melih/Kemal | GO + VM oder L1-Box |
 | L6 | Zugangsübergabe: unser Schlüssel gelöscht, Praxis bestätigt (I5) — **vor** dem ersten Patientendatum | Kemal + P1 | L1–L5 |
 | L7 | Vertrag inkl. KI-Anlage unterschrieben (PILOT-PLAN §1) | Kemal | Preis (offen) |
 
@@ -42,7 +48,11 @@ Nur diese vier beeinflussen den Start, Rest von `PARTNER-FRAGEN.md` später:
 
 - Gerätetests: Passwort, Google-Kalender, Kamera, GPS
 - F9/F11 Urlaub als Inhaber und als Mitarbeiter, S5/S6 Standortplanung, F2 Widget im bestätigten QA-Mandanten
-- Kompakte Checkliste dafür baut der Gemini-Agent (Tab „Offene Punkte 1“)
+- Kompakte Checkliste: `canli-test/2026-11-19-physio-launch-checkliste.md` (Gemini, 19.11.)
+- Rechnungsrechte (0081): inaktive Mitarbeiter + Modulrecht sind mit 0120/0121 seit 11.11. live
+  (`fortschritte/2026-11-11.md`). Der dritte Teilpunkt „Storno-/Wartelistenreferenzen“
+  (`wissensbank/sitzungen/2026-11-11_offene-punkte-wiederaufnahme.md:19`) ist darin nicht belegt
+  → vor dem Launch kurz von db-ustasi bestätigen lassen
 
 ## Wer arbeitet woran (19.11.2026, ohne Überschneidung)
 

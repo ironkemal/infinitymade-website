@@ -404,6 +404,7 @@
     "api-backend/billing/dta/strict-fields.test.js",
     "api-backend/billing/dta/ta-validator-satz.mjs",
     "api-backend/billing/dta/ta-validator-satz-physio.mjs",
+    "api-backend/billing/dta/ta-validator-satz.test.js",
     "api-backend/billing/dta/verschluesselung.js",
     "api-backend/billing/dta/verschluesselung.test.js",
     "api-backend/billing/dta/vkz03.test.js",
