@@ -3,7 +3,7 @@
 > Üretim: 2026-11-19 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4747 fonksiyon** (4625 JS · 95 bash · 27 ps1) · 585 dosya · 42 sidebar modülü
+**4756 fonksiyon** (4634 JS · 95 bash · 27 ps1) · 585 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -620,7 +620,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `zeile` — api-backend/lib/therapiebericht.js:420 · module/branding-ui.js:39 · module/fax-deckblatt.js:54 · module/rechnung-druck.js:34 · module/verordnung-detail.js:293 · module/verordnung-detail.js:428 · module/verordnung-detail.js:496 · module/verordnung-pruefen-knopf.js:122
 - `el` — module/arzt-register.js:253 · module/fussbefund.js:232 · module/mailversand.js:59 · module/patient-notizen.js:16 · module/termin-aktionsleiste.js:49 · module/termin-panel.js:39 · module/verordnung-maske.js:765
 - `fmtEur` — api-backend/billing/pdf/ausfallrechnung.template.js:19 · api-backend/billing/pdf/begleitzettel.template.js:32 · api-backend/billing/pdf/mahnung.template.js:9 · api-backend/billing/pdf/rechnung.template.js:14 · api-backend/billing/pdf/rzg-quittung.template.js:12 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:17 · module/geld.js:48
-- `init` — attendance.js:299 · booking-request.js:1416 · booking.js:68 · cookie-consent.js:210 · dashboard.js:14102 · onboarding.js:78 · setup.js:197
+- `init` — attendance.js:299 · booking-request.js:1427 · booking.js:68 · cookie-consent.js:210 · dashboard.js:14102 · onboarding.js:78 · setup.js:197
 - `leer` — api-backend/billing/dta/auftragsdatei.js:67 · api-backend/lib/terminerinnerung-job.js:27 · module/fahrtenbuch-regeln.js:315 · module/fussbefund-archiv.js:199 · module/sitzungsplan.js:114 · module/startseite-handlungsbedarf-karte.js:9 · module/verordnung-pruefung.js:101
 - `onEsc` — dashboard.js:5945 · module/rechnung-leistung-picker.js:48 · module/verordnung-einheiten.js:304 · module/verordnung-einheiten.js:402 · module/verordnung-einheiten.js:596 · module/zuzahlung-befreiung.js:156 · module/zuzahlung-korrektur.js:214
 - `wert` — module/anfrage-bearbeiten.js:186 · module/fahrtenbuch-regeln.js:307 · module/hausbesuch-route.js:33 · module/mail-entwurf.js:55 · module/mailversand.js:324 · module/verordnung-pruefen-knopf.js:44 · setup.js:290

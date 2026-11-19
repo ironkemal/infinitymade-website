@@ -13,6 +13,7 @@
 import { API_BASE, IST_KUTU } from './supabase-config.js';
 import { getPublicClient } from './module/public-supabase.js?v=20261009k15';
 import { ladeKennung } from './module/public-owner.js?v=20261102w7';
+import { apiFehlertext, fehlertextAus } from './module/api-sitzung.js?v=20261118s1';
 import { praxisRechtstexteAnbringen, NICHT_EINGERICHTET } from './module/termin-rechtstexte.js?v=20261117f5';
 import { anliegenFuerBereich, zahlungsartenFuer, hausbesuchFrageNoetig, anliegenNotiz, findAnliegen, WUNDE_HINWEIS, heilmittelFrage, behandlungsartFuer, patientenLeistungen } from './module/anfrage-anliegen.js?v=20261009k15c';
 
@@ -162,6 +163,11 @@ function markValid(inputId) {
   if (inp) inp.classList.remove('error');
 }
 
+const BEKANNTE_500 = new Set([
+  'Anfrage konnte nicht gespeichert werden',
+  'Praxisangaben nicht verfügbar',
+]);
+
 async function apiFetch(path, options = {}) {
   const url = `${API_BASE}${path}`;
   const res = await fetch(url, {
@@ -169,12 +175,13 @@ async function apiFetch(path, options = {}) {
     ...options,
   });
   if (!res.ok) {
-    let errMsg = `HTTP ${res.status}`;
-    try {
-      const body = await res.json();
-      errMsg = body.error || body.message || errMsg;
-    } catch {}
-    throw new Error(errMsg);
+    const body = await res.clone().json().catch(() => null);
+    const meldung = res.status === 500 && typeof body?.error === 'string' && BEKANNTE_500.has(body.error.trim())
+      ? body.error.trim()
+      : (body
+        ? fehlertextAus(res.status, body, 'Die Anfrage ist fehlgeschlagen. Bitte versuchen Sie es erneut.')
+        : await apiFehlertext(res, 'Die Anfrage ist fehlgeschlagen. Bitte versuchen Sie es erneut.'));
+    throw new Error(meldung);
   }
   return res.json();
 }

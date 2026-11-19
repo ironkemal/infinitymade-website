@@ -3,6 +3,7 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY, IST_KUTU, API_BASE } from './supabase-
 import { minPasswortLaenge, MIN_MITARBEITER } from './module/passwort-regel.js';
 import { rechtslinksFuerKutu } from './module/ueber.js?v=20261009k15';
 import { einrichtungHinweisZeigen } from './module/einrichtung-hinweis.js?v=20261022';
+import { fehlertextAus } from './module/api-sitzung.js?v=20261118s1';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -319,8 +320,8 @@ document.getElementById('erstSubmitBtn').addEventListener('click', async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, code, passwort: pw }),
     });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) { showPanelMsg('erstMsg', data.error || 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.', 'error'); return; }
+    const data = await res.json().catch(() => null);
+    if (!res.ok) { showPanelMsg('erstMsg', fehlertextAus(res.status, data, 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.'), 'error'); return; }
     document.getElementById('erstPw').value = '';
     document.getElementById('erstPw2').value = '';
     document.getElementById('erstCode').value = '';

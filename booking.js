@@ -2,6 +2,7 @@ import { API_BASE, IST_KUTU } from './supabase-config.js';
 import { getPublicClient } from './module/public-supabase.js?v=20261009k15';
 import { ladeKennung } from './module/public-owner.js?v=20261102w7';
 import { praxisRechtstexteAnbringen, NICHT_EINGERICHTET } from './module/termin-rechtstexte.js?v=20261117f5';
+import { apiFehlertext } from './module/api-sitzung.js?v=20261118s1';
 
 const supabase = await getPublicClient();
 const API = API_BASE; // O-01, 11.09.2026
@@ -266,7 +267,11 @@ async function loadBookingSlots(date) {
         duration: state.durationMinutes
       })
     });
-    const data = await res.json();
+    if (!res.ok) {
+      listEl.innerHTML = '<div class="slots-empty">Termine konnten nicht geladen werden. Bitte versuchen Sie es erneut.</div>';
+      return;
+    }
+    const data = await res.json().catch(() => ({}));
     let slots = data.slots || [];
     const tz = 'Europe/Berlin';
     const now = new Date();
@@ -479,8 +484,8 @@ document.getElementById('bookingForm').addEventListener('submit', async e => {
         website: document.getElementById('bookingWebsite')?.value || ''
       })
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(res.status === 409 && typeof data.error === 'string' ? data.error : 'Buchung fehlgeschlagen');
+    if (!res.ok) throw new Error(await apiFehlertext(res, 'Buchung fehlgeschlagen. Bitte versuchen Sie es erneut.'));
+    const data = await res.json().catch(() => null);
     if (data?.booking?.id) {
       document.querySelector('.success-title').textContent = 'Termin bestätigt!';
       document.querySelector('.success-sub').textContent = `${data.booking.room_name ? `Bitte kommen Sie in Raum „${data.booking.room_name}“. ` : ''}Wir freuen uns auf Sie. Eine Bestätigung wird in Kürze gesendet.`;

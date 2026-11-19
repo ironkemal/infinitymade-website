@@ -395,7 +395,7 @@ document.querySelectorAll('.nav-item[data-panel]').forEach(el => {
 );
 
 document.getElementById('logoutBtn').addEventListener('click', async () => {
-  await supabase.auth.signOut();
+  await supabase.auth.signOut({ scope: 'local' });
   window.location.href = '/login';
 });
 
@@ -405,7 +405,7 @@ async function boot() {
   if (error || !session) { window.location.href = '/login'; return; }
   currentSession = session;
   if (!(await isAdminUser(session.user.id))) {
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: 'local' });
     window.location.href = '/login';
     return;
   }

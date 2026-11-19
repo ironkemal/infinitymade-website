@@ -31,7 +31,7 @@ if (session) {
   if (await isAdmin(session.user.id)) {
     window.location.href = ADMIN_HOME;
   } else {
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: 'local' }); // beendet nur diese Sitzung, nicht andere Geräte (19.11.2026)
   }
 }
 
@@ -56,7 +56,7 @@ document.getElementById('adminLoginForm').addEventListener('submit', async (e) =
 
   // Verify admin AFTER auth succeeds — never reveal admin status before correct credentials.
   if (!(await isAdmin(data.user.id))) {
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: 'local' }); // beendet nur diese Sitzung, nicht andere Geräte (19.11.2026)
     showMsg('Kein Administrator-Zugang für dieses Konto.', 'error');
     btn.disabled = false;
     btn.textContent = 'Anmelden';

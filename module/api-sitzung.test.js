@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { sitzungBeendet, fehlertextAus, apiFehlertext, sitzungsWaechterInstallieren, MELDUNG_SITZUNG_BEENDET } from './api-sitzung.js';
 
 const authMit = (antwort) => ({ getUser: async () => antwort });
@@ -59,4 +60,23 @@ test('Wächter: gültige Sitzung, fremde URL oder 200 → keine Abmeldung', asyn
 test('Meldung nennt die Ursache und den Ausweg', () => {
   assert.match(MELDUNG_SITZUNG_BEENDET, /anderen Gerät/);
   assert.match(MELDUNG_SITZUNG_BEENDET, /neu an/);
+});
+
+test('Abmelden außerhalb der Kontolöschung nutzt immer scope: local', () => {
+  for (const datei of ['admin-login.js', 'admin.js', 'onboarding.js', 'module/kiosk.js']) {
+    const text = readFileSync(new URL(`../${datei}`, import.meta.url), 'utf8');
+    const treffer = text.match(/supabase\.auth\.signOut\([^)]*\)/g) || [];
+    assert.ok(treffer.length > 0, `${datei}: signOut erwartet`);
+    for (const aufruf of treffer) {
+      assert.match(aufruf, /scope:\s*['"]local['"]/, `${datei}: ${aufruf} darf keine anderen Geräte abmelden`);
+    }
+  }
+});
+
+test('Nebenseiten zeigen lesbare Fehlertexte statt rohem JSON/HTTP-Status', () => {
+  for (const datei of ['booking-request.js', 'booking.js', 'login.js', 'onboarding.js']) {
+    const text = readFileSync(new URL(`../${datei}`, import.meta.url), 'utf8');
+    assert.match(text, /from\s+['"]\.\/module\/api-sitzung\.js/, `${datei}: nutzt api-sitzung.js`);
+    assert.doesNotMatch(text, /HTTP \$\{res\.status\}/, `${datei}: kein roher HTTP-Status als Meldung`);
+  }
 });

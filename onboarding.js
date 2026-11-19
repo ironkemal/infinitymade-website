@@ -1,6 +1,7 @@
 // Praxura Onboarding — 8 step state machine + Supabase saves
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
+import { fehlertextAus } from './module/api-sitzung.js?v=20261118s1';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -922,6 +923,12 @@ function bindPlan() {
         if (userId) {
           // Existing user flow
           const { data: { session } } = await supabase.auth.getSession();
+          if (!session?.access_token) {
+            showError('Ihre Anmeldung ist abgelaufen. Bitte melden Sie sich neu an.');
+            btn.disabled = false;
+            btn.textContent = `${planSlug.charAt(0).toUpperCase() + planSlug.slice(1)} wählen`;
+            return;
+          }
           const res = await fetch('/api/stripe/create-checkout-session', {
             method: 'POST',
             headers: {
@@ -930,9 +937,9 @@ function bindPlan() {
             },
             body: JSON.stringify({ planSlug, interval: currentInterval, consents }),
           });
-          const data = await res.json();
-          if (!res.ok || !data.url) {
-            showError(data.error || 'Checkout konnte nicht gestartet werden.');
+          const data = await res.json().catch(() => null);
+          if (!res.ok || !data?.url) {
+            showError(fehlertextAus(res.status, data, 'Checkout konnte nicht gestartet werden.'));
             btn.disabled = false;
             btn.textContent = `${planSlug.charAt(0).toUpperCase() + planSlug.slice(1)} wählen`;
             return;
@@ -990,9 +997,9 @@ function bindPlan() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password, onboarding_data }),
         });
-        pendingData = await pendingRes.json();
-        if (!pendingRes.ok || !pendingData.pending_id) {
-          showError(pendingData.error || 'Vorbereitung fehlgeschlagen.');
+        pendingData = await pendingRes.json().catch(() => null);
+        if (!pendingRes.ok || !pendingData?.pending_id) {
+          showError(fehlertextAus(pendingRes.status, pendingData, 'Vorbereitung fehlgeschlagen.'));
           btn.disabled = false;
           btn.textContent = `${planSlug.charAt(0).toUpperCase() + planSlug.slice(1)} wählen`;
           return;
@@ -1002,9 +1009,9 @@ function bindPlan() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ pending_id: pendingData.pending_id, planSlug, interval: currentInterval }),
         });
-        const checkoutData = await checkoutRes.json();
-        if (!checkoutRes.ok || !checkoutData.url) {
-          showError(checkoutData.error || 'Checkout konnte nicht gestartet werden.');
+        const checkoutData = await checkoutRes.json().catch(() => null);
+        if (!checkoutRes.ok || !checkoutData?.url) {
+          showError(fehlertextAus(checkoutRes.status, checkoutData, 'Checkout konnte nicht gestartet werden.'));
           btn.disabled = false;
           btn.textContent = `${planSlug.charAt(0).toUpperCase() + planSlug.slice(1)} wählen`;
           return;
@@ -1014,7 +1021,7 @@ function bindPlan() {
         sessionStorage.removeItem('onboarding_email');
         window.location.href = checkoutData.url;
       } catch (err) {
-        showError(err.message);
+        showError('Verbindung zum Server fehlgeschlagen. Bitte versuchen Sie es erneut.');
         btn.disabled = false;
         btn.textContent = `${planSlug.charAt(0).toUpperCase() + planSlug.slice(1)} wählen`;
       }
@@ -1024,7 +1031,7 @@ function bindPlan() {
 
 // ---- Helpers ----
 async function logout() {
-  await supabase.auth.signOut();
+  await supabase.auth.signOut({ scope: 'local' });
   window.location.href = 'index.html';
 }
 
