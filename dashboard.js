@@ -7212,8 +7212,7 @@ function wireBefreiungCard(leadId) {
 // ─── MESSREIHEN (VAS / ROM) ───────────────────────────────────────────────────
 
 const MESS_COLORS = { VAS: '#ef4444', ROM: '#3b82f6', kraft: '#22c55e', custom: '#e6a817' };
-const MESS_UNITS  = { VAS: '/ 10', ROM: '°', kraft: 'kg', custom: '' };
-const MESS_MAX    = { VAS: 10, ROM: 180, kraft: 100, custom: 100 };
+import { MESS_UNITS, messGrenze, bindeMesstyp, messFehler } from './module/messreihe-eingabe.js';
 
 async function loadMessreihen(leadId) {
   const area    = document.getElementById('messChartArea');
@@ -7222,11 +7221,7 @@ async function loadMessreihen(leadId) {
   const typSel  = document.getElementById('messTyp');
   if (!area) return;
 
-  // Einheit-Hinweis bei Typ-Wechsel
-  if (typSel) typSel.onchange = () => {
-    const u = document.getElementById('messEinheitLabel');
-    if (u) u.textContent = MESS_UNITS[typSel.value] || '';
-  };
+  bindeMesstyp(typSel);
 
   // Datum vorbelegen (immer aktuell)
   const datumInp = document.getElementById('messDatum');
@@ -7273,13 +7268,13 @@ async function refreshMessreihen(leadId) {
     const [typ, koerperteil, seite] = key.split('||');
     const label = `${typ}${koerperteil ? ' · ' + koerperteil : ''}${seite ? ' (' + seite + ')' : ''}`;
     const color = MESS_COLORS[typ] || '#888';
-    const maxY  = MESS_MAX[typ] || 100;
+    const maxY  = Math.max(1, ...points.map(p => Number(p.wert)), typ === 'VAS' ? messGrenze(typ) : 0);
     const lowerBetter = typ === 'VAS';
 
     const chartSvg = renderMessreihenChart(points, maxY, color, lowerBetter);
     const lastVal = points[points.length - 1];
     const firstVal = points[0];
-    const trend = lowerBetter
+    const trend = points.length < 2 ? '' : lowerBetter
       ? (lastVal.wert < firstVal.wert ? '↓ besser' : lastVal.wert > firstVal.wert ? '↑ schlechter' : '→ stabil')
       : (lastVal.wert > firstVal.wert ? '↑ besser' : lastVal.wert < firstVal.wert ? '↓ schlechter' : '→ stabil');
 
@@ -7372,12 +7367,9 @@ async function saveMessung(leadId) {
   const datumVal  = document.getElementById('messDatum')?.value;
   const notiz     = document.getElementById('messNotiz')?.value?.trim() || null;
 
-  if (!typ || !wertRaw || !datumVal) {
-    showToast('Bitte Typ, Wert und Datum angeben.', 'error');
-    return;
-  }
-  const wert = parseFloat(wertRaw);
-  if (isNaN(wert) || wert < 0) { showToast('Ungültiger Wert.', 'error'); return; }
+  const fehler = messFehler(typ, koerper, wertRaw, datumVal);
+  if (fehler) { showToast(fehler, 'error'); return; }
+  const wert = Number(wertRaw);
 
   const einheit = MESS_UNITS[typ]?.replace('/ ', '') || 'Punkte';
   const btn = document.getElementById('messSaveBtn');
