@@ -183,6 +183,9 @@ const faelle = [
 ];
 
 // ── Erzeugen ────────────────────────────────────────────────────────────────
+// Physio ab Transfer-/Dateinummer 101 (TSOL0101 …), damit sich die Dateinamen
+// beim selben Absender nie mit dem Podologie-Satz (TSOL0001 …) überschneiden.
+const NUMMER_AB = 100;
 mkdirSync(ausgabe, { recursive: true });
 let fehler = 0;
 faelle.forEach((f, i) => {
@@ -194,9 +197,9 @@ faelle.forEach((f, i) => {
       davIk: das.ik,
       kassenart: AZE_MODUS ? 'BK' : 'EK',
       rechnung: { sammelRechnungsnummer: `P2026-10-${String(i + 1).padStart(3, '0')}`, einzelRechnungsnummer: '0',
-                  datum: RECHNUNGSDATUM, datennummer: i + 1, rechnungsart: '1' },
+                  datum: RECHNUNGSDATUM, datennummer: NUMMER_AB + i + 1, rechnungsart: '1' },
       kind: 'test',
-      transfernummer: i + 1,
+      transfernummer: NUMMER_AB + i + 1,
       vkz: '01',
       prescriptions: f.prescriptions,
     });
