@@ -52,7 +52,7 @@ Aktuelle Bugfix-Übergabe: [[2026-11-17_praxura-bugfix-uebergabe]] — P1–P3 l
 
 | Datum | Ticket | Notiz | Stand beim Schreiben |
 |---|---|---|---|
-| 2026-11-19 | Physio-Launch Stufe 1 / AZE | [[2026-11-19_physio-launch-stufe1-sitzung-auth-raeume-ueberblick]] | `b4009e27` gepusht, `npm test` komplett grün (`3.031`/`0`/`355`/`109`), 0081 über `0120`/`0121` komplett zu, Raum-Concurrency `0104` auf Postgres 17.11 bewiesen, 15-Min-Live-Checkliste bereit, AZE-Antwort & Box `L1–L7` offen. |
+| 2026-11-19 | Physio-Launch Stufe 1 / AZE | [[2026-11-19_physio-launch-stufe1-sitzung-auth-raeume-ueberblick]] | QA-Nachprüfung und Push `173acb73`, Raumprobe 66/66, Physio 41/41, `npm test` komplett grün (`3.031`/`2.242`/`355`/`109`), 0081 über `0120`/`0121` komplett zu, Raum-Concurrency `0104` auf Postgres 17.11 bewiesen, 15-Min-Live-Checkliste bereit, AZE-Antwort & Box `L1–L7` offen. |
 | 2026-11-18 | QA und O-138 | [[2026-11-18_dmrz-termin-anfragen-und-kostentraeger-waechter]] | Zwei lokale Browserproben grün, Telegram-Zustellung bestätigt, Live-Dateien entsprechen `0e6552d1`. Externer DMRZ-Import offen. |
 | 2026-11-14 | Qualitätsoffensive (Prüfstand & `checkJs`) | [[2026-11-14_qualitaetsoffensive-pruefstand-und-typecheck]] | 16 Befunde + 8 Ergo/Logo gelöst (`119/0/3`, `122/122`), `V:01019`, `checkJs` `682` Einträge (`0` Fehler), `npm test` `5555 pass` (`4` PG `SKIP`, `3` `TODO`); lokal committed (`c5dca0c8`), Push & SQL `0122` offen |
 | 2026-11-07 | Physio-Abrechnung | [[2026-11-07_physio-fertigstellung]] | Astra-Plan zur Umsetzung freigegeben; Quellen-/Sollfall- und Testinventur läuft; Veröffentlichungsschutz offen; keine Live-Abnahme |

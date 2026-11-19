@@ -58,3 +58,11 @@ Vollständige Liste: [[2026-11-11_offene-punkte-wiederaufnahme]] → „Nachtrag
 - **AZE-Betreffregel:** `inbox@tp5.arz-emmendingen.de` verlangt **ausschließlich** die 9-stellige Absender-IK als E-Mail-Betreff; Zusatztext im Betreff führt zur automatischen Ablehnung vor Dateiprüfung.
 - **Cache-Buster bei neuen Exporten sofort mitziehen:** Geänderte Module mit neuen Exporten (`leistungsOptionen`, `wechsleLeistungsoptionen`) brauchen überall dieselbe neue `?v=`-Version, sonst brechen wiederkehrende Browser beim Laden aus dem Cache.
 - **Vor Parallelarbeit zuerst Orca-Postfach + Originalmigrationen prüfen:** Verhindert doppelte Arbeit (0081 war in `0120`/`0121` schon komplett live) und Push-/Commit-Kollisionen.
+
+## Nachprüfung des Physio-QA-Berichts und Push am 19.11.2026
+
+Der Produktfix `140691f2` umfasst Sitzungsabschluss, Serienplanung, Sondertage und Leistungswahl. Die erneute Prüfung auf `6a87cc2d` fand eine instabile Browserprobe. Sie prüfte die Schließtagsmarkierung nach festen 300 ms. Commit `173acb73` lässt die Probe bis zu vier Sekunden auf die Markierung des konkreten Raumtermins warten. Der Push auf `origin/main` wurde anhand der Remote-Commit-ID bestätigt.
+
+- **Gegenprobe im Browser.** Mit künstlich auf 650 ms verzögerter Markierung bestanden 66/66 Raumprüfungen. Bei gezielt entfernter Markierung schlug genau die erwartete Prüfung fehl.
+- **Abschlusslauf.** 5.737 Tests bestanden (3.031 Frontend, 2.242 Backend, 355 Tools, 109 Merkez), null Fehler, vier übersprungene Backend-Tests und drei bekannte TODOs. Typprüfung und vollständiger Browserlauf waren grün, darunter Raumplanung 66/66 und Physio 41/41.
+- **Offene Live-Abnahme.** Im angemeldeten Physio-Testkonto stehen der Abschluss einer gültigen Verordnung von 0/6 auf 1/6 und die anschließende Sichtprüfung von „Zuzahlung kassieren“ aus. Es wurde keine Zahlung ausgelöst.
