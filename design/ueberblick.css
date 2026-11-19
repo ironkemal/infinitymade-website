@@ -49,6 +49,45 @@
     flex-wrap: wrap;
   }
 
+  /* Kompakter Umschalter Praxis / Meine (nur bei Mehrbehandler-Praxen sichtbar) */
+  #panel-ueberblick .ubl-scope {
+    display: inline-flex;
+    align-items: center;
+    height: 36px;
+    padding: 3px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm, 8px);
+    background: var(--bg-card-solid);
+  }
+
+  #panel-ueberblick .ubl-scope[hidden] {
+    display: none;
+  }
+
+  #panel-ueberblick .ubl-scope-btn {
+    height: 28px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 120ms ease, color 120ms ease;
+  }
+
+  #panel-ueberblick .ubl-scope-btn:hover {
+    color: var(--text-main);
+  }
+
+  #panel-ueberblick .ubl-scope-btn.is-active {
+    background: var(--bg-sunken, var(--bg-hover));
+    color: var(--text-main);
+    font-weight: 600;
+  }
+
   #panel-ueberblick .ubl-search {
     position: relative;
     display: flex;
@@ -689,10 +728,19 @@
   #panel-ueberblick .ubl-links {
     display: inline-flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 2px;
   }
 
+  @media (min-width: 769px) {
+    #panel-ueberblick #ublDeadlinesSection .ubl-links {
+      min-width: 162px;
+    }
+  }
+
   #panel-ueberblick .ubl-link {
+    display: inline-flex;
+    align-items: center;
     padding: 4px 7px;
     border: 0;
     border-radius: 6px;
@@ -701,9 +749,51 @@
     font: inherit;
     font-size: 12px;
     font-weight: 500;
+    text-decoration: none;
     cursor: pointer;
     white-space: nowrap;
     transition: background-color 110ms ease, color 110ms ease;
+  }
+
+  /* Aufgaben-Zeile mit ruhiger Abhak-Checkbox */
+  #panel-ueberblick .ubl-task-lead {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  #panel-ueberblick .ubl-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 17px;
+    height: 17px;
+    margin-top: 2px;
+    padding: 0;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 5px;
+    background: transparent;
+    color: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease;
+  }
+
+  #panel-ueberblick .ubl-check:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  #panel-ueberblick .ubl-check:focus-visible {
+    outline: 2px solid var(--focus-ring, var(--accent));
+    outline-offset: 2px;
+  }
+
+  #panel-ueberblick .ubl-check:disabled {
+    opacity: 0.45;
+    cursor: default;
   }
 
   #panel-ueberblick .ubl-row:hover .ubl-link {
@@ -874,9 +964,16 @@
       white-space: normal;
     }
 
+    #panel-ueberblick .ubl-tabs {
+      -webkit-mask-image: linear-gradient(to right, #000 88%, transparent 100%);
+      mask-image: linear-gradient(to right, #000 88%, transparent 100%);
+      padding-right: 28px;
+    }
+
     #panel-ueberblick .ubl-tab,
     #panel-ueberblick .ubl-link,
     #panel-ueberblick .ubl-horiz-btn,
+    #panel-ueberblick .ubl-scope-btn,
     #panel-ueberblick #ueberblickRefreshBtn {
       min-height: 38px;
     }

@@ -9,6 +9,7 @@ import {
   wochenAuslastungAufbereiten,
   fristenAuswerten,
   therapieberichteAufbereiten,
+  rezeptPruefbedarfAufbereiten,
   anfragenAufbereiten,
   wartelisteAufbereiten,
   aufgabenAufbereiten,
@@ -16,6 +17,7 @@ import {
   geburtstageAufbereiten,
   abwesenheitenAufbereiten,
   nichtErscheinerAufbereiten,
+  telefonLink,
   initialen,
   suchePasst,
 } from './ueberblick-listen.js';
@@ -173,6 +175,23 @@ test('geburtstageAufbereiten, abwesenheitenAufbereiten, nichtErscheinerAufbereit
   assert.equal(ns[0].vorText, 'Gestern');
   assert.equal(initialen('Jörg TEST-Müller'), 'JT');
   assert.equal(suchePasst('müller', ['Jörg Müller', 'KG']), true);
+});
+
+test('telefonLink & rezeptPruefbedarfAufbereiten (Absetzungen vor Scans)', () => {
+  assert.deepEqual(telefonLink('+49 171 / 123-4567'), { anzeige: '+49 171 / 123-4567', href: 'tel:+491711234567' });
+  assert.equal(telefonLink('123'), null);
+  assert.equal(telefonLink('javascript:alert(1)'), null);
+
+  const p = rezeptPruefbedarfAufbereiten([
+    { id: 'r1', status: 'parsed', abrechnung_status: null, ausstellungsdatum: '2026-11-18', heilmittel: 'KG', leads: { first_name: 'Anna', last_name: 'Scan' } },
+    { id: 'r2', status: 'confirmed', abrechnung_status: 'absetzung', ausstellungsdatum: '2026-10-10', heilmittel: 'MT', leads: { first_name: 'Bernd', last_name: 'Kasse' } },
+    { id: 'r3', status: 'confirmed', abrechnung_status: 'bereit', ausstellungsdatum: '2026-11-01', heilmittel: 'MLD', leads: { first_name: 'Ok', last_name: 'Fall' } },
+  ]);
+  assert.equal(p.length, 2);
+  assert.equal(p[0].art, 'absetzung');
+  assert.equal(p[0].schwere, 'danger');
+  assert.equal(p[1].art, 'scan');
+  assert.equal(p[1].schwere, 'warning');
 });
 
 test('Überblick-Ansicht und Panel-Markup enthalten keine Emojis', () => {

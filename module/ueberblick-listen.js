@@ -112,6 +112,23 @@ export function suchePasst(suche, felder) {
   return heuhaufen.includes(q);
 }
 
+/**
+ * Bereinigt eine Telefonnummer zu einem sicheren `tel:`-Ziel (nur führendes `+` und Ziffern).
+ * @param {string|null|undefined} nummer
+ * @returns {{ anzeige: string, href: string } | null}
+ */
+export function telefonLink(nummer) {
+  const roh = String(nummer || '').trim();
+  if (!roh) return null;
+  const fuehrendPlus = roh.startsWith('+');
+  const ziffern = roh.replace(/[^\d]/g, '');
+  if (ziffern.length < 4) return null;
+  return {
+    anzeige: roh,
+    href: `tel:${fuehrendPlus ? '+' : ''}${ziffern}`,
+  };
+}
+
 const WOCHENTAGE_KURZ = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 const MONATE_KURZ = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
 const MONATE_DE = [
@@ -226,6 +243,7 @@ export function fristenAuswerten(rezepte, heuteIso) {
     const lead = rx?.leads || null;
     const patientName = [lead?.first_name, lead?.last_name].filter(Boolean).join(' ').trim() || 'Ohne Namen';
     const patientId = rx?.patient_id || lead?.id || null;
+    const telefon = telefonLink(lead?.handy || lead?.phone);
     const rxId = rx?.id || null;
     const quelle = rx?.therapie_bereich === 'podo' ? 'podologie' : 'physio';
     const dringend = !!rx?.is_dringend;
@@ -264,6 +282,7 @@ export function fristenAuswerten(rezepte, heuteIso) {
               schwere,
               patientName,
               patientId,
+              telefon,
               rxId,
               quelle,
               dringend,
@@ -311,6 +330,7 @@ export function fristenAuswerten(rezepte, heuteIso) {
               schwere,
               patientName,
               patientId,
+              telefon,
               rxId,
               quelle,
               dringend: false,
@@ -335,6 +355,39 @@ export function fristenAuswerten(rezepte, heuteIso) {
     if (a.tageDiff !== b.tageDiff) return a.tageDiff - b.tageDiff;
     return a.patientName.localeCompare(b.patientName, 'de-DE');
   });
+}
+
+/**
+ * Filtert Rezepte mit offenem Prüfbedarf:
+ *  - Kassen-Absetzungen (`abrechnung_status === 'absetzung'`) — höchste Priorität
+ *  - Noch unbestätigte OCR-Scans (`status === 'parsed'`)
+ *
+ * @param {Array<Record<string, any>>} rezepte
+ */
+export function rezeptPruefbedarfAufbereiten(rezepte) {
+  const out = [];
+  for (const rx of rezepte || []) {
+    const absetzung = rx?.abrechnung_status === 'absetzung';
+    const scanOffen = rx?.status === 'parsed';
+    if (!absetzung && !scanOffen) continue;
+    const lead = rx?.leads || null;
+    const patientName = [lead?.first_name, lead?.last_name].filter(Boolean).join(' ').trim() || 'Ohne Namen';
+    const kontextMeta = [rx?.heilmittel, rx?.diagnosegruppe].map(s => String(s || '').trim()).filter(Boolean).join(' · ');
+    out.push({
+      rxId: rx?.id || null,
+      patientId: rx?.patient_id || lead?.id || null,
+      quelle: rx?.therapie_bereich === 'podo' ? 'podologie' : 'physio',
+      patientName,
+      telefon: telefonLink(lead?.handy || lead?.phone),
+      art: absetzung ? 'absetzung' : 'scan',
+      schwere: absetzung ? 'danger' : 'warning',
+      etikett: absetzung ? 'Absetzung' : 'Scan offen',
+      hinweis: absetzung ? 'Kassen-Absetzung prüfen' : 'Rezept-Scan bestätigen',
+      kontextMeta: kontextMeta || 'Verordnung',
+      ausgestelltDe: rx?.ausstellungsdatum ? datumMitJahr(rx.ausstellungsdatum) : '—',
+    });
+  }
+  return out.sort((a, b) => (a.art === b.art ? a.patientName.localeCompare(b.patientName, 'de-DE') : a.art === 'absetzung' ? -1 : 1));
 }
 
 /**
@@ -447,6 +500,7 @@ export function aufgabenAufbereiten(aufgaben, heuteIso) {
       return {
         id: a?.id || null,
         leadId: a?.lead_id || lead?.id || null,
+        erstelltVon: a?.erstellt_von || null,
         patientName,
         text: String(a?.text || '').trim() || 'Aufgabe',
         faelligIso,
@@ -571,6 +625,7 @@ export function abwesenheitenAufbereiten(zeilen, heuteIso, tageVoraus = 14) {
         : (tageBisStart === 1 ? 'Ab morgen' : `In ${tageBisStart} T.`);
       return {
         id: v?.id || null,
+        employeeId: v?.employee_id || v?.profiles?.id || null,
         name: empName,
         initialen: initialen(empName),
         typKey: String(v?.type || 'frei'),
@@ -617,11 +672,14 @@ export function nichtErscheinerAufbereiten(bookings, heuteIso) {
           : `vor ${diff} T.`;
     const name = String(b?.customer_name || '').trim() || 'Ohne Namen';
     const leistung = b?.services?.title ? String(b.services.title).trim() : '';
+    const telefon = telefonLink(b?.leads?.handy || b?.leads?.phone || b?.customer_phone);
     return {
       id: b?.id || null,
       leadId: b?.lead_id || null,
+      userId: b?.user_id || null,
       name,
       initialen: initialen(name),
+      telefon,
       datumDe: datumDeText,
       zeitDe: zeitText,
       vorText,

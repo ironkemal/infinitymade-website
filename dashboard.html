@@ -32,7 +32,7 @@
   <link rel="stylesheet" href="design/startseite.css?v=20261119warmweiss1">
   <link rel="stylesheet" href="design/seiten.css?v=20261118v914">
   <link rel="stylesheet" href="design/verwaltung.css?v=20261111p3">
-  <link rel="stylesheet" href="design/ueberblick.css?v=20261119ubl2">
+  <link rel="stylesheet" href="design/ueberblick.css?v=20261119ubl3">
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <!-- Cropper.js lokal statt cdnjs (27.08.2026) — gleiche Datei, gleiche Version,
        Pruefsumme gegen unpkg verglichen. Grund: dies ist die eingeloggte App, in der
@@ -251,6 +251,10 @@
               <p class="ubl-header-sub" id="ublHeaderSub" aria-live="polite">Praxis-Überblick</p>
             </div>
             <div class="ubl-toolbar">
+              <div id="ublScopeToggle" class="ubl-scope" role="group" aria-label="Umfang wählen" hidden>
+                <button type="button" class="ubl-scope-btn is-active" data-ubl-scope="praxis" aria-pressed="true">Praxis</button>
+                <button type="button" class="ubl-scope-btn" data-ubl-scope="meine" aria-pressed="false">Meine</button>
+              </div>
               <div class="ubl-search">
                 <span class="ubl-search-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
@@ -5984,7 +5988,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261119ubl2"></script>
+  <script type="module" src="dashboard.js?v=20261119ubl3"></script></script>
 </body>
 
 </html>
