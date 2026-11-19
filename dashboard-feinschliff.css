@@ -166,7 +166,14 @@
   :root:not([data-design="neu"]) body:has(#panel-overview.active) #sidebarNav .sidebar-item.active::before {
     box-shadow: inset 3px 0 var(--text-main);
   }
-  :root:not([data-design="neu"]) #startAufgabeInput {
+  #panel-overview #welcomeOverview {
+    --primary: #F6F8FC;
+    --text-main: var(--primary);
+    background: #233750;
+    border-color: #536C89;
+  }
+
+  :root:not([data-design="neu"]) #startAufgabeForm :is(input, select, #startAufgabePatientToggle) {
     --border: var(--border-strong);
   }
   :root:not([data-design="neu"]) #startAufgabeInput::placeholder {

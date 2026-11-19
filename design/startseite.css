@@ -12,6 +12,13 @@
   [data-design="neu"] #panel-overview > [data-px-start-ersetzt] { display: none !important; }
 
   [data-design="neu"] .px-start { display: flex; flex-direction: column; gap: 24px; }
+  [data-design="neu"] .px-start-kopf {
+    --text-main: #F6F8FC;
+    --text-muted: #DCE5F1;
+    padding: 18px 22px;
+    border-radius: var(--radius);
+    background: #233750;
+  }
   [data-design="neu"] .px-start-kopf h1 {
     margin: 0;
     font-size: var(--fs-h1, 28px);
