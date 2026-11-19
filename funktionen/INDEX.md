@@ -72,26 +72,26 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `speichereSchalter()` — [module/terminerinnerung-einstellung.js:29](module/terminerinnerung-einstellung.js#L29-L33) · 5 satır · profiles:update
 
 **Yol 18 — `loadProfile()`** · Ekran: _UI yolu çözülemedi_
-- `loadProfile()` — [onboarding.js:115](onboarding.js#L115-L173) · 59 satır · profiles:insert
+- `loadProfile()` — [onboarding.js:116](onboarding.js#L116-L174) · 59 satır · profiles:insert
 
 **Yol 19 — `saveStepProgress()`** · Ekran: _UI yolu çözülemedi_
-- `saveStepProgress()` — [onboarding.js:281](onboarding.js#L281-L285) · 5 satır · profiles:update
+- `saveStepProgress()` — [onboarding.js:282](onboarding.js#L282-L286) · 5 satır · profiles:update
 
 **Yol 20 — `bindBusiness()`** · Ekran: _UI yolu çözülemedi_
-- `bindBusiness()` — [onboarding.js:388](onboarding.js#L388-L450) · 63 satır · profiles:update
+- `bindBusiness()` — [onboarding.js:389](onboarding.js#L389-L451) · 63 satır · profiles:update
 
 **Yol 21 — `bindBilling()`** · Ekran: _UI yolu çözülemedi_
-- `bindBilling()` — [onboarding.js:453](onboarding.js#L453-L513) · 61 satır · profiles:update
-- `handleSave()` — [onboarding.js:457](onboarding.js#L457-L503) · 47 satır · profiles:update
+- `bindBilling()` — [onboarding.js:454](onboarding.js#L454-L514) · 61 satır · profiles:update
+- `handleSave()` — [onboarding.js:458](onboarding.js#L458-L504) · 47 satır · profiles:update
 
 **Yol 22 — `bindOwner()`** · Ekran: _UI yolu çözülemedi_
-- `bindOwner()` — [onboarding.js:516](onboarding.js#L516-L542) · 27 satır · profiles:update
+- `bindOwner()` — [onboarding.js:517](onboarding.js#L517-L543) · 27 satır · profiles:update
 
 **Yol 23 — `bindHours()`** · Ekran: _UI yolu çözülemedi_
-- `bindHours()` — [onboarding.js:820](onboarding.js#L820-L865) · 46 satır · profiles:update
+- `bindHours()` — [onboarding.js:821](onboarding.js#L821-L866) · 46 satır · profiles:update
 
 **Yol 24 — `bindPlan()`** · Ekran: _UI yolu çözülemedi_
-- `bindPlan()` — [onboarding.js:877](onboarding.js#L877-L1023) · 147 satır · profiles:update
+- `bindPlan()` — [onboarding.js:878](onboarding.js#L878-L1030) · 153 satır · profiles:update
 
 ### `bookings` — 17 bağımsız yazma yolu
 
@@ -297,7 +297,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `setzen()` — [module/praxis-standort.js:151](module/praxis-standort.js#L151-L175) · 25 satır · businesses:update
 
 **Yol 6 — `bindBusiness()`** · Ekran: _UI yolu çözülemedi_
-- `bindBusiness()` — [onboarding.js:388](onboarding.js#L388-L450) · 63 satır · businesses:update, businesses:insert
+- `bindBusiness()` — [onboarding.js:389](onboarding.js#L389-L451) · 63 satır · businesses:update, businesses:insert
 
 ### `services` — 6 bağımsız yazma yolu
 
@@ -306,8 +306,8 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 
 **Yol 2 — `normName()`** · Ekran: _UI yolu çözülemedi_
 - `autoSeedGkvServices()` — [dashboard.js:7928](dashboard.js#L7928-L7955) · 28 satır · services:insert
-- `normName()` — [onboarding.js:606](onboarding.js#L606-L735) · 130 satır · services:update, services:insert, services:delete
-- `syncServices()` — [onboarding.js:625](onboarding.js#L625-L735) · 111 satır · services:update, services:insert, services:delete
+- `normName()` — [onboarding.js:607](onboarding.js#L607-L736) · 130 satır · services:update, services:insert, services:delete
+- `syncServices()` — [onboarding.js:626](onboarding.js#L626-L736) · 111 satır · services:update, services:insert, services:delete
 
 **Yol 3 — `migratePodologieLegacyServices()`** · Ekran: ortak yardımcı — 37 modülden çağrılıyor
 - `migratePodologieLegacyServices()` — [dashboard.js:8115](dashboard.js#L8115-L8150) · 36 satır · services:update
@@ -381,8 +381,8 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `loadEmpServices()` — [dashboard.js:9906](dashboard.js#L9906-L9990) · 85 satır · employee_services:insert, employee_services:delete
 
 **Yol 3 — `normName()`** · Ekran: _UI yolu çözülemedi_
-- `normName()` — [onboarding.js:606](onboarding.js#L606-L735) · 130 satır · employee_services:insert
-- `syncServices()` — [onboarding.js:625](onboarding.js#L625-L735) · 111 satır · employee_services:insert
+- `normName()` — [onboarding.js:607](onboarding.js#L607-L736) · 130 satır · employee_services:insert
+- `syncServices()` — [onboarding.js:626](onboarding.js#L626-L736) · 111 satır · employee_services:insert
 
 ### `mitarbeiter_anstellung` — 3 bağımsız yazma yolu
 
@@ -551,7 +551,7 @@ fonksiyon id'yi tutuyor ve gövdesinde bir yerde HTML basıyor. İnceleme kuyru�
 - `#abDetailContent` — 2 yol: [`leere()`](module/abrechnung-detail.js#L177-L183) · [`zeigeAbrechnungDetail()`](module/abrechnung-detail.js#L185-L234)
 - `#bkGroupParticipantsList` — 2 yol: [`loadGroupParticipants()`](dashboard.js#L3747-L3824) · [`renderLocalGroupParticipants()`](dashboard.js#L3826-L3860)
 - `#bkService` — 2 yol: [`populateSrvSelect()`](dashboard.js#L4367-L4377) · [`wechsleLeistungsoptionen()`](module/termin-leistungen.js#L524-L534)
-- `#bkSlotsList` — 2 yol: [`loadBookingSlots()`](booking.js#L232-L303) · [`ersterFreierTagImMonat()`](booking.js#L409-L417)
+- `#bkSlotsList` — 2 yol: [`loadBookingSlots()`](booking.js#L233-L308) · [`ersterFreierTagImMonat()`](booking.js#L414-L422)
 - `#zaaResult` — 2 yol: [`runZaaUpload()`](dashboard.js#L14716-L14763) · [`showZaaErrors()`](dashboard.js#L14773-L14792)
 
 ## En çok yazılan tablolar
@@ -620,7 +620,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `zeile` — api-backend/lib/therapiebericht.js:420 · module/branding-ui.js:39 · module/fax-deckblatt.js:54 · module/rechnung-druck.js:34 · module/verordnung-detail.js:293 · module/verordnung-detail.js:428 · module/verordnung-detail.js:496 · module/verordnung-pruefen-knopf.js:122
 - `el` — module/arzt-register.js:253 · module/fussbefund.js:232 · module/mailversand.js:59 · module/patient-notizen.js:16 · module/termin-aktionsleiste.js:49 · module/termin-panel.js:39 · module/verordnung-maske.js:765
 - `fmtEur` — api-backend/billing/pdf/ausfallrechnung.template.js:19 · api-backend/billing/pdf/begleitzettel.template.js:32 · api-backend/billing/pdf/mahnung.template.js:9 · api-backend/billing/pdf/rechnung.template.js:14 · api-backend/billing/pdf/rzg-quittung.template.js:12 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:17 · module/geld.js:48
-- `init` — attendance.js:299 · booking-request.js:1420 · booking.js:67 · cookie-consent.js:210 · dashboard.js:14102 · onboarding.js:77 · setup.js:197
+- `init` — attendance.js:299 · booking-request.js:1416 · booking.js:68 · cookie-consent.js:210 · dashboard.js:14102 · onboarding.js:78 · setup.js:197
 - `leer` — api-backend/billing/dta/auftragsdatei.js:67 · api-backend/lib/terminerinnerung-job.js:27 · module/fahrtenbuch-regeln.js:315 · module/fussbefund-archiv.js:199 · module/sitzungsplan.js:114 · module/startseite-handlungsbedarf-karte.js:9 · module/verordnung-pruefung.js:101
 - `onEsc` — dashboard.js:5945 · module/rechnung-leistung-picker.js:48 · module/verordnung-einheiten.js:304 · module/verordnung-einheiten.js:402 · module/verordnung-einheiten.js:596 · module/zuzahlung-befreiung.js:156 · module/zuzahlung-korrektur.js:214
 - `wert` — module/anfrage-bearbeiten.js:186 · module/fahrtenbuch-regeln.js:307 · module/hausbesuch-route.js:33 · module/mail-entwurf.js:55 · module/mailversand.js:324 · module/verordnung-pruefen-knopf.js:44 · setup.js:290

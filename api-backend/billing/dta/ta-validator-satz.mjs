@@ -107,7 +107,7 @@ const alleFaelle = [
     name: '01_df_erstverordnung_zuzahlungspflichtig',
     hinweis: 'DF, Eingangsbefundung 78040 + 4× Behandlung groß 78020, zuzahlungspflichtig',
     prescriptions: [rx(
-      patient('Probe', 'Anna', '1952-03-14', 'T100000017'),
+      patient('Probe', 'Anna', '1952-03-14', 'T100000015'),
       verordnung({ icd10: 'E11.74', diagnosegruppe: 'DF' }),
       [pos('78040', '2026-09-29'), pos('78020', '2026-09-29'), pos('78020', '2026-10-27'),
        pos('78020', '2026-11-24'), pos('78020', '2026-12-22')].filter(s => s.datumLeistung <= RECHNUNGSDATUM),
@@ -117,7 +117,7 @@ const alleFaelle = [
     name: '02_df_befreit',
     hinweis: 'DF, Patient von der Zuzahlung befreit (Kennzeichen 1), 78030 + 78010',
     prescriptions: [rx(
-      patient('Muster', 'Bernd', '1948-11-02', 'T200000013', '50000'),
+      patient('Muster', 'Bernd', '1948-11-02', 'T200000016', '50000'),
       verordnung({ icd10: 'E11.74', diagnosegruppe: 'DF', zuzahlungskennzeichen: '1' }),
       [pos('78030', '2026-09-30'), pos('78010', '2026-09-30'), pos('78010', '2026-10-21')],
     )],
@@ -126,7 +126,7 @@ const alleFaelle = [
     name: '03_df_hausbesuch',
     hinweis: 'DF, Hausbesuch ärztlich verordnet: je Tag 78020 + 79933',
     prescriptions: [rx(
-      patient('Beispiel', 'Clara', '1940-06-21', 'T300000019', '50000'),
+      patient('Beispiel', 'Clara', '1940-06-21', 'T300000017', '50000'),
       verordnung({ icd10: 'E11.74', diagnosegruppe: 'DF', hausbesuch: true }),
       [pos('78020', '2026-09-25'), pos('79933', '2026-09-25'),
        pos('78020', '2026-10-20'), pos('79933', '2026-10-20')],
@@ -136,7 +136,7 @@ const alleFaelle = [
     name: '04_df_hausbesuch_soziale_einrichtung',
     hinweis: 'DF, Hausbesuch in sozialer Einrichtung (Pflegeheim): 78010 + 79934',
     prescriptions: [rx(
-      patient('Versuch', 'Dieter', '1936-01-09', 'T400000015', '50000'),
+      patient('Versuch', 'Dieter', '1936-01-09', 'T400000018', '50000'),
       verordnung({ icd10: 'E11.74', diagnosegruppe: 'DF', hausbesuch: true }),
       [pos('78010', '2026-10-02'), pos('79934', '2026-10-02')],
     )],
@@ -145,7 +145,7 @@ const alleFaelle = [
     name: '05_nf_neuropathie',
     hinweis: 'NF (Neuropathie ohne Diabetes), 78010 zweimal',
     prescriptions: [rx(
-      patient('Kontrolle', 'Eva', '1961-08-30', 'T500000011'),
+      patient('Kontrolle', 'Eva', '1961-08-30', 'T500000019'),
       verordnung({ icd10: 'G60.0', diagnosegruppe: 'NF' }),
       [pos('78010', '2026-10-05'), pos('78010', '2026-10-19')],
     )],
@@ -154,7 +154,7 @@ const alleFaelle = [
     name: '06_ui1_nagelspange',
     hinweis: 'UI1 (eingewachsener Nagel): Erstbefundung 78100, Spange 78610, Kontrolle 78510, Abschluss 78520',
     prescriptions: [rx(
-      patient('Nagel', 'Felix', '1999-04-12', 'T600000018'),
+      patient('Nagel', 'Felix', '1999-04-12', 'T600000010'),
       verordnung({ icd10: 'L60.0', diagnosegruppe: 'UI1' }),
       [pos('78100', '2026-09-28'), pos('78610', '2026-09-28'),
        pos('78510', '2026-10-12'), pos('78520', '2026-10-19')],
@@ -164,13 +164,13 @@ const alleFaelle = [
     name: '07_mehrere_verordnungen_gemischter_status',
     hinweis: 'Drei Patienten in einer Datei: Mitglied (1), Familienversichert (3), Rentner (5) — GES-Summen je Status',
     prescriptions: [
-      rx(patient('Eins', 'Gerda', '1958-02-02', 'T700000014', '10000'),
+      rx(patient('Eins', 'Gerda', '1958-02-02', 'T700000011', '10000'),
          verordnung({ icd10: 'E11.74', diagnosegruppe: 'DF' }),
          [pos('78020', '2026-10-01')]),
-      rx(patient('Zwei', 'Hans', '1966-05-05', 'T710000017', '30000'),
+      rx(patient('Zwei', 'Hans', '1966-05-05', 'T710000013', '30000'),
          verordnung({ icd10: 'E10.74', diagnosegruppe: 'DF' }),
          [pos('78010', '2026-10-06'), pos('78010', '2026-10-20')]),
-      rx(patient('Drei', 'Ilse', '1944-09-09', 'T720000010', '50000'),
+      rx(patient('Drei', 'Ilse', '1944-09-09', 'T720000015', '50000'),
          verordnung({ icd10: 'E11.74', diagnosegruppe: 'DF', zuzahlungskennzeichen: '1' }),
          [pos('78020', '2026-10-08')]),
     ],
@@ -180,7 +180,7 @@ const alleFaelle = [
     hinweis: 'BARMER → DDG Essen (nicht IQVIA). Prüft, ob der Validator fremde DAS-Dateien annimmt',
     das: DAS.ddg,
     prescriptions: [rx(
-      patient('Anders', 'Jana', '1957-12-24', 'T800000010'),
+      patient('Anders', 'Jana', '1957-12-24', 'T800000012'),
       verordnung({ kasse: KASSE.barmer, icd10: 'E11.74', diagnosegruppe: 'DF' }),
       [pos('78020', '2026-10-09')],
     )],
