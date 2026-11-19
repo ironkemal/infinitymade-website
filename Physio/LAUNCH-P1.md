@@ -50,10 +50,10 @@ Nur diese vier beeinflussen den Start, Rest von `PARTNER-FRAGEN.md` später:
 - Gerätetests: Passwort, Google-Kalender, Kamera, GPS
 - F9/F11 Urlaub als Inhaber und als Mitarbeiter, S5/S6 Standortplanung, F2 Widget im bestätigten QA-Mandanten
 - Kompakte Checkliste: `canli-test/2026-11-19-physio-launch-checkliste.md` (Gemini, 19.11.)
-- Rechnungsrechte (0081): inaktive Mitarbeiter + Modulrecht sind mit 0120/0121 seit 11.11. live
-  (`fortschritte/2026-11-11.md`). Der dritte Teilpunkt „Storno-/Wartelistenreferenzen“
-  (`wissensbank/sitzungen/2026-11-11_offene-punkte-wiederaufnahme.md:19`) ist darin nicht belegt
-  → vor dem Launch kurz von db-ustasi bestätigen lassen
+- Rechnungsrechte (0081): ✅ alle drei Teilpunkte seit 11.11. live — inaktive Mitarbeiter +
+  Modulrecht (0120/0121) sowie Storno-/Wartelistenreferenzen (Trigger
+  `rechnung_zahlung_storno_referenz_pruefen` / `warteliste_referenzen_pruefen`,
+  `api-backend/db/migrations/0120_rechnungsrechte_teil1.sql:24–82`)
 
 ## Wer arbeitet woran (19.11.2026, ohne Überschneidung)
 
