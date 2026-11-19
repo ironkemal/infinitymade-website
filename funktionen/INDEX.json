@@ -24627,8 +24627,8 @@
    "lang": "js",
    "file": "api-backend/billing/dta/ta-validator-satz-physio.mjs",
    "start": 85,
-   "end": 138,
-   "lines": 54,
+   "end": 139,
+   "lines": 55,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -24644,7 +24644,8 @@
     "resolvePositionsnummer",
     "resolvePreis",
     "therapiefrequenzFuer",
-    "validatePhysioAbrechnung"
+    "validatePhysioAbrechnung",
+    "verordnungsbesonderheitFuer"
    ],
    "calledBy": [
     "(datei) api-backend/billing/dta/ta-validator-satz-physio.mjs"
@@ -24908,6 +24909,7 @@
    "domRender": false,
    "calls": [],
    "calledBy": [
+    "fall",
     "mapPrescriptionToDtaShape"
    ],
    "modules": [],

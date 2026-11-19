@@ -28,7 +28,7 @@ import { join, resolve } from 'node:path';
 import { buildDtaFile } from './builder.js';
 import { pruefeDatenstrom } from './preflight.js';
 import { validatePhysioAbrechnung } from './physio-verfahren.js';
-import { heilmittelBereichFuer, therapiefrequenzFuer } from './zhe-kennzeichen.js';
+import { heilmittelBereichFuer, therapiefrequenzFuer, verordnungsbesonderheitFuer } from './zhe-kennzeichen.js';
 import { legsFuer, abrechnungscodeAusLegs, tarifkennzeichenAusLegs } from '../codes/legs.js';
 import { physioLeistungszeilen } from '../codes/physio-leistungszeilen.js';
 import { resolvePositionsnummer } from '../codes/physio_positions.js';
@@ -125,7 +125,8 @@ function fall({ pat, icd10, diagnosegruppe, position, anzahl, tage, ergaenzend, 
     doctor: { lanr: '999999999', bsnr: '999999999' },
     verordnung: {
       ausstellungsdatum, icd10, icd10Liste: [icd10], diagnosegruppe,
-      verordnungsart, leitsymptomatik: '1000',
+      verordnungsart, verordnungsbesonderheiten: verordnungsbesonderheitFuer({ entlassmanagement: false }),
+      leitsymptomatik: '1000',
       dringend: false, hausbesuch,
       heilmittelBereich: heilmittelBereichFuer(SECTOR),
       therapiefrequenz: therapiefrequenzFuer(SECTOR, frequenz),

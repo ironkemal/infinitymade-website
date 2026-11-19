@@ -21,7 +21,7 @@ import { buildDtaFile } from '../dta/builder.js';
 import { leitsymptomatikAlsBitmaske } from '../dta/leitsymptomatik.js';
 import { befundpauschaleRegeln } from '../dta/befundpauschale-regeln.js';
 import { hausbesuchRegeln } from '../dta/hausbesuch-regeln.js';
-import { verordnungsartFuer, heilmittelBereichFuer, therapiefrequenzFuer } from '../dta/zhe-kennzeichen.js';
+import { verordnungsartFuer, verordnungsbesonderheitFuer, heilmittelBereichFuer, therapiefrequenzFuer } from '../dta/zhe-kennzeichen.js';
 import { validatePhysioAbrechnung } from '../dta/physio-verfahren.js';
 // Preise/Zuzahlung kommen ab Aufgabe 2 ausschliesslich über preise/resolver.js.
 // Aus den Katalogen wird hier nur noch gebraucht, was nichts mit Geld zu tun hat.
@@ -689,6 +689,8 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sect
       // Wird heute nicht ausgelöst, die Stelle war aber bruchgefährdet.
       diagnosegruppe:           (rx.diagnosegruppe || '').replace(/-[abc]$/i, '') || '9999',
       verordnungsart:           verordnungsartFuer(rx),
+      // ZHE Feld 7, Anlage 3 V21 §8.1.11 — '4' bei Entlassmanagement (bis 19.11.2026 nie gesetzt, gkv-302).
+      verordnungsbesonderheiten: verordnungsbesonderheitFuer(rx),
       hausbesuch:               !!rx.hausbesuch,
       leitsymptomatik:          leitsymptomatikAlsBitmaske(rx.leitsymptomatik, {
                                   diagnosegruppe: rx.diagnosegruppe,

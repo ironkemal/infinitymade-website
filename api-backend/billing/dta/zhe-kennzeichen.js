@@ -8,7 +8,30 @@
  * niemand gegen die Schluesseltabelle gehalten.
  */
 
-import { VERORDNUNGSART_HEILMITTEL } from '../codes/anlage3_v22.js';
+import { VERORDNUNGSART_HEILMITTEL, VERORDNUNGSBESONDERHEITEN } from '../codes/anlage3_v22.js';
+
+const ENTLASSMANAGEMENT = '4';
+if (!VERORDNUNGSBESONDERHEITEN[ENTLASSMANAGEMENT]?.includes('Entlassmanagement')) {
+  throw new Error('Anlage 3 §8.1.11: Schlüssel 4 ist nicht mehr Entlassmanagement — zhe-kennzeichen.js prüfen');
+}
+
+/**
+ * Kennzeichen Verordnungsbesonderheiten (ZHE Feld 7) — Anlage 3 TP5 V21, § 8.1.11:
+ * „4 = Verordnung im Rahmen des Entlassmanagements". Anlage 1 V21 (ZHE, S. 70):
+ * zu übermitteln, wenn der Fall vorliegt.
+ *
+ * Bis 19.11.2026 setzte kein Mapper dieses Feld: eine Entlass-Verordnung ging
+ * als normale Verordnung an die Kasse (gkv-302-Fund). Nur ein ausdrückliches
+ * `true` aus der geprüften Spalte zählt — `null` (Merkmal ungeklärt) sperrt
+ * `validatePhysioAbrechnung` vorher ohnehin. Zahnarzt (1) und Schwangerschaft (2)
+ * führen wir nicht als Spalte, sie bleiben leer.
+ *
+ * @param {{ entlassmanagement?: boolean | null } | null | undefined} rx
+ * @returns {'' | '4'}
+ */
+export function verordnungsbesonderheitFuer(rx) {
+  return rx?.entlassmanagement === true ? ENTLASSMANAGEMENT : '';
+}
 
 /**
  * Kennzeichen Verordnungsart bei Heilmitteln — Anlage 3 TP5 V21, § 8.1.12.
