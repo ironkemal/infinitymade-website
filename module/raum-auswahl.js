@@ -9,7 +9,7 @@
  */
 import { raeumeDesStandorts, raumAuswahl, raumKonflikt } from './raum-plan.js';
 import { ladeAbwesenheiten } from './abwesenheit.js?v=20261031';
-import { ladeSondertage, warnungFuerTag } from './sondertag.js?v=20261104sondertag';
+import { ladeSondertage, warnungFuerTag } from './sondertag.js?v=20261119physio';
 
 const NICHT_VERFUEGBAR = 'Therapeut:in ist an diesem Tag nicht verfügbar.';
 const RAUM_SPALTEN = 'id,owner_id,business_id,name,plaetze,aktiv,sort';

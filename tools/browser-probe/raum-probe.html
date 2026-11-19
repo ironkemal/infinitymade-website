@@ -155,6 +155,7 @@
     pruefe('Umschalter heißt Therapeut | Raum', /Therapeut/.test(umschalter.textContent) && /Raum/.test(umschalter.textContent));
     tagDatum = '2026-12-23';
     document.getElementById('dayViewDateLabel').textContent = '23.12.2026';
+    tabellen.custom_days.push({ owner_id: OWNER, date: tagDatum, type: 'closed' });
     umschalter.querySelector('[data-modus="raum"]').click();
     await warte(300);
     pruefe('Raum-Modus blendet die Therapeutenansicht aus', rasterHost.classList.contains('raum-sichtbar') && getComputedStyle(document.getElementById('dayViewGrid')).display === 'none');
@@ -166,6 +167,10 @@
     pruefe('Zwei Termine bei zwei Plätzen stehen nebeneinander', inSpalte('r2').length === 2 && inSpalte('r2')[0].style.left !== inSpalte('r2')[1].style.left && !inSpalte('r2').some(b => b.classList.contains('raum-ueberbelegt')));
     pruefe('Termin ohne Raum steht in der Spalte Ohne Raum', inSpalte('__ohne_raum__').length === 1 && /Tag Online/.test(inSpalte('__ohne_raum__')[0].textContent));
     pruefe('Namen bleiben sichtbar wie in der Therapeutenansicht', /Tag Zwei/.test(rasterHost.textContent));
+    const raumTermin = inSpalte('r1')[0];
+    pruefe('Raumtermin am Schließtag trägt Warnfarbe und Erläuterung',
+      raumTermin.dataset.sondertag === 'geschlossen' && getComputedStyle(raumTermin).boxShadow !== 'none' && raumTermin.title.includes('Praxis an diesem Tag geschlossen'));
+    tabellen.custom_days.pop();
     inSpalte('r1')[0].click();
     pruefe('Klick auf Block öffnet den Termin', geoeffnet === 'q1');
     umschalter.querySelector('[data-modus="therapeut"]').click();
@@ -260,8 +265,14 @@
     await warte(120);
 
     // Sondertage: Etiketten in Woche, Monat und Tag, ohne interne Notiz
-    document.getElementById('weekViewGrid').append(document.createElement('span'));
+    const wochentermin = document.createElement('div');
+    wochentermin.className = 'wv-booking-block';
+    wochentermin.style.background = 'green';
+    wochentermin._termin = { start_time: '2026-12-24T09:00:00+01:00' };
+    document.getElementById('weekViewGrid').append(wochentermin);
     await warte(250);
+    pruefe('Wochentermin am Schließtag überstimmt die grüne Terminfarbe',
+      wochentermin.dataset.sondertag === 'geschlossen' && getComputedStyle(wochentermin).backgroundColor !== 'rgb(0, 128, 0)');
     const wochenEtikett = document.querySelector('#weekViewGrid [data-datum="2026-12-24"] .sondertag-etikett');
     pruefe('Woche zeigt Schließtag', wochenEtikett?.textContent === 'Praxis geschlossen');
     pruefe('Woche zeigt Sonderöffnung', /Sonderöffnung 09:00–13:00/.test(document.querySelector('#weekViewGrid [data-datum="2026-12-25"]').textContent));

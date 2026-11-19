@@ -51,8 +51,8 @@ import { positionVon } from './podo-geplant.js?v=20261010zc';
 import { istVergeben, ladePodoTermine, bindeTermin, podoBelegung } from './verordnung-termine.js?v=20261102a';
 import { zeigeSitzungenArbeit, setzeSitzungenKopf } from './termin-panel.js?v=20261117p33';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './sitzungen-ansicht.js?v=20260919';
-import { serienAnzahl, serienKnopfText } from './serien-termine.js?v=20261021k';
-import { rxGeschlossen } from './termin-verordnung.js?v=20261103n';
+import { serienAnzahl, serienKnopfText } from './serien-termine.js?v=20261119serie';
+import { rxGeschlossen } from './termin-verordnung.js?v=20261119serie';
 
 /** Klartext der Befundpositionen — dieselben Namen wie im Sitzungsplan. */
 const BEFUND_NAME = Object.freeze({

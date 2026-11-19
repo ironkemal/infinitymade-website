@@ -520,6 +520,19 @@ export async function speichereLeistungenFuerErstellte(created, { showToast } = 
   return lg;
 }
 
+/** Beim Therapeutenwechsel alle Auswahlfelder mit dem neuen Leistungskatalog abgleichen. */
+export function wechsleLeistungsoptionen(optionen) {
+  const feld = document.getElementById('bkService');
+  const bisher = feld.value;
+  feld.innerHTML = optionen;
+  feld.value = bisher;
+  zeichneZeilen();
+  if (bisher && !feld.value) {
+    feld.value = '';
+    feld.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+}
+
 /** Zusatzzeilen zeichnen. Optionen werden aus `#bkService` geklont. */
 function zeichneZeilen() {
   const wrap = document.getElementById('bkLeistungExtra');
@@ -536,6 +549,12 @@ function zeichneZeilen() {
     sel.className = 'form-select';
     sel.style.cssText = 'flex:1;min-width:0;';
     sel.innerHTML = quelle.innerHTML;
+    if (z.serviceId && !Array.from(sel.options).some(o => o.value === z.serviceId)) {
+      const titel = ctx?.getServices?.().find(s => s.id === z.serviceId)?.title || 'Leistung';
+      const gesperrt = new Option(titel + ' (nicht zugeordnet)', z.serviceId);
+      gesperrt.disabled = true;
+      sel.add(gesperrt);
+    }
     sel.value = z.serviceId || '';
     sel.dataset.rolle = 'leistung';
 
@@ -804,6 +823,7 @@ export function mountTerminLeistungen(deps) {
   // wird. Falls die Reihenfolge doch einmal kippt, greift zusaetzlich
   // `istKombinierterTermin()` in dashboard.js — die schreibt dann gar nicht erst.
   document.getElementById('bkService')?.addEventListener('change', () => {
+    aktualisiereDauer();
     setTimeout(() => { schlageBefundungVor(); }, 60);
   });
   document.getElementById('bkCustomerId')?.addEventListener('change', () => {

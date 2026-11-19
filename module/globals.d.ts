@@ -15,6 +15,7 @@ declare module './podo-behandlungstag-regel.js?v=*';
 declare module './standort-plan-regel.js?v=*';
 declare module './verordnung-regeln.js?v=*';
 declare module './api-sitzung.js?v=*';
+declare module './frequenz-pruefung.js?v=*';
 
 // Sentry kommt per CDN-Loader ins Fenster, nicht als npm-Paket.
 interface Window {

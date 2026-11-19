@@ -22,8 +22,10 @@
  * Beides ist dieselbe Annahme: die Zahl der offenen Einheiten sei zugleich die
  * Zahl der Termine, die jetzt entstehen. Diese Datei trennt die zwei Zahlen.
  *
- * Keine DOM-Zugriffe hier. Die Maske liest ihre Felder und übergibt Werte.
+ * Die Datumsrechnung ist unabhängig von der Maske.
  */
+
+import { sitzungenProWoche, verteileWochentage } from './frequenz-pruefung.js?v=20261026p';
 
 const WOCHENTAG_KURZ = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 
@@ -182,43 +184,34 @@ export function anzahlHinweisText(/** @type {number} */ anzahl, /** @type {any} 
 
 /**
  * Wochentag der Serie folgt dem Starttag, solange niemand die Kästchen selbst
- * angefasst hat. Vorher stand ohne Verordnung fest „Mo" angehakt — eine Serie
- * ab Mittwoch lief dann montags (canli-test 20.10.2026). Mit Verordnung setzt
- * `uebernimmSerienfrequenzAusRx()` die Tage ohnehin aus der Frequenz.
+ * angefasst hat. Bei mehreren Terminen pro Woche folgt die Verteilung dem
+ * Starttag ebenfalls. Beim Öffnen für einen anderen Termin gilt der neue Start.
  *
  * @param {any} [doc]
  */
 export function verdrahteSerienStarttag(doc = globalThis.document) {
   const wrap = doc?.getElementById('bkSeriesWeekdays');
-  if (!wrap) return;
+  const start = doc?.getElementById('bkStart');
+  const wiederholung = doc?.getElementById('bkSeriesRecurrence');
+  const toggle = doc?.getElementById('bkSeriesToggle');
+  const anzahl = doc?.getElementById('bkAnzahl');
   let vonHand = false;
-  wrap.addEventListener('change', (/** @type {any} */ e) => { if (e.isTrusted) vonHand = true; });
+  wrap?.addEventListener('change', (/** @type {any} */ e) => { if (e.isTrusted) vonHand = true; });
   const setze = () => {
-    const v = (/** @type {HTMLInputElement | null} */ (doc.getElementById('bkStart')))?.value;
-    if (vonHand || !v || !isValidCalendarDate(v.substring(0, 10))) return;
-    const tag = new Date(v.substring(0, 10) + 'T12:00:00Z').getUTCDay();
-    const boxen = /** @type {HTMLInputElement[]} */ ([...wrap.querySelectorAll('input')]);
-    if (boxen.filter(cb => cb.checked).length > 1) return;   // mehrere Tage = bewusst gewählt (z. B. aus der Frequenz)
-    boxen.forEach(cb => { cb.checked = Number(cb.value) === tag; });
-    boxen[0]?.dispatchEvent(new Event('change'));   // Vorschau nachziehen (nicht als Handeingabe gezählt)
+    if (vonHand || !wrap) return;
+    const datum = start?.value?.substring(0, 10);
+    const tag = isValidCalendarDate(datum) ? wochentag(datum) : null;
+    const proWoche = sitzungenProWoche(wiederholung?.value);
+    const tage = tag === null ? [] : proWoche != null && proWoche > 1 ? verteileWochentage(tag, proWoche) : [tag];
+    wrap.querySelectorAll('input').forEach((/** @type {HTMLInputElement} */ cb) => { cb.checked = tage.includes(Number(cb.value)); });
   };
-  doc.getElementById('bkSeriesToggle')?.addEventListener('change', (/** @type {any} */ e) => { if (e.target?.checked) { vonHand = false; setze(); uebernimmAnzahl(); } });
-  doc.getElementById('bkStart')?.addEventListener('change', setze);
-
-  // Eine Zahl, zwei Felder: „Anzahl" oben und „Anzahl der Termine" unter
-  // „Mehr Optionen" liefen auseinander („Alle 6 Termine" über einer Vorschau
-  // mit 3 — canli-test 20.10.2026). Beim Einschalten gilt die obere Zahl,
-  // wer unten tippt, schreibt sie nach oben zurück.
-  const anzahl = /** @type {HTMLInputElement | null} */ (doc.getElementById('bkAnzahl')), serie = /** @type {HTMLInputElement | null} */ (doc.getElementById('bkSeriesCount'));
-  function uebernimmAnzahl() {
-    const n = parseInt(anzahl?.value || '', 10);
-    if (!serie || !(n > 1) || String(n) === serie.value) return;
-    serie.value = String(n);
-    serie.dispatchEvent(new Event('input'));
-  }
-  serie?.addEventListener('input', (/** @type {any} */ e) => {
-    if (!e.isTrusted || !anzahl) return;
-    const n = parseInt(serie.value, 10);
-    if (n > 1 && String(n) !== anzahl.value) { anzahl.value = String(n); anzahl.dispatchEvent(new Event('input')); }
+  toggle?.addEventListener('change', () => {
+    if (!toggle.checked) return;
+    if (anzahl && anzahl.value === anzahl.defaultValue) anzahl.value = '6';
+    setze();
   });
+  start?.addEventListener('input', setze);
+  start?.addEventListener('change', setze);
+  wiederholung?.addEventListener('change', setze);
+  return () => { vonHand = false; setze(); };
 }

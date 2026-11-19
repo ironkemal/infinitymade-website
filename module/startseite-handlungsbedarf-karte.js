@@ -1,4 +1,4 @@
-import { ladeHandlungsbedarfInput } from './startseite-handlungsbedarf-laden.js?v=20261113f602';
+import { ladeHandlungsbedarfInput } from './startseite-handlungsbedarf-laden.js?v=20261119physio';
 import { berechneHandlungsbedarf } from './startseite-handlungsbedarf.js?v=20261117v906';
 
 const UUID = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;

@@ -43,7 +43,7 @@ import { NAGEL_WERTE, nagelLabel } from './eingangsbefundung-regel.js?v=20261003
 import { sitzungsplan } from './sitzungsplan.js?v=20261003a';
 import { TOPF } from './verordnung-topf.js?v=20260930c';
 import { ladeVorgeschichte } from './podo-vorgeschichte.js?v=20261021v';
-import { POD_KATALOG, POD_HOECHSTMENGE, POD_ORIENTIEREND, dgWurzel } from './verordnung-regeln.js?v=20261031k3';
+import { POD_KATALOG, POD_HOECHSTMENGE, POD_ORIENTIEREND, dgWurzel } from './verordnung-regeln.js?v=20261119physio';
 import { heilmittelGegenLeitsymptomatik } from './verordnung-pruefung.js?v=20261031k3';
 
 // [Q1] Heilmittelkatalog Podologische Therapie, Höchstmenge und orientierende

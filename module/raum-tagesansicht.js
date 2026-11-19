@@ -207,6 +207,7 @@ export function rasterZeichnen(doc, host, modell, { termine, heute, blockHtml, f
       const block = doc.createElement('div');
       block.className = 'dv-booking-block' + (g.hoehe <= 28 ? ' dv-booking-block--compact' : '') + (eintrag.ueberbelegt ? ' raum-ueberbelegt' : '');
       block.dataset.terminId = b.id;
+      block._termin = b;
       block.style.top = `${g.top}px`;
       block.style.height = `${g.hoehe}px`;
       block.style.left = `calc(4px + (100% - 8px) * ${g.links / 100})`;

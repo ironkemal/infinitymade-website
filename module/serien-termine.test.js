@@ -139,7 +139,7 @@ test('recurrence biweekly ohne intervalDays liefert 14 Tage Abstand', () => {
   assert.deepEqual(tage, ['2026-10-14', '2026-10-28', '2026-11-11']);
 });
 
-test('verdrahteSerienStarttag: Starttag Mittwoch hakt Mi an, Handeingabe bleibt', async () => {
+test('verdrahteSerienStarttag: automatische Tage folgen Start und Frequenz, Handeingabe bleibt bis zum Reset', async () => {
   const { verdrahteSerienStarttag } = await import('./serien-termine.js');
   const box = (/** @type {any} */ v, /** @type {any} */ c) => ({ value: String(v), checked: c, dispatchEvent: () => {} });
   const boxen = [box(1, true), box(2, false), box(3, false), box(4, false), box(5, false), box(6, false), box(0, false)];
@@ -148,30 +148,41 @@ test('verdrahteSerienStarttag: Starttag Mittwoch hakt Mi an, Handeingabe bleibt'
   const el = (/** @type {any} */ id) => ({ id, value: id === 'bkStart' ? '2026-10-21T09:00' : '', addEventListener: (/** @type {any} */ t, /** @type {any} */ f) => { (hoerer[id + t] ||= []).push(f); } });
   const wrap = { ...el('bkSeriesWeekdays'), querySelectorAll: () => boxen };
   /** @type {Record<string, any>} */
-  const els = { bkSeriesWeekdays: wrap, bkStart: el('bkStart'), bkSeriesToggle: el('bkSeriesToggle') };
+  const els = { bkSeriesWeekdays: wrap, bkStart: el('bkStart'), bkSeriesToggle: { ...el('bkSeriesToggle'), checked: true }, bkSeriesRecurrence: el('bkSeriesRecurrence') };
   boxen[0].dispatchEvent = () => {};
-  verdrahteSerienStarttag(/** @type {any} */ ({ getElementById: (/** @type {any} */ id) => els[id] }));
-  hoerer.bkSeriesTogglechange[0]({ target: { checked: true } });
+  const reset = verdrahteSerienStarttag(/** @type {any} */ ({ getElementById: (/** @type {any} */ id) => els[id] }));
+  hoerer.bkSeriesTogglechange[0]();
   assert.deepEqual(boxen.filter(b => b.checked).map(b => b.value), ['3']);
+  els.bkSeriesRecurrence.value = '2x pro Woche';
+  hoerer.bkSeriesRecurrencechange[0]();
+  assert.deepEqual(boxen.filter(b => b.checked).map(b => b.value), ['2', '3']);
+  els.bkStart.value = '2026-10-22T09:00';
+  hoerer.bkStartinput[0]();
+  assert.deepEqual(boxen.filter(b => b.checked).map(b => b.value), ['3', '4']);
   hoerer.bkSeriesWeekdayschange[0]({ isTrusted: true });   // Hand
   boxen.forEach(b => { b.checked = b.value === '5'; });
-  els.bkStart.value = '2026-10-22T09:00';
+  els.bkStart.value = '2026-10-27T09:00';
   hoerer.bkStartchange[0]();
   assert.deepEqual(boxen.filter(b => b.checked).map(b => b.value), ['5']);
+  reset();
+  assert.deepEqual(boxen.filter(b => b.checked).map(b => b.value), ['1', '2']);
 });
 
-test('verdrahteSerienStarttag: Anzahl oben und Serienanzahl bleiben gleich', async () => {
+test('verdrahteSerienStarttag: Serie schlägt 6 vor und erhält eine eingegebene Anzahl', async () => {
   const { verdrahteSerienStarttag } = await import('./serien-termine.js');
   /** @type {Record<string, any[]>} */
   const hoerer = {};
   const el = (/** @type {any} */ id, value = '') => ({ id, value, dispatchEvent: (/** @type {any} */ e) => (hoerer[id + e.type] || []).forEach(f => f(e)), addEventListener: (/** @type {any} */ t, /** @type {any} */ f) => { (hoerer[id + t] ||= []).push(f); } });
   /** @type {Record<string, any>} */
   const els = { bkSeriesWeekdays: { ...el('bkSeriesWeekdays'), querySelectorAll: () => [] }, bkStart: el('bkStart', '2026-10-21T09:00'),
-    bkSeriesToggle: el('bkSeriesToggle'), bkAnzahl: el('bkAnzahl', '6'), bkSeriesCount: el('bkSeriesCount', '3') };
+    bkSeriesToggle: { ...el('bkSeriesToggle'), checked: false }, bkAnzahl: { ...el('bkAnzahl', '1'), defaultValue: '1' } };
   verdrahteSerienStarttag(/** @type {any} */ ({ getElementById: (/** @type {any} */ id) => els[id] }));
-  hoerer.bkSeriesTogglechange[0]({ target: { checked: true } });
-  assert.equal(els.bkSeriesCount.value, '6');
-  els.bkSeriesCount.value = '4';
-  hoerer.bkSeriesCountinput[0]({ isTrusted: true });
+  hoerer.bkSeriesTogglechange[0]();
+  assert.equal(els.bkAnzahl.value, '1');
+  els.bkSeriesToggle.checked = true;
+  hoerer.bkSeriesTogglechange[0]();
+  assert.equal(els.bkAnzahl.value, '6');
+  els.bkAnzahl.value = '4';
+  hoerer.bkSeriesTogglechange[0]();
   assert.equal(els.bkAnzahl.value, '4');
 });

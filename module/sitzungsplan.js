@@ -46,8 +46,8 @@
  */
 
 import { befundungFuerLeistung } from './eingangsbefundung-regel.js?v=20261003a';
-export { dgWurzel } from './verordnung-regeln.js?v=20261031k3';
-import { dgWurzel } from './verordnung-regeln.js?v=20261031k3';
+export { dgWurzel } from './verordnung-regeln.js?v=20261119physio';
+import { dgWurzel } from './verordnung-regeln.js?v=20261119physio';
 
 /**
  * Stellvertretende Behandlungsposition je Diagnosegruppe — nur, um

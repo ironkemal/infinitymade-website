@@ -543,12 +543,18 @@ export const SONDERTAG_TERMIN_HINWEIS = "Praxis an diesem Tag geschlossen (Sonde
 export function markiereSondertagTermine({ wurzel, tage } = {}) {
   if (!wurzel || typeof wurzel.querySelectorAll !== "function") return 0;
   let anzahl = 0;
-  for (const el of wurzel.querySelectorAll(".dv-booking-block, .month-event-pill")) {
-    if (!terminAmSondertag(el._termin, tage)) continue;
+  for (const el of wurzel.querySelectorAll(".dv-booking-block, .wv-booking-block, .month-event-pill")) {
+    const hinweis = SONDERTAG_TERMIN_HINWEIS;
+    if (!terminAmSondertag(el._termin, tage)) {
+      if (el.dataset.sondertag === "geschlossen") {
+        delete el.dataset.sondertag;
+        if (el.title === hinweis) el.title = "";
+        else if (el.title.startsWith(hinweis + "\n")) el.title = el.title.slice(hinweis.length + 1);
+      }
+      continue;
+    }
     el.dataset.sondertag = "geschlossen";
-    el.style.boxShadow = "inset 0 0 0 2px var(--danger, #dc2626)";
-    el.style.backgroundImage = "linear-gradient(rgba(220, 38, 38, 0.22), rgba(220, 38, 38, 0.22))";
-    el.title = el.title ? `${SONDERTAG_TERMIN_HINWEIS}\n${el.title}` : SONDERTAG_TERMIN_HINWEIS;
+    if (!el.title.startsWith(hinweis)) el.title = el.title ? hinweis + "\n" + el.title : hinweis;
     anzahl += 1;
   }
   return anzahl;

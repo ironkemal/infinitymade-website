@@ -125,9 +125,10 @@ export function hauptbuchFuehrtStatus(therapieBereich) {
  *
  * @param supabase         aktiver Supabase-Client
  * @param {string} prescriptionId
+ * @param {{fehlerMelden?:boolean}} [optionen]
  * @returns {Promise<{offen:number, erbracht:number, einheiten:number|null, fertig:boolean}|null>}
  */
-export async function pruefeVerordnungsfortschritt(supabase, prescriptionId) {
+export async function pruefeVerordnungsfortschritt(supabase, prescriptionId, { fehlerMelden = false } = {}) {
   if (!prescriptionId) return null;
 
   const zaehler = () => supabase
@@ -141,6 +142,9 @@ export async function pruefeVerordnungsfortschritt(supabase, prescriptionId) {
     supabase.from('prescriptions').select('anzahl_einheiten, therapie_bereich, status, doppelbehandlung').eq('id', prescriptionId).maybeSingle(),
   ]);
 
+  const leseFehler = offenRes.error || erbrachtRes.error || rxRes.error;
+  if (fehlerMelden && (leseFehler || !rxRes.data)) throw leseFehler || new Error('Verordnung nicht gefunden.');
+
   // Podologie: der Status gehört der Abrechnungsmaske, siehe hauptbuchFuehrtStatus().
   if (!hauptbuchFuehrtStatus(rxRes.data?.therapie_bereich) || rxRes.error || rxRes.data?.status === 'parsed') return null;
 
@@ -151,9 +155,10 @@ export async function pruefeVerordnungsfortschritt(supabase, prescriptionId) {
   const fertig    = istFertigBehandelt({ offen, erbracht, einheiten });
 
   if (fertig) {
-    await supabase.from('prescriptions')
+    const { error: statusFehler } = await supabase.from('prescriptions')
       .update({ status: 'completed' }).eq('id', prescriptionId)
       .in('status', ['confirmed', 'in_therapy']);
+    if (fehlerMelden && statusFehler) throw statusFehler;
     // §302-Weiche: erst hier taucht das Rezept in der Kassenabrechnung auf.
     // Bewusst OHNE Bedingung an `kostentraeger_ik`: fehlt die Kasse, landet das
     // Rezept in der Gruppe „Kostenträger fehlt“ und wird dort zugewiesen.
@@ -162,15 +167,17 @@ export async function pruefeVerordnungsfortschritt(supabase, prescriptionId) {
     // Ops #310: der Stempel haelt eine Handentscheidung fest
     // (verordnung-status.routes.js) — solange er steht, hebt die Automatik
     // nicht erneut an, auch wenn spaeter noch eine Sitzung nachgetragen wird.
-    await supabase.from('prescriptions')
+    const { error } = await supabase.from('prescriptions')
       .update({ abrechnung_status: 'bereit' }).eq('id', prescriptionId)
       .neq('status', 'parsed')
       .is('abrechnung_status', null)
       .is('abrechnung_status_manuell_am', null);
+    if (fehlerMelden && error) throw error;
   } else {
-    await supabase.from('prescriptions')
+    const { error } = await supabase.from('prescriptions')
       .update({ status: 'in_therapy' }).eq('id', prescriptionId)
       .in('status', ['confirmed']);
+    if (fehlerMelden && error) throw error;
   }
 
   return { offen, erbracht, einheiten, fertig };

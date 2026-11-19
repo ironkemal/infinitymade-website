@@ -201,7 +201,7 @@ test('waehleVerordnung: Physio setzt Sitzungspunkte und naechste Session', async
   assert.equal(el.bkSelectedSessionId.value, 'sess-1');
 });
 
-test('waehleVerordnung: Physio meldet Alle vergeben wenn sessions leer sind', async () => {
+test('waehleVerordnung: Physio kennzeichnet fehlende Sitzungsdaten', async () => {
   const el = setupWaehleDom();
   const rx = {
     id: 'rx-physio-leer',
@@ -212,7 +212,49 @@ test('waehleVerordnung: Physio meldet Alle vergeben wenn sessions leer sind', as
   await waehleVerordnung(rx, []);
 
   assert.equal(window._pendingRxSession, null);
+  assert.match(el.bkSessionPickerInfo.textContent, /Sitzungsdaten fehlen/);
+});
+
+test('waehleVerordnung: Physio ergänzt 6 fehlende Sitzungszeilen und wählt die erste aus', async () => {
+  const el = setupWaehleDom();
+  const rx = { id: 'rx-physio-alt', therapie_bereich: 'physio', anzahl_einheiten: 6, status: 'confirmed' };
+  const sessions = [];
+  const sb = {
+    from(table) {
+      assert.equal(table, 'prescription_sessions');
+      return {
+        select: () => ({ async eq(col, id) {
+          assert.equal(col, 'prescription_id');
+          assert.equal(id, rx.id);
+          return { data: sessions, error: null };
+        } }),
+        async upsert(rows) {
+          sessions.push(...rows.map(row => ({ ...row, id: `s-${row.session_number}`, booking_id: null })));
+          return { error: null };
+        },
+      };
+    },
+  };
+
+  await waehleVerordnung(rx, [], { sb });
+
+  assert.equal(sessions.length, 6);
+  assert.equal(el.bkSessionPickerInfo.textContent, 'Nächste: Sitzung 1 von 6');
+  assert.deepEqual(window._pendingRxSession, { sessionId: 's-1', prescriptionId: rx.id });
+});
+
+test('waehleVerordnung: Physio meldet tatsächlich vollständig verplante Sitzungen', async () => {
+  const el = setupWaehleDom();
+  const rx = { id: 'rx-physio-voll', therapie_bereich: 'physio', anzahl_einheiten: 2, status: 'confirmed' };
+  const sessions = [
+    { id: 's-1', session_number: 1, status: 'planned', booking_id: 'b-1' },
+    { id: 's-2', session_number: 2, status: 'planned', booking_id: 'b-2' },
+  ];
+
+  await waehleVerordnung(rx, sessions);
+
   assert.equal(el.bkSessionPickerInfo.textContent, 'Alle Sitzungen bereits vergeben.');
+  assert.equal(window._pendingRxSession, null);
 });
 
 // ── zeigeVerordnungenFuerTermin & resetVerordnungFelder ────────────────────

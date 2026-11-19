@@ -13,7 +13,7 @@ import {
 import { raeumeDesStandorts } from './raum-plan.js';
 import { mountRaumVerwaltung } from './raum-verwaltung.js?v=20261103raum';
 import { mountRaumStreifen } from './raum-streifen.js';
-import { mountRaumTagesansicht } from './raum-tagesansicht.js?v=20261105sperre';
+import { mountRaumTagesansicht } from './raum-tagesansicht.js?v=20261119physio';
 import { mountWidgetEinbettung } from './widget-einbettung.js';
 import { termineDesStandorts } from './standort-plan-laden.js?v=20261103planung';
 import { mountAnstellung, ladeAnstellung, ladeArbeitstage, urlaubsKennzahlen, arbeitstageImZeitraum } from './anstellung.js?v=20261103planung';
@@ -22,7 +22,7 @@ import { mountStandortPlan } from './standort-plan.js?v=20261104zeit';
 import { mountEhemalige } from './ehemalige-mitarbeiter.js?v=20261102a';
 import { mountMitteilung } from './sondertag-mitteilung.js?v=20261109';
 import { mountMeinUrlaub } from './mein-urlaub.js?v=20261103planung2';
-import { ladeSondertage, markiereSondertage, markiereSondertagTermine, sondertagEtikett, sondertagArt, ladeBetroffene, betroffeneTermine, anruflisteHtml } from './sondertag.js?v=20261104sondertag';
+import { ladeSondertage, markiereSondertage, markiereSondertagTermine, sondertagEtikett, sondertagArt, ladeBetroffene, betroffeneTermine, anruflisteHtml } from './sondertag.js?v=20261119physio';
 
 export { raumFelder, terminWarnungen, sondertagGesperrt, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, urlaubsKennzahlen, arbeitstageImZeitraum };
 export { termineDesStandorts };
@@ -111,9 +111,12 @@ function mountSondertagAnzeige(deps) {
     ['monat', document.getElementById('monthViewWrap')],
     ['tag', document.getElementById('dayViewGrid')],
   ].filter(([, el]) => el);
+  const raumRaster = document.getElementById('raumTagGrid');
+  let generation = 0;
   let warte = null;
 
   async function zeichnen() {
+    const stand = ++generation;
     try {
       const auftraege = [];
       for (const [ansicht, wurzel] of ansichten) {
@@ -125,6 +128,7 @@ function mountSondertagAnzeige(deps) {
         auftraege.push({ ansicht, wurzel, tage, tag: daten[0] });
       }
       // Erst nach dem Laden trennen: Zeichnet der Kalender währenddessen neu, meldet der Beobachter das.
+      if (stand !== generation) return;
       beobachter.disconnect();
       auftraege.forEach(markiere);
     } catch { /* Anzeige darf den Kalender nicht stören */ }
@@ -134,6 +138,7 @@ function mountSondertagAnzeige(deps) {
   function markiere({ ansicht, wurzel, tage, tag }) {
     markiereSondertagTermine({ wurzel, tage });
     if (ansicht !== 'tag') { markiereSondertage({ wurzel, tage, ansicht }); return; }
+    markiereSondertagTermine({ wurzel: raumRaster, tage });
     document.getElementById('sondertagTagEtikett')?.remove();
     const treffer = tage.find(t => t.date === tag);
     const label = document.getElementById('dayViewDateLabel');
@@ -145,6 +150,7 @@ function mountSondertagAnzeige(deps) {
 
   const beobachter = new MutationObserver(() => { clearTimeout(warte); warte = setTimeout(zeichnen, 120); });
   function beobachte() {
+    if (raumRaster) beobachter.observe(raumRaster, { childList: true, subtree: true });
     ansichten.forEach(([, el]) => beobachter.observe(el, { childList: true, subtree: true }));
   }
   beobachte();
@@ -250,7 +256,7 @@ export function planungVerdrahten(deps) {
   verdrahtet = deps;
   setzeGrundSichtbar(empId => deps.istInhaber() || deps.getEigeneId() === empId);
   // Eine fehlende Stelle im DOM darf den Rest von dashboard.js nicht abbrechen.
-  for (const schritt of [raumAuswahlVerdrahten, mountVerwaltung, mountStreifen, mountSondertagAnzeige, d => mountRaumTagesansicht({ ...d, termineDesStandorts }), mountStandortplanReiter, mountEhemaligeAnzeige, mountMeinUrlaubAnzeige]) {
+  for (const schritt of [raumAuswahlVerdrahten, mountVerwaltung, mountStreifen, d => mountRaumTagesansicht({ ...d, termineDesStandorts }), mountSondertagAnzeige, mountStandortplanReiter, mountEhemaligeAnzeige, mountMeinUrlaubAnzeige]) {
     try {
       schritt(deps);
     } catch (fehler) {

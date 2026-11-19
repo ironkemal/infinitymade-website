@@ -261,7 +261,7 @@ export function regelnFuerBereich(bereich, dbZeilen = []) {
     if (!alle.some(g => g.hoechstmenge != null)) {
       luecken.push('Höchstmengen je Verordnung sind für diesen Fachbereich noch nicht erfasst.');
     }
-    if (!alle.some(g => g.icd_accept.length)) {
+    if (!alle.some(g => g.icd_accept.length || g.icd_ranges.length)) {
       luecken.push('Die ICD-Zuordnung der Diagnosegruppen ist für diesen Fachbereich noch nicht erfasst.');
     }
     if (!profil?.leitsymptomatikKatalog) {

@@ -1,7 +1,7 @@
 import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261103mail1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261103mail1';
 import { oeffneLeistungsRaum, leistungsRaumPayload } from './module/leistungs-raum.js?v=20261103raum';
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
-import { planungVerdrahten, raumFelder, terminWarnungen, sondertagGesperrt, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261109';
+import { planungVerdrahten, raumFelder, terminWarnungen, sondertagGesperrt, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261119physio';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
 import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261103mail1';
@@ -34,7 +34,7 @@ import { attachKrankenkasseSuche, verwerfeKassenCache, kartenIkHinweise, kasseAb
 import { attachLeadKartenIk, pruefeLeadKartenIk } from './module/lead-karten-ik.js?v=20261003e';
 import { renderPatientenkarte } from './module/patientenkarte.js?v=20261117p33';
 import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from './module/lead-felder.js?v=20260929a';
-import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20261027p'; import { ermittleSitzungKuerzel, kuerzelAusKatalog } from './module/heilmittel-kuerzel.js?v=20261103q';
+import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20261119physio'; import { ermittleSitzungKuerzel, kuerzelAusKatalog } from './module/heilmittel-kuerzel.js?v=20261103q';
 import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten, ladeAnfragenDaten } from './module/anfrage-bearbeiten.js?v=20261118s1';
 import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
 // §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche (archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1). fmtEur kommt ab jetzt aus module/geld.js — die lokale Kopie hier ist mit dem alten Assistenten entfallen.
@@ -85,7 +85,7 @@ import { druckenMenueHtml, verdrahteDruckenMenue, oeffneRechnungZurVerordnung, b
 import { leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung, pruefeZuzahlungsBezug } from './module/rechnung-editor.js?v=20261117p22';
 import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren, verordnungVormerken } from './module/rechnung-verordnung.js?v=20261010zc';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
-import { katalogNachladen } from './module/leistungskatalog.js?v=20260909';
+import { katalogNachladen, leistungsOptionen } from './module/leistungskatalog.js?v=20261119physio';
 import { zahlartLabel as zahlartLabelBase, zahlartChipsHtml } from './module/zahlarten.js?v=20260910';
 import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart, editorLeistungsartVorschlag } from './module/rechnung-steuer.js?v=20261117c2';
 import { behandlungenVerknuepfen, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261010zc';
@@ -96,20 +96,20 @@ import { ladePodoPositionen } from './module/podologie-positionen.js?v=20261101u
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261117p33';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261118s1';
 import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261117c5'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
-import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261103n';
+import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261119serie';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl, bindeAnTerminNachAnlage } from './module/verordnung-anlegen.js?v=20261117p33';
 import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261117p33';
 import { initBarcodeDialog } from './module/rezept-barcode-dialog.js?v=20261117p33';
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
-import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen, schlageBefundungVor } from './module/termin-leistungen.js?v=20261021v';
-import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261117p33';
+import { mountTerminLeistungen, wechsleLeistungsoptionen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen, schlageBefundungVor } from './module/termin-leistungen.js?v=20261119physio';
+import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261119physio';
 import { oeffneMailAngebotModal, istPodoOhneRechnung } from './module/termin-mail-angebot.js?v=20260929a';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20261026p';
 import { pruefeArbeitszeit } from './module/arbeitszeit-pruefung.js?v=20260928';
 import { migrierePhysioAltlast, ZERTIFIKAT_PFLICHT, zertifikateMitDeckung, PHYSIO_KATALOG_ERGAENZUNG } from './module/physio-katalog-migration.js?v=20261030k11';
-import { bucheErgaenzendMit } from './module/ergaenzend-mitbuchen.js?v=20261027p';
+import { bucheErgaenzendMit } from './module/ergaenzend-mitbuchen.js?v=20261119physio';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817'; import { ladeNaechsteTermineJePatient } from './module/naechste-termine.js?v=20261118v914';
 import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschlecht.js?v=20260816';
@@ -142,7 +142,7 @@ import {
 import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261021w'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
 import { gleicheSitzungenAb, terminZielToplam } from './module/sitzung-abgleich.js?v=20261103q';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20261103q';
-import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-km.js?v=20261021m'; import { terminHinweiseHtml } from './module/termin-hinweise.js?v=20261021s'; import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText, verdrahteSerienStarttag } from './module/serien-termine.js?v=20261021k'; verdrahteSerienStarttag();
+import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-km.js?v=20261021m'; import { terminHinweiseHtml } from './module/termin-hinweise.js?v=20261021s'; import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText, verdrahteSerienStarttag } from './module/serien-termine.js?v=20261119serie'; const resetSerienStarttag = verdrahteSerienStarttag();
 // Seit der Zusammenlegung der zwei Verordnungstöpfe (04.09.2026): Podologie
 // steht in derselben Tabelle wie Physio/Ergo/Logo, führt aber bewusst KEIN
 // Einheiten-Hauptbuch (Begründung: module/verordnung-termine.js). Jeder Aufruf
@@ -498,6 +498,7 @@ let bkActionBookingCache = null;
 // z. B. fuer die Anrede auf dem Terminzettel.
 let bkActionLeadCache = null;
 let bkActionTimer = null;
+let sitzungsabschlussLaeuft = false;
 let pdCurrentLeadId = null;
 let pdCurrentLeadName = '';
 
@@ -978,7 +979,7 @@ function showQualWarningToast(certCode, empId) {
 // Rohe Postgres-Fehler in verständliche Meldungen übersetzen (Termin speichern)
 function bookingErrMsg(error) {
   const m = (error && error.message) || '';
-  if (m.includes('no_overlapping_bookings') || m.toLowerCase().includes('overlap') || m.includes('exclusion constraint')) {
+  if (error?.code === '23P01' || m.includes('no_overlapping_bookings') || m.toLowerCase().includes('overlap') || m.includes('exclusion constraint')) {
     return 'Dieser Zeitraum ist für diese:n Mitarbeiter:in bereits belegt. Bitte eine andere Uhrzeit wählen.';
   }
   return m || t('err_generic');
@@ -2129,7 +2130,7 @@ verdrahteHeuteButton(() => {
 // Woche/Monat laden weniger Spalten: erst vollstaendig laden (module/termin-laden.js).
 const mitTermin = (fn) => async (b) => { const t = await ladeTerminVollstaendig(supabase, b); if (t && t.status !== 'cancelled') return fn(t); };
 verdrahteKontextmenue({
-  wahrgenommen: mitTermin((b) => { bkActionBookingCache = b; handleTerminStarten(); }),
+  wahrgenommen: mitTermin((b) => { bkActionBookingCache = b; return handleTerminStarten(); }),
   nichtErschienen: mitTermin((b) => { bkActionBookingCache = b; handlePatientNichtErschienen(); }),
   verschieben: mitTermin((b) => startMoveBooking(b)),
   absagen: mitTermin((b) => absageTerminMitGrund(b)),
@@ -2343,11 +2344,12 @@ async function prefillBookingModal(startStr) {
 // dort ist sie geprüft. Hier bleibt nur das Ablesen der Maske.
 function computeSeriesPreview() {
   const startV = document.getElementById('bkStart').value;
-  if (!startV) return [];
+  const anzahl = Number(document.getElementById('bkAnzahl').value);
+  if (!startV || anzahl > 52) return [];
   const recInfo = frequenzToSeries(document.getElementById('bkSeriesRecurrence').value);
   return serienDaten({
     startDatum: startV.substring(0, 10),
-    anzahl: parseInt(document.getElementById('bkSeriesCount').value) || 0,
+    anzahl,
     intervalDays: recInfo.intervalDays,
     taeglich: recInfo.recurrence === 'daily',
     wochentage: Array.from(document.querySelectorAll('#bkSeriesWeekdays input:checked')).map(cb => parseInt(cb.value)),
@@ -2413,13 +2415,13 @@ async function openBookingActionModal(booking, opts = {}) {
   let bkGeldNeuZeichnen = null;
   verdrahteFussbefundKnopf(fussbefundCtx(), booking);
   setzeTerminAuswahlLabel(booking);
-  if (booking && booking.status === 'confirmed') {
+  if (booking?.status === 'confirmed' && terminIstPodo(booking, getSector())) {
     const endTime = new Date(booking.end_time || (new Date(booking.start_time).getTime() + 30*60000));
     if (endTime < new Date()) {
       supabase.from('bookings').update({ status: 'completed' }).eq('id', booking.id).then(({ error }) => {
         if (!error) {
           booking.status = 'completed';
-          bkActionBookingCache.status = 'completed';
+          if (bkActionBookingCache?.id === booking.id) bkActionBookingCache.status = 'completed';
         }
       });
     }
@@ -2849,7 +2851,9 @@ async function selectVerordnung(rx, sessions) {
   window._bkGewaehlteRx = rx;
   const leadId = document.getElementById('bkCustomerId')?.value || null;
   await waehleVerordnung(rx, sessions, { aufDienstleistung: uebernehmeDienstleistungAusRx, sb: supabase, ownerId: getOwnerId(), leadId });
+  if (document.getElementById('bkSelectedRxId')?.value !== rx.id) return;
   uebernimmSerienfrequenzAusRx(rx);
+  resetSerienStarttag(); document.getElementById('bkSeriesRecurrence')?.dispatchEvent(new Event('change'));
 }
 
 // Die Verordnung enthaelt die Leistung bereits — die Praxis soll sie nicht ein
@@ -3350,55 +3354,71 @@ async function saveFahrtEndHandler() {
 }
 
 async function handleTerminStarten() {
-  if (!bkActionBookingCache) return;
+  if (!bkActionBookingCache || sitzungsabschlussLaeuft) return;
   const b = bkActionBookingCache;
   const patientName = b.customer_name || '';
   const patientPhone = b.customer_phone || '';
   const ownerId = getOwnerId();
   const istPodoTermin = terminIstPodo(b, getSector()); // s. module/podo-behandlungen-oeffnen.js
 
-  // Hausbesuch: fahrt_status'u fahrt_return_pending yap (CHECK-konform), modal'da kal — Fahrt Beenden göster
-  if (b.hausbesuch) {
-    if (b.fahrt_status !== 'fahrt_arrived' && b.fahrt_status !== 'fahrt_return_pending') {
-      showToast('Bitte zuerst "Fahrt Starten" → "Ich bin angekommen" durchlaufen.', 'error');
-      return;
-    }
-    if (b.fahrt_status === 'fahrt_arrived') {
-      const { error: fsErr } = await supabase.from('bookings').update({ fahrt_status: 'fahrt_return_pending' }).eq('id', b.id);
-      if (fsErr) showToast('Fahrt-Status konnte nicht gespeichert werden - die Behandlung kann trotzdem dokumentiert werden.', 'error');
+  if (istPodoTermin) {
+    if (!b.hausbesuch) closeBkActionPanel();
+    else if (!['fahrt_arrived', 'fahrt_return_pending'].includes(b.fahrt_status)) {
+      showToast('Bitte zuerst „Fahrt starten“ und „Ich bin angekommen“ auswählen.', 'error'); return;
+    } else if (b.fahrt_status === 'fahrt_arrived') {
+      const { error } = await supabase.from('bookings').update({ fahrt_status: 'fahrt_return_pending' }).eq('id', b.id);
+      if (error) showToast('Fahrtstatus konnte nicht gespeichert werden. Die Behandlung kann trotzdem dokumentiert werden.', 'error');
       else b.fahrt_status = 'fahrt_return_pending';
     }
-    if (istPodoTermin) { await terminStartenPodo(b, podoBehandlungenDeps()); return; }
-    markPrescriptionSession(b.id, 'done', undefined, b.start_time);
-    await renderBkActionFahrtState(b, true);
-    return;
-  }
-
-  if (istPodoTermin) {
-    // Podologie (Reform S1.4): kein Sitzungsbuch, keine Notiz, keine Namenssuche — s. module/podo-behandlungen-oeffnen.js
-    closeBkActionPanel();
-    if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
     await terminStartenPodo(b, podoBehandlungenDeps());
     return;
   }
 
-  // Normal randevu (Physio/Ergo/Logo): modal kapat, anamnese/notizen'e yönlendir
-  closeBkActionPanel();
-  if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
-
-  const sessionNote = await showInputModal({
-    title: 'Sitzungsnotiz (optional)',
-    message: 'Kurze Notiz zur heutigen Sitzung:',
-    inputLabel: 'Notiz',
-    inputPlaceholder: 'z. B. Fortschritt, Beobachtungen, nächste Schritte…',
-    confirmText: 'Sitzung abschließen',
-    cancelText: 'Ohne Notiz',
-  });
-  if (sessionNote === null) {
-    markPrescriptionSession(b.id, 'done', undefined, b.start_time);
-  } else {
-    markPrescriptionSession(b.id, 'done', sessionNote || undefined, b.start_time);
+  sitzungsabschlussLaeuft = true;
+  try {
+    const notiz = b.hausbesuch ? '' : await showInputModal({
+      title: 'Sitzungsnotiz (optional)', message: 'Kurze Notiz zur Sitzung:',
+      inputPlaceholder: 'z. B. Fortschritt, Beobachtungen, nächste Schritte…',
+      confirmText: 'Sitzung abschließen', cancelText: 'Ohne Notiz', cancelValue: '',
+    });
+    if (notiz === null) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) { showToast('Bitte erneut anmelden.', 'error'); return; }
+    const res = await fetch(`${API}/booking/${encodeURIComponent(b.id)}/sitzung-abschliessen`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ startzeit: b.start_time, notiz }),
+    });
+    const ergebnis = await res.json().catch(() => null);
+    if (!res.ok || !Array.isArray(ergebnis?.prescriptionIds)) {
+      showToast(ergebnis?.error || 'Der Sitzungsabschluss konnte nicht bestätigt werden. Bitte erneut versuchen.', 'error');
+      return;
+    }
+    try {
+      for (const rxId of ergebnis.prescriptionIds) {
+        await bucheErgaenzendMit(supabase, rxId, b.id);
+        await pruefeVerordnungsfortschritt(supabase, rxId, { fehlerMelden: true });
+      }
+    } catch {
+      showToast('Sitzung gespeichert. Der Verordnungsstatus konnte nicht vollständig aktualisiert werden. Bitte den Abschluss erneut aufrufen.', 'warning');
+      return;
+    }
+    b.status = 'completed';
+    showToast('Sitzung abgeschlossen.');
+    emit('bookings:changed');
+    if (ergebnis.prescriptionIds.length) emit('verordnungen:changed');
+    if (b.hausbesuch) {
+      if (b.fahrt_status === 'fahrt_arrived') b.fahrt_status = 'fahrt_return_pending';
+      if (bkActionBookingCache?.id === b.id) await renderBkActionFahrtState(b, true);
+      return;
+    }
+  } catch {
+    showToast('Der Sitzungsabschluss konnte nicht bestätigt werden. Bitte erneut versuchen.', 'error');
+    return;
+  } finally {
+    sitzungsabschlussLaeuft = false;
   }
+  closeBkActionPanel();
 
   // Erste Sitzung → Anamnese, sonst Notizen. Die Zahl kam bis hierher aus dem
   // Text eines Anzeigefeldes im Panel; das Feld gibt es nicht mehr, gerechnet
@@ -4022,6 +4042,7 @@ async function openBookingModal(b) {
       }
     } catch (_) { }
   }
+  document.getElementById('bkEmployee').dataset.bisher = b.user_id || '';
   populateEmpSelects(b.user_id);
   await populateSrvSelect(b.service_id);
   
@@ -4337,8 +4358,8 @@ function populateEmpSelects(selectedId = null) {
   const bkEmp = document.getElementById('bkEmployee');
   if (bkEmp && !bkEmp.dataset.srvFilterWired) {
     bkEmp.dataset.srvFilterWired = '1';
-    bkEmp.addEventListener('change', async () => {
-      await populateSrvSelect(null, bkEmp.value);
+    bkEmp.addEventListener('change', () => {
+      wechsleLeistungsoptionen(leistungsOptionen(servicesCache, bkEmp.value, null, escapeHtml));
     });
   }
 }
@@ -4351,29 +4372,7 @@ async function populateSrvSelect(selectedId = null, employeeId = null) {
 
   if (!employeeId) employeeId = document.getElementById('bkEmployee')?.value || null;
 
-  // Çalışan filtresi: employee_services zaten servicesCache içinde mevcut
-  let visible = servicesCache.filter(s => !s.is_internal || s.id === selectedId);
-  if (employeeId) {
-    visible = visible.filter(s => {
-      const assigned = s.employee_services || [];
-      return assigned.length === 0 || assigned.some(es => es.employee_id === employeeId) || s.id === selectedId;
-    });
-  }
-
-  const gkvSrvs     = visible.filter(s => s.gkv_position_nr);
-  const privateSrvs = visible.filter(s => !s.gkv_position_nr);
-
-  const makeOption = s =>
-    `<option value="${s.id}" data-duration="${s.duration_minutes || 30}" data-code="${escapeHtml(s.code || '')}" ${s.id === selectedId ? 'selected' : ''}>${escapeHtml(s.title)}</option>`;
-
-  let html = '<option value="">— Leistung wählen —</option>';
-  if (gkvSrvs.length) {
-    html += `<optgroup label="⚕ GKV-Leistungen (§125 SGB V)">${gkvSrvs.map(makeOption).join('')}</optgroup>`;
-  }
-  if (privateSrvs.length) {
-    html += `<optgroup label="✦ Private Leistungen">${privateSrvs.map(makeOption).join('')}</optgroup>`;
-  }
-  el.innerHTML = html;
+  el.innerHTML = leistungsOptionen(servicesCache, employeeId, selectedId, escapeHtml);
   if (selectedId) updateBkDuration(selectedId);
 }
 
@@ -4394,7 +4393,7 @@ async function updateBkDuration(srvId, defaultValue = null) {
   const durGroup = document.getElementById('bkDurationGroup');
   if (!durGroup) return;
   if (!srvId) { durGroup.hidden = true; return; }
-  if (istKombinierterTermin()) return;
+  if (document.getElementById('bkService')?.value !== srvId || istKombinierterTermin()) return;
 
   // First check local cache
   let srv = ownerServices.find(s => s.id === srvId);
@@ -4408,7 +4407,7 @@ async function updateBkDuration(srvId, defaultValue = null) {
       srv = idx >= 0 ? Object.assign(ownerServices[idx], data) : data;
     }
   }
-  if (istKombinierterTermin()) return;
+  if (document.getElementById('bkService')?.value !== srvId || istKombinierterTermin()) return;
 
   if (defaultValue) {
     setzeDauer(parseInt(defaultValue, 10));
@@ -4416,7 +4415,7 @@ async function updateBkDuration(srvId, defaultValue = null) {
   }
 
   const gelernte = await gelernteDauer({ supabase, ownerId: getOwnerId(), serviceId: srvId });
-  if (istKombinierterTermin()) return;
+  if (document.getElementById('bkService')?.value !== srvId || istKombinierterTermin()) return;
   if (gelernte) {
     setzeDauer(gelernte.minuten, `aus ${gelernte.anzahl} bisherigen Terminen`);
     return;
@@ -4693,26 +4692,20 @@ window._resetRezeptartUI = function() {};
 // vorher eingetippte 3 stehen und der naechste Termin waere still eine Serie.
 function resetBkAnzahl() {
   const feld = document.getElementById('bkAnzahl');
-  if (feld) feld.value = '1';
-  const hinweis = document.getElementById('bkAnzahlHinweis');
-  if (hinweis) { hinweis.hidden = true; hinweis.textContent = ''; }
+  if (feld) { feld.value = feld.defaultValue; feld.dispatchEvent(new Event('input')); }
+  document.getElementById('bkSeriesRecurrence').value = '1x pro Woche'; resetSerienStarttag();
+  document.getElementById('bkSeriesRecurrence').dispatchEvent(new Event('change'));
 }
 
-// "3x Podologie": das Feld befüllt die vorhandene Serienlogik nur vor, statt
-// sie zu erzwingen. Anzahl>1 und "als Serie speichern" sind zwei getrennte
-// Entscheidungen — ein Einzeltermin muss auch bei Anzahl>1 speicherbar
-// bleiben (Ops #231). Bei 1 bleibt alles wie vorher.
+// Anzahl > 1 schaltet die Serie nicht automatisch ein (Ops #231).
 document.getElementById('bkAnzahl')?.addEventListener('input', () => {
-  const n = Math.max(1, parseInt(document.getElementById('bkAnzahl').value, 10) || 1);
+  const n = Number(document.getElementById('bkAnzahl').value);
   const toggle = document.getElementById('bkSeriesToggle');
   const hinweis = document.getElementById('bkAnzahlHinweis');
   if (!toggle) return;
-  // Nur vorbefüllen — nicht mehr automatisch ankreuzen/entkreuzen. Wenn der
-  // Serien-Toggle bereits an ist, übernimmt die Vorschau sofort die neue Zahl.
-  if (n > 1) document.getElementById('bkSeriesCount').value = String(n);
   if (toggle.checked) updateBkSeriesPreview();
   if (hinweis) {
-    const text = anzahlHinweisText(n, toggle.checked);
+    const text = Number.isInteger(n) && n <= 52 ? anzahlHinweisText(n, toggle.checked) : '';
     hinweis.hidden = !text;
     hinweis.textContent = text;
   }
@@ -4735,19 +4728,24 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   if (!srvId) { terminFehler('Bitte eine Leistung auswählen.'); return; }
   if (!startV) { terminFehler('Bitte Datum und Uhrzeit auswählen.'); return; }
 
-  // Qualifikation gating: sertifika kontrolü (sadece yeni termin)
-  if (!id) {
-    const qSrv = servicesCache.find(s => s.id === srvId);
-    if (qSrv?.required_certificate) {
+  const wechsel = id && document.getElementById('bkEmployee').dataset.bisher !== empId;
+  const belegt = new Set(leseLeistungen().map(z => z.serviceId).filter(Boolean));
+  const gewaehlt = servicesCache.filter(s => belegt.has(s.id));
+  if ((!id || wechsel) && gewaehlt.some(s => s.employee_services?.length && !s.employee_services.some(es => es.employee_id === empId))) {
+    terminFehler('Eine gewählte Leistung ist dieser Person nicht zugeordnet. Bitte Leistung oder Therapeut:in ändern.'); return;
+  }
+  if (!id || wechsel) {
+    const pflicht = gewaehlt.filter(s => s.required_certificate);
+    if (pflicht.length) {
       const { data: qCerts } = await supabase.from('therapist_certificates')
         .select('certificate').eq('profile_id', empId);
-      const hasQCert = (qCerts || []).some(c => c.certificate === qSrv.required_certificate);
-      if (!hasQCert) {
+      const fehlend = pflicht.filter(s => !(qCerts || []).some(c => c.certificate === s.required_certificate));
+      if (fehlend.length) {
         const empObj = teamMembers.find(t => t.id === empId);
-        const empName = empObj?.full_name || empObj?.email || 'Dieser Therapeut';
+        const empName = [empObj?.owner_first_name, empObj?.owner_last_name].filter(Boolean).join(' ') || empObj?.business_name || 'Die ausgewählte Person';
         const proceed = await showConfirmModal({
           title: '⚠️ Qualifikationswarnung',
-          message: `${empName} hat keine ${qSrv.required_certificate}-Zertifizierung.\n\n„${qSrv.title}" erfordert diese Qualifikation — die Leistung kann bei der GKV-Abrechnung abgelehnt werden.\n\nTrotzdem buchen?`,
+          message: `${empName}: Für ${fehlend.map(s => `„${s.title}“ (${s.required_certificate})`).join(', ')} fehlt der Zertifikatsnachweis. Die Leistung kann bei der GKV-Abrechnung abgelehnt werden.\n\nTrotzdem buchen?`,
           confirmText: 'Trotzdem buchen',
           cancelText: 'Abbrechen'
         });
@@ -4860,7 +4858,8 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   if (isSeries) {
     const dateStr = startV.substring(0, 10);
     const timeStr = startV.substring(11, 16);
-    const count = parseInt(document.getElementById('bkSeriesCount').value) || 8;
+    const count = Number(document.getElementById('bkAnzahl').value);
+    if (!Number.isInteger(count) || count < 1 || count > 52) { terminFehler('Bitte eine Anzahl von 1 bis 52 Terminen eingeben.'); return; }
     const recInfo = frequenzToSeries(document.getElementById('bkSeriesRecurrence').value);
     const checked = Array.from(document.querySelectorAll('#bkSeriesWeekdays input:checked')).map(cb => parseInt(cb.value));
     const durMin = dur;
@@ -4872,7 +4871,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
       time: timeStr,
       recurrence: recInfo.recurrence,
       intervalDays: recInfo.intervalDays,
-      weekdays: checked.length ? checked : [new Date(dateStr + 'T12:00:00Z').getDay()],
+      weekdays: checked,
       count: count,
       customerName: cust,
       // Ohne `leadId` legte die Serie jeden Termin ohne Patientenbezug an — der Fußbefund-Knopf blieb dann unsichtbar und der Terminzettel fand die Geschwistertermine nicht (17.08.2026).
@@ -4981,7 +4980,6 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
         .single();
         
       if (pErr) {
-        console.error('[group parent save]', pErr);
         terminFehler(bookingErrMsg(pErr));
         return;
       }
@@ -5041,11 +5039,11 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   let bindung = null;
   if (id) {
     const { error } = await supabase.from('bookings').update(payload).eq('id', id);
-    if (error) { console.error('[booking save]', error); terminFehler(bookingErrMsg(error)); return; }
+    if (error) { terminFehler(bookingErrMsg(error)); return; }
     bindung = await aktualisiereBindungBeimSpeichern(supabase, id, { emit, binde: bindePodoAnTermin });
   } else {
     const { data: newBooking, error } = await supabase.from('bookings').insert(payload).select('id').single();
-    if (error) { console.error('[booking save]', error); terminFehler(bookingErrMsg(error)); return; }
+    if (error) { terminFehler(bookingErrMsg(error)); return; }
     savedBookingId = newBooking?.id;
 
     // If pending drag-drop or Verordnung-picker session(s): link them
@@ -5443,7 +5441,8 @@ document.getElementById('aiPrefSubmit').addEventListener('click', async () => {
   const empId = document.getElementById('bkEmployee').value;
   const srvId = document.getElementById('bkService').value;
   const custId = document.getElementById('bkCustomerId').value.trim();
-  const count = parseInt(document.getElementById('bkSeriesCount').value) || 8;
+  const count = Number(document.getElementById('bkAnzahl').value);
+  if (!Number.isInteger(count) || count < 1 || count > 52) { showToast('Bitte eine Anzahl von 1 bis 52 Terminen eingeben.', 'error'); return; }
   const recInfo = frequenzToSeries(document.getElementById('bkSeriesRecurrence').value);
   const startV = document.getElementById('bkStart').value;
   const preferredTime = startV ? startV.substring(11, 16) : null;
@@ -5830,7 +5829,7 @@ document.getElementById('aiSuggestConfirm').addEventListener('click', async () =
 
 function showConfirmModal(options = {}) { return zeigeBestaetigungsDialog(options, { openModal, closeModal }); }
 
-function showInputModal({ title = 'Eingabe', message = '', placeholder = '', defaultValue = '', confirmText = 'Bestätigen', cancelText = 'Abbrechen', variant = 'primary', inputLabel, inputPlaceholder } = {}) {
+function showInputModal({ title = 'Eingabe', message = '', placeholder = '', defaultValue = '', confirmText = 'Bestätigen', cancelText = 'Abbrechen', cancelValue = null, variant = 'primary', inputLabel, inputPlaceholder } = {}) {
   return new Promise(resolve => {
     const titleEl  = document.getElementById('inputModalTitle');
     const textEl   = document.getElementById('inputModalText');
@@ -5838,6 +5837,7 @@ function showInputModal({ title = 'Eingabe', message = '', placeholder = '', def
     const okBtn    = document.getElementById('inputModalOk');
     const cancelBtn = document.getElementById('inputModalCancel');
     const closeBtn = document.querySelector('#inputModal .modal-close');
+    const modal    = document.getElementById('inputModal');
 
     titleEl.textContent   = title;
     textEl.textContent    = message;
@@ -5848,13 +5848,14 @@ function showInputModal({ title = 'Eingabe', message = '', placeholder = '', def
     okBtn.className       = variant === 'danger' ? 'btn-danger' : 'btn-primary';
 
     const cleanup = (val) => {
-      okBtn.onclick = null; cancelBtn.onclick = null; closeBtn.onclick = null; field.onkeydown = null;
+      okBtn.onclick = null; cancelBtn.onclick = null; closeBtn.onclick = null; field.onkeydown = null; modal.onkeydown = null;
       closeModal('inputModal');
       resolve(val);
     };
-    field.onkeydown = (e) => { if (e.key === 'Enter') cleanup(field.value); if (e.key === 'Escape') cleanup(null); };
+    field.onkeydown = (e) => { if (e.key === 'Enter') cleanup(field.value); };
+    modal.onkeydown = (e) => { if (e.key === 'Escape') { e.stopPropagation(); cleanup(null); } };
     okBtn.onclick     = () => cleanup(field.value);
-    cancelBtn.onclick = () => cleanup(null);
+    cancelBtn.onclick = () => cleanup(cancelValue);
     closeBtn.onclick  = () => cleanup(null);
     openModal('inputModal');
     setTimeout(() => field.focus(), 50);
@@ -6106,25 +6107,6 @@ async function storniereZuzahlung({ rxId, patientId, patientName, betragEur }) {
 
   showToast(t('kass_storno_ok'));
   return true;
-}
-
-async function markPrescriptionSession(bookingId, status, notes, terminStart) {
-  if (!bookingId) return;
-  try {
-    const patch = { status };
-    if (status === 'done') patch.done_at = terminStart || new Date().toISOString(); // Leistungsdatum = Termintag, nicht Klickzeit
-    if (notes !== undefined && notes !== null) patch.notes = notes;
-    // Kombi-Termin = mehrere Sitzungen je booking_id → kein maybeSingle() (PGRST116, Rezept nie 'bereit').
-    const { data: rows, error } = await supabase
-      .from('prescription_sessions')
-      .update(patch).eq('booking_id', bookingId)
-      .select('prescription_id');
-    if (error) { console.warn('[session update]', error); return; }
-    // Ergänzendes Heilmittel mitbuchen (module/ergaenzend-mitbuchen.js), dann Fortschritt + §302-Weiche (module/sitzungsfortschritt.js).
-    for (const rxId of new Set((rows || []).map(r => r.prescription_id).filter(Boolean))) { if (status === 'done') await bucheErgaenzendMit(supabase, rxId, bookingId); await pruefeVerordnungsfortschritt(supabase, rxId); }
-  } catch (e) {
-    console.warn('[markPrescriptionSession]', e);
-  }
 }
 
 async function decorateBookingTitleWithSession(bookingId) {
@@ -6449,30 +6431,18 @@ document.getElementById('bkWlMatchBtn')?.addEventListener('click', async () => {
 (function bindSeriesEvents() {
   const toggle = document.getElementById('bkSeriesToggle');
   const fields = document.getElementById('bkSeriesFields');
-  const countEl = document.getElementById('bkSeriesCount');
   const recEl = document.getElementById('bkSeriesRecurrence');
   const wdWrap = document.getElementById('bkSeriesWeekdayWrap');
   const startEl = document.getElementById('bkStart');
   if (toggle) toggle.onchange = () => {
     fields.hidden = !toggle.checked;
-    if (toggle.checked) updateBkSeriesPreview();
-    // Hinweistext hängt von "an/aus" ab (anzahlHinweisText) — beim manuellen
-    // Umschalten neu ziehen, sonst zeigt er den Zustand von vorhin.
-    const anzahlFeld = document.getElementById('bkAnzahl');
-    const hinweis = document.getElementById('bkAnzahlHinweis');
-    if (anzahlFeld && hinweis) {
-      const n = Math.max(1, parseInt(anzahlFeld.value, 10) || 1);
-      const text = anzahlHinweisText(n, toggle.checked);
-      hinweis.hidden = !text;
-      hinweis.textContent = text;
-    }
+    document.getElementById('bkAnzahl')?.dispatchEvent(new Event('input'));
   };
-  if (countEl) countEl.oninput = updateBkSeriesPreview;
   if (recEl) recEl.onchange = () => {
     wdWrap.hidden = frequenzToSeries(recEl.value).recurrence === 'daily';
     updateBkSeriesPreview();
   };
-  if (startEl) startEl.onchange = updateBkSeriesPreview;
+  if (startEl) startEl.oninput = startEl.onchange = updateBkSeriesPreview;
   document.querySelectorAll('#bkSeriesWeekdays input').forEach(cb => {
     cb.onchange = updateBkSeriesPreview;
   });
@@ -14508,11 +14478,10 @@ async function openBookingFromRxPreset(preset) {
     // Series
     if (preset.anzahl && preset.anzahl > 1) {
       const toggle = document.getElementById('bkSeriesToggle');
+      document.getElementById('bkAnzahl').value = preset.anzahl;
       toggle.checked = true;
       toggle.dispatchEvent(new Event('change'));
-      const fields = document.getElementById('bkSeriesFields');
-      if (fields) fields.hidden = false;
-      document.getElementById('bkSeriesCount').value = preset.anzahl;
+      const details = toggle.closest('details'); if (details) details.open = true;
       // Dieselbe Frequenzlogik wie bei der Verordnungsauswahl. Vorher stand hier
       // `parseFrequenzWoche`, das „4-6 wöchig“ (alle 4-6 WOCHEN — die typische
       // Podologie-Frequenz) als „6× pro Woche“ las und der Praxis genau das

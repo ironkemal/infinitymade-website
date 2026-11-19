@@ -34,16 +34,19 @@ export function ergaenzendMitbuchen({ rx, bereitsErbracht }) {
  */
 export async function bucheErgaenzendMit(supabase, prescriptionId, bookingId) {
   if (!supabase || !prescriptionId || !bookingId) return;
-  const { data: rx } = await supabase.from('prescriptions')
+  const { data: rx, error: rezeptFehler } = await supabase.from('prescriptions')
     .select('ergaenzend_position, ergaenzend_einheiten, vorrangig_einheiten, anzahl_einheiten, therapie_bereich')
     .eq('id', prescriptionId).maybeSingle();
-  if (!rx?.ergaenzend_position) return;
-  const { count } = await supabase.from('prescription_sessions')
+  if (rezeptFehler) throw rezeptFehler;
+  if (!rx) throw new Error('Verordnung nicht gefunden.');
+  if (!rx.ergaenzend_position) return;
+  const { count, error: zaehlFehler } = await supabase.from('prescription_sessions')
     .select('id', { count: 'exact', head: true })
     .eq('prescription_id', prescriptionId).eq('status', 'done').eq('ergaenzend_erbracht', true);
+  if (zaehlFehler) throw zaehlFehler;
   if (!ergaenzendMitbuchen({ rx, bereitsErbracht: count || 0 })) return;
   const { error } = await supabase.from('prescription_sessions')
     .update({ ergaenzend_erbracht: true })
     .eq('prescription_id', prescriptionId).eq('booking_id', bookingId).eq('status', 'done');
-  if (error) console.warn('[ergaenzend mitbuchen]', error);
+  if (error) throw error;
 }

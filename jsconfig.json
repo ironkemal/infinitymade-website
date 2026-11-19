@@ -490,6 +490,8 @@
     "api-backend/booking/public-guards.js",
     "api-backend/booking/public-guards.test.js",
     "api-backend/booking/series.js",
+    "api-backend/booking/sitzung-abschliessen.js",
+    "api-backend/booking/sitzung-abschliessen.test.js",
     "api-backend/booking/slot-parameter.js",
     "api-backend/booking/slot-parameter.test.js",
     "api-backend/booking/status.js",

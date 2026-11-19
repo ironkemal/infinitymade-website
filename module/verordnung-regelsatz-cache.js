@@ -17,7 +17,7 @@
  * NICHT verschluckt: ohne Regeln gibt es kein Urteil, `null` sagt das offen.
  */
 
-import { bereichSchluessel, regelnFuerBereich } from './verordnung-regeln.js?v=20261031k3';
+import { bereichSchluessel, regelnFuerBereich } from './verordnung-regeln.js?v=20261119physio';
 
 const _cache = new Map();
 

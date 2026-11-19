@@ -48,6 +48,7 @@ import { heilmittelPositionAufloesen, kostentraegerIkAufloesen, kartenIkNormalis
 import { validiereBarcodeErfassung, computedMitErfassung } from './lib/rezept-erfassung.js';
 import { statusAusAbrechnungStatus } from './billing/utils/einreichbar.js';
 import { requireAuth as requireAuthAI } from './ai/auth.js';
+import { createSitzungsabschluss } from './booking/sitzung-abschliessen.js';
 import { fetchWithTimeout } from './lib/fetch-with-timeout.js';
 import { sendeUeberGmail } from './lib/gmail-senden.js';
 import { startWarnungen } from './lib/start-pruefungen.js';
@@ -647,6 +648,13 @@ app.use('/api', createMailversandRouter({ supabase, googleVerfuegbar: GOOGLE_KON
 // M6b/S8: Terminabsage per Mail bei geschlossenem Sondertag — nie automatisch, Vorschau -> Freigabe -> Versand.
 app.use('/api', createSondertagMitteilungRouter({ supabase, gmail: { newOAuthClient, fetchWithTimeout } }));
 app.use('/api', createFormularSignierenRouter({ supabase }));
+
+app.post('/api/booking/:id/sitzung-abschliessen', requireAuthAI, createSitzungsabschluss({
+  clientFuerToken: token => createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  }),
+}));
 
 // 1. Google OAuth Routes
 app.get('/api/calendar/google-auth', requireAuthAI, (req, res) => {
@@ -1931,44 +1939,14 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
     const tod = preferences.timeOfDay; // morning|afternoon|any
     const step = SLOT_STEP_MINUTES;
     const anchor = startDate || today;
-    const anchorWd = berlinDayOfWeek(anchor);
-    // Respect user's weekday selection exactly. Only fall back to anchor weekday if none chosen.
-    const wdSet = (weekdays && weekdays.length) ? new Set(weekdays.map(Number)) : new Set([anchorWd]);
+    const targetDates = serienDaten({ startDate: anchor, recurrence, count, intervalDays, weekdays });
+    if (!targetDates.length) return res.status(400).json({ error: 'Ungültiges Startdatum oder ungültige Serientage.' });
 
     function addDaysISO(dateStr, days) {
       const d = new Date(dateStr + 'T12:00:00Z');
       d.setUTCDate(d.getUTCDate() + days);
       return d.toISOString().substring(0, 10);
     }
-
-    const targetDates = [];
-    if (recurrence === 'daily') {
-      for (let i = 0; i < count; i++) targetDates.push(addDaysISO(anchor, i));
-    } else {
-      const customWeekStep = parseInt(intervalDays, 10);
-      const weekStep = (customWeekStep >= 7 && customWeekStep <= 84) ? customWeekStep : (recurrence === 'biweekly' ? 14 : 7);
-      // For each selected weekday, compute the first occurrence on/after the anchor
-      const sortedWds = [...wdSet].sort((a, b) => ((a - anchorWd + 7) % 7) - ((b - anchorWd + 7) % 7));
-      const firstByWd = new Map();
-      sortedWds.forEach(wd => {
-        const diff = (wd - anchorWd + 7) % 7;
-        firstByWd.set(wd, addDaysISO(anchor, diff));
-      });
-      const perBucket = sortedWds.length;
-      const buckets = Math.ceil(count / perBucket);
-      for (let b = 0; b < buckets && targetDates.length < count; b++) {
-        for (const wd of sortedWds) {
-          if (targetDates.length >= count) break;
-          targetDates.push(addDaysISO(firstByWd.get(wd), b * weekStep));
-        }
-      }
-    }
-    // Final guard: dedupe + sort chronologically (defensive — should not be needed)
-    const seen = new Set();
-    const dedupedTargets = [];
-    targetDates.sort().forEach(d => { if (!seen.has(d)) { seen.add(d); dedupedTargets.push(d); } });
-    targetDates.length = 0;
-    Array.prototype.push.apply(targetDates, dedupedTargets);
 
     // Cap horizon to what we fetched (14 weeks)
     const horizonCap = horizon;

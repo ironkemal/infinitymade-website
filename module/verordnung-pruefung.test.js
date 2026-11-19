@@ -620,6 +620,7 @@ test('Physio: ICD ausserhalb icd_ranges ergibt Warnung ICD_DG_UNTYPISCH, nie Blo
   const passt = pruefeVerordnung({ ...basis, icd: 'M54.5' }, satz, HEUTE);
   assert.ok(!codes(passt).includes('ICD_DG_UNTYPISCH'));
   assert.ok(passt.geprueft.includes('ICD ⇄ Diagnosegruppe (typische Bereiche)'));
+  assert.ok(!satz.luecken.some(hinweis => hinweis.includes('ICD-Zuordnung')));
   const fremd = pruefeVerordnung({ ...basis, icd: 'S82.0' }, satz, HEUTE);
   const b = fremd.befunde.find(x => x.code === 'ICD_DG_UNTYPISCH');
   assert.ok(b);

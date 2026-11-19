@@ -29,6 +29,9 @@ import { alsBerlinDatum } from './berlin-datum.js';
 import { kuerzelAusKatalog, formatMultiHeilmittelTitel } from './heilmittel-kuerzel.js?v=20261103q';
 import { ausTopf, statusAusTopf, PODO_ARBEITSLISTE_OR } from './verordnung-topf.js?v=20260930c';
 import { RX_FELDER } from './termin-laden.js?v=20261103r';
+import { gleicheSitzungenAb, terminZielToplam } from './sitzung-abgleich.js?v=20261103q';
+
+const TERMIN_SITZUNGSFELDER = 'id,session_number,heilmittel_index,status,booking_id';
 
 // ── Frequenz ─────────────────────────────────────────────────────────────
 
@@ -259,6 +262,25 @@ export async function waehleVerordnung(rx, sessions, deps = {}) {
     }
   } else {
     const currentBookingId = deps?.bookingId || (typeof document !== 'undefined' ? document.getElementById('bk-id')?.value : null) || null;
+    const sitzungsZiel = terminZielToplam(rx);
+    let sitzungenFehlen = (sessions?.length || 0) < sitzungsZiel;
+    if (sb && !currentBookingId && sitzungenFehlen && !rxGeschlossen(rx) && rx.status !== 'parsed') {
+      setzeWert('bkSelectedSessionId', '');
+      window._pendingRxSession = null;
+      dotsEl.innerHTML = '';
+      if (infoEl) infoEl.textContent = 'Sitzungen werden geladen …';
+      pickerBlock.hidden = false;
+      const { fehler } = await gleicheSitzungenAb({
+        supabase: sb, prescriptionId: rx.id, anzahlEinheiten: rx.anzahl_einheiten,
+        status: rx.status, doppelbehandlung: rx.doppelbehandlung, items: rx.heilmittel_items,
+      });
+      if (!fehler) {
+        const { data } = await sb.from('prescription_sessions').select(TERMIN_SITZUNGSFELDER).eq('prescription_id', rx.id);
+        sessions = data || sessions;
+        sitzungenFehlen = (sessions?.length || 0) < sitzungsZiel;
+      }
+      if (document.getElementById('bkSelectedRxId')?.value !== rx.id) return;
+    }
     const eigeneSession = currentBookingId
       ? (sessions || []).find(s => s.booking_id && s.booking_id === currentBookingId)
       : null;
@@ -333,7 +355,11 @@ export async function waehleVerordnung(rx, sessions, deps = {}) {
     if (naechste) {
       waehleSitzung(naechste, { istInit: true });
     } else {
-      if (infoEl) infoEl.textContent = 'Alle Sitzungen bereits vergeben.';
+      if (infoEl) {
+        if (rx.status === 'parsed') infoEl.textContent = 'Die Verordnung ist noch ein Entwurf.';
+        else if (sitzungenFehlen || !sessions?.length) infoEl.textContent = 'Die Sitzungsdaten fehlen. Bitte die Verordnung öffnen und erneut speichern.';
+        else infoEl.textContent = 'Alle Sitzungen bereits vergeben.';
+      }
       setzeWert('bkSelectedSessionId', '');
       window._pendingRxSession = null;
       if (typeof aufDienstleistung === 'function') aufDienstleistung(rx);
@@ -438,7 +464,7 @@ export function rxGeschlossen(rx) {
  */
 export async function ladeTerminVerordnungen(sb, { leadId, vordId = null } = {}) {
   if (!sb || !leadId) return [];
-  const felder = `${RX_FELDER},prescription_sessions(id,session_number,heilmittel_index,status,booking_id)`;
+  const felder = `${RX_FELDER},doppelbehandlung,prescription_sessions(${TERMIN_SITZUNGSFELDER})`;
   const { data } = await sb
     .from('prescriptions')
     .select(felder)

@@ -138,6 +138,25 @@ p('und die Dauer schrumpft mit', await dauer() === 50, `${await dauer()} Min (nu
 p('auch hier ueber den Rueckweg',
   (await page.evaluate(() => window.__einzelDauerRufe)).includes('s-beh-gr'));
 
+const wechsel = await page.evaluate(async () => {
+  const { leistungsOptionen } = await import('/module/leistungskatalog.js');
+  const { setzeLeistungen, wechsleLeistungsoptionen } = await import('/module/termin-leistungen.js');
+  const auswahl = [
+    { id: 's-beh-gr', title: 'Hauptleistung' },
+    { id: 's-eing', title: 'Zusatzleistung', employee_services: [{ employee_id: 'a' }] },
+  ];
+  setzeLeistungen(['s-beh-gr', 's-eing']);
+  const pruefe = employee => {
+    wechsleLeistungsoptionen(leistungsOptionen(auswahl, employee, null, text => text));
+    const zusatz = document.querySelector('#bkLeistungExtra select');
+    return [document.getElementById('bkService').value, zusatz.value, zusatz.selectedOptions[0].disabled];
+  };
+  return [pruefe('b'), pruefe('a')];
+});
+p('Wechsel behält die Hauptleistung und zeigt die nicht zugeordnete Zusatzleistung gesperrt',
+  wechsel[0].join('|') === 's-beh-gr|s-eing|true');
+p('Rückwechsel gibt dieselbe Zusatzleistung wieder frei', wechsel[1].join('|') === 's-beh-gr|s-eing|false');
+
 console.log(fehler.length ? `\n   ✗ Konsolenfehler:\n     ${fehler.join('\n     ')}` : '\n   keine Konsolenfehler');
 await browser.close();
 process.exit(schlecht || fehler.length ? 1 : 0);

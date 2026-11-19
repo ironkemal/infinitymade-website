@@ -31,11 +31,14 @@ test('markiert betroffene Blöcke rot und lässt andere unberührt', () => {
   const rot = element({ start_time: '2026-12-24T10:00:00+01:00' });
   const normal = element({ start_time: '2026-12-22T10:00:00+01:00' });
   const ohne = { dataset: {}, style: {}, title: '' };
-  const wurzel = { querySelectorAll: sel => { assert.match(sel, /dv-booking-block/); assert.match(sel, /month-event-pill/); return [rot, normal, ohne]; } };
+  const wurzel = { querySelectorAll: sel => { assert.match(sel, /wv-booking-block/); assert.match(sel, /dv-booking-block/); assert.match(sel, /month-event-pill/); return [rot, normal, ohne]; } };
   assert.equal(markiereSondertagTermine({ wurzel, tage }), 1);
   assert.equal(rot.dataset.sondertag, 'geschlossen');
-  assert.match(rot.style.boxShadow, /danger/);
+  markiereSondertagTermine({ wurzel, tage });
   assert.equal(rot.title, SONDERTAG_TERMIN_HINWEIS);
+  markiereSondertagTermine({ wurzel, tage: [] });
+  assert.equal(rot.dataset.sondertag, undefined);
+  assert.equal(rot.title, "");
   assert.deepEqual(normal.style, {});
   assert.equal(markiereSondertagTermine({}), 0);
 });

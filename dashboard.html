@@ -23,7 +23,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20261118v914" />
+  <link rel="stylesheet" href="dashboard.css?v=20261119physio" />
   <link rel="stylesheet" href="dashboard-feinschliff.css?v=20261119terracotta1" />
   <link rel="stylesheet" href="praxura-design.css?v=20261114v805" />
   <link rel="stylesheet" href="design/shell.css?v=20261114v209c">
@@ -3248,10 +3248,6 @@
             <label class="form-label" data-i18n="lbl_manual_start">Von</label>
             <input class="form-input" id="bkStart" type="datetime-local" />
           </div>
-          <!-- Mehrfachanlage direkt in der Grundmaske: "3x Podologie" war eine
-               ausdrueckliche Rueckmeldung. Der Wert steuert die vorhandene
-               Serienlogik (bkSeriesToggle / bkSeriesCount), es entsteht kein
-               zweiter Weg. -->
           <div class="form-group" style="max-width:110px;">
             <label class="form-label" for="bkAnzahl">Anzahl</label>
             <input class="form-input" id="bkAnzahl" type="number" min="1" max="52" value="1" />
@@ -3323,24 +3319,18 @@
         </div>
 
         <div id="bkSeriesFields" hidden style="margin-top:8px;padding-top:12px;border-top:1px solid var(--border);">
-          <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-            <div class="form-group">
-              <label class="form-label">Anzahl der Termine</label>
-              <input type="number" class="form-input" id="bkSeriesCount" value="8" min="2" max="52" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Wiederholung</label>
-              <!-- Optionen kommen aus FREQUENZ_OPTIONS (populateFrequenzSelects) — gleiche Liste wie Verordnungs-Frequenz -->
-              <select class="form-select" id="bkSeriesRecurrence">
-                <option value="1x pro Woche">1x pro Woche</option>
-              </select>
-            </div>
+          <div class="form-group">
+            <label class="form-label" for="bkSeriesRecurrence">Wiederholung</label>
+            <!-- Optionen kommen aus FREQUENZ_OPTIONS (populateFrequenzSelects) — gleiche Liste wie Verordnungs-Frequenz -->
+            <select class="form-select" id="bkSeriesRecurrence">
+              <option value="1x pro Woche">1x pro Woche</option>
+            </select>
           </div>
           <div class="form-group" style="margin-top:12px;" id="bkSeriesWeekdayWrap">
             <label class="form-label">Wochentag(e)</label>
             <div class="anam-grid" id="bkSeriesWeekdays"
               style="grid-template-columns:repeat(7,1fr);gap:4px;margin-top:6px;">
-              <label><input type="checkbox" value="1" checked /> Mo</label>
+              <label><input type="checkbox" value="1" /> Mo</label>
               <label><input type="checkbox" value="2" /> Di</label>
               <label><input type="checkbox" value="3" /> Mi</label>
               <label><input type="checkbox" value="4" /> Do</label>
@@ -5888,7 +5878,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261118s2"></script>
+  <script type="module" src="dashboard.js?v=20261119physio"></script>
 </body>
 
 </html>

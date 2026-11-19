@@ -36,3 +36,37 @@ export function katalogNachladen({ katalog, sektorHatGkvKatalog }) {
   if (sektorHatGkvKatalog && !liste.some(s => s.gkv_position_nr)) return true;
   return false;
 }
+
+/** @typedef {{id: string, title: string, duration_minutes?: number, code?: string, is_internal?: boolean, gkv_position_nr?: string, employee_services?: {employee_id: string}[]}} TerminLeistung */
+
+/** Beim Öffnen bestehender Buchungen bleibt die gespeicherte Auswahl sichtbar.
+ * @param {TerminLeistung[]} servicesCache
+ * @param {string|null} employeeId
+ * @param {string|null} selectedId
+ * @param {(text: string) => string} escapeHtml
+ */
+export function leistungsOptionen(servicesCache, employeeId, selectedId, escapeHtml) {
+  let visible = servicesCache.filter(s => !s.is_internal || s.id === selectedId);
+  if (employeeId) {
+    visible = visible.filter(s => {
+      const assigned = s.employee_services || [];
+      return assigned.length === 0 || assigned.some(es => es.employee_id === employeeId) || s.id === selectedId;
+    });
+  }
+
+  const gkvSrvs     = visible.filter(s => s.gkv_position_nr);
+  const privateSrvs = visible.filter(s => !s.gkv_position_nr);
+
+  /** @param {TerminLeistung} s */
+  const makeOption = s =>
+    `<option value="${s.id}" data-duration="${s.duration_minutes || 30}" data-code="${escapeHtml(s.code || '')}" ${s.id === selectedId ? 'selected' : ''}>${escapeHtml(s.title)}</option>`;
+
+  let html = '<option value="">— Leistung wählen —</option>';
+  if (gkvSrvs.length) {
+    html += `<optgroup label="⚕ GKV-Leistungen (§125 SGB V)">${gkvSrvs.map(makeOption).join('')}</optgroup>`;
+  }
+  if (privateSrvs.length) {
+    html += `<optgroup label="✦ Private Leistungen">${privateSrvs.map(makeOption).join('')}</optgroup>`;
+  }
+  return html;
+}

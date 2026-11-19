@@ -8939,3 +8939,10 @@ button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(
 
 /* V9.12: Telefonzeile in der Patientenliste gehört zum neuen Design (design/seiten.css); im alten bleibt alles wie bisher. */
 .pat-tel, .pat-next { display: none; }
+
+/* Geschlossene Sondertage in allen Kalenderrastern. Die Randfarbe kennzeichnet weiter das Teammitglied. */
+:is(.dv-booking-block, .wv-booking-block, .month-event-pill)[data-sondertag="geschlossen"] {
+  background: color-mix(in srgb, var(--danger) 22%, var(--bg-card-solid)) !important;
+  box-shadow: inset 0 0 0 2px var(--danger);
+  color: var(--text-main) !important;
+}
