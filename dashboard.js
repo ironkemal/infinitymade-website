@@ -44,7 +44,7 @@ import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnun
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20261004m116';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261005g';
 import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261004m116';
-import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261118v914'; import { pruefePatientPflicht } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { fristenGruppieren, aktuelleAbwesenheiten, datumMitJahr, abwesenheitTyp } from './module/ueberblick-listen.js?v=20261117p32';
+import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261118v914'; import { pruefePatientPflicht } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { ladeUeberblickAnsicht } from './module/ueberblick-ansicht.js?v=20261119ubl1';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
 import { ladeStatusJePatient, oeffneStatusDialogFuer, verordnungStatusInfo } from './module/abrechnungsstatus.js?v=20261117f2';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261117v906';
@@ -16967,228 +16967,22 @@ async function openPatRxDetail(rxId, leadId) {
   });
 }
 
-// ===== Überblick Hub (madde 15) =====
+// ===== Überblick (Praxis-Radar → module/ueberblick-ansicht.js) =====
 
 async function loadUeberblick() {
-  const ownerId = getOwnerId();
-  const today = new Date();
-  const todayStr = toISODate(today);
-
-  // Refresh butonu
-  document.getElementById('ueberblickRefreshBtn')?.addEventListener('click', loadUeberblick);
-
-  // --- 1. Rezept-Fristen ---
-  loadUeberblickDeadlines(ownerId, todayStr);
-
-  // --- 2. Geburtstage (nächste 7 Tage) ---
-  loadUeberblickBirthdays(ownerId, today);
-
-  // --- 3. Letzte No-Shows ---
-  loadUeberblickNoShows(ownerId);
-
-  // --- 4. Aktuelle Abwesenheiten ---
-  loadUeberblickVacations(ownerId, todayStr);
-}
-
-async function loadUeberblickDeadlines(ownerId, todayStr) {
-  const el = document.getElementById('ublDeadlinesList');
-  if (!el) return;
-
-  // 28 Tage Startfrist
-  const plus28 = new Date(new Date(todayStr).getTime() + 28 * 86400000).toISOString().slice(0, 10);
-
-  const { data, error } = await supabase
-    .from('prescriptions')
-    .select('id, ausstellungsdatum, behandlungsbeginn, status, is_dringend, leads!patient_id(first_name, last_name)')
-    .eq('owner_id', ownerId)
-    .not('status', 'in', '(completed,billed,rejected)')
-    .order('ausstellungsdatum', { ascending: true })
-    .limit(50);
-
-  if (error || !data || data.length === 0) {
-    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Keine ausstehenden Rezepte.</div>';
-    return;
-  }
-
-  const fmt = d => d ? new Date(d).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
-
-  const alerts = [];
-  data.forEach(rx => {
-    const name = [rx.leads?.first_name, rx.leads?.last_name].filter(Boolean).join(' ') || '—';
-    const started = rx.behandlungsbeginn ? new Date(rx.behandlungsbeginn) : null;
-    // Dringlich 14 Tage, sonst 28 (module/heilmittel-fristen.js) — vorher hier
-    // fest 28 Tage für alle, dringlich wurde nicht berücksichtigt.
-    const frist = behandlungsbeginnFrist(rx.ausstellungsdatum, rx.is_dringend);
-
-    if (frist) {
-      const deadline28 = new Date(frist);
-      if (!started && deadline28 >= new Date(todayStr) && deadline28 <= new Date(plus28)) {
-        const daysLeft = Math.round((deadline28 - new Date(todayStr)) / 86400000);
-        alerts.push({ type: 'warning', text: `${escapeHtml(name)} — Behandlungsbeginn in ${daysLeft} Tagen fällig (bis ${fmt(deadline28)})` });
-      }
-      if (!started && deadline28 < new Date(todayStr)) {
-        alerts.push({ type: 'danger', text: `${escapeHtml(name)} — Behandlungsbeginn-Frist ABGELAUFEN (seit ${fmt(deadline28)})` });
-      }
-    }
-
-    if (started) {
-      // 9-Monate Abrechnungsfrist
-      const deadline9m = new Date(started.getTime() + 274 * 86400000);
-      const days9Left = Math.round((deadline9m - new Date(todayStr)) / 86400000);
-      if (days9Left <= 60 && days9Left > 0) {
-        alerts.push({ type: 'warning', text: `${escapeHtml(name)} — Abrechnungsfrist in ${days9Left} Tagen (bis ${fmt(deadline9m)})` });
-      } else if (days9Left <= 0) {
-        alerts.push({ type: 'danger', text: `${escapeHtml(name)} — Abrechnungsfrist ABGELAUFEN (${fmt(deadline9m)})` });
-      }
-    }
+  return ladeUeberblickAnsicht({
+    supabase,
+    getOwnerId,
+    bizScope,
+    escapeHtml,
+    oeffnePatient: (leadId) => window.openPatientDetail?.(leadId),
+    oeffneVerordnung: (quelle, rxId) => {
+      switchPanel('verordnungen');
+      const ok = oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id: rxId, rolle: currentProfile?.role, apiBase: API });
+      if (!ok) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info');
+    },
+    wechslePanel: (panelId) => switchPanel(panelId),
   });
-
-  if (alerts.length === 0) {
-    el.innerHTML = '<div style="color:#22c55e;font-size:13px;">✓ Keine dringenden Fristen.</div>';
-    return;
-  }
-
-  el.innerHTML = fristenGruppieren(alerts).map(a => `
-    <div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
-      <span style="font-size:16px;">${a.type === 'danger' ? '🔴' : '🟡'}</span>
-      <span style="font-size:13px;color:var(--text-main);">${a.text}</span>
-    </div>
-  `).join('');
-}
-
-async function loadUeberblickBirthdays(ownerId, today) {
-  const el = document.getElementById('ublBirthdaysList');
-  if (!el) return;
-
-  const { data, error } = await supabase
-    .from('leads')
-    .select('id, first_name, last_name, geburtsdatum')
-    .eq('owner_id', ownerId)
-    .not('geburtsdatum', 'is', null);
-
-  if (error || !data || data.length === 0) {
-    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Keine Geburtstage gefunden.</div>';
-    return;
-  }
-
-  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const in7Days = new Date(todayMidnight.getTime() + 7 * 86400000 + 86399999);
-
-  const upcoming = data.filter(p => {
-    if (!p.geburtsdatum) return false;
-    const bd = new Date(p.geburtsdatum);
-    let bday = new Date(todayMidnight.getFullYear(), bd.getMonth(), bd.getDate());
-    if (bday < todayMidnight) {
-      bday.setFullYear(todayMidnight.getFullYear() + 1);
-    }
-    return bday >= todayMidnight && bday <= in7Days;
-  });
-
-  if (upcoming.length === 0) {
-    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Keine Geburtstage in den nächsten 7 Tagen.</div>';
-    return;
-  }
-
-  const fmt = d => d ? new Date(d).toLocaleDateString('de-DE', { day:'2-digit', month:'long' }) : '—';
-  el.innerHTML = upcoming.map(p => {
-    const bd = new Date(p.geburtsdatum);
-    let bday = new Date(todayMidnight.getFullYear(), bd.getMonth(), bd.getDate());
-    if (bday < todayMidnight) {
-      bday.setFullYear(todayMidnight.getFullYear() + 1);
-    }
-    const daysLeft = Math.round((bday - todayMidnight) / 86400000);
-    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
-      <span style="font-size:16px;">🎂</span>
-      <span style="font-size:13px;color:var(--text-main);">${escapeHtml([p.first_name,p.last_name].filter(Boolean).join(' '))} — ${fmt(p.geburtsdatum)}${daysLeft === 0 ? ' <strong style="color:#f59e0b;">(Heute!)</strong>' : ` (in ${daysLeft} Tag${daysLeft !== 1 ? 'en' : ''})`}</span>
-    </div>`;
-  }).join('');
-}
-
-async function loadUeberblickNoShows(ownerId) {
-  const el = document.getElementById('ublNoShowList');
-  if (!el) return;
-
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('id, start_time, customer_name, lead_id')
-    .eq('owner_id', ownerId)
-    .eq('status', 'no_show')
-    .order('start_time', { ascending: false })
-    .limit(10);
-
-  if (error || !data || data.length === 0) {
-    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Niemand ist zuletzt nicht erschienen.</div>';
-    return;
-  }
-
-  const fmt = d => d ? new Date(d).toLocaleString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
-  el.innerHTML = data.map(b => `
-    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
-      <span style="font-size:16px;">⚠</span>
-      <span style="font-size:13px;color:var(--text-main);">${escapeHtml(b.customer_name || '—')} — ${fmt(b.start_time)}</span>
-    </div>
-  `).join('');
-}
-
-async function loadUeberblickVacations(ownerId, todayStr) {
-  const el = document.getElementById('ublVacationList');
-  if (!el) return;
-
-  const { data: emps } = await supabase
-    .from('profiles')
-    .select('id, business_name, email')
-    .or(`id.eq.${ownerId},owner_id.eq.${ownerId}`);
-  const empIds = (emps || []).map(e => e.id);
-  if (empIds.length === 0) {
-    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Keine aktuellen Abwesenheiten.</div>';
-    return;
-  }
-
-  let { data, error } = await supabase
-    .from('time_offs')
-    .select('id, start_date, end_date, type, profiles!employee_id(business_name, email)')
-    .in('employee_id', empIds)
-    .gte('end_date', todayStr + 'T00:00:00')
-    .order('start_date', { ascending: true })
-    .limit(20);
-
-  if (error || !data) {
-    console.warn('time_offs join failed, falling back to manual profiles mapping', error);
-    const { data: rawData, error: rawError } = await supabase
-      .from('time_offs')
-      .select('id, start_date, end_date, type, employee_id')
-      .in('employee_id', empIds)
-      .gte('end_date', todayStr + 'T00:00:00')
-      .order('start_date', { ascending: true })
-      .limit(20);
-
-    if (rawError || !rawData || rawData.length === 0) {
-      el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Keine aktuellen Abwesenheiten.</div>';
-      return;
-    }
-
-    const empMap = {};
-    (emps || []).forEach(e => { empMap[e.id] = e; });
-    data = rawData.map(v => ({
-      ...v,
-      profiles: empMap[v.employee_id] || null
-    }));
-  }
-
-  data = aktuelleAbwesenheiten(data || [], todayStr); if (!data.length) {   // Fund 8: nur laufend/anstehend
-    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Keine aktuellen Abwesenheiten.</div>';
-    return;
-  }
-
-  const typeEmoji = { urlaub: '🏖', krank: '🤒', frei: '📅', elternzeit: '👶' };
-  const fmt = datumMitJahr;   // Fund 8: mit Jahr
-  el.innerHTML = data.map(v => {
-    const empName = v.profiles?.business_name || v.profiles?.email?.split('@')[0] || '—';
-    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
-      <span style="font-size:16px;">${typeEmoji[v.type] || '📅'}</span>
-      <span style="font-size:13px;color:var(--text-main);">${escapeHtml(empName)} — ${escapeHtml(abwesenheitTyp(v.type))} · ${fmt(v.start_date)} – ${fmt(v.end_date)}</span>
-    </div>`;
-  }).join('');
 }
 
 window.openPatientDetail = async function(leadId) {
