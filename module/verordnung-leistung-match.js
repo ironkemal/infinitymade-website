@@ -13,6 +13,8 @@
  * prüfbar, ohne einen Browser zu simulieren.
  */
 
+import { kuerzelAusKatalog } from './heilmittel-kuerzel.js';
+
 /**
  * @param {{heilmittel?:?string, heilmittel_position?:?string}} rx  Verordnungszeile
  * @param {Array<{id:string, title?:?string, code?:?string, gkv_position_nr?:?string}>} dienste
@@ -36,6 +38,11 @@ export function passendeLeistungId(rx, dienste) {
   // Zeichenkette nie in der langen.
   const hmLower = String(rx?.heilmittel || '').trim().toLowerCase();
   if (hmLower) {
+    const kuerzel = String(kuerzelAusKatalog(rx.heilmittel_position || rx.heilmittel)).toLowerCase();
+    const exakt = dienste.filter(s => [s.title, s.code, kuerzelAusKatalog(s.gkv_position_nr)]
+      .some(wert => String(wert || '').trim().toLowerCase() === kuerzel));
+    if (exakt.length === 1) return exakt[0].id;
+    if (exakt.length > 1 || /^[a-z]{1,3}$/i.test(hmLower)) return null;
     const byText = dienste.find(s => {
       const titel = String(s.title || '').trim().toLowerCase();
       const code = String(s.code || '').trim().toLowerCase();

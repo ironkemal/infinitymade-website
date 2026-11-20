@@ -3,7 +3,7 @@
  *
  * Extracted from the booking modal's picker (`bkCustomerSearch`), which was the
  * only one that had everything: arrow-key navigation, match highlighting,
- * "+ Neuer Kunde…", and the full search via `patientMatchesQuery` (name,
+ * "+ Neuer Patient…", and the full search via `patientMatchesQuery` (name,
  * birth date in ISO *and* German notation, phone with 0170 ↔ +49170).
  *
  * Before this module there were five separate pickers that disagreed:
@@ -23,7 +23,7 @@
  *     matches:    patientMatchesQuery,      // shared matcher
  *     labelOf:    displayNameWithBirth,     // shared label
  *     onSelect:   lead => {...},
- *     onNew:      typedText => {...},       // optional "+ Neuer Kunde…"
+ *     onNew:      typedText => {...},       // optional "+ Neuer Patient…"
  *   });
  */
 
@@ -44,7 +44,7 @@ function escHtml(str) {
  * @param {Function} cfg.matches    (lead, query) => boolean
  * @param {Function} cfg.labelOf    (lead) => string
  * @param {Function} cfg.onSelect   (lead) => void
- * @param {Function} [cfg.onNew]    (typedText) => void — enables "+ Neuer Kunde…"
+ * @param {Function} [cfg.onNew]    (typedText) => void — enables "+ Neuer Patient…"
  * @param {HTMLElement} [cfg.listEl]      existing <ul>; created next to the input if omitted
  * @param {HTMLElement} [cfg.containerEl] click-outside boundary
  * @param {number}   [cfg.emptyLimit]     rows shown when the field is empty (0 = all)
@@ -72,7 +72,7 @@ export function attachPatientSearch(inputEl, cfg = {}) {
     rank       = null,
     badgeOf    = null,
     separatorLabel = '',
-    newLabel   = '+ Neuer Kunde…',
+    newLabel   = '+ Neuer Patient…',
     emptyText  = 'Keine Treffer',
   } = cfg;
 

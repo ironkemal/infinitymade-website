@@ -263,7 +263,15 @@ export function renderVerlauf(el, zeilen, onSprung) {
     return;
   }
 
-  el.innerHTML = zeilen.map(z => `
+  const jetzt = Date.now();
+  const zukunft = zeilen.filter(z => z.art === 'Termin' && Date.parse(z.datum) > jetzt);
+  const kommende = new Set(zukunft);
+  const historie = zeilen.filter(z => !kommende.has(z));
+  const gruppen = zukunft.length
+    ? [['Kommende Termine', zukunft.sort((a, b) => Date.parse(a.datum) - Date.parse(b.datum))], ['Bisheriger Verlauf', historie]]
+    : [['', historie]];
+  el.innerHTML = gruppen.filter(([, rows]) => rows.length).map(([titel, rows]) =>
+    (titel ? `<h3>${titel}</h3>` : '') + rows.map(z => `
     <button type="button" class="pk-verlauf-zeile" data-ziel="${esc(z.ziel)}" data-id="${esc(z.id)}"
       data-lead="${esc(z.leadId || '')}" data-datum="${esc(z.datum || '')}"
       style="display:grid;grid-template-columns:92px 108px 1fr;gap:10px;align-items:baseline;width:100%;
@@ -272,7 +280,7 @@ export function renderVerlauf(el, zeilen, onSprung) {
       <span style="color:var(--text-muted);">${DE(z.datum)}</span>
       <span style="color:${z.farbe || FARBE[z.art] || 'var(--text-muted)'};font-weight:600;font-size:12px;">${esc(z.art)}</span>
       <span${z.farbe ? ` style="color:${z.farbe};"` : ''}>${esc(z.text)}</span>
-    </button>`).join('');
+    </button>`).join('')).join('');
 
   el.querySelectorAll('.pk-verlauf-zeile').forEach(b => {
     // Datum und Patient wandern mit: das Zielpanel soll nicht nur aufgehen,

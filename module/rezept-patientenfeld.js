@@ -47,7 +47,7 @@ export async function ladePatientenCache({ supabase, bizScope, getOwnerId }) {
         hint.textContent = '⚠ Keine Patienten gefunden — bitte zuerst Patienten anlegen';
         hint.style.color = '#b45309';
       } else {
-        hint.textContent = `${leads.length} Patienten — tippen zum Suchen`;
+        hint.textContent = `${leads.length} Patienten in dieser Auswahl — tippen zum Suchen`;
         hint.style.color = '';
       }
     }

@@ -219,8 +219,8 @@ const T = {
     saved: 'Gespeichert.', pw_changed: 'Passwort geändert.', err_generic: 'Ein Fehler ist aufgetreten.',
     copied: 'Kopiert!',
     apify_error: 'Apify-Fehler: ', apify_done: 'Importiert: ', me: '(Sie)',
-    nav_doctors: 'Ärzte', nav_notizen: 'Notizen', nav_fahrtenbuch: 'Fahrtenbuch', nav_beispielmodus: 'Demo-Modus', nav_anamnese: 'Anamnese',
-    doctors_sub: 'Verordnende Ärzte und ihre Zuweisungen', notizen_sub: 'Patientennotizen & Berichte', b2c_sub: 'Kundenmailings & KI-Assistent',
+    nav_doctors: 'Ärzte', nav_notizen: 'Notizen', nav_fahrtenbuch: 'Fahrtenbuch', nav_beispielmodus: 'Anatomiekarten', nav_anamnese: 'Anamnese',
+    doctors_sub: 'Verordnende Ärzte und ihre Zuweisungen', notizen_sub: 'Patientennotizen & Berichte', b2c_sub: 'Patientenmailings & KI-Assistent',
     beispielmodus_sub: 'Anatomiekarten für Patientengespräche', anamnese_sub: 'Digitales Anamnese-Formular',
     lbl_doctor_notes: 'Arztnotizen', lbl_therapist_notes: 'Therapeutennotizen',
     lbl_ai_summary: 'AI-Bericht', lbl_send_patient: 'An Patient senden',
@@ -764,11 +764,10 @@ async function gehZuEinstellung(sectionId, focusId) {
 window.gehZuEinstellung = gehZuEinstellung;
 
 async function switchPanel(id) {
-  const panelId = id;
   if (currentProfile?.role === 'employee' && SIDEBAR_TO_MODULE[id] && !hasModuleAccess(SIDEBAR_TO_MODULE[id])) { showToast('Keine Berechtigung für diesen Bereich.', 'error'); return; }
   // Aktif panelin grubunu otomatik aç
   const _allItems = getSidebarItems ? getSidebarItems() : [];
-  const _activeNavItem = _allItems.find(i => i.id === panelId);
+  const _activeNavItem = _allItems.find(i => i.id === id);
   if (_activeNavItem?.group) {
     const _groupEl = document.querySelector('[data-group-id="' + _activeNavItem.group + '"]');
     if (_groupEl && !_groupEl.classList.contains('open')) {
@@ -781,6 +780,7 @@ async function switchPanel(id) {
     }
   }
   // Beim Verlassen des Kalenders Verschiebemodus und Termin-Seitenbereich beenden.
+  if (id !== activePanel) document.querySelectorAll('#_peModal [data-pe-cancel], #_peOffenModal [data-pe-offen-schliessen], #_peZkPromptModal [data-pe-zk-spaeter]').forEach(button => button.click());
   if (id !== 'calendar' && moveBooking) cancelMoveBooking();
   if (activePanel === 'calendar' && id !== 'calendar') closeBkActionPanel();
   if (id !== 'notizen') notizenController.invalidate();
@@ -4359,7 +4359,7 @@ function populateEmpSelects(selectedId = null) {
   if (bkEmp && !bkEmp.dataset.srvFilterWired) {
     bkEmp.dataset.srvFilterWired = '1';
     bkEmp.addEventListener('change', () => {
-      wechsleLeistungsoptionen(leistungsOptionen(servicesCache, bkEmp.value, null, escapeHtml));
+      wechsleLeistungsoptionen(leistungsOptionen(servicesCache, bkEmp.value, document.getElementById('bkService').value, escapeHtml));
     });
   }
 }
@@ -4742,7 +4742,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
       const fehlend = pflicht.filter(s => !(qCerts || []).some(c => c.certificate === s.required_certificate));
       if (fehlend.length) {
         const empObj = teamMembers.find(t => t.id === empId);
-        const empName = [empObj?.owner_first_name, empObj?.owner_last_name].filter(Boolean).join(' ') || empObj?.business_name || 'Die ausgewählte Person';
+        const empName = [empObj?.owner_first_name, empObj?.owner_last_name].filter(Boolean).join(' ') || (empObj?.business_name && !empObj.business_name.includes('@') ? empObj.business_name : 'Die ausgewählte Person');
         const proceed = await showConfirmModal({
           title: '⚠️ Qualifikationswarnung',
           message: `${empName}: Für ${fehlend.map(s => `„${s.title}“ (${s.required_certificate})`).join(', ')} fehlt der Zertifikatsnachweis. Die Leistung kann bei der GKV-Abrechnung abgelehnt werden.\n\nTrotzdem buchen?`,
@@ -15044,12 +15044,12 @@ async function loadFahrtenbuchPanel() {
       const sel = document.getElementById('fbFahrtenUser');
       if (sel && !sel.dataset.populated) {
         const { data: team } = await supabase.from('profiles')
-          .select('id,owner_first_name,owner_last_name,email')
+          .select('id,owner_first_name,owner_last_name,business_name')
           .or(`id.eq.${currentSession.user.id},owner_id.eq.${currentSession.user.id}`);
         sel.innerHTML = '<option value="">— Alle —</option>' +
           (team || []).map(u => {
-            const name = [u.owner_first_name, u.owner_last_name].filter(Boolean).join(' ') || u.email || u.id.slice(0, 8);
-            return `<option value="${u.id}">${name}</option>`;
+            const name = [u.owner_first_name, u.owner_last_name].filter(Boolean).join(' ') || (u.business_name && !u.business_name.includes('@') ? u.business_name : 'Teammitglied ' + u.id.slice(0, 8));
+            return `<option value="${escapeHtml(u.id)}">${escapeHtml(name)}</option>`;
           }).join('');
         sel.addEventListener('change', loadFbFahrten);
         sel.dataset.populated = '1';
@@ -15084,9 +15084,9 @@ async function loadFbFahrten() {
   const userMap = {};
   if (userIds.length) {
     const { data: users } = await supabase.from('profiles')
-      .select('id,owner_first_name,owner_last_name,email').in('id', userIds);
+      .select('id,owner_first_name,owner_last_name,business_name').in('id', userIds);
     (users || []).forEach(u => {
-      userMap[u.id] = [u.owner_first_name, u.owner_last_name].filter(Boolean).join(' ') || u.email || u.id.slice(0, 8);
+      userMap[u.id] = [u.owner_first_name, u.owner_last_name].filter(Boolean).join(' ') || (u.business_name && !u.business_name.includes('@') ? u.business_name : 'Teammitglied ' + u.id.slice(0, 8));
     });
   }
 
@@ -15393,10 +15393,10 @@ async function loadFbReports() {
   // Aggregate by user
   const userIds = Array.from(new Set(data.map(r => r.user_id)));
   const { data: users } = await supabase.from('profiles')
-    .select('id,owner_first_name,owner_last_name,email').in('id', userIds);
+    .select('id,owner_first_name,owner_last_name,business_name').in('id', userIds);
   const userMap = {};
   (users || []).forEach(u => {
-    userMap[u.id] = [u.owner_first_name, u.owner_last_name].filter(Boolean).join(' ') || u.email || u.id.slice(0, 8);
+    userMap[u.id] = [u.owner_first_name, u.owner_last_name].filter(Boolean).join(' ') || (u.business_name && !u.business_name.includes('@') ? u.business_name : 'Teammitglied ' + u.id.slice(0, 8));
   });
 
   const byUser = {};

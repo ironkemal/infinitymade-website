@@ -36,3 +36,11 @@ test('leere/keine Verordnungsangaben ergeben null', () => {
 test('keine Leistungen im Katalog ergibt null', () => {
   assert.equal(passendeLeistungId({ heilmittel: 'egal' }, []), null);
 });
+
+test('Chrome1911 · KG trifft eindeutige Katalogleistung, keine Geräteleistung', () => {
+  const geraet = { id: 'geraet', title: 'KG-Gerät', gkv_position_nr: '20507' };
+  const kg = { id: 'einzel', title: 'Krankengymnastik', gkv_position_nr: '20501' };
+  assert.equal(passendeLeistungId({ heilmittel: 'KG' }, [geraet, kg]), 'einzel');
+  assert.equal(passendeLeistungId({ heilmittel: 'KG' }, [geraet]), null);
+  assert.equal(passendeLeistungId({ heilmittel: 'KG' }, [kg, { ...kg, id: 'zweite' }]), null);
+});
