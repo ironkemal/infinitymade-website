@@ -8,6 +8,7 @@
  * der Mitarbeiterzuordnung ab, meist den Standard-Standort; ein Raum an Standort B würde dann abgewiesen.
  */
 import { raeumeDesStandorts, raumAuswahl, raumKonflikt } from './raum-plan.js';
+import { alsBerlinDatum } from './berlin-datum.js';
 import { mountTerminKonflikte } from './termin-konflikte.js';
 import { ladeAbwesenheiten } from './abwesenheit.js?v=20261031';
 import { ladeSondertage, warnungFuerTag } from './sondertag.js?v=20261119physio';
@@ -104,12 +105,6 @@ export function tagesgrenzen(zeitpunkt) {
   return { vonISO: von.toISOString(), bisISO: bis.toISOString() };
 }
 
-function lokaleTage(zeitpunkt) {
-  const d = new Date(zeitpunkt);
-  const text = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  return { vonDatum: text, bisDatum: text };
-}
-
 /** Warntext für den Raum, oder null. Sperrt nichts (Ops #307). */
 export function raumWarnung(raum, termine, startIso, endIso, optionen = {}) {
   if (!raum || !raumKonflikt(raum, termine, startIso, endIso, optionen).voll) return null;
@@ -154,7 +149,7 @@ export async function sondertagGesperrt(startIso, id = null) {
       const { data: alt } = await kontext.supabase.from('bookings').select('start_time').eq('id', id).maybeSingle();
       if (alt?.start_time && new Date(alt.start_time).getTime() === new Date(startIso).getTime()) return false;
     }
-    const { vonDatum, bisDatum } = lokaleTage(startIso);
+    const vonDatum = alsBerlinDatum(startIso), bisDatum = vonDatum;
     const tage = await ladeSondertage({ supabase: kontext.supabase, ownerId: kontext.getOwnerId(), von: vonDatum, bis: bisDatum });
     const geschlossen = warnungFuerTag(tage, vonDatum);
     if (geschlossen) { kontext.showToast(geschlossen, 'error'); return true; } // 0106: Sperre (Kemal 31.10.)

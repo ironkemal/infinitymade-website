@@ -69,7 +69,8 @@ export function terminPruefen(daten, termin) {
   if (!raum && !termin.ohneRaum && (daten.raeume.length || daten.leistungen.some(s => s.raum_ausstattung?.length)) && !daten.raeume.some(r => geeignet(r) && frei(r))) melde('Kein geeigneter Raum frei.', true);
   const sonder = daten.tage.find(t => t.date === tag);
   const geschlossen = sonder && ['closed', 'holiday'].includes(sonder.type);
-  if (daten.geschlossen.includes(wochentag) || (geschlossen && (!sonder.start_time || (von < sonder.end_time.slice(0,5) && bis > sonder.start_time.slice(0,5))))) melde('Praxis geschlossen.', true);
+  const bestand = id && daten.bookings.some(b => b.id === id && Date.parse(b.start_time) === start && (b.business_id ?? null) === (daten.businessId ?? null));
+  if (daten.geschlossen.includes(wochentag) || (geschlossen && (!sonder.start_time || (von < sonder.end_time.slice(0,5) && bis > sonder.start_time.slice(0,5))))) melde('Praxis geschlossen.', !bestand);
   if (abwesendAm(daten.abwesenheiten.filter(t => t.employee_id === empId), tag)) melde('Therapeut:in ist wegen Abwesenheit nicht verfügbar.');
   const fenster = arbeitsfenster(daten, empId, wochentag, sonder);
   if (berlinTag.format(ende - 1) !== tag || !fenster.some(w => w.is_active && von >= w.start_time.slice(0,5) && bis <= w.end_time.slice(0,5) && bis > von)) melde('Termin liegt außerhalb der Arbeitszeit.');

@@ -38,3 +38,10 @@ test('Chrome1911 eigener Termin, Anschluss und Gruppenraumkapazität',()=>{
   d.raeume[0].ausstattung.push('Gruppenraum'); assert.deepEqual(terminPruefen(d,t),[]);
   d.bookings.push({...b,id:'Chrome1911 parallel',user_id:'dritte Person'});assert.ok(terminPruefen(d,t).some(k=>k.sperre));
 });
+
+test('Chrome1911 geschlossener Berliner Kalendertag: Bestand bleibt änderbar, neue Zeit gesperrt', () => {
+  const d = stand(), b = buchung(termin.empId, 'R1'); d.bookings.push(b);
+  d.tage.push({date:'2026-11-23',type:'closed'});
+  assert.equal(terminPruefen(d,{...termin,id:b.id}).find(k => k.grund.includes('geschlossen')).sperre, false);
+  assert.equal(terminPruefen(d,{...termin,id:b.id,start:start+60000}).find(k => k.grund.includes('geschlossen')).sperre, true);
+});
