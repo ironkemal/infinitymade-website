@@ -182,6 +182,10 @@ test('verdrahteSerienStarttag: Serie schlägt 6 vor und erhält eine eingegebene
   els.bkSeriesToggle.checked = true;
   hoerer.bkSeriesTogglechange[0]();
   assert.equal(els.bkAnzahl.value, '6');
+  els.bkSelectedRxId = { value: 'Chrome1911 KG', dataset: { offeneEinheiten: '3' } };
+  els.bkAnzahl.value = '1';
+  hoerer.bkSeriesTogglechange[0]();
+  assert.equal(els.bkAnzahl.value, '3');
   els.bkAnzahl.value = '4';
   hoerer.bkSeriesTogglechange[0]();
   assert.equal(els.bkAnzahl.value, '4');

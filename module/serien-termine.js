@@ -207,7 +207,11 @@ export function verdrahteSerienStarttag(doc = globalThis.document) {
   };
   toggle?.addEventListener('change', () => {
     if (!toggle.checked) return;
-    if (anzahl && anzahl.value === anzahl.defaultValue) anzahl.value = '6';
+    if (anzahl && anzahl.value === anzahl.defaultValue) {
+      const rx = doc.getElementById('bkSelectedRxId');
+      const offen = rx?.value ? Number(rx.dataset?.offeneEinheiten) : NaN;
+      anzahl.value = Number.isInteger(offen) && offen >= 0 ? String(Math.min(offen, 52)) : '6';
+    }
     setze();
   });
   start?.addEventListener('input', setze);

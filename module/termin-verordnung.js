@@ -199,6 +199,16 @@ export async function waehleVerordnung(rx, sessions, deps = {}) {
   if (selbstBtn) { selbstBtn.style.borderColor = 'var(--border)'; selbstBtn.style.color = 'var(--text-muted)'; }
   setzeWert('bkIsSelbstzahler', '');
   setzeWert('bkSelectedRxId', rx.id);
+  const rxFeld = document.getElementById('bkSelectedRxId');
+  if (rxFeld?.dataset) delete rxFeld.dataset.offeneEinheiten;
+  const serienVorgabe = offen => {
+    if (!rxFeld?.dataset || rxFeld.value !== rx.id || !Number.isInteger(offen)) return;
+    rxFeld.dataset.offeneEinheiten = String(offen);
+    const anzahl = document.getElementById('bkAnzahl');
+    if (anzahl && document.getElementById('bkSeriesToggle')?.checked) {
+      anzahl.value = String(Math.min(offen,52)); anzahl.dispatchEvent(new Event('input'));
+    }
+  };
 
   const pickerBlock = document.getElementById('bkSessionPickerBlock');
   const dotsEl = document.getElementById('bkSessionDots');
@@ -245,6 +255,7 @@ export async function waehleVerordnung(rx, sessions, deps = {}) {
       try {
         const [{ vergeben }, behs] = await Promise.all([ladePodoTermine(sb, { ownerId, vordId: rx.id, leadId }), ladeVerordnungsBehandlungen(sb, { ownerId, vordId: rx.id })]);
         const z = podoBelegung(ausTopf(rx).behandlungseinheiten, vergeben, behs, alsBerlinDatum);
+        serienVorgabe(z.offen);
         if (z.offen === 0) {
           if (infoEl) infoEl.textContent = 'Alle Sitzungen bereits vergeben.';
           window._pendingRxSession = null;
@@ -288,6 +299,7 @@ export async function waehleVerordnung(rx, sessions, deps = {}) {
     const offeneSessions = (sessions || [])
       .filter(s => (s.status === 'planned' || !s.status) && !s.booking_id)
       .sort((a, b) => a.session_number - b.session_number);
+    serienVorgabe(offeneSessions.length);
     const naechste = eigeneSession || offeneSessions[0] || null;
 
     const hmKuerzelFuerSitzung = (s) => {
