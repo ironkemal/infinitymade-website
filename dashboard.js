@@ -76,7 +76,7 @@ import { verordnungenListeLaden, oeffneVerordnungAusSuche } from './module/veror
 import { zeigeVerordnungDetail, multiHeilmittelTitel } from './module/verordnung-detail.js?v=20261117p33';
 import { downloadDmrzForInvoice, setzeDmrzKnopf } from './module/rechnung-dmrz.js?v=20261117p24';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909'; import { renderDatevSettings, verdrahteDatevExport } from './module/datev-einstellungen.js?v=20261022a'; import { renderTerminerinnerungSettings } from './module/terminerinnerung-einstellung.js?v=20261109'; import { renderMailversandSettings } from './module/mailversand.js?v=20261109';
-import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261118s1'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261118s1'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261118s1'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261118s1'; import { mountStartAufgaben } from './module/start-aufgaben.js?v=20261101st';
+import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261118s1'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft, zeigeRechnungsPraxisHinweis } from './module/rechnung-snapshot.js?v=20261118s1'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261118s1'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261118s1'; import { mountStartAufgaben } from './module/start-aufgaben.js?v=20261101st';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20261014fix1'; import { markiereZuBelegBezahlt } from './module/rechnung-zahlung.js?v=20261010w';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20261103b';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261117p33';
@@ -12554,10 +12554,11 @@ async function loadRechnungen() {
   renderInvList(); return invListCache;
 }
 
-function printArea() {
+async function printArea() {
   const inv = document.getElementById('invoicePrintArea');
   const anam = document.getElementById('anamnesePrintArea');
-  // Force the print template into the layout briefly so @media print can show it
+  const warnung = activePanel === 'rechnungen' && !document.getElementById('invView').hidden && document.getElementById('invViewPraxisHinweis')?.textContent;
+  if (warnung && !await showConfirmModal({ title: 'Rechnung drucken?', message: warnung, confirmText: 'Drucken', cancelText: 'Abbrechen', variant: 'warning' })) return;
   const prevInv = inv ? inv.style.display : '';
   const prevAnam = anam ? anam.style.display : '';
   if (inv && !document.getElementById('invView').hidden) inv.style.display = 'block';
@@ -12664,7 +12665,6 @@ function calcInvTotals() {
   document.getElementById('invTotalPatient').textContent = formatEur(r.total);
 }
 
-
 function resetInvEditor() {
   ({ invLines, invPatientId, invPrescriptionId, invVerordnungId, invBehandlungIds, invPatientInsuranceType } = leererEditorZustand());
   document.getElementById('invPatientSelect').value = '';
@@ -12697,6 +12697,7 @@ async function openInvEditor(invoiceId) {
       invPatientInsuranceType = inv.invoice_type || null;
       renderInvLines(); updateInvForInsuranceType();
     }
+    zeigeRechnungsPraxisHinweis('invEditorPraxisHinweis', ownerProfile || currentProfile);
     zeigeRechnungsModus('editor');
     if (!invoiceId) document.getElementById('invPatientSelect').focus();
   } catch {
@@ -12804,7 +12805,6 @@ function bindInvEvents() {
   document.getElementById('invCancelBtn').onclick = () => closeInvEditor();
   document.getElementById('invSaveBtn').onclick = saveInvoice;
   document.getElementById('invPrintBtn').onclick = () => {
-    // Switch to view first, then print the templated invoice
     if (window._currentInvoiceId) {
       openInvView(window._currentInvoiceId).then(printArea);
     } else {

@@ -142,6 +142,8 @@ export function renderInvList() {
   });
 }
 
+import { zeigeRechnungsPraxisHinweis } from './rechnung-snapshot.js';
+
 export async function openInvView(invoiceId) {
   if (!invoiceId) return;
   const invListCache = d.liste();
@@ -188,6 +190,7 @@ export async function openInvView(invoiceId) {
   // Aussteller wie beim Speichern eingefroren (0075, § 147 Abs. 2 Nr. 1 AO); Altbelege ohne Snapshot live —
   // über dieselbe Normalisierung (PLZ aus plz|zip, Hausnummer, E-Mail der PRAXIS statt fünf eigener Blöcke).
   const aus = inv.aussteller_snapshot || ausstellerSnapshot(currentProfile);
+  zeigeRechnungsPraxisHinweis('invViewPraxisHinweis', currentProfile, inv);
   document.getElementById('invvBizName').textContent = aus.name || '—';
   const bizMeta = [];
   if (aus.inhaber && aus.inhaber !== aus.name) bizMeta.push('Inhaber/in: ' + aus.inhaber);

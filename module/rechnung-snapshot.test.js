@@ -151,3 +151,14 @@ test('P2-1a: fehlende Straße warnt, erhält aber Rechnungserstellung', async ()
     assert.ok(result?.empfaenger_snapshot);assert.equal(warnungen,1);
   }
 });
+
+test('Chrome1911 prüft konfigurierbare Praxisangaben am tatsächlich gedruckten Snapshot', async () => {
+  const { rechnungsPraxisHinweis } = await import('./rechnung-snapshot.js');
+  const leer = rechnungsPraxisHinweis({});
+  for (const fehlt of ['Straße', 'Telefon', 'IBAN', 'Steuernummer']) assert.ok(leer.includes(fehlt));
+  const profil = { street: 'Chrome1911 Weg', phone: 'Chrome1911', iban: 'Chrome1911', steuernummer: 'Chrome1911' };
+  assert.equal(rechnungsPraxisHinweis(profil), '');
+  const beleg = { aussteller_snapshot: { strasse: '', telefon: 'Chrome1911', bank: {} } };
+  assert.match(rechnungsPraxisHinweis(profil, beleg, ['strasse']), /Straße/);
+  assert.equal(rechnungsPraxisHinweis(profil, beleg, ['telefon']), '');
+});

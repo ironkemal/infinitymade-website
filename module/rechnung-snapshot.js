@@ -66,3 +66,25 @@ export async function rechnungSnapshotsGeprueft(supabase, q, { bestaetige } = {}
   });
   return ok ? snap : null;
 }
+
+// Arbeitsliste der Praxis; fachlich endgültige Auswahl mit der Steuerberatung abstimmen.
+export const RECHNUNGS_PRAXISFELDER = Object.freeze(['strasse', 'telefon', 'iban', 'steuer']);
+
+export function rechnungsPraxisHinweis(profil, rechnung = {}, felder = RECHNUNGS_PRAXISFELDER) {
+  const aus = rechnung.aussteller_snapshot || ausstellerSnapshot(profil);
+  const angaben = {
+    strasse: [aus.strasse, 'Straße und Hausnummer'],
+    telefon: [aus.telefon, 'Telefon'],
+    iban: [aus.bank?.iban, 'IBAN'],
+    steuer: [(rechnung.steuernummer_snapshot ?? profil?.steuernummer) || (rechnung.ust_id_snapshot ?? profil?.ust_id), 'Steuernummer oder USt-IdNr.'],
+  };
+  const fehlend = felder.filter(k => angaben[k] && !String(angaben[k][0] ?? '').trim());
+  return fehlend.length ? 'Praxisangaben fehlen: ' + fehlend.map(k => angaben[k][1]).join(', ') + '.' : '';
+}
+
+export function zeigeRechnungsPraxisHinweis(id, profil, rechnung) {
+  const feld = document.getElementById(id);
+  if (!feld) return;
+  feld.textContent = rechnungsPraxisHinweis(profil, rechnung);
+  feld.hidden = !feld.textContent;
+}
