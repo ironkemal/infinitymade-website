@@ -14,6 +14,12 @@
 
 Details [Public-Repo](docs/agents-referenz.md#public), [Git](docs/agents-referenz.md#git), [Veröffentlichung](docs/agents-referenz.md#struktur).
 
+## Unteragenten sparsam
+
+- Nur klar abgegrenzte Aufgaben mit präzisem Auftrag, Dateigrenzen und erwarteter Ausgabe delegieren. Wenn möglich ohne vollständigen Elternverlauf starten und nur den nötigen Kontext mitgeben. Angeforderte Modellvorgaben und Pflichtberatung beachten.
+- Dateien abschnittsweise mit `sed -n`, `rg` oder `grep` lesen. Wissensbank über `wissensbank/INDEX.md` erschließen und nur den Zielabschnitt lesen. Keine vollständigen PDF- oder TXT-Dokumente laden.
+- Große generierte Dateien wie `funktionen/INDEX.json`, `db/SCHEMA*.sql` und Logs nur gezielt durchsuchen. Testausgaben auf Ergebnis und relevante Fehler filtern (`tail`, `grep -E "pass|fail"`), Exitcode des Testlaufs erhalten (z. B. `set -o pipefail`).
+
 ## Pflichtberatung und Kontext
 
 - Vor eigener Recherche den zuständigen Fachagenten fragen. Vor neuer Funktion `fonksiyon-ustasi` fragen, vorhandene Funktion bevorzugt erweitern. Nach neuer Funktion, Modul oder Erweiterung kurz Zweck und beabsichtigten oder ersten Einsatz melden. Die Funktionskarte ersetzt diese Meldung nicht. Dubletten in `funktionen/INDEX.md` nur nach Nutzerentscheidung zusammenführen.
