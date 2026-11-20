@@ -8330,7 +8330,6 @@ button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(
   .pd-tab { min-height: 44px; }
 
   /* Termin-Aktionen: Ziele ≥44 px … */
-  #bkDetailEditBtn { min-height: 44px; padding: 0 12px !important; /* Inline padding 2px 8px */ }
   #bkActPatSearch { min-height: 44px; }
   #bkActionStartBtn,
   #bkActionFahrtStartBtn,

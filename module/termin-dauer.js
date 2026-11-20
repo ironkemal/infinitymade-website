@@ -82,7 +82,7 @@ export function leseDauer() {
  */
 export function setzeDauer(minuten, hinweis = '') {
   const el = /** @type {HTMLInputElement | null} */ (document.getElementById('bkDurationValue'));
-  const gruppe = document.getElementById('bkDurationGroup');
+  const gruppe = globalThis.document?.getElementById('bkDurationGroup');
   if (!el) return;
   el.value = minuten > 0 ? String(minuten) : '';
   _beruehrt = false;
@@ -97,6 +97,10 @@ export function setzeDauer(minuten, hinweis = '') {
 /** Beim Oeffnen einer leeren Maske (neuer Termin ohne Vorauswahl) zuruecksetzen. */
 export function setzeDauerQuelleZurueck() {
   _beruehrt = false;
+  const el = globalThis.document?.getElementById('bkDurationValue');
+  if (el) { el.value = ''; if (el.dataset) delete el.dataset.fahrtBlock; }
+  const gruppe = globalThis.document?.getElementById('bkDurationGroup');
+  if (gruppe) gruppe.hidden = true;
 }
 
 /**

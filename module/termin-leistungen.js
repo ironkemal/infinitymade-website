@@ -422,13 +422,15 @@ export async function ladeLeistungen(bookingId) {
     .select('service_id, anzahl, sort_order')
     .eq('booking_id', bookingId)
     .order('sort_order', { ascending: true });
+  if (document.getElementById('bk-id')?.value !== bookingId) return;
   _extra = (data || []).slice(1).map(z => ({
     serviceId: z.service_id, anzahl: begrenzeAnzahl(z.anzahl), auto: false, grund: '',
   }));
   const menge = document.getElementById('bkMenge');
   if (menge && data?.length) menge.value = String(begrenzeAnzahl(data[0].anzahl));
   zeichneZeilen();
-  aktualisiereDauer();
+  // Geladene Zeilen beschreiben den gespeicherten Zeitblock. Erst Nutzeränderungen berechnen neu.
+  _kombiDauerGesetzt = _extra.length > 0;
 }
 
 /** Beim Oeffnen der Maske: alles zurueck auf eine Zeile. */

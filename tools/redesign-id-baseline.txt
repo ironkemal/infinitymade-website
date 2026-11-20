@@ -277,7 +277,6 @@ bkDeleteBtn
 bkDetailCard
 bkDetailDateTime
 bkDetailDuration
-bkDetailEditBtn
 bkDetailService
 bkDetailTherapist
 bkDocAssignHint

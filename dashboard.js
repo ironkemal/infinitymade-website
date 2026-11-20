@@ -4034,7 +4034,7 @@ async function openBookingModal(b, verschiebung = null) {
   }
   document.getElementById('bkEmployee').dataset.bisher = b.user_id || '';
   populateEmpSelects(b.user_id);
-  await populateSrvSelect(b.service_id);
+  await populateSrvSelect(b.service_id, b.user_id, false);
   
   // Group Booking UI Populate
   const isGrpCheckbox = document.getElementById('bkIsGroup');
@@ -4053,9 +4053,8 @@ async function openBookingModal(b, verschiebung = null) {
   
   if (b.service_id && b.start_time && b.end_time) {
     const actualDur = Math.round((new Date(b.end_time) - new Date(b.start_time)) / 60000);
-    // Erst abwarten, dann die gespeicherte Herkunft uebernehmen — setzeDauer()
-    // innerhalb von updateBkDuration() setzt "manuell" sonst wieder zurueck.
-    await updateBkDuration(b.service_id, actualDur);
+    setzeDauer(actualDur, b.hausbesuch ? 'gespeicherter Zeitblock einschließlich Fahrt' : 'gespeicherte Dauer');
+    document.getElementById('bkDurationValue').dataset.fahrtBlock = b.hausbesuch ? String(actualDur) : '';
     uebernehmeDauerQuelle(b.dauer_quelle);
   }
   openModal('bookingModal');
@@ -4330,12 +4329,12 @@ function populateEmpSelects(selectedId = null) {
   if (bkEmp && !bkEmp.dataset.srvFilterWired) {
     bkEmp.dataset.srvFilterWired = '1';
     bkEmp.addEventListener('change', () => {
-      wechsleLeistungsoptionen(leistungsOptionen(servicesCache, bkEmp.value, document.getElementById('bkService').value, escapeHtml));
+      wechsleLeistungsoptionen(leistungsOptionen(servicesCache, bkEmp.value, document.getElementById('bkService')?.value, escapeHtml));
     });
   }
 }
 
-async function populateSrvSelect(selectedId = null, employeeId = null) {
+async function populateSrvSelect(selectedId = null, employeeId = null, dauerLaden = true) {
   const el = document.getElementById('bkService');
   if (!el) return;
 
@@ -4344,7 +4343,7 @@ async function populateSrvSelect(selectedId = null, employeeId = null) {
   if (!employeeId) employeeId = document.getElementById('bkEmployee')?.value || null;
 
   el.innerHTML = leistungsOptionen(servicesCache, employeeId, selectedId, escapeHtml);
-  if (selectedId) updateBkDuration(selectedId);
+  if (selectedId && dauerLaden) await updateBkDuration(selectedId);
 }
 
 /** Mehr als eine Leistungszeile? Dann besitzt aktualisiereDauer() (termin-leistungen.js) das Feld. */
@@ -4769,7 +4768,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     if (!selLead) { terminFehler('Bitte zuerst den Patienten auswählen.'); return; }
     if (!selLead.street || !selLead.plz || !selLead.city) { terminFehler('Hausbesuch: Patientenadresse fehlt — Patient bearbeiten.'); return; }
     if (selLead.duration_min == null && !IST_KUTU && !await holeFahrzeitBeimSpeichern(selLead)) showToast('Fahrzeit konnte nicht berechnet werden — Termin ohne Fahrzeit gespeichert.', 'warning');
-    totalBlockMin = Number(selLead.duration_min || 0) * 2 + dur + HAUSBESUCH_BUFFER_MIN; // Box: keine Routenberechnung (K-5) → ohne Fahrtzeit, canli-test 02.10.
+    if (!id || String(dur) !== document.getElementById('bkDurationValue').dataset.fahrtBlock) totalBlockMin = Number(selLead.duration_min || 0) * 2 + dur + HAUSBESUCH_BUFFER_MIN; // Box: keine Routenberechnung (K-5) → ohne Fahrtzeit, canli-test 02.10.
   }
 
   const startIso = new Date(startV).toISOString();
@@ -6378,11 +6377,9 @@ document.getElementById('bkActionKorrekturBtn').addEventListener('click', async 
 const folgeDeps = { supabase, ownerId: getOwnerId, prefillBookingModal, populateSrvSelect, updateBkDuration, selectVerordnung, zeigeVerordnungenFuerTermin, rendereVeroKarten, resetVerordnungFelder, oeffneAnlegenWahl, closeModal, escapeHtml, getServices: () => servicesCache };
 verdrahteAktionsleiste({ getBooking: () => bkActionBookingCache, getLeadId: () => bkActionLeadCache?.id || bkActionBookingCache?.lead_id || null, oeffneAnlegenWahl, toast: showToast, folge: folgeDeps });
 
-// Stift oben in der Terminkarte und „Verschieben" unten oeffnen dieselbe Maske (Kemal, 31.08.2026).
-['bkActionEditBtn', 'bkDetailEditBtn'].forEach(id => document.getElementById(id)?.addEventListener('click', () => {
-  if (!bkActionBookingCache) return;
-  openBookingModal(bkActionBookingCache);
-}));
+document.getElementById('bkActionEditBtn')?.addEventListener('click', () => {
+  if (bkActionBookingCache) openBookingModal(bkActionBookingCache);
+});
 
 // Terminzettel A5: alle kommenden Termine dieses Patienten auf einen Zettel
 // zum Mitgeben. Vorlage und Druck liegen in module/termin-druck.js.

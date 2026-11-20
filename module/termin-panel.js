@@ -57,7 +57,6 @@ export const TERMIN_AKTIONEN = [
   'bkActionNoShowGroup',       // „Nicht erschienen" + Ausfallrechnung / „Doch behandelt"
   'bkActionMehrBtn',           // „Weitere Aktionen …" (Absagen, Terminzettel, Adresse, Fußbefund)
   'bkActionAuswahlZeile',
-  'bkDetailEditBtn',           // der Stift oben in der Terminkarte
 ];
 
 /**

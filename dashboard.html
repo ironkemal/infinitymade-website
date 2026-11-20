@@ -3472,7 +3472,7 @@
       <div id="bkSaveError" role="alert" hidden style="margin:0 24px 12px;padding:10px 12px;border-radius:8px;background:var(--danger-dim);color:var(--danger);font-size:13px;line-height:1.4;"></div>
       <div class="modal-footer">
         <button class="btn-ghost" id="bkWlMatchBtn" style="gap:6px;display:inline-flex;align-items:center;margin-right:auto;" hidden>🔍 Warteliste</button>
-        <button class="btn-danger" id="bkDeleteBtn" hidden data-i18n="lead_delete">Löschen</button>
+        <button class="btn-danger" id="bkDeleteBtn" hidden>Termin absagen</button>
         <button class="btn-ghost" id="bkMoveBtn" hidden>Verschieben</button>
         <button class="btn-ghost" data-modal="bookingModal" data-i18n="lead_cancel">Abbrechen</button>
         <button class="btn-primary" id="bkSaveBtn" data-i18n="lead_save">Speichern</button>
@@ -4993,22 +4993,7 @@
     <div class="modal-body">
         <!-- Detaylı Termin-Info -->
         <div id="bkDetailCard" style="background:rgba(255,255,255,0.04);border:1px solid var(--border,#374151);border-radius:8px;padding:12px;margin-bottom:12px;">
-          <!-- Der Stift sitzt neben dem Namen der Leistung, weil man beim
-               Aufschlagen des Panels ohnehin dorthin sieht. Er öffnet
-               dieselbe Terminmaske wie „Bearbeiten" weiter unten — Uhrzeit
-               ändern oder eine andere Leistung zuweisen, ohne den Kalender
-               zu verlassen (Kemal, 31.08.2026: „hier ein Editor, also
-               ändern, direkt ganz oben neben der Podologischen Behandlung").
-               Ein Weg, zwei Einstiege: verdrahtet ist er zusammen mit
-               #bkActionEditBtn. -->
-          <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:4px;">
-            <div id="bkDetailService" style="font-size:13px;color:var(--text-muted);flex:1;min-width:0;"></div>
-            <button class="btn-ghost btn-sm" id="bkDetailEditBtn" type="button"
-                    title="Termin ändern — Uhrzeit oder Leistung"
-                    style="flex-shrink:0;font-size:11px;padding:2px 8px;color:var(--text-main);">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Ändern
-            </button>
-          </div>
+          <div id="bkDetailService" style="font-size:13px;color:var(--text-muted);margin-bottom:4px;"></div>
           <div id="bkDetailDateTime" style="font-size:15px;font-weight:600;color:var(--text-main);margin-bottom:4px;"></div>
           <div id="bkDetailTherapist" style="font-size:12px;color:var(--text-muted);"></div>
           <div id="bkDetailDuration" style="font-size:12px;color:var(--text-muted);"></div>
@@ -5184,7 +5169,7 @@
           <button class="btn-ghost bk-akt-btn" id="bkActionFolgeBtn" type="button" hidden
                   title="Neuer Termin mit demselben Patienten, denselben Leistungen und derselben Verordnung">Folgetermin</button>
           <button class="btn-ghost bk-akt-btn" id="bkActionEditBtn" type="button"
-                  title="Termin verschieben oder ändern">Verschieben</button>
+                  title="Datum, Uhrzeit, Raum oder Leistung ändern">Termin bearbeiten</button>
           <!-- Nach „Nicht erschienen" tritt Ausfallrechnung / „Doch behandelt"
                an seine Stelle (Regel in dashboard.css: bk-akt-noshow). -->
           <div class="bk-akt-noshow" id="bkActionNoShowGroup">

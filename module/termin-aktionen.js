@@ -623,7 +623,7 @@ export function setFreqValue(id, value) {
  * @param {object|null} booking  null → Patientenmodus, Knöpfe werden gesperrt
  */
 export function setzeTerminAuswahlLabel(booking) {
-  const knoepfe = ['bkActionEditBtn', 'bkActionDeleteBtn', 'bkDetailEditBtn']
+  const knoepfe = ['bkActionEditBtn', 'bkActionDeleteBtn']
     .map(id => document.getElementById(id)).filter(Boolean);
   const zeile = document.getElementById('bkActionAuswahlZeile');
   if (!knoepfe.length) return;
