@@ -20,6 +20,7 @@
 # die stehen im Repo, nicht im Browser.
 
 # Docs, plans, internal notes
+/docs/
 *.md
 .plans/
 .planning/
