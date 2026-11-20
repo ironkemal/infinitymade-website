@@ -33,7 +33,7 @@ import {
   abwesenheitenAufbereiten,
   nichtErscheinerAufbereiten,
   suchePasst,
-} from './ueberblick-listen.js?v=20261119ubl3';
+} from './ueberblick-listen.js?v=20261119ubl4';
 import { alsBerlinDatum, berlinTagesgrenzen } from './berlin-datum.js';
 import { fmtEur } from './geld.js?v=20260909';
 import { on } from './signal.js?v=20260813';
@@ -288,22 +288,19 @@ function renderMetricBar() {
     : (state.noShowsFehler ? 'Nicht verfügbar' : noShows.length > 0 ? 'Nachfassen empfohlen' : 'Keine Ausfälle');
   const m4Focus = zeigtFinanz ? 'rechnungen' : 'noshows';
 
-  // 5. Team & Aufgaben
+  // 5. Abwesenheiten & Aufgaben (einheitlich numerisch wie Spalten 1–4)
   const abw = gefilterteAbwesenheiten();
   const aktivAbw = abw.filter(a => a.istAktiv).length;
   const ueberfAufg = aufg.filter(a => a.ueberfaellig).length;
-  const m5Val = initLoad
-    ? '–'
-    : aktivAbw > 0
-      ? `${aktivAbw} abwesend`
-      : abw.length > 0
-        ? `${abw.length} geplant`
-        : 'Vollzählig';
-  const m5Sub = state.aufgabenFehler
-    ? `${abw.length} Abwesenheiten`
-    : aufg.length > 0
-      ? `${aufg.length} ${aufg.length === 1 ? 'Aufgabe' : 'Aufgaben'}${ueberfAufg > 0 ? ` (${ueberfAufg} fällig)` : ''}`
-      : 'Keine offenen Aufgaben';
+  const m5Val = val(abw.length, state.abwesenheitenFehler);
+  const m5Sub = state.abwesenheitenFehler
+    ? 'Nicht verfügbar'
+    : [
+        aktivAbw > 0 ? `${aktivAbw} heute` : 'Team vollzählig',
+        !state.aufgabenFehler && aufg.length > 0
+          ? `${aufg.length} ${aufg.length === 1 ? 'Aufgabe' : 'Aufgaben'}${ueberfAufg > 0 ? ` (${ueberfAufg} fällig)` : ''}`
+          : '',
+      ].filter(Boolean).join(' · ');
 
   el.innerHTML = `
     <button type="button" class="ubl-metric" data-ubl-cal-date="${escStandard(state.heuteIso)}">
@@ -327,7 +324,7 @@ function renderMetricBar() {
       <span class="ubl-metric-sub">${escStandard(m4Sub)}</span>
     </button>
     <button type="button" class="ubl-metric" data-ubl-focus="vacations">
-      <span class="ubl-metric-lbl">Team & Aufgaben</span>
+      <span class="ubl-metric-lbl">Abwesenheiten</span>
       <span class="ubl-metric-val">${escStandard(m5Val)}</span>
       <span class="ubl-metric-sub">${escStandard(m5Sub)}</span>
     </button>
@@ -358,14 +355,12 @@ function renderWeekStrip() {
     sumEl.textContent = `${gesamt7} ${gesamt7 === 1 ? 'Termin' : 'Termine'}${hausbesuche7 > 0 ? ` · ${hausbesuche7} HB` : ''}`;
   }
 
-  const maxAnz = Math.max(1, ...tage.map(t => t.anzahl));
   bodyEl.innerHTML = `<div class="ubl-week-body">${tage.map(t => {
-    const busy = t.anzahl > 0 && t.anzahl >= Math.max(4, maxAnz * 0.8);
     const klassen = [
       'ubl-day',
       t.istHeute ? 'is-today' : '',
+      t.istWochenende ? 'is-weekend' : '',
       t.anzahl === 0 ? 'is-zero' : '',
-      busy ? 'is-busy' : '',
     ].filter(Boolean).join(' ');
     const label = t.istHeute ? 'Heute' : `${t.wochentag} ${t.tagKurz}`;
     const titel = `${t.wochentag} ${t.tagKurz}: ${t.anzahl} Termine${t.hausbesuche > 0 ? `, davon ${t.hausbesuche} Hausbesuche` : ''} — klicken für Tagesansicht`;
@@ -421,17 +416,18 @@ function renderDeadlines() {
     const tabs = [
       { id: 'alle', label: 'Alle', n: z.alle },
       { id: 'ueberfaellig', label: 'Überfällig', n: z.ueberfaellig, danger: z.ueberfaellig > 0 },
-      { id: 'bald', label: '≤ 7 Tage', n: z.bald },
-      { id: 'geplant', label: '8–28 Tage', n: z.geplant },
+      { id: 'bald', label: '≤ 7 T.', n: z.bald },
+      { id: 'geplant', label: '8–28 T.', n: z.geplant },
       { id: 'abrechnung', label: 'Abrechnung', n: z.abrechnung },
       { id: 'berichte', label: 'Berichte', n: z.berichte },
-      { id: 'pruefbedarf', label: 'Prüfbedarf', n: z.pruefbedarf, danger: hatAbsetzung },
+      { id: 'pruefbedarf', label: 'Prüfung', n: z.pruefbedarf, danger: hatAbsetzung },
     ];
     filterEl.innerHTML = tabs.map(t => `
       <button type="button"
+        role="tab"
         class="ubl-tab${state.fristTab === t.id ? ' is-active' : ''}${t.danger ? ' is-danger-n' : ''}"
         data-ubl-frist-filter="${t.id}"
-        aria-pressed="${state.fristTab === t.id ? 'true' : 'false'}">
+        aria-selected="${state.fristTab === t.id ? 'true' : 'false'}">
         <span>${t.label}</span>
         <span class="ubl-tab-n">${t.n}</span>
       </button>
@@ -470,17 +466,18 @@ function renderDeadlines() {
         kannVerordnung && p.rxId ? `<button type="button" class="ubl-link" data-ubl-rx="${esc(p.rxId)}" data-ubl-quelle="${esc(p.quelle)}">Rezept</button>` : '',
       ].filter(Boolean).join('<span class="ubl-dot-sep" aria-hidden="true">·</span>');
       return `
-        <div class="ubl-row ubl-row--${p.schwere}">
+        <div class="ubl-row">
           <div class="ubl-row-main">
             <div class="ubl-row-top">
+              <span class="ubl-dot${p.schwere === 'danger' ? ' ubl-dot--danger' : ' ubl-dot--warn'}" aria-hidden="true"></span>
               ${nameHtml}
-              <span class="ubl-tag ${p.schwere === 'danger' ? 'ubl-tag--danger' : 'ubl-tag--accent'}">${esc(p.etikett)}</span>
+              <span class="ubl-tag${p.schwere === 'danger' ? ' ubl-tag--danger' : ''}">${esc(p.etikett)}</span>
             </div>
             <div class="ubl-meta">${esc(p.kontextMeta)}</div>
           </div>
           <div class="ubl-row-right">
             <div class="ubl-val-col">
-              <span class="ubl-val-primary ${p.schwere === 'danger' ? 'is-danger' : 'is-accent'}">${esc(p.hinweis)}</span>
+              <span class="ubl-val-primary${p.schwere === 'danger' ? ' is-danger' : ''}">${esc(p.hinweis)}</span>
               <span class="ubl-val-sub">vom ${esc(p.ausgestelltDe)}</span>
             </div>
             ${aktionen ? `<div class="ubl-links">${aktionen}</div>` : ''}
@@ -532,7 +529,7 @@ function renderDeadlines() {
     }).join('');
     if (footEl) {
       footEl.hidden = false;
-      footEl.innerHTML = `<span>${berichteSuche.length} offene ${berichteSuche.length === 1 ? 'Therapiebericht' : 'Therapieberichte'}</span><span>Vor Abrechnung freigeben</span>`;
+      footEl.innerHTML = `<span>${berichteSuche.length} ${berichteSuche.length === 1 ? 'offener Therapiebericht' : 'offene Therapieberichte'}</span><span>Vor Abrechnung freigeben</span>`;
     }
     return;
   }
@@ -553,8 +550,12 @@ function renderDeadlines() {
   }
 
   listEl.innerHTML = sichtbar.map(f => {
-    const rowKlasse = f.schwere === 'danger' ? ' ubl-row--danger' : f.schwere === 'warning' ? ' ubl-row--warning' : '';
-    const valKlasse = f.schwere === 'danger' ? ' is-danger' : f.schwere === 'warning' ? ' is-accent' : '';
+    const dotHtml = f.schwere === 'danger'
+      ? '<span class="ubl-dot ubl-dot--danger" aria-hidden="true"></span>'
+      : f.schwere === 'warning'
+        ? '<span class="ubl-dot ubl-dot--warn" aria-hidden="true"></span>'
+        : '';
+    const valKlasse = f.schwere === 'danger' ? ' is-danger' : '';
     const nameHtml = f.patientId
       ? `<button type="button" class="ubl-name-btn" data-ubl-patient="${esc(f.patientId)}">${esc(f.patientName)}</button>`
       : `<span class="ubl-name-plain">${esc(f.patientName)}</span>`;
@@ -565,14 +566,20 @@ function renderDeadlines() {
       f.patientId ? `<button type="button" class="ubl-link" data-ubl-patient="${esc(f.patientId)}">Akte</button>` : '',
       kannVerordnung && f.rxId ? `<button type="button" class="ubl-link" data-ubl-rx="${esc(f.rxId)}" data-ubl-quelle="${esc(f.quelle)}">Rezept</button>` : '',
     ].filter(Boolean).join('<span class="ubl-dot-sep" aria-hidden="true">·</span>');
+    // Höchstens ein Etikett je Zeile (E12)
+    const etikett = f.dringend
+      ? '<span class="ubl-tag">Dringend</span>'
+      : f.anzahl > 1
+        ? `<span class="ubl-tag">${f.anzahl}×</span>`
+        : '';
 
     return `
-      <div class="ubl-row${rowKlasse}">
+      <div class="ubl-row">
         <div class="ubl-row-main">
           <div class="ubl-row-top">
+            ${dotHtml}
             ${nameHtml}
-            ${f.dringend ? '<span class="ubl-tag ubl-tag--danger">Dringend</span>' : ''}
-            ${f.anzahl > 1 ? `<span class="ubl-tag">${f.anzahl}×</span>` : ''}
+            ${etikett}
           </div>
           <div class="ubl-meta">${esc(metaZeile)}</div>
         </div>
@@ -620,9 +627,10 @@ function renderVorgaenge() {
     const warn = id === 'aufgaben' && aufgSuche.some(a => a.ueberfaellig);
     return `
       <button type="button"
+        role="tab"
         class="ubl-tab${aktiv === id ? ' is-active' : ''}${warn ? ' is-danger-n' : ''}"
         data-ubl-vorgang-tab="${id}"
-        aria-pressed="${aktiv === id ? 'true' : 'false'}">
+        aria-selected="${aktiv === id ? 'true' : 'false'}">
         <span>${m.label}</span>
         <span class="ubl-tab-n">${m.n}</span>
       </button>
@@ -706,7 +714,7 @@ function renderVorgaenge() {
       return;
     }
     listEl.innerHTML = aufgSuche.slice(0, 6).map(a => `
-      <div class="ubl-row${a.ueberfaellig ? ' ubl-row--danger' : ''}">
+      <div class="ubl-row">
         <div class="ubl-task-lead">
           ${a.id ? `<button type="button" class="ubl-check" data-ubl-aufgabe-done="${esc(a.id)}" aria-label="Aufgabe erledigen: ${esc(a.text)}" title="Als erledigt markieren">${HAKEN_SVG}</button>` : ''}
           <div class="ubl-row-main">
@@ -734,9 +742,10 @@ function renderVorgaenge() {
       return;
     }
     listEl.innerHTML = rechSuche.slice(0, 6).map(r => `
-      <div class="ubl-row${r.ueberfaellig ? ' ubl-row--warning' : ''}">
+      <div class="ubl-row">
         <div class="ubl-row-main">
           <div class="ubl-row-top">
+            ${r.ueberfaellig ? '<span class="ubl-dot ubl-dot--warn" aria-hidden="true"></span>' : ''}
             <span class="ubl-name-plain">${esc(r.patientName)}</span>
             <span class="ubl-tag">${esc(r.nummer)}</span>
           </div>
@@ -744,7 +753,7 @@ function renderVorgaenge() {
         </div>
         <div class="ubl-row-right">
           <div class="ubl-val-col">
-            <span class="ubl-val-primary${r.ueberfaellig ? ' is-accent' : ''}">${esc(fmtEur(r.betrag))}</span>
+            <span class="ubl-val-primary">${esc(fmtEur(r.betrag))}</span>
           </div>
           ${r.id ? `<div class="ubl-links"><button type="button" class="ubl-link" data-ubl-inv="${esc(r.id)}">Öffnen</button></div>` : ''}
         </div>

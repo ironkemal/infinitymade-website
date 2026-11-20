@@ -1,16 +1,29 @@
 /* ============================================================================
-   dashboard-ueberblick.css — Praxis-Überblick v2 (ruhiges, dichtes Cockpit)
+   dashboard-ueberblick.css — Praxis-Überblick nach Praxura-Redesign-Vertrag
    ============================================================================
-   Gestaltungsprinzip:
-   - Viel Inhalt, minimale Optik-Unruhe: keine verschachtelten Boxen, keine
-     runden Buchstaben-Avatare, keine 12 gerahmten Knöpfe je Liste, keine Emojis.
-   - Ein einziges durchgehendes Kennzahlen-Band statt doppelter KPI-Karten.
-   - Klare Spaltenachsen, Unterstrich-Reiter, ruhige Hover-Aktionen und
-     Farbe nur dort, wo sie echten Handlungsbedarf signalisiert.
-   - Ausschließlich Praxura-CSS-Variablen (Hell, Dunkel, Standard & Redesign).
+   Folgt DESIGN.md (E12 runde Karten, ruhige Gewichte 400/500/600, keine
+   dicken farbigen Seitenbalken, keine Emojis, sparsame Akzente) und schützt
+   alle Steuerelemente auch unter [data-design="neu"] (gegen .card-Padding
+   aus praxura-design.css und Desktop-44px aus design/verwaltung.css).
    ========================================================================== */
 
 @media screen {
+  #panel-ueberblick {
+    --ubl-radius: 16px;
+    --ubl-radius-sm: 10px;
+    --ubl-shadow: 0 1px 2px rgba(48, 43, 39, 0.04), 0 6px 18px -10px rgba(48, 43, 39, 0.08);
+  }
+
+  [data-theme="dark"] #panel-ueberblick {
+    --ubl-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 8px 22px -12px rgba(0, 0, 0, 0.45);
+  }
+
+  [data-design="neu"] #panel-ueberblick {
+    --ubl-radius: var(--radius, 18px);
+    --ubl-radius-sm: var(--radius-sm, 12px);
+    --ubl-shadow: var(--shadow-e1);
+  }
+
   /* ── Kopfzeile ── */
   #panel-ueberblick .ubl-header {
     display: flex;
@@ -18,7 +31,7 @@
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 12px 20px;
-    margin-bottom: 16px;
+    margin-bottom: 18px;
   }
 
   #panel-ueberblick .ubl-header-title {
@@ -27,17 +40,22 @@
 
   #panel-ueberblick .ubl-header-title h2 {
     margin: 0;
-    font-size: 21px;
-    line-height: 26px;
-    font-weight: 600;
+    font-size: 22px;
+    line-height: 28px;
+    font-weight: 500;
     letter-spacing: -0.02em;
     color: var(--text-main);
   }
 
+  [data-design="neu"] #panel-ueberblick .ubl-header-title h2 {
+    font-size: var(--fs-h1, 28px);
+    line-height: var(--lh-h1, 34px);
+  }
+
   #panel-ueberblick .ubl-header-sub {
     margin: 3px 0 0;
-    font-size: 12.5px;
-    line-height: 17px;
+    font-size: 13px;
+    line-height: 18px;
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
   }
@@ -56,7 +74,7 @@
     height: 36px;
     padding: 3px;
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm, 8px);
+    border-radius: var(--ubl-radius-sm);
     background: var(--bg-card-solid);
   }
 
@@ -66,9 +84,11 @@
 
   #panel-ueberblick .ubl-scope-btn {
     height: 28px;
+    min-height: 28px;
+    min-width: 0;
     padding: 0 10px;
     border: 0;
-    border-radius: 6px;
+    border-radius: 7px;
     background: transparent;
     color: var(--text-muted);
     font: inherit;
@@ -92,7 +112,7 @@
     position: relative;
     display: flex;
     align-items: center;
-    width: 264px;
+    width: 248px;
     max-width: 100%;
   }
 
@@ -107,9 +127,10 @@
   #panel-ueberblick .ubl-search-input {
     width: 100%;
     height: 36px;
+    min-height: 36px;
     padding: 0 30px 0 34px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm, 8px);
+    border: 1px solid var(--border-input, var(--border));
+    border-radius: var(--ubl-radius-sm);
     background: var(--bg-card-solid);
     color: var(--text-main);
     font: inherit;
@@ -125,7 +146,7 @@
   #panel-ueberblick .ubl-search-input:focus {
     outline: none;
     border-color: var(--focus-ring, var(--accent));
-    box-shadow: 0 0 0 3px var(--focus-halo, rgba(148, 77, 51, 0.16));
+    box-shadow: 0 0 0 3px var(--focus-halo);
   }
 
   #panel-ueberblick .ubl-search-clear {
@@ -136,6 +157,8 @@
     justify-content: center;
     width: 24px;
     height: 24px;
+    min-width: 24px;
+    min-height: 24px;
     border: 0;
     border-radius: 6px;
     background: transparent;
@@ -158,12 +181,13 @@
     justify-content: center;
     gap: 6px;
     height: 36px;
+    min-height: 36px;
     padding: 0 12px;
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm, 8px);
+    border-radius: var(--ubl-radius-sm);
     background: var(--bg-card-solid);
     color: var(--text-main);
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     transition: background-color 130ms ease, border-color 130ms ease;
@@ -191,16 +215,18 @@
   #panel-ueberblick #ueberblickContent {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 18px;
   }
 
-  /* ── EIN durchgehendes Kennzahlen-Band (5 Spalten mit Haarlinien) ── */
+  /* ── Durchgehendes 5-Spalten-Kennzahlenband (einheitlich numerisch) ── */
   #panel-ueberblick .ubl-metric-bar {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1px;
     border: 1px solid var(--border);
-    border-radius: var(--radius, 12px);
-    background: var(--bg-card-solid);
+    border-radius: var(--ubl-radius);
+    background: var(--border);
+    box-shadow: var(--ubl-shadow);
     overflow: hidden;
   }
 
@@ -210,19 +236,15 @@
     align-items: flex-start;
     gap: 4px;
     min-width: 0;
-    padding: 14px 18px;
+    min-height: 0;
+    padding: 15px 18px;
     border: 0;
-    border-right: 1px solid var(--border);
-    background: transparent;
+    background: var(--bg-card-solid);
     color: var(--text-main);
     font: inherit;
     text-align: left;
     cursor: pointer;
     transition: background-color 120ms ease;
-  }
-
-  #panel-ueberblick .ubl-metric:last-child {
-    border-right: 0;
   }
 
   #panel-ueberblick .ubl-metric:hover {
@@ -235,8 +257,8 @@
   }
 
   #panel-ueberblick .ubl-metric-lbl {
-    font-size: 11.5px;
-    line-height: 15px;
+    font-size: 12px;
+    line-height: 16px;
     font-weight: 500;
     color: var(--text-muted);
     white-space: nowrap;
@@ -246,9 +268,9 @@
   }
 
   #panel-ueberblick .ubl-metric-val {
-    font-size: 24px;
-    line-height: 29px;
-    font-weight: 600;
+    font-size: 26px;
+    line-height: 30px;
+    font-weight: 500;
     letter-spacing: -0.025em;
     font-variant-numeric: tabular-nums;
     color: var(--text-main);
@@ -259,13 +281,9 @@
     color: var(--danger);
   }
 
-  #panel-ueberblick .ubl-metric.is-accent .ubl-metric-val {
-    color: var(--accent);
-  }
-
   #panel-ueberblick .ubl-metric-sub {
-    font-size: 11.5px;
-    line-height: 15px;
+    font-size: 12px;
+    line-height: 16px;
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
@@ -274,37 +292,33 @@
     max-width: 100%;
   }
 
-  /* ── Haupt-Raster: 62 % links (Auslastung · Fristen · Vorgänge) / 38 % rechts (Patienten & Team) ── */
+  /* ── Haupt-Raster ── */
   #panel-ueberblick .ubl-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.38fr) minmax(360px, 1fr);
-    gap: 16px;
+    grid-template-columns: minmax(0, 1.38fr) minmax(350px, 1fr);
+    gap: 18px;
     align-items: start;
   }
 
   #panel-ueberblick .ubl-col {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 18px;
     min-width: 0;
   }
 
-  /* ── Ruhige Karten-Grundform ── */
-  #panel-ueberblick .ubl-card {
+  /* ── Ruhige Karten-Grundform (behebt auch .card-Padding-Kollision in [data-design="neu"]) ── */
+  #panel-ueberblick .card.ubl-card {
     display: flex;
     flex-direction: column;
     min-width: 0;
-    padding: 0;
+    padding: 0 !important; /* gegen praxura-design.css:358 .card-Innenabstand */
     margin: 0;
     border: 1px solid var(--border);
-    border-radius: var(--radius, 12px);
+    border-radius: var(--ubl-radius);
     background: var(--bg-card-solid);
+    box-shadow: var(--ubl-shadow);
     overflow: hidden;
-  }
-
-  [data-design="neu"] #panel-ueberblick .ubl-card,
-  [data-design="neu"] #panel-ueberblick .ubl-metric-bar {
-    box-shadow: var(--shadow-e1);
   }
 
   #panel-ueberblick .ubl-head {
@@ -313,7 +327,7 @@
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 8px 12px;
-    padding: 13px 18px;
+    padding: 15px 20px;
     border-bottom: 1px solid var(--border);
   }
 
@@ -331,15 +345,15 @@
 
   #panel-ueberblick .ubl-head h3 {
     margin: 0;
-    font-size: 14px;
-    line-height: 20px;
-    font-weight: 600;
+    font-size: 16px;
+    line-height: 22px;
+    font-weight: 500;
     letter-spacing: -0.01em;
     color: var(--text-main);
   }
 
   #panel-ueberblick .ubl-head-count {
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 500;
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
@@ -361,12 +375,14 @@
     display: inline-flex;
     align-items: center;
     gap: 3px;
+    min-width: 0;
+    min-height: 28px;
     padding: 2px 0;
     border: 0;
     background: transparent;
     color: var(--text-muted);
     font: inherit;
-    font-size: 12px;
+    font-size: 12.5px;
     font-weight: 500;
     cursor: pointer;
     transition: color 120ms ease;
@@ -380,7 +396,7 @@
     display: none;
   }
 
-  /* Ruhiger Text-Umschalter für Zeithorizonte (14 T. / 30 T.) ohne Box-in-Box */
+  /* Ruhiger Text-Umschalter für Zeithorizonte (14 T. / 30 T.) */
   #panel-ueberblick .ubl-horiz {
     display: inline-flex;
     align-items: center;
@@ -388,13 +404,15 @@
   }
 
   #panel-ueberblick .ubl-horiz-btn {
-    padding: 3px 6px;
+    min-width: 0;
+    min-height: 26px;
+    padding: 3px 7px;
     border: 0;
-    border-radius: 5px;
+    border-radius: 6px;
     background: transparent;
     color: var(--text-muted);
     font: inherit;
-    font-size: 11.5px;
+    font-size: 12px;
     font-weight: 500;
     font-variant-numeric: tabular-nums;
     cursor: pointer;
@@ -412,12 +430,12 @@
     font-weight: 600;
   }
 
-  /* ── Unterstrich-Tabs (Linear-Stil, null Pillen-Unruhe) ── */
+  /* ── Unterstrich-Tabs mit dezenter Scrollkante ── */
   #panel-ueberblick .ubl-tabs {
     display: flex;
     align-items: center;
-    gap: 18px;
-    padding: 0 18px;
+    gap: 16px;
+    padding: 0 20px;
     border-bottom: 1px solid var(--border);
     overflow-x: auto;
     scrollbar-width: none;
@@ -431,13 +449,15 @@
     position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 9px 0 10px;
+    gap: 5px;
+    flex: 0 0 auto;
+    min-height: 36px;
+    padding: 8px 0 9px;
     border: 0;
     background: transparent;
     color: var(--text-muted);
     font: inherit;
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 500;
     white-space: nowrap;
     cursor: pointer;
@@ -465,7 +485,7 @@
   }
 
   #panel-ueberblick .ubl-tab-n {
-    font-size: 11.5px;
+    font-size: 12px;
     font-variant-numeric: tabular-nums;
     color: var(--text-muted);
   }
@@ -475,22 +495,24 @@
     font-weight: 600;
   }
 
-  /* ── 7-Tage-Auslastung (kompaktes Balkendiagramm) ── */
+  /* ── 7-Tage-Auslastung (ruhig, 2-farbig, Wochenenden klar abgesetzt) ── */
   #panel-ueberblick .ubl-week-body {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 8px;
-    padding: 14px 18px 14px;
+    padding: 16px 20px 14px;
   }
 
   #panel-ueberblick .ubl-day {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
-    padding: 8px 4px 6px;
+    gap: 6px;
+    min-width: 0;
+    min-height: 0;
+    padding: 6px 4px;
     border: 0;
-    border-radius: 8px;
+    border-radius: 10px;
     background: transparent;
     color: var(--text-main);
     font: inherit;
@@ -502,16 +524,24 @@
     background: var(--bg-hover);
   }
 
-  #panel-ueberblick .ubl-day.is-today {
-    background: var(--bg-warm, var(--bg-hover));
+  #panel-ueberblick .ubl-day.is-weekend .ubl-day-track {
+    opacity: 0.45;
+  }
+
+  #panel-ueberblick .ubl-day.is-weekend:hover .ubl-day-track {
+    opacity: 0.85;
   }
 
   #panel-ueberblick .ubl-day-num {
     font-size: 13px;
     line-height: 16px;
-    font-weight: 600;
+    font-weight: 500;
     font-variant-numeric: tabular-nums;
     color: var(--text-main);
+  }
+
+  #panel-ueberblick .ubl-day.is-today .ubl-day-num {
+    font-weight: 600;
   }
 
   #panel-ueberblick .ubl-day.is-zero .ubl-day-num {
@@ -534,7 +564,7 @@
     width: 100%;
     border-radius: 4px 4px 0 0;
     background: var(--border-strong);
-    opacity: 0.45;
+    opacity: 0.55;
     transition: height 200ms ease, opacity 120ms ease;
   }
 
@@ -543,18 +573,17 @@
     opacity: 1;
   }
 
-  #panel-ueberblick .ubl-day.is-busy:not(.is-today) .ubl-day-bar {
-    background: var(--accent);
-    opacity: 0.85;
+  [data-theme="dark"] #panel-ueberblick .ubl-day.is-today .ubl-day-bar {
+    background: var(--chart-1, var(--accent));
   }
 
   #panel-ueberblick .ubl-day:hover .ubl-day-bar {
-    opacity: 1;
+    opacity: 0.9;
   }
 
   #panel-ueberblick .ubl-day-lbl {
-    font-size: 11px;
-    line-height: 14px;
+    font-size: 11.5px;
+    line-height: 15px;
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
@@ -565,7 +594,7 @@
     font-weight: 600;
   }
 
-  /* ── Klare Listen & Tabellen-Rhythmus ── */
+  /* ── Listen & Zeilen (keine dicken farbigen Seitenbalken — nur feine Punkte & Text) ── */
   #panel-ueberblick .ubl-list {
     display: flex;
     flex-direction: column;
@@ -576,8 +605,8 @@
     align-items: center;
     justify-content: space-between;
     gap: 14px;
-    padding: 10px 18px;
-    border-bottom: 1px solid var(--border);
+    padding: 11px 20px;
+    border-bottom: 1px solid var(--border-subtle, var(--border));
     transition: background-color 110ms ease;
   }
 
@@ -587,15 +616,6 @@
 
   #panel-ueberblick .ubl-row:hover {
     background: var(--bg-hover);
-  }
-
-  /* Dringlichkeits-Linie NUR bei echten Problem-/Eilfällen */
-  #panel-ueberblick .ubl-row--danger {
-    box-shadow: inset 3px 0 0 var(--danger);
-  }
-
-  #panel-ueberblick .ubl-row--warning {
-    box-shadow: inset 3px 0 0 var(--accent);
   }
 
   #panel-ueberblick .ubl-row-main {
@@ -610,18 +630,20 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 5px 8px;
+    gap: 6px 8px;
     min-width: 0;
   }
 
   #panel-ueberblick .ubl-name-btn {
+    min-width: 0;
+    min-height: 0;
     padding: 0;
     border: 0;
     background: transparent;
     color: var(--text-main);
     font: inherit;
-    font-size: 13.5px;
-    line-height: 19px;
+    font-size: 14px;
+    line-height: 20px;
     font-weight: 500;
     text-align: left;
     cursor: pointer;
@@ -637,8 +659,8 @@
   }
 
   #panel-ueberblick .ubl-name-plain {
-    font-size: 13.5px;
-    line-height: 19px;
+    font-size: 14px;
+    line-height: 20px;
     font-weight: 500;
     color: var(--text-main);
     overflow: hidden;
@@ -646,25 +668,26 @@
   }
 
   #panel-ueberblick .ubl-meta {
-    font-size: 12px;
-    line-height: 16px;
+    font-size: 12.5px;
+    line-height: 17px;
     color: var(--text-muted);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  /* Kleine, leise Inline-Markierungen (nur wo wirklich nötig) */
+  /* Ruhige E12-Pillen (max. eine je Zeile, neutraler Grund) */
   #panel-ueberblick .ubl-tag {
     display: inline-flex;
     align-items: center;
-    height: 18px;
-    padding: 0 6px;
-    border-radius: 4px;
+    height: 20px;
+    padding: 0 8px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
     background: var(--bg-sunken, var(--bg-hover));
     color: var(--text-muted);
-    font-size: 11px;
-    line-height: 14px;
+    font-size: 11.5px;
+    line-height: 15px;
     font-weight: 500;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
@@ -672,21 +695,21 @@
 
   #panel-ueberblick .ubl-tag--danger {
     background: var(--danger-dim);
+    border-color: transparent;
     color: var(--danger);
     font-weight: 600;
   }
 
   #panel-ueberblick .ubl-tag--accent {
-    background: var(--bg-warm, var(--bg-hover));
-    color: var(--accent);
-    font-weight: 600;
+    background: var(--bg-sunken, var(--bg-hover));
+    color: var(--text-main);
   }
 
-  /* Rechte Spalte in Zeilen: tabellarische Werte + stille Text-Aktionen */
+  /* Rechte Spalte in Zeilen */
   #panel-ueberblick .ubl-row-right {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
     flex-shrink: 0;
   }
 
@@ -700,8 +723,8 @@
   }
 
   #panel-ueberblick .ubl-val-primary {
-    font-size: 12.5px;
-    line-height: 17px;
+    font-size: 13px;
+    line-height: 18px;
     font-weight: 500;
     color: var(--text-main);
     white-space: nowrap;
@@ -714,17 +737,16 @@
 
   #panel-ueberblick .ubl-val-primary.is-accent {
     color: var(--accent);
-    font-weight: 600;
+    font-weight: 500;
   }
 
   #panel-ueberblick .ubl-val-sub {
-    font-size: 11.5px;
-    line-height: 15px;
+    font-size: 12px;
+    line-height: 16px;
     color: var(--text-muted);
     white-space: nowrap;
   }
 
-  /* Ruhige Text-Aktionen ohne Kasten-Wand */
   #panel-ueberblick .ubl-links {
     display: inline-flex;
     align-items: center;
@@ -732,27 +754,43 @@
     gap: 2px;
   }
 
-  @media (min-width: 769px) {
-    #panel-ueberblick #ublDeadlinesSection .ubl-links {
-      min-width: 162px;
-    }
-  }
-
   #panel-ueberblick .ubl-link {
     display: inline-flex;
     align-items: center;
+    min-width: 0;
+    min-height: 28px;
     padding: 4px 7px;
     border: 0;
-    border-radius: 6px;
+    border-radius: 7px;
     background: transparent;
     color: var(--text-muted);
     font: inherit;
-    font-size: 12px;
+    font-size: 12.5px;
     font-weight: 500;
     text-decoration: none;
     cursor: pointer;
     white-space: nowrap;
     transition: background-color 110ms ease, color 110ms ease;
+  }
+
+  #panel-ueberblick .ubl-row:hover .ubl-link {
+    color: var(--text-main);
+  }
+
+  #panel-ueberblick .ubl-link:hover {
+    background: var(--bg-sunken, var(--bg-warm));
+    color: var(--accent);
+  }
+
+  #panel-ueberblick .ubl-link:focus-visible {
+    outline: 2px solid var(--focus-ring, var(--accent));
+    outline-offset: 1px;
+  }
+
+  #panel-ueberblick .ubl-dot-sep {
+    color: var(--border-strong);
+    font-size: 11px;
+    user-select: none;
   }
 
   /* Aufgaben-Zeile mit ruhiger Abhak-Checkbox */
@@ -768,12 +806,14 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 17px;
-    height: 17px;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    min-height: 18px;
     margin-top: 2px;
     padding: 0;
     border: 1.5px solid var(--border-strong);
-    border-radius: 5px;
+    border-radius: 6px;
     background: transparent;
     color: transparent;
     cursor: pointer;
@@ -796,27 +836,7 @@
     cursor: default;
   }
 
-  #panel-ueberblick .ubl-row:hover .ubl-link {
-    color: var(--text-main);
-  }
-
-  #panel-ueberblick .ubl-link:hover {
-    background: var(--bg-sunken, var(--bg-warm));
-    color: var(--accent) !important;
-  }
-
-  #panel-ueberblick .ubl-link:focus-visible {
-    outline: 2px solid var(--focus-ring, var(--accent));
-    outline-offset: 1px;
-  }
-
-  #panel-ueberblick .ubl-dot-sep {
-    color: var(--border-strong);
-    font-size: 11px;
-    user-select: none;
-  }
-
-  /* Statuspunkt für laufende Abwesenheiten / heute */
+  /* Feine semantische Statuspunkte statt farbiger Balken */
   #panel-ueberblick .ubl-dot {
     display: inline-block;
     width: 6px;
@@ -826,20 +846,24 @@
     flex-shrink: 0;
   }
 
+  #panel-ueberblick .ubl-dot--warn {
+    background: var(--warning, var(--accent));
+  }
+
   #panel-ueberblick .ubl-dot--danger {
     background: var(--danger);
   }
 
-  /* ── Ruhige Fußzeile & Leerzustände ── */
+  /* ── Fußzeile & Leerzustände ── */
   #panel-ueberblick .ubl-foot {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 8px 18px;
+    padding: 9px 20px;
     border-top: 1px solid var(--border);
     background: var(--bg-sunken, var(--bg-hover));
-    font-size: 11.5px;
+    font-size: 12px;
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
   }
@@ -849,22 +873,22 @@
   }
 
   #panel-ueberblick .ubl-empty {
-    padding: 14px 18px;
-    font-size: 12.5px;
-    line-height: 18px;
+    padding: 15px 20px;
+    font-size: 13px;
+    line-height: 19px;
     color: var(--text-muted);
   }
 
   #panel-ueberblick .ubl-skeleton-wrap {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 14px 18px;
+    gap: 9px;
+    padding: 15px 20px;
   }
 
   #panel-ueberblick .ubl-skeleton {
     height: 13px;
-    border-radius: 5px;
+    border-radius: 6px;
     background: var(--bg-sunken, var(--bg-hover));
     width: 100%;
   }
@@ -873,18 +897,56 @@
     width: 55%;
   }
 
+  /* ── Desktop-Ausrichtung gegen design/verwaltung.css:150 (44px erst ab <=1024px) ── */
+  @media (min-width: 1025px) {
+    [data-design="neu"] #panel-ueberblick :is(.ubl-scope-btn, .ubl-search-clear, .ubl-horiz-btn, .ubl-nav-link, .ubl-name-btn, .ubl-link, .ubl-check, .ubl-day, .ubl-metric, .ubl-tab) {
+      min-height: 0;
+      min-width: 0;
+    }
+
+    [data-design="neu"] #panel-ueberblick #ueberblickRefreshBtn,
+    [data-design="neu"] #panel-ueberblick .ubl-search-input {
+      min-height: 36px;
+    }
+
+    #panel-ueberblick #ublDeadlinesSection .ubl-val-col {
+      min-width: 128px;
+    }
+  }
+
   /* ── Responsive ── */
   @media (max-width: 1199px) {
     #panel-ueberblick .ubl-metric-bar {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    #panel-ueberblick .ubl-metric {
-      border-bottom: 1px solid var(--border);
+    #panel-ueberblick .ubl-metric:nth-child(4) {
+      grid-column: span 2;
     }
 
     #panel-ueberblick .ubl-grid {
       grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (max-width: 1024px) {
+    #panel-ueberblick :is(.ubl-tab, .ubl-link, .ubl-horiz-btn, .ubl-nav-link, #ueberblickRefreshBtn) {
+      min-height: 44px;
+    }
+
+    #panel-ueberblick .ubl-scope {
+      height: auto;
+      min-height: 44px;
+    }
+
+    #panel-ueberblick .ubl-scope-btn {
+      height: 36px;
+      min-height: 36px;
+    }
+
+    #panel-ueberblick .ubl-search-input {
+      height: 44px;
+      min-height: 44px;
     }
   }
 
@@ -899,7 +961,7 @@
 
     #panel-ueberblick .ubl-search {
       width: auto;
-      flex: 1 1 200px;
+      flex: 1 1 180px;
     }
 
     #panel-ueberblick .ubl-metric-bar {
@@ -907,23 +969,19 @@
     }
 
     #panel-ueberblick .ubl-metric {
-      padding: 12px 14px;
-      border-right: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
+      padding: 13px 14px;
     }
 
-    #panel-ueberblick .ubl-metric:nth-child(2n) {
-      border-right: 0;
+    #panel-ueberblick .ubl-metric:nth-child(4) {
+      grid-column: auto;
     }
 
     #panel-ueberblick .ubl-metric:last-child:nth-child(odd) {
       grid-column: 1 / -1;
-      border-right: 0;
-      border-bottom: 0;
     }
 
     #panel-ueberblick .ubl-metric-val {
-      font-size: 21px;
+      font-size: 22px;
       line-height: 26px;
     }
 
@@ -937,25 +995,28 @@
       padding-right: 14px;
     }
 
+    #panel-ueberblick .ubl-tabs {
+      -webkit-mask-image: linear-gradient(to right, #000 88%, transparent 100%);
+      mask-image: linear-gradient(to right, #000 88%, transparent 100%);
+      padding-right: 28px;
+    }
+
     #panel-ueberblick .ubl-week-body {
       gap: 4px;
     }
 
-    #panel-ueberblick #ublDeadlinesSection .ubl-row,
-    #panel-ueberblick #ublVorgaengeSection .ubl-row {
+    #panel-ueberblick .ubl-row:has(.ubl-links) {
       flex-direction: column;
       align-items: stretch;
       gap: 6px;
     }
 
-    #panel-ueberblick #ublDeadlinesSection .ubl-row-right,
-    #panel-ueberblick #ublVorgaengeSection .ubl-row-right {
+    #panel-ueberblick .ubl-row:has(.ubl-links) .ubl-row-right {
       justify-content: space-between;
       width: 100%;
     }
 
-    #panel-ueberblick #ublDeadlinesSection .ubl-val-col,
-    #panel-ueberblick #ublVorgaengeSection .ubl-val-col {
+    #panel-ueberblick .ubl-row:has(.ubl-links) .ubl-val-col {
       align-items: flex-start;
       text-align: left;
     }
@@ -963,25 +1024,17 @@
     #panel-ueberblick .ubl-meta {
       white-space: normal;
     }
-
-    #panel-ueberblick .ubl-tabs {
-      -webkit-mask-image: linear-gradient(to right, #000 88%, transparent 100%);
-      mask-image: linear-gradient(to right, #000 88%, transparent 100%);
-      padding-right: 28px;
-    }
-
-    #panel-ueberblick .ubl-tab,
-    #panel-ueberblick .ubl-link,
-    #panel-ueberblick .ubl-horiz-btn,
-    #panel-ueberblick .ubl-scope-btn,
-    #panel-ueberblick #ueberblickRefreshBtn {
-      min-height: 38px;
-    }
   }
 
   @media (prefers-reduced-motion: reduce) {
     #panel-ueberblick #ueberblickRefreshBtn.is-loading svg {
       animation: none;
     }
+  }
+
+  /* [data-design="neu"] erzwingt 44px-Tippflächen (design/verwaltung.css). Beim Patientennamen
+     bleibt die Tippfläche erhalten, die Zeile rückt aber optisch wieder zusammen. */
+  :root[data-design="neu"] #panel-ueberblick .ubl-name-btn {
+    margin-block: -12px;
   }
 }

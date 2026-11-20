@@ -32,7 +32,8 @@
   <link rel="stylesheet" href="design/startseite.css?v=20261119warmweiss1">
   <link rel="stylesheet" href="design/seiten.css?v=20261118v914">
   <link rel="stylesheet" href="design/verwaltung.css?v=20261111p3">
-  <link rel="stylesheet" href="dashboard-ueberblick.css?v=20261119ubl4">
+  <link rel="stylesheet" href="dashboard-ueberblick.css?v=20261119ubl5">
+  <link rel="stylesheet" href="dashboard-start.css?v=20261119start1">
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <!-- Cropper.js lokal statt cdnjs (27.08.2026) — gleiche Datei, gleiche Version,
        Pruefsumme gegen unpkg verglichen. Grund: dies ist die eingeloggte App, in der
@@ -232,11 +233,11 @@
           </div>
 
           <!-- Letzte Aktivität Feed -->
-          <div class="activity-section" style="margin-top: 24px;">
-            <div class="card" style="padding: 16px 20px; background: var(--bg-card-solid); border: 1px solid var(--border); border-radius: var(--radius);">
-              <h3 style="font-family: var(--serif); font-size: 14px; margin-top: 0; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; color: var(--text-main); font-weight: 600;">Letzte Aktivität</h3>
-              <div id="activityFeedList" style="display: flex; flex-direction: column; gap: 12px;">
-                <div style="font-size: 12px; color: var(--text-muted); padding: 4px 0;">Noch keine Aktivität.</div>
+          <div class="activity-section">
+            <div class="card activity-card">
+              <h3 class="activity-title">Letzte Aktivität</h3>
+              <div id="activityFeedList" class="activity-list">
+                <div class="act-empty">Noch keine Aktivität.</div>
               </div>
             </div>
           </div>
@@ -306,7 +307,7 @@
                     </div>
                   </div>
                   <div id="ublDeadlineFilters" class="ubl-tabs" role="tablist" aria-label="Fristen filtern"></div>
-                  <div id="ublDeadlinesList" class="ubl-list">Lade…</div>
+                  <div id="ublDeadlinesList" class="ubl-list"><div class="ubl-empty">Lade…</div></div>
                   <div id="ublDeadlinesFoot" class="ubl-foot" hidden></div>
                 </article>
               </div>
@@ -325,7 +326,7 @@
                     </div>
                   </div>
                   <div id="ublVorgaengeTabs" class="ubl-tabs" role="tablist" aria-label="Vorgänge wechseln"></div>
-                  <div id="ublVorgaengeList" class="ubl-list">Lade…</div>
+                  <div id="ublVorgaengeList" class="ubl-list"><div class="ubl-empty">Lade…</div></div>
                 </article>
 
                 <article id="ublNoShowSection" class="card ubl-card">
@@ -341,7 +342,7 @@
                       </button>
                     </div>
                   </div>
-                  <div id="ublNoShowList" class="ubl-list">Lade…</div>
+                  <div id="ublNoShowList" class="ubl-list"><div class="ubl-empty">Lade…</div></div>
                 </article>
 
                 <article id="ublVacationSection" class="card ubl-card">
@@ -361,7 +362,7 @@
                       </button>
                     </div>
                   </div>
-                  <div id="ublVacationList" class="ubl-list">Lade…</div>
+                  <div id="ublVacationList" class="ubl-list"><div class="ubl-empty">Lade…</div></div>
                 </article>
 
                 <article id="ublBirthdaysSection" class="card ubl-card">
@@ -378,7 +379,7 @@
                       </div>
                     </div>
                   </div>
-                  <div id="ublBirthdaysList" class="ubl-list">Lade…</div>
+                  <div id="ublBirthdaysList" class="ubl-list"><div class="ubl-empty">Lade…</div></div>
                 </article>
               </div>
             </div>
@@ -5988,7 +5989,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261119ubl3"></script></script>
+  <script type="module" src="dashboard.js?v=20261119start1"></script></script>
 </body>
 
 </html>
