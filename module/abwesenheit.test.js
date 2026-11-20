@@ -103,8 +103,8 @@ test('Chrome1911 Enddatum, Überlappung und Abbruch', async () => {
   const { abwesenheitFreigeben } = await import('./abwesenheit.js');
   let count = 1, abfragen = 0, fragen = 0;
   const q = { select(){ return this; }, eq(){return this;}, in(){return this;}, is(){return this;},
-    lt(key,val){ assert.equal(val,'2026-12-25T23:00:00.000Z'); return this; },
-    gt(key,val){ assert.equal(val,'2026-12-23T23:00:00.000Z'); return {count,error:null}; } };
+    lt(/** @type {string} */ key, /** @type {string} */ val){ assert.equal(val,'2026-12-25T23:00:00.000Z'); return this; },
+    gt(/** @type {string} */ key, /** @type {string} */ val){ assert.equal(val,'2026-12-23T23:00:00.000Z'); return {count,error:null}; } };
   const deps = { ownerId:'Chrome1911',empId:'Chrome1911 Physio',von:'2026-12-24',bis:'2026-12-25',
     supabase: { from(){abfragen++; return q;} }, showToast(){}, showConfirmModal(){fragen++; return false;} };
   assert.equal(await abwesenheitFreigeben({...deps,bis:'2026-12-20'}),false);

@@ -120,6 +120,8 @@ export function abwesenheitsGrund(abwesenheiten, empId, tagISO) {
 }
 
 // Eine Abwesenheit gilt einschließlich Endtag. Nur die Zahl betroffener Termine laden.
+/** @param {{supabase:any,ownerId:string,empId:string,von:string,bis:string,
+ * showToast:(meldung:string,art:string)=>void,showConfirmModal:(optionen:object)=>Promise<boolean>|boolean}} deps */
 export async function abwesenheitFreigeben({ supabase, ownerId, empId, von, bis, showToast, showConfirmModal }) {
   const start = berlinTagesgrenzen(von), ende = berlinTagesgrenzen(bis);
   if (!start || !ende || !empId || bis < von) {

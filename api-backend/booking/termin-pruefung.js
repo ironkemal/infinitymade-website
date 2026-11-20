@@ -6,7 +6,7 @@ import { planErlaubt } from '../lib/standort-plan-laden.js';
  * @typedef {{id?:string,required_certificate?:string,raum_ausstattung?:string[],employee_services?:{employee_id:string}[]}} Leistung
  * @typedef {{user_id?:string,day_of_week?:number,is_active?:boolean,start_time:string,end_time:string}} Zeitfenster
  * @typedef {{type:string,date:string,start_time:string,end_time:string}} Sondertag
- * @typedef {{start_time:string,end_time:string,id:string,group_parent_id?:string,room_id:string,user_id:string,status:string}} Buchung
+ * @typedef {{start_time:string,end_time:string,id:string,group_parent_id?:string,business_id?:string|null,room_id:string,user_id:string,status:string}} Buchung
  * @typedef {{employee_id:string,start_date:string,end_date:string}} Abwesenheit
  * @typedef {{profile_id:string,certificate:string}} Nachweis
  * @typedef {{ownerId:string,businessId:string|null,bookings:Buchung[],raeume:Raum[],tage:Sondertag[],

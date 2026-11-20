@@ -128,7 +128,7 @@ export function rendereVeroKarten({ container, rxs, onSelect, onAnlegen = null, 
     const freq = rx.frequenz ? ` · ${escapeHtml(rx.frequenz)}` : '';
     // Geschlossene (nur als Termin-Bindung sichtbare) Verordnung: markiert und
     // nicht wählbar — sonst bindet man neue Termine an eine abgerechnete VO (podoloji).
-    const geschlossen = rxGeschlossen(rx);
+    const geschlossen = rx.status === 'parsed' ? 'Entwurf' : rxGeschlossen(rx);
     const hmTitel = formatMultiHeilmittelTitel(rx, katalog);
     card.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
@@ -449,7 +449,7 @@ export function resetVerordnungFelder() {
   zeigeDienstleistungsfeld(true);
 }
 
-const RX_GESCHLOSSEN = { parsed: 'Entwurf', completed: 'abgeschlossen', billed: 'abgerechnet', cancelled: 'storniert' };
+const RX_GESCHLOSSEN = { completed: 'abgeschlossen', billed: 'abgerechnet', cancelled: 'storniert' };
 const ABR_GESCHLOSSEN = new Set(['abgerechnet', 'storniert', 'archiviert']);
 
 /**

@@ -534,7 +534,7 @@ test('rxGeschlossen: Podo-VO mit status=confirmed, aber eingereicht/storniert, i
   assert.equal(rxGeschlossen({ status: 'confirmed', abrechnung_status: 'bereit' }), null);
   assert.equal(rxGeschlossen({ status: 'confirmed', abrechnung_status: null }), null);
   assert.equal(rxGeschlossen(null), null);
-  assert.equal(rxGeschlossen({ status: 'parsed' }), 'Entwurf');
+  assert.equal(rxGeschlossen({ status: 'parsed' }), null);
 });
 
 test('waehleVerordnung #339: Termin vor Ausstellungsdatum blockiert Auswahl mit Fehlermeldung', async () => {
