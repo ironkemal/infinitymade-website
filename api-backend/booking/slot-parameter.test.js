@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+import { arbeitsfenster, terminPruefen } from './termin-pruefung.js';
 import { slotParameter } from './slot-parameter.js';
 const source = readFileSync(new URL('../server.js', import.meta.url), 'utf8');
 const routeSource = source.slice(source.indexOf("app.post('/api/booking/get-slots'"), source.indexOf("app.post('/api/booking/create'"));
@@ -62,7 +63,7 @@ test('actual slot engine keeps valid numeric/string lookup, buffer and bounded c
   const start=source.indexOf('async function getAvailableSlots(');
   const end=source.indexOf('// 2. Booking Routes',start);
   const supabase={from(/** @type {string} */ table){
-    const data=table==='working_hours'?{is_active:true,start_time:'09:00',end_time:'10:00'}:
+    const data=table==='profiles'?{ owner_id:null }:
       ['bookings','breaks','time_offs'].includes(table)?[]:null;
     /** @type {any} */
     const q={}; for(const key of ['select','eq','is','gte','lte','in']) q[key]=()=>q;
@@ -70,7 +71,12 @@ test('actual slot engine keeps valid numeric/string lookup, buffer and bounded c
     q.then=(/** @type {any} */ resolve,/** @type {any} */ reject)=>Promise.resolve({data,error:null}).then(resolve,reject);
     return q;
   }};
+  /** @type {import('./termin-pruefung.js').Planung} */
+  const plan = { ownerId:'synthetic', businessId:null, team:[], bis:Infinity, zeiten:[{ user_id:'synthetic', day_of_week:1, is_active:true, start_time:'09:00', end_time:'10:00' }],
+    bookings:[], leistungen:[], raeume:[], tage:[], geschlossen:[], abwesenheiten:[], pausen:[], zuordnung:[], plan:[], zertifikate:[], jetzt:0 };
   const get=vm.runInNewContext(source.slice(start,end)+';getAvailableSlots',{
+    planungLaden:async()=>plan, arbeitsfenster, terminPruefen,
+    berlinLocalToUTC:(/** @type {string} */ date, /** @type {string} */ time)=>new Date(date+'T'+time+':00+02:00'),
     slotParameter,SLOT_STEP_MINUTES:15,supabase,BUSINESS_TZ:'Europe/Berlin',
     berlinDayOfWeek:()=>1,berlinDayBoundsUTC:()=>({start:'2099-06-01T00:00Z',end:'2099-06-01T23:59Z'}),
     timeToMins:(/** @type {string} */ t)=>{const[h,m]=t.split(':').map(Number);return h*60+m;},
@@ -79,4 +85,10 @@ test('actual slot engine keeps valid numeric/string lookup, buffer and bounded c
   assert.deepEqual(Array.from((await get('synthetic','2099-06-01',30,null)).slots),['09:00','09:15','09:30']);
   assert.deepEqual(Array.from((await get('synthetic','2099-06-01','30',null,'15','15')).slots),['09:00','09:15']);
   assert.deepEqual(Array.from((await get('synthetic','2099-06-01',30,null,0,1440)).slots),['09:00']);
+  plan.leistungen.push({ id:'Chrome1911', required_certificate:'MT' });
+  assert.deepEqual(Array.from((await get('synthetic','2099-06-01',30,null,0,15,'Chrome1911')).slots),[]);
+  plan.zertifikate.push({ profile_id:'synthetic', certificate:'MT' });
+  assert.equal((await get('synthetic','2099-06-01',30,null,0,15,'Chrome1911')).slots.length,3);
+  plan.abwesenheiten.push({ employee_id:'synthetic', start_date:'2099-05-30', end_date:'2099-06-01' });
+  assert.equal((await get('synthetic','2099-06-01',30,null,0,15,'Chrome1911')).slots.length,0);
 });

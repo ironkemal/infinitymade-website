@@ -71,9 +71,10 @@ import { resolveOrCreateArzt } from './lib/arzt-registry.js';
 import { gpsCheckinErgebnisRein } from './lib/gps-checkin.js';
 import { normalisiereGeschlecht } from './lib/geschlecht.js';
 import { mailKanal, speichereGmailMailversand, meldeVerbindungsfehler } from './lib/mail.js';
+import { terminPlanungHandler, planungLaden } from './booking/termin-planung.js';
+import { arbeitsfenster, terminPruefen } from './booking/termin-pruefung.js';
 import { raumFelderFuerTermin } from './lib/raum-zuordnung.js';
 import { raumLeistungenFelder, raumBuchungsFehler, raumNameFuerBuchung } from './lib/raum-automatik.js';
-import { terminPlanungHandler } from './booking/termin-planung.js';
 import { ladeStandortPlan, planErlaubt } from './lib/standort-plan-laden.js';
 import { starteIpAbgleich } from './merkez-istemci/ip-abgleich.js';
 import { starteFristen } from './dsgvo/fristen.js';
@@ -850,20 +851,8 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
     .select('owner_id')
     .eq('id', userId)
     .single();
-  if (profile?.owner_id) ownerId = profile.owner_id;
-
-  // 1.1 Fetch requested service if serviceId is provided to check if it's a group service
-  let isRequestedServiceGroup = false;
-  if (serviceId) {
-    const { data: svc } = await supabase
-      .from('services')
-      .select('is_group')
-      .eq('id', serviceId)
-      .maybeSingle();
-    if (svc && svc.is_group) {
-      isRequestedServiceGroup = true;
-    }
-  }
+  if (!profile) return { slots: [], reason: 'working_hours_inactive' };
+  if (profile.owner_id) ownerId = profile.owner_id;
 
   // 1.4 Check business closed_days (multi-business açılış günleri)
   let activeBiz = null;
@@ -909,145 +898,27 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
     }
   }
 
-  // 1.45 Standort-Plan (S6/M4d): nur wenn ein Plan fuer diesen Mitarbeiter existiert und ihn an diesem Tag
-  // nicht am Standort vorsieht. Tabelle fehlt/Fehler/leer -> ladeStandortPlan liefert [] = altes Verhalten.
-  let planFuerSlots = null; // 0109: Zeitfenster schneiden die Slots unten zusaetzlich zu (Schnittmenge mit working_hours)
-  if (activeBiz?.id) {
-    const planZeilen = await ladeStandortPlan(supabase, { ownerId, employeeIds: [userId] });
-    planFuerSlots = planZeilen;
-    if (!planErlaubt(planZeilen, userId, date, activeBiz.id)) return { slots: [], reason: 'working_hours_inactive' }; // bewusst kein eigener Grund: öffentlich nicht vom freien Tag unterscheidbar (S-59)
-  }
-
-  // 1.5 Check custom_days (shop-wide closed/holiday/special)
-  const { data: customDay } = await supabase
-    .from('custom_days')
-    .select('type,start_time,end_time')
-    .eq('owner_id', ownerId)
-    .eq('date', date)
-    .maybeSingle();
-
-  if (customDay && (customDay.type === 'closed' || customDay.type === 'holiday') && !customDay.start_time && !customDay.end_time) {
+  const planung = await planungLaden(supabase, {
+    ownerId, businessId: activeBiz?.id, empId: userId, serviceIds: serviceId ? [serviceId] : [],
+    tag: date, folgetag: date, von: dayStart, bis: dayEnd,
+  });
+  const sondertag = planung.tage.find(t => t.date === date);
+  if (sondertag && ['closed', 'holiday'].includes(sondertag.type) && !sondertag.start_time) {
     return { slots: [], reason: 'custom_day_closed' };
   }
+  const fenster = arbeitsfenster(planung, userId, dayOfWeek, sondertag);
+  if (!fenster.length) return { slots: [], reason: 'working_hours_inactive' };
 
-  // 2. Get Working Hours — employee first, fallback to owner
-  let wh = (await supabase
-    .from('working_hours')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('day_of_week', dayOfWeek)
-    .single()).data;
-
-  // Correct fallback logic: only fall back if the employee has no record at all (wh is null)
-  if (!wh) {
-    if (profile?.owner_id) {
-      wh = (await supabase
-        .from('working_hours')
-        .select('*')
-        .eq('user_id', profile.owner_id)
-        .eq('day_of_week', dayOfWeek)
-        .single()).data;
-    }
+  const gruppen = planung.leistungen[0]?.is_group ? planung.bookings.filter(b =>
+    b.user_id === userId && b.service_id === serviceId && b.is_group && b.status === 'confirmed') : [];
+  const teilnehmer = new Map();
+  if (gruppen.length) {
+    const { data, error } = await supabase.from('bookings').select('group_parent_id')
+      .in('group_parent_id', gruppen.map(b => b.id)).eq('status', 'confirmed');
+    if (error || !data || data.length >= 1000) throw new Error('Gruppenbelegung konnte nicht geprüft werden.');
+    for (const row of data) teilnehmer.set(row.group_parent_id, (teilnehmer.get(row.group_parent_id) || 0) + 1);
   }
-
-  if (customDay && customDay.type === 'special' && customDay.start_time && customDay.end_time) {
-    wh = { start_time: customDay.start_time, end_time: customDay.end_time, is_active: true };
-  }
-
-  if (!wh || !wh.is_active) {
-    return { slots: [], reason: 'working_hours_inactive' };
-  }
-
-  const startMinutes = timeToMins(wh.start_time);
-  const endMinutes = timeToMins(wh.end_time);
-
-  // 2. Get existing bookings for this date (Supabase stores TIMESTAMPTZ as UTC)
-  // Only query bookings where group_parent_id IS NULL to prevent child bookings
-  // from incorrectly blocking the time slots.
-  const { data: bookings } = await supabase
-    .from('bookings')
-    .select('id, start_time, end_time, is_group, group_capacity, service_id')
-    .eq('user_id', userId)
-    .eq('status', 'confirmed')
-    .is('group_parent_id', null)
-    .gte('start_time', dayStart)
-    .lte('start_time', dayEnd);
-
-  // Query actual participant counts for group parent slots
-  const parentIds = (bookings || []).filter(b => b.is_group).map(b => b.id);
-  const participantCounts = {};
-  if (parentIds.length > 0) {
-    const { data: participants } = await supabase
-      .from('bookings')
-      .select('group_parent_id')
-      .in('group_parent_id', parentIds)
-      .eq('status', 'confirmed');
-    (participants || []).forEach(p => {
-      participantCounts[p.group_parent_id] = (participantCounts[p.group_parent_id] || 0) + 1;
-    });
-  }
-
   const bookedIntervals = [];
-
-  (bookings || []).forEach(b => {
-    // If it's a group booking, and we are searching for slots for the SAME group service,
-    // and there is still remaining capacity, it's not a blocked slot!
-    if (b.is_group) {
-      const count = participantCounts[b.id] || 0;
-      const cap = b.group_capacity || 1;
-      if (isRequestedServiceGroup && b.service_id === serviceId && count < cap) {
-        // Safe to book here! Do not block this interval
-        return;
-      }
-    }
-
-    bookedIntervals.push({
-      start: utcToBerlinMinutes(new Date(b.start_time)),
-      end: utcToBerlinMinutes(new Date(b.end_time))
-    });
-  });
-
-  if (customDay && (customDay.type === 'closed' || customDay.type === 'holiday') && customDay.start_time && customDay.end_time) {
-    bookedIntervals.push({
-      start: timeToMins(customDay.start_time),
-      end: timeToMins(customDay.end_time)
-    });
-  }
-
-  // 2.6 Get Breaks/Pauses for this employee
-  const { data: breaksData } = await supabase
-    .from('breaks')
-    .select('start_time, end_time')
-    .eq('user_id', userId)
-    .eq('day_of_week', dayOfWeek);
-
-  (breaksData || []).forEach(b => {
-    bookedIntervals.push({
-      start: timeToMins(b.start_time),
-      end: timeToMins(b.end_time)
-    });
-  });
-
-  // 2.5 Get Time Offs (Beurlaubt) for this employee
-  const { data: timeOffs } = await supabase
-    .from('time_offs')
-    .select('start_date, end_date')
-    .eq('employee_id', userId)
-    .lte('start_date', dayEnd)
-    .gte('end_date', dayStart);
-
-  if (timeOffs) {
-    const dayStartMs = new Date(dayStart).getTime();
-    const dayEndMs = new Date(dayEnd).getTime();
-    timeOffs.forEach(t => {
-      const tStartMs = Math.max(new Date(t.start_date).getTime(), dayStartMs);
-      const tEndMs = Math.min(new Date(t.end_date).getTime(), dayEndMs);
-      bookedIntervals.push({
-        start: utcToBerlinMinutes(new Date(tStartMs)),
-        end: utcToBerlinMinutes(new Date(tEndMs))
-      });
-    });
-  }
 
   // 3. Get Google Calendar Busy slots
   const { data: integ } = await supabase
@@ -1085,19 +956,24 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
 
   // 4. Generate available slots
   const totalBlock = parseInt(duration) + buffer;
-  const slots = [];
-  let currentMins = startMinutes;
-  while (currentMins + totalBlock <= endMinutes) {
-    const slotEnd = currentMins + totalBlock;
-    const hasOverlap = bookedIntervals.some(b => currentMins < b.end && slotEnd > b.start);
-    // Skip slots in the past (today only) + enforce 30-min lead time
-    const tooSoon = nowBerlinMinutes !== null && (currentMins + totalBlock) <= nowBerlinMinutes + 30;
-    const imFenster = !planFuerSlots || planErlaubt(planFuerSlots, userId, date, activeBiz.id, { vonMin: currentMins, dauerMin: parseInt(duration) });
-    if (!hasOverlap && !tooSoon && imFenster) slots.push(minsToTime(currentMins));
-    currentMins += step;
+  const slots = new Set();
+  for (const zeitfenster of fenster) {
+    const endMinutes = timeToMins(zeitfenster.end_time);
+    for (let minute = timeToMins(zeitfenster.start_time); minute + totalBlock <= endMinutes; minute += step) {
+      if (nowBerlinMinutes !== null && minute <= nowBerlinMinutes + 30) continue;
+      if (bookedIntervals.some(b => minute < b.end && minute + totalBlock > b.start)) continue;
+      const time = minsToTime(minute);
+      const start = berlinLocalToUTC(date, time).getTime();
+      const gruppe = gruppen.find(b => Date.parse(b.start_time) === start &&
+        (teilnehmer.get(b.id) || 0) < (b.group_capacity || 1));
+      const konflikte = terminPruefen(planung, {
+        start, dauer: totalBlock, empId: userId, roomId: gruppe?.room_id, id: gruppe?.id,
+        ohneRaum: planung.leistungen[0]?.is_online_meeting === true,
+      });
+      if (!konflikte.length) slots.add(time);
+    }
   }
-
-  return { slots };
+  return { slots: [...slots].sort() };
 }
 
 // 2. Booking Routes (Get Slots & Create)
