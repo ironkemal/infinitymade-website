@@ -62,6 +62,14 @@
     gap: 8px;
   }
 
+  #startAufgaben .sa-opts-btn {
+    display: none;
+  }
+
+  #startAufgaben .sa-form-extras {
+    display: contents;
+  }
+
   #startAufgaben .sa-input,
   #startAufgaben .sa-date,
   #startAufgaben .sa-select {
@@ -930,6 +938,1047 @@
 
     :root:not([data-design="neu"]) #panel-overview .ov-count-selector {
       margin-left: 0;
+    }
+  }
+
+  /* ==========================================================================
+     3. Tageszentrale (#panel-overview[data-tz="1"], nur Standard-Design)
+     Schwarz-Weiß + kühle Schiefer-/Eisblau-Akzente mit hohem Block-Kontrast
+     ========================================================================== */
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] {
+    --tz-canvas: #E8EEF5;
+    --tz-surface: #FFFFFF;
+    --tz-band: #F1F5F9;
+    --tz-sunken: #E9EFF6;
+    --tz-hover: #EDF2F8;
+    --tz-border: #C4D0DF;
+    --tz-border-soft: #DCE4EE;
+    --tz-border-strong: #7E8FA6;
+    --tz-ink: #090D16;
+    --tz-muted: #425268;
+    --tz-faint: #52627A;
+    --tz-primary: #090D16;
+    --tz-primary-fg: #FFFFFF;
+    --tz-accent: #1D4ED8;
+    --tz-accent-soft: #EFF6FF;
+    --tz-accent-border: #93C5FD;
+    --tz-hero-bg: #090E18;
+    --tz-hero-border: #1E293B;
+    --tz-hero-ink: #F8FAFC;
+    --tz-hero-muted: #9FB0C7;
+    --tz-danger: #B42318;
+    --tz-ok: #067647;
+    --tz-shadow: 0 1px 2px rgba(9, 13, 22, 0.06), 0 8px 20px -14px rgba(9, 13, 22, 0.14);
+    --tz-shadow-hero: 0 14px 32px -14px rgba(9, 13, 22, 0.42);
+    --tz-r: 14px;
+    --tz-r-lg: 16px;
+
+    /* Auch bestehende Unter-Komponenten (#startAufgaben, #physioRezKpi, .today-section)
+       erben innerhalb des Dashboards dieselbe kühle Schwarz-Weiß-Palette */
+    --bg-main: var(--tz-canvas);
+    --bg-card: var(--tz-surface);
+    --bg-card-solid: var(--tz-surface);
+    --bg-sunken: var(--tz-sunken);
+    --bg-hover: var(--tz-hover);
+    --bg-input: var(--tz-surface);
+    --border: var(--tz-border);
+    --border-subtle: var(--tz-border-soft);
+    --border-strong: var(--tz-border-strong);
+    --border-input: var(--tz-border-strong);
+    --text-main: var(--tz-ink);
+    --text-muted: var(--tz-muted);
+    --primary: var(--tz-primary);
+    --primary-dim: var(--tz-accent-soft);
+    --accent: var(--tz-accent);
+    --focus-ring: var(--tz-accent);
+    --focus-halo: rgba(29, 78, 216, 0.22);
+    --danger: var(--tz-danger);
+
+    background: var(--tz-canvas);
+    border: 1px solid var(--tz-border);
+    border-radius: 18px;
+    padding: 24px 26px 28px;
+  }
+
+  :root:not([data-design="neu"])[data-theme="dark"] #panel-overview[data-tz="1"] {
+    --tz-canvas: #05080E;
+    --tz-surface: #0F1521;
+    --tz-band: #151E2E;
+    --tz-sunken: #0B101A;
+    --tz-hover: #192335;
+    --tz-border: #2B3B54;
+    --tz-border-soft: #1D293D;
+    --tz-border-strong: #5E7391;
+    --tz-ink: #F8FAFC;
+    --tz-muted: #A6B5CA;
+    --tz-faint: #8C9DB5;
+    --tz-primary: #F8FAFC;
+    --tz-primary-fg: #090D16;
+    --tz-accent: #60A5FA;
+    --tz-accent-soft: #10203B;
+    --tz-accent-border: #2B538C;
+    --tz-hero-bg: #141E30;
+    --tz-hero-border: #364E73;
+    --tz-hero-ink: #F8FAFC;
+    --tz-hero-muted: #A6B5CA;
+    --tz-danger: #F97066;
+    --tz-ok: #47CD89;
+    --tz-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), 0 12px 28px -16px rgba(0, 0, 0, 0.65);
+    --tz-shadow-hero: 0 14px 36px -14px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(148, 163, 184, 0.18);
+  }
+
+  /* Zweispaltiges Raster: links Fokus + Tagesplan bündig in #tzColLeft (ohne Lücke!),
+     rechts KPI + Handlungsbedarf + Aufgaben + Abrechnung als direkte Kinder von #panel-overview */
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"].active {
+    display: grid;
+    grid-template-columns: minmax(0, 1.54fr) minmax(330px, 1fr);
+    grid-template-areas:
+      "tz-head   tz-head"
+      "urlaub    urlaub"
+      "tz-left   rez"
+      "tz-left   tz-bedarf"
+      "tz-left   tasks"
+      "tz-left   tz-geld"
+      "tz-left   ."
+      "tz-raster tz-raster";
+    grid-template-rows: auto auto auto auto auto auto 1fr auto;
+    column-gap: 22px;
+    row-gap: 0;
+    align-items: start;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] > #tzColLeft {
+    grid-area: tz-left;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin: 0 0 18px;
+    min-width: 0;
+  }
+
+  /* Alte Dopplungen unter data-tz ausblenden (DOM & IDs bleiben für Skripte/Tests erhalten) */
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] > :is(.panel-header, #welcomeOverview, #todayKpiBlock, .gaps-section, .activity-section) {
+    display: none !important;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"]:not([data-tz-raster="1"]) > .today-section {
+    display: none;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"][data-tz-raster="1"] > .today-section {
+    grid-area: tz-raster;
+    display: block;
+    margin: 4px 0 0;
+    border-color: var(--tz-border);
+    box-shadow: var(--tz-shadow);
+  }
+
+  /* ── Kopfzeile (#tzHead) ── */
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] > #tzHead {
+    grid-area: tz-head;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding-bottom: 18px;
+    margin: 0 0 20px;
+    border-bottom: 1px solid var(--tz-border);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-title {
+    margin: 0;
+    font-size: 25px;
+    line-height: 31px;
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    color: var(--tz-ink);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-sub {
+    margin: 4px 0 0;
+    font-size: 13.5px;
+    color: var(--tz-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-sub strong {
+    color: var(--tz-ink);
+    font-weight: 600;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 9px;
+    border: 1px solid var(--tz-border);
+    background: var(--tz-surface);
+    color: var(--tz-ink);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 120ms ease, border-color 120ms ease;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-btn:hover {
+    background: var(--tz-hover);
+    border-color: var(--tz-border-strong);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-btn--primary {
+    background: var(--tz-primary);
+    color: var(--tz-primary-fg);
+    border-color: var(--tz-primary);
+    font-weight: 600;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-btn--primary:hover {
+    opacity: 0.92;
+  }
+
+  /* ── Invertierte Obsidian-Fokuskarte (#tzHero) ── */
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #tzHero {
+    margin: 0;
+    padding: 20px 22px;
+    border-radius: var(--tz-r-lg);
+    border: 1px solid var(--tz-hero-border);
+    background: var(--tz-hero-bg);
+    color: var(--tz-hero-ink);
+    box-shadow: var(--tz-shadow-hero);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-kicker {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-live-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(56, 189, 248, 0.18);
+    color: #7DD3FC;
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-live-pill--calm {
+    background: rgba(148, 163, 184, 0.18);
+    color: #CBD5E1;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #38BDF8;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-room {
+    font-size: 12.5px;
+    color: var(--tz-hero-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-info {
+    min-width: 0;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-time {
+    font-size: 13px;
+    color: #93C5FD;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 2px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-name {
+    margin: 0;
+    font-size: 21px;
+    line-height: 27px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--tz-hero-ink);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-meta {
+    margin-top: 3px;
+    font-size: 13px;
+    color: var(--tz-hero-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-cta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-btn {
+    height: 36px;
+    padding: 0 13px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    background: transparent;
+    color: var(--tz-hero-ink);
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-btn--solid {
+    background: #FFFFFF;
+    color: #090D16;
+    border-color: #FFFFFF;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-btn--solid:hover {
+    background: #E2E8F0;
+    border-color: #E2E8F0;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-prog {
+    margin-top: 15px;
+    padding-top: 13px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-prog-lbl {
+    font-size: 12px;
+    color: var(--tz-hero-muted);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-prog-lbl strong {
+    color: var(--tz-hero-ink);
+    font-weight: 600;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-bar {
+    flex: 1;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+    overflow: hidden;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: #38BDF8;
+    transition: width 220ms ease;
+  }
+
+  /* ── Kontrastreiche Karten (#tzPlan, #tzBedarf, #tzGeld, #physioRezKpi, #startAufgaben) ── */
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-card {
+    background: var(--tz-surface);
+    border: 1px solid var(--tz-border);
+    border-radius: var(--tz-r);
+    box-shadow: var(--tz-shadow);
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #tzPlan {
+    margin: 0;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] > #tzBedarf {
+    grid-area: tz-bedarf;
+    margin: 0 0 18px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] > #tzGeld {
+    grid-area: tz-geld;
+    margin: 0 0 18px;
+  }
+
+  /* Abgesetzter Kartenkopf schafft deutlichen Block-zu-Block-Kontrast */
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 13px 18px;
+    background: var(--tz-band);
+    border-bottom: 1px solid var(--tz-border);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-card-title-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-card-title {
+    margin: 0;
+    font-size: 15px;
+    line-height: 20px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--tz-ink);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-card-count {
+    font-size: 12px;
+    color: var(--tz-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-head-tools {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-mini-btn {
+    height: 30px;
+    padding: 0 10px;
+    border-radius: 7px;
+    border: 1px solid var(--tz-border);
+    background: var(--tz-surface);
+    color: var(--tz-ink);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-mini-btn:hover {
+    background: var(--tz-hover);
+    border-color: var(--tz-border-strong);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-mini-btn.is-active {
+    background: var(--tz-primary);
+    color: var(--tz-primary-fg);
+    border-color: var(--tz-primary);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-mini-btn--ico {
+    width: 30px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-mini-link {
+    border: 0;
+    background: transparent;
+    color: var(--tz-muted);
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-mini-link:hover {
+    color: var(--tz-ink);
+  }
+
+  /* Filter-Chip-Band im Tagesplan */
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-chip-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 9px 18px;
+    background: var(--tz-sunken);
+    border-bottom: 1px solid var(--tz-border-soft);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-chip {
+    height: 28px;
+    padding: 0 11px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--tz-muted);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-chip.is-on {
+    background: var(--tz-surface);
+    border-color: var(--tz-border);
+    color: var(--tz-ink);
+    font-weight: 600;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-chip--gap {
+    margin-left: auto;
+    border-color: var(--tz-accent-border);
+    background: var(--tz-accent-soft);
+    color: var(--tz-accent);
+    font-weight: 600;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-chip--gap.is-on {
+    background: var(--tz-accent);
+    border-color: var(--tz-accent);
+    color: #FFFFFF;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── Zeitleiste (#tzPlan) ── */
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-tl-row {
+    display: grid;
+    grid-template-columns: 70px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    padding: 11px 18px;
+    border-bottom: 1px solid var(--tz-border-soft);
+    cursor: pointer;
+    transition: background-color 120ms ease;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-tl-row:last-child {
+    border-bottom: 0;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-tl-row:hover {
+    background: var(--tz-hover);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-tl-row.is-now {
+    background: var(--tz-accent-soft);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-tl-time {
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--tz-ink);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-tl-row.is-past .tz-tl-time,
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-tl-row.is-past .tz-tl-pat {
+    color: var(--tz-muted);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-tl-row.is-now .tz-tl-time {
+    color: var(--tz-accent);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-tl-dur {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 400;
+    color: var(--tz-faint);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-tl-main {
+    min-width: 0;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-tl-pat {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--tz-ink);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-tl-meta {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--tz-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-st {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--tz-muted);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-st--ok {
+    color: var(--tz-ok);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-st--accent {
+    color: var(--tz-accent);
+    font-weight: 600;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-row-act {
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 7px;
+    border: 1px solid var(--tz-border);
+    background: var(--tz-surface);
+    color: var(--tz-ink);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-row-act:hover {
+    background: var(--tz-hover);
+    border-color: var(--tz-border-strong);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-row-act--ghost {
+    border-color: transparent;
+    background: transparent;
+    color: var(--tz-muted);
+    padding: 0 6px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-row-act--ghost:hover {
+    color: var(--tz-ink);
+    background: var(--tz-hover);
+  }
+
+  /* Buchbare Inline-Lücke */
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-gap-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 18px;
+    background: var(--tz-sunken);
+    border-bottom: 1px solid var(--tz-border-soft);
+    font-size: 12.5px;
+    color: var(--tz-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-gap-row:last-child {
+    border-bottom: 0;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-gap-left {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-gap-left strong {
+    color: var(--tz-ink);
+    font-weight: 600;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-gap-btn {
+    min-height: 28px;
+    padding: 4px 11px;
+    border-radius: 7px;
+    border: 1px solid var(--tz-accent-border);
+    background: var(--tz-accent-soft);
+    color: var(--tz-accent);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-gap-btn:hover {
+    background: var(--tz-accent);
+    border-color: var(--tz-accent);
+    color: #FFFFFF;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-empty {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 20px 18px;
+    font-size: 13px;
+    color: var(--tz-muted);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-empty--sm {
+    padding: 14px 18px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-warn-foot {
+    padding: 10px 18px;
+    background: var(--tz-band);
+    border-top: 1px solid var(--tz-border);
+    font-size: 12px;
+    color: var(--tz-muted);
+  }
+
+  /* ── Rechte Spalte: #physioRezKpi (sichtbar für alle + v602) ── */
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] > #physioRezKpi {
+    grid-area: rez;
+    margin: 0 0 18px !important;
+    border: 1px solid var(--tz-border);
+    background: var(--tz-border);
+    box-shadow: var(--tz-shadow);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .rez-kpi-tile {
+    padding: 14px 16px;
+    background: var(--tz-surface);
+  }
+
+  /* ── Rechte Spalte: Handlungsbedarf (#tzBedarf) ── */
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--tz-border-soft);
+    border-bottom: 1px solid var(--tz-border);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-kpi-cell {
+    background: var(--tz-surface);
+    border: 0;
+    padding: 11px 12px;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-kpi-cell:hover {
+    background: var(--tz-hover);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-kpi-n {
+    font-size: 19px;
+    line-height: 23px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: var(--tz-ink);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-kpi-n.is-danger {
+    color: var(--tz-danger);
+    font-weight: 600;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-kpi-n.is-accent {
+    color: var(--tz-accent);
+    font-weight: 600;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-kpi-l {
+    font-size: 11.5px;
+    color: var(--tz-muted);
+    font-weight: 500;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-act-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 18px;
+    border-bottom: 1px solid var(--tz-border-soft);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-act-row:last-child {
+    border-bottom: 0;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-act-left {
+    min-width: 0;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-act-top {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--tz-ink);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-act-sub {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--tz-muted);
+  }
+
+  /* ── Rechte Spalte: Kompakte Aufgaben (#startAufgaben direktes Kind von #panel-overview) ── */
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] > #startAufgaben {
+    grid-area: tasks;
+    margin: 0 0 18px !important;
+    align-self: start;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-card {
+    padding: 0;
+    border-radius: var(--tz-r);
+    border: 1px solid var(--tz-border);
+    background: var(--tz-surface);
+    box-shadow: var(--tz-shadow);
+    overflow: hidden;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-head {
+    margin: 0;
+    padding: 13px 18px;
+    background: var(--tz-band);
+    border-bottom: 1px solid var(--tz-border);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-head h3 {
+    font-size: 15px;
+    line-height: 20px;
+    font-weight: 600;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-form {
+    margin: 0;
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--tz-border-soft);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-input {
+    min-height: 36px;
+    background: var(--tz-sunken);
+    border-color: var(--tz-border);
+    font-size: 13px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-opts-btn {
+    display: inline-flex;
+    align-items: center;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1px solid var(--tz-border);
+    background: var(--tz-surface);
+    color: var(--tz-ink);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-opts-btn:hover {
+    background: var(--tz-hover);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-submit {
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 12.5px;
+    background: var(--tz-primary);
+    color: var(--tz-primary-fg);
+    border-color: var(--tz-primary);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-form:not([data-opts="1"]) .sa-form-extras,
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-form:not([data-opts="1"]) .sa-hint {
+    display: none;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-form[data-opts="1"] .sa-form-extras {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    flex: 1 1 100%;
+    order: 4;
+    padding-top: 2px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-list {
+    padding: 0 18px;
+  }
+
+  /* In der schmaleren rechten Spalte rutschen Datum & Patient sauber unter den Aufgabentext */
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-row {
+    flex-wrap: wrap;
+    row-gap: 2px;
+    padding: 8px 0;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-text {
+    flex: 1 1 0;
+    font-size: 13.5px;
+    line-height: 19px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-row-meta {
+    order: 3;
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    padding: 0 0 2px 37px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-done-details {
+    margin: 0;
+    padding: 6px 18px 10px;
+    background: var(--tz-sunken);
+    border-top: 1px solid var(--tz-border-soft);
+  }
+
+  /* ── Rechte Spalte unten: Abrechnungspuls (#tzGeld) ── */
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-pulse {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--tz-border-soft);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-pulse-cell {
+    background: var(--tz-surface);
+    border: 0;
+    padding: 12px 14px;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-pulse-cell:hover {
+    background: var(--tz-hover);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-pulse-lbl {
+    font-size: 11.5px;
+    color: var(--tz-muted);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-pulse-val {
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--tz-ink);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-pulse-sub {
+    font-size: 11.5px;
+    color: var(--tz-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Responsive für Tageszentrale ── */
+  @media (max-width: 1120px) {
+    :root:not([data-design="neu"]) #panel-overview[data-tz="1"].active {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        "tz-head"
+        "urlaub"
+        "tz-left"
+        "tz-raster"
+        "rez"
+        "tz-bedarf"
+        "tasks"
+        "tz-geld";
+      grid-template-rows: none;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    :root:not([data-design="neu"]) #panel-overview[data-tz="1"] :is(.tz-btn, .tz-hero-btn, .tz-mini-btn, .tz-gap-btn, .tz-row-act) {
+      min-height: 40px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    :root:not([data-design="neu"]) #panel-overview[data-tz="1"] {
+      padding: 16px 14px 20px;
+      border-radius: 14px;
+    }
+
+    :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-title {
+      font-size: 21px;
+      line-height: 27px;
+    }
+
+    :root:not([data-design="neu"]) #panel-overview[data-tz="1"] > #tzHero {
+      padding: 16px;
+    }
+
+    :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-card-head,
+    :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-chip-row,
+    :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-tl-row,
+    :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-gap-row,
+    :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-act-row {
+      padding-left: 14px;
+      padding-right: 14px;
+    }
+
+    :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-tl-row {
+      grid-template-columns: 56px minmax(0, 1fr) auto;
+      gap: 10px;
+    }
+
+    :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-chip--gap {
+      margin-left: 0;
+    }
+
+    :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-kpi-strip {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-pulse {
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 }
