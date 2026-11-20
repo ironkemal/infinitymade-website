@@ -7096,20 +7096,20 @@ async function belegOeffnen(rxId, typ, leadId) {
   return oeffneRechnungZurVerordnung({ rxId, leadId }, { supabase, switchPanel, openInvEditor, rechnungAusVerordnung, ladePodVerordnung: (id) => ladePodVerordnung(supabase, id), podVerordnungVorhanden: (id) => !!getPodVerordnung(id), toast: showToast });
 }
 
+import { bereitschaftsFehler } from './module/verordnung-bereitschaft.js';
+
 async function flipAbrechnungStatus(rxId, newStatus, leadId) {
   try {
     if (newStatus === 'bereit') {
       const { data: rx, error: getErr } = await supabase
         .from('prescriptions')
-        .select('bericht_angefordert, bericht_status')
+        .select('*, leads!patient_id(versichertennummer), aerzte!arzt_id(lanr,bsnr)')
         .eq('id', rxId)
         .single();
       if (getErr) throw getErr;
 
-      // Hinweis statt Riegel. Vorher war dieser Weg strenger als der
-      // automatische (pruefeVerordnungsfortschritt setzt „bereit", ohne den
-      // Bericht überhaupt anzusehen) — von Hand ging also weniger als von
-      // selbst. Der belastbare Nachweis entsteht ohnehin erst beim Abrechnen.
+      const grund = await bereitschaftsFehler(supabase, rx);
+      if (grund) { showToast(grund, 'error'); return; }
       if (istBerichtOffen(rx)) {
         const ok = await frageBerichtFreigabe([{ id: rxId, name: 'Dieses Rezept', status: rx.bericht_status }]);
         if (!ok) return;

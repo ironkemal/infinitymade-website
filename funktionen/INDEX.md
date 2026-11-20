@@ -3,7 +3,7 @@
 > Üretim: 2026-11-20 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4793 fonksiyon** (4671 JS · 95 bash · 27 ps1) · 588 dosya · 42 sidebar modülü
+**4794 fonksiyon** (4672 JS · 95 bash · 27 ps1) · 589 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -163,7 +163,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 
 **Yol 4 — `kassiereZuzahlung()`** · Ekran: ortak yardımcı — 37 modülden çağrılıyor
 - `kassiereZuzahlung()` — [dashboard.js:5967](dashboard.js#L5967-L6039) · 73 satır · prescriptions:update
-- `flipAbrechnungStatus()` — [dashboard.js:7099](dashboard.js#L7099-L7134) · 36 satır · prescriptions:update
+- `flipAbrechnungStatus()` — [dashboard.js:7101](dashboard.js#L7101-L7134) · 34 satır · prescriptions:update
 
 **Yol 5 — `storniereZuzahlung()`** · Ekran: _UI yolu çözülemedi_
 - `storniereZuzahlung()` — [dashboard.js:6042](dashboard.js#L6042-L6110) · 69 satır · prescriptions:update

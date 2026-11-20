@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-20",
- "dateien": 588,
- "funktionen": 4793,
+ "dateien": 589,
+ "funktionen": 4794,
  "module": [
   "abrechnung",
   "anamnese",
@@ -73955,9 +73955,9 @@
    "kind": "function",
    "lang": "js",
    "file": "dashboard.js",
-   "start": 7099,
+   "start": 7101,
    "end": 7134,
-   "lines": 36,
+   "lines": 34,
    "spiegelHinweis": null,
    "tables": [
     "prescriptions"
@@ -73972,6 +73972,7 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
+    "bereitschaftsFehler",
     "error",
     "frageBerichtFreigabe",
     "istBerichtOffen",
@@ -156727,6 +156728,7 @@
     "kartenIkNormalisieren"
    ],
    "calledBy": [
+    "bereitschaftsFehler",
     "ladeAbrechnungAuswahl",
     "loadPatientDetailRezepte"
    ],
@@ -246512,6 +246514,76 @@
    ]
   },
   {
+   "name": "bereitschaftsFehler",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/verordnung-bereitschaft.js",
+   "start": 5,
+   "end": 12,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "kasseAbrechnungsbereit",
+    "pruefeVerordnung",
+    "regelsatzLaden",
+    "voAusGespeicherterVerordnung"
+   ],
+   "calledBy": [
+    "flipAbrechnungStatus"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "sitzungZielZahl",
    "kind": "function",
    "lang": "js",
@@ -260814,6 +260886,7 @@
    ],
    "calledBy": [
     "(datei) module/verordnung-pruefung.js",
+    "bereitschaftsFehler",
     "icdSpeicherHinweise",
     "ladeAktiveVerordnungen",
     "pruefeMaske",
@@ -261162,6 +261235,7 @@
    ],
    "calledBy": [
     "(datei) module/verordnung-maske.js",
+    "bereitschaftsFehler",
     "ladeAktiveVerordnungen",
     "pruefeZeile",
     "zeigeVerordnungDetail"
@@ -261524,6 +261598,7 @@
     "set"
    ],
    "calledBy": [
+    "bereitschaftsFehler",
     "icdSpeicherHinweise",
     "ladeAktiveVerordnungen",
     "oeffneVerordnungImport",
@@ -289007,9 +289082,9 @@
       {
        "name": "flipAbrechnungStatus",
        "file": "dashboard.js",
-       "start": 7099,
+       "start": 7101,
        "end": 7134,
-       "lines": 36,
+       "lines": 34,
        "writes": [
         "prescriptions:update"
        ],
