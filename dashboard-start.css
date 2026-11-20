@@ -943,69 +943,69 @@
 
   /* ==========================================================================
      3. Tageszentrale (#panel-overview[data-tz="1"], nur Standard-Design)
-     Ruhiges neutrales Graphit-/Steingrau — fügt sich in die App ein, ohne zu warm
-     (kein Pfirsich/Terracotta-Stich) oder künstlich kaltblau zu wirken.
+     Leicht kühles Schiefer-/Graphitgrau — klarer Block-Kontrast ohne schreiendes
+     Königsblau/Cyan und ohne warmen Beige-Stich.
      ========================================================================== */
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] {
     --tz-canvas: var(--bg-main, #F6F3EF);
     --tz-surface: #FFFFFF;
-    --tz-band: #F2F1EE;
-    --tz-sunken: #EEEDEA;
-    --tz-hover: #F5F4F1;
-    --tz-border: #D2CEC8;
-    --tz-border-soft: #E6E3DE;
-    --tz-border-strong: #8A857E;
-    --tz-ink: #1C1B1A;
-    --tz-muted: #5C5853;
-    --tz-faint: #76716B;
-    --tz-primary: #1F1E1D;
+    --tz-band: #EFF2F6;
+    --tz-sunken: #EBF0F5;
+    --tz-hover: #F3F6F9;
+    --tz-border: #C7D0DC;
+    --tz-border-soft: #DFE5EE;
+    --tz-border-strong: #7C8A9E;
+    --tz-ink: #0F141C;
+    --tz-muted: #4E5A6B;
+    --tz-faint: #677487;
+    --tz-primary: #121721;
     --tz-primary-fg: #FFFFFF;
-    --tz-accent: #2C2A28;
-    --tz-accent-soft: #ECEAE6;
-    --tz-accent-border: #C5C0B8;
-    --tz-hero-bg: #1A1918;
-    --tz-hero-border: #2E2C2A;
-    --tz-hero-ink: #F7F6F4;
-    --tz-hero-muted: #B8B3AC;
-    --tz-hero-accent: #E2DDD6;
-    --tz-hero-pill-bg: rgba(255, 255, 255, 0.11);
-    --tz-hero-pill-fg: #F2EFEA;
+    --tz-accent: #283548;
+    --tz-accent-soft: #E4EBF3;
+    --tz-accent-border: #B3C1D4;
+    --tz-hero-bg: #10151F;
+    --tz-hero-border: #232D3F;
+    --tz-hero-ink: #F5F7FA;
+    --tz-hero-muted: #A3B0C2;
+    --tz-hero-accent: #CBD5E1;
+    --tz-hero-pill-bg: rgba(203, 213, 225, 0.14);
+    --tz-hero-pill-fg: #E2E8F0;
     --tz-danger: var(--danger, #B42318);
     --tz-ok: var(--success, #067647);
-    --tz-shadow: 0 1px 2px rgba(28, 27, 26, 0.05), 0 8px 20px -14px rgba(28, 27, 26, 0.1);
-    --tz-shadow-hero: 0 12px 28px -14px rgba(20, 19, 18, 0.34);
+    --tz-shadow: 0 1px 2px rgba(15, 20, 28, 0.05), 0 8px 20px -14px rgba(15, 20, 28, 0.11);
+    --tz-shadow-hero: 0 12px 28px -14px rgba(12, 16, 23, 0.36);
     --tz-r: 14px;
     --tz-r-lg: 16px;
   }
 
   :root:not([data-design="neu"])[data-theme="dark"] #panel-overview[data-tz="1"] {
     --tz-canvas: var(--bg-main, #181614);
-    --tz-surface: #1F1E1C;
-    --tz-band: #272523;
-    --tz-sunken: #181715;
-    --tz-hover: #2C2A27;
-    --tz-border: #3D3A36;
-    --tz-border-soft: #2E2C29;
-    --tz-border-strong: #6E6A63;
-    --tz-ink: #F5F4F2;
-    --tz-muted: #B5B0A8;
-    --tz-faint: #8F8A82;
-    --tz-primary: #F5F4F2;
-    --tz-primary-fg: #1A1918;
-    --tz-accent: #E5E1DA;
-    --tz-accent-soft: #2C2A27;
-    --tz-accent-border: #4F4B46;
-    --tz-hero-bg: #23211F;
-    --tz-hero-border: #423E3A;
-    --tz-hero-ink: #F7F6F4;
-    --tz-hero-muted: #C2BDB6;
-    --tz-hero-accent: #E5E1DA;
-    --tz-hero-pill-bg: rgba(255, 255, 255, 0.11);
-    --tz-hero-pill-fg: #F2EFEA;
+    --tz-surface: #171B22;
+    --tz-band: #1E242E;
+    --tz-sunken: #12161C;
+    --tz-hover: #232A36;
+    --tz-border: #313B4B;
+    --tz-border-soft: #232B37;
+    --tz-border-strong: #5D6B7E;
+    --tz-ink: #F3F5F8;
+    --tz-muted: #A3AFBF;
+    --tz-faint: #8290A3;
+    --tz-primary: #F3F5F8;
+    --tz-primary-fg: #10151F;
+    --tz-accent: #CBD5E1;
+    --tz-accent-soft: #222A36;
+    --tz-accent-border: #414F63;
+    --tz-hero-bg: #1A202B;
+    --tz-hero-border: #364256;
+    --tz-hero-ink: #F5F7FA;
+    --tz-hero-muted: #B0BCCB;
+    --tz-hero-accent: #CBD5E1;
+    --tz-hero-pill-bg: rgba(203, 213, 225, 0.14);
+    --tz-hero-pill-fg: #E2E8F0;
     --tz-danger: #F97066;
     --tz-ok: #47CD89;
-    --tz-shadow: 0 2px 4px rgba(0, 0, 0, 0.32), 0 10px 24px -14px rgba(0, 0, 0, 0.52);
-    --tz-shadow-hero: 0 14px 32px -14px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    --tz-shadow: 0 2px 4px rgba(0, 0, 0, 0.34), 0 10px 24px -14px rgba(0, 0, 0, 0.54);
+    --tz-shadow-hero: 0 14px 32px -14px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(226, 232, 240, 0.08);
   }
 
   /* Zweispaltiges Raster: links Fokus + Tagesplan bündig in #tzColLeft (ohne Lücke!),
