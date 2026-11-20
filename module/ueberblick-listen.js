@@ -188,9 +188,9 @@ export function wochenAuslastungAufbereiten(bookings, heuteIso, jetzt = new Date
     }
   }
 
-  const maxTag = Math.max(1, ...tage.map(t => t.anzahl));
+  const maxTag = Math.max(6, ...tage.map(t => t.anzahl));
   for (const t of tage) {
-    t.prozent = t.anzahl > 0 ? Math.max(14, Math.round((t.anzahl / maxTag) * 100)) : 0;
+    t.prozent = t.anzahl > 0 ? Math.max(14, Math.min(100, Math.round((t.anzahl / maxTag) * 100))) : 0;
   }
 
   const heute = tage[0] || { anzahl: 0, hausbesuche: 0, offenHeute: 0 };

@@ -153,50 +153,50 @@ export function mountStartAufgaben(ctx, doc = document) {
   let gespeicherteAufgaben = [];
   let gespeicherteLeads = new Map();
 
+  const CLOSE_SVG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+  const CHECK_SVG = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>';
+  const LINK_SVG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M16 11h6"/></svg>';
+
   root.innerHTML = `
-    <div class="card" style="padding:16px 20px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <h3 style="margin:0;font-size:15px;font-weight:700;color:var(--text-main);">Aufgaben</h3>
-          <span id="startAufgabenCount" style="font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-muted);">0</span>
+    <div class="card sa-card">
+      <div class="sa-head">
+        <div class="sa-head-title">
+          <h3>Aufgaben</h3>
+          <span id="startAufgabenCount" class="sa-count">0</span>
         </div>
       </div>
 
-      <form id="startAufgabeForm" style="margin-bottom:16px;">
-        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
-          <input type="text" id="startAufgabeInput" maxlength="500" placeholder="Neue Aufgabe …" style="flex:1 1 240px;min-height:44px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-main);font-size:14px;box-sizing:border-box;" />
-          <input type="date" id="startAufgabeFaellig" style="flex:0 1 145px;min-height:44px;padding:0 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-main);font-size:13px;box-sizing:border-box;" title="Fällig am" aria-label="Fällig am" />
-          <button type="button" id="startAufgabePatientToggle" class="btn-ghost" style="flex:0 0 auto;min-height:44px;padding:0 12px;font-size:13px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:var(--primary);border:1px dashed var(--border);border-radius:8px;background:none;box-sizing:border-box;">
-            Patient verknüpfen
+      <form id="startAufgabeForm" class="sa-form">
+        <div class="sa-form-row">
+          <input type="text" id="startAufgabeInput" class="sa-input" maxlength="500" placeholder="Neue Aufgabe …" />
+          <input type="date" id="startAufgabeFaellig" class="sa-date" title="Fällig am" aria-label="Fällig am" />
+          <button type="button" id="startAufgabePatientToggle" class="btn-ghost sa-pat-toggle">
+            ${LINK_SVG}<span>Patient verknüpfen</span>
           </button>
-          <div id="startAufgabePatientChip" style="display:none;align-items:center;gap:6px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:0 10px;font-size:13px;min-height:44px;box-sizing:border-box;">
-            <span id="startAufgabePatientChipName" style="color:var(--text-main);font-weight:500;"></span>
-            <button type="button" id="startAufgabePatientRemove" style="background:none;border:none;cursor:pointer;color:var(--text-muted);min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:0;font-size:14px;" aria-label="Patientenbezug entfernen" title="Verknüpfung entfernen">✕</button>
+          <div id="startAufgabePatientChip" class="sa-pat-chip" style="display:none;">
+            <span id="startAufgabePatientChipName" class="sa-pat-chip-name"></span>
+            <button type="button" id="startAufgabePatientRemove" class="sa-icon-btn" aria-label="Patientenbezug entfernen" title="Verknüpfung entfernen">${CLOSE_SVG}</button>
           </div>
-          <select id="startAufgabeStandort" hidden title="Standort" aria-label="Standort" style="flex:0 1 180px;min-height:44px;padding:0 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-main);font-size:13px;box-sizing:border-box;"></select>
-          <button type="submit" id="startAufgabeAddBtn" class="btn-primary" style="flex:0 0 auto;min-height:44px;padding:0 18px;font-size:14px;font-weight:600;border-radius:8px;cursor:pointer;box-sizing:border-box;">Hinzufügen</button>
+          <select id="startAufgabeStandort" class="sa-select" hidden title="Standort" aria-label="Standort"></select>
+          <button type="submit" id="startAufgabeAddBtn" class="btn-primary sa-submit">Hinzufügen</button>
         </div>
 
-        <div id="startAufgabePatientBox" style="display:none;position:relative;margin-top:8px;">
-          <input type="text" id="startAufgabePatientSearch" placeholder="Patient suchen (Name, Telefon, Geburtsdatum)…" autocomplete="off" style="width:100%;min-height:44px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-main);font-size:14px;box-sizing:border-box;" />
+        <div id="startAufgabePatientBox" class="sa-pat-box" style="display:none;">
+          <input type="text" id="startAufgabePatientSearch" class="sa-input" placeholder="Patient suchen (Name, Telefon, Geburtsdatum) …" autocomplete="off" />
           <ul id="startAufgabePatientList" class="patient-search-list" hidden></ul>
         </div>
 
-        <div style="font-size:12px;color:var(--text-muted);margin-top:6px;line-height:1.4;">
-          Patientenbezug bitte verknüpfen, statt Namen in den Text zu schreiben.
-        </div>
+        <p class="sa-hint">Patientenbezug bitte verknüpfen, statt Namen in den Text zu schreiben.</p>
       </form>
 
-      <ul id="startAufgabenOffenListe" style="list-style:none;margin:0;padding:0;">
-        <li style="padding:16px 0;font-size:13px;color:var(--text-muted);list-style:none;">Keine offenen Aufgaben</li>
+      <ul id="startAufgabenOffenListe" class="sa-list">
+        <li class="sa-empty">Keine offenen Aufgaben.</li>
       </ul>
 
-      <details id="startAufgabenDetails" style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px;">
-        <summary style="cursor:pointer;color:var(--text-muted);font-size:13px;font-weight:500;min-height:44px;display:inline-flex;align-items:center;user-select:none;">
-          Erledigt (zuletzt 5)
-        </summary>
-        <ul id="startAufgabenErledigtListe" style="list-style:none;margin:8px 0 0;padding:0;">
-          <li style="padding:8px 0;font-size:13px;color:var(--text-muted);list-style:none;">Keine erledigten Aufgaben</li>
+      <details id="startAufgabenDetails" class="sa-done-details">
+        <summary class="sa-done-summary">Erledigt (zuletzt 5)</summary>
+        <ul id="startAufgabenErledigtListe" class="sa-list sa-list--done">
+          <li class="sa-empty">Keine erledigten Aufgaben.</li>
         </ul>
       </details>
     </div>
@@ -279,9 +279,7 @@ export function mountStartAufgaben(ctx, doc = document) {
 
   function standortMarke(a) {
     const name = fremderStandortName(a, standorte(), aktiverStandort());
-    return name
-      ? `<span style="font-size:12px;color:var(--text-muted);background:var(--bg-input);padding:2px 8px;border-radius:4px;border:1px solid var(--border);white-space:nowrap;">${esc(name)}</span>`
-      : '';
+    return name ? `<span class="sa-pill">${esc(name)}</span>` : '';
   }
 
   function renderListen() {
@@ -294,36 +292,26 @@ export function mountStartAufgaben(ctx, doc = document) {
 
     if (offenListe) {
       if (offene.length === 0) {
-        offenListe.innerHTML = `<li style="padding:16px 0;font-size:13px;color:var(--text-muted);list-style:none;">Keine offenen Aufgaben</li>`;
+        offenListe.innerHTML = `<li class="sa-empty">Keine offenen Aufgaben.</li>`;
       } else {
         offenListe.innerHTML = offene.map((a) => {
           const ueberfaellig = istUeberfaellig(a, heuteISO);
           const faelligHtml = a.faellig_am
-            ? `<span style="font-size:12px;white-space:nowrap;${ueberfaellig ? 'color:var(--danger);font-weight:600;' : 'color:var(--text-muted);'}">
-                ${ueberfaellig ? '⚠ ' : ''}${formatiereDatum(a.faellig_am)}
-               </span>`
+            ? `<span class="sa-due${ueberfaellig ? ' sa-due--overdue' : ''}">${ueberfaellig ? 'Überfällig · ' : ''}${formatiereDatum(a.faellig_am)}</span>`
             : '';
           const patientName = a.lead_id ? (gespeicherteLeads.get(a.lead_id) || '') : '';
-          const patientHtml = patientName
-            ? `<span style="font-size:12px;color:var(--text-muted);background:var(--bg-input);padding:2px 8px;border-radius:4px;border:1px solid var(--border);white-space:nowrap;">
-                ${esc(patientName)}
-               </span>`
-            : '';
+          const patientHtml = patientName ? `<span class="sa-pill">${esc(patientName)}</span>` : '';
           const canDel = darfLoeschen(a, { userId: ctx.userId, istInhaber: ctx.istInhaber });
           const deleteBtnHtml = canDel
-            ? `<button type="button" class="aufgabe-delete-btn" data-id="${esc(a.id)}" style="min-width:44px;min-height:44px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;display:inline-flex;align-items:center;justify-content:center;padding:0;margin-left:auto;" title="Aufgabe löschen" aria-label="Aufgabe löschen">✕</button>`
+            ? `<button type="button" class="aufgabe-delete-btn sa-icon-btn sa-del-btn" data-id="${esc(a.id)}" title="Aufgabe löschen" aria-label="Aufgabe löschen">${CLOSE_SVG}</button>`
             : '';
 
-          return `<li style="display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid var(--border);min-height:44px;">
-            <button type="button" class="aufgabe-check-btn" data-id="${esc(a.id)}" style="min-width:44px;min-height:44px;background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;" title="Als erledigt markieren" aria-label="Als erledigt markieren">
-              <span class="einrichtung-aufgabe-kreis" aria-hidden="true"></span>
+          return `<li class="sa-row">
+            <button type="button" class="aufgabe-check-btn sa-check-btn" data-id="${esc(a.id)}" title="Als erledigt markieren" aria-label="Als erledigt markieren">
+              <span class="einrichtung-aufgabe-kreis sa-kreis" aria-hidden="true"></span>
             </button>
-            <span class="einrichtung-aufgabe-text" style="color:var(--text-main);font-size:14px;word-break:break-word;">
-              ${esc(a.text)}
-            </span>
-            ${faelligHtml}
-            ${patientHtml}
-            ${standortMarke(a)}
+            <span class="einrichtung-aufgabe-text sa-text">${esc(a.text)}</span>
+            <span class="sa-row-meta">${faelligHtml}${patientHtml}${standortMarke(a)}</span>
             ${deleteBtnHtml}
           </li>`;
         }).join('');
@@ -332,24 +320,16 @@ export function mountStartAufgaben(ctx, doc = document) {
 
     if (erledigtListe) {
       if (erledigte.length === 0) {
-        erledigtListe.innerHTML = `<li style="padding:8px 0;font-size:13px;color:var(--text-muted);list-style:none;">Keine erledigten Aufgaben</li>`;
+        erledigtListe.innerHTML = `<li class="sa-empty">Keine erledigten Aufgaben.</li>`;
       } else {
         erledigtListe.innerHTML = erledigte.map((a) => {
           const patientName = a.lead_id ? (gespeicherteLeads.get(a.lead_id) || '') : '';
-          const patientHtml = patientName
-            ? `<span style="font-size:12px;color:var(--text-muted);background:var(--bg-input);padding:2px 8px;border-radius:4px;border:1px solid var(--border);white-space:nowrap;">
-                ${esc(patientName)}
-               </span>`
-            : '';
-          return `<li class="einrichtung-aufgabe-fertig" style="display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid var(--border);min-height:44px;">
-            <span class="einrichtung-aufgabe-kreis" aria-hidden="true">✓</span>
-            <span class="einrichtung-aufgabe-text" style="color:var(--text-muted);font-size:14px;word-break:break-word;">
-              ${esc(a.text)}
-            </span>
+          const patientHtml = patientName ? `<span class="sa-pill">${esc(patientName)}</span>` : '';
+          return `<li class="einrichtung-aufgabe-fertig sa-row sa-row--done">
+            <span class="einrichtung-aufgabe-kreis sa-kreis sa-kreis--done" aria-hidden="true">${CHECK_SVG}</span>
+            <span class="einrichtung-aufgabe-text sa-text sa-text--done">${esc(a.text)}</span>
             ${patientHtml}
-            <button type="button" class="aufgabe-undo-btn" data-id="${esc(a.id)}" style="min-height:44px;padding:0 12px;background:none;border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text-main);font-size:12px;display:inline-flex;align-items:center;justify-content:center;margin-left:auto;white-space:nowrap;" title="Aufgabe wieder öffnen">
-              Rückgängig
-            </button>
+            <button type="button" class="aufgabe-undo-btn sa-undo-btn" data-id="${esc(a.id)}" title="Aufgabe wieder öffnen">Rückgängig</button>
           </li>`;
         }).join('');
       }

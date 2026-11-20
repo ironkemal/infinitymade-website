@@ -1,0 +1,935 @@
+/* ============================================================================
+   dashboard-start.css — Ruhige Gestaltung für Dashboard (#panel-overview)
+   und Praxis-Aufgaben (#startAufgaben) nach dem Praxura-Redesign-Vertrag
+   ============================================================================
+   Folgt DESIGN.md (E12 runde Karten, ruhige Typografie 400/500/600, klare
+   Abstände, keine dicken farbigen Seitenbalken, keine Emojis, keine
+   Olivgold-Verläufe).
+   - Bereich 1 (#startAufgaben .sa-*): gilt in beiden Designs (behebt u. a.
+     schwachen Feldkontrast in [data-design="neu"]).
+   - Bereich 2 (:root:not([data-design="neu"]) #panel-overview): gestaltet die
+     Standard-Startseite analog zu design/startseite.css, ohne [data-design="neu"]
+     (#pxStartseite) zu berühren.
+   ========================================================================== */
+
+@media screen {
+  /* ── 1. Gemeinsame Aufgaben-Karte (#startAufgaben, beide Designs) ── */
+  #startAufgaben .sa-card {
+    padding: 20px 24px;
+    border-radius: var(--radius, 16px);
+    background: var(--bg-card-solid);
+    border: 1px solid var(--border);
+  }
+
+  #startAufgaben .sa-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  #startAufgaben .sa-head-title {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  #startAufgaben .sa-head h3 {
+    margin: 0;
+    font-size: 17px;
+    line-height: 22px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--text-main);
+  }
+
+  #startAufgaben .sa-count {
+    font-size: 13px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
+  }
+
+  #startAufgaben .sa-form {
+    margin-bottom: 12px;
+  }
+
+  #startAufgaben .sa-form-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #startAufgaben .sa-input,
+  #startAufgaben .sa-date,
+  #startAufgaben .sa-select {
+    min-height: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--border-input, var(--border-strong));
+    border-radius: var(--radius-sm, 10px);
+    background: var(--bg-input);
+    color: var(--text-main);
+    font: inherit;
+    font-size: 13.5px;
+    box-sizing: border-box;
+    transition: border-color 140ms ease, box-shadow 140ms ease;
+  }
+
+  #startAufgaben .sa-input {
+    flex: 1 1 150px;
+    min-width: 0;
+  }
+
+  #startAufgaben .sa-date {
+    flex: 0 0 132px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  #startAufgaben .sa-select {
+    flex: 0 1 168px;
+    min-width: 0;
+  }
+
+  #startAufgaben :is(.sa-input, .sa-date, .sa-select):focus {
+    outline: none;
+    border-color: var(--focus-ring, var(--accent));
+    box-shadow: 0 0 0 3px var(--focus-halo, rgba(148, 77, 51, 0.16));
+  }
+
+  #startAufgaben .sa-pat-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 0 10px;
+    border: 1px solid var(--border-input, var(--border-strong));
+    border-radius: var(--radius-sm, 10px);
+    background: var(--bg-card-solid);
+    color: var(--text-main);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    box-sizing: border-box;
+  }
+
+  #startAufgaben .sa-pat-toggle:hover {
+    background: var(--bg-hover);
+  }
+
+  #startAufgaben .sa-pat-chip {
+    align-items: center;
+    gap: 4px;
+    min-height: 40px;
+    padding: 0 6px 0 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm, 10px);
+    background: var(--bg-sunken, var(--bg-hover));
+    font-size: 13px;
+    box-sizing: border-box;
+  }
+
+  #startAufgaben .sa-pat-chip-name {
+    color: var(--text-main);
+    font-weight: 500;
+  }
+
+  #startAufgaben .sa-submit {
+    flex: 0 0 auto;
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: var(--radius-sm, 10px);
+    font-size: 13.5px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  #startAufgaben .sa-pat-box {
+    position: relative;
+    margin-top: 8px;
+  }
+
+  #startAufgaben .sa-pat-box .sa-input {
+    width: 100%;
+  }
+
+  #startAufgaben .sa-hint {
+    margin: 8px 0 0;
+    font-size: 12px;
+    line-height: 17px;
+    color: var(--text-muted);
+  }
+
+  #startAufgaben .sa-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  #startAufgaben .sa-list--done {
+    margin-top: 6px;
+  }
+
+  #startAufgaben .sa-empty {
+    padding: 12px 0;
+    font-size: 13.5px;
+    line-height: 19px;
+    color: var(--text-muted);
+  }
+
+  #startAufgaben .sa-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 46px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border-subtle, var(--border));
+  }
+
+  #startAufgaben .sa-row:last-child {
+    border-bottom: 0;
+  }
+
+  #startAufgaben .sa-check-btn,
+  #startAufgaben .sa-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color 120ms ease, color 120ms ease;
+  }
+
+  #startAufgaben .sa-icon-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-main);
+  }
+
+  #startAufgaben .sa-check-btn {
+    margin-left: -9px;
+  }
+
+  #startAufgaben .sa-del-btn {
+    margin-left: auto;
+    margin-right: -9px;
+  }
+
+  #startAufgaben .sa-kreis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border-strong);
+    background: transparent;
+    color: transparent;
+    transition: border-color 120ms ease, background-color 120ms ease;
+  }
+
+  #startAufgaben .sa-check-btn:hover .sa-kreis {
+    border-color: var(--accent);
+  }
+
+  #startAufgaben .sa-kreis--done {
+    border-color: var(--border);
+    background: var(--bg-sunken, var(--bg-hover));
+    color: var(--text-muted);
+  }
+
+  #startAufgaben .sa-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--text-main);
+    word-break: break-word;
+  }
+
+  #startAufgaben .sa-text--done {
+    color: var(--text-muted);
+    text-decoration: line-through;
+  }
+
+  #startAufgaben .sa-row-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  #startAufgaben .sa-due {
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  #startAufgaben .sa-due--overdue {
+    color: var(--danger);
+    font-weight: 600;
+  }
+
+  #startAufgaben .sa-pill {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 9px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg-sunken, var(--bg-hover));
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 16px;
+    white-space: nowrap;
+  }
+
+  #startAufgaben .sa-undo-btn {
+    min-height: 34px;
+    padding: 0 11px;
+    margin-left: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  #startAufgaben .sa-undo-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-main);
+  }
+
+  #startAufgaben .sa-done-details {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+
+  #startAufgaben .sa-done-summary {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    user-select: none;
+  }
+
+  #startAufgaben .sa-done-summary:hover {
+    color: var(--text-main);
+  }
+
+  /* ── 2. Standard-Dashboard (#panel-overview, nur außerhalb [data-design="neu"]) ── */
+  :root:not([data-design="neu"]) #panel-overview {
+    --ov-radius: 16px;
+    --ov-radius-sm: 10px;
+    --ov-shadow: 0 1px 2px rgba(48, 43, 39, 0.04), 0 6px 18px -10px rgba(48, 43, 39, 0.08);
+  }
+
+  :root:not([data-design="neu"])[data-theme="dark"] #panel-overview {
+    --ov-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 8px 22px -12px rgba(0, 0, 0, 0.45);
+  }
+
+  /* Raster über benannte Flächen: dynamisch eingefügte Knoten (#meinUrlaub) und
+     ausgeblendete Karten verschieben die übrigen nicht. Abstände über margin-bottom,
+     damit leere Zeilen (z. B. verborgenes #meinUrlaub) keinen Leerraum erzeugen. */
+  :root:not([data-design="neu"]) #panel-overview.active {
+    display: grid;
+    grid-template-columns: minmax(0, 1.62fr) minmax(300px, 1fr);
+    grid-template-areas:
+      "head    head"
+      "welcome kpi"
+      "urlaub  urlaub"
+      "today   rez"
+      "today   gaps"
+      "tasks   act";
+    column-gap: 20px;
+    row-gap: 0;
+    align-items: start;
+  }
+
+  /* Karten einer Reihe enden bündig: Termine füllen die Höhe neben Verordnungen +
+     Freie Zeiten, Aufgaben und Aktivität teilen sich die untere Reihe. */
+  :root:not([data-design="neu"]) #panel-overview.active > :is(.today-section, .gaps-section, #startAufgaben, .activity-section) {
+    align-self: stretch;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview > .today-section {
+    display: flex;
+    flex-direction: column;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview > .today-section > .upcoming-bookings-card {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview > .today-section .upcoming-empty:not([hidden]) {
+    margin-block: auto;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview > #startAufgaben {
+    display: flex;
+    flex-direction: column;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview > #startAufgaben > .sa-card,
+  :root:not([data-design="neu"]) #panel-overview > .activity-section > .activity-card {
+    flex: 1 1 auto;
+    height: 100%;
+    box-sizing: border-box;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview.active > * {
+    grid-column: 1 / -1;
+    margin-bottom: 20px;
+  }
+
+  /* Kopfzeile dezent und ruhig */
+  :root:not([data-design="neu"]) #panel-overview > .panel-header {
+    grid-area: head;
+    margin-bottom: 14px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview > .panel-header h2 {
+    font-size: 22px;
+    line-height: 28px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview > .panel-header .panel-sub {
+    font-size: 13.5px;
+    color: var(--text-muted);
+  }
+
+  /* Begrüßungsbanner links, Tageszahl-Karte rechts daneben auf gleicher Höhe */
+  :root:not([data-design="neu"]) #panel-overview > #welcomeOverview {
+    grid-area: welcome;
+    margin: 0 0 20px;
+    padding: 18px 22px;
+    border-radius: var(--ov-radius);
+    border: 1px solid var(--overview-head-border);
+    background: var(--overview-head-bg);
+    box-shadow: none;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview #welcomeText {
+    font-size: 20px;
+    line-height: 26px;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    color: var(--overview-head-text);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview #welcomeText span {
+    font-weight: 600;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview > #todayKpiBlock {
+    grid-area: kpi;
+    margin: 0 0 20px;
+    padding: 16px 22px;
+    border-radius: var(--ov-radius);
+    border: 1px solid var(--border);
+    background: var(--bg-card-solid);
+    box-shadow: var(--ov-shadow);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    align-self: stretch;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .today-kpi-label {
+    font-size: 13.5px;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--text-muted);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .today-kpi-value {
+    font-size: 28px;
+    line-height: 32px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    color: var(--text-main);
+  }
+
+  /* Urlaub-Sektion für Mitarbeiter volle Breite unter Begrüßung */
+  :root:not([data-design="neu"]) #panel-overview > #meinUrlaub {
+    grid-area: urlaub;
+    margin: 0 0 20px;
+  }
+
+  /* ── Verordnungs-Kacheln (#physioRezKpi): bündige Haarlinien-Leiste wie im Überblick, OHNE 4px Seitenbalken ── */
+  :root:not([data-design="neu"]) #panel-overview > #physioRezKpi {
+    grid-area: rez;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    margin: 0 0 20px !important; /* gegen Inline-margin-bottom:16px in dashboard.html */
+    padding: 0;
+    border-radius: var(--ov-radius);
+    border: 1px solid var(--border);
+    background: var(--border);
+    box-shadow: var(--ov-shadow);
+    overflow: hidden;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .rez-kpi-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 15px 18px;
+    border: 0;
+    border-left: 0;
+    border-radius: 0;
+    background: var(--bg-card-solid);
+    box-shadow: none;
+    transform: none;
+    transition: background-color 120ms ease;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .rez-kpi-tile:hover {
+    background: var(--bg-hover);
+    transform: none;
+    box-shadow: none;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .rez-kpi-num {
+    font-size: 24px;
+    line-height: 28px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-main);
+  }
+
+  /* Rot nur, wenn wirklich etwas überfällig ist — eine rote Null ist Fehlalarm */
+  :root:not([data-design="neu"]) #panel-overview #physioRezKpi[data-ueberfaellig="1"] .rez-kpi-overdue .rez-kpi-num {
+    color: var(--danger);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .rez-kpi-lbl {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  /* ── Heutige Termine (.today-section) links als ruhige Hauptkarte ── */
+  :root:not([data-design="neu"]) #panel-overview > .today-section {
+    grid-area: today;
+    margin: 0 0 20px;
+    padding: 20px 24px 22px;
+    border-radius: var(--ov-radius);
+    border: 1px solid var(--border);
+    background: var(--bg-card-solid);
+    box-shadow: var(--ov-shadow);
+    min-width: 0;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .schedule-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .schedule-title {
+    font-size: 17px;
+    line-height: 22px;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: -0.01em;
+    color: var(--text-main);
+    margin-right: 4px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .schedule-header .btn-icon,
+  :root:not([data-design="neu"]) #panel-overview .gaps-header .btn-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-card-solid);
+    color: var(--text-main);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .schedule-today-btn {
+    margin-left: 0;
+    height: 32px;
+    padding: 0 11px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 500;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .schedule-view-toggle,
+  :root:not([data-design="neu"]) #panel-overview .ov-count-selector {
+    padding: 2px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--bg-sunken, var(--bg-hover));
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .sv-btn,
+  :root:not([data-design="neu"]) #panel-overview .ov-count-btn {
+    height: 28px;
+    border-radius: 7px;
+    font-size: 12.5px;
+    font-weight: 500;
+    border: 0;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .sv-btn.active,
+  :root:not([data-design="neu"]) #panel-overview .ov-count-btn.active {
+    background: var(--bg-card-solid);
+    color: var(--text-main);
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+
+  :root:not([data-design="neu"])[data-theme="dark"] #panel-overview :is(.sv-btn.active, .ov-count-btn.active) {
+    background: var(--bg-hover);
+    border: 1px solid var(--border-strong);
+    box-shadow: none;
+  }
+
+  /* dashboard.css gibt .cal-emp-chips flex: 1 — in der Spalten-Karte würde die Leiste sonst in die Höhe wachsen */
+  :root:not([data-design="neu"]) #panel-overview .cal-emp-chips {
+    flex: 0 0 auto;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 0;
+    gap: 6px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .cal-emp-chip {
+    height: 30px;
+    padding: 0 12px;
+    font-size: 12.5px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .upcoming-bookings-card {
+    border: 0;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    padding: 12px 0 0;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .upcoming-empty {
+    padding: 24px 12px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13.5px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .upcoming-empty p {
+    margin: 0;
+  }
+
+  /* ── Aufgaben links darunter ── */
+  :root:not([data-design="neu"]) #panel-overview > #startAufgaben {
+    grid-area: tasks;
+    margin: 0 0 20px !important; /* gegen Inline-margin-bottom:16px in dashboard.html */
+    min-width: 0;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview #startAufgaben .sa-card {
+    border-radius: var(--ov-radius);
+    box-shadow: var(--ov-shadow);
+  }
+
+  /* ── Freie Zeiten (.gaps-section) rechts unter Verordnungen — OHNE Olivgold-Verlauf! ── */
+  :root:not([data-design="neu"]) #panel-overview > .gaps-section {
+    grid-area: gaps;
+    margin: 0 0 20px;
+    padding: 18px 20px 20px;
+    border-radius: var(--ov-radius);
+    border: 1px solid var(--border);
+    background: var(--bg-card-solid);
+    box-shadow: var(--ov-shadow);
+    min-width: 0;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .gaps-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .gaps-title {
+    font-size: 17px;
+    line-height: 22px;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: -0.01em;
+    color: var(--text-main);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .gaps-total {
+    margin-left: auto;
+    font-size: 12.5px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
+    background: var(--bg-sunken, var(--bg-hover));
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 10px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .gaps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* Ruhige Haarlinien-Zeile statt Olivgold-Kasten oder Karte-in-Karte */
+  :root:not([data-design="neu"]) #panel-overview .gap-card {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 44px;
+    padding: 10px 0;
+    border: 0;
+    border-bottom: 1px solid var(--border-subtle, var(--border));
+    border-radius: 0;
+    background: transparent;
+    background-image: none;
+    box-shadow: none;
+    color: var(--text-main);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .gap-card:last-child {
+    border-bottom: 0;
+    padding-bottom: 2px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .gap-card-top {
+    margin: 0;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .gap-card-dur {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: var(--bg-sunken, var(--bg-hover));
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .gap-card-time {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-main);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .gap-empty {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    padding: 6px 0;
+  }
+
+  /* ── Letzte Aktivität (.activity-section) rechts unten — ohne Serifen, ohne Emojis ── */
+  :root:not([data-design="neu"]) #panel-overview > .activity-section {
+    grid-area: act;
+    margin: 0 0 20px !important; /* gegen früheres margin-top */
+    min-width: 0;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .activity-card {
+    padding: 18px 20px;
+    border-radius: var(--ov-radius);
+    border: 1px solid var(--border);
+    background: var(--bg-card-solid);
+    box-shadow: var(--ov-shadow);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .activity-title {
+    margin: 0 0 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    font-family: inherit;
+    font-size: 16px;
+    line-height: 22px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--text-main);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .act-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border-subtle, var(--border));
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .act-row:last-child {
+    border-bottom: 0;
+    padding-bottom: 2px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .act-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-card-solid);
+    color: var(--text-muted);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .act-body {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .act-text {
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--text-main);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .act-text strong {
+    font-weight: 500;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .act-time {
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  :root:not([data-design="neu"]) #panel-overview .act-empty {
+    font-size: 13px;
+    color: var(--text-muted);
+    padding: 6px 0;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 1120px) {
+    :root:not([data-design="neu"]) #panel-overview.active {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: "head" "welcome" "kpi" "urlaub" "rez" "today" "tasks" "gaps" "act";
+    }
+
+    :root:not([data-design="neu"]) #panel-overview.active > * {
+      margin-bottom: 16px;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    #startAufgaben :is(.sa-input, .sa-date, .sa-select, .sa-pat-toggle, .sa-submit, .sa-check-btn, .sa-icon-btn, .sa-undo-btn, .sa-done-summary) {
+      min-height: 44px;
+    }
+
+    :root:not([data-design="neu"]) #panel-overview :is(.cal-emp-chip, .schedule-header .btn-icon, .gaps-header .btn-icon, .schedule-today-btn) {
+      height: auto;
+      min-height: 44px;
+    }
+
+    :root:not([data-design="neu"]) #panel-overview :is(.schedule-header .btn-icon, .gaps-header .btn-icon) {
+      min-width: 44px;
+    }
+
+    :root:not([data-design="neu"]) #panel-overview :is(.sv-btn, .ov-count-btn) {
+      height: auto;
+      min-height: 38px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    :root:not([data-design="neu"]) #panel-overview > .today-section,
+    :root:not([data-design="neu"]) #panel-overview > .gaps-section,
+    :root:not([data-design="neu"]) #panel-overview .activity-card,
+    #startAufgaben .sa-card {
+      padding: 16px;
+    }
+
+    #startAufgaben .sa-input,
+    #startAufgaben .sa-date,
+    #startAufgaben .sa-select,
+    #startAufgaben .sa-pat-toggle,
+    #startAufgaben .sa-submit {
+      flex: 1 1 100%;
+      width: 100%;
+    }
+
+    /* Fälligkeit und Patient rutschen unter den Aufgabentext statt ihn zu quetschen */
+    #startAufgaben .sa-row {
+      flex-wrap: wrap;
+      row-gap: 2px;
+    }
+
+    #startAufgaben .sa-text {
+      flex: 1 1 0;
+    }
+
+    #startAufgaben .sa-row-meta {
+      order: 3;
+      flex: 1 1 100%;
+      flex-wrap: wrap;
+      padding: 0 0 4px 37px;
+    }
+
+    :root:not([data-design="neu"]) #panel-overview .cal-emp-chips {
+      flex-wrap: wrap;
+    }
+
+    :root:not([data-design="neu"]) #panel-overview .ov-count-selector {
+      margin-left: 0;
+    }
+  }
+}

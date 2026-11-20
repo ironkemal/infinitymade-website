@@ -64,7 +64,7 @@ test('wochenAuslastungAufbereiten: zählt 7 Tage inkl. Hausbesuche, ignoriert st
   assert.equal(w.heuteHausbesuche, 1);
   assert.equal(w.gesamt7, 4);
   assert.equal(w.hausbesuche7, 1);
-  assert.equal(w.tage[0].prozent, 100);
+  assert.equal(w.tage[0].prozent, 33); // Untergrenze 6: 2 Termine sind kein voller Balken
   assert.equal(w.tage[2].prozent, 0);
 });
 

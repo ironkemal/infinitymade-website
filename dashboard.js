@@ -44,7 +44,7 @@ import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnun
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20261004m116';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261005g';
 import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261004m116';
-import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261118v914'; import { pruefePatientPflicht, patientKontaktFehler } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { ladeUeberblickAnsicht } from './module/ueberblick-ansicht.js?v=20261119ubl3';
+import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261118v914'; import { pruefePatientPflicht, patientKontaktFehler } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { ladeUeberblickAnsicht } from './module/ueberblick-ansicht.js?v=20261119ubl4'; import { aktivitaetZeileHtml } from './module/aktivitaet-zeile.js?v=20261119start1';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
 import { ladeStatusJePatient, oeffneStatusDialogFuer, verordnungStatusInfo } from './module/abrechnungsstatus.js?v=20261117f2';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261117v906';
@@ -76,7 +76,7 @@ import { verordnungenListeLaden, oeffneVerordnungAusSuche } from './module/veror
 import { zeigeVerordnungDetail, multiHeilmittelTitel } from './module/verordnung-detail.js?v=20261117p33';
 import { downloadDmrzForInvoice, setzeDmrzKnopf } from './module/rechnung-dmrz.js?v=20261117p24';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909'; import { renderDatevSettings, verdrahteDatevExport } from './module/datev-einstellungen.js?v=20261022a'; import { renderTerminerinnerungSettings } from './module/terminerinnerung-einstellung.js?v=20261109'; import { renderMailversandSettings } from './module/mailversand.js?v=20261109';
-import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261118s1'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft, zeigeRechnungsPraxisHinweis } from './module/rechnung-snapshot.js?v=20261118s1'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261118s1'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261118s1'; import { mountStartAufgaben } from './module/start-aufgaben.js?v=20261101st';
+import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261118s1'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft, zeigeRechnungsPraxisHinweis } from './module/rechnung-snapshot.js?v=20261118s1'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261118s1'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261118s1'; import { mountStartAufgaben } from './module/start-aufgaben.js?v=20261119start1';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20261014fix1'; import { markiereZuBelegBezahlt } from './module/rechnung-zahlung.js?v=20261010w';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20261103b';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261117p33';
@@ -1565,46 +1565,12 @@ async function loadActivityFeed() {
     activities.sort((a, b) => new Date(b.ts) - new Date(a.ts));
     const topActivities = activities.slice(0, 7);
 
-    if (topActivities.length === 0) {
-      container.innerHTML = `<div style="font-size: 12px; color: var(--text-muted); padding: 4px 0;">Noch keine Aktivität.</div>`;
-      return;
-    }
-
-    container.innerHTML = topActivities.map(item => {
-      let icon = '';
-      let text = '';
-      if (item.type === 'note') {
-        icon = '📝';
-        text = `Notiz hinzugefügt für <strong>${escapeHtml(item.name)}</strong>.`;
-      } else if (item.type === 'invoice') {
-        icon = '💶';
-        const formattedAmount = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(item.total_patient) + ' €';
-        text = `Rechnung <strong>${escapeHtml(item.invoice_number)}</strong> (${escapeHtml(formattedAmount)}) für ${escapeHtml(item.name)} bezahlt.`;
-      } else if (item.type === 'fahrt') {
-        icon = '🚗';
-        text = `Fahrt gebucht (${escapeHtml(String(item.distance_km))} km).`;
-      } else if (item.type === 'lead') {
-        icon = '👤';
-        text = `${escapeHtml(item.name)} neu als Patient:in registriert.`;
-      } else if (item.type === 'booking') {
-        icon = '📅';
-        text = `Neuer Termin von <strong>${escapeHtml(item.name)}</strong> gebucht.`;
-      }
-      
-      return `
-        <div style="display: flex; gap: 10px; font-size: 12px; color: var(--text-main); text-align: left;">
-          <span style="font-size: 14px; flex-shrink: 0; line-height: 1.4;">${icon}</span>
-          <div style="flex-grow: 1;">
-            <div style="line-height: 1.4; color: var(--text-main);">${text}</div>
-            <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">${escapeHtml(formatActivityTimestamp(item.ts))}</div>
-          </div>
-        </div>
-      `;
-    }).join('');
-
+    container.innerHTML = topActivities.length
+      ? topActivities.map(item => aktivitaetZeileHtml(item, { escapeHtml, formatTimestamp: formatActivityTimestamp })).join('')
+      : '<div class="act-empty">Noch keine Aktivität.</div>';
   } catch (error) {
     console.error('[loadActivityFeed] error', error);
-    container.innerHTML = `<div style="font-size: 12px; color: var(--text-muted); padding: 4px 0;">Aktivität konnte nicht geladen werden.</div>`;
+    container.innerHTML = '<div class="act-empty">Aktivität konnte nicht geladen werden.</div>';
   }
 }
 
@@ -1675,7 +1641,7 @@ async function loadPhysioRezKpis() {
   document.getElementById('rezKpiOverdue').textContent = overdue.length;
   document.getElementById('rezKpiSoon').textContent = soon.length;
   document.getElementById('rezKpiActive').textContent = active.length;
-  block.dataset.pxStatus = 'ok'; block.style.display = '';
+  block.dataset.pxStatus = 'ok'; block.dataset.ueberfaellig = overdue.length ? '1' : '0'; block.style.display = '';
 }
 
 (function bindRezKpiClicks() {
