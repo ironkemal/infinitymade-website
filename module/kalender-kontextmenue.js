@@ -33,6 +33,7 @@
  * eine Abrechnung, die nie kommt.
  */
 
+import { abschlussSperrgrund } from './termin-aktionsleiste.js?v=20261120';
 import { aufLangenDruck } from './langer-druck.js?v=20260822';
 import { verdrahteAuswahl } from './kalender-auswahl.js?v=20261020';
 
@@ -52,6 +53,7 @@ export const TERMIN_SELEKTOR = '.dv-booking-block, .wv-booking-block, .month-eve
 export function eintraegeFuer(termin) {
   const status = termin?.status || 'confirmed';
   const offen = status === 'confirmed';
+  const sperre = abschlussSperrgrund(termin);
 
   // Gruppentermine: die Handlungen betreffen die Kinder-Buchungen, nicht den
   // Kopf. Bis das geklärt ist, führt hier nur der Weg ins Panel.
@@ -60,7 +62,7 @@ export function eintraegeFuer(termin) {
   }
 
   return [
-    { id: 'wahrgenommen', label: 'Termin wahrgenommen', deaktiviert: !offen },
+    { id: 'wahrgenommen', label: sperre || 'Termin wahrgenommen', deaktiviert: !offen || Boolean(sperre) },
     { id: 'nicht_erschienen', label: 'Patient nicht erschienen', deaktiviert: !offen },
     { id: 'verschieben', label: 'Verschieben', deaktiviert: !offen },
     { id: 'trenner' },

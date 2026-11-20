@@ -64,3 +64,10 @@ test('der Selektor deckt alle drei Ansichten ab', () => {
     assert.ok(TERMIN_SELEKTOR.includes(klasse), klasse);
   }
 });
+
+test('Chrome1911: zukünftige Sitzung zeigt Sperrgrund, Verschieben bleibt möglich', () => {
+  const termin = { start_time: '2099-01-01T08:00:00+01:00', status: 'confirmed' };
+  assert.equal(eintrag(termin, 'wahrgenommen').label, 'Termin liegt in der Zukunft');
+  assert.equal(eintrag(termin, 'wahrgenommen').deaktiviert, true);
+  assert.equal(eintrag(termin, 'verschieben').deaktiviert, false);
+});

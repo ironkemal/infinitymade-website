@@ -125,7 +125,7 @@ import { farbwahlFuer } from './module/leistung-farbwahl.js?v=20260830';
 import { ladeAbwesenheiten, istAbwesend, abwesenheitsGrund } from './module/abwesenheit.js?v=20261031';
 import { renderLeistungenListe, renderGkvKatalog, normalisiereTyp, kostentraegerTyp } from './module/leistungen-liste.js?v=20260903';
 import { ermittleKostentraegerSpalte, kostentraegerSpalteDa } from './module/kostentraeger-spalte.js?v=20260903';
-import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20261020';
+import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20261120';
 import { TERMIN_SELECT, RX_JOIN, ladeTerminVollstaendig } from './module/termin-laden.js?v=20261103r';
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWartend } from './module/warteliste-nachruecker.js?v=20260903b';
 import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20261105sperre';
@@ -139,7 +139,7 @@ import {
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
   verteileOffeneSitzungen, zeichneRezeptFortschritt, uebernimmSerienfrequenzAusRx, setFreqValue,
 } from './module/termin-aktionen.js?v=20261117p33';
-import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261021w'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
+import { verdrahteAktionsleiste, zeigeAbschlussAktion, abschlussSperrgrund } from './module/termin-aktionsleiste.js?v=20261120'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
 import { gleicheSitzungenAb, terminZielToplam } from './module/sitzung-abgleich.js?v=20261103q';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20261103q';
 import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-km.js?v=20261021m'; import { terminHinweiseHtml } from './module/termin-hinweise.js?v=20261021s'; import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText, verdrahteSerienStarttag } from './module/serien-termine.js?v=20261119serie'; const resetSerienStarttag = verdrahteSerienStarttag();
@@ -3005,9 +3005,7 @@ async function renderBkActionFahrtState(booking, isOwn) {
   const fahrtEndGroup = document.getElementById('bkActionFahrtEndGroup');
   const doneGroup = document.getElementById('bkActionDoneGroup');
 
-  document.getElementById('bkActionStartBtn').textContent = terminIstPodo(booking, getSector())
-    ? 'Behandlung dokumentieren' : 'Sitzung abschließen';
-  // Reset
+  zeigeAbschlussAktion(booking, terminIstPodo(booking, getSector()));
   hbInfo.hidden = true;
   fahrtStartGroup.hidden = true;
   arrivedGroup.hidden = true;
@@ -3015,10 +3013,7 @@ async function renderBkActionFahrtState(booking, isOwn) {
   fahrtEndGroup.hidden = true;
   doneGroup.hidden = true;
 
-  if (!booking.hausbesuch) {
-    // Normal randevu — sadece "Termin Starten" (mevcut akış)
-    return;
-  }
+  if (!booking.hausbesuch) return;
 
   // Hausbesuch — adres ve durum bilgisini al
   // Phone exact match çok kısıtlı (booking.customer_phone normalize farkı, eski kayıtlar vs.).
@@ -3358,6 +3353,8 @@ async function saveFahrtEndHandler() {
 async function handleTerminStarten() {
   if (!bkActionBookingCache || sitzungsabschlussLaeuft) return;
   const b = bkActionBookingCache;
+  const sperre = abschlussSperrgrund(b);
+  if (sperre) { showToast(sperre, 'warning'); return; }
   const patientName = b.customer_name || '';
   const patientPhone = b.customer_phone || '';
   const ownerId = getOwnerId();

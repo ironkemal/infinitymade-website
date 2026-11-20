@@ -48,6 +48,27 @@ export function verordnungsZiel(bloecke) {
 
 const el = (id) => (typeof document !== 'undefined' ? document.getElementById(id) : null);
 
+/**
+ * Wie der Abschluss-Endpunkt ab Terminbeginn freigeben.
+ * @param {{start_time?: string}|null} termin
+ * @param {number} [jetzt]
+ */
+export function abschlussSperrgrund(termin, jetzt = Date.now()) {
+  return Date.parse(termin?.start_time || '') > jetzt ? 'Termin liegt in der Zukunft' : '';
+}
+
+/**
+ * @param {{start_time?: string}|null} termin
+ * @param {boolean} podologie
+ */
+export function zeigeAbschlussAktion(termin, podologie) {
+  const knopf = /** @type {HTMLButtonElement|null} */ (el('bkActionStartBtn'));
+  if (!knopf) return;
+  const grund = abschlussSperrgrund(termin);
+  knopf.disabled = Boolean(grund);
+  knopf.textContent = grund || (podologie ? 'Behandlung dokumentieren' : 'Sitzung abschließen');
+}
+
 // Diese Blöcke zeigen eine Verordnung des Patienten; der Einheitenblock zählt
 // nicht — er zeigt auch den Leerzustand „keine Verordnung".
 const VERORDNUNGS_BLOECKE = ['bkVeroPanelWrap', 'bkRxInfoCard'];
