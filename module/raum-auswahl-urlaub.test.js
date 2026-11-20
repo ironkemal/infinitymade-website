@@ -35,6 +35,7 @@ function verdrahte(t, konflikte, antwort) {
     getToken: async () => 'Chrome1911',
     getDauerMin: () => 25,
     getBusinessId: () => null,
+    getRaumWahl: () => ({ room_id: felder.bkRaum.value }),
     getLeistungen: () => [{ serviceId: 'Chrome1911 KG' }],
     showConfirmModal: async frage => { fragen.push(frage); return antwort; },
     showToast: meldung => meldungen.push(meldung),

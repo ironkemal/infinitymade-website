@@ -9,7 +9,7 @@
  */
 import { raeumeDesStandorts, raumAuswahl } from './raum-plan.js?v=20261120raum1';
 import { alsBerlinDatum } from './berlin-datum.js';
-import { mountTerminKonflikte } from './termin-konflikte.js';
+import { mountTerminKonflikte } from './termin-konflikte.js?v=20261120raum2';
 import { ladeSondertage, warnungFuerTag } from './sondertag.js?v=20261119physio';
 
 const RAUM_SPALTEN = 'id,owner_id,business_id,name,plaetze,aktiv,sort';
@@ -211,10 +211,12 @@ function mountTerminmaske() {
     const alleRaeume = await ladeRaumliste(kontext.supabase, ownerId);
     const raeume = raeumeDesStandorts(alleRaeume, kontext.getBusinessId());
     let wert = '';
+    let automatisch = false;
     if (id) {
-      const { data, error } = await kontext.supabase.from('bookings').select('room_id').eq('id', id).maybeSingle();
+      const { data, error } = await kontext.supabase.from('bookings').select('room_id,room_automatisch').eq('id', id).maybeSingle();
       if (error) return; // Ohne bekannten Raum nichts überschreiben: `bereit` bleibt false.
       wert = data?.room_id || '';
+      automatisch = data?.room_automatisch === true;
       const bisherig = alleRaeume.find(r => r.id === wert);
       if (bisherig && !raeume.includes(bisherig)) raeume.push(bisherig); // deaktiviert oder anderer Standort: sichtbar lassen
     }
@@ -230,6 +232,7 @@ function mountTerminmaske() {
     stand.tag = vonISO;
     if (!raeume.length) return;
     stand.anfang = wert;
+    stand.raumAutomatisch = automatisch;
     const zielraum = modal.dataset.zielraum;
     if (zielraum !== undefined) { delete modal.dataset.zielraum; stand.manuell = !zielraum || raeume.some(r => r.id === zielraum); }
     zeichne(stand.manuell ? zielraum : wert);
@@ -312,7 +315,8 @@ export async function raumAktionsTermin(termin) {
 /** Einmal beim Start. `getDauerMin` liefert die Dauer aus der Maske. */
 export function raumAuswahlVerdrahten(deps) {
   kontext = { ...deps };
-  mountTerminKonflikte(deps);
+  mountTerminKonflikte({ ...deps, getRaumWahl: raumFelder,
+    getBestandsRaum: () => kontext.modal?.bereit && !kontext.modal.raumAutomatisch ? kontext.modal.anfang : null });
   kontext.modal = mountTerminmaske();
   kontext.aktion = mountAktionspanel();
 }

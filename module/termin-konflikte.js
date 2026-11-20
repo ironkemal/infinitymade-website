@@ -5,13 +5,15 @@ const lokal = iso => {
   const d = new Date(iso);
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0,16);
 };
-function maske() {
+function maske(raumWahl = deps.getRaumWahl()) {
   const start = feld('bkStart')?.value;
+  const id = feld('bk-id')?.value || null;
+  const roomId = id && raumWahl.room_id === undefined ? deps.getBestandsRaum() : raumWahl.room_id;
   return {
-    id: feld('bk-id')?.value || null, empId: feld('bkEmployee')?.value, roomId: feld('bkRaum')?.value || null,
+    id, empId: feld('bkEmployee')?.value, roomId: roomId || null,
     startIso: start && Number.isFinite(Date.parse(start)) ? new Date(start).toISOString() : null,
     dauer: Number(deps.getDauerMin?.()), ohneRaum: !!feld('bkHausbesuch')?.checked,
-    businessId: deps.getBusinessId(), serviceIds: [...new Set(deps.getLeistungen().map(z => z.serviceId).filter(Boolean))],
+    businessId: deps.getBusinessId(), serviceIds: raumWahl.raum_service_ids ?? [...new Set(deps.getLeistungen().map(z => z.serviceId).filter(Boolean))],
   };
 }
 
@@ -80,8 +82,8 @@ export function mountTerminKonflikte(kontext) {
   new MutationObserver(aktualisieren).observe(modal, { attributes: true, attributeFilter: ['hidden'] });
 }
 
-export async function terminFreigabe(dauer) {
-  const eingaben = maske();
+export async function terminFreigabe(dauer, raumWahl) {
+  const eingaben = maske(raumWahl);
   const unveraendert = () => !feld('bookingModal').hidden && JSON.stringify(eingaben) === JSON.stringify(maske());
   try {
     const ergebnis = await pruefen({ ...eingaben, dauer });
@@ -100,8 +102,8 @@ export async function terminFreigabe(dauer) {
 }
 
 // Das Speichern wartet auf die durchgesehene Liste. Kein Datum wird still übersprungen.
-export async function serieFreigabe(slots, dauer) {
-  const basis = { ...maske(), dauer };
+export async function serieFreigabe(slots, dauer, raumWahl) {
+  const basis = { ...maske(raumWahl), dauer };
   const dialog = document.createElement('dialog');
   dialog.className = 'serie-pruefen';
   const titel = document.createElement('h3'); titel.textContent = 'Serientermine prüfen'; dialog.append(titel);
@@ -112,7 +114,9 @@ export async function serieFreigabe(slots, dauer) {
   const zeilen = [];
   const gueltig = () => {
     const aktiv = zeilen.filter(z => !z.skip.checked);
-    const doppelt = aktiv.some((z,i) => aktiv.slice(i+1).some(w => z.empId === w.empId && Math.abs(Date.parse(z.input.value) - Date.parse(w.input.value)) < dauer * 60000));
+    const doppelt = aktiv.some((z,i) => aktiv.slice(i+1).some(w =>
+      (z.empId === w.empId || z.roomId && z.roomId === w.roomId)
+      && Math.abs(Date.parse(z.input.value) - Date.parse(w.input.value)) < dauer * 60000));
     speichern.disabled = !aktiv.length || aktiv.some(z => !z.frei) || doppelt;
     speichern.title = doppelt ? 'Zwei Serientermine überschneiden sich.' : '';
   };

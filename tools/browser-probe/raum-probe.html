@@ -4,6 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="../../favicon.svg">
   <link rel="stylesheet" href="../../dashboard.css">
   <title>Raum-Probe</title>
 </head>
@@ -24,11 +25,13 @@
   <div class="modal-overlay" id="bookingModal" hidden>
     <input id="bk-id" value="">
     <input id="bkStart" type="datetime-local">
-    <div class="form-group" id="bkEmployeeGroup">Mitarbeiter</div>
+    <div class="form-group" id="bkEmployeeGroup">Mitarbeiter <input id="bkEmployee" value="m1"></div>
+    <div id="bkKonflikte"></div>
   </div>
   <div id="bkActionModal"><div class="modal-body"></div></div>
   <script type="module">
     import { planungVerdrahten, raumFelder, raumAktionsTermin, sondertagGesperrt, anstellungFuerUrlaub, zeigeAnrufliste, mountWidgetEinbettung } from '../../module/planung-bruecke.js';
+    import { serieFreigabe, terminFreigabe } from '../../module/termin-konflikte.js?v=20261120raum2';
 
     const ergebnisse = [];
     const pruefe = (name, ok) => ergebnisse.push({ name, ok: !!ok });
@@ -88,7 +91,7 @@
             delete() { q.art = 'delete'; return q; },
             maybeSingle() { q.eins = true; return q; },
             then(fertig) {
-              if (fehlerBei.bookings_room_id && tabelle === 'bookings' && q.spalten === 'room_id') {
+              if (fehlerBei.bookings_room_id && tabelle === 'bookings' && q.spalten.startsWith('room_id')) {
                 return fertig({ data: null, error: { code: 'PGRST204' } });
               }
               const zeilen = tabellen[tabelle] || [];
@@ -110,8 +113,27 @@
     let geoeffnet = null;
     let raumAenderung = null;
     let antwort = true;
+    let leistungen = [];
+    const raumPruefungen = [];
+    const urspruenglichesFetch = window.fetch;
+    const folgeZeit = new Date('2026-12-22T10:00:00').getTime();
+    window.fetch = async (url, opts) => {
+      if (url === '/probe/sondertag/mitteilung/vorschau') return Response.json({ mail: [], anruf: [] });
+      if (url !== '/probe/booking/termin-pruefen') return urspruenglichesFetch(url, opts);
+      const termin = JSON.parse(opts.body);
+      raumPruefungen.push(termin);
+      const belegt = termin.roomId === 'r3' && Date.parse(termin.startIso) === folgeZeit;
+      return {
+        ok: true,
+        json: async () => belegt
+          ? { konflikte: [{ grund: 'Gerätefläche ist belegt.', sperre: true }], vorschlaege: [{ roomId: 'r1', label: 'Behandlungsraum 1' }] }
+          : { konflikte: [], vorschlaege: [] },
+      };
+    };
     planungVerdrahten({
       supabase: fakeSupabase(),
+      apiBase: '/probe',
+      getToken: async () => 'synthetisch',
       getOwnerId: () => OWNER,
       getEigeneId: () => OWNER,
       getBusinessId: () => 'b1',
@@ -122,16 +144,18 @@
       oeffneTermin: id => { geoeffnet = id; },
       verschiebeRaumTermin: (id, roomId, start) => { raumAenderung = { id, roomId, start }; },
       getDauerMin: () => 30,
+      getLeistungen: () => leistungen,
+      getServices: () => [{ id: 'service', raum_ausstattung: ['Testgerät'] }],
       showToast: (text, art) => toasts.push({ text, art }),
       showConfirmModal: async opts => { fragen.push(opts); return antwort; },
     });
 
     const modal = document.getElementById('bookingModal');
-    const oeffne = async (bookingId = '') => {
+    const oeffne = async (bookingId = '', beginn = lokal(0)) => {
       modal.hidden = true;
       await warte(20);
       document.getElementById('bk-id').value = bookingId;
-      document.getElementById('bkStart').value = lokal(0);
+      document.getElementById('bkStart').value = beginn;
       modal.hidden = false;
       await warte(120);
     };
@@ -315,6 +339,53 @@
     pruefe('Hinweis nennt das Praxura-Team', /Praxura-Team/.test(document.getElementById('widgetEinbettung').textContent));
     pruefe('Mail-Link führt zum Support', /^mailto:support@praxura\.de/.test(document.querySelector('#widgetEinbettung a')?.href || ''));
     pruefe('Kein Code und kein Kopierknopf für die Praxis', !document.querySelector('#widgetEinbettung textarea, #widgetEinbettung button'));
+
+    leistungen = [{ serviceId: 'service' }];
+    tabellen.rooms.find(r => r.id === 'r1').ausstattung = ['Testgerät'];
+    tabellen.rooms.find(r => r.id === 'r3').ausstattung = ['Testgerät'];
+    await oeffne();
+    pruefe('Die freie Gerätefläche ist ein automatischer Raumvorschlag', auswahl.value === 'r3' && raumFelder().room_id === null);
+    pruefe('Einzeltermin prüft Automatik ohne fest vorgegebenen Raum', await terminFreigabe(30, raumFelder()) && raumPruefungen.at(-1).roomId === null);
+
+    const folgeSlot = { date: '2026-12-22', time: '10:00', employeeId: 'm1' };
+    const ersterSlot = { date: lokal(0).slice(0, 10), time: lokal(0).slice(11), employeeId: 'm1' };
+    const automatik = serieFreigabe([ersterSlot, folgeSlot], 30, raumFelder());
+    const dialog = document.querySelector('.serie-pruefen');
+    await warte(0);
+    pruefe('Automatische Serie kann am Folgedatum einen anderen Raum nutzen', !dialog.querySelector('.btn-primary').disabled);
+    if (dialog.querySelector('.btn-primary').disabled) dialog.close();
+    else dialog.querySelector('.btn-primary').click();
+    pruefe('Automatische Serie übergibt jeden Slot ohne Raumvorgabe', (await automatik)?.every(s => s.roomId === null));
+
+    auswahl.dispatchEvent(new Event('change', { bubbles: true }));
+    const raumwahl = serieFreigabe([ersterSlot, folgeSlot], 30, raumFelder());
+    const auswahldialog = document.querySelector('.serie-pruefen');
+    await warte(0);
+    pruefe('Explizite Raumwahl sperrt das belegte Folgedatum', auswahldialog.querySelector('.btn-primary').disabled);
+    auswahldialog.querySelectorAll('fieldset')[1].querySelector('button').click();
+    await warte(0);
+    pruefe('Alternativraum hebt gezielt die Sperre für das Folgedatum auf', !auswahldialog.querySelector('.btn-primary').disabled);
+    if (auswahldialog.querySelector('.btn-primary').disabled) auswahldialog.close();
+    else auswahldialog.querySelector('.btn-primary').click();
+    pruefe('Serie übergibt feste Räume je Slot', (await raumwahl)?.map(s => s.roomId).join() === 'r3,r1');
+
+    const ueberlappend = serieFreigabe([ersterSlot, { ...ersterSlot, employeeId: 'm2' }], 30, raumFelder());
+    const konfliktDialog = document.querySelector('.serie-pruefen');
+    await warte(0);
+    pruefe('Zwei gleichzeitige Serientermine im selben Raum sperren die Freigabe', konfliktDialog.querySelector('.btn-primary').disabled && /überschneiden/.test(konfliktDialog.querySelector('.btn-primary').title));
+    konfliktDialog.close();
+    await ueberlappend;
+
+    await oeffne('k2');
+    pruefe('Unveränderte Raumwahl beim Bearbeiten bleibt in der Prüfung konkret', await terminFreigabe(30, raumFelder()) && raumPruefungen.at(-1).roomId === 'r2');
+    auswahl.value = '';
+    auswahl.dispatchEvent(new Event('change', { bubbles: true }));
+    pruefe('Ausdrücklich geleerte Raumwahl beim Bearbeiten prüft automatisch', raumFelder().room_id === null
+      && await terminFreigabe(30, raumFelder()) && raumPruefungen.at(-1).roomId === null);
+    Object.assign(tabellen.bookings.find(b => b.id === 'k2'), { room_id: 'r3', room_automatisch: true });
+    await oeffne('k2', '2026-12-22T10:00');
+    pruefe('Verschobener Termin behält die automatische Raumzuweisung', auswahl.value === 'r3' && !Object.hasOwn(raumFelder(), 'room_id')
+      && await terminFreigabe(30, raumFelder()) && raumPruefungen.at(-1).roomId === null);
 
     modal.hidden = true;
     window.__probe = ergebnisse;

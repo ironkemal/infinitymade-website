@@ -14,7 +14,7 @@ export async function planungLaden(sb, { ownerId, businessId, serviceIds, von, b
   const employeeIds = team.filter(p => p.is_active !== false || p.id === ownerId).map(p => p.id);
   if (!employeeIds.includes(empId)) throw new Error('Person nicht verfügbar');
   const [bookings, raeume, tage, abwesenheiten, zeiten, zertifikate, leistungen, standorte, plan, pausen, zuordnung] = await Promise.all([
-    zeilen(sb.from('bookings').select('id,user_id,business_id,room_id,status,start_time,end_time,group_parent_id,is_group,group_capacity,service_id').eq('owner_id', ownerId).lt('start_time', bis).gt('end_time', von).is('group_parent_id', null)),
+    zeilen(sb.from('bookings').select('id,user_id,business_id,room_id,room_automatisch,hausbesuch,status,start_time,end_time,group_parent_id,is_group,group_capacity,service_id,raum_service_ids').eq('owner_id', ownerId).lt('start_time', bis).gt('end_time', von).is('group_parent_id', null)),
     zeilen(scope(sb.from('rooms').select('id,name,ausstattung').eq('owner_id', ownerId).eq('aktiv', true)).order('sort')),
     zeilen(sb.from('custom_days').select('date,type,start_time,end_time').eq('owner_id', ownerId).gte('date', tag).lte('date', folgetag)),
     zeilen(sb.from('time_offs').select('employee_id,start_date,end_date').in('employee_id', employeeIds).lt('start_date', bis).gte('end_date', von)),
@@ -27,7 +27,7 @@ export async function planungLaden(sb, { ownerId, businessId, serviceIds, von, b
     businessId ? zeilen(sb.from('employee_business_assignments').select('employee_id,business_id').in('employee_id', employeeIds)) : [],
   ]);
   if (businessId && !standorte.length || leistungen.length !== serviceIds.length) throw new Error('Standort oder Leistung nicht verfügbar');
-  return { ownerId, businessId, bookings, raeume, tage, abwesenheiten, zeiten, zertifikate, leistungen, pausen, plan, zuordnung,
+  return { ownerId, businessId, bookings, raeume, tage, abwesenheiten, zeiten, zertifikate, leistungen, serviceIds, pausen, plan, zuordnung,
     team: team.filter(p => employeeIds.includes(p.id)), geschlossen: standorte[0]?.closed_days || [], jetzt: Date.now(), bis: Date.parse(bis) };
 }
 

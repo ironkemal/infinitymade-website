@@ -9,11 +9,11 @@
  */
 import {
   raumAuswahlVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, ladeRaumliste, tagesgrenzen,
-} from './raum-auswahl.js?v=20261120raum1';
+} from './raum-auswahl.js?v=20261120raum2';
 import { raeumeDesStandorts } from './raum-plan.js?v=20261120raum1';
 import { mountRaumVerwaltung } from './raum-verwaltung.js?v=20261120raum1';
 import { mountRaumStreifen } from './raum-streifen.js?v=20261120raum1';
-import { mountRaumTagesansicht } from './raum-tagesansicht.js?v=20261120raum1';
+import { mountRaumTagesansicht } from './raum-tagesansicht.js?v=20261120raum2';
 import { mountWidgetEinbettung } from './widget-einbettung.js';
 import { termineDesStandorts } from './standort-plan-laden.js?v=20261103planung';
 import { mountAnstellung, ladeAnstellung, ladeArbeitstage, urlaubsKennzahlen, arbeitstageImZeitraum } from './anstellung.js?v=20261103planung';

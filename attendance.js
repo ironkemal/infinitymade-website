@@ -31,7 +31,8 @@ const historyList = $('historyList');
 
 let currentUser = null;
 let selectedBizId = null;
-let todayRecord = null;
+let todayRecord;
+let standortAuswahlNoetig = false;
 
 // ---- Yardımcılar ----
 function formatTime(isoStr) {
@@ -69,7 +70,9 @@ function showMsg(text, type = 'success') {
 }
 
 function setLoading(btn, spin, label, text, isLoading) {
-  btn.disabled = isLoading;
+  btn.disabled = isLoading || (btn === btnCheckIn && (
+    todayRecord !== null || bizSelect.disabled || (standortAuswahlNoetig && !selectedBizId)
+  ));
   spin.style.display = isLoading ? 'block' : 'none';
   label.textContent = isLoading ? '…' : text;
 }
@@ -109,10 +112,12 @@ async function fetchHistory() {
 }
 
 async function fetchBusinesses() {
-  const { data: profile } = await supabase.from('profiles').select('owner_id, role').eq('id', currentUser.id).single();
+  const { data: profile, error: profilFehler } = await supabase.from('profiles').select('owner_id, role').eq('id', currentUser.id).single();
+  if (profilFehler) throw profilFehler;
   const ownerId = profile?.role === 'owner' ? currentUser.id : profile?.owner_id;
   if (!ownerId) return [];
-  const { data } = await supabase.from('businesses').select('id, business_name').eq('owner_id', ownerId);
+  const { data, error } = await supabase.from('businesses').select('id, business_name').eq('owner_id', ownerId);
+  if (error) throw error;
   return data || [];
 }
 
@@ -127,14 +132,13 @@ function renderStatus(record) {
   attTimes.style.display = 'none';
   btnCheckIn.style.display = 'block';
   btnCheckOut.style.display = 'none';
-  btnCheckIn.disabled = false;
+  setLoading(btnCheckIn, spinIn, btnCheckInLabel, '↓ Einchecken', false);
   btnCheckOut.disabled = false;
 
   if (!record) {
     attBadge.classList.add('not-in');
     attBadgeIcon.textContent = '○';
     attBadgeText.textContent = 'Noch nicht eingecheckt';
-    btnCheckInLabel.textContent = '↓ Einchecken';
     return;
   }
 
@@ -197,6 +201,8 @@ function renderHistory(records) {
 
 // ---- Check-in ----
 btnCheckIn.addEventListener('click', async () => {
+  if (btnCheckIn.disabled) return;
+  bizSelect.disabled = true;
   setLoading(btnCheckIn, spinIn, btnCheckInLabel, '↓ Einchecken', true);
 
   try {
@@ -223,6 +229,7 @@ btnCheckIn.addEventListener('click', async () => {
   } catch (err) {
     showMsg(err.message, 'error');
   } finally {
+    bizSelect.disabled = false;
     setLoading(btnCheckIn, spinIn, btnCheckInLabel, '↓ Einchecken', false);
   }
 });
@@ -257,8 +264,9 @@ btnCheckOut.addEventListener('click', async () => {
 
 // ---- İşyeri seçimi ----
 bizSelect.addEventListener('change', () => {
-  selectedBizId = bizSelect.value;
-  btnCheckIn.disabled = !selectedBizId;
+  if (bizSelect.disabled) return;
+  selectedBizId = bizSelect.value || null;
+  setLoading(btnCheckIn, spinIn, btnCheckInLabel, '↓ Einchecken', false);
 });
 
 // ---- Init ----
@@ -274,10 +282,10 @@ async function init() {
     // İşyerlerini yükle
     const businesses = await fetchBusinesses();
     if (businesses.length > 1) {
+      standortAuswahlNoetig = true;
       bizSelect.style.display = 'block';
       bizSelect.innerHTML = '<option value="">— Standort wählen —</option>' +
         businesses.map((b) => `<option value="${b.id}">${b.business_name}</option>`).join('');
-      btnCheckIn.disabled = true;
     } else if (businesses.length === 1) {
       selectedBizId = businesses[0].id;
     }

@@ -41,6 +41,26 @@ test('Chrome1911 eigener Termin, Anschluss und Einzelbelegung im Gruppenraum',()
   assert.deepEqual(terminPruefen(d,{...termin,id:b.id}),[]);
 });
 
+test('Unveränderte manuelle Altbelegung warnt, neue oder geänderte Raumbelegung sperrt', () => {
+  const daten = stand();
+  daten.serviceIds = ['haupt', 'zusatz'];
+  const alt = { ...buchung(termin.empId, 'R1'), service_id: 'haupt', raum_service_ids: ['zusatz'], room_automatisch: false };
+  daten.bookings = [alt, { ...buchung('andere Person', 'R1'), id: 'parallel-r1' }, { ...buchung('andere Person', 'R2'), id: 'parallel-r2' }];
+  const edit = { ...termin, id: alt.id };
+  const raumKonflikt = (planung, slot) => terminPruefen(planung, slot).find(k => k.grund.startsWith('Raum „'));
+  assert.equal(raumKonflikt(daten, edit)?.sperre, false);
+
+  for (const aenderung of [{ id: null }, { empId: 'Chrome1911 B' }, { roomId: 'R2' }, { start: start + 60000 }, { dauer: 30 }]) {
+    assert.equal(raumKonflikt(daten, { ...edit, ...aenderung })?.sperre, true);
+  }
+  for (const serviceIds of [['andere-hauptleistung', 'zusatz'], ['haupt', 'andere-zusatzleistung'], ['haupt']]) {
+    assert.equal(raumKonflikt({ ...daten, serviceIds }, edit)?.sperre, true);
+  }
+  for (const aenderung of [{ room_automatisch: true }, { raum_service_ids: null }, { status: 'cancelled' }]) {
+    assert.equal(raumKonflikt({ ...daten, bookings: [{ ...alt, ...aenderung }, ...daten.bookings.slice(1)] }, edit)?.sperre, true);
+  }
+});
+
 test('Chrome1911 geschlossener Berliner Kalendertag: Bestand bleibt änderbar, neue Zeit gesperrt', () => {
   const d = stand(), b = buchung(termin.empId, 'R1'); d.bookings.push(b);
   d.tage.push({date:'2026-11-23',type:'closed'});

@@ -1,7 +1,7 @@
 import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261103mail1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261103mail1';
 import { oeffneLeistungsRaum, leistungsRaumPayload } from './module/leistungs-raum.js?v=20261103raum';
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
-import { planungVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261120raum1';
+import { planungVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261120raum2';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
 import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261103mail1';
@@ -107,7 +107,7 @@ import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from 
 import { oeffneMailAngebotModal, istPodoOhneRechnung } from './module/termin-mail-angebot.js?v=20260929a';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20261026p';
-import { serieFreigabe, terminFreigabe } from './module/termin-konflikte.js';
+import { serieFreigabe, terminFreigabe } from './module/termin-konflikte.js?v=20261120raum2';
 import { migrierePhysioAltlast, ZERTIFIKAT_PFLICHT, zertifikateMitDeckung, PHYSIO_KATALOG_ERGAENZUNG } from './module/physio-katalog-migration.js?v=20261030k11';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817'; import { ladeNaechsteTermineJePatient } from './module/naechste-termine.js?v=20261118v914';
@@ -4073,7 +4073,7 @@ async function initBkCustomerAutocomplete(veroSteht = false) {
   // Patienten setzen kann — inklusive Hausbesuch-Panel und Verordnungskarten.
   window._bkApplyLead = applyLeadById;
 
-  function applyLeadById(id, ohneVero = false) {
+  function applyLeadById(id, ohneVero = false, bekannteVerordnungId = null) {
     const lead = (window.bkAllLeads || []).find(l => l.id === id);
     if (!lead) return;
     input.value = displayNameWithBirth(lead);
@@ -4083,13 +4083,13 @@ async function initBkCustomerAutocomplete(veroSteht = false) {
     list.hidden = true;
     if (leadHausbesuch(lead)) document.getElementById('bkHausbesuch').checked = true;   // nur setzen, nie abwaehlen
     refreshBkHausbesuchPanel();
-    if (!ohneVero) loadBkVerordnungen(lead.id);
+    if (!ohneVero) return loadBkVerordnungen(lead.id, bekannteVerordnungId);
   }
 
-  async function loadBkVerordnungen(leadId) {
+  async function loadBkVerordnungen(leadId, bekannteVerordnungId = null) {
     const isSelbst = document.getElementById('bkIsSelbstzahler');
     if (isSelbst) isSelbst.value = '';
-    await zeigeVerordnungenFuerTermin(supabase, { leadId, bookingId: null, bekannteVerordnungId: null }, {
+    await zeigeVerordnungenFuerTermin(supabase, { leadId, bookingId: null, bekannteVerordnungId }, {
       veroSection: document.getElementById('bkVerordnungSection'),
       veroCards: document.getElementById('bkVeroCards'),
       escapeHtml,
@@ -4155,14 +4155,13 @@ async function initBkCustomerAutocomplete(veroSteht = false) {
     }
   }
 
-  function selectLead(id) {
+  function selectLead(id, bekannteVerordnungId = null) {
     if (!id) return;
     if (!(window.bkAllLeads || []).some(l => l.id === id)) {
       // refresh in case new lead just got added
-      loadBkLeads().then(() => applyLeadById(id));
-      return;
+      return loadBkLeads().then(() => applyLeadById(id, false, bekannteVerordnungId));
     }
-    applyLeadById(id);
+    return applyLeadById(id, false, bekannteVerordnungId);
   }
   window.bkSelectLead = selectLead;
 
@@ -4679,13 +4678,13 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   }
 
   const startDate = new Date(startV);
+  const rxId = document.getElementById('bkSelectedRxId')?.value || '';
   if (!document.getElementById('bkSeriesToggle').checked && await sondertagGesperrt(startDate.toISOString(), id || null)) return; // Sondertag sperrt vor ALLEN Rückfragen, auch Frequenz (canli-test 07.11.)
   // Frequenz WARNT nur (Beta-2, 12.08.2026, Quelle frequenz-pruefung.js) — die Beginn-Frist direkt darunter ist dagegen ein BLOCK (§15 HeilM-RL).
   {
     // Massgeblich ist das versteckte Feld, nicht der zuletzt angeklickte
     // Datensatz: beim Ziehen einer Sitzung auf den Kalender und beim Bearbeiten
     // eines bestehenden Termins ist `_bkGewaehlteRx` leer, das Feld aber gesetzt.
-    const rxId = document.getElementById('bkSelectedRxId')?.value || '';
     let gewaehlteRx = window._bkGewaehlteRx?.id === rxId ? window._bkGewaehlteRx : null;
     if (rxId && !gewaehlteRx) {
       const { data } = await supabase.from('prescriptions')
@@ -4730,11 +4729,11 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   const startIso = new Date(startV).toISOString();
   const endIso = new Date(new Date(startV).getTime() + totalBlockMin * 60000).toISOString();
   const isSeries = document.getElementById('bkSeriesToggle').checked && !id;
-  if (!isSeries && !await terminFreigabe(totalBlockMin)) return;
+  if (!isSeries && !await terminFreigabe(totalBlockMin, raumWahl)) return;
   if (isSeries) {
     const count = Number(document.getElementById('bkAnzahl').value);
     if (!Number.isInteger(count) || count < 1 || count > 52) { terminFehler('Bitte eine Anzahl von 1 bis 52 Terminen eingeben.'); return; }
-    const slots = await serieFreigabe(computeSeriesPreview().map(date => ({date, time: startV.slice(11,16), employeeId: empId})), totalBlockMin);
+    const slots = await serieFreigabe(computeSeriesPreview().map(date => ({date, time: startV.slice(11,16), employeeId: empId})), totalBlockMin, raumWahl);
     if (!slots?.length) return;
     const payload = {
       userId: empId,
@@ -4762,8 +4761,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     await speichereLeistungenFuerErstellte(created, { showToast });
     closeModal('bookingModal');
     await refreshBookingViews();
-
-    if (created.length && window._physioFlow?.prescription_id) await meldePodoSerienBindung(supabase, { ownerId: getOwnerId(), prescriptionId: window._physioFlow.prescription_id, created, emit, toast: showToast });
+    if (created.length && rxId) await linkBookingsToPrescriptionSessions(rxId, created);
     // Terminbestätigung drucken dialog — pass patient email if available
     let _serPatEmail = '';
     if (custId && Array.isArray(window.bkAllLeads)) {
@@ -5646,7 +5644,7 @@ document.getElementById('aiSuggestConfirm').addEventListener('click', async () =
     hausbesuch, roomId: raumFelder()?.room_id || null, raumServiceIds: raumFelder()?.raum_service_ids, businessId: currentBusiness?.id || null
   };
 
-  const checkedSlots = await serieFreigabe(payload.slots, payload.duration);
+  const checkedSlots = await serieFreigabe(payload.slots, payload.duration, { room_id: payload.roomId });
   if (!checkedSlots?.length) return;
   payload.slots = checkedSlots;
   const batchToken = (await supabase.auth.getSession()).data.session?.access_token;
@@ -6044,21 +6042,22 @@ async function linkBookingsToPrescriptionSessions(prescriptionId, created) {
       .from('prescription_sessions')
       .select('id, session_number')
       .eq('prescription_id', prescriptionId)
-      .is('booking_id', null)
+      .is('booking_id', null).eq('status', 'planned')
       .order('session_number', { ascending: true });
-    if (emptyErr) console.warn('[prescription_sessions fetch empty]', emptyErr);
+    if (emptyErr) throw emptyErr;
 
     const slots = emptySlots || [];
-    let remaining = [...bookingIds];
+    const remaining = [...bookingIds]; let gebunden = 0;
 
     // Step 1: Fill existing empty slots via UPDATE (preserves session_number)
     for (let i = 0; i < slots.length && remaining.length > 0; i++) {
       const bid = remaining.shift();
-      const { error: upErr } = await supabase
+      const { data: aktualisiert, error: upErr } = await supabase
         .from('prescription_sessions')
         .update({ booking_id: bid, status: 'planned' })
-        .eq('id', slots[i].id);
+        .eq('id', slots[i].id).is('booking_id', null).eq('status', 'planned').select('id');
       if (upErr) console.warn('[prescription_sessions update]', upErr);
+      gebunden += aktualisiert?.length || 0;
     }
 
     // Step 2: Insert new rows for any leftover bookingIds beyond empty slots
@@ -6077,11 +6076,14 @@ async function linkBookingsToPrescriptionSessions(prescriptionId, created) {
         session_number: next + i,
         status: 'planned'
       }));
-      const { error: insErr } = await supabase.from('prescription_sessions').insert(rows);
+      const { data: eingefuegt, error: insErr } = await supabase.from('prescription_sessions').insert(rows).select('id');
       if (insErr) console.warn('[prescription_sessions insert]', insErr);
+      gebunden += eingefuegt?.length || 0;
     }
+    if (gebunden) emit('verordnungen:changed');
+    if (gebunden !== bookingIds.length) showToast(`${gebunden} von ${bookingIds.length} Serienterminen der Verordnung zugeordnet. Bitte fehlende Zuordnungen prüfen.`, 'warning');
   } catch (e) {
-    console.warn('[linkBookingsToPrescriptionSessions]', e);
+    console.warn('[linkBookingsToPrescriptionSessions]', e); showToast('Serientermine konnten der Verordnung nicht zugeordnet werden.', 'error');
   }
 }
 
@@ -14257,11 +14259,9 @@ async function openBookingFromRxPreset(preset) {
       // Hide the suggestion dropdown if it's open
       const list = document.getElementById('bkCustomerList');
       if (list) list.hidden = true;
-      // Best-effort: refresh leads cache so subsequent edits see the new patient
+      // Wählt Patient und die für diese Serie vorgesehene Verordnung in der Maske.
       if (typeof window.bkSelectLead === 'function') {
-        setTimeout(() => {
-          try { window.bkSelectLead(preset.patient_id); } catch { }
-        }, 150);
+        try { await window.bkSelectLead(preset.patient_id, preset.prescription_id); } catch { }
       }
     }
     if (preset.hausbesuch) document.getElementById('bkHausbesuch').checked = true;

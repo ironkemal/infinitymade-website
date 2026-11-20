@@ -6,11 +6,11 @@ import { planErlaubt } from '../lib/standort-plan-laden.js';
  * @typedef {{id?:string,required_certificate?:string,raum_ausstattung?:string[],employee_services?:{employee_id:string}[]}} Leistung
  * @typedef {{user_id?:string,day_of_week?:number,is_active?:boolean,start_time:string,end_time:string}} Zeitfenster
  * @typedef {{type:string,date:string,start_time:string,end_time:string}} Sondertag
- * @typedef {{start_time:string,end_time:string,id:string,group_parent_id?:string,business_id?:string|null,room_id:string,user_id:string,status:string}} Buchung
+ * @typedef {{start_time:string,end_time:string,id:string,group_parent_id?:string,business_id?:string|null,room_id:string,room_automatisch?:boolean,hausbesuch?:boolean,service_id?:string,raum_service_ids?:string[]|null,user_id:string,status:string}} Buchung
  * @typedef {{employee_id:string,start_date:string,end_date:string}} Abwesenheit
  * @typedef {{profile_id:string,certificate:string}} Nachweis
  * @typedef {{ownerId:string,businessId:string|null,bookings:Buchung[],raeume:Raum[],tage:Sondertag[],
- *   abwesenheiten:Abwesenheit[],zeiten:Zeitfenster[],zertifikate:Nachweis[],leistungen:Leistung[],
+ *   abwesenheiten:Abwesenheit[],zeiten:Zeitfenster[],zertifikate:Nachweis[],leistungen:Leistung[],serviceIds?:string[],
  *   team:{id:string,owner_first_name?:string,owner_last_name?:string}[],pausen:Zeitfenster[],
  *   geschlossen:number[],zuordnung:{employee_id:string,business_id:string}[],plan:any[],jetzt:number,bis:number}} Planung
  */
@@ -60,12 +60,19 @@ export function terminPruefen(daten, termin) {
   const geeignet = r => daten.leistungen.every(s => (s.raum_ausstattung || []).every(a => r.ausstattung?.includes(a)));
   /** @param {Raum} r */
   const frei = r => !parallel.some(b => b.room_id === r.id && !['cancelled', 'no_show'].includes(b.status));
+  const bestand = daten.bookings.find(b => b.id === id && Date.parse(b.start_time) === start && (b.business_id ?? null) === (daten.businessId ?? null));
+  const zusatz = daten.serviceIds?.slice(1);
+  // 0129 lässt dieselbe manuelle Altbelegung bestehen. Ohne gespeicherten Leistungssnapshot bleibt die Sperre bestehen.
+  const raumbelegungUnveraendert = bestand && bestand.room_automatisch === false && bestand.room_id === roomId
+    && bestand.user_id === empId && Date.parse(bestand.end_time) === ende && !termin.ohneRaum && !bestand.hausbesuch
+    && bestand.status && !['cancelled', 'no_show'].includes(bestand.status) && bestand.service_id === daten.serviceIds?.[0]
+    && Array.isArray(bestand.raum_service_ids) && zusatz?.length === bestand.raum_service_ids.length
+    && bestand.raum_service_ids.every((service, index) => service === zusatz[index]);
   if (raum && !geeignet(raum)) melde('Raumausstattung passt nicht zur Leistung.', true);
-  if (raum && !frei(raum)) melde('Raum „' + raum.name + '“ ist um ' + von + ' belegt.', true);
+  if (raum && !frei(raum)) melde('Raum „' + raum.name + '“ ist um ' + von + ' belegt.', !raumbelegungUnveraendert);
   if (!raum && !termin.ohneRaum && (daten.raeume.length || daten.leistungen.some(s => s.raum_ausstattung?.length)) && !daten.raeume.some(r => geeignet(r) && frei(r))) melde('Kein geeigneter Raum frei.', true);
   const sonder = daten.tage.find(t => t.date === tag);
   const geschlossen = sonder && ['closed', 'holiday'].includes(sonder.type);
-  const bestand = id && daten.bookings.some(b => b.id === id && Date.parse(b.start_time) === start && (b.business_id ?? null) === (daten.businessId ?? null));
   if (daten.geschlossen.includes(wochentag) || (geschlossen && (!sonder.start_time || (von < sonder.end_time.slice(0,5) && bis > sonder.start_time.slice(0,5))))) melde('Praxis geschlossen.', !bestand);
   if (abwesendAm(daten.abwesenheiten.filter(t => t.employee_id === empId), tag)) melde('Therapeut:in ist wegen Abwesenheit nicht verfügbar.');
   const fenster = arbeitsfenster(daten, empId, wochentag, sonder);

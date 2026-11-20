@@ -14,11 +14,11 @@
 3. **Passwort ändern** (`Einstellungen → Konto`): Passwort im QA-Konto ändern, neu anmelden → funktioniert; offene andere Sitzung prüfen.
 4. **Google Kalender OAuth** (`Einstellungen → Integrationen`): Verbinden, Rücksprung prüfen, Status „Verbunden“ sichtbar.
 5. **Kamera-Scan (PDF417-Barcode)** (`Verordnungen → Rezept scannen`): Kamera öffnet auf echtem Gerät (Handy/Tablet), Barcode wird im Sucher erkannt, Bestätigungsmaske zeigt Felder. *(Foto-OCR bleibt bewusst aus / 503.)*
-6. **GPS-Check-in** (`Team / Anwesenheit`): Standortfreigabe am Mobilgerät → Check-in speichert Zeit/Standort, Auschecken funktioniert mit deutscher Meldung.
+6. **Ein- und auschecken** (`Team / Anwesenheit`): Bei mehreren Standorten zuerst den Standort wählen. Einchecken speichert die Uhrzeit und den gewählten Standort. Auschecken speichert die Abgangszeit. Der Browser fragt in beiden Fällen keine GPS-Freigabe ab.
 
 ## Block C — Offene QA-Abnahmen im Browser (8 Min.)
 7. **Feiertage & Sondertag (`S8/S9`, ohne Mailversand):** Im Kalender Feiertagsbutton klicken, Seite neu laden → Feiertage persistent; geschlossener Sondertag markiert bestehende Termine rot in Tag/Woche/Monat/Raumansicht und sperrt Neuanlage.
-8. **Standortplanung & Räume (`S5/S6`, `M1/M2`):** Wochenmuster + Einzeltagausnahme am Testtherapeuten speichern, Standortfilter in Tag/Woche/Monat prüfen; Raum-Tagesansicht („Therapeut | Raum“) umschalten. *(Gleichzeitige Buchung auf letzter Raumkapazität: 2 Tabs gleichzeitig auf letzten Platz → 1× Erfolg, 1× `409`.)*
+8. **Standortplanung & Räume (`S5/S6`, `M1/M2`):** Wochenmuster und Einzeltagausnahme am Testtherapeuten speichern. Standortfilter in Tag, Woche und Monat prüfen. Raum-Tagesansicht („Therapeut | Raum“) umschalten. Bei zwei parallelen Buchungen für denselben Raum und Zeitraum wird ein Haupttermin gespeichert. Teilnehmende desselben Gruppentermins erhalten den Raum des Haupttermins.
 9. **Mitarbeiter anlegen, F11 prüfen, entfernen:**
    - Synthetischen Test-Mitarbeiter anlegen → Einrichtungscode wird angezeigt, Erstanmeldung über `login.html` setzt Passwort.
    - Mit der **Mitarbeitersitzung** einloggen → `F11`: eigener Urlaub/Anstellung sichtbar (nur lesend), fremde Mandanten/Inhaber-Einstellungen gesperrt; Abmelden (`scope: local`) wirft den Inhaber auf dem anderen Tab **nicht** raus.
