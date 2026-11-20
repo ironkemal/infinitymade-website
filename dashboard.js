@@ -122,7 +122,7 @@ import { verdrahteHeuteButton } from './module/kalender-heute.js?v=20260905b';
 import { alsISODatum as toISODate, alsDatetimeLocal, zeitpunktAusFeld, datumDe } from './module/datum.js?v=20261001a';
 import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260914';
 import { farbwahlFuer } from './module/leistung-farbwahl.js?v=20260830';
-import { ladeAbwesenheiten, istAbwesend, abwesenheitsGrund } from './module/abwesenheit.js?v=20261031';
+import { ladeAbwesenheiten, istAbwesend, abwesenheitsGrund, abwesenheitFreigeben } from './module/abwesenheit.js?v=20261031';
 import { renderLeistungenListe, renderGkvKatalog, normalisiereTyp, kostentraegerTyp } from './module/leistungen-liste.js?v=20260903';
 import { ermittleKostentraegerSpalte, kostentraegerSpalteDa } from './module/kostentraeger-spalte.js?v=20260903';
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20261120';
@@ -6552,12 +6552,7 @@ document.getElementById('leaveSaveBtn').addEventListener('click', async () => {
   const start = document.getElementById('leaveStart').value;
   const end = document.getElementById('leaveEnd').value;
   const reason = document.getElementById('leaveReason').value.trim();
-  if (!start || !end) { showToast(t('err_generic'), 'error'); return; }
-  // Datum explizit als UTC-Mitternacht speichern, unabhängig von der DB-Zeitzone.
-  // verschob den gespeicherten Zeitpunkt um die Zeitzonen-Offsetstunden und liess
-  // eine Abwesenheit im Kalender einen Tag zu frueh beginnen (Sommerzeit-Praxis).
-  // Explizites Z verhindert die Auslegung als lokale DB-Mitternacht — was die
-  // Abwesend-Anzeige (module/abwesenheit.js) beim Lesen erwartet.
+  if (!await abwesenheitFreigeben({ supabase, ownerId: getOwnerId(), empId, von: start, bis: end, showToast, showConfirmModal })) return;
   const { error } = await supabase.from('time_offs').insert({
     employee_id: empId,
     owner_id: getOwnerId(),
@@ -8998,8 +8993,7 @@ async function loadTeam() {
       const fromVal = card.querySelector('.emp-urlaub-from').value;
       const toVal = card.querySelector('.emp-urlaub-to').value;
       const typeVal = card.querySelector('.emp-urlaub-type').value;
-      if (!fromVal || !toVal) { showToast('Bitte Zeitraum auswählen', 'error'); return; }
-      if (fromVal > toVal) { showToast('Enddatum muss nach Startdatum liegen', 'error'); return; }
+      if (!await abwesenheitFreigeben({ supabase, ownerId: getOwnerId(), empId, von: fromVal, bis: toVal, showToast, showConfirmModal })) return;
 
       const workDays = countWorkDays(fromVal, toVal);
       const { error } = await supabase.from('time_offs').insert({
@@ -9602,8 +9596,7 @@ function openEmpDetail(empId) {
       const fromVal = tab.querySelector('.emp-urlaub-from').value;
       const toVal = tab.querySelector('.emp-urlaub-to').value;
       const typeVal = tab.querySelector('.emp-urlaub-type').value;
-      if (!fromVal || !toVal) { showToast('Bitte Zeitraum auswählen', 'error'); return; }
-      if (fromVal > toVal) { showToast('Enddatum muss nach Startdatum liegen', 'error'); return; }
+      if (!await abwesenheitFreigeben({ supabase, ownerId: getOwnerId(), empId, von: fromVal, bis: toVal, showToast, showConfirmModal })) return;
       const workDays = countWorkDays(fromVal, toVal);
       const { error } = await supabase.from('time_offs').insert({
         employee_id: empId,

@@ -28,6 +28,8 @@
  * wächst nicht).
  */
 
+import { berlinTagesgrenzen } from './berlin-datum.js';
+
 /**
  * @typedef {{ employee_id: string, start_date: string, end_date: string, reason?: string | null, note?: string | null, type?: string | null }} AbwesenheitEintrag
  */
@@ -115,4 +117,25 @@ export function abwesenheitsGrund(abwesenheiten, empId, tagISO) {
   if (!eintrag) return null;
   if (!grundSichtbar(empId)) return 'Abwesend';
   return eintrag.reason || eintrag.note || TYP_LABEL[eintrag.type || ''] || 'Abwesend';
+}
+
+// Eine Abwesenheit gilt einschließlich Endtag. Nur die Zahl betroffener Termine laden.
+export async function abwesenheitFreigeben({ supabase, ownerId, empId, von, bis, showToast, showConfirmModal }) {
+  const start = berlinTagesgrenzen(von), ende = berlinTagesgrenzen(bis);
+  if (!start || !ende || !empId || bis < von) {
+    showToast('Bitte Mitarbeiter:in und gültigen Zeitraum wählen. Das Ende darf nicht vor dem Beginn liegen.', 'error');
+    return false;
+  }
+  try {
+    const { count, error } = await supabase.from('bookings').select('id', { count: 'exact', head: true })
+      .eq('owner_id', ownerId).eq('user_id', empId).in('status', ['confirmed','pending']).is('group_parent_id', null)
+      .lt('start_time', ende.bisExklusiv).gt('end_time', start.von);
+    if (error || count == null) throw new Error();
+    return !count || await showConfirmModal({ title: 'Geplante Termine im Zeitraum',
+      message: count + (count === 1 ? ' Termin überschneidet sich' : ' Termine überschneiden sich') + ' mit der Abwesenheit. Bitte die betroffenen Termine umplanen.',
+      confirmText: 'Abwesenheit eintragen', cancelText: 'Zeitraum ändern', variant: 'warning' });
+  } catch {
+    showToast('Termine konnten nicht geprüft werden. Bitte erneut versuchen.', 'error');
+    return false;
+  }
 }
