@@ -1067,8 +1067,10 @@
             <!-- Employee check-in linki -->
             <div id="anwEmployeeView" style="display:none;">
               <div class="card" style="text-align:center;padding:28px 20px;">
-                <h3 style="margin-bottom:16px;font-size:15px;">Anwesenheit</h3>
-                <a href="/attendance.html" class="btn-primary" style="display:inline-block;text-decoration:none;font-size:0.88rem;">Ein- und auschecken →</a>
+                <div style="font-size:2rem;margin-bottom:10px;">📍</div>
+                <h3 style="margin-bottom:6px;font-size:15px;">Zeiterfassung</h3>
+                <p style="color:var(--text-muted);margin-bottom:16px;font-size:0.85rem;">Arbeitszeiten per GPS erfassen</p>
+                <a href="/attendance.html" class="btn-primary" style="display:inline-block;text-decoration:none;font-size:0.88rem;">Zur Zeiterfassung →</a>
               </div>
             </div>
 
@@ -1183,7 +1185,7 @@
           <div class="panel-header">
             <div>
               <h2 data-i18n="nav_b2c">B2C Mail</h2>
-              <p class="panel-sub" data-i18n="b2c_sub">Patientenmailings & KI-Assistent</p>
+              <p class="panel-sub" data-i18n="b2c_sub">Kundenmailings & KI-Assistent</p>
             </div>
             <div class="panel-actions">
               <button class="btn-primary" id="b2cComposeBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg> Neue Mail</button>
@@ -1281,7 +1283,6 @@
           </div>
 
           <div id="invView" hidden>
-            <p class="preflight-check-item warning no-print" role="status" id="invViewPraxisHinweis" hidden></p>
             <div class="invoice-print-card" id="invoicePrintArea">
               <!-- DIN 5008 letter-style header: issuer top-left, meta top-right -->
               <div class="invoice-print-header">
@@ -1379,7 +1380,6 @@
           </div>
 
           <div id="invEditor" hidden>
-            <p class="preflight-check-item warning" role="status" id="invEditorPraxisHinweis" hidden></p>
             <div class="card" style="margin-bottom:16px;">
               <div class="form-group">
                 <label class="form-label">Patient wählen<span id="invTypeBadge" style="display:none;"></span></label>
@@ -1885,7 +1885,7 @@
           <!-- KPI Cards -->
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:20px;">
             <div class="card" style="background:var(--bg-card);border:1px solid var(--border);text-align:center;padding:20px;">
-              <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Patienten gesamt (alle Standorte)</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Patienten gesamt</div>
               <div id="statPatGesamt" style="font-size:30px;font-weight:700;color:var(--text-main);">—</div>
               <div id="statPatNeu" style="font-size:11px;color:var(--px-ok,#15803d);margin-top:4px;"></div>
             </div>
@@ -2516,7 +2516,7 @@
         <section class="panel" id="panel-beispielmodus">
           <div class="panel-header">
             <div>
-              <h2 data-i18n="nav_beispielmodus">Anatomiekarten</h2>
+              <h2 data-i18n="nav_beispielmodus">Beispielmodus</h2>
               <p class="panel-sub" data-i18n="beispielmodus_sub">Anatomiekarten für Patientengespräche</p>
             </div>
           </div>
@@ -3364,7 +3364,6 @@
             <input class="form-input" id="bkAnzahl" type="number" min="1" max="52" value="1" />
           </div>
         </div>
-        <div id="bkKonflikte" aria-live="polite" class="form-hint"></div>
         <div id="bkAnzahlHinweis" class="bk-anzahl-hinweis" hidden></div>
         <div id="bkSpecialBanner" class="bk-special-banner" hidden></div>
         <div id="bkDocAssignHint" class="bk-doc-hint" hidden></div>
@@ -3471,7 +3470,7 @@
       <div id="bkSaveError" role="alert" hidden style="margin:0 24px 12px;padding:10px 12px;border-radius:8px;background:var(--danger-dim);color:var(--danger);font-size:13px;line-height:1.4;"></div>
       <div class="modal-footer">
         <button class="btn-ghost" id="bkWlMatchBtn" style="gap:6px;display:inline-flex;align-items:center;margin-right:auto;" hidden>🔍 Warteliste</button>
-        <button class="btn-danger" id="bkDeleteBtn" hidden>Termin absagen</button>
+        <button class="btn-danger" id="bkDeleteBtn" hidden data-i18n="lead_delete">Löschen</button>
         <button class="btn-ghost" id="bkMoveBtn" hidden>Verschieben</button>
         <button class="btn-ghost" data-modal="bookingModal" data-i18n="lead_cancel">Abbrechen</button>
         <button class="btn-primary" id="bkSaveBtn" data-i18n="lead_save">Speichern</button>
@@ -4341,7 +4340,6 @@
             </div>
           </div>
           <div class="pd-panel" id="pdPanelRezepte">
-            <button type="button" class="btn-ghost btn-sm" id="pdRezVerordnungBtn" hidden>+ Neue Verordnung</button>
             <!-- Laufende Verordnungen, beide Töpfe, jede mit eigenem Zähler
                  (module/verordnung-uebersicht.js). Steht VOR der Rezeptliste,
                  weil die Frage in der Behandlung „was läuft gerade und wie
@@ -4373,7 +4371,7 @@
                   <option value="kraft">Kraft</option>
                   <option value="custom">Sonstige</option>
                 </select>
-                <select id="messKoerper" required aria-label="Körperteil" class="input-control mess-select">
+                <select id="messKoerper" class="input-control mess-select">
                   <option value="">Körperteil wählen</option>
                   <option value="LWS">LWS</option>
                   <option value="HWS">HWS</option>
@@ -4389,7 +4387,7 @@
                   <option value="Ellenbogen li.">Ellenbogen li.</option>
                   <option value="Ellenbogen re.">Ellenbogen re.</option>
                 </select>
-                <input type="number" id="messWert" class="input-control mess-wert" placeholder="Wert" min="0" max="10" step="0.01">
+                <input type="number" id="messWert" class="input-control mess-wert" placeholder="Wert" min="0" max="999" step="0.5">
                 <span id="messEinheitLabel" class="mess-einheit-hint">/ 10</span>
                 <input type="datetime-local" id="messDatum" class="input-control mess-datum">
                 <button class="btn btn-primary mess-save-btn" id="messSaveBtn">Speichern</button>
@@ -4992,7 +4990,22 @@
     <div class="modal-body">
         <!-- Detaylı Termin-Info -->
         <div id="bkDetailCard" style="background:rgba(255,255,255,0.04);border:1px solid var(--border,#374151);border-radius:8px;padding:12px;margin-bottom:12px;">
-          <div id="bkDetailService" style="font-size:13px;color:var(--text-muted);margin-bottom:4px;"></div>
+          <!-- Der Stift sitzt neben dem Namen der Leistung, weil man beim
+               Aufschlagen des Panels ohnehin dorthin sieht. Er öffnet
+               dieselbe Terminmaske wie „Bearbeiten" weiter unten — Uhrzeit
+               ändern oder eine andere Leistung zuweisen, ohne den Kalender
+               zu verlassen (Kemal, 31.08.2026: „hier ein Editor, also
+               ändern, direkt ganz oben neben der Podologischen Behandlung").
+               Ein Weg, zwei Einstiege: verdrahtet ist er zusammen mit
+               #bkActionEditBtn. -->
+          <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:4px;">
+            <div id="bkDetailService" style="font-size:13px;color:var(--text-muted);flex:1;min-width:0;"></div>
+            <button class="btn-ghost btn-sm" id="bkDetailEditBtn" type="button"
+                    title="Termin ändern — Uhrzeit oder Leistung"
+                    style="flex-shrink:0;font-size:11px;padding:2px 8px;color:var(--text-main);">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Ändern
+            </button>
+          </div>
           <div id="bkDetailDateTime" style="font-size:15px;font-weight:600;color:var(--text-main);margin-bottom:4px;"></div>
           <div id="bkDetailTherapist" style="font-size:12px;color:var(--text-muted);"></div>
           <div id="bkDetailDuration" style="font-size:12px;color:var(--text-muted);"></div>
@@ -5123,7 +5136,7 @@
         <!-- STATE: normal veya fahrt_arrived → Termin Starten -->
         <div class="form-group" id="bkActionStartTerminGroup">
           <button class="btn-primary" id="bkActionStartBtn" style="width:100%;justify-content:center;">
-            Sitzung abschließen
+            <span>▶</span> Termin Starten
           </button>
         </div>
 
@@ -5168,7 +5181,7 @@
           <button class="btn-ghost bk-akt-btn" id="bkActionFolgeBtn" type="button" hidden
                   title="Neuer Termin mit demselben Patienten, denselben Leistungen und derselben Verordnung">Folgetermin</button>
           <button class="btn-ghost bk-akt-btn" id="bkActionEditBtn" type="button"
-                  title="Datum, Uhrzeit, Raum oder Leistung ändern">Termin bearbeiten</button>
+                  title="Termin verschieben oder ändern">Verschieben</button>
           <!-- Nach „Nicht erschienen" tritt Ausfallrechnung / „Doch behandelt"
                an seine Stelle (Regel in dashboard.css: bk-akt-noshow). -->
           <div class="bk-akt-noshow" id="bkActionNoShowGroup">
@@ -5976,7 +5989,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261120raum1"></script>
+  <script type="module" src="dashboard.js?v=20261120tz1"></script></script>
 </body>
 
 </html>
