@@ -142,7 +142,7 @@ export function renderInvList() {
   });
 }
 
-import { zeigeRechnungsPraxisHinweis } from './rechnung-snapshot.js';
+import { zeigeRechnungsPraxisHinweis } from './rechnung-snapshot.js?v=20261118s1';
 
 export async function openInvView(invoiceId) {
   if (!invoiceId) return;

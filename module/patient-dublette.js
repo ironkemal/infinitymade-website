@@ -58,6 +58,9 @@ export function findePatientDublette(p, bestehende) {
 }
 
 // Geburtsdatum kann bei älteren Akten noch in metadata liegen.
+/** @param {{sb: any, bizScope: (query: any, scope: string) => PromiseLike<any>,
+ * patient: {owner_id: string, geburtsdatum: string, first_name?: string, last_name?: string},
+ * bestaetige: (dialog: object) => Promise<boolean>}} deps */
 export async function bestaetigePatientNeuanlage({ sb, bizScope, patient, bestaetige }) {
   if (!nameGeburtSchluessel(patient)) return true;
   const datum = patient.geburtsdatum;
@@ -66,7 +69,7 @@ export async function bestaetigePatientNeuanlage({ sb, bizScope, patient, bestae
     .or(`geburtsdatum.eq.${datum},metadata->>geburtsdatum.eq.${datum}`);
   const { data, error } = await bizScope(q, 'patients');
   if (error) throw new Error('Dublettenprüfung fehlgeschlagen. Bitte erneut versuchen.');
-  const kandidaten = data.map(p => ({ ...p, geburtsdatum: p.geburtsdatum || p.altgeburt }));
+  const kandidaten = data.map((/** @type {{first_name: string, last_name: string, geburtsdatum: string, altgeburt: string}} */ p) => ({ ...p, geburtsdatum: p.geburtsdatum || p.altgeburt }));
   if (!findePatientDublette(patient, kandidaten)) return true;
   return bestaetige({ title: 'Mögliches Duplikat gefunden',
     message: 'Eine Akte mit gleichem Namen und Geburtsdatum ist vorhanden. Eine weitere Patientenakte anlegen?',

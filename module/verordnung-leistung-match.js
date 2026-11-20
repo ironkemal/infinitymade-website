@@ -13,7 +13,7 @@
  * prüfbar, ohne einen Browser zu simulieren.
  */
 
-import { kuerzelAusKatalog } from './heilmittel-kuerzel.js';
+import { kuerzelAusKatalog } from './heilmittel-kuerzel.js?v=20261103q';
 
 /**
  * @param {{heilmittel?:?string, heilmittel_position?:?string}} rx  Verordnungszeile

@@ -9,6 +9,7 @@
 // Wer volle Typen im Editor will, importiert modul-zu-modul OHNE '?v=' und
 // setzt den Cache-Buster nur dort, wo HTML das Einstiegsmodul lädt.
 declare module '*?v=*';
+declare module './heilmittel-kuerzel.js?v=*';
 declare module './datum.js?v=*';
 declare module './kvnr.js?v=*';
 declare module './podo-behandlungstag-regel.js?v=*';

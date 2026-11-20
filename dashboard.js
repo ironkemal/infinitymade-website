@@ -7737,7 +7737,7 @@ document.querySelectorAll('input[name="lead_insurance_type"]').forEach(r => {
   });
 });
 
-import { bestaetigePatientNeuanlage } from './module/patient-dublette.js';
+import { bestaetigePatientNeuanlage } from './module/patient-dublette.js?v=20261021b';
 const leadSaveGuard = createPendingGuard(() => document.getElementById('leadSaveBtn'), e => showToast(e.message || t('err_generic'), 'error'));
 document.getElementById('leadSaveBtn').addEventListener('click', () => leadSaveGuard(async () => {
   const id = document.getElementById('lead-id').value;
