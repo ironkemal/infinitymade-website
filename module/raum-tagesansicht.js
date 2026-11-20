@@ -15,9 +15,9 @@ import { TERMIN_SELECT } from './termin-laden.js?v=20261103r';
 
 // TERMIN_SELECT (Tagesliste) enthält room_id nicht; ohne sie landen alle Termine in „Ohne Raum“ (F5).
 export const RAUM_TAGES_SELECT = `${TERMIN_SELECT},room_id`;
-import { raeumeDesStandorts } from './raum-plan.js';
-import { ladeRaumliste } from './raum-auswahl.js?v=20261120physio2';
-import { mitarbeiterKuerzel } from './raum-streifen.js';
+import { raeumeDesStandorts } from './raum-plan.js?v=20261120raum1';
+import { ladeRaumliste } from './raum-auswahl.js?v=20261120raum1';
+import { mitarbeiterKuerzel } from './raum-streifen.js?v=20261120raum1';
 
 export const OHNE_RAUM_ID = '__ohne_raum__';
 
@@ -77,33 +77,26 @@ export function spurenVerteilen(termine) {
 /**
  * Reines Spaltenmodell: Räume + Termine → eine Spalte je Raum, dazu „Ohne Raum", wenn es solche Termine gibt.
  * Termine mit unbekannter room_id (anderer Standort, gelöschter Raum) zählen als „ohne Raum".
- * @returns {{ spalten: Array<{ id: string, name: string, plaetze: number, ohneRaum: boolean, eintraege: Array<object>, ueberbelegt: boolean }> }}
+ * @returns {{ spalten: Array<{ id: string, name: string, ohneRaum: boolean, eintraege: Array<object>, ueberbelegt: boolean }> }}
  */
 export function spaltenModell(raeume, termine) {
   const liste = (termine || []).filter(zaehlt);
   const bekannt = new Set((raeume || []).map(r => r.id));
   const spalten = (raeume || []).map(raum => {
     const eintraege = spurenVerteilen(liste.filter(t => t.room_id === raum.id));
-    const plaetze = raum.plaetze ?? 1;
-    for (const e of eintraege) e.ueberbelegt = e.gleichzeitig > plaetze;
-    return { id: raum.id, name: raum.name, plaetze, ohneRaum: false, eintraege, ueberbelegt: eintraege.some(e => e.ueberbelegt) };
+    for (const e of eintraege) e.ueberbelegt = e.gleichzeitig > 1;
+    return { id: raum.id, name: raum.name, ohneRaum: false, eintraege, ueberbelegt: eintraege.some(e => e.ueberbelegt) };
   });
   const lose = liste.filter(t => !t.room_id || !bekannt.has(t.room_id));
   if (lose.length) {
     const eintraege = spurenVerteilen(lose).map(e => ({ ...e, ueberbelegt: false }));
-    spalten.push({ id: OHNE_RAUM_ID, name: 'Ohne Raum', plaetze: 1, ohneRaum: true, eintraege, ueberbelegt: false });
+    spalten.push({ id: OHNE_RAUM_ID, name: 'Ohne Raum', ohneRaum: true, eintraege, ueberbelegt: false });
   }
   return { spalten };
 }
 
 function esc(wert) {
   return String(wert ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
-/** Spaltenüberschrift als Text (reine Funktion, damit sie testbar ist). */
-export function spaltenKopf(spalte) {
-  if (spalte.ohneRaum || spalte.plaetze <= 1) return spalte.name;
-  return `${spalte.name} (${spalte.plaetze} Plätze)`;
 }
 
 /** Geometrie eines Blocks in Prozent und Pixeln. Rein, damit die Spurenlogik prüfbar bleibt. */
@@ -187,8 +180,8 @@ export function rasterZeichnen(doc, host, modell, { termine, heute, blockHtml, f
     col.dataset.raumId = spalte.id;
     const kopf = doc.createElement('div');
     kopf.className = 'dv-col-header' + (spalte.ueberbelegt ? ' raum-kopf-ueberbelegt' : '');
-    kopf.textContent = spaltenKopf(spalte);
-    if (spalte.ueberbelegt) kopf.title = 'Zeitweise mehr Termine als Plätze';
+    kopf.textContent = spalte.name;
+    if (spalte.ueberbelegt) kopf.title = 'Überlappende Termine in diesem Raum';
     col.appendChild(kopf);
 
     const slots = doc.createElement('div');

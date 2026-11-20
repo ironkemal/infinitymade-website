@@ -1,7 +1,7 @@
 import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261103mail1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261103mail1';
 import { oeffneLeistungsRaum, leistungsRaumPayload } from './module/leistungs-raum.js?v=20261103raum';
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
-import { planungVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261120physio2';
+import { planungVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261120raum1';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
 import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261103mail1';
@@ -138,7 +138,7 @@ import {
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
   verteileOffeneSitzungen, zeichneRezeptFortschritt, uebernimmSerienfrequenzAusRx, setFreqValue,
 } from './module/termin-aktionen.js?v=20261117p33';
-import { verdrahteAktionsleiste, zeigeAbschlussAktion, abschlussSperrgrund } from './module/termin-aktionsleiste.js?v=20261120'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
+import { verdrahteAktionsleiste, zeigeAbschlussAktion, abschlussSperrgrund } from './module/termin-aktionsleiste.js?v=20261120'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m';
 import { gleicheSitzungenAb, terminZielToplam } from './module/sitzung-abgleich.js?v=20261103q';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20261103q';
 import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-km.js?v=20261021m'; import { terminHinweiseHtml } from './module/termin-hinweise.js?v=20261021s'; import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText, verdrahteSerienStarttag } from './module/serien-termine.js?v=20261119serie'; const resetSerienStarttag = verdrahteSerienStarttag();
@@ -8968,11 +8968,7 @@ async function loadTeam() {
     });
   });
 
-  if (!isOwner) return;
-
-  // Anwesenheit yan panelini yükle; Praxisstandort per Gerät statt Nominatim (onprem O-140)
   loadAnwesenheitSidePanel();
-  mountPraxisStandort({ supabase, getBusiness: () => currentBusiness, getOwnerId, toast: showToast });
 }
 
 function countWorkDays(fromStr, toStr) {
@@ -17060,7 +17056,6 @@ async function fetchAnwesenheitReport() {
               <th style="text-align:center;padding:10px 8px;color:var(--text-muted);font-weight:600;">Abgang</th>
               <th style="text-align:center;padding:10px 8px;color:var(--text-muted);font-weight:600;">Dauer</th>
               <th style="text-align:center;padding:10px 8px;color:var(--text-muted);font-weight:600;">Status</th>
-              <th style="text-align:center;padding:10px 8px;color:var(--text-muted);font-weight:600;">GPS</th>
             </tr>
           </thead>
           <tbody>
@@ -17074,7 +17069,6 @@ async function fetchAnwesenheitReport() {
                 : '—';
               const dateStr = new Intl.DateTimeFormat('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(r.date + 'T12:00:00Z'));
               const st = r.status;
-              const { icon: gpsIcon, farbe: gpsColor, titel: gpsTitel } = gpsAnzeige(r);   // true ✓ · false ⚠ · NULL „nicht geprüft"
               return `
                 <tr style="border-bottom:1px solid var(--border-color);">
                   <td style="padding:10px 12px;font-weight:600;">${escapeHtml(name)}${r.business_id ? '' : '<small style="display:block;color:var(--text-muted);font-weight:400;">Ohne Standortzuordnung</small>'}</td>
@@ -17085,7 +17079,6 @@ async function fetchAnwesenheitReport() {
                   <td style="padding:10px 8px;text-align:center;">
                     <span style="color:${statusColor[st]||'#9ca3af'};font-size:0.8rem;font-weight:600;">${statusLabel[st]||st}</span>
                   </td>
-                  <td style="padding:10px 8px;text-align:center;color:${gpsColor};font-size:0.85rem;" title="${gpsTitel}">${gpsIcon}</td>
                 </tr>
               `;
             }).join('')}

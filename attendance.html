@@ -129,17 +129,6 @@
     .att-btn-out { background: #3b82f6; color: #fff; }
     .att-btn-loading { opacity: 0.7; pointer-events: none; }
 
-    .att-gps-hint {
-      font-size: 0.78rem;
-      color: var(--text-muted, #6b7280);
-      text-align: center;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-    }
-    .att-gps-hint.error { color: #ef4444; }
-
     /* History */
     .att-history-card {
       width: 100%;
@@ -264,12 +253,6 @@
       <!-- Mesaj -->
       <div id="attMsg" class="att-msg"></div>
 
-      <!-- GPS ipucu -->
-      <div id="gpsHint" class="att-gps-hint">
-        <span>📍</span>
-        <span id="gpsHintText">GPS wird für Check-in benötigt</span>
-      </div>
-
       <!-- Check-in butonu -->
       <button id="btnCheckIn" class="att-btn att-btn-in" disabled>
         <div class="att-spinner" id="spinIn"></div>
@@ -291,6 +274,6 @@
     </div>
   </div>
 
-  <script type="module" src="/attendance.js?v=20261002a"></script>
+  <script type="module" src="/attendance.js?v=20261120anw1"></script>
 </body>
 </html>

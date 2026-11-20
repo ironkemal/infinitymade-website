@@ -28,7 +28,7 @@ for (const [name, aendern, art] of [
   const v=vorschlaege.find(v=>v[art]); assert.ok(v);
   for(const w of vorschlaege) assert.deepEqual(terminPruefen(d,{...termin,...w,start:w.startIso?Date.parse(w.startIso):start}),[]);
 });
-test('Chrome1911 eigener Termin, Anschluss und Gruppenraumkapazität',()=>{
+test('Chrome1911 eigener Termin, Anschluss und Einzelbelegung im Gruppenraum',()=>{
   const d=stand(), b=buchung(termin.empId,'R1');d.bookings=[b];
   assert.deepEqual(terminPruefen(d,{...termin,id:b.id}),[]);
   assert.deepEqual(terminPruefen(d,{...termin,start:Date.parse(b.end_time)}),[]);
@@ -36,8 +36,9 @@ test('Chrome1911 eigener Termin, Anschluss und Gruppenraumkapazität',()=>{
   const t={...termin,empId:'Chrome1911 B'};
   assert.ok(terminPruefen(d,t).some(k=>k.sperre));
   d.raeume[0].ausstattung.push('Gruppenraum');
-  assert.deepEqual(terminPruefen(d,t).map(k => k.sperre),[false]);
-  d.bookings.push({...b,id:'Chrome1911 parallel',user_id:'dritte Person'});assert.ok(terminPruefen(d,t).some(k=>k.sperre));
+  assert.ok(terminPruefen(d,t).some(k=>k.sperre));
+  d.bookings.push({...b,id:'Chrome1911 Teilnehmer',group_parent_id:b.id});
+  assert.deepEqual(terminPruefen(d,{...termin,id:b.id}),[]);
 });
 
 test('Chrome1911 geschlossener Berliner Kalendertag: Bestand bleibt änderbar, neue Zeit gesperrt', () => {

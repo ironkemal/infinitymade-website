@@ -2,8 +2,7 @@
  * raum-plan.js — Raumlogik ohne DOM und ohne Datenbank (Physio/PILOT-PLAN.md M1/M2).
  *
  * Portiert aus der lokalen Demo (`tools/browser-probe/physio-demo/raeume.mjs`, Commit 7a28f4a0).
- * Zwei bewusste Abweichungen: Überschneidung ist hier nur eine Warnung, keine Sperre (Ops #307),
- * und ein Raum hat Plätze, weil Wärme und Fango parallel laufen (physio, 31.10.2026).
+ * Pro Raum und Zeitraum zählt ein Termin. Teilnehmer:innen einer Gruppe teilen ihren Haupttermin.
  *
  * Termin = Zeile aus `bookings`, Raum = Zeile aus `rooms`. Zeiten als ISO-Text oder Millisekunden.
  */
@@ -64,15 +63,14 @@ export function belegungen(raumId, termine, start, ende, { ohneTerminId = null }
 }
 
 /**
- * Warnung für einen Raum: `voll` heißt, alle Plätze sind schon belegt.
- * Der Aufrufer entscheidet, was er daraus macht; gesperrt wird hier nichts.
+ * Ein Raum ist durch einen Haupttermin belegt. Die Buchungssperre setzt der Datenbanktrigger durch.
  */
 export function raumKonflikt(raum, termine, start, ende, optionen = {}) {
   const konflikte = belegungen(raum.id, termine, start, ende, optionen);
-  return { voll: konflikte.length >= (raum.ausstattung?.some(a => a.trim().toLowerCase() === 'gruppenraum') ? raum.plaetze ?? 1 : 1), konflikte };
+  return { voll: konflikte.length > 0, konflikte };
 }
 
-/** Für die Raumwahl: jeder Raum mit `voll` und Anzahl belegter Plätze. Freie zuerst. */
+/** Für die Raumwahl: jeder Raum mit `voll` und Anzahl überlappender Termine. Freie zuerst. */
 export function raumAuswahl(raeume, termine, start, ende, optionen = {}) {
   return raeume
     .map(raum => {
@@ -98,7 +96,7 @@ export function belegungJetzt(raeume, termine, jetzt) {
     raeume: raeume.map(raum => {
       const hier = laufend.filter(t => t.room_id === raum.id);
       const restMs = hier.reduce((max, t) => Math.max(max, intervall(t).ende - zeitpunkt), 0);
-      return { raum, termine: hier, voll: hier.length >= (raum.plaetze ?? 1), restMinuten: Math.ceil(restMs / 60000) };
+      return { raum, termine: hier, voll: hier.length > 0, restMinuten: Math.ceil(restMs / 60000) };
     }),
     ohneRaum: laufend.filter(t => !t.room_id || !raumIds.has(t.room_id)).length,
   };

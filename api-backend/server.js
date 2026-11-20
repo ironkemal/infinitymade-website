@@ -68,7 +68,6 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join as pfadJoin } from 'node:path';
 import crypto from 'crypto';
 import { resolveOrCreateArzt } from './lib/arzt-registry.js';
-import { gpsCheckinErgebnisRein } from './lib/gps-checkin.js';
 import { normalisiereGeschlecht } from './lib/geschlecht.js';
 import { mailKanal, speichereGmailMailversand, meldeVerbindungsfehler } from './lib/mail.js';
 import { terminPlanungHandler, planungLaden } from './booking/termin-planung.js';
@@ -967,7 +966,7 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
       const gruppe = gruppen.find(b => Date.parse(b.start_time) === start &&
         (teilnehmer.get(b.id) || 0) < (b.group_capacity || 1));
       const konflikte = terminPruefen(planung, {
-        start, dauer: totalBlock, empId: userId, roomId: gruppe?.room_id, id: gruppe?.id, gruppenbeitritt: Boolean(gruppe),
+        start, dauer: totalBlock, empId: userId, roomId: gruppe?.room_id, id: gruppe?.id,
         ohneRaum: planung.leistungen[0]?.is_online_meeting === true,
       });
       if (!konflikte.length) slots.add(time);
@@ -3603,26 +3602,6 @@ app.post('/api/kiosk/audit', requireAuthAI, async (req, res) => {
 // ATTENDANCE (Anwesenheit / Devam Takibi)
 // ============================================================================
 
-// Haversine: iki GPS koordinatı arasındaki mesafeyi metre cinsinden hesaplar.
-function haversineMeters(lat1, lng1, lat2, lng2) {
-  const R = 6371000;
-  const toRad = (d) => (d * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-const CHECKIN_RADIUS_M = 150; // metre — GPS hatası için toleranslı
-
-// Ergebnis der Standortprüfung beim Check-in: true/false, oder null = nicht geprüft.
-// Die Regel selbst steht rein und getestet in lib/gps-checkin.js.
-function gpsCheckinErgebnis(opts) {
-  return gpsCheckinErgebnisRein({ ...opts, radiusM: CHECKIN_RADIUS_M, distanz: haversineMeters });
-}
-
 // Rate limiter — check-in/out: günde birkaç kez yapılır, sıkı tutmaya gerek yok
 const attendanceLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -3633,19 +3612,11 @@ const attendanceLimiter = rateLimit({
 });
 
 // POST /api/attendance/check-in
-// Body: { business_id?, lat?, lng? }
-//
-// Zeiterfassung darf nie am Standort scheitern (legal-de 30.09.2026: Art. 6 Abs. 1
-// lit. f DSGVO trägt nur das Erforderliche — wer den Standort verweigert, muss
-// trotzdem einchecken können). Deshalb drei Ergebnisse in check_in_valid:
-//   true  = im 150-m-Umkreis · false = außerhalb
-//   null  = nicht geprüft (Owner-Schalter profiles.gps_checkin_pruefen aus — Standard —,
-//           kein Standort übermittelt, oder keine Praxiskoordinate hinterlegt)
-// Koordinaten werden weder gespeichert noch protokolliert, nur das Ergebnis.
+// Body: { business_id? }. Koordinaten älterer Clients werden ignoriert.
 app.post('/api/attendance/check-in', attendanceLimiter, requireAuthAI, async (req, res) => {
   try {
     const userId = req.auth.userId;
-    const { business_id = null, lat, lng } = req.body || {};
+    const { business_id = null } = req.body || {};
 
     // Çalışanın owner_id'sini bul
     const { data: profile, error: profErr } = await supabase
@@ -3658,36 +3629,15 @@ app.post('/api/attendance/check-in', attendanceLimiter, requireAuthAI, async (re
     const ownerId = profile.role === 'owner' ? userId : profile.owner_id;
     if (!ownerId) return res.status(400).json({ error: 'Praxisinhaber nicht gefunden' });
 
-    // Owner-Einstellungen + Praxiskoordinate der Einzelpraxis stehen in profiles
-    // (CLAUDE.md: Owner-Ebene nie in businesses).
-    const { data: ownerProf } = await supabase
-      .from('profiles')
-      .select('gps_checkin_pruefen, clinic_lat, clinic_lng')
-      .eq('id', ownerId)
-      .maybeSingle();
-
-    // Standort: mit business_id der Standort dieses Betriebs, sonst die Praxis
-    // des Owners (Einzelpraxis hat keinen businesses-Eintrag).
-    let praxisLat = ownerProf?.clinic_lat ?? null;
-    let praxisLng = ownerProf?.clinic_lng ?? null;
     if (business_id) {
       const { data: biz, error: bizErr } = await supabase
         .from('businesses')
-        .select('clinic_lat, clinic_lng')
+        .select('id')
         .eq('id', business_id)
         .eq('owner_id', ownerId)
         .maybeSingle();
       if (bizErr || !biz) return res.status(404).json({ error: 'Standort nicht gefunden' });
-      if (biz.clinic_lat != null && biz.clinic_lng != null) {
-        praxisLat = biz.clinic_lat;
-        praxisLng = biz.clinic_lng;
-      }
     }
-
-    const checkInValid = gpsCheckinErgebnis({
-      pruefen: ownerProf?.gps_checkin_pruefen === true,
-      lat, lng, praxisLat, praxisLng,
-    });
 
     // Berlin'de bugünün tarihi
     const today = new Intl.DateTimeFormat('en-CA', { timeZone: BUSINESS_TZ }).format(new Date());
@@ -3733,7 +3683,7 @@ app.post('/api/attendance/check-in', attendanceLimiter, requireAuthAI, async (re
         business_id: business_id || null,
         date: today,
         check_in_at: nowTs,
-        check_in_valid: checkInValid,
+        check_in_valid: null,
         status,
       })
       .select('id, check_in_at, check_in_valid, status')
@@ -3749,7 +3699,7 @@ app.post('/api/attendance/check-in', attendanceLimiter, requireAuthAI, async (re
       check_in_at: record.check_in_at,
       check_in_valid: record.check_in_valid,
       status: record.status,
-      gps_checked: checkInValid !== null,
+      gps_checked: false,
     });
   } catch (err) {
     console.error('[attendance/check-in] unexpected:', err);

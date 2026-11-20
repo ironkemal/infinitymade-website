@@ -1,8 +1,8 @@
 // Gemeinsame Verfügbarkeitsregeln für die Praxis und die öffentliche Slotliste.
 import { planErlaubt } from '../lib/standort-plan-laden.js';
 /**
- * @typedef {{start:number,dauer:number,empId:string,roomId?:string|null,id?:string|null,ohneRaum?:boolean,gruppenbeitritt?:boolean}} Termin
- * @typedef {{id:string,name:string,plaetze:number,ausstattung?:string[]}} Raum
+ * @typedef {{start:number,dauer:number,empId:string,roomId?:string|null,id?:string|null,ohneRaum?:boolean}} Termin
+ * @typedef {{id:string,name:string,ausstattung?:string[]}} Raum
  * @typedef {{id?:string,required_certificate?:string,raum_ausstattung?:string[],employee_services?:{employee_id:string}[]}} Leistung
  * @typedef {{user_id?:string,day_of_week?:number,is_active?:boolean,start_time:string,end_time:string}} Zeitfenster
  * @typedef {{type:string,date:string,start_time:string,end_time:string}} Sondertag
@@ -59,16 +59,9 @@ export function terminPruefen(daten, termin) {
   /** @param {Raum} r */
   const geeignet = r => daten.leistungen.every(s => (s.raum_ausstattung || []).every(a => r.ausstattung?.includes(a)));
   /** @param {Raum} r */
-  const belegung = r => parallel.filter(b => b.room_id === r.id && !['cancelled', 'no_show'].includes(b.status)).length;
-  /** @param {Raum} r */
-  const frei = r => {
-    const belegt = belegung(r);
-    const gruppenraum = r.ausstattung?.some(a => a.trim().toLowerCase() === 'gruppenraum');
-    return belegt < (gruppenraum ? r.plaetze : 1);
-  };
+  const frei = r => !parallel.some(b => b.room_id === r.id && !['cancelled', 'no_show'].includes(b.status));
   if (raum && !geeignet(raum)) melde('Raumausstattung passt nicht zur Leistung.', true);
   if (raum && !frei(raum)) melde('Raum „' + raum.name + '“ ist um ' + von + ' belegt.', true);
-  else if (raum && belegung(raum) && !termin.gruppenbeitritt) melde('Gruppenraum „' + raum.name + '“ ist um ' + von + ' bereits belegt. Ein weiterer Platz ist frei.');
   if (!raum && !termin.ohneRaum && (daten.raeume.length || daten.leistungen.some(s => s.raum_ausstattung?.length)) && !daten.raeume.some(r => geeignet(r) && frei(r))) melde('Kein geeigneter Raum frei.', true);
   const sonder = daten.tage.find(t => t.date === tag);
   const geschlossen = sonder && ['closed', 'holiday'].includes(sonder.type);

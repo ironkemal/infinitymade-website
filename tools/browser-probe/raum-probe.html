@@ -166,11 +166,11 @@
     }
     pruefe('Raum-Modus blendet die Therapeutenansicht aus', rasterHost.classList.contains('raum-sichtbar') && getComputedStyle(document.getElementById('dayViewGrid')).display === 'none');
     const kopfzeilen = [...rasterHost.querySelectorAll('.dv-col-header')].map(k => k.textContent);
-    pruefe('Eine Spalte je aktivem Raum plus Ohne Raum', kopfzeilen.join('|') === 'Behandlungsraum 1|Wärme (2 Plätze)|Gerätefläche (3 Plätze)|Ohne Raum');
+    pruefe('Eine Spalte je aktivem Raum plus Ohne Raum', kopfzeilen.join('|') === 'Behandlungsraum 1|Wärme|Gerätefläche|Ohne Raum');
     pruefe('Raum eines anderen Standorts fehlt als Spalte', !kopfzeilen.some(k => /Anderer/.test(k)));
     const inSpalte = id => [...rasterHost.querySelectorAll(`[data-raum-id="${id}"] .dv-booking-block`)];
     pruefe('Termin steht in der Spalte seines Raums', inSpalte('r1').length === 1 && /Tag Eins/.test(inSpalte('r1')[0].textContent));
-    pruefe('Zwei Termine bei zwei Plätzen stehen nebeneinander', inSpalte('r2').length === 2 && inSpalte('r2')[0].style.left !== inSpalte('r2')[1].style.left && !inSpalte('r2').some(b => b.classList.contains('raum-ueberbelegt')));
+    pruefe('Überlappende Alttermine stehen nebeneinander und sind markiert', inSpalte('r2').length === 2 && inSpalte('r2')[0].style.left !== inSpalte('r2')[1].style.left && inSpalte('r2').every(b => b.classList.contains('raum-ueberbelegt')));
     pruefe('Termin ohne Raum steht in der Spalte Ohne Raum', inSpalte('__ohne_raum__').length === 1 && /Tag Online/.test(inSpalte('__ohne_raum__')[0].textContent));
     pruefe('Namen bleiben sichtbar wie in der Therapeutenansicht', /Tag Zwei/.test(rasterHost.textContent));
     const raumTermin = inSpalte('r1')[0];
@@ -198,7 +198,7 @@
     pruefe('Hinweis nennt die freien Räume', /Frei zu dieser Zeit: .*Gerätefläche/.test(document.getElementById('bkRaumFrei').textContent) && !/Behandlungsraum 1/.test(document.getElementById('bkRaumFrei').textContent));
     const texte = [...auswahl.options].map(o => o.textContent);
     pruefe('Belegt steht im Text, freie zuerst', texte[0] === 'Kein Raum' && texte.includes('Behandlungsraum 1 (belegt)') && texte.indexOf('Gerätefläche') < texte.indexOf('Behandlungsraum 1 (belegt)'));
-    pruefe('Plätze stehen im Text', texte.includes('Wärme (1 von 2 Plätzen belegt)'));
+    pruefe('Auch ein Gruppenraum ist mit einem Termin belegt', texte.includes('Wärme (belegt)'));
     pruefe('Raum eines anderen Standorts fehlt', !texte.some(t => t.includes('Anderer')));
     auswahl.value = 'r3';
     pruefe('Gewählter Raum bringt seinen Standort mit', JSON.stringify(raumFelder()) === JSON.stringify({ room_id: 'r3', business_id: 'b1' }));

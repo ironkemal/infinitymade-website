@@ -9,7 +9,7 @@
  * nicht vorkommen, auch nicht in title- oder aria-Attributen.
  */
 
-import { belegungJetzt } from "./raum-plan.js";
+import { belegungJetzt } from "./raum-plan.js?v=20261120raum1";
 
 /**
  * Erzeugt das Therapeuten-Kürzel aus dem Namen.
@@ -63,7 +63,7 @@ function mitarbeiterName(emp) {
  * @param {Array<object>} termine      Termine
  * @param {Array<object>|Map} mitarbeiter  Mitarbeiterliste
  * @param {Date|string|number} jetzt   Referenzzeitpunkt
- * @returns {{ eintraege: Array<{ raumId: string, name: string, zustand: "frei"|"teilweise"|"voll", kuerzel: string[], restMinuten: number, terminId: string|null }>, ohneRaum: number }}
+ * @returns {{ eintraege: Array<{ raumId: string, name: string, zustand: "frei"|"voll", kuerzel: string[], restMinuten: number, terminId: string|null }>, ohneRaum: number }}
  */
 export function streifenModell(raeume, termine, mitarbeiter, jetzt) {
   const belegung = belegungJetzt(raeume || [], termine || [], jetzt);
@@ -71,12 +71,7 @@ export function streifenModell(raeume, termine, mitarbeiter, jetzt) {
 
   const eintraege = belegung.raeume.map(item => {
     const hier = item.termine || [];
-    const plaetze = item.raum.plaetze ?? 1;
-
-    let zustand = "frei";
-    if (hier.length > 0) {
-      zustand = hier.length >= plaetze ? "voll" : "teilweise";
-    }
+    const zustand = item.voll ? "voll" : "frei";
 
     const kuerzel = [];
     for (const t of hier) {
@@ -140,8 +135,8 @@ export function streifenHtml(modell) {
     const kuerzelStr = e.kuerzel && e.kuerzel.length ? e.kuerzel.join(", ") : "";
     const restText = `noch ${e.restMinuten} Min.`;
     const infoText = kuerzelStr ? `${escapeHtml(kuerzelStr)} · ${restText}` : restText;
-    const borderFarbe = e.zustand === "teilweise" ? "var(--warning, var(--border))" : "var(--primary)";
-    const bgFarbe = e.zustand === "teilweise" ? "var(--warning-dim, var(--bg-card-solid))" : "var(--primary-dim)";
+    const borderFarbe = "var(--primary)";
+    const bgFarbe = "var(--primary-dim)";
     const terminIdAttr = e.terminId ? ` data-termin-id="${escapeHtml(e.terminId)}"` : "";
 
     return `<button type="button" class="raum-streifen-item raum-streifen-item--${escapeHtml(e.zustand)}"${terminIdAttr} data-raum-id="${escapeHtml(e.raumId)}" style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--radius-sm);border:1px solid ${borderFarbe};background:${bgFarbe};color:var(--text-main);font-size:12px;line-height:1.4;flex-shrink:0;cursor:pointer;font-family:inherit;"><strong style="color:var(--text-main);font-weight:600;">${nameEscaped}</strong><span>${infoText}</span></button>`;

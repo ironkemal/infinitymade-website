@@ -7,7 +7,7 @@
  * Der Raum bestimmt den Standort des Termins. Ohne `business_id` im Payload leitet die Datenbank den Standort aus
  * der Mitarbeiterzuordnung ab, meist den Standard-Standort; ein Raum an Standort B würde dann abgewiesen.
  */
-import { raeumeDesStandorts, raumAuswahl } from './raum-plan.js';
+import { raeumeDesStandorts, raumAuswahl } from './raum-plan.js?v=20261120raum1';
 import { alsBerlinDatum } from './berlin-datum.js';
 import { mountTerminKonflikte } from './termin-konflikte.js';
 import { ladeSondertage, warnungFuerTag } from './sondertag.js?v=20261119physio';
@@ -48,16 +48,15 @@ export function optionenFuerAuswahl(raeume, termine, start, ende, optionen = {})
     : raeume.map(raum => ({ raum, voll: false, belegt: 0 }));
   return [
     { wert: '', text: 'Kein Raum' },
-    ...liste.map(({ raum, voll, belegt }) => {
+    ...liste.map(({ raum, voll }) => {
       if (voll) return { wert: raum.id, text: `${raum.name} (belegt)` };
-      if (belegt) return { wert: raum.id, text: `${raum.name} (${belegt} von ${raum.plaetze} Plätzen belegt)` };
       return { wert: raum.id, text: raum.name };
     }),
   ];
 }
 
 /**
- * Hinweiszeile unter der Raumwahl: welche Räume zur gewählten Zeit noch Platz haben. Nur Anzeige, sperrt nichts.
+ * Hinweiszeile unter der Raumwahl: welche Räume zur gewählten Zeit frei sind.
  * Ohne Zeit oder ohne Räume: leerer Text.
  */
 export function freieRaeumeHinweis(raeume, termine, start, ende, optionen = {}) {

@@ -73,7 +73,7 @@ test("B. Raum ohne Termin: zustand frei, terminId null", () => {
   assert.ok(!html.includes("data-termin-id"));
 });
 
-test("C. Raum mit plaetze 2 und einem Termin: zustand teilweise", () => {
+test("C. Raum mit zwei Plätzen und einem Termin: Raum belegt", () => {
   const raeume = [{ id: "r-w", name: "Wärmeraum", plaetze: 2 }];
   const termine = [
     {
@@ -89,13 +89,13 @@ test("C. Raum mit plaetze 2 und einem Termin: zustand teilweise", () => {
   const modell = streifenModell(raeume, termine, TEAM, JETZT);
   assert.equal(modell.eintraege.length, 1);
   const e = modell.eintraege[0];
-  assert.equal(e.zustand, "teilweise");
+  assert.equal(e.zustand, "voll");
   assert.deepEqual(e.kuerzel, ["B. S."]);
   assert.equal(e.restMinuten, 30);
   assert.equal(e.terminId, "t1");
 
   const html = streifenHtml(modell);
-  assert.match(html, /raum-streifen-item--teilweise/);
+  assert.match(html, /raum-streifen-item--voll/);
   assert.match(html, /data-termin-id="t1"/);
   assert.match(html, /B. S./);
   assert.match(html, /noch 30 Min./);

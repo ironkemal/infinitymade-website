@@ -21,7 +21,7 @@ globalThis.document = {
 globalThis.MutationObserver = class { observe() {} };
 
 const abwesenheit = { grund: 'Therapeut:in ist wegen Abwesenheit nicht verfügbar.', sperre: false };
-const gruppe = { grund: 'Im Gruppenraum ist ein weiterer Platz frei.', sperre: false };
+const vergangenheit = { grund: 'Termin liegt in der Vergangenheit.', sperre: false };
 const arbeitszeit = { grund: 'Termin liegt außerhalb der Arbeitszeit.', sperre: false };
 
 function verdrahte(t, konflikte, antwort) {
@@ -42,12 +42,13 @@ function verdrahte(t, konflikte, antwort) {
   return { fragen, meldungen };
 }
 
-test('Abwesenheit, Arbeitszeit und Gruppenraum erscheinen in einer Bestätigung', async t => {
-  const { fragen } = verdrahte(t, [abwesenheit, arbeitszeit, gruppe], true);
+test('Abwesenheit, Arbeitszeit und vergangener Termin erscheinen in einer Bestätigung', async t => {
+  const warnungen = [abwesenheit, arbeitszeit, vergangenheit];
+  const { fragen } = verdrahte(t, warnungen, true);
   assert.equal(await terminFreigabe(25), true);
   assert.equal(fragen.length, 1);
   assert.equal(fragen[0].confirmText, 'Trotzdem eintragen');
-  assert.equal(fragen[0].message, [abwesenheit, arbeitszeit, gruppe].map(k => k.grund).join('\n'));
+  assert.equal(fragen[0].message, warnungen.map(k => k.grund).join('\n'));
 });
 
 test('Abbrechen verwirft die Freigabe', async t => {
@@ -68,4 +69,12 @@ test('Freier Termin benötigt keine Bestätigung', async t => {
   const { fragen } = verdrahte(t, [], false);
   assert.equal(await terminFreigabe(25), true);
   assert.deepEqual(fragen, []);
+});
+
+test('Belegter Gruppenraum sperrt den Termin auch bei einer weiteren Warnung', async t => {
+  const raum = { grund: 'Raum ist belegt.', sperre: true };
+  const { fragen, meldungen } = verdrahte(t, [abwesenheit, raum], true);
+  assert.equal(await terminFreigabe(25), false);
+  assert.deepEqual(fragen, []);
+  assert.deepEqual(meldungen, [`${abwesenheit.grund} ${raum.grund}`]);
 });

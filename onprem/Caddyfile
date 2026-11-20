@@ -102,21 +102,15 @@
 		-Server
 	}
 
-	# A-19: geolocation=(self) nur für die zwei Seiten, die den Standort lesen
-	# (Praxisstandort in dashboard.html, GPS-Check-in in attendance.html) —
-	# Spiegel von vercel.json. Der allgemeine Wert schliesst die beiden Pfade
-	# ausdrücklich aus: zwei `header`-Direktiven auf dasselbe Feld würden von
-	# Caddy nach Matcher-Spezifität sortiert, und die spätere überschriebe die
-	# frühere — mit disjunkten Matchern gibt es genau einen Wert pro Antwort.
+	# A-19: Geolocation nur fürs Dashboard erlauben. Disjunkte Matcher sorgen
+	# für genau einen Permissions-Policy-Wert pro Antwort.
 	# camera=(self): ohne das bricht Rezept-Scan per Webcam lautlos (getUserMedia
 	# → NotAllowedError, kein Fallback ausgelöst, weil isSecureContext hier true
 	# ist). serial=(self): fuer eGK-Kartenleser per Web Serial API vorgesehen,
 	# noch ungenutzt — bewusst explizit statt implizitem Default (O-109).
 	@dashboard path /dashboard.html /dashboard /dashboard/
-	@geo path /attendance.html
-	@nogeo not path /dashboard.html /dashboard /dashboard/ /attendance.html /widget/booking-widget.html
+	@nogeo not path /dashboard.html /dashboard /dashboard/ /widget/booking-widget.html
 	header @dashboard Permissions-Policy "camera=(self), microphone=(self), geolocation=(self), serial=(self)"
-	header @geo Permissions-Policy "camera=(self), microphone=(), geolocation=(self), serial=(self)"
 	header @nogeo Permissions-Policy "camera=(self), microphone=(), geolocation=(), serial=(self)"
 
 	# ── Backend (Express) ───────────────────────────────────────────────────

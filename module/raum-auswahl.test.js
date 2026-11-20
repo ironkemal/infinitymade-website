@@ -16,10 +16,10 @@ const termine = [
 const start = '2026-11-02T09:10:00Z';
 const ende = '2026-11-02T09:40:00Z';
 
-test('Optionen: „Kein Raum" zuerst, freie vor belegten, Plätze im Text', () => {
+test('Optionen: „Kein Raum" zuerst, freie vor belegten, Gruppenraum belegt', () => {
   const optionen = optionenFuerAuswahl(raeume, termine, start, ende);
   assert.equal(optionen[0].text, 'Kein Raum');
-  assert.deepEqual(optionen.slice(1).map(o => o.text), ['Wärme (1 von 2 Plätzen belegt)', 'Einzelpraxis', 'Raum 1 (belegt)']);
+  assert.deepEqual(optionen.slice(1).map(o => o.text), ['Einzelpraxis', 'Raum 1 (belegt)', 'Wärme (belegt)']);
 });
 
 test('Optionen ohne Zeit zeigen nur die Namen', () => {
@@ -63,7 +63,7 @@ test('Tagesgrenzen umfassen den ganzen lokalen Tag', () => {
 });
 
 test('Hinweis: nennt die freien Räume, belegte nicht', () => {
-  assert.equal(freieRaeumeHinweis(raeume, termine, start, ende), 'Frei zu dieser Zeit: Wärme, Einzelpraxis');
+  assert.equal(freieRaeumeHinweis(raeume, termine, start, ende), 'Frei zu dieser Zeit: Einzelpraxis');
 });
 
 test('Hinweis: alles belegt, ohne Zeit oder ohne Räume', () => {

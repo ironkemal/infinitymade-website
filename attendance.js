@@ -1,6 +1,5 @@
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE } from '/supabase-config.js'; // O-01, 11.09.2026
-import { gpsSchalterLesen, standortFuerCheckin, GPS_HINWEIS } from './module/praxis-standort.js?v=20261002a';
 
 const BERLIN_TZ = 'Europe/Berlin';
 
@@ -20,8 +19,6 @@ const attCheckIn  = $('attCheckIn');
 const attCheckOut = $('attCheckOut');
 const attDuration = $('attDuration');
 const attMsg      = $('attMsg');
-const gpsHint     = $('gpsHint');
-const gpsHintText = $('gpsHintText');
 const btnCheckIn  = $('btnCheckIn');
 const btnCheckOut = $('btnCheckOut');
 const spinIn      = $('spinIn');
@@ -35,7 +32,6 @@ const historyList = $('historyList');
 let currentUser = null;
 let selectedBizId = null;
 let todayRecord = null;
-let gpsPruefen = false;   // Owner-Schalter profiles.gps_checkin_pruefen (Standard aus): nur dann wird ein Standort erfragt
 
 // ---- Yardımcılar ----
 function formatTime(isoStr) {
@@ -199,40 +195,16 @@ function renderHistory(records) {
   }).join('');
 }
 
-// ---- GPS al ----
-function getLocation() {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('GPS wird von diesem Gerät nicht unterstützt'));
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      (err) => {
-        if (err.code === 1) reject(new Error('GPS-Berechtigung verweigert. Bitte Standort-Zugriff erlauben.'));
-        else reject(new Error('Standort konnte nicht ermittelt werden. Bitte erneut versuchen.'));
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
-  });
-}
-
 // ---- Check-in ----
 btnCheckIn.addEventListener('click', async () => {
   setLoading(btnCheckIn, spinIn, btnCheckInLabel, '↓ Einchecken', true);
 
   try {
-    // Schalter aus → der Standort wird gar nicht erst erfragt. Schalter an, aber verweigert oder vom
-    // Browser gesperrt (Permissions-Policy) → Check-in geht ohne Koordinaten raus, Server schreibt NULL.
-    if (gpsPruefen) { gpsHintText.textContent = 'Standort wird ermittelt …'; gpsHint.className = 'att-gps-hint'; }
-    const { lat, lng, ohneStandort } = await standortFuerCheckin(gpsPruefen, getLocation);
-    if (gpsPruefen) gpsHintText.textContent = ohneStandort ? 'Standort nicht verfügbar – Check-in erfolgt ohne Standortprüfung.' : 'Standort ermittelt ✓';
-
     const headers = await authHeaders();
     const res = await fetch(`${API_BASE}/attendance/check-in`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ business_id: selectedBizId, ...(lat != null ? { lat, lng } : {}) }),
+      body: JSON.stringify({ business_id: selectedBizId }),
     });
 
     const data = await res.json();
@@ -242,19 +214,13 @@ btnCheckIn.addEventListener('click', async () => {
     } else if (!res.ok) {
       throw new Error(data.error || 'Check-in fehlgeschlagen');
     } else {
-      if (data.check_in_valid === false) {
-        showMsg('⚠️ Check-in gespeichert, aber Standort außerhalb des Bereichs.', 'error');
-      } else {
-        showMsg('✓ Erfolgreich eingecheckt!', 'success');
-      }
+      showMsg('✓ Erfolgreich eingecheckt!', 'success');
     }
 
     // Durumu yenile
     const { record } = await fetchToday();
     renderStatus(record);
   } catch (err) {
-    gpsHint.className = 'att-gps-hint error';
-    gpsHintText.textContent = err.message;
     showMsg(err.message, 'error');
   } finally {
     setLoading(btnCheckIn, spinIn, btnCheckInLabel, '↓ Einchecken', false);
@@ -305,9 +271,6 @@ async function init() {
   currentUser = session.user;
 
   try {
-    gpsPruefen = await gpsSchalterLesen(supabase, currentUser.id);
-    // Hinweistext VOR dem Check-in, nur bei aktivem Schalter; sonst bleibt der Hinweis ganz weg.
-    if (gpsPruefen) gpsHintText.textContent = GPS_HINWEIS; else gpsHint.style.display = 'none';
     // İşyerlerini yükle
     const businesses = await fetchBusinesses();
     if (businesses.length > 1) {

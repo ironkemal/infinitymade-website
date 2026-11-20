@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spurenVerteilen, spaltenModell, spaltenKopf, blockGeometrie, OHNE_RAUM_ID, RAUM_TAGES_SELECT } from './raum-tagesansicht.js';
+import { spurenVerteilen, spaltenModell, blockGeometrie, OHNE_RAUM_ID, RAUM_TAGES_SELECT } from './raum-tagesansicht.js';
 
 const t = (id, room, von, bis, extra = {}) => ({
   id, room_id: room, status: 'confirmed', customer_name: `Patient ${id}`,
@@ -44,10 +44,10 @@ test('Spaltenmodell: abgesagte Termine und Gruppenkinder zählen nicht', () => {
   assert.deepEqual(m.spalten[0].eintraege.map(e => e.termin.id), ['c']);
 });
 
-test('Plätze: zwei Termine bei 2 Plätzen stehen nebeneinander ohne Überbelegung', () => {
+test('Altbestand: parallele Termine bleiben sichtbar und sind als Überbelegung markiert', () => {
   const m = spaltenModell([{ id: 'w', name: 'Wärme', plaetze: 2 }], [t('a', 'w', '09:00', '09:30'), t('b', 'w', '09:00', '09:30')]);
-  assert.deepEqual(m.spalten[0].eintraege.map(e => [e.spur, e.spuren, e.ueberbelegt]), [[0, 2, false], [1, 2, false]]);
-  assert.equal(m.spalten[0].ueberbelegt, false);
+  assert.deepEqual(m.spalten[0].eintraege.map(e => [e.spur, e.spuren, e.ueberbelegt]), [[0, 2, true], [1, 2, true]]);
+  assert.equal(m.spalten[0].ueberbelegt, true);
 });
 
 test('Überschneidung bei 1 Platz: beide nebeneinander, nur als Hinweis markiert', () => {
@@ -57,11 +57,6 @@ test('Überschneidung bei 1 Platz: beide nebeneinander, nur als Hinweis markiert
   assert.equal(m.spalten[0].ueberbelegt, true);
 });
 
-test('Spaltenkopf nennt Plätze erst ab zwei', () => {
-  assert.equal(spaltenKopf({ name: 'Raum 1', plaetze: 1 }), 'Raum 1');
-  assert.equal(spaltenKopf({ name: 'Wärme', plaetze: 2 }), 'Wärme (2 Plätze)');
-  assert.equal(spaltenKopf({ name: 'Ohne Raum', plaetze: 1, ohneRaum: true }), 'Ohne Raum');
-});
 
 test('Blockgeometrie: Position, Höhe und Spurbreite', () => {
   const e = spurenVerteilen([t('a', 'r', '09:00', '10:00'), t('b', 'r', '09:30', '10:30')]);

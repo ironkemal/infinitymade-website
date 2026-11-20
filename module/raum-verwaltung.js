@@ -13,7 +13,7 @@ import {
   raumNameFrei,
   raeumeDesStandorts,
   RAUM_NAME_MAX,
-} from "./raum-plan.js";
+} from "./raum-plan.js?v=20261120raum1";
 
 import { raumDetails } from "./raum-details.js";
 
