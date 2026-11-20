@@ -103,3 +103,13 @@ test('Kopf-Knöpfe: ohne Patient passiert nichts', async () => {
   await d.byId.pdKopfTerminBtn._l.click(); d.byId.pdKopfVerordnungBtn._l.click();
   assert.deepEqual(log, []);
 });
+
+test('Chrome1911 öffnet aus Rezepte die Verordnungsanlage mit dem aktuellen Patienten', () => {
+  const d = fakeDoc(['pdRezVerordnungBtn'], ALLE);
+  const klicks = [];
+  setzeAkteReiter({ isPhysio: true, isPodo: false }, d);
+  assert.equal(d.byId.pdRezVerordnungBtn.hidden, false);
+  verdrahteAkteKopf({ leadId: () => 'Chrome1911', closeModal: id => klicks.push(id), oeffneAnlegenWahl: id => klicks.push(id) }, d);
+  d.byId.pdRezVerordnungBtn._l.click();
+  assert.deepEqual(klicks, ['patientDetailModal', 'Chrome1911']);
+});

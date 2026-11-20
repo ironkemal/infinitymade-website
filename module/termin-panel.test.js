@@ -138,7 +138,7 @@ test('die uebrigen vier Gruende nennen den Grund, ohne einen Knopf anzubieten', 
 test('ein unbekannter Uebersetzer-Schluessel faellt auf Deutsch zurueck, nicht auf den Schluessel', () => {
   const dom = baueDom();
   zeichneSitzungenLeer('keineVo', { t: (k) => k });   // t() gibt bei Unbekanntem den Schluessel
-  assert.match(dom.bkRxSessionsLeerText.textContent, /keine aktive Verordnung/);
+  assert.match(dom.bkRxSessionsLeerText.textContent, /Diesem Termin ist keine Verordnung zugeordnet/);
 });
 
 test('der Uebersetzer schlaegt den deutschen Rueckfall, wenn er etwas kennt', () => {

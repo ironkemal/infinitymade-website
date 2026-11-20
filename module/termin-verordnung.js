@@ -71,7 +71,7 @@ function anlegenKnopf(onAnlegen, leer) {
       + 'gap:6px;color:var(--text-muted);font-size:12px;font-weight:600;';
   btn.innerHTML = leer
     ? '<span style="font-size:26px;line-height:1;">＋</span>'
-      + '<span style="font-size:12px;font-weight:600;">Für diesen Patienten ist keine Verordnung hinterlegt</span>'
+      + '<span style="font-size:12px;font-weight:600;">Für diesen Patienten ist keine aktive Verordnung hinterlegt</span>'
       + '<span style="font-size:12px;font-weight:700;">Jetzt eine anlegen?</span>'
     : '<span style="font-size:15px;line-height:1;">＋</span> Verordnung anlegen';
   btn.addEventListener('click', onAnlegen);
@@ -437,7 +437,7 @@ export function resetVerordnungFelder() {
   zeigeDienstleistungsfeld(true);
 }
 
-const RX_GESCHLOSSEN = { completed: 'abgeschlossen', billed: 'abgerechnet', cancelled: 'storniert' };
+const RX_GESCHLOSSEN = { parsed: 'Entwurf', completed: 'abgeschlossen', billed: 'abgerechnet', cancelled: 'storniert' };
 const ABR_GESCHLOSSEN = new Set(['abgerechnet', 'storniert', 'archiviert']);
 
 /**
@@ -469,7 +469,7 @@ export async function ladeTerminVerordnungen(sb, { leadId, vordId = null } = {})
     .from('prescriptions')
     .select(felder)
     .eq('patient_id', leadId)
-    .not('status', 'in', '("completed","billed","cancelled")')
+    .not('status', 'in', '("parsed","completed","billed","cancelled")')
     .or(PODO_ARBEITSLISTE_OR)   // eingereichte/stornierte nach abrechnung_status auch raus
     .order('created_at', { ascending: false })
     .limit(5);

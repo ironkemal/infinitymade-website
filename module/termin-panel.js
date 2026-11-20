@@ -341,7 +341,7 @@ export const SITZUNGEN_LEER_KEYS = {
 /** Rückfall, falls kein Übersetzer gereicht wird (Tests, früher Aufruf). */
 const SITZUNGEN_LEER_DE = {
   keinTermin:     'Keine Verordnung zugeordnet.',
-  keineVo:        'Für diesen Patienten ist keine aktive Verordnung hinterlegt.',
+  keineVo:        'Diesem Termin ist keine Verordnung zugeordnet.',
   ladefehler:     'Verordnung konnte nicht geladen werden.',
   podologie:      'Podologie führt kein Einheiten-Hauptbuch — die erbrachten Leistungen stehen in den Behandlungen.',
   keineSitzungen: 'Noch keine Sitzungen erfasst.',

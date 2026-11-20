@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-20",
  "dateien": 589,
- "funktionen": 4800,
+ "funktionen": 4801,
  "module": [
   "abrechnung",
   "anamnese",
@@ -64317,6 +64317,7 @@
     "showZaaErrors",
     "startMoveBooking",
     "verdrahteAkteKopf",
+    "verordnungAnlegen",
     "zeigeKiRueckfrageDialog"
    ],
    "modules": [
@@ -80438,6 +80439,7 @@
     "showZaaErrors",
     "startMoveBooking",
     "verdrahteAkteKopf",
+    "verordnungAnlegen",
     "zeigeKiRueckfrageDialog"
    ],
    "modules": [
@@ -80979,6 +80981,7 @@
     "showZaaErrors",
     "startMoveBooking",
     "verdrahteAkteKopf",
+    "verordnungAnlegen",
     "zeigeKiRueckfrageDialog"
    ],
    "modules": [
@@ -111726,8 +111729,8 @@
    "lang": "js",
    "file": "module/akte-podo.js",
    "start": 88,
-   "end": 134,
-   "lines": 47,
+   "end": 136,
+   "lines": 49,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -111737,7 +111740,8 @@
    "domIds": [
     "pdKopfAktionen",
     "pdRezLeer",
-    "pdRezLoading"
+    "pdRezLoading",
+    "pdRezVerordnungBtn"
    ],
    "domRenderIds": [],
    "domRender": false,
@@ -111798,9 +111802,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/akte-podo.js",
-   "start": 146,
-   "end": 162,
-   "lines": 17,
+   "start": 148,
+   "end": 167,
+   "lines": 20,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -111808,8 +111812,7 @@
    "endpoints": [],
    "storage": [],
    "domIds": [
-    "pdKopfTerminBtn",
-    "pdKopfVerordnungBtn"
+    "pdKopfTerminBtn"
    ],
    "domRenderIds": [],
    "domRender": false,
@@ -111821,6 +111824,32 @@
    "calledBy": [
     "(datei) dashboard.js"
    ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "verordnungAnlegen",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/akte-podo.js",
+   "start": 158,
+   "end": 163,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "closeModal",
+    "oeffneAnlegenWahl"
+   ],
+   "calledBy": [],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -245869,7 +245898,8 @@
     "openBookingActionModal",
     "openBookingModal",
     "verdrahteAkteKopf",
-    "verdrahteAktionsleiste"
+    "verdrahteAktionsleiste",
+    "verordnungAnlegen"
    ],
    "modules": [
     "abrechnung",
@@ -273474,6 +273504,7 @@
     "showZaaErrors",
     "startMoveBooking",
     "verdrahteAkteKopf",
+    "verordnungAnlegen",
     "zeigeKiRueckfrageDialog"
    ],
    "modules": [

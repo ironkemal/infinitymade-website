@@ -87,6 +87,8 @@ const PODO_ABSCHNITTE = ['pdVerlaufNotizenBox', 'pdVerlaufTermineBox', 'pdDokEin
  */
 export function setzeAkteReiter(f, doc = document) {
   const plan = akteReiterPlan(f);
+  const neueVo = doc.getElementById('pdRezVerordnungBtn');
+  if (neueVo) neueVo.hidden = !f.isPhysio || f.isPodo;
   for (const tab of ALLE_REITER) {
     const btn = /** @type {HTMLElement|null} */ (doc.querySelector(`.pd-tab[data-tab="${tab}"]`));
     if (btn) btn.style.display = plan.sichtbar[tab] ? '' : 'none';
@@ -153,10 +155,13 @@ export function verdrahteAkteKopf(deps, doc = document) {
     await deps.prefillBookingModal(null);
     /** @type {any} */ (globalThis)._bkApplyLead?.(id);
   });
-  doc.getElementById('pdKopfVerordnungBtn')?.addEventListener('click', () => {
+  const verordnungAnlegen = () => {
     const id = deps.leadId();
     if (!id) return;
     deps.closeModal('patientDetailModal');
     deps.oeffneAnlegenWahl(id);
-  });
+  };
+  for (const knopf of ['pdKopfVerordnungBtn', 'pdRezVerordnungBtn']) {
+    doc.getElementById(knopf)?.addEventListener('click', verordnungAnlegen);
+  }
 }

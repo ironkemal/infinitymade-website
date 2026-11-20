@@ -333,7 +333,7 @@ const T = {
     kass_befreit: 'Zuzahlung befreit', kass_offen: 'Zuzahlung offen', kass_bezahlt: 'Zuzahlung kassiert', kass_btn: 'Kassieren',
     kass_beleg: 'Beleg', kass_rechnung: 'Rechnung öffnen', stat_bezahlt: 'Bezahlt', stat_offen: 'Offen', kass_undo: 'stornieren',
     kass_ok: 'Zuzahlung kassiert ✓', kass_storno_ok: 'Zuzahlung storniert ✓',
-    sitz_leer_kein_termin: 'Keine Verordnung zugeordnet.', sitz_leer_keine_vo: 'Für diesen Patienten ist keine aktive Verordnung hinterlegt.',
+    sitz_leer_kein_termin: 'Keine Verordnung zugeordnet.', sitz_leer_keine_vo: 'Diesem Termin ist keine Verordnung zugeordnet.',
     sitz_leer_fehler: 'Verordnung konnte nicht geladen werden.', sitz_leer_keine_sitzungen: 'Noch keine Sitzungen erfasst.',
     sitz_leer_podo: 'Podologie führt kein Einheiten-Hauptbuch — die erbrachten Leistungen stehen in den Behandlungen.',
     kass_err_betrag: 'Kein Zuzahlungsbetrag hinterlegt — bitte zuerst am Rezept eintragen.',
@@ -12991,7 +12991,7 @@ async function resolveArzt(input, quelle = 'manuell') {
 function toastArztErgebnis(out) {
   if (!out?.arzt_id) return;
   if (out.created) {
-    showToast(`Arzt „${out.arzt?.arzt_name}" neu ins Register aufgenommen.`);
+    showToast(`Arzt neu angelegt: ${out.arzt?.arzt_name || 'Registereintrag'}.`);
   } else if (out.enriched?.length) {
     showToast(`Arzt „${out.arzt?.arzt_name}" erkannt und aktualisiert.`);
   }
