@@ -943,88 +943,68 @@
 
   /* ==========================================================================
      3. Tageszentrale (#panel-overview[data-tz="1"], nur Standard-Design)
-     Schwarz-Weiß + kühle Schiefer-/Eisblau-Akzente mit hohem Block-Kontrast
+     Harmonisch im aktuellen warmen Praxura-Design mit klarem Block-Kontrast
      ========================================================================== */
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] {
-    --tz-canvas: #E8EEF5;
-    --tz-surface: #FFFFFF;
-    --tz-band: #F1F5F9;
-    --tz-sunken: #E9EFF6;
-    --tz-hover: #EDF2F8;
-    --tz-border: #C4D0DF;
-    --tz-border-soft: #DCE4EE;
-    --tz-border-strong: #7E8FA6;
-    --tz-ink: #090D16;
-    --tz-muted: #425268;
-    --tz-faint: #52627A;
-    --tz-primary: #090D16;
+    --tz-canvas: var(--bg-main, #F6F3EF);
+    --tz-surface: var(--bg-card-solid, #FFFFFF);
+    --tz-band: #F2EBE3;
+    --tz-sunken: var(--bg-sunken, #EFEAE3);
+    --tz-hover: var(--bg-hover, #F5EDE6);
+    --tz-border: #CCC1B5;
+    --tz-border-soft: #E5DDD4;
+    --tz-border-strong: var(--border-strong, #85786B);
+    --tz-ink: var(--text-main, #302B27);
+    --tz-muted: var(--text-muted, #60564F);
+    --tz-faint: #786D64;
+    --tz-primary: var(--primary, #573B30);
     --tz-primary-fg: #FFFFFF;
-    --tz-accent: #1D4ED8;
-    --tz-accent-soft: #EFF6FF;
-    --tz-accent-border: #93C5FD;
-    --tz-hero-bg: #090E18;
-    --tz-hero-border: #1E293B;
-    --tz-hero-ink: #F8FAFC;
-    --tz-hero-muted: #9FB0C7;
-    --tz-danger: #B42318;
-    --tz-ok: #067647;
-    --tz-shadow: 0 1px 2px rgba(9, 13, 22, 0.06), 0 8px 20px -14px rgba(9, 13, 22, 0.14);
-    --tz-shadow-hero: 0 14px 32px -14px rgba(9, 13, 22, 0.42);
+    --tz-accent: var(--accent, #944D33);
+    --tz-accent-soft: #F5E6DA;
+    --tz-accent-border: #D8B9A3;
+    --tz-hero-bg: #28201C;
+    --tz-hero-border: #3E322C;
+    --tz-hero-ink: #FAF7F2;
+    --tz-hero-muted: #C8BDB2;
+    --tz-hero-accent: #E6A989;
+    --tz-hero-pill-bg: rgba(230, 169, 137, 0.18);
+    --tz-hero-pill-fg: #F5C9B0;
+    --tz-danger: var(--danger, #B42318);
+    --tz-ok: var(--success, #067647);
+    --tz-shadow: 0 1px 2px rgba(48, 43, 39, 0.06), 0 8px 20px -14px rgba(48, 43, 39, 0.12);
+    --tz-shadow-hero: 0 12px 28px -14px rgba(40, 32, 28, 0.36);
     --tz-r: 14px;
     --tz-r-lg: 16px;
-
-    /* Auch bestehende Unter-Komponenten (#startAufgaben, #physioRezKpi, .today-section)
-       erben innerhalb des Dashboards dieselbe kühle Schwarz-Weiß-Palette */
-    --bg-main: var(--tz-canvas);
-    --bg-card: var(--tz-surface);
-    --bg-card-solid: var(--tz-surface);
-    --bg-sunken: var(--tz-sunken);
-    --bg-hover: var(--tz-hover);
-    --bg-input: var(--tz-surface);
-    --border: var(--tz-border);
-    --border-subtle: var(--tz-border-soft);
-    --border-strong: var(--tz-border-strong);
-    --border-input: var(--tz-border-strong);
-    --text-main: var(--tz-ink);
-    --text-muted: var(--tz-muted);
-    --primary: var(--tz-primary);
-    --primary-dim: var(--tz-accent-soft);
-    --accent: var(--tz-accent);
-    --focus-ring: var(--tz-accent);
-    --focus-halo: rgba(29, 78, 216, 0.22);
-    --danger: var(--tz-danger);
-
-    background: var(--tz-canvas);
-    border: 1px solid var(--tz-border);
-    border-radius: 18px;
-    padding: 24px 26px 28px;
   }
 
   :root:not([data-design="neu"])[data-theme="dark"] #panel-overview[data-tz="1"] {
-    --tz-canvas: #05080E;
-    --tz-surface: #0F1521;
-    --tz-band: #151E2E;
-    --tz-sunken: #0B101A;
-    --tz-hover: #192335;
-    --tz-border: #2B3B54;
-    --tz-border-soft: #1D293D;
-    --tz-border-strong: #5E7391;
-    --tz-ink: #F8FAFC;
-    --tz-muted: #A6B5CA;
-    --tz-faint: #8C9DB5;
-    --tz-primary: #F8FAFC;
-    --tz-primary-fg: #090D16;
-    --tz-accent: #60A5FA;
-    --tz-accent-soft: #10203B;
-    --tz-accent-border: #2B538C;
-    --tz-hero-bg: #141E30;
-    --tz-hero-border: #364E73;
-    --tz-hero-ink: #F8FAFC;
-    --tz-hero-muted: #A6B5CA;
+    --tz-canvas: var(--bg-main, #181614);
+    --tz-surface: var(--bg-card-solid, #24211F);
+    --tz-band: #2D2825;
+    --tz-sunken: var(--bg-sunken, #1E1B19);
+    --tz-hover: var(--bg-hover, #362F2A);
+    --tz-border: #4A4039;
+    --tz-border-soft: #362F2A;
+    --tz-border-strong: #73695D;
+    --tz-ink: var(--text-main, #F1F3F6);
+    --tz-muted: var(--text-muted, #C8C0B7);
+    --tz-faint: #9E948A;
+    --tz-primary: #573B30;
+    --tz-primary-fg: #FAF7F2;
+    --tz-accent: var(--accent, #E6A989);
+    --tz-accent-soft: #3D2D24;
+    --tz-accent-border: #6E4F3F;
+    --tz-hero-bg: #2C2420;
+    --tz-hero-border: #52433B;
+    --tz-hero-ink: #FAF7F2;
+    --tz-hero-muted: #D2C7BC;
+    --tz-hero-accent: #E6A989;
+    --tz-hero-pill-bg: rgba(230, 169, 137, 0.2);
+    --tz-hero-pill-fg: #F5C9B0;
     --tz-danger: #F97066;
     --tz-ok: #47CD89;
-    --tz-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), 0 12px 28px -16px rgba(0, 0, 0, 0.65);
-    --tz-shadow-hero: 0 14px 36px -14px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(148, 163, 184, 0.18);
+    --tz-shadow: 0 2px 4px rgba(0, 0, 0, 0.32), 0 10px 24px -14px rgba(0, 0, 0, 0.52);
+    --tz-shadow-hero: 0 14px 32px -14px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(250, 247, 242, 0.08);
   }
 
   /* Zweispaltiges Raster: links Fokus + Tagesplan bündig in #tzColLeft (ohne Lücke!),
@@ -1174,23 +1154,23 @@
     gap: 7px;
     padding: 3px 10px;
     border-radius: 999px;
-    background: rgba(56, 189, 248, 0.18);
-    color: #7DD3FC;
+    background: var(--tz-hero-pill-bg);
+    color: var(--tz-hero-pill-fg);
     font-size: 12px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-live-pill--calm {
-    background: rgba(148, 163, 184, 0.18);
-    color: #CBD5E1;
+    background: rgba(200, 189, 178, 0.16);
+    color: #E2D9CE;
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-live-dot {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: #38BDF8;
+    background: var(--tz-hero-accent);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-room {
@@ -1213,7 +1193,7 @@
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-time {
     font-size: 13px;
-    color: #93C5FD;
+    color: var(--tz-hero-accent);
     font-weight: 500;
     font-variant-numeric: tabular-nums;
     margin-bottom: 2px;
@@ -1262,14 +1242,14 @@
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-btn--solid {
-    background: #FFFFFF;
-    color: #090D16;
-    border-color: #FFFFFF;
+    background: #FAF7F2;
+    color: #28201C;
+    border-color: #FAF7F2;
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-btn--solid:hover {
-    background: #E2E8F0;
-    border-color: #E2E8F0;
+    background: #EFE7DD;
+    border-color: #EFE7DD;
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-prog {
@@ -1304,7 +1284,7 @@
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-bar-fill {
     height: 100%;
     border-radius: 999px;
-    background: #38BDF8;
+    background: var(--tz-hero-accent);
     transition: width 220ms ease;
   }
 
@@ -1458,14 +1438,14 @@
     margin-left: auto;
     border-color: var(--tz-accent-border);
     background: var(--tz-accent-soft);
-    color: var(--tz-accent);
+    color: var(--tz-ink);
     font-weight: 600;
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-chip--gap.is-on {
-    background: var(--tz-accent);
-    border-color: var(--tz-accent);
-    color: #FFFFFF;
+    background: var(--tz-primary);
+    border-color: var(--tz-primary);
+    color: var(--tz-primary-fg);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-dot {
@@ -1626,7 +1606,7 @@
     border-radius: 7px;
     border: 1px solid var(--tz-accent-border);
     background: var(--tz-accent-soft);
-    color: var(--tz-accent);
+    color: var(--tz-ink);
     font: inherit;
     font-size: 12px;
     font-weight: 600;
@@ -1636,9 +1616,9 @@
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-gap-btn:hover {
-    background: var(--tz-accent);
-    border-color: var(--tz-accent);
-    color: #FFFFFF;
+    background: var(--tz-primary);
+    border-color: var(--tz-primary);
+    color: var(--tz-primary-fg);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-empty {
@@ -1941,11 +1921,6 @@
   }
 
   @media (max-width: 768px) {
-    :root:not([data-design="neu"]) #panel-overview[data-tz="1"] {
-      padding: 16px 14px 20px;
-      border-radius: 14px;
-    }
-
     :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-title {
       font-size: 21px;
       line-height: 27px;
