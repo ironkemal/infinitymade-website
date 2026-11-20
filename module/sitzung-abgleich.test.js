@@ -110,7 +110,7 @@ test('Schreibfehler wird gemeldet, nicht geworfen', async () => {
 // Legte der Abgleich ihr offene Sitzungen nach, stünde sie wieder als
 // „in Behandlung" da.
 test('abgeschlossene Verordnungen werden nicht angefasst', async () => {
-  for (const status of ['completed', 'billed', 'cancelled']) {
+  for (const status of ['parsed', 'completed', 'billed', 'cancelled']) {
     const { supabase, geschrieben } = supabaseDoppel({ vorhandene: [] });
     const r = await gleicheSitzungenAb({ supabase, prescriptionId: 'rx-1', anzahlEinheiten: 6, status });
     assert.equal(r.ergaenzt, 0, status);
@@ -119,7 +119,7 @@ test('abgeschlossene Verordnungen werden nicht angefasst', async () => {
 });
 
 test('aktive Verordnungen werden ergänzt', async () => {
-  for (const status of ['confirmed', 'in_therapy', 'parsed', null]) {
+  for (const status of ['confirmed', 'in_therapy', null]) {
     const { supabase, geschrieben } = supabaseDoppel({ vorhandene: [] });
     const r = await gleicheSitzungenAb({ supabase, prescriptionId: 'rx-1', anzahlEinheiten: 2, status });
     assert.equal(r.ergaenzt, 2, String(status));

@@ -6137,9 +6137,9 @@ async function linkBookingsToPrescriptionSessions(prescriptionId, created) {
       .maybeSingle();
 
     if (await meldePodoSerienBindung(supabase, { ownerId: getOwnerId(), prescriptionId, created, emit, toast: showToast })) return;
-    // Erst die Sollzeilen herstellen, dann füllen. Ohne das legte genau dieser Pfad eine Zeile
-    // je *Termin* an — und die Verordnung hatte am Ende so viele Sitzungen, wie zufällig gebucht
-    // wurden, statt so viele wie verordnet (Fund vom 16.08.2026, module/sitzung-abgleich.js).
+    if (rx?.status === 'parsed') {
+      showToast('Terminserie ohne Zuordnung: Bitte zuerst die Verordnung bestätigen.', 'warning'); return;
+    }
     const _abgl = await gleicheSitzungenAb({
       supabase, prescriptionId, anzahlEinheiten: rx?.anzahl_einheiten, status: rx?.status, doppelbehandlung: rx?.doppelbehandlung, items: rx?.heilmittel_items,
     });

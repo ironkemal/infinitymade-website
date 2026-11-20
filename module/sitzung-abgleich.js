@@ -175,7 +175,7 @@ export function terminZielToplam(rx) {
  */
 export async function gleicheSitzungenAb({ supabase, prescriptionId, anzahlEinheiten, status = null, heilmittelIndex = 0, doppelbehandlung = false, items = null }) {
   if (!supabase || !prescriptionId) return { ergaenzt: 0, fehler: null };
-  if (status && ABGESCHLOSSEN.includes(status)) return { ergaenzt: 0, fehler: null };
+  if (status === 'parsed' || (status && ABGESCHLOSSEN.includes(status))) return { ergaenzt: 0, fehler: null };
 
   const { data: vorhandene, error: leseFehler } = await supabase
     .from('prescription_sessions')

@@ -486,7 +486,7 @@ function _termine(rx, esc, quelle, termine, katalog = null) {
   const sitzungen = aktiveSitzungszeilen(Array.isArray(rx.prescription_sessions) ? rx.prescription_sessions : [])
     .slice()
     .sort((a, b) => (a.session_number || 0) - (b.session_number || 0));
-  if (!sitzungen.length) return _spaltenKasten('Termine', _LEER('Keine Sitzungszeilen angelegt.', esc), esc);
+  if (!sitzungen.length) return _spaltenKasten('Termine', _LEER(rx.status === 'parsed' ? 'Entwurf. Erst nach Bestätigung werden die Sitzungen angelegt.' : 'Keine Sitzungszeilen angelegt.', esc), esc);
 
   const vergeben = sitzungen.filter(s => s.booking_id);
   const unvergeben = sitzungen.filter(s => !s.booking_id);
