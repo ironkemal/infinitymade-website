@@ -34,7 +34,7 @@ import { attachKrankenkasseSuche, verwerfeKassenCache, kartenIkHinweise, kasseAb
 import { attachLeadKartenIk, pruefeLeadKartenIk } from './module/lead-karten-ik.js?v=20261003e';
 import { renderPatientenkarte } from './module/patientenkarte.js?v=20261117p33';
 import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from './module/lead-felder.js?v=20260929a';
-import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20261119physio'; import { ermittleSitzungKuerzel, kuerzelAusKatalog } from './module/heilmittel-kuerzel.js?v=20261103q';
+import { ermittleSitzungKuerzel, kuerzelAusKatalog } from './module/heilmittel-kuerzel.js?v=20261103q';
 import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten, ladeAnfragenDaten } from './module/anfrage-bearbeiten.js?v=20261118s1';
 import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
 // §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche (archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1). fmtEur kommt ab jetzt aus module/geld.js — die lokale Kopie hier ist mit dem alten Assistenten entfallen.
@@ -109,7 +109,6 @@ import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDa
 import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20261026p';
 import { serieFreigabe, terminFreigabe } from './module/termin-konflikte.js';
 import { migrierePhysioAltlast, ZERTIFIKAT_PFLICHT, zertifikateMitDeckung, PHYSIO_KATALOG_ERGAENZUNG } from './module/physio-katalog-migration.js?v=20261030k11';
-import { bucheErgaenzendMit } from './module/ergaenzend-mitbuchen.js?v=20261119physio';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817'; import { ladeNaechsteTermineJePatient } from './module/naechste-termine.js?v=20261118v914';
 import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschlecht.js?v=20260816';
@@ -3391,15 +3390,6 @@ async function handleTerminStarten() {
     const ergebnis = await res.json().catch(() => null);
     if (!res.ok || !Array.isArray(ergebnis?.prescriptionIds)) {
       showToast(ergebnis?.error || 'Der Sitzungsabschluss konnte nicht bestätigt werden. Bitte erneut versuchen.', 'error');
-      return;
-    }
-    try {
-      for (const rxId of ergebnis.prescriptionIds) {
-        await bucheErgaenzendMit(supabase, rxId, b.id);
-        await pruefeVerordnungsfortschritt(supabase, rxId, { fehlerMelden: true });
-      }
-    } catch {
-      showToast('Sitzung gespeichert. Der Verordnungsstatus konnte nicht vollständig aktualisiert werden. Bitte den Abschluss erneut aufrufen.', 'warning');
       return;
     }
     b.status = 'completed';
