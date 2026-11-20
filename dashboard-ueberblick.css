@@ -12,18 +12,19 @@
     --ubl-radius: 16px;
     --ubl-radius-sm: 10px;
     --ubl-shadow: 0 1px 2px rgba(15, 20, 28, 0.05), 0 8px 20px -12px rgba(15, 20, 28, 0.10);
+    /* Tier 1: Einzelner Carbon-Black-Fokusanker (Kachel 1 "Termine heute" + aktive Mikro-Pills) */
     --ubl-blk-bg: #10151F;
-    --ubl-blk-bg-elev: #141B27;
     --ubl-blk-bg-hover: #1A2333;
-    --ubl-blk-border: #242E40;
     --ubl-blk-ink: #F5F7FA;
     --ubl-blk-muted: #A3B0C2;
     --ubl-blk-faint: #8896AB;
-    --ubl-blk-danger: #F97066;
-    --ubl-blk-ctrl-bg: #1A2232;
-    --ubl-blk-ctrl-border: #2E3B52;
-    --ubl-blk-ctrl-hover: #232E42;
-    --ubl-blk-shadow: 0 12px 28px -14px rgba(12, 16, 23, 0.34);
+    /* Tier 2 & 3: Kühle Steel-Slate-Kennzahlenkacheln & Steel-Mist-Kartenköpfe */
+    --ubl-slate-bg: #EDF2F8;
+    --ubl-slate-hover: #E3EAF4;
+    --ubl-slate-border: #C2CFE0;
+    --ubl-head-bg: #EFF3F8;
+    --ubl-tabs-bg: #F6F8FB;
+    --ubl-card-border: #C7D0DC;
   }
 
   :root:not([data-design="neu"]) #panel-ueberblick {
@@ -40,17 +41,16 @@
   [data-theme="dark"] #panel-ueberblick {
     --ubl-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 8px 22px -12px rgba(0, 0, 0, 0.45);
     --ubl-blk-bg: #0A0D14;
-    --ubl-blk-bg-elev: #0E131D;
     --ubl-blk-bg-hover: #151C28;
-    --ubl-blk-border: #263144;
     --ubl-blk-ink: #F5F7FA;
     --ubl-blk-muted: #A8B5C7;
     --ubl-blk-faint: #8E9CB0;
-    --ubl-blk-danger: #F97066;
-    --ubl-blk-ctrl-bg: #141B28;
-    --ubl-blk-ctrl-border: #2D3A50;
-    --ubl-blk-ctrl-hover: #1D2636;
-    --ubl-blk-shadow: 0 14px 32px -14px rgba(0, 0, 0, 0.62);
+    --ubl-slate-bg: #1B222F;
+    --ubl-slate-hover: #232C3C;
+    --ubl-slate-border: #334054;
+    --ubl-head-bg: #1E2531;
+    --ubl-tabs-bg: #141922;
+    --ubl-card-border: #313B4B;
   }
 
   :root[data-theme="dark"]:not([data-design="neu"]) #panel-ueberblick {
@@ -149,8 +149,8 @@
   }
 
   #panel-ueberblick .ubl-scope-btn.is-active {
-    background: var(--bg-sunken, var(--bg-hover));
-    color: var(--text-main);
+    background: var(--primary);
+    color: var(--bg-card-solid);
     font-weight: 600;
   }
 
@@ -264,15 +264,15 @@
     gap: 18px;
   }
 
-  /* ── Durchgehendes 5-Spalten-Kennzahlenband als Carbon-Black-Monolith (#10151F) ── */
+  /* ── 5-Spalten-Kennzahlenband: Kachel 1 als Carbon-Black-Fokusanker, Kacheln 2–5 als Steel-Slate (#EDF2F8) ── */
   #panel-ueberblick .ubl-metric-bar {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 1px;
-    border: 1px solid var(--ubl-blk-border);
+    border: 1px solid var(--ubl-slate-border);
     border-radius: var(--ubl-radius);
-    background: var(--ubl-blk-border);
-    box-shadow: var(--ubl-blk-shadow);
+    background: var(--ubl-slate-border);
+    box-shadow: var(--ubl-shadow);
     overflow: hidden;
   }
 
@@ -285,8 +285,8 @@
     min-height: 0;
     padding: 16px 18px;
     border: 0;
-    background: var(--ubl-blk-bg);
-    color: var(--ubl-blk-ink);
+    background: var(--ubl-slate-bg);
+    color: var(--text-main);
     font: inherit;
     text-align: left;
     cursor: pointer;
@@ -294,11 +294,11 @@
   }
 
   #panel-ueberblick .ubl-metric:hover {
-    background: var(--ubl-blk-bg-hover);
+    background: var(--ubl-slate-hover);
   }
 
   #panel-ueberblick .ubl-metric:focus-visible {
-    outline: 2px solid var(--ubl-blk-ink);
+    outline: 2px solid var(--focus-ring, var(--accent));
     outline-offset: -2px;
   }
 
@@ -306,7 +306,7 @@
     font-size: 12px;
     line-height: 16px;
     font-weight: 500;
-    color: var(--ubl-blk-muted);
+    color: var(--text-muted);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -319,24 +319,46 @@
     font-weight: 500;
     letter-spacing: -0.025em;
     font-variant-numeric: tabular-nums;
-    color: var(--ubl-blk-ink);
+    color: var(--text-main);
     white-space: nowrap;
   }
 
   #panel-ueberblick .ubl-metric.is-danger .ubl-metric-val {
-    color: var(--ubl-blk-danger);
+    color: var(--danger);
     font-weight: 600;
   }
 
   #panel-ueberblick .ubl-metric-sub {
     font-size: 12px;
     line-height: 16px;
-    color: var(--ubl-blk-faint);
+    color: var(--text-muted);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
+  }
+
+  /* Kachel 1 ("Termine heute") als einzelner Carbon-Black-Fokusblock */
+  #panel-ueberblick .ubl-metric:first-child {
+    background: var(--ubl-blk-bg);
+    color: var(--ubl-blk-ink);
+  }
+
+  #panel-ueberblick .ubl-metric:first-child:hover {
+    background: var(--ubl-blk-bg-hover);
+  }
+
+  #panel-ueberblick .ubl-metric:first-child .ubl-metric-lbl {
+    color: var(--ubl-blk-muted);
+  }
+
+  #panel-ueberblick .ubl-metric:first-child .ubl-metric-val {
+    color: var(--ubl-blk-ink);
+  }
+
+  #panel-ueberblick .ubl-metric:first-child .ubl-metric-sub {
+    color: var(--ubl-blk-faint);
   }
 
   /* ── Haupt-Raster ── */
@@ -354,14 +376,14 @@
     min-width: 0;
   }
 
-  /* ── Ruhige Karten-Grundform (behebt auch .card-Padding-Kollision in [data-design="neu"]) ── */
+  /* ── Ruhige Karten-Grundform mit kühlem Steel-Mist-Kopf (#EFF3F8 statt Schwarz) ── */
   #panel-ueberblick .card.ubl-card {
     display: flex;
     flex-direction: column;
     min-width: 0;
     padding: 0 !important; /* gegen praxura-design.css:358 .card-Innenabstand */
     margin: 0;
-    border: 1px solid var(--border);
+    border: 1px solid var(--ubl-card-border);
     border-radius: var(--ubl-radius);
     background: var(--bg-card-solid);
     box-shadow: var(--ubl-shadow);
@@ -374,17 +396,14 @@
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 8px 12px;
-    margin: -1px -1px 0;
-    padding: 15px 21px 14px;
-    border-top-left-radius: var(--ubl-radius);
-    border-top-right-radius: var(--ubl-radius);
-    background: var(--ubl-blk-bg);
-    color: var(--ubl-blk-ink);
-    border-bottom: 1px solid var(--ubl-blk-border);
+    padding: 14px 20px;
+    background: var(--ubl-head-bg);
+    color: var(--text-main);
+    border-bottom: 1px solid var(--ubl-card-border);
   }
 
   #panel-ueberblick .ubl-head--flush {
-    border-bottom: 1px solid var(--ubl-blk-border);
+    border-bottom: 1px solid var(--border);
     padding-bottom: 12px;
   }
 
@@ -401,18 +420,18 @@
     line-height: 21px;
     font-weight: 600;
     letter-spacing: -0.01em;
-    color: var(--ubl-blk-ink);
+    color: var(--text-main);
   }
 
   #panel-ueberblick .ubl-head-count {
     font-size: 13px;
     font-weight: 500;
-    color: var(--ubl-blk-muted);
+    color: var(--text-muted);
     font-variant-numeric: tabular-nums;
   }
 
   #panel-ueberblick .ubl-head-count.is-danger {
-    color: var(--ubl-blk-danger);
+    color: var(--danger);
     font-weight: 600;
   }
 
@@ -432,7 +451,7 @@
     padding: 2px 0;
     border: 0;
     background: transparent;
-    color: var(--ubl-blk-muted);
+    color: var(--text-muted);
     font: inherit;
     font-size: 12.5px;
     font-weight: 500;
@@ -441,14 +460,14 @@
   }
 
   #panel-ueberblick .ubl-nav-link:hover {
-    color: var(--ubl-blk-ink);
+    color: var(--text-main);
   }
 
   #panel-ueberblick .ubl-nav-link[hidden] {
     display: none;
   }
 
-  /* Ruhiger Text-Umschalter für Zeithorizonte (14 T. / 30 T.) im dunklen Kartenkopf */
+  /* Ruhiger Text-Umschalter für Zeithorizonte (14 T. / 30 T.) mit Carbon-Black-Aktivpille */
   #panel-ueberblick .ubl-horiz {
     display: inline-flex;
     align-items: center;
@@ -459,10 +478,10 @@
     min-width: 0;
     min-height: 26px;
     padding: 3px 8px;
-    border: 1px solid var(--ubl-blk-ctrl-border);
+    border: 1px solid var(--ubl-card-border);
     border-radius: 6px;
-    background: var(--ubl-blk-ctrl-bg);
-    color: var(--ubl-blk-muted);
+    background: var(--bg-card-solid);
+    color: var(--text-muted);
     font: inherit;
     font-size: 12px;
     font-weight: 500;
@@ -472,26 +491,25 @@
   }
 
   #panel-ueberblick .ubl-horiz-btn:hover {
-    color: var(--ubl-blk-ink);
-    background: var(--ubl-blk-ctrl-hover);
+    color: var(--text-main);
+    background: var(--bg-hover);
   }
 
   #panel-ueberblick .ubl-horiz-btn.is-active {
-    background: var(--ubl-blk-ink);
-    border-color: var(--ubl-blk-ink);
-    color: var(--ubl-blk-bg);
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--bg-card-solid);
     font-weight: 600;
   }
 
-  /* ── Unterstrich-Tabs als abgesetztes Graphit-Unterdeck (#141B27) unter .ubl-head--flush ── */
+  /* ── Unterstrich-Tabs als helles Steel-Subdeck (#F6F8FB) mit Carbon-Black-Aktivlinie ── */
   #panel-ueberblick .ubl-tabs {
     display: flex;
     align-items: center;
     gap: 16px;
-    margin: 0 -1px;
-    padding: 0 21px;
-    background: var(--ubl-blk-bg-elev);
-    border-bottom: 1px solid var(--ubl-blk-border);
+    padding: 0 20px;
+    background: var(--ubl-tabs-bg);
+    border-bottom: 1px solid var(--ubl-card-border);
     overflow-x: auto;
     scrollbar-width: none;
   }
@@ -510,7 +528,7 @@
     padding: 8px 0 9px;
     border: 0;
     background: transparent;
-    color: var(--ubl-blk-muted);
+    color: var(--text-muted);
     font: inherit;
     font-size: 13px;
     font-weight: 500;
@@ -520,11 +538,11 @@
   }
 
   #panel-ueberblick .ubl-tab:hover {
-    color: var(--ubl-blk-ink);
+    color: var(--text-main);
   }
 
   #panel-ueberblick .ubl-tab.is-active {
-    color: var(--ubl-blk-ink);
+    color: var(--text-main);
     font-weight: 600;
   }
 
@@ -535,18 +553,18 @@
     right: 0;
     bottom: -1px;
     height: 2px;
-    background: var(--ubl-blk-ink);
+    background: var(--primary);
     border-radius: 2px 2px 0 0;
   }
 
   #panel-ueberblick .ubl-tab-n {
     font-size: 12px;
     font-variant-numeric: tabular-nums;
-    color: var(--ubl-blk-muted);
+    color: var(--text-muted);
   }
 
   #panel-ueberblick .ubl-tab.is-danger-n .ubl-tab-n {
-    color: var(--ubl-blk-danger);
+    color: var(--danger);
     font-weight: 600;
   }
 

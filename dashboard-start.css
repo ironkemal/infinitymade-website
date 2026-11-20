@@ -983,23 +983,16 @@
     --tz-shadow-hero: 0 12px 28px -14px rgba(12, 16, 23, 0.36);
     --tz-r: 14px;
     --tz-r-lg: 16px;
-    --tz-blk-bg: #10151F;
-    --tz-blk-bg-elev: #141B27;
-    --tz-blk-bg-hover: #1A2333;
-    --tz-blk-border: #242E40;
-    --tz-blk-ink: #F5F7FA;
-    --tz-blk-muted: #A3B0C2;
-    --tz-blk-faint: #8896AB;
-    --tz-blk-danger: #F97066;
-    --tz-blk-ctrl-bg: #1A2232;
-    --tz-blk-ctrl-border: #2E3B52;
-    --tz-blk-ctrl-hover: #232E42;
+    --tz-slate-bg: #EBF0F7;
+    --tz-slate-head: #E1E8F2;
+    --tz-slate-hover: #E0E8F2;
+    --tz-slate-border: #C0CDDF;
   }
 
   :root:not([data-design="neu"])[data-theme="dark"] #panel-overview[data-tz="1"] {
     --tz-canvas: var(--bg-main, #181614);
     --tz-surface: #171B22;
-    --tz-band: #1E242E;
+    --tz-band: #1E2531;
     --tz-sunken: #12161C;
     --tz-hover: #232A36;
     --tz-border: #313B4B;
@@ -1024,17 +1017,10 @@
     --tz-ok: #47CD89;
     --tz-shadow: 0 2px 4px rgba(0, 0, 0, 0.34), 0 10px 24px -14px rgba(0, 0, 0, 0.54);
     --tz-shadow-hero: 0 14px 32px -14px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(226, 232, 240, 0.08);
-    --tz-blk-bg: #0A0D14;
-    --tz-blk-bg-elev: #0E131D;
-    --tz-blk-bg-hover: #151C28;
-    --tz-blk-border: #263144;
-    --tz-blk-ink: #F5F7FA;
-    --tz-blk-muted: #A8B5C7;
-    --tz-blk-faint: #8E9CB0;
-    --tz-blk-danger: #F97066;
-    --tz-blk-ctrl-bg: #141B28;
-    --tz-blk-ctrl-border: #2D3A50;
-    --tz-blk-ctrl-hover: #1D2636;
+    --tz-slate-bg: #1B222F;
+    --tz-slate-head: #222B3B;
+    --tz-slate-hover: #242E3F;
+    --tz-slate-border: #334054;
   }
 
   /* Zweispaltiges Raster: links Fokus + Tagesplan bündig in #tzColLeft (ohne Lücke!),
@@ -1342,20 +1328,17 @@
     margin: 0 0 18px;
   }
 
-  /* Architektonischer Carbon-Black-Kartenkopf (#10151F) auf allen Karten */
+  /* Kühler Steel-Mist-Kartenkopf (#EFF2F6) auf allen Arbeitskarten */
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-card-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
     flex-wrap: wrap;
-    margin: -1px -1px 0;
-    padding: 14px 19px 13px;
-    border-top-left-radius: var(--tz-r);
-    border-top-right-radius: var(--tz-r);
-    background: var(--tz-blk-bg);
-    color: var(--tz-blk-ink);
-    border-bottom: 1px solid var(--tz-blk-border);
+    padding: 13px 18px;
+    background: var(--tz-band);
+    color: var(--tz-ink);
+    border-bottom: 1px solid var(--tz-border);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-card-title-wrap {
@@ -1370,12 +1353,12 @@
     line-height: 20px;
     font-weight: 600;
     letter-spacing: -0.01em;
-    color: var(--tz-blk-ink);
+    color: var(--tz-ink);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-card-count {
     font-size: 12px;
-    color: var(--tz-blk-muted);
+    color: var(--tz-muted);
     font-variant-numeric: tabular-nums;
   }
 
@@ -1390,9 +1373,9 @@
     height: 30px;
     padding: 0 10px;
     border-radius: 7px;
-    border: 1px solid var(--tz-blk-ctrl-border);
-    background: var(--tz-blk-ctrl-bg);
-    color: var(--tz-blk-ink);
+    border: 1px solid var(--tz-border);
+    background: var(--tz-surface);
+    color: var(--tz-ink);
     font: inherit;
     font-size: 12px;
     font-weight: 500;
@@ -1404,14 +1387,14 @@
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-mini-btn:hover {
-    background: var(--tz-blk-ctrl-hover);
-    border-color: var(--tz-blk-muted);
+    background: var(--tz-hover);
+    border-color: var(--tz-border-strong);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-mini-btn.is-active {
-    background: var(--tz-blk-ink);
-    color: var(--tz-blk-bg);
-    border-color: var(--tz-blk-ink);
+    background: var(--tz-primary);
+    color: var(--tz-primary-fg);
+    border-color: var(--tz-primary);
     font-weight: 600;
   }
 
@@ -1424,7 +1407,7 @@
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-mini-link {
     border: 0;
     background: transparent;
-    color: var(--tz-blk-muted);
+    color: var(--tz-muted);
     font: inherit;
     font-size: 12.5px;
     font-weight: 500;
@@ -1432,7 +1415,7 @@
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-mini-link:hover {
-    color: var(--tz-blk-ink);
+    color: var(--tz-ink);
   }
 
   /* Filter-Chip-Band im Tagesplan */
@@ -1463,9 +1446,9 @@
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-chip.is-on {
-    background: var(--tz-surface);
-    border-color: var(--tz-border);
-    color: var(--tz-ink);
+    background: var(--tz-primary);
+    border-color: var(--tz-primary);
+    color: var(--tz-primary-fg);
     font-weight: 600;
   }
 
@@ -1593,6 +1576,13 @@
     border-color: var(--tz-border-strong);
   }
 
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-tl-row.is-now .tz-row-act {
+    background: var(--tz-primary);
+    border-color: var(--tz-primary);
+    color: var(--tz-primary-fg);
+    font-weight: 600;
+  }
+
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-row-act--ghost {
     border-color: transparent;
     background: transparent;
@@ -1679,35 +1669,35 @@
     color: var(--tz-muted);
   }
 
-  /* ── Rechte Spalte: #physioRezKpi als voller Carbon-Black-Monolith (sichtbar für alle + v602) ── */
+  /* ── Rechte Spalte: #physioRezKpi als kühler Steel-Slate-Kennzahlenblock (#EBF0F7) ── */
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] > #physioRezKpi {
     grid-area: rez;
     margin: 0 0 18px !important;
-    border: 1px solid var(--tz-blk-border);
-    background: var(--tz-blk-border);
-    box-shadow: var(--tz-shadow-hero);
+    border: 1px solid var(--tz-slate-border);
+    background: var(--tz-slate-border);
+    box-shadow: var(--tz-shadow);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .rez-kpi-tile {
     padding: 15px 16px;
-    background: var(--tz-blk-bg);
-    color: var(--tz-blk-ink);
+    background: var(--tz-slate-bg);
+    color: var(--tz-ink);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .rez-kpi-tile:hover {
-    background: var(--tz-blk-bg-hover);
+    background: var(--tz-slate-hover);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .rez-kpi-num {
-    color: var(--tz-blk-ink);
+    color: var(--tz-ink);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #physioRezKpi[data-ueberfaellig="1"] .rez-kpi-overdue .rez-kpi-num {
-    color: var(--tz-blk-danger);
+    color: var(--tz-danger);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .rez-kpi-lbl {
-    color: var(--tz-blk-muted);
+    color: var(--tz-muted);
   }
 
   /* ── Rechte Spalte: Handlungsbedarf (#tzBedarf) ── */
@@ -1715,12 +1705,12 @@
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 1px;
-    background: var(--tz-border-soft);
+    background: var(--tz-border);
     border-bottom: 1px solid var(--tz-border);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-kpi-cell {
-    background: var(--tz-surface);
+    background: var(--tz-sunken);
     border: 0;
     padding: 11px 12px;
     text-align: left;
@@ -1808,23 +1798,21 @@
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-head {
-    margin: -1px -1px 0;
-    padding: 14px 19px 13px;
-    border-top-left-radius: var(--tz-r);
-    border-top-right-radius: var(--tz-r);
-    background: var(--tz-blk-bg);
-    border-bottom: 1px solid var(--tz-blk-border);
+    margin: 0;
+    padding: 13px 18px;
+    background: var(--tz-band);
+    border-bottom: 1px solid var(--tz-border);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-head h3 {
     font-size: 15px;
     line-height: 20px;
     font-weight: 600;
-    color: var(--tz-blk-ink);
+    color: var(--tz-ink);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-count {
-    color: var(--tz-blk-muted);
+    color: var(--tz-muted);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-form {
@@ -1925,22 +1913,27 @@
     border-top: 1px solid var(--tz-border-soft);
   }
 
-  /* ── Rechte Spalte unten: Abrechnungspuls (#tzGeld) als voller Carbon-Black-Monolith ── */
+  /* ── Rechte Spalte unten: Abrechnungspuls (#tzGeld) als kühler Steel-Slate-Ledger (#EBF0F7) ── */
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] > #tzGeld {
-    background: var(--tz-blk-bg);
-    border-color: var(--tz-blk-border);
-    box-shadow: var(--tz-shadow-hero);
+    background: var(--tz-slate-bg);
+    border-color: var(--tz-slate-border);
+    box-shadow: var(--tz-shadow);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #tzGeld .tz-card-head {
+    background: var(--tz-slate-head);
+    border-bottom-color: var(--tz-slate-border);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-pulse {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1px;
-    background: var(--tz-blk-border);
+    background: var(--tz-slate-border);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-pulse-cell {
-    background: var(--tz-blk-bg-elev);
+    background: var(--tz-slate-bg);
     border: 0;
     padding: 13px 14px;
     text-align: left;
@@ -1952,24 +1945,24 @@
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-pulse-cell:hover {
-    background: var(--tz-blk-bg-hover);
+    background: var(--tz-slate-hover);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-pulse-lbl {
     font-size: 11.5px;
-    color: var(--tz-blk-muted);
+    color: var(--tz-muted);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-pulse-val {
     font-size: 15.5px;
     font-weight: 500;
     font-variant-numeric: tabular-nums;
-    color: var(--tz-blk-ink);
+    color: var(--tz-ink);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-pulse-sub {
     font-size: 11.5px;
-    color: var(--tz-blk-faint);
+    color: var(--tz-faint);
     font-variant-numeric: tabular-nums;
   }
 
