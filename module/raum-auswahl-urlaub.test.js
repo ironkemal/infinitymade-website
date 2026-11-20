@@ -1,51 +1,71 @@
-// M5: Termin an einem Urlaubstag der Therapeut:in warnt ("Trotzdem eintragen"), Abbrechen verhindert das Speichern.
-// DOM-Stub nur, damit raumAuswahlVerdrahten() ohne Browser mountet; alle Daten sind synthetisch.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { mountTerminKonflikte, terminFreigabe } from './termin-konflikte.js';
 
-globalThis.document = {
-  getElementById: () => null, querySelector: () => null, querySelectorAll: () => [],
-  createElement: () => ({ style: {}, classList: { add() {} }, append() {}, addEventListener() {} }),
-  addEventListener() {},
+const konfliktFeld = {
+  replaceChildren() {},
+  append() {},
+  scrollIntoView() {},
 };
-const { raumAuswahlVerdrahten, terminWarnungen } = await import('./raum-auswahl.js');
+const felder = {
+  bookingModal: { hidden: false, addEventListener() {} },
+  bkKonflikte: konfliktFeld,
+  bkEmployee: { value: 'Chrome1911 Emp' },
+  bkRaum: { value: 'Chrome1911 Gruppe' },
+  bkStart: { value: '2026-11-23T10:00' },
+};
+globalThis.document = {
+  getElementById: id => felder[id],
+  createElement: () => ({ style: {}, append() {} }),
+};
+globalThis.MutationObserver = class { observe() {} };
 
-function tabelle(zeilen) {
-  const b = {
-    select() { return b; }, in() { return b; }, lte() { return b; }, gte() { return b; }, eq() { return b; },
-    maybeSingle: async () => ({ data: null }),
-    then: (ok) => ok({ data: zeilen, error: null }),
-  };
-  return b;
-}
-function verdrahte({ timeOffs, antwort }) {
-  const fragen = [];
-  raumAuswahlVerdrahten({
-    supabase: { from: t => tabelle(t === 'time_offs' ? timeOffs : []) },
-    getOwnerId: () => 'owner-1',
-    showToast: () => {},
-    showConfirmModal: async m => { fragen.push(m.message); return antwort; },
+const abwesenheit = { grund: 'Therapeut:in ist wegen Abwesenheit nicht verfügbar.', sperre: false };
+const gruppe = { grund: 'Im Gruppenraum ist ein weiterer Platz frei.', sperre: false };
+const arbeitszeit = { grund: 'Termin liegt außerhalb der Arbeitszeit.', sperre: false };
+
+function verdrahte(t, konflikte, antwort) {
+  const fragen = [], meldungen = [];
+  t.mock.method(globalThis, 'fetch', async () => ({
+    ok: true,
+    json: async () => ({ konflikte, vorschlaege: [] }),
+  }));
+  mountTerminKonflikte({
+    apiBase: '/api',
+    getToken: async () => 'Chrome1911',
+    getDauerMin: () => 25,
+    getBusinessId: () => null,
+    getLeistungen: () => [{ serviceId: 'Chrome1911 KG' }],
+    showConfirmModal: async frage => { fragen.push(frage); return antwort; },
+    showToast: meldung => meldungen.push(meldung),
   });
-  return fragen;
+  return { fragen, meldungen };
 }
-const termin = { empId: 'emp-1', startIso: '2026-11-09T09:00:00Z', endIso: '2026-11-09T09:30:00Z' };
-const urlaub = [{ employee_id: 'emp-1', start_date: '2026-11-09', end_date: '2026-11-09', type: 'vacation' }];
 
-test('Urlaubstag: Warnung, Bestätigen speichert weiter', async () => {
-  const fragen = verdrahte({ timeOffs: urlaub, antwort: true });
-  assert.equal(await terminWarnungen(termin), true);
+test('Abwesenheit, Arbeitszeit und Gruppenraum erscheinen in einer Bestätigung', async t => {
+  const { fragen } = verdrahte(t, [abwesenheit, arbeitszeit, gruppe], true);
+  assert.equal(await terminFreigabe(25), true);
   assert.equal(fragen.length, 1);
-  assert.match(fragen[0], /nicht verfügbar/);
+  assert.equal(fragen[0].confirmText, 'Trotzdem eintragen');
+  assert.equal(fragen[0].message, [abwesenheit, arbeitszeit, gruppe].map(k => k.grund).join('\n'));
 });
 
-test('Urlaubstag: Abbrechen verhindert das Speichern', async () => {
-  const fragen = verdrahte({ timeOffs: urlaub, antwort: false });
-  assert.equal(await terminWarnungen(termin), false);
+test('Abbrechen verwirft die Freigabe', async t => {
+  const { fragen } = verdrahte(t, [abwesenheit], false);
+  assert.equal(await terminFreigabe(25), false);
   assert.equal(fragen.length, 1);
 });
 
-test('Kein Urlaub: keine Warnung', async () => {
-  const fragen = verdrahte({ timeOffs: [], antwort: false });
-  assert.equal(await terminWarnungen(termin), true);
-  assert.equal(fragen.length, 0);
+test('Therapeutenüberschneidung sperrt den Termin ohne Weiter-Knopf', async t => {
+  const belegt = { grund: 'Therapeut:in ist belegt.', sperre: true };
+  const { fragen, meldungen } = verdrahte(t, [belegt], true);
+  assert.equal(await terminFreigabe(25), false);
+  assert.deepEqual(fragen, []);
+  assert.deepEqual(meldungen, [belegt.grund]);
+});
+
+test('Freier Termin benötigt keine Bestätigung', async t => {
+  const { fragen } = verdrahte(t, [], false);
+  assert.equal(await terminFreigabe(25), true);
+  assert.deepEqual(fragen, []);
 });

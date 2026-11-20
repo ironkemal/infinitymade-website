@@ -28,7 +28,7 @@
   </div>
   <div id="bkActionModal"><div class="modal-body"></div></div>
   <script type="module">
-    import { planungVerdrahten, raumFelder, raumAktionsTermin, terminWarnungen, sondertagGesperrt, anstellungFuerUrlaub, zeigeAnrufliste, mountWidgetEinbettung } from '../../module/planung-bruecke.js';
+    import { planungVerdrahten, raumFelder, raumAktionsTermin, sondertagGesperrt, anstellungFuerUrlaub, zeigeAnrufliste, mountWidgetEinbettung } from '../../module/planung-bruecke.js';
 
     const ergebnisse = [];
     const pruefe = (name, ok) => ergebnisse.push({ name, ok: !!ok });
@@ -44,7 +44,7 @@
     const tabellen = {
       rooms: [
         { id: 'r1', owner_id: OWNER, business_id: 'b1', name: 'Behandlungsraum 1', plaetze: 1, aktiv: true, sort: 0 },
-        { id: 'r2', owner_id: OWNER, business_id: 'b1', name: 'Wärme', plaetze: 2, aktiv: true, sort: 1 },
+        { id: 'r2', owner_id: OWNER, business_id: 'b1', name: 'Wärme', plaetze: 2, ausstattung: ['Gruppenraum'], aktiv: true, sort: 1 },
         { id: 'r3', owner_id: OWNER, business_id: 'b1', name: 'Gerätefläche', plaetze: 3, aktiv: true, sort: 2 },
         { id: 'r9', owner_id: OWNER, business_id: 'b2', name: 'Anderer Standort', plaetze: 1, aktiv: true, sort: 0 },
       ],
@@ -108,6 +108,7 @@
     const toasts = [];
     const fragen = [];
     let geoeffnet = null;
+    let raumAenderung = null;
     let antwort = true;
     planungVerdrahten({
       supabase: fakeSupabase(),
@@ -119,6 +120,7 @@
       blockHtml: b => `<strong>${b.customer_name}</strong>`,
       getTeam: () => [{ id: 'm1', business_name: 'Anna Beispiel' }, { id: 'm2', business_name: 'Ben Muster' }],
       oeffneTermin: id => { geoeffnet = id; },
+      verschiebeRaumTermin: (id, roomId, start) => { raumAenderung = { id, roomId, start }; },
       getDauerMin: () => 30,
       showToast: (text, art) => toasts.push({ text, art }),
       showConfirmModal: async opts => { fragen.push(opts); return antwort; },
@@ -225,18 +227,6 @@
     pruefe('Lesefehler: Raum wird nicht angefasst', JSON.stringify(raumFelder()) === '{}');
     fehlerBei.bookings_room_id = false;
 
-    // Warnung: nachgeben und abbrechen
-    fragen.length = 0;
-    antwort = false;
-    const abgebrochen = await terminWarnungen({ empId: 'm9', startIso: iso(0), endIso: iso(10), raumId: 'r1' });
-    pruefe('Warnung nennt den Raum und erlaubt Abbruch', abgebrochen === false && /Behandlungsraum 1/.test(fragen[0]?.message));
-    antwort = true;
-    pruefe('Trotzdem eintragen ist möglich', await terminWarnungen({ empId: 'm9', startIso: iso(0), endIso: iso(10), raumId: 'r1' }));
-    tabellen.time_offs.push({ employee_id: 'm9', start_date: iso(-600), end_date: iso(600), reason: 'Krankheit', note: 'Geheim', type: 'krank' });
-    fragen.length = 0;
-    await terminWarnungen({ empId: 'm9', startIso: iso(0), endIso: iso(10), raumId: null });
-    pruefe('Abwesenheit warnt ohne Grund zu nennen', fragen[0]?.message === 'Therapeut:in ist an diesem Tag nicht verfügbar.');
-
     // Aktionspanel
     await raumAktionsTermin({ id: 'k3', user_id: 'm2', start_time: iso(-5), end_time: iso(15) });
     const aktion = document.getElementById('bkActRaum');
@@ -244,7 +234,8 @@
     document.getElementById('bkActRaumAuswahl').value = 'r3';
     document.getElementById('bkActRaumSpeichern').click();
     await warte(120);
-    pruefe('Raum wird nachgetragen', tabellen.bookings.find(b => b.id === 'k3').room_id === 'r3');
+    pruefe('Raumzuweisung öffnet den Termin mit gewähltem Raum', raumAenderung?.id === 'k3' && raumAenderung.roomId === 'r3' && raumAenderung.start === null);
+    pruefe('Raumzuweisung schreibt erst nach Freigabe im Termindialog', tabellen.bookings.find(b => b.id === 'k3').room_id === null);
     await raumAktionsTermin(null);
     pruefe('Ohne Termin verschwindet die Raumwahl', aktion.hidden);
 
@@ -290,8 +281,8 @@
     // Sperre am Schließtag (0106, Kemal 31.10.): kein „Trotzdem eintragen“, Fehlermeldung, Speichern bricht ab
     fragen.length = 0;
     toasts.length = 0;
-    const weiter = await terminWarnungen({ empId: 'm1', startIso: '2026-12-24T09:00:00+01:00', endIso: '2026-12-24T09:30:00+01:00', raumId: null });
-    pruefe('Termin am Schließtag wird gesperrt', weiter === false && fragen.length === 0
+    const gesperrt = await sondertagGesperrt('2026-12-24T09:00:00+01:00');
+    pruefe('Termin am Schließtag wird gesperrt', gesperrt && fragen.length === 0
       && toasts.some(t => t.art === 'error' && /gesperrt/.test(t.text)));
 
     // Anrufliste: kein Grund, nur Zeit, Patient, Telefon

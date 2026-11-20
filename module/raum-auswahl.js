@@ -1,19 +1,17 @@
 /**
- * raum-auswahl.js — Raum im Termin wählen, nachtragen, vor Überschneidung warnen (Physio/PILOT-PLAN.md M1/M2).
+ * raum-auswahl.js — Raum im Termin wählen und Belegung anzeigen (Physio/PILOT-PLAN.md M1/M2).
  *
- * Das Dashboard kennt nur `raumFelder()` und `terminWarnungen()`. Beides fällt weich: ohne Tabelle, ohne Räume
- * oder bei Lesefehler liefert `raumFelder()` {}, der Termin wird also wie bisher gespeichert (O-222, :stable/:beta).
+ * Die Buchungsfreigabe läuft über termin-konflikte.js. Ohne lesbare Raumdaten lässt
+ * raumFelder() die gespeicherte Raumwahl unangetastet.
  *
  * Der Raum bestimmt den Standort des Termins. Ohne `business_id` im Payload leitet die Datenbank den Standort aus
  * der Mitarbeiterzuordnung ab, meist den Standard-Standort; ein Raum an Standort B würde dann abgewiesen.
  */
-import { raeumeDesStandorts, raumAuswahl, raumKonflikt } from './raum-plan.js';
+import { raeumeDesStandorts, raumAuswahl } from './raum-plan.js';
 import { alsBerlinDatum } from './berlin-datum.js';
 import { mountTerminKonflikte } from './termin-konflikte.js';
-import { ladeAbwesenheiten } from './abwesenheit.js?v=20261031';
 import { ladeSondertage, warnungFuerTag } from './sondertag.js?v=20261119physio';
 
-const NICHT_VERFUEGBAR = 'Therapeut:in ist an diesem Tag nicht verfügbar.';
 const RAUM_SPALTEN = 'id,owner_id,business_id,name,plaetze,aktiv,sort';
 const BELEGUNG_SPALTEN = 'id,room_id,status,start_time,end_time,group_parent_id';
 
@@ -94,21 +92,11 @@ export async function ladeBelegungsstand(supabase, ownerId, vonISO, bisISO) {
   } catch { return { termine: [], fehler: true }; }
 }
 
-export async function ladeBelegungen(supabase, ownerId, vonISO, bisISO) {
-  return (await ladeBelegungsstand(supabase, ownerId, vonISO, bisISO)).termine;
-}
-
 export function tagesgrenzen(zeitpunkt) {
   const d = new Date(zeitpunkt);
   const von = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0);
   const bis = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59);
   return { vonISO: von.toISOString(), bisISO: bis.toISOString() };
-}
-
-/** Warntext für den Raum, oder null. Sperrt nichts (Ops #307). */
-export function raumWarnung(raum, termine, startIso, endIso, optionen = {}) {
-  if (!raum || !raumKonflikt(raum, termine, startIso, endIso, optionen).voll) return null;
-  return `Raum „${raum.name}" ist zu dieser Zeit belegt. Möchten Sie den Termin trotzdem eintragen?`;
 }
 
 let kontext = null;
@@ -155,59 +143,6 @@ export async function sondertagGesperrt(startIso, id = null) {
     if (geschlossen) { kontext.showToast(geschlossen, 'error'); return true; } // 0106: Sperre (Kemal 31.10.)
   } catch { /* Lesefehler darf das Speichern nicht aufhalten */ }
   return false;
-}
-
-/**
- * Sperrt am geschlossenen Sondertag, warnt vor Abwesenheit und Raumüberschneidung. true = weiter speichern.
- * `raumId` undefined: Raum aus dem gespeicherten Termin (Verschieben), sonst der gewählte.
- */
-export async function terminWarnungen({ id = null, empId, startIso, endIso, raumId }) {
-  if (!kontext) return true;
-  const { supabase, getOwnerId, showConfirmModal } = kontext;
-  const frage = meldung => showConfirmModal({
-    title: 'Hinweis zum Termin', message: meldung, confirmText: 'Trotzdem eintragen', cancelText: 'Abbrechen', variant: 'warning',
-  });
-  if (await sondertagGesperrt(startIso, id)) return false;
-  try {
-    const abwesend = await ladeAbwesenheiten(supabase, { empIds: [empId], vonISO: startIso, bisISO: endIso });
-    if (abwesend.length && !await frage(NICHT_VERFUEGBAR)) return false;
-  } catch { /* Lesefehler darf das Speichern nicht aufhalten */ }
-  try {
-    let gewaehlt = raumId;
-    if (gewaehlt === undefined && id) {
-      const { data } = await supabase.from('bookings').select('room_id').eq('id', id).maybeSingle();
-      gewaehlt = data?.room_id ?? null;
-    }
-    if (!gewaehlt) return true;
-    const ownerId = getOwnerId();
-    const raum = (await ladeRaumliste(supabase, ownerId)).find(r => r.id === gewaehlt);
-    const { vonISO, bisISO } = tagesgrenzen(startIso);
-    const termine = await ladeBelegungen(supabase, ownerId, vonISO, bisISO);
-    const warnung = raumWarnung(raum, termine, startIso, endIso, { ohneTerminId: id });
-    if (warnung && !await frage(warnung)) return false;
-  } catch { /* wie oben */ }
-  return true;
-}
-
-/** Nach einer Serie: Sammelhinweis statt Dialog je Termin. */
-export async function serieNachpruefen({ raumId, empId, termine: neue }) {
-  if (!kontext || !neue?.length) return;
-  const { supabase, getOwnerId, showToast } = kontext;
-  try {
-    const zeiten = neue.map(t => t.start_time).sort();
-    const vonISO = zeiten[0];
-    const bisISO = new Date(Date.parse(zeiten[zeiten.length - 1]) + 864e5).toISOString();
-    const abwesend = await ladeAbwesenheiten(supabase, { empIds: [empId], vonISO, bisISO });
-    if (abwesend.length) showToast(`${NICHT_VERFUEGBAR} Bitte die Serientermine prüfen.`, 'warning');
-    if (!raumId) return;
-    const ownerId = getOwnerId();
-    const raum = (await ladeRaumliste(supabase, ownerId)).find(r => r.id === raumId);
-    if (!raum) return;
-    const belegt = await ladeBelegungen(supabase, ownerId, vonISO, bisISO);
-    const treffer = belegt.filter(t => t.room_id === raumId
-      && raumKonflikt(raum, belegt, t.start_time, t.end_time, { ohneTerminId: t.id }).voll);
-    if (treffer.length) showToast(`Raum „${raum.name}" ist bei ${treffer.length} Terminen doppelt belegt.`, 'warning');
-  } catch { /* Hinweis, keine Pflicht */ }
 }
 
 function fuelleAuswahl(select, optionen, wert) {

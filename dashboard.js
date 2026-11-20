@@ -1,7 +1,7 @@
 import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261103mail1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261103mail1';
 import { oeffneLeistungsRaum, leistungsRaumPayload } from './module/leistungs-raum.js?v=20261103raum';
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
-import { planungVerdrahten, raumFelder, terminWarnungen, sondertagGesperrt, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261119physio';
+import { planungVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261120physio2';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
 import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261103mail1';
@@ -3342,7 +3342,7 @@ async function handleTerminStarten() {
   try {
     const notiz = b.hausbesuch ? '' : await showInputModal({
       title: 'Sitzung abschließen', message: 'Sitzungsnotiz (optional). Beim Abschließen wird die zugeordnete Einheit als erbracht gezählt.',
-      inputPlaceholder: 'z. B. Fortschritt, Beobachtungen, nächste Schritte…',
+      placeholder: 'z. B. Fortschritt, Beobachtungen, nächste Schritte…',
       confirmText: 'Sitzung abschließen', cancelText: 'Abbrechen',
     });
     if (notiz === null) return;

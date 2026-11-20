@@ -3,7 +3,7 @@
 > Üretim: 2026-11-20 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4833 fonksiyon** (4711 JS · 95 bash · 27 ps1) · 593 dosya · 42 sidebar modülü
+**4828 fonksiyon** (4706 JS · 95 bash · 27 ps1) · 593 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -607,7 +607,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `run` — api-backend/ai/tasks/appointment-confirm-draft.js:17 · api-backend/ai/tasks/b2b-draft.js:69 · api-backend/ai/tasks/b2c-draft.js:69 · api-backend/ai/tasks/rezept-normalize.js:136 · api-backend/ai/tasks/rezept-ocr.js:20 · api-backend/ai/tasks/rezept-validate.js:12 · api-backend/ai/tasks/series-scheduler.js:7 · api-backend/ai/tasks/transkribieren.js:15 · merkez/db.js:125
 - `speichern` — cookie-consent.js:120 · module/arzt-register.js:294 · module/fax-einstellungen.js:112 · module/fussbefund.js:792 · module/mailversand.js:326 · module/physio-befund.js:906 · module/praxis-rechtslinks-einstellungen.js:102 · module/standort-plan.js:606 · module/verordnung-detail.js:959
 - `resolveAuth` — api-backend/billing/api/ausfall.routes.js:33 · api-backend/billing/api/mahnwesen.routes.js:29 · api-backend/billing/api/podo-empfangsnachweis.routes.js:14 · api-backend/billing/api/rechnung-zahlung.routes.js:92 · api-backend/billing/api/statistik.routes.js:25 · api-backend/billing/api/verordnung-status.routes.js:53 · api-backend/billing/api/warteliste.routes.js:29 · api-backend/billing/api/zuzahlung.routes.js:53
-- `zeichne` — module/abrechnung-auswahl.js:769 · module/abrechnungsstatus.js:616 · module/einrichtung-ring.js:44 · module/patienten-einwilligung.js:540 · module/patienten-import.js:394 · module/praxis-standort.js:122 · module/raum-auswahl.js:247 · module/rezeptinfo-geld.js:458
+- `zeichne` — module/abrechnung-auswahl.js:769 · module/abrechnungsstatus.js:616 · module/einrichtung-ring.js:44 · module/patienten-einwilligung.js:540 · module/patienten-import.js:394 · module/praxis-standort.js:122 · module/raum-auswahl.js:182 · module/rezeptinfo-geld.js:458
 - `zeile` — api-backend/lib/therapiebericht.js:420 · module/branding-ui.js:39 · module/fax-deckblatt.js:54 · module/rechnung-druck.js:34 · module/verordnung-detail.js:293 · module/verordnung-detail.js:428 · module/verordnung-detail.js:496 · module/verordnung-pruefen-knopf.js:122
 - `el` — module/arzt-register.js:253 · module/fussbefund.js:232 · module/mailversand.js:59 · module/patient-notizen.js:16 · module/termin-aktionsleiste.js:49 · module/termin-panel.js:39 · module/verordnung-maske.js:765
 - `fmtEur` — api-backend/billing/pdf/ausfallrechnung.template.js:19 · api-backend/billing/pdf/begleitzettel.template.js:32 · api-backend/billing/pdf/mahnung.template.js:9 · api-backend/billing/pdf/rechnung.template.js:14 · api-backend/billing/pdf/rzg-quittung.template.js:12 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:17 · module/geld.js:48
@@ -630,7 +630,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `main` — api-backend/check_diagnosegruppen_icd.js:101 · api-backend/merkez-istemci/kayit.js:230 · api-backend/preise_autoupdate.mjs:211 · api-backend/preise_pruefen.mjs:261 · api-backend/sync_heilmittel_katalog.js:159
 - `markiere` — module/kalender-auswahl.js:46 · module/leistung-farbwahl.js:51 · module/planung-bruecke.js:138 · module/verordnung-liste.js:301 · widget/booking-widget.js:107
 - `oeffne` — module/kalender-kontextmenue.js:122 · module/kopf-suche-ansicht.js:122 · module/leiste-flyout.js:64 · module/leistungen-liste.js:190 · module/verordnung-liste.js:253
-- `oeffnen` — dashboard.js:7040 · module/fussbefund.js:1078 · module/kopf-dokumente.js:108 · module/raum-auswahl.js:269 · module/rechnung-mail.js:63
+- `oeffnen` — dashboard.js:7040 · module/fussbefund.js:1078 · module/kopf-dokumente.js:108 · module/raum-auswahl.js:204 · module/rechnung-mail.js:63
 - `tag` — module/podo-vorgeschichte.js:22 · module/rechnung-dmrz.js:38 · module/rezeptinfo-geld.js:257 · module/startseite-handlungsbedarf-laden.js:13 · module/startseite-handlungsbedarf.js:7
 
 ## Shell (onprem/)

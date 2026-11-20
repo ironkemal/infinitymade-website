@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  optionenFuerAuswahl, felderAusWahl, ladeRaumliste, ladeBelegungen, raumWarnung, freieRaeumeHinweis, raumFelder, terminWarnungen, tagesgrenzen,
+  optionenFuerAuswahl, felderAusWahl, ladeRaumliste, freieRaeumeHinweis, raumFelder, tagesgrenzen,
 } from './raum-auswahl.js';
 
 const raeume = [
@@ -44,23 +44,15 @@ test('„Kein Raum" leert den Raum, unbekannter Raum fasst nichts an', () => {
   assert.deepEqual(felderAusWahl('weg', raeume), {});
 });
 
-test('Warnung nennt den Raum, sonst null', () => {
-  assert.match(raumWarnung(raeume[0], termine, start, ende), /Raum „Raum 1" ist zu dieser Zeit belegt/);
-  assert.equal(raumWarnung(raeume[1], termine, start, ende), null);
-  assert.equal(raumWarnung(undefined, termine, start, ende), null);
-});
-
 test('Lesefehler führen zu leerer Liste, nie zu einer Ausnahme', async () => {
   const kaputt = { from() { throw new Error('Tabelle fehlt'); } };
   assert.deepEqual(await ladeRaumliste(kaputt, 'O'), []);
-  assert.deepEqual(await ladeBelegungen(kaputt, 'O', 'a', 'b'), []);
   const fehler = { from: () => ({ select: () => ({ eq: async () => ({ data: null, error: { code: '42P01' } }) }) }) };
   assert.deepEqual(await ladeRaumliste(fehler, 'O'), []);
 });
 
-test('Ohne verdrahtetes Modul bleibt alles beim Alten', async () => {
+test('Ohne verdrahtetes Modul werden Raumfelder nicht überschrieben', () => {
   assert.deepEqual(raumFelder(), {});
-  assert.equal(await terminWarnungen({ empId: 'x', startIso: start, endIso: ende }), true);
 });
 
 test('Tagesgrenzen umfassen den ganzen lokalen Tag', () => {

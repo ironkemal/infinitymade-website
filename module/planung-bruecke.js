@@ -8,12 +8,12 @@
  * wäre eine zweite Instanz ohne Kontext.
  */
 import {
-  raumAuswahlVerdrahten, raumFelder, terminWarnungen, sondertagGesperrt, serieNachpruefen, raumAktionsTermin, ladeRaumliste, tagesgrenzen,
-} from './raum-auswahl.js?v=20261107hinweis';
+  raumAuswahlVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, ladeRaumliste, tagesgrenzen,
+} from './raum-auswahl.js?v=20261120physio2';
 import { raeumeDesStandorts } from './raum-plan.js';
 import { mountRaumVerwaltung } from './raum-verwaltung.js?v=20261103raum';
 import { mountRaumStreifen } from './raum-streifen.js';
-import { mountRaumTagesansicht } from './raum-tagesansicht.js?v=20261119physio';
+import { mountRaumTagesansicht } from './raum-tagesansicht.js?v=20261120physio2';
 import { mountWidgetEinbettung } from './widget-einbettung.js';
 import { termineDesStandorts } from './standort-plan-laden.js?v=20261103planung';
 import { mountAnstellung, ladeAnstellung, ladeArbeitstage, urlaubsKennzahlen, arbeitstageImZeitraum } from './anstellung.js?v=20261103planung';
@@ -24,7 +24,7 @@ import { mountMitteilung } from './sondertag-mitteilung.js?v=20261109';
 import { mountMeinUrlaub } from './mein-urlaub.js?v=20261103planung2';
 import { ladeSondertage, markiereSondertage, markiereSondertagTermine, sondertagEtikett, sondertagArt, ladeBetroffene, betroffeneTermine, anruflisteHtml } from './sondertag.js?v=20261119physio';
 
-export { raumFelder, terminWarnungen, sondertagGesperrt, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, urlaubsKennzahlen, arbeitstageImZeitraum };
+export { raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, urlaubsKennzahlen, arbeitstageImZeitraum };
 export { termineDesStandorts };
 
 let verdrahtet = null;
