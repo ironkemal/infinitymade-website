@@ -35,7 +35,8 @@ test('Chrome1911 eigener Termin, Anschluss und Gruppenraumkapazität',()=>{
   d.raeume[0].plaetze=2;
   const t={...termin,empId:'Chrome1911 B'};
   assert.ok(terminPruefen(d,t).some(k=>k.sperre));
-  d.raeume[0].ausstattung.push('Gruppenraum'); assert.deepEqual(terminPruefen(d,t),[]);
+  d.raeume[0].ausstattung.push('Gruppenraum');
+  assert.deepEqual(terminPruefen(d,t).map(k => k.sperre),[false]);
   d.bookings.push({...b,id:'Chrome1911 parallel',user_id:'dritte Person'});assert.ok(terminPruefen(d,t).some(k=>k.sperre));
 });
 

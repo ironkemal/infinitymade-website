@@ -20,6 +20,14 @@ BEGIN
     NEW.room_automatisch := false;
     RETURN NEW;
   END IF;
+  -- Ein bereits stattgefundener Termin darf seine damalige Raumbelegung behalten.
+  IF TG_OP = 'UPDATE' AND OLD.status = 'confirmed' AND NEW.status = 'completed'
+     AND (NEW.owner_id, NEW.business_id, NEW.user_id, NEW.room_id, NEW.room_automatisch, NEW.hausbesuch,
+          NEW.service_id, NEW.raum_service_ids, NEW.start_time, NEW.end_time, NEW.group_parent_id)
+         IS NOT DISTINCT FROM
+         (OLD.owner_id, OLD.business_id, OLD.user_id, OLD.room_id, OLD.room_automatisch, OLD.hausbesuch,
+          OLD.service_id, OLD.raum_service_ids, OLD.start_time, OLD.end_time, OLD.group_parent_id)
+  THEN RETURN NEW; END IF;
   automatisch := NEW.room_id IS NULL;
   IF TG_OP = 'UPDATE' THEN
     automatisch := automatisch OR (OLD.room_automatisch AND NEW.room_automatisch AND NEW.room_id IS NOT DISTINCT FROM OLD.room_id);

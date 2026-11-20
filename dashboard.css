@@ -8950,3 +8950,6 @@ button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(
 .serie-pruefen::backdrop { background: rgb(0 0 0 / .55); }
 .serie-pruefen fieldset { margin: .75rem 0; border: 1px solid var(--border); border-radius: 8px; }
 .serie-pruefen label, #bkKonflikte button { display: inline-block; margin: .25rem; }
+
+#bkKonflikte button { max-width: 100%; text-align: start; white-space: normal; }
+#bkKonflikte button small { display: block; font-weight: normal; }

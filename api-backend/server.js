@@ -967,7 +967,7 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
       const gruppe = gruppen.find(b => Date.parse(b.start_time) === start &&
         (teilnehmer.get(b.id) || 0) < (b.group_capacity || 1));
       const konflikte = terminPruefen(planung, {
-        start, dauer: totalBlock, empId: userId, roomId: gruppe?.room_id, id: gruppe?.id,
+        start, dauer: totalBlock, empId: userId, roomId: gruppe?.room_id, id: gruppe?.id, gruppenbeitritt: Boolean(gruppe),
         ohneRaum: planung.leistungen[0]?.is_online_meeting === true,
       });
       if (!konflikte.length) slots.add(time);

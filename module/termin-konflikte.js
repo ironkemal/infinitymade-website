@@ -40,7 +40,11 @@ function zeige(host, ergebnis) {
   for (const v of vorschlaege) {
     const knopf = document.createElement('button');
     knopf.type = 'button'; knopf.className = 'btn-ghost';
-    knopf.textContent = v.label + ' übernehmen';
+    const label = document.createElement('strong');
+    label.textContent = v.label + ' übernehmen';
+    const grund = document.createElement('small');
+    grund.textContent = konflikte.map(k => k.grund).join(' ');
+    knopf.append(label, grund);
     knopf.addEventListener('click', () => anwenden(v));
     host.append(knopf);
   }
@@ -77,9 +81,11 @@ export function mountTerminKonflikte(kontext) {
 }
 
 export async function terminFreigabe(dauer) {
-  const termin = { ...maske(), dauer };
+  const eingaben = maske();
+  const unveraendert = () => !feld('bookingModal').hidden && JSON.stringify(eingaben) === JSON.stringify(maske());
   try {
-    const ergebnis = await pruefen(termin);
+    const ergebnis = await pruefen({ ...eingaben, dauer });
+    if (!unveraendert()) return false;
     zeige(feld('bkKonflikte'), ergebnis);
     if (!ergebnis.konflikte.length) return true;
     if (ergebnis.konflikte.some(k => k.sperre)) {
@@ -87,8 +93,9 @@ export async function terminFreigabe(dauer) {
       deps.showToast(ergebnis.konflikte.map(k => k.grund).join(' '), 'error');
       return false;
     }
-    return deps.showConfirmModal({ title: 'Hinweise zum Termin', message: ergebnis.konflikte.map(k => k.grund).join('\n'),
+    const bestaetigt = await deps.showConfirmModal({ title: 'Hinweise zum Termin', message: ergebnis.konflikte.map(k => k.grund).join('\n'),
       confirmText: 'Trotzdem eintragen', cancelText: 'Termin ändern', variant: 'warning' });
+    return bestaetigt && unveraendert();
   } catch (e) { deps.showToast(e.message, 'error'); return false; }
 }
 

@@ -1,7 +1,7 @@
 // Gemeinsame Verfügbarkeitsregeln für die Praxis und die öffentliche Slotliste.
 import { planErlaubt } from '../lib/standort-plan-laden.js';
 /**
- * @typedef {{start:number,dauer:number,empId:string,roomId?:string|null,id?:string|null,ohneRaum?:boolean}} Termin
+ * @typedef {{start:number,dauer:number,empId:string,roomId?:string|null,id?:string|null,ohneRaum?:boolean,gruppenbeitritt?:boolean}} Termin
  * @typedef {{id:string,name:string,plaetze:number,ausstattung?:string[]}} Raum
  * @typedef {{id?:string,required_certificate?:string,raum_ausstattung?:string[],employee_services?:{employee_id:string}[]}} Leistung
  * @typedef {{user_id?:string,day_of_week?:number,is_active?:boolean,start_time:string,end_time:string}} Zeitfenster
@@ -59,13 +59,16 @@ export function terminPruefen(daten, termin) {
   /** @param {Raum} r */
   const geeignet = r => daten.leistungen.every(s => (s.raum_ausstattung || []).every(a => r.ausstattung?.includes(a)));
   /** @param {Raum} r */
+  const belegung = r => parallel.filter(b => b.room_id === r.id && !['cancelled', 'no_show'].includes(b.status)).length;
+  /** @param {Raum} r */
   const frei = r => {
-    const belegt = parallel.filter(b => b.room_id === r.id && !['cancelled', 'no_show'].includes(b.status)).length;
+    const belegt = belegung(r);
     const gruppenraum = r.ausstattung?.some(a => a.trim().toLowerCase() === 'gruppenraum');
     return belegt < (gruppenraum ? r.plaetze : 1);
   };
   if (raum && !geeignet(raum)) melde('Raumausstattung passt nicht zur Leistung.', true);
   if (raum && !frei(raum)) melde('Raum „' + raum.name + '“ ist um ' + von + ' belegt.', true);
+  else if (raum && belegung(raum) && !termin.gruppenbeitritt) melde('Gruppenraum „' + raum.name + '“ ist um ' + von + ' bereits belegt. Ein weiterer Platz ist frei.');
   if (!raum && !termin.ohneRaum && (daten.raeume.length || daten.leistungen.some(s => s.raum_ausstattung?.length)) && !daten.raeume.some(r => geeignet(r) && frei(r))) melde('Kein geeigneter Raum frei.', true);
   const sonder = daten.tage.find(t => t.date === tag);
   const geschlossen = sonder && ['closed', 'holiday'].includes(sonder.type);
@@ -78,7 +81,12 @@ export function terminPruefen(daten, termin) {
   const orte = daten.zuordnung.filter(z => z.employee_id === empId);
   if ((daten.businessId && orte.length && !orte.some(z => z.business_id === daten.businessId)) || !planErlaubt(daten.plan, empId, tag, daten.businessId, { start: von, dauerMin: dauer })) melde('Therapeut:in ist nicht an diesem Standort eingeplant.', true);
   if (daten.leistungen.some(s => s.employee_services?.length && !s.employee_services.some(es => es.employee_id === empId))) melde('Leistung ist dieser Person nicht zugeordnet.', true);
-  if (qualifikationFehlt(daten.leistungen, daten.zertifikate, empId)) melde('Erforderlicher Zertifikatsnachweis fehlt (' + [...new Set(daten.leistungen.map(s => s.required_certificate).filter(Boolean))].join(', ') + ').');
+  if (qualifikationFehlt(daten.leistungen, daten.zertifikate, empId)) {
+    const person = daten.team.find(p => p.id === empId);
+    const name = [person?.owner_first_name, person?.owner_last_name].filter(Boolean).join(' ') || 'Ausgewählte Person';
+    const fehlend = daten.leistungen.filter(s => qualifikationFehlt([s], daten.zertifikate, empId));
+    melde(name + ': Zertifikatsnachweis fehlt (' + [...new Set(fehlend.map(s => s.required_certificate))].join(', ') + ').');
+  }
   if (start < daten.jetzt) melde('Termin liegt in der Vergangenheit.');
   return konflikte;
 }

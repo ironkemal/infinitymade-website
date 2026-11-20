@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-20",
  "dateien": 592,
- "funktionen": 4828,
+ "funktionen": 4830,
  "module": [
   "abrechnung",
   "anamnese",
@@ -406,6 +406,7 @@
     "toggleStandortDay",
     "triggerStorno",
     "uebernimmVerordnungAlsVorlage",
+    "unveraendert",
     "updateStatus",
     "upload",
     "val",
@@ -34524,8 +34525,8 @@
    "lang": "js",
    "file": "api-backend/booking/termin-pruefung.js",
    "start": 46,
-   "end": 84,
-   "lines": 39,
+   "end": 92,
+   "lines": 47,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -34538,6 +34539,7 @@
    "calls": [
     "abwesendAm",
     "arbeitsfenster",
+    "belegung",
     "frei",
     "geeignet",
     "melde",
@@ -34732,13 +34734,13 @@
    ]
   },
   {
-   "name": "frei",
+   "name": "belegung",
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/booking/termin-pruefung.js",
    "start": 62,
-   "end": 66,
-   "lines": 5,
+   "end": 63,
+   "lines": 2,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -34749,6 +34751,74 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [],
+   "calledBy": [
+    "frei",
+    "terminPruefen"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "frei",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "api-backend/booking/termin-pruefung.js",
+   "start": 64,
+   "end": 68,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "belegung"
+   ],
    "calledBy": [
     "(datei) module/rechnung-zahlung.js",
     "(datei) module/sitzung-aktiv.js",
@@ -34809,8 +34879,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/booking/termin-pruefung.js",
-   "start": 87,
-   "end": 107,
+   "start": 95,
+   "end": 115,
    "lines": 21,
    "spiegelHinweis": null,
    "tables": [],
@@ -34839,8 +34909,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/booking/termin-pruefung.js",
-   "start": 93,
-   "end": 97,
+   "start": 101,
+   "end": 105,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -65477,6 +65547,7 @@
     "toggleStandortDay",
     "triggerStorno",
     "uebernimmVerordnungAlsVorlage",
+    "unveraendert",
     "updateStatus",
     "upload",
     "val",
@@ -72672,6 +72743,7 @@
     "speichern",
     "terminFreigabe",
     "terminWarnungen",
+    "unveraendert",
     "verordnungPatientenAbgleich",
     "wireAbrechnungSettings",
     "wireBefreiungCard",
@@ -94046,7 +94118,8 @@
     "has",
     "matchIcdToDg",
     "push",
-    "soleIcdForDg"
+    "soleIcdForDg",
+    "unveraendert"
    ],
    "calledBy": [
     "(datei) module/diagnosegruppen-regeln.js",
@@ -103124,6 +103197,7 @@
     "renderMailversandSettings",
     "rendereGeldzeile",
     "terminFreigabe",
+    "unveraendert",
     "zeileDetailHtml"
    ],
    "modules": [
@@ -120951,6 +121025,7 @@
     "onIcdChange",
     "start",
     "terminFreigabe",
+    "unveraendert",
     "verdrahteIcdDg"
    ],
    "modules": [
@@ -129029,6 +129104,7 @@
     "renderMailversandSettings",
     "rendereGeldzeile",
     "terminFreigabe",
+    "unveraendert",
     "zeileDetailHtml"
    ],
    "modules": [
@@ -142992,6 +143068,7 @@
     "renderMailversandSettings",
     "rendereGeldzeile",
     "terminFreigabe",
+    "unveraendert",
     "zeileDetailHtml"
    ],
    "modules": [
@@ -149031,6 +149108,7 @@
     "onIcdChange",
     "start",
     "terminFreigabe",
+    "unveraendert",
     "verdrahteIcdDg"
    ],
    "modules": [
@@ -153225,6 +153303,7 @@
     "toggleStandortDay",
     "triggerStorno",
     "uebernimmVerordnungAlsVorlage",
+    "unveraendert",
     "updateStatus",
     "upload",
     "val",
@@ -155402,6 +155481,7 @@
     "onIcdChange",
     "start",
     "terminFreigabe",
+    "unveraendert",
     "verdrahteIcdDg"
    ],
    "modules": [
@@ -159768,6 +159848,7 @@
     "pruefeZeile",
     "serieFreigabe",
     "terminFreigabe",
+    "unveraendert",
     "validiere"
    ],
    "modules": [
@@ -166948,6 +167029,7 @@
     "renderMailversandSettings",
     "rendereGeldzeile",
     "terminFreigabe",
+    "unveraendert",
     "zeileDetailHtml"
    ],
    "modules": [
@@ -180922,6 +181004,7 @@
     "pruefeZeile",
     "serieFreigabe",
     "terminFreigabe",
+    "unveraendert",
     "validiere"
    ],
    "modules": [
@@ -182288,6 +182371,7 @@
     "pruefeZeile",
     "serieFreigabe",
     "terminFreigabe",
+    "unveraendert",
     "validiere"
    ],
    "modules": [
@@ -213817,6 +213901,7 @@
     "renderMailversandSettings",
     "rendereGeldzeile",
     "terminFreigabe",
+    "unveraendert",
     "zeileDetailHtml"
    ],
    "modules": [
@@ -235795,6 +235880,7 @@
     "renderMailversandSettings",
     "rendereGeldzeile",
     "terminFreigabe",
+    "unveraendert",
     "zeileDetailHtml"
    ],
    "modules": [
@@ -235935,7 +236021,8 @@
     "mountTerminKonflikte",
     "serieFreigabe",
     "terminFreigabe",
-    "uebernehmen"
+    "uebernehmen",
+    "unveraendert"
    ],
    "modules": [
     "abrechnung",
@@ -236015,6 +236102,7 @@
     "pruefeZeile",
     "serieFreigabe",
     "terminFreigabe",
+    "unveraendert",
     "validiere"
    ],
    "modules": [
@@ -236139,8 +236227,8 @@
    "lang": "js",
    "file": "module/termin-konflikte.js",
    "start": 33,
-   "end": 47,
-   "lines": 15,
+   "end": 51,
+   "lines": 19,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -236161,6 +236249,7 @@
     "onIcdChange",
     "start",
     "terminFreigabe",
+    "unveraendert",
     "verdrahteIcdDg"
    ],
    "modules": [
@@ -236212,8 +236301,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/termin-konflikte.js",
-   "start": 49,
-   "end": 77,
+   "start": 53,
+   "end": 81,
    "lines": 29,
    "spiegelHinweis": null,
    "tables": [],
@@ -236244,8 +236333,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/termin-konflikte.js",
-   "start": 54,
-   "end": 69,
+   "start": 58,
+   "end": 73,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -236326,8 +236415,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/termin-konflikte.js",
-   "start": 70,
-   "end": 72,
+   "start": 74,
+   "end": 76,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -236351,8 +236440,41 @@
    "kind": "function",
    "lang": "js",
    "file": "module/termin-konflikte.js",
-   "start": 79,
-   "end": 93,
+   "start": 83,
+   "end": 100,
+   "lines": 18,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "feld",
+    "maske",
+    "pruefen",
+    "showConfirmModal",
+    "showToast",
+    "unveraendert",
+    "zeige"
+   ],
+   "calledBy": [
+    "(datei) dashboard.js"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "unveraendert",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/termin-konflikte.js",
+   "start": 85,
+   "end": 99,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -236372,7 +236494,9 @@
     "zeige"
    ],
    "calledBy": [
-    "(datei) dashboard.js"
+    "(datei) module/standort-plan-laden.js",
+    "dgVorschlag",
+    "terminFreigabe"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -236383,8 +236507,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/termin-konflikte.js",
-   "start": 96,
-   "end": 159,
+   "start": 103,
+   "end": 166,
    "lines": 64,
    "spiegelHinweis": null,
    "tables": [],
@@ -236418,8 +236542,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/termin-konflikte.js",
-   "start": 106,
-   "end": 111,
+   "start": 113,
+   "end": 118,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -236484,8 +236608,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/termin-konflikte.js",
-   "start": 112,
-   "end": 134,
+   "start": 119,
+   "end": 141,
    "lines": 23,
    "spiegelHinweis": null,
    "tables": [],
@@ -236555,8 +236679,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/termin-konflikte.js",
-   "start": 148,
-   "end": 148,
+   "start": 155,
+   "end": 155,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -296789,7 +296913,7 @@
    "orte": [
     "module/raum-streifen.js:191",
     "module/shell-ansicht.js:86",
-    "module/termin-konflikte.js:54",
+    "module/termin-konflikte.js:58",
     "module/verordnung-podo.js:1072"
    ],
    "aynalar": []
@@ -296910,7 +297034,7 @@
     "module/abrechnung-artefakte.js:83",
     "module/patient-termine.js:59",
     "module/praxis-standort.js:129",
-    "module/termin-konflikte.js:148"
+    "module/termin-konflikte.js:155"
    ],
    "aynalar": []
   },
@@ -297076,8 +297200,8 @@
   {
    "name": "frei",
    "orte": [
-    "api-backend/booking/termin-pruefung.js:62",
-    "api-backend/booking/termin-pruefung.js:93",
+    "api-backend/booking/termin-pruefung.js:64",
+    "api-backend/booking/termin-pruefung.js:101",
     "module/eingangsbefundung-regel.js:450"
    ],
    "aynalar": []
@@ -298357,7 +298481,7 @@
   {
    "name": "pruefeZeile",
    "orte": [
-    "module/termin-konflikte.js:112",
+    "module/termin-konflikte.js:119",
     "module/verordnung-uebersicht.js:333"
    ],
    "aynalar": []
