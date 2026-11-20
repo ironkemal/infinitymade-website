@@ -169,15 +169,18 @@ export function mountStartAufgaben(ctx, doc = document) {
       <form id="startAufgabeForm" class="sa-form">
         <div class="sa-form-row">
           <input type="text" id="startAufgabeInput" class="sa-input" maxlength="500" placeholder="Neue Aufgabe …" />
-          <input type="date" id="startAufgabeFaellig" class="sa-date" title="Fällig am" aria-label="Fällig am" />
-          <button type="button" id="startAufgabePatientToggle" class="btn-ghost sa-pat-toggle">
-            ${LINK_SVG}<span>Patient verknüpfen</span>
-          </button>
-          <div id="startAufgabePatientChip" class="sa-pat-chip" style="display:none;">
-            <span id="startAufgabePatientChipName" class="sa-pat-chip-name"></span>
-            <button type="button" id="startAufgabePatientRemove" class="sa-icon-btn" aria-label="Patientenbezug entfernen" title="Verknüpfung entfernen">${CLOSE_SVG}</button>
+          <button type="button" id="startAufgabeOptsBtn" class="sa-opts-btn" aria-expanded="false">+ Optionen</button>
+          <div class="sa-form-extras">
+            <input type="date" id="startAufgabeFaellig" class="sa-date" title="Fällig am" aria-label="Fällig am" />
+            <button type="button" id="startAufgabePatientToggle" class="btn-ghost sa-pat-toggle">
+              ${LINK_SVG}<span>Patient verknüpfen</span>
+            </button>
+            <div id="startAufgabePatientChip" class="sa-pat-chip" style="display:none;">
+              <span id="startAufgabePatientChipName" class="sa-pat-chip-name"></span>
+              <button type="button" id="startAufgabePatientRemove" class="sa-icon-btn" aria-label="Patientenbezug entfernen" title="Verknüpfung entfernen">${CLOSE_SVG}</button>
+            </div>
+            <select id="startAufgabeStandort" class="sa-select" hidden title="Standort" aria-label="Standort"></select>
           </div>
-          <select id="startAufgabeStandort" class="sa-select" hidden title="Standort" aria-label="Standort"></select>
           <button type="submit" id="startAufgabeAddBtn" class="btn-primary sa-submit">Hinzufügen</button>
         </div>
 
@@ -203,6 +206,15 @@ export function mountStartAufgaben(ctx, doc = document) {
   `;
 
   const form = doc.getElementById('startAufgabeForm');
+  const optsBtn = doc.getElementById('startAufgabeOptsBtn');
+  if (optsBtn && form) {
+    optsBtn.addEventListener('click', () => {
+      const offen = form.dataset.opts === '1';
+      form.dataset.opts = offen ? '0' : '1';
+      optsBtn.setAttribute('aria-expanded', offen ? 'false' : 'true');
+      optsBtn.textContent = offen ? '+ Optionen' : 'Weniger';
+    });
+  }
   const textInput = doc.getElementById('startAufgabeInput');
   const faelligInput = doc.getElementById('startAufgabeFaellig');
   const patientToggle = doc.getElementById('startAufgabePatientToggle');
