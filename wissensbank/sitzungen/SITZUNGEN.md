@@ -9,6 +9,8 @@ tags: [sitzung, uebersicht]
 
 **Bei „Was ist noch offen?“:** [[2026-11-11_offene-punkte-wiederaufnahme]] zuerst lesen, dann neuere Belege und führende Restmatrix abgleichen. Enthält Restpunkte, Zuständigkeiten, externe Mitwirkung und Rückstellungen.
 
+Aktuelle Ergänzung (20.11.): [[2026-11-20_raumbelegung-gruppentermine-anwesenheit]] — Physio-QA-Entscheidungen und lokale Nachweise zu Raumbelegung, Rechnungen, Zuweisern und Anwesenheit. SaaS-Migrationen und Live-Abnahme stehen aus.
+
 Aktuelle Ergänzung (20.11.): [[2026-11-20_dashboard-und-ueberblick-redesign]] — Dashboard (`#panel-overview`) im Standard-Design nach `DESIGN.md` neu aufgebaut (`dashboard-start.css`, `module/aktivitaet-zeile.js`, `module/start-aufgaben.js` ohne Emojis/Seitenbalken/Olivgold, `dashboard.js` `-34` Zeilen auf `17641`) und Überblick (`#panel-ueberblick`) feingeschliffen (Mobile-Tabs, `Nicht erschienen`-Stapelung, Dark-Mode-Chart, `[data-design="neu"]`-Zeilenhöhe); `3.033` Frontend- und `355` Tool-Tests + Browser-Probes (`layout`, `v303`, `v602`) grün (`713c5429`), Push auf `origin/main` freigegeben.
 
 Aktuelle Ergänzung (19.11.): [[2026-11-19_physio-launch-stufe1-sitzung-auth-raeume-ueberblick]] — Physio-Launch Stufe 1 gehärtet (`sitzung-abschliessen.js` Rollback-Fix + 8 Tests, `?v=`-Cache-Buster, `signOut` lokal + deutsche Fehlertexte auf allen Nebenseiten, echter Postgres-17.11-Parallel-Nachweis `0104`, `0081` über `0120`/`0121` komplett als live bestätigt, `dashboard-ueberblick.css` aus `design/` gelöst, `npm test` 100 % grün, `b4009e27` gepusht); 15-Min-Live-Checkliste in `canli-test/2026-11-19-physio-launch-checkliste.md`; AZE-Satz `TSOL0101–0105` (Betreff = nur IK) verschickt.
@@ -54,6 +56,7 @@ Aktuelle Bugfix-Übergabe: [[2026-11-17_praxura-bugfix-uebergabe]] — P1–P3 l
 
 | Datum | Ticket | Notiz | Stand beim Schreiben |
 |---|---|---|---|
+| 2026-11-20 | Physio-QA / Bestätigte Entscheidungen | [[2026-11-20_raumbelegung-gruppentermine-anwesenheit]] | Lokal geprüft. Raum 64/64, Physio 41/41, Migrationen bis 0129 in der Testbox. Live-Schema und Abnahme ausstehend. |
 | 2026-11-20 | Redesign / Dashboard & Überblick | [[2026-11-20_dashboard-und-ueberblick-redesign]] | Dashboard (`#panel-overview`) nach `DESIGN.md` neu gestaltet (`dashboard-start.css`, `module/aktivitaet-zeile.js`, `module/start-aufgaben.js`), Überblick feingeschliffen; `3.033` Frontend- + `355` Tool-Tests, `typecheck`, `redesign-wachen`, Browser-Probes (`layout`, `v303`, `v602`) grün (`713c5429`); Push auf `origin/main`, Live-Sichtprüfung nach Deploy offen. |
 | 2026-11-19 | Physio-Launch Stufe 1 / AZE | [[2026-11-19_physio-launch-stufe1-sitzung-auth-raeume-ueberblick]] | QA-Nachprüfung und Push `173acb73`, Raumprobe 66/66, Physio 41/41, `npm test` komplett grün (`3.031`/`2.242`/`355`/`109`), 0081 über `0120`/`0121` komplett zu, Raum-Concurrency `0104` auf Postgres 17.11 bewiesen, 15-Min-Live-Checkliste bereit, AZE-Antwort & Box `L1–L7` offen. |
 | 2026-11-18 | QA und O-138 | [[2026-11-18_dmrz-termin-anfragen-und-kostentraeger-waechter]] | Zwei lokale Browserproben grün, Telegram-Zustellung bestätigt, Live-Dateien entsprechen `0e6552d1`. Externer DMRZ-Import offen. |
