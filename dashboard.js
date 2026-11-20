@@ -44,7 +44,7 @@ import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnun
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20261004m116';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261005g';
 import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261004m116';
-import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261118v914'; import { pruefePatientPflicht, patientKontaktFehler } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { ladeUeberblickAnsicht } from './module/ueberblick-ansicht.js?v=20261119ubl4'; import { aktivitaetZeileHtml } from './module/aktivitaet-zeile.js?v=20261119start1';
+import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261118v914'; import { pruefePatientPflicht, patientKontaktFehler } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { ladeUeberblickAnsicht } from './module/ueberblick-ansicht.js?v=20261120tz5'; import { aktivitaetZeileHtml } from './module/aktivitaet-zeile.js?v=20261119start1';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
 import { ladeStatusJePatient, oeffneStatusDialogFuer, verordnungStatusInfo } from './module/abrechnungsstatus.js?v=20261117f2';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261117v906';
@@ -1148,7 +1148,7 @@ async function renderGapsForDate(date) {
     if (!container) return;
     if (!date) date = scheduleDate;
 
-    const dateStr = date.toLocaleDateString('sv-SE', { timeZone: tz });
+    const dateStr = date.toLocaleDateString('sv-SE', { timeZone: tz }); container.dataset.dateIso = dateStr;
     const dayStart = new Date(dateStr + 'T00:00:00');
     const dayDow = dayStart.getDay();
 
@@ -1256,7 +1256,7 @@ async function loadScheduleBookings(date) {
     document.getElementById('kpi-today').textContent = countToday;
   }
 
-  if (displayBookings.length === 0) { const p = emptyEl.querySelector('p'); if (p) p.textContent = isToday && (bookings || []).length ? 'Keine weiteren Termine heute.' : t('upcoming_empty'); emptyEl.hidden = false; return; }   // Fund 3: KPI zählt den ganzen Tag, die Liste nur Kommendes
+  if (displayBookings.length === 0) { const p = emptyEl.querySelector('p'); if (p) p.textContent = isToday && (bookings || []).length ? 'Keine weiteren Termine heute.' : t('upcoming_empty'); if (scheduleView === 'daily') emptyEl.hidden = false; return; }   // Fund 3: KPI zählt den ganzen Tag, die Liste nur Kommendes
 
   const timeCol = document.getElementById('ovTimeCol');
   const colsWrap = document.getElementById('ovColsWrap');
@@ -1392,7 +1392,7 @@ async function loadScheduleBookings(date) {
     colsWrap.appendChild(col);
   });
 
-  gridEl.hidden = false;
+  if (scheduleView === 'daily') gridEl.hidden = false;
 }
 
 async function loadTodayBookings() { return loadScheduleBookings(new Date()); }
@@ -1404,7 +1404,8 @@ async function loadTodayBookings() { return loadScheduleBookings(new Date()); }
 async function refreshBookingViews() {
   if (calendar) { try { await calendar.reloadMonth(); calendar.refresh(); } catch (e) {} }
   // Übersicht-Tagesplan auffrischen (den aktuell gezeigten Tag beibehalten)
-  try { await loadScheduleBookings(scheduleDate instanceof Date ? scheduleDate : new Date()); } catch (e) {}
+  const zielTag = scheduleDate instanceof Date ? scheduleDate : new Date();
+  try { await loadScheduleBookings(zielTag); await renderGapsForDate(zielTag); } catch (e) {}
   loadActivityFeed().catch(() => {});
   if (activePanel === 'calendar') {
     try { await renderCalendarView(); } catch (e) {}
@@ -1420,6 +1421,7 @@ on('bookings:changed', () => { refreshBookingViews().catch(() => {}); });
 // offen, zeigt er den Stand VOR dem Schreiben — er wird deshalb mit frischen
 // Daten neu aufgebaut, statt den Nutzer die Seite neu laden zu lassen.
 on('verordnungen:changed', async () => {
+  loadPhysioRezKpis().catch(() => {});
   const panel = document.getElementById('bkActionModal');
   if (!panel || panel.hidden || !bkActionBookingCache?.id) return;
   const { data: frisch } = await supabase.from('bookings')
@@ -1652,16 +1654,14 @@ async function loadPhysioRezKpis() {
     const list = _rezKpiCache[cat] || [];
     if (!list.length) { showToast('Keine Rezepte in dieser Kategorie.', 'info'); return; }
     // Open the first patient with such a prescription; user can flip patients from there
-    const firstRx = list[0];
-    if (!firstRx?.patient_id) return;
+    const firstRx = list.find(r => r?.patient_id) || list[0];
+    if (!firstRx?.patient_id) { switchPanel('verordnungen'); return; }
     const { data: lead } = await supabase.from('leads')
       .select('*').eq('id', firstRx.patient_id).maybeSingle();
     if (lead && typeof openPatientDetailModal === 'function') {
-      openPatientDetailModal(lead);
-      setTimeout(() => {
-        const rezTab = document.querySelector('.pd-tab[data-tab="rezepte"]');
-        if (rezTab) rezTab.click();
-      }, 200);
+      await openPatientDetailModal(lead);
+      const rezTab = document.querySelector('.pd-tab[data-tab="rezepte"]');
+      if (rezTab) rezTab.click();
     }
   });
 })();
@@ -12270,9 +12270,9 @@ async function refreshActiveScheduleView() {
     await loadScheduleBookings(scheduleDate);
     await renderGapsForDate(scheduleDate);
   } else if (scheduleView === 'weekly') {
-    await renderOverviewWeekly(scheduleDate);
+    await Promise.all([renderOverviewWeekly(scheduleDate), loadScheduleBookings(scheduleDate), renderGapsForDate(scheduleDate)]);
   } else if (scheduleView === 'monthly') {
-    await renderOverviewMonthly(scheduleDate);
+    await Promise.all([renderOverviewMonthly(scheduleDate), loadScheduleBookings(scheduleDate), renderGapsForDate(scheduleDate)]);
   }
 }
 
@@ -13984,7 +13984,7 @@ async function init() {
       const ansichtKontext = { uid: () => currentSession?.user?.id, rolle: () => currentProfile?.role, scope: () => [currentSession?.user?.id, currentProfile?.role, getOwnerId(), currentBusiness?.id].join(':') };
       startansicht = (await import('./module/startseite-ansicht.js?v=20261118v908')).montiereStartansicht({ ...ansichtKontext, sektor: getSector, api: () => API, springe: switchPanel, akte: id => window.openPatientDetail?.(id), neuLaden: loadTodayBookings, anfragenLaden: () => loadAnfragen('pending'), behandler: () => teamMembers.map(m => ({ id: m.id, name: m.business_name || m.full_name || (m.email || '').split('@')[0] })), hb: { supabase, ownerId: () => getOwnerId(), businessId: () => currentBusiness?.id ?? null, patientsGemeinsam: () => dataSharing.patients === true } });
       (await import('./module/anamnese-abschnitte.js?v=20261114v402')).montiereAnamneseAbschnitte(ansichtKontext); try { (await import('./module/shell-ansicht.js?v=20261117v906')).montiereShellansicht({ ...ansichtKontext, name: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', suche: { ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, oeffnePatient: id => window.openPatientDetail?.(id), dokumente: { kontext: () => ({ supabase, rolle: currentProfile?.role, uid: currentSession?.user?.id, ownerId: getOwnerId(), businessId: currentBusiness?.id ?? null, patientsGemeinsam: dataSharing.patients === true, financeGemeinsam: dataSharing.finance === true }), ladeRechnungen: loadRechnungen, oeffneRechnung: id => { switchPanel('rechnungen'); return openInvView(id); }, oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); const ok = oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API }); if (!ok) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); return ok; } } } }); } catch (e) { console.error('[init] shell', e); }
-    } else { startansicht = (await import('./module/tageszentrale-ansicht.js?v=20261120tz1')).montiereTageszentrale({ supabase, api: () => API, getOwnerId, getUserId: () => currentSession?.user?.id || null, istOwner: () => currentProfile?.role === 'owner', getName: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', getTeam: () => teamMembers.map(m => ({ id: m.id, name: m.business_name || m.full_name || (m.email || '').split('@')[0] })), bizScope, oeffneTerminNeu: (s) => prefillBookingModal(s || null), oeffneTerminAktion: (b) => openBookingActionModal(b), oeffnePatient: (id) => window.openPatientDetail?.(id), oeffnePatientNeu: () => openLeadModal(null), oeffneRezeptNeu: () => openRezeptModal(null, null), oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API }); }, wechslePanel: switchPanel, oeffneKalenderTag: (tagIso) => { dayViewDate = new Date(`${tagIso}T12:00:00`); switchPanel('calendar'); setCalendarView('day'); } }); }
+    } else { startansicht = (await import('./module/tageszentrale-ansicht.js?v=20261120tz5')).montiereTageszentrale({ supabase, api: () => API, getOwnerId, getUserId: () => currentSession?.user?.id || null, istOwner: () => currentProfile?.role === 'owner', getName: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', getTeam: () => teamMembers.map(m => ({ id: m.id, name: m.business_name || m.full_name || (m.email || '').split('@')[0] })), bizScope, oeffneTerminNeu: (s) => prefillBookingModal(s || null), oeffneTerminAktion: (b) => openBookingActionModal(b), oeffnePatient: (id) => window.openPatientDetail?.(id), oeffnePatientNeu: () => openLeadModal(null), oeffneRezeptNeu: () => openRezeptModal(null, null), oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); if (!oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API })) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); }, oeffneAnfrage: async (id) => { await switchPanel('anfragen'); if (id) setTimeout(() => showAnfrageDetail(id), 220); }, oeffneWarteliste: async (id) => { await switchPanel('warteliste'); if (id) setTimeout(() => window.openWlEntry?.(id), 180); }, wechslePanel: switchPanel, oeffneKalenderTag: (tagIso) => { dayViewDate = new Date(`${tagIso}T12:00:00`); switchPanel('calendar'); setCalendarView('day'); } }); }
     await renderOverview();
     try { await renderGapsForDate(scheduleDate); dbg('[init] gapsForDate ok'); } catch (e) { console.error('[init] renderGapsForDate error', e); }
     setupScheduleNav();

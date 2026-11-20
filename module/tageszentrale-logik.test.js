@@ -23,7 +23,7 @@ test('buchungenFuerTagAufbereiten erkennt laufenden und nächsten Termin, Fortsc
   const jetzt = new Date('2026-11-20T09:42:00+01:00');
   const teamMap = new Map([['u1', 'Melih'], ['u2', 'Laura']]);
   const bookings = [
-    { id: 'b1', user_id: 'u1', start_time: '2026-11-20T08:30:00+01:00', end_time: '2026-11-20T09:00:00+01:00', customer_name: 'Lukas Berger', status: 'completed', services: { title: 'KG' } },
+    { id: 'b1', user_id: 'u1', start_time: '2026-11-20T08:30:00+01:00', end_time: '2026-11-20T09:00:00+01:00', customer_name: 'Lukas Berger · 1951-03-14', status: 'completed', services: { title: 'KG' }, prescription_sessions: [{ id: 's6', session_number: 6, prescriptions: { anzahl_einheiten: 6, diagnosegruppe: 'WS2' } }] },
     { id: 'b2', user_id: 'u1', start_time: '2026-11-20T09:30:00+01:00', end_time: '2026-11-20T10:00:00+01:00', customer_name: 'Änne Größer', status: 'confirmed', services: { title: 'KG-ZNS' }, prescriptions: { anzahl_einheiten: 6, diagnosegruppe: 'ZN2', prescription_sessions: [{ status: 'done' }, { status: 'done' }] } },
     { id: 'b3', user_id: 'u2', start_time: '2026-11-20T10:00:00+01:00', end_time: '2026-11-20T10:30:00+01:00', customer_name: 'Bernd Weber', status: 'confirmed', hausbesuch: true, services: { title: 'MT' } },
     { id: 'b4', user_id: 'u1', start_time: '2026-11-20T11:00:00+01:00', end_time: '2026-11-20T11:30:00+01:00', customer_name: 'Abgesagt', status: 'cancelled' },
@@ -32,6 +32,8 @@ test('buchungenFuerTagAufbereiten erkennt laufenden und nächsten Termin, Fortsc
 
   const erg = buchungenFuerTagAufbereiten(bookings, { heuteIso: '2026-11-20', zielIso: '2026-11-20', jetzt, teamMap, istOwner: true });
   assert.equal(erg.gesamt, 3);
+  assert.equal(erg.alle[0].patient, 'Lukas Berger');
+  assert.equal(erg.alle[0].vo, 'WS2 · VO 6/6');
   assert.equal(erg.erledigt, 1);
   assert.equal(erg.offen, 2);
   assert.equal(erg.hausbesuche, 1);

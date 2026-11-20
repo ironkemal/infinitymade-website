@@ -20,7 +20,7 @@ import {
   lueckenFiltern,
   zeitleisteZusammenfuehren,
   handlungsbedarfZusammenfassen,
-} from './tageszentrale-logik.js?v=20261120tz1';
+} from './tageszentrale-logik.js?v=20261120tz5';
 import {
   addiereTageIso,
   fristenAuswerten,
@@ -30,6 +30,7 @@ import {
 } from './ueberblick-listen.js?v=20261119ubl4';
 import { ladeGeld, monatText } from './startseite-geld.js?v=20261114b03';
 import { fmtEur } from './geld.js?v=20260909';
+import { on } from './signal.js?v=20260813';
 
 const esc = (s) =>
   String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -128,6 +129,7 @@ export function montiereTageszentrale(k) {
   let geldCtrl = null;
   let bedarfGeladen = false;
   let geldGeladen = false;
+  let bedarfStartMs = 0;
 
   const teamMap = () => {
     const m = new Map();
@@ -140,6 +142,12 @@ export function montiereTageszentrale(k) {
   const leseLueckenAusDom = () => {
     const list = document.getElementById('gapsList');
     if (!list) return;
+    if (list.querySelector('.gaps-loading') || (list.dataset.dateIso && list.dataset.dateIso !== state.zielIso)) {
+      state.lueckenFehler = false;
+      state.luecken = [];
+      state.lueckenMin = 0;
+      return;
+    }
     const fehlerEl = list.querySelector('.gap-fehler');
     if (fehlerEl || /nicht geladen/.test(list.textContent || '')) {
       state.lueckenFehler = true;
@@ -201,6 +209,7 @@ export function montiereTageszentrale(k) {
     const ownerId = k.getOwnerId?.();
     if (!ownerId) return;
     bedarfGeladen = true;
+    bedarfStartMs = Date.now();
     const scope = (q, typ) => (typeof k.bizScope === 'function' ? k.bizScope(q, typ) : q);
     const heuteIso = berlinIsoTag();
 
@@ -651,9 +660,9 @@ export function montiereTageszentrale(k) {
     const stepBtn = target.closest('[data-tz-step]');
     if (stepBtn) {
       const s = stepBtn.getAttribute('data-tz-step');
-      if (s === 'prev') { document.getElementById('schedulePrev')?.click(); document.getElementById('gapsPrev')?.click(); }
-      else if (s === 'next') { document.getElementById('scheduleNext')?.click(); document.getElementById('gapsNext')?.click(); }
-      else if (s === 'today') { document.getElementById('scheduleToday')?.click(); document.getElementById('gapsToday')?.click(); }
+      if (s === 'prev') document.getElementById('gapsPrev')?.click();
+      else if (s === 'next') document.getElementById('gapsNext')?.click();
+      else if (s === 'today') document.getElementById('gapsToday')?.click();
       return;
     }
 
@@ -668,12 +677,17 @@ export function montiereTageszentrale(k) {
     if (needBtn) {
       const art = needBtn.getAttribute('data-tz-need');
       const id = needBtn.getAttribute('data-tz-id') || '';
-      const quelle = needBtn.getAttribute('data-tz-quelle') || 'prescriptions';
+      const quelle = needBtn.getAttribute('data-tz-quelle') || 'physio';
       const lead = needBtn.getAttribute('data-tz-lead') || '';
       if (art === 'rezept' && id) k.oeffneVerordnung?.(quelle, id);
       else if (art === 'patient' && (lead || id)) k.oeffnePatient?.(lead || id);
-      else if (art === 'anfrage') k.wechslePanel?.('anfragen');
-      else if (art === 'warteliste') k.wechslePanel?.('warteliste');
+      else if (art === 'anfrage') {
+        if (typeof /** @type {any} */ (k).oeffneAnfrage === 'function') /** @type {any} */ (k).oeffneAnfrage(id);
+        else k.wechslePanel?.('anfragen');
+      } else if (art === 'warteliste') {
+        if (typeof /** @type {any} */ (k).oeffneWarteliste === 'function') /** @type {any} */ (k).oeffneWarteliste(id);
+        else k.wechslePanel?.('warteliste');
+      }
       return;
     }
 
@@ -687,7 +701,6 @@ export function montiereTageszentrale(k) {
     else if (act === 'ueberblick') k.wechslePanel?.('ueberblick');
     else if (act === 'kalender') k.oeffneKalenderTag?.(state.zielIso);
     else if (act === 'morgen') {
-      document.getElementById('scheduleNext')?.click();
       document.getElementById('gapsNext')?.click();
     } else if (act === 'raster') {
       state.rasterOffen = !state.rasterOffen;
@@ -717,8 +730,44 @@ export function montiereTageszentrale(k) {
   });
   designObs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-design'] });
 
+  const offVo = on('verordnungen:changed', () => {
+    state.morgenGeprueftIso = '';
+    void ladeOwnerHandlungsbedarf();
+    void ladeOwnerGeld();
+  });
+  const offBk = on('bookings:changed', () => {
+    state.morgenGeprueftIso = '';
+    if (k.istOwner?.()) void ladeOwnerHandlungsbedarf();
+  });
+  const onUebersicht = () => {
+    state.morgenGeprueftIso = '';
+    if (Date.now() - bedarfStartMs > 800) {
+      bedarfGeladen = false;
+      geldGeladen = false;
+      void ladeOwnerHandlungsbedarf();
+      void ladeOwnerGeld();
+    }
+    leseLueckenAusDom();
+    renderHead();
+    renderHero();
+    renderPlan();
+  };
+  document.addEventListener('praxura:uebersicht', onUebersicht);
+
+  const tickTimer = setInterval(() => {
+    if (!panel.classList.contains('active') || state.laden) return;
+    leseLueckenAusDom();
+    renderHead();
+    renderHero();
+    renderPlan();
+  }, 60000);
+
   const abbauen = () => {
     panel.removeEventListener('click', onClick);
+    document.removeEventListener('praxura:uebersicht', onUebersicht);
+    offVo();
+    offBk();
+    clearInterval(tickTimer);
     gapsObs.disconnect();
     welcomeObs.disconnect();
     designObs.disconnect();

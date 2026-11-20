@@ -84,13 +84,16 @@ export function datumLangDeutsch(datum = new Date()) {
  * @param {any} b
  */
 function verordnungFortschritt(b) {
-  const rx = b?.prescriptions || b?.prescription || null;
+  const sess = Array.isArray(b?.prescription_sessions) ? b.prescription_sessions[0] : null;
+  const rx = b?.prescriptions || b?.prescription || sess?.prescriptions || null;
   if (!rx || typeof rx !== 'object') return '';
   const gesamt = Number(rx.anzahl_einheiten || rx.verordnete_menge || rx.menge || 0);
-  if (!Number.isFinite(gesamt) || gesamt <= 0) return '';
-  const erledigt = Array.isArray(rx.prescription_sessions)
-    ? rx.prescription_sessions.filter((s) => s?.status === 'done').length
-    : Number(rx.erledigte_einheiten || 0);
+  if (!Number.isFinite(gesamt) || gesamt <= 0) return rx.diagnosegruppe ? String(rx.diagnosegruppe) : '';
+  const erledigt = Number(sess?.session_number) > 0
+    ? Number(sess.session_number)
+    : Array.isArray(rx.prescription_sessions)
+      ? rx.prescription_sessions.filter((s) => s?.status === 'done').length
+      : Number(rx.erledigte_einheiten || 0);
   const dg = rx.diagnosegruppe ? `${rx.diagnosegruppe} · ` : '';
   return `${dg}VO ${erledigt}/${gesamt}`;
 }
@@ -133,7 +136,9 @@ export function buchungenFuerTagAufbereiten(bookings, opts = {}) {
       const inMin = istHeute && !vorbei && !laeuft ? Math.max(1, Math.ceil((startMs - jetztMs) / 60000)) : null;
 
       const leistung = b.services?.title || b.service_title || 'Termin';
-      const patient = (b.customer_name || '').trim() || 'Patient';
+      const patient = String(b.customer_name || '')
+        .replace(/\s*·\s*(\d{4}-\d{2}-\d{2}|\d{1,2}\.\d{1,2}\.\d{4})$/, '')
+        .trim() || 'Patient';
       const behandlerId = b.user_id || '';
       const behandler = teamMap.get(behandlerId) || '';
       const vo = verordnungFortschritt(b);
@@ -313,14 +318,17 @@ export function handlungsbedarfZusammenfassen(daten = {}) {
 
   for (const b of berichte.slice(0, 1)) {
     const pid = String(b.patientId || b.leadId || '');
+    const rxId = String(b.rxId || '');
+    const nurRezept = !pid && !!rxId;
     liste.push({
       kategorie: 'bericht',
       schwere: 'neutral',
       titel: `${b.patientName || 'Patient'} · Bericht`,
       sub: [b.kontextMeta || b.detail || 'Therapiebericht offen', 'Therapiebericht fällig'].filter(Boolean).join(' · '),
-      cta: 'Akte',
-      aktion: 'patient',
-      id: pid,
+      cta: nurRezept ? 'Rezept' : 'Akte',
+      aktion: nurRezept ? 'rezept' : 'patient',
+      id: nurRezept ? rxId : pid,
+      quelle: b.quelle || 'physio',
       leadId: pid,
     });
   }

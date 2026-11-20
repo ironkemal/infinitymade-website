@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-20",
  "dateien": 595,
- "funktionen": 4854,
+ "funktionen": 4855,
  "module": [
   "abrechnung",
   "anamnese",
@@ -66614,6 +66614,7 @@
    "calledBy": [
     "init",
     "refreshActiveScheduleView",
+    "refreshBookingViews",
     "setupScheduleNav"
    ],
    "modules": [
@@ -66834,8 +66835,8 @@
    "lang": "js",
    "file": "dashboard.js",
    "start": 1404,
-   "end": 1413,
-   "lines": 10,
+   "end": 1414,
+   "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -66852,7 +66853,8 @@
     "loadActivityFeed",
     "loadScheduleBookings",
     "refresh",
-    "renderCalendarView"
+    "renderCalendarView",
+    "renderGapsForDate"
    ],
    "calledBy": [
     "(datei) dashboard.js",
@@ -66909,8 +66911,8 @@
    "kind": "function",
    "lang": "js",
    "file": "dashboard.js",
-   "start": 1432,
-   "end": 1461,
+   "start": 1434,
+   "end": 1463,
    "lines": 30,
    "spiegelHinweis": null,
    "tables": [],
@@ -66934,8 +66936,8 @@
    "kind": "function",
    "lang": "js",
    "file": "dashboard.js",
-   "start": 1463,
-   "end": 1575,
+   "start": 1465,
+   "end": 1577,
    "lines": 113,
    "spiegelHinweis": null,
    "tables": [
@@ -67019,8 +67021,8 @@
    "kind": "function",
    "lang": "js",
    "file": "dashboard.js",
-   "start": 1579,
-   "end": 1581,
+   "start": 1581,
+   "end": 1583,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -67089,8 +67091,8 @@
    "kind": "function",
    "lang": "js",
    "file": "dashboard.js",
-   "start": 1616,
-   "end": 1645,
+   "start": 1618,
+   "end": 1647,
    "lines": 30,
    "spiegelHinweis": null,
    "tables": [
@@ -67117,6 +67119,7 @@
     "push"
    ],
    "calledBy": [
+    "(datei) dashboard.js",
     "renderOverview"
    ],
    "modules": [],
@@ -67128,8 +67131,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "dashboard.js",
-   "start": 1629,
-   "end": 1638,
+   "start": 1631,
+   "end": 1640,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -84717,6 +84720,7 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
+    "all",
     "loadScheduleBookings",
     "renderGapsForDate",
     "renderOverviewMonthly",
@@ -88339,6 +88343,7 @@
     "setupScheduleNav",
     "setzeDesign",
     "setzeMaskeBruecke",
+    "showAnfrageDetail",
     "showToast",
     "startClock",
     "switchPanel",
@@ -92950,6 +92955,7 @@
     "showHtmlModal"
    ],
    "calledBy": [
+    "init",
     "renderAnfragenList"
    ],
    "modules": [
@@ -98512,6 +98518,7 @@
     "proveConcurrentWrites",
     "pruefeEmpfaenger",
     "pruefeVerordnungsfortschritt",
+    "refreshActiveScheduleView",
     "renderBookingCalendar",
     "renderHoursGrid",
     "renderHoursMiniCal",
@@ -216120,6 +216127,7 @@
     "erzeugeRechnungPdf",
     "init",
     "initAbrechnungDetail",
+    "montiereTageszentrale",
     "mountFinance",
     "mountTodo",
     "mountWissen",
@@ -231301,8 +231309,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/tageszentrale-ansicht.js",
-   "start": 34,
-   "end": 50,
+   "start": 35,
+   "end": 51,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [],
@@ -231560,8 +231568,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/tageszentrale-ansicht.js",
-   "start": 37,
-   "end": 50,
+   "start": 38,
+   "end": 51,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -231626,8 +231634,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/tageszentrale-ansicht.js",
-   "start": 47,
-   "end": 50,
+   "start": 48,
+   "end": 51,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -231695,9 +231703,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/tageszentrale-ansicht.js",
-   "start": 75,
-   "end": 782,
-   "lines": 708,
+   "start": 76,
+   "end": 831,
+   "lines": 756,
    "spiegelHinweis": null,
    "tables": [
     "bookings",
@@ -231716,9 +231724,6 @@
     "gapsToday",
     "panel-overview",
     "rezeptScanBtn",
-    "scheduleNext",
-    "schedulePrev",
-    "scheduleToday",
     "welcomeText"
    ],
    "domRenderIds": [],
@@ -231748,6 +231753,7 @@
     "lueckenFiltern",
     "makeEl",
     "monatText",
+    "on",
     "pruefeMorgenFallsAbend",
     "renderBedarf",
     "renderGeld",
@@ -231775,8 +231781,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/tageszentrale-ansicht.js",
-   "start": 88,
-   "end": 93,
+   "start": 89,
+   "end": 94,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -231800,8 +231806,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/tageszentrale-ansicht.js",
-   "start": 132,
-   "end": 138,
+   "start": 134,
+   "end": 140,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -231871,9 +231877,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/tageszentrale-ansicht.js",
-   "start": 140,
-   "end": 162,
-   "lines": 23,
+   "start": 142,
+   "end": 170,
+   "lines": 29,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -231890,7 +231896,8 @@
     "lueckenFiltern"
    ],
    "calledBy": [
-    "montiereTageszentrale"
+    "montiereTageszentrale",
+    "onUebersicht"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -231901,8 +231908,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/tageszentrale-ansicht.js",
-   "start": 164,
-   "end": 194,
+   "start": 172,
+   "end": 202,
    "lines": 31,
    "spiegelHinweis": null,
    "tables": [
@@ -231935,9 +231942,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/tageszentrale-ansicht.js",
-   "start": 196,
-   "end": 251,
-   "lines": 56,
+   "start": 204,
+   "end": 260,
+   "lines": 57,
    "spiegelHinweis": null,
    "tables": [
     "prescriptions",
@@ -231966,7 +231973,8 @@
     "wartelisteAufbereiten"
    ],
    "calledBy": [
-    "montiereTageszentrale"
+    "montiereTageszentrale",
+    "onUebersicht"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -231977,8 +231985,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/tageszentrale-ansicht.js",
-   "start": 204,
-   "end": 248,
+   "start": 213,
+   "end": 257,
    "lines": 45,
    "spiegelHinweis": null,
    "tables": [
@@ -232064,8 +232072,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/tageszentrale-ansicht.js",
-   "start": 253,
-   "end": 267,
+   "start": 262,
+   "end": 276,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -232083,7 +232091,8 @@
     "renderGeld"
    ],
    "calledBy": [
-    "montiereTageszentrale"
+    "montiereTageszentrale",
+    "onUebersicht"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -232094,8 +232103,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/tageszentrale-ansicht.js",
-   "start": 269,
-   "end": 309,
+   "start": 278,
+   "end": 318,
    "lines": 41,
    "spiegelHinweis": null,
    "tables": [],
@@ -232121,6 +232130,7 @@
    ],
    "calledBy": [
     "montiereTageszentrale",
+    "onUebersicht",
     "pruefeMorgenFallsAbend"
    ],
    "modules": [],
@@ -232132,8 +232142,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/tageszentrale-ansicht.js",
-   "start": 311,
-   "end": 406,
+   "start": 320,
+   "end": 415,
    "lines": 96,
    "spiegelHinweis": null,
    "tables": [],
@@ -232153,6 +232163,7 @@
    ],
    "calledBy": [
     "montiereTageszentrale",
+    "onUebersicht",
     "pruefeMorgenFallsAbend"
    ],
    "modules": [],
@@ -232164,8 +232175,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/tageszentrale-ansicht.js",
-   "start": 408,
-   "end": 522,
+   "start": 417,
+   "end": 531,
    "lines": 115,
    "spiegelHinweis": null,
    "tables": [],
@@ -232187,6 +232198,7 @@
    "calledBy": [
     "montiereTageszentrale",
     "onClick",
+    "onUebersicht",
     "pruefeMorgenFallsAbend"
    ],
    "modules": [
@@ -232238,8 +232250,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/tageszentrale-ansicht.js",
-   "start": 524,
-   "end": 572,
+   "start": 533,
+   "end": 581,
    "lines": 49,
    "spiegelHinweis": null,
    "tables": [],
@@ -232307,8 +232319,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/tageszentrale-ansicht.js",
-   "start": 574,
-   "end": 608,
+   "start": 583,
+   "end": 617,
    "lines": 35,
    "spiegelHinweis": null,
    "tables": [],
@@ -232338,8 +232350,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/tageszentrale-ansicht.js",
-   "start": 581,
-   "end": 586,
+   "start": 590,
+   "end": 595,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -232418,9 +232430,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/tageszentrale-ansicht.js",
-   "start": 610,
-   "end": 697,
-   "lines": 88,
+   "start": 619,
+   "end": 710,
+   "lines": 92,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -232431,10 +232443,7 @@
     "gapsNext",
     "gapsPrev",
     "gapsToday",
-    "rezeptScanBtn",
-    "scheduleNext",
-    "schedulePrev",
-    "scheduleToday"
+    "rezeptScanBtn"
    ],
    "domRenderIds": [],
    "domRender": false,
@@ -232491,13 +232500,43 @@
    ]
   },
   {
+   "name": "onUebersicht",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/tageszentrale-ansicht.js",
+   "start": 742,
+   "end": 754,
+   "lines": 13,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "ladeOwnerGeld",
+    "ladeOwnerHandlungsbedarf",
+    "leseLueckenAusDom",
+    "renderHead",
+    "renderHero",
+    "renderPlan"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "abbauen",
    "kind": "arrow",
    "lang": "js",
    "file": "module/tageszentrale-ansicht.js",
-   "start": 720,
-   "end": 732,
-   "lines": 13,
+   "start": 765,
+   "end": 781,
+   "lines": 17,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -232905,8 +232944,8 @@
    "lang": "js",
    "file": "module/tageszentrale-logik.js",
    "start": 86,
-   "end": 96,
-   "lines": 11,
+   "end": 99,
+   "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -232969,9 +233008,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/tageszentrale-logik.js",
-   "start": 104,
-   "end": 198,
-   "lines": 95,
+   "start": 107,
+   "end": 203,
+   "lines": 97,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -233046,8 +233085,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/tageszentrale-logik.js",
-   "start": 207,
-   "end": 236,
+   "start": 212,
+   "end": 241,
    "lines": 30,
    "spiegelHinweis": null,
    "tables": [],
@@ -233077,8 +233116,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/tageszentrale-logik.js",
-   "start": 245,
-   "end": 266,
+   "start": 250,
+   "end": 271,
    "lines": 22,
    "spiegelHinweis": null,
    "tables": [],
@@ -233145,9 +233184,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/tageszentrale-logik.js",
-   "start": 274,
-   "end": 352,
-   "lines": 79,
+   "start": 279,
+   "end": 360,
+   "lines": 82,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -247142,8 +247181,8 @@
    "lang": "js",
    "file": "module/ueberblick-ansicht.js",
    "start": 924,
-   "end": 952,
-   "lines": 29,
+   "end": 953,
+   "lines": 30,
    "spiegelHinweis": null,
    "tables": [
     "praxis_aufgaben"
@@ -247214,8 +247253,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/ueberblick-ansicht.js",
-   "start": 954,
-   "end": 963,
+   "start": 955,
+   "end": 964,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -247241,8 +247280,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/ueberblick-ansicht.js",
-   "start": 965,
-   "end": 1133,
+   "start": 966,
+   "end": 1134,
    "lines": 169,
    "spiegelHinweis": null,
    "tables": [],
@@ -247327,8 +247366,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/ueberblick-ansicht.js",
-   "start": 984,
-   "end": 990,
+   "start": 985,
+   "end": 991,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -247399,8 +247438,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/ueberblick-ansicht.js",
-   "start": 1135,
-   "end": 1168,
+   "start": 1136,
+   "end": 1169,
    "lines": 34,
    "spiegelHinweis": null,
    "tables": [
@@ -247468,8 +247507,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/ueberblick-ansicht.js",
-   "start": 1187,
-   "end": 1402,
+   "start": 1188,
+   "end": 1403,
    "lines": 216,
    "spiegelHinweis": null,
    "tables": [
@@ -247567,8 +247606,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/ueberblick-ansicht.js",
-   "start": 1212,
-   "end": 1322,
+   "start": 1213,
+   "end": 1323,
    "lines": 111,
    "spiegelHinweis": null,
    "tables": [
@@ -297465,8 +297504,8 @@
        "name": "erledigeAufgabe",
        "file": "module/ueberblick-ansicht.js",
        "start": 924,
-       "end": 952,
-       "lines": 29,
+       "end": 953,
+       "lines": 30,
        "writes": [
         "praxis_aufgaben:update"
        ],
@@ -297891,7 +297930,7 @@
     "module/start-aufgaben.js:6",
     "module/startseite-ansicht.js:10",
     "module/startseite-geld.js:16",
-    "module/tageszentrale-ansicht.js:34",
+    "module/tageszentrale-ansicht.js:35",
     "module/termin-hinweise.js:44",
     "module/therapiebericht.js:30",
     "module/ueber.js:26",
@@ -298037,7 +298076,7 @@
     "module/kalender-raster.js:76",
     "module/rechnung-ansicht.js:234",
     "module/rezeptinfo-geld.js:71",
-    "module/tageszentrale-ansicht.js:581"
+    "module/tageszentrale-ansicht.js:590"
    ],
    "aynalar": []
   },
@@ -298709,7 +298748,7 @@
     "module/aktivitaet-zeile.js:9",
     "module/kopf-neu.js:16",
     "module/startseite-ansicht.js:11",
-    "module/tageszentrale-ansicht.js:37"
+    "module/tageszentrale-ansicht.js:38"
    ],
    "aynalar": []
   },
@@ -298774,7 +298813,7 @@
    "name": "berlinTag",
    "orte": [
     "api-backend/lib/sondertag-mitteilung.js:112",
-    "dashboard.js:1629",
+    "dashboard.js:1631",
     "module/heilmittel-fristen.js:101"
    ],
    "aynalar": []
@@ -299044,8 +299083,8 @@
    "name": "scope",
    "orte": [
     "api-backend/booking/termin-planung.js:11",
-    "module/tageszentrale-ansicht.js:204",
-    "module/ueberblick-ansicht.js:1212"
+    "module/tageszentrale-ansicht.js:213",
+    "module/ueberblick-ansicht.js:1213"
    ],
    "aynalar": []
   },
@@ -300377,7 +300416,7 @@
   {
    "name": "sucheAnwenden",
    "orte": [
-    "module/ueberblick-ansicht.js:984",
+    "module/ueberblick-ansicht.js:985",
     "module/verordnung-liste.js:216"
    ],
    "aynalar": []

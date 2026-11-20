@@ -949,6 +949,7 @@ async function erledigeAufgabe(id, btn) {
     return;
   }
   ctx.showToast?.('Aufgabe erledigt.', 'success');
+  document.dispatchEvent(new Event('praxura:uebersicht'));
 }
 
 function planeLiveAktualisierung() {
@@ -1284,7 +1285,7 @@ export async function ladeUeberblickAnsicht(ctx) {
       .is('erledigt_at', null)
       .order('faellig_am', { ascending: true })
       .limit(15),
-    'patients'
+    'activities'
   );
 
   const rechnungenPromise = (state.istOwner && inLeiste('rechnungen'))
