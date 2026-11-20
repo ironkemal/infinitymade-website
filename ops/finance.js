@@ -1,6 +1,6 @@
 // Praxura Ops-Dashboard — Finanzen, Anlage EÜR & GoBD Modul v2.0
 // Rechtsträger: Einzelunternehmen Yavuz Kemal Demir (EÜR nach § 4 Abs. 3 EStG)
-import { sb, state, $, $$, esc, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260811a';
+import { sb, state, $, $$, esc, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20261120a';
 import { INVOICE_FOLDER_URL } from './config.js?v=20260811a';
 
 let expenses = [];

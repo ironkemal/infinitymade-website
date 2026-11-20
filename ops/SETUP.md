@@ -177,3 +177,36 @@ Zwei Dinge, die man beim nächsten Vorfall dort abliest:
   dosyaları gösterir. Sözleşmeler ve gizli belgeler oraya düşmez — onlar paylaşılan klasörde.
 - Sohbet / dosya yükleme / takvim yok. WhatsApp zaten var; kullanılmayacak ama bakım
   isteyecek şey eklemiyoruz.
+
+---
+
+## 6. Rollen + Betrieb (20.11.2026) — einmal ausführen
+
+Das Dashboard ist jetzt in Bereiche gegliedert (Seitenleiste) und kennt Rollen:
+**Admin** (Kemal, Melih — alles), **Vertrieb**, **Software/Technik**, **Support**,
+**Buchhaltung** (nur lesend: Finanzen + Fahrtenbuch). Neu dazu: **Übersicht**,
+**Kunden & Vertrieb**, **Support & Störungen**, **Boxen & Wartung**, **Team & Rollen**.
+
+1. Supabase → **Ops-Projekt** (`farkaejociddtgqkusvm`) → SQL Editor →
+   `schema-rollen-betrieb.sql` komplett einfügen → Run. ⚠️ Nicht im Produktprojekt.
+   - Idempotent. Beim ersten Lauf werden alle bestehenden Mitglieder **Admin**.
+   - Ersetzt die Policies der bekannten Tabellen durch die Rollen-Matrix
+     (inkl. Fahrtenbuch- und Finanztabellen). Eine fehlende Tabelle wird übersprungen.
+2. Seite neu laden. Unten links muss bei euch „Admin" stehen.
+3. Kontrolle: `select display_name, role, active from ops_members;`
+
+**Ohne Schritt 1** läuft das Dashboard wie bisher (alle sehen alles), die neuen
+Bereiche zeigen einen gelben Hinweis statt Daten.
+
+**Neues Mitglied:** Supabase → Authentication → Add user → UID kopieren →
+Dashboard → *Team & Rollen* → *+ Mitglied*. Austritt: Haken *aktiv* entfernen.
+Die Datenbank verhindert, dass der letzte aktive Admin entfernt wird.
+
+**Rechte ändern:** immer zwei Stellen im selben Commit — RLS-Matrix in
+`schema-rollen-betrieb.sql` (§5) **und** `rollen.js` (AREAS). Die Datenbank ist
+die Grenze, `rollen.js` blendet nur aus.
+
+Getestet am 20.11.2026: SQL gegen lokales Postgres 16 mit Supabase-Stubs
+(zweimal ausgeführt; Rollengrenzen pro Rolle geprüft; letzter Admin geschützt).
+UI mit Playwright gegen gemocktes Supabase (Admin, Vertrieb, Buchhaltung,
+„Rollen nicht eingerichtet"; Desktop + 390 px). **Nicht** gegen das echte Ops-Projekt.

@@ -3,7 +3,7 @@
 // Bewusst nur Lesen. Der Code selbst wird über Git bearbeitet, nicht hier.
 // Gitignore'lu belgeler (legal/, Verträge, Rechnungen) burada GÖRÜNMEZ —
 // onlar paylaşılan Google Drive klasöründedir, sağ üstteki bağlantı oraya gider.
-import { $, esc, fail } from './app.js?v=20260811a';
+import { $, esc, fail } from './app.js?v=20261120a';
 import { GITHUB_REPO, GITHUB_BRANCH, SHARED_FOLDER_URL } from './config.js?v=20260811a';
 
 let tree = null;        // { name → node }, node: { dir:bool, path, children }

@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Praxura Ops</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🗂️</text></svg>">
-<link rel="stylesheet" href="app.css?v=20260816j">
+<link rel="stylesheet" href="app.css?v=20261120b">
 </head>
 <body>
 
@@ -42,24 +42,35 @@
 <!-- ── App ────────────────────────────────────────────────────────────── -->
 <div id="app" class="app" hidden>
 
-  <header class="top">
-    <div class="brand">Prax<em>ura</em> <span class="brand-tag">Ops</span></div>
-    <nav class="tabs" id="tabs">
-      <button class="tab is-active" data-view="todo">Aufgaben</button>
-      <button class="tab" data-view="wissen">Wissensbank</button>
-      <button class="tab" data-view="decisions">Entscheidungen</button>
-      <button class="tab" data-view="meetings">Meetings</button>
-      <button class="tab" data-view="ausgaben">Finanzen 💶</button>
-      <button class="tab" data-view="fahrtenbuch">Fahrtenbuch</button>
-      <button class="tab" data-view="files">Dateien</button>
-    </nav>
-    <div class="top-right">
-      <span class="who" id="who"></span>
-      <button class="btn btn-ghost" id="logoutBtn" title="Abmelden">Abmelden</button>
+  <!-- Seitenleiste: Einträge kommen aus rollen.js (VIEWS), gefiltert nach Rolle -->
+  <aside class="side" id="side">
+    <div class="side-brand">Prax<em>ura</em> <span class="brand-tag">Ops</span></div>
+    <nav class="nav" id="nav" aria-label="Bereiche"></nav>
+    <div class="side-foot">
+      <span class="avatar" id="whoAvatar"></span>
+      <div class="side-who">
+        <strong id="who"></strong>
+        <span id="whoRole"></span>
+      </div>
+      <button class="btn btn-icon" id="logoutBtn" title="Abmelden" aria-label="Abmelden">⏻</button>
     </div>
+  </aside>
+  <div class="nav-shade" id="navShade"></div>
+
+  <!-- Nur mobil sichtbar -->
+  <header class="top">
+    <button class="btn btn-icon" id="navToggle" aria-label="Menü">☰</button>
+    <div class="brand">Prax<em>ura</em> <span class="brand-tag">Ops</span></div>
   </header>
 
   <main class="main">
+
+    <!-- ── Neue Betriebs-Ansichten: Inhalt rendert das jeweilige Modul ── -->
+    <section class="view" id="view-uebersicht" hidden></section>
+    <section class="view" id="view-kunden" hidden></section>
+    <section class="view" id="view-support" hidden></section>
+    <section class="view" id="view-boxen" hidden></section>
+    <section class="view" id="view-team" hidden></section>
 
     <!-- ── Aufgaben ─────────────────────────────────────────────────── -->
     <section class="view" id="view-todo">
@@ -223,6 +234,6 @@
 
 <div class="toast" id="toast" hidden></div>
 
-<script type="module" src="app.js?v=20261023blocker1"></script>
+<script type="module" src="app.js?v=20261120a"></script>
 </body>
 </html>

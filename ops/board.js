@@ -1,7 +1,7 @@
 // Aufgaben-Board — Kemal | Pool | Melih
 // Zwei Ebenen: Oberaufgabe (Thema) → aufklappbare Unteraufgaben.
 // Zusätzlich "Zuerst: …" — eine Aufgabe kann auf andere warten.
-import { sb, state, $, esc, md, toast, fail, fmtDate, fmtDateTime, openModal, confirmDialog, memberById } from './app.js?v=20260811a';
+import { sb, state, $, esc, md, toast, fail, fmtDate, fmtDateTime, openModal, confirmDialog, memberById } from './app.js?v=20261120a';
 import { DONE_ARCHIVE_DAYS } from './config.js?v=20260811a';
 
 let todos = [];
@@ -24,7 +24,8 @@ let hasGroupCols = true;
 
 /** Kolon düzeni: üyeler alfabetik, havuz tam ortada. */
 function columns() {
-  const ms = [...state.members].sort((a, b) => a.display_name.localeCompare(b.display_name, 'de'));
+  // Nur aktive Mitglieder, die am Board arbeiten (Buchhaltung liest nur Finanzen).
+  const ms = state.members.filter(m => m.active !== false && m.role !== 'buchhaltung').sort((a, b) => a.display_name.localeCompare(b.display_name, 'de'));
   const mid = Math.ceil(ms.length / 2);
   return [
     ...ms.slice(0, mid).map(m => ({ key: m.id, name: m.display_name, color: m.color })),

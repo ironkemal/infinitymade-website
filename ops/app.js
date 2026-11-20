@@ -3,6 +3,7 @@
 // göndermesi ve oturum davranışının bizden habersiz değişmesi demekti.
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260811a';
+import { ROLES, VIEWS, setRole, role, visibleViews, canRead } from './rollen.js?v=20261120a';
 
 const AUTH_STORAGE_KEY = 'praxura-ops-auth';
 
@@ -39,6 +40,7 @@ export const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 export const state = {
   me: null,          // ops_members satırı
   members: [],       // tüm üyeler
+  rolesReady: true,  // false → schema-rollen-betrieb.sql noch nicht ausgeführt (alle = Admin)
 };
 
 export const memberById = (id) => state.members.find(m => m.id === id) || null;
@@ -133,8 +135,9 @@ export function md(src) {
 
 let modalEsc = null;
 
-export function openModal({ title, bodyHTML, actions = [], onOpen }) {
+export function openModal({ title, bodyHTML, actions = [], onOpen, wide = false }) {
   const back = $('#modalBack');
+  $('#modalBack .modal').className = 'modal' + (wide ? ' modal-wide' : '');
   $('#modalTitle').textContent = title;
   $('#modalBody').innerHTML = bodyHTML;
 
@@ -162,6 +165,7 @@ export function openModal({ title, bodyHTML, actions = [], onOpen }) {
 export function closeModal() {
   $('#modalBack').hidden = true;
   $('#modalBody').innerHTML = '';
+  $('#modalBack .modal').className = 'modal';   // Größen-Klasse (modal-wide) zurücksetzen
   if (modalEsc) { document.removeEventListener('keydown', modalEsc); modalEsc = null; }
 }
 
@@ -180,12 +184,19 @@ export function confirmDialog(title, text, onYes) {
 
 const views = {};   // name → { mount(), mounted }
 
+/** Startansicht: Übersicht, sonst die erste Ansicht, die die Rolle sehen darf. */
+const DEFAULT_VIEW = () => views.uebersicht
+  ? 'uebersicht' : (visibleViews().find(v => views[v.name])?.name || 'uebersicht');
+
 export function registerView(name, mount) { views[name] = { mount, mounted: false }; }
 
 export function showView(name) {
   if (name === 'finance' || name === 'finanzen') name = 'ausgaben';
-  if (!views[name]) name = 'todo';
-  $$('.tab').forEach(t => t.classList.toggle('is-active', t.dataset.view === name));
+  if (!views[name]) name = DEFAULT_VIEW();
+  $$('.nav-item').forEach(t => t.classList.toggle('is-active', t.dataset.view === name));
+  document.body.classList.toggle('nav-open', false);
+  const vdef = VIEWS.find(v => v.name === name);
+  if (vdef) document.title = vdef.label + ' · Praxura Ops';
   $$('.view').forEach(v => { v.hidden = v.id !== `view-${name}`; });
   if (location.hash.replace('#', '') !== name) location.hash = name;
 
@@ -200,7 +211,7 @@ export function showView(name) {
 
 /** Görünür sekmeyi baştan kurmaya zorla — oturum tazelendikten sonra kullanılır. */
 export function remountCurrent() {
-  const name = location.hash.replace('#', '') || 'todo';
+  const name = location.hash.replace('#', '') || DEFAULT_VIEW();
   if (views[name]) { views[name].mounted = false; showView(name); }
 }
 
@@ -246,6 +257,17 @@ async function loadMe() {
   state.members = data || [];
   state.me = state.members.find(m => m.id === user.id) || null;
 
+  if (state.me) {
+    // Spalte "role" fehlt → Migration nicht ausgeführt: bisheriges Verhalten (alle sehen alles).
+    state.rolesReady = Object.prototype.hasOwnProperty.call(state.me, 'role');
+    if (state.me.active === false) {
+      await sb.auth.signOut();
+      showLogin('Dieser Zugang ist deaktiviert.');
+      return null;
+    }
+    setRole(state.rolesReady ? state.me.role : 'admin');
+  }
+
   if (!state.me) {
     // Oturum var ama üye kaydı yok → RLS hiçbir şey göstermez, boş ekran yerine açıkça söyle.
     await sb.auth.signOut();
@@ -267,15 +289,8 @@ async function showApp() {
   // Görünümler yüklenmeden kabuğu AÇMA. Aksi hâlde import takılırsa kullanıcı
   // üst çubuğu görür, panoyu göremez ve sekmeler ölü olur — teşhis edilemeyen
   // bir "boş uygulama" hâli. Önce yükle, sonra göster.
-  const modules = [
-    ['todo',      './board.js?v=20261023blocker1', 'mountTodo'],
-    ['wissen',    './wissen.js?v=20260811a',    'mountWissen'],
-    ['decisions', './decisions.js?v=20260811a', 'mountDecisions'],
-    ['meetings',  './meetings.js?v=20260811a',  'mountMeetings'],
-    ['ausgaben',  './finance.js?v=20260816j',   'mountFinance'],
-    ['fahrtenbuch', './fahrtenbuch.js?v=20260816b', 'mountFahrtenbuch'],
-    ['files',     './files.js?v=20260811a',     'mountFiles']
-  ];
+  // Registry: rollen.js → VIEWS. Nur was die Rolle lesen darf, wird überhaupt geladen.
+  const modules = visibleViews().map(v => [v.name, v.path, v.fn]);
 
   // Her görünüm tek tek ve süreli yüklenir: biri patlar ya da asılırsa
   // diğerleri çalışmaya devam etsin, uygulama sessizce ölmesin.
@@ -294,10 +309,39 @@ async function showApp() {
   $('#login').hidden = true;
   $('#app').hidden = false;
   $('#who').textContent = state.me.display_name;
+  $('#whoRole').textContent = state.rolesReady ? (ROLES[role()]?.label || role()) : 'Admin · Rollen nicht eingerichtet';
+  const av = $('#whoAvatar');
+  av.textContent = (state.me.display_name || '?').slice(0, 1).toUpperCase();
+  av.style.background = state.me.color || '#6b7280';
+  renderNav(broken);
 
   if (broken.length) toast('Ansicht nicht geladen: ' + broken.join(', '), true);
 
-  showView(location.hash.replace('#', '') || 'todo');
+  showView(location.hash.replace('#', '') || DEFAULT_VIEW());
+}
+
+/** Seitenleiste aus der Registry, gruppiert. Ansichten ohne Recht erscheinen nicht. */
+function renderNav(broken = []) {
+  let html = '', group;
+  for (const v of visibleViews()) {
+    if (!views[v.name] && !broken.includes(v.name)) continue;
+    if (v.group !== group) {
+      group = v.group;
+      if (group) html += `<div class="nav-group">${esc(group)}</div>`;
+    }
+    html += `<button class="nav-item" data-view="${v.name}" ${broken.includes(v.name) ? 'disabled title="Nicht geladen"' : ''}>
+      <span class="nav-ico" aria-hidden="true">${v.icon}</span><span>${esc(v.label)}</span></button>`;
+  }
+  $('#nav').innerHTML = html;
+}
+
+/** Für Module: Ansicht wechseln und ein Ziel mitgeben (z. B. Kunde öffnen).
+ *  Das Ereignis kommt NACH dem Mount, damit die Zielansicht ihren Listener hat. */
+export function goTo(name, detail) {
+  if (!views[name]) return;
+  showView(name);
+  if (detail) setTimeout(() =>
+    window.dispatchEvent(new CustomEvent('ops:open', { detail: { view: name, ...detail } })), 0);
 }
 
 // ── Start ──────────────────────────────────────────────────────────────
@@ -321,10 +365,12 @@ $('#logoutBtn').addEventListener('click', async () => {
   location.reload();
 });
 
-$('#tabs').addEventListener('click', (e) => {
-  const t = e.target.closest('.tab');
-  if (t) showView(t.dataset.view);
+$('#nav').addEventListener('click', (e) => {
+  const t = e.target.closest('.nav-item');
+  if (t && !t.disabled) showView(t.dataset.view);
 });
+$('#navToggle').addEventListener('click', () => document.body.classList.toggle('nav-open'));
+$('#navShade').addEventListener('click', () => document.body.classList.toggle('nav-open', false));
 
 $('#modalClose').addEventListener('click', closeModal);
 // Backdrop-Klick zum Schließen absichtlich deaktiviert, um versehentlichen Datenverlust bei Formulareingaben zu verhindern

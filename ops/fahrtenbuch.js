@@ -1,6 +1,6 @@
 // Praxura Ops-Dashboard — Fahrtenbuch & Kfz-Kosten Modul (GoBD & EÜR)
 // Rechtsträger: Einzelunternehmen Yavuz Kemal Demir
-import { sb, state, $, $$, esc, toast, fail, fmtDate, openModal, closeModal, confirmDialog } from './app.js?v=20260811a';
+import { sb, state, $, $$, esc, toast, fail, fmtDate, openModal, closeModal, confirmDialog } from './app.js?v=20261120a';
 
 let vehicles = [];
 let entries = [];

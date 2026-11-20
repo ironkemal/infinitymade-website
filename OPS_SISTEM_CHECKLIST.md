@@ -15,7 +15,7 @@
 
 | # | Alan | Bugün | Önerilen yol | Öncelik |
 |---|---|---|---|---|
-| 1 | Yönetim paneli (komuta merkezi) | ✅ Ops-Dashboard (7 sekme) | Aynı panele **Kunden/Pipeline** + **KPI** sekmesi ekle — yeni araç değil | P0 |
+| 1 | Yönetim paneli (komuta merkezi) | 🟡 Rollen + Übersicht + Kunden + Support + Boxen + Team **gebaut 20.11.** — SQL noch nicht im Ops-Projekt ausgeführt | `ops/schema-rollen-betrieb.sql` ausführen (`ops/SETUP.md` §6) | P0 |
 | 2 | Satış / CRM (lead→demo→teklif→kutu) | 🟡 demo-booking + kontakt formu var, pipeline yok | Ops-Dashboard'a pipeline tablosu; harici CRM şimdilik gereksiz | P0 |
 | 3 | Teklif (Angebot) + fatura + E-Rechnung | ⬜ | **Hazır muhasebe yazılımı** (Lexware Office veya sevDesk) — kendimiz yazmıyoruz | P0 |
 | 4 | Sözleşme + AVV + e-imza | 🟡 compliance belgeleri var, imza akışı yok | AVV/Lizenzvertrag şablonu + **DocuSeal** (self-host) | P0 |
@@ -177,6 +177,17 @@ makinede çalışırsa makineyle birlikte düşer → **ikinci, dış kontrol ş
 - [ ] Zamanlanmış işler için "dead man's switch" (yedek, katalog senkronu çalıştı mı) — Kuma push monitor yeter
 
 ## 9. Kutu filosu (on-prem'e özgü — hazır paket yok)
+
+> **Kuma kutuyu okuyabilir mi? (Kemal'in sorusu, 20.11.)** Hayır, bugünkü haliyle değil.
+> Kuma ve benzerleri **dışarıdan çeker** (ping/HTTP); bu SaaS sunucumuz için çalışır çünkü o
+> internette. Kutu praxis'in iç ağında, router arkasında — dışarıdan erişilemez, erişilebilir
+> yapmak da yanlış olur (port açmak = saldırı yüzeyi). Doğru yön **tersine**: kutu kendisi,
+> yalnız giden bağlantıyla merkeze "buradayım + durum özeti" yollar (push). Merkezde bunun
+> çekirdeği zaten var: kutu imzalı `/v1/ip` çağrısıyla LAN IP'sini bildiriyor, `boxes.ip_am`
+> = son haber zamanı. Kuma'nın da "push monitor" türü var (kutu belirli aralıkla bir URL'e
+> vurur, gelmezse alarm). Yapılacak: hangi alanların (heartbeat, disk %, son yedek, sürüm —
+> **hasta verisi asla**) gönderileceği + merkez→Ops-Dashboard aktarımı → **`onprem` kararı**.
+> O gelene kadar Ops'taki „zuletzt gemeldet" alanı elle doldurulur.
 
 Kutu modelinde en büyük ops işi bu: kaç kutu var, hangisi hangi sürümde, lisansı ne zaman bitiyor,
 son yedek ne zaman, kim kurdu. **Hazır:** `merkez/` servisi (ad, jeton, IP), `/api/status` tasarımı
