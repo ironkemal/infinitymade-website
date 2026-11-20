@@ -1,3 +1,4 @@
+import { rechnungsPraxisHinweis } from './rechnung-snapshot.js';
 import { setzeDmrzKnopf } from './rechnung-dmrz.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -133,6 +134,7 @@ function createEditorHarness({
   const dom = {
     invPatientSelect: { id: 'invPatientSelect', value: '', disabled: false, focusCalls: 0, focus() { this.focusCalls++; } },
     invEditor: { id: 'invEditor', hidden: true },
+    invEditorPraxisHinweis: { hidden: true, textContent: '' },
     invListWrap: { id: 'invListWrap', hidden: false },
     invLineBody: { id: 'invLineBody', innerHTML: '' },
     invEigenPct: { id: 'invEigenPct', value: 10 },
@@ -157,6 +159,9 @@ function createEditorHarness({
       },
     },
     window: { _currentInvoiceId: null },
+    ownerProfile: { business_name: 'Chrome1911' },
+    currentProfile: {},
+    rechnungsPraxisHinweis,
     leererEditorZustand,
     leereTerminAuswahl() { events.push('leereTerminAuswahl'); },
     setzeSpeichernText(btn, isUpdate) { events.push(`setzeSpeichernText:${isUpdate}`); },
@@ -195,6 +200,7 @@ function createEditorHarness({
 
   const context = vm.createContext(sandbox);
   const code = `
+    ${extractFunctionDecl(fs.readFileSync(new URL('./rechnung-snapshot.js', import.meta.url), 'utf8'), 'zeigeRechnungsPraxisHinweis')}
     ${extractFunctionDecl(dashboardSrc, 'resetInvEditor')}
     ${extractFunctionDecl(dashboardSrc, 'openInvEditor')}
     ${extractFunctionDecl(dashboardSrc, 'closeInvEditor')}
@@ -225,6 +231,9 @@ test('openInvEditor: reset erfolgt synchron zuerst, Editor bleibt während Laden
   await openPromise;
 
   assert.equal(dom.invEditor.hidden, false, 'Editor wird erst nach Abschluss aller Initialisierungen sichtbar');
+
+  assert.equal(dom.invEditorPraxisHinweis.hidden, false);
+  assert.match(dom.invEditorPraxisHinweis.textContent, /Straße/);
 
   // Benutzer wählt Privatpatient: Zustand darf nach Bereitschaft nicht mehr gelöscht werden
   context.invPatientInsuranceType = 'privat';
