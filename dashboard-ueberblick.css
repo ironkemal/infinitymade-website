@@ -11,11 +11,57 @@
   #panel-ueberblick {
     --ubl-radius: 16px;
     --ubl-radius-sm: 10px;
-    --ubl-shadow: 0 1px 2px rgba(48, 43, 39, 0.04), 0 6px 18px -10px rgba(48, 43, 39, 0.08);
+    --ubl-shadow: 0 1px 2px rgba(15, 20, 28, 0.05), 0 8px 20px -12px rgba(15, 20, 28, 0.10);
+    --ubl-blk-bg: #10151F;
+    --ubl-blk-bg-elev: #141B27;
+    --ubl-blk-bg-hover: #1A2333;
+    --ubl-blk-border: #242E40;
+    --ubl-blk-ink: #F5F7FA;
+    --ubl-blk-muted: #A3B0C2;
+    --ubl-blk-faint: #8896AB;
+    --ubl-blk-danger: #F97066;
+    --ubl-blk-ctrl-bg: #1A2232;
+    --ubl-blk-ctrl-border: #2E3B52;
+    --ubl-blk-ctrl-hover: #232E42;
+    --ubl-blk-shadow: 0 12px 28px -14px rgba(12, 16, 23, 0.34);
+  }
+
+  :root:not([data-design="neu"]) #panel-ueberblick {
+    --bg-card-solid: #FFFFFF;
+    --bg-sunken: #EFF2F6;
+    --bg-hover: #E4EBF3;
+    --border: #C7D0DC;
+    --border-strong: #AAB6C6;
+    --text-main: #0F141C;
+    --text-muted: #525E6F;
+    --primary: #10151F;
   }
 
   [data-theme="dark"] #panel-ueberblick {
     --ubl-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 8px 22px -12px rgba(0, 0, 0, 0.45);
+    --ubl-blk-bg: #0A0D14;
+    --ubl-blk-bg-elev: #0E131D;
+    --ubl-blk-bg-hover: #151C28;
+    --ubl-blk-border: #263144;
+    --ubl-blk-ink: #F5F7FA;
+    --ubl-blk-muted: #A8B5C7;
+    --ubl-blk-faint: #8E9CB0;
+    --ubl-blk-danger: #F97066;
+    --ubl-blk-ctrl-bg: #141B28;
+    --ubl-blk-ctrl-border: #2D3A50;
+    --ubl-blk-ctrl-hover: #1D2636;
+    --ubl-blk-shadow: 0 14px 32px -14px rgba(0, 0, 0, 0.62);
+  }
+
+  :root[data-theme="dark"]:not([data-design="neu"]) #panel-ueberblick {
+    --bg-card-solid: #171B22;
+    --bg-sunken: #12161C;
+    --bg-hover: #232A36;
+    --border: #313B4B;
+    --border-strong: #435064;
+    --text-main: #F1F4F8;
+    --text-muted: #9AA5B4;
+    --primary: #F1F4F8;
   }
 
   [data-design="neu"] #panel-ueberblick {
@@ -218,15 +264,15 @@
     gap: 18px;
   }
 
-  /* ── Durchgehendes 5-Spalten-Kennzahlenband (einheitlich numerisch) ── */
+  /* ── Durchgehendes 5-Spalten-Kennzahlenband als Carbon-Black-Monolith (#10151F) ── */
   #panel-ueberblick .ubl-metric-bar {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 1px;
-    border: 1px solid var(--border);
+    border: 1px solid var(--ubl-blk-border);
     border-radius: var(--ubl-radius);
-    background: var(--border);
-    box-shadow: var(--ubl-shadow);
+    background: var(--ubl-blk-border);
+    box-shadow: var(--ubl-blk-shadow);
     overflow: hidden;
   }
 
@@ -237,10 +283,10 @@
     gap: 4px;
     min-width: 0;
     min-height: 0;
-    padding: 15px 18px;
+    padding: 16px 18px;
     border: 0;
-    background: var(--bg-card-solid);
-    color: var(--text-main);
+    background: var(--ubl-blk-bg);
+    color: var(--ubl-blk-ink);
     font: inherit;
     text-align: left;
     cursor: pointer;
@@ -248,11 +294,11 @@
   }
 
   #panel-ueberblick .ubl-metric:hover {
-    background: var(--bg-hover);
+    background: var(--ubl-blk-bg-hover);
   }
 
   #panel-ueberblick .ubl-metric:focus-visible {
-    outline: 2px solid var(--focus-ring, var(--accent));
+    outline: 2px solid var(--ubl-blk-ink);
     outline-offset: -2px;
   }
 
@@ -260,7 +306,7 @@
     font-size: 12px;
     line-height: 16px;
     font-weight: 500;
-    color: var(--text-muted);
+    color: var(--ubl-blk-muted);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -273,18 +319,19 @@
     font-weight: 500;
     letter-spacing: -0.025em;
     font-variant-numeric: tabular-nums;
-    color: var(--text-main);
+    color: var(--ubl-blk-ink);
     white-space: nowrap;
   }
 
   #panel-ueberblick .ubl-metric.is-danger .ubl-metric-val {
-    color: var(--danger);
+    color: var(--ubl-blk-danger);
+    font-weight: 600;
   }
 
   #panel-ueberblick .ubl-metric-sub {
     font-size: 12px;
     line-height: 16px;
-    color: var(--text-muted);
+    color: var(--ubl-blk-faint);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
     overflow: hidden;
@@ -327,13 +374,18 @@
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 8px 12px;
-    padding: 15px 20px;
-    border-bottom: 1px solid var(--border);
+    margin: -1px -1px 0;
+    padding: 15px 21px 14px;
+    border-top-left-radius: var(--ubl-radius);
+    border-top-right-radius: var(--ubl-radius);
+    background: var(--ubl-blk-bg);
+    color: var(--ubl-blk-ink);
+    border-bottom: 1px solid var(--ubl-blk-border);
   }
 
   #panel-ueberblick .ubl-head--flush {
-    border-bottom: 0;
-    padding-bottom: 6px;
+    border-bottom: 1px solid var(--ubl-blk-border);
+    padding-bottom: 12px;
   }
 
   #panel-ueberblick .ubl-head-left {
@@ -345,22 +397,22 @@
 
   #panel-ueberblick .ubl-head h3 {
     margin: 0;
-    font-size: 16px;
-    line-height: 22px;
-    font-weight: 500;
+    font-size: 15.5px;
+    line-height: 21px;
+    font-weight: 600;
     letter-spacing: -0.01em;
-    color: var(--text-main);
+    color: var(--ubl-blk-ink);
   }
 
   #panel-ueberblick .ubl-head-count {
     font-size: 13px;
     font-weight: 500;
-    color: var(--text-muted);
+    color: var(--ubl-blk-muted);
     font-variant-numeric: tabular-nums;
   }
 
   #panel-ueberblick .ubl-head-count.is-danger {
-    color: var(--danger);
+    color: var(--ubl-blk-danger);
     font-weight: 600;
   }
 
@@ -380,7 +432,7 @@
     padding: 2px 0;
     border: 0;
     background: transparent;
-    color: var(--text-muted);
+    color: var(--ubl-blk-muted);
     font: inherit;
     font-size: 12.5px;
     font-weight: 500;
@@ -389,54 +441,57 @@
   }
 
   #panel-ueberblick .ubl-nav-link:hover {
-    color: var(--accent);
+    color: var(--ubl-blk-ink);
   }
 
   #panel-ueberblick .ubl-nav-link[hidden] {
     display: none;
   }
 
-  /* Ruhiger Text-Umschalter für Zeithorizonte (14 T. / 30 T.) */
+  /* Ruhiger Text-Umschalter für Zeithorizonte (14 T. / 30 T.) im dunklen Kartenkopf */
   #panel-ueberblick .ubl-horiz {
     display: inline-flex;
     align-items: center;
-    gap: 2px;
+    gap: 3px;
   }
 
   #panel-ueberblick .ubl-horiz-btn {
     min-width: 0;
     min-height: 26px;
-    padding: 3px 7px;
-    border: 0;
+    padding: 3px 8px;
+    border: 1px solid var(--ubl-blk-ctrl-border);
     border-radius: 6px;
-    background: transparent;
-    color: var(--text-muted);
+    background: var(--ubl-blk-ctrl-bg);
+    color: var(--ubl-blk-muted);
     font: inherit;
     font-size: 12px;
     font-weight: 500;
     font-variant-numeric: tabular-nums;
     cursor: pointer;
-    transition: background-color 120ms ease, color 120ms ease;
+    transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
   }
 
   #panel-ueberblick .ubl-horiz-btn:hover {
-    color: var(--text-main);
-    background: var(--bg-hover);
+    color: var(--ubl-blk-ink);
+    background: var(--ubl-blk-ctrl-hover);
   }
 
   #panel-ueberblick .ubl-horiz-btn.is-active {
-    background: var(--bg-sunken, var(--bg-hover));
-    color: var(--text-main);
+    background: var(--ubl-blk-ink);
+    border-color: var(--ubl-blk-ink);
+    color: var(--ubl-blk-bg);
     font-weight: 600;
   }
 
-  /* ── Unterstrich-Tabs mit dezenter Scrollkante ── */
+  /* ── Unterstrich-Tabs als abgesetztes Graphit-Unterdeck (#141B27) unter .ubl-head--flush ── */
   #panel-ueberblick .ubl-tabs {
     display: flex;
     align-items: center;
     gap: 16px;
-    padding: 0 20px;
-    border-bottom: 1px solid var(--border);
+    margin: 0 -1px;
+    padding: 0 21px;
+    background: var(--ubl-blk-bg-elev);
+    border-bottom: 1px solid var(--ubl-blk-border);
     overflow-x: auto;
     scrollbar-width: none;
   }
@@ -455,7 +510,7 @@
     padding: 8px 0 9px;
     border: 0;
     background: transparent;
-    color: var(--text-muted);
+    color: var(--ubl-blk-muted);
     font: inherit;
     font-size: 13px;
     font-weight: 500;
@@ -465,11 +520,11 @@
   }
 
   #panel-ueberblick .ubl-tab:hover {
-    color: var(--text-main);
+    color: var(--ubl-blk-ink);
   }
 
   #panel-ueberblick .ubl-tab.is-active {
-    color: var(--text-main);
+    color: var(--ubl-blk-ink);
     font-weight: 600;
   }
 
@@ -480,18 +535,18 @@
     right: 0;
     bottom: -1px;
     height: 2px;
-    background: var(--primary);
+    background: var(--ubl-blk-ink);
     border-radius: 2px 2px 0 0;
   }
 
   #panel-ueberblick .ubl-tab-n {
     font-size: 12px;
     font-variant-numeric: tabular-nums;
-    color: var(--text-muted);
+    color: var(--ubl-blk-muted);
   }
 
   #panel-ueberblick .ubl-tab.is-danger-n .ubl-tab-n {
-    color: var(--danger);
+    color: var(--ubl-blk-danger);
     font-weight: 600;
   }
 
@@ -985,6 +1040,23 @@
       line-height: 26px;
     }
 
+    #panel-ueberblick .ubl-metric-sub {
+      white-space: normal;
+    }
+
+    #panel-ueberblick .ubl-head {
+      flex-wrap: nowrap;
+    }
+
+    #panel-ueberblick .ubl-head-left {
+      flex-wrap: wrap;
+      row-gap: 1px;
+    }
+
+    #panel-ueberblick .ubl-head-right {
+      flex-shrink: 0;
+    }
+
     #panel-ueberblick .ubl-head,
     #panel-ueberblick .ubl-tabs,
     #panel-ueberblick .ubl-week-body,
@@ -996,9 +1068,7 @@
     }
 
     #panel-ueberblick .ubl-tabs {
-      -webkit-mask-image: linear-gradient(to right, #000 88%, transparent 100%);
-      mask-image: linear-gradient(to right, #000 88%, transparent 100%);
-      padding-right: 28px;
+      padding-right: 18px;
     }
 
     #panel-ueberblick .ubl-week-body {

@@ -983,6 +983,17 @@
     --tz-shadow-hero: 0 12px 28px -14px rgba(12, 16, 23, 0.36);
     --tz-r: 14px;
     --tz-r-lg: 16px;
+    --tz-blk-bg: #10151F;
+    --tz-blk-bg-elev: #141B27;
+    --tz-blk-bg-hover: #1A2333;
+    --tz-blk-border: #242E40;
+    --tz-blk-ink: #F5F7FA;
+    --tz-blk-muted: #A3B0C2;
+    --tz-blk-faint: #8896AB;
+    --tz-blk-danger: #F97066;
+    --tz-blk-ctrl-bg: #1A2232;
+    --tz-blk-ctrl-border: #2E3B52;
+    --tz-blk-ctrl-hover: #232E42;
   }
 
   :root:not([data-design="neu"])[data-theme="dark"] #panel-overview[data-tz="1"] {
@@ -1002,8 +1013,8 @@
     --tz-accent: #CBD5E1;
     --tz-accent-soft: #222A36;
     --tz-accent-border: #414F63;
-    --tz-hero-bg: #1A202B;
-    --tz-hero-border: #364256;
+    --tz-hero-bg: #0A0D14;
+    --tz-hero-border: #263144;
     --tz-hero-ink: #F5F7FA;
     --tz-hero-muted: #B0BCCB;
     --tz-hero-accent: #CBD5E1;
@@ -1013,6 +1024,17 @@
     --tz-ok: #47CD89;
     --tz-shadow: 0 2px 4px rgba(0, 0, 0, 0.34), 0 10px 24px -14px rgba(0, 0, 0, 0.54);
     --tz-shadow-hero: 0 14px 32px -14px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(226, 232, 240, 0.08);
+    --tz-blk-bg: #0A0D14;
+    --tz-blk-bg-elev: #0E131D;
+    --tz-blk-bg-hover: #151C28;
+    --tz-blk-border: #263144;
+    --tz-blk-ink: #F5F7FA;
+    --tz-blk-muted: #A8B5C7;
+    --tz-blk-faint: #8E9CB0;
+    --tz-blk-danger: #F97066;
+    --tz-blk-ctrl-bg: #141B28;
+    --tz-blk-ctrl-border: #2D3A50;
+    --tz-blk-ctrl-hover: #1D2636;
   }
 
   /* Zweispaltiges Raster: links Fokus + Tagesplan bündig in #tzColLeft (ohne Lücke!),
@@ -1320,16 +1342,20 @@
     margin: 0 0 18px;
   }
 
-  /* Abgesetzter Kartenkopf schafft deutlichen Block-zu-Block-Kontrast */
+  /* Architektonischer Carbon-Black-Kartenkopf (#10151F) auf allen Karten */
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-card-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
     flex-wrap: wrap;
-    padding: 13px 18px;
-    background: var(--tz-band);
-    border-bottom: 1px solid var(--tz-border);
+    margin: -1px -1px 0;
+    padding: 14px 19px 13px;
+    border-top-left-radius: var(--tz-r);
+    border-top-right-radius: var(--tz-r);
+    background: var(--tz-blk-bg);
+    color: var(--tz-blk-ink);
+    border-bottom: 1px solid var(--tz-blk-border);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-card-title-wrap {
@@ -1344,12 +1370,12 @@
     line-height: 20px;
     font-weight: 600;
     letter-spacing: -0.01em;
-    color: var(--tz-ink);
+    color: var(--tz-blk-ink);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-card-count {
     font-size: 12px;
-    color: var(--tz-muted);
+    color: var(--tz-blk-muted);
     font-variant-numeric: tabular-nums;
   }
 
@@ -1364,9 +1390,9 @@
     height: 30px;
     padding: 0 10px;
     border-radius: 7px;
-    border: 1px solid var(--tz-border);
-    background: var(--tz-surface);
-    color: var(--tz-ink);
+    border: 1px solid var(--tz-blk-ctrl-border);
+    background: var(--tz-blk-ctrl-bg);
+    color: var(--tz-blk-ink);
     font: inherit;
     font-size: 12px;
     font-weight: 500;
@@ -1378,14 +1404,15 @@
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-mini-btn:hover {
-    background: var(--tz-hover);
-    border-color: var(--tz-border-strong);
+    background: var(--tz-blk-ctrl-hover);
+    border-color: var(--tz-blk-muted);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-mini-btn.is-active {
-    background: var(--tz-primary);
-    color: var(--tz-primary-fg);
-    border-color: var(--tz-primary);
+    background: var(--tz-blk-ink);
+    color: var(--tz-blk-bg);
+    border-color: var(--tz-blk-ink);
+    font-weight: 600;
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-mini-btn--ico {
@@ -1397,7 +1424,7 @@
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-mini-link {
     border: 0;
     background: transparent;
-    color: var(--tz-muted);
+    color: var(--tz-blk-muted);
     font: inherit;
     font-size: 12.5px;
     font-weight: 500;
@@ -1405,7 +1432,7 @@
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-mini-link:hover {
-    color: var(--tz-ink);
+    color: var(--tz-blk-ink);
   }
 
   /* Filter-Chip-Band im Tagesplan */
@@ -1652,18 +1679,35 @@
     color: var(--tz-muted);
   }
 
-  /* ── Rechte Spalte: #physioRezKpi (sichtbar für alle + v602) ── */
+  /* ── Rechte Spalte: #physioRezKpi als voller Carbon-Black-Monolith (sichtbar für alle + v602) ── */
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] > #physioRezKpi {
     grid-area: rez;
     margin: 0 0 18px !important;
-    border: 1px solid var(--tz-border);
-    background: var(--tz-border);
-    box-shadow: var(--tz-shadow);
+    border: 1px solid var(--tz-blk-border);
+    background: var(--tz-blk-border);
+    box-shadow: var(--tz-shadow-hero);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .rez-kpi-tile {
-    padding: 14px 16px;
-    background: var(--tz-surface);
+    padding: 15px 16px;
+    background: var(--tz-blk-bg);
+    color: var(--tz-blk-ink);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .rez-kpi-tile:hover {
+    background: var(--tz-blk-bg-hover);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .rez-kpi-num {
+    color: var(--tz-blk-ink);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #physioRezKpi[data-ueberfaellig="1"] .rez-kpi-overdue .rez-kpi-num {
+    color: var(--tz-blk-danger);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .rez-kpi-lbl {
+    color: var(--tz-blk-muted);
   }
 
   /* ── Rechte Spalte: Handlungsbedarf (#tzBedarf) ── */
@@ -1764,16 +1808,23 @@
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-head {
-    margin: 0;
-    padding: 13px 18px;
-    background: var(--tz-band);
-    border-bottom: 1px solid var(--tz-border);
+    margin: -1px -1px 0;
+    padding: 14px 19px 13px;
+    border-top-left-radius: var(--tz-r);
+    border-top-right-radius: var(--tz-r);
+    background: var(--tz-blk-bg);
+    border-bottom: 1px solid var(--tz-blk-border);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-head h3 {
     font-size: 15px;
     line-height: 20px;
     font-weight: 600;
+    color: var(--tz-blk-ink);
+  }
+
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-count {
+    color: var(--tz-blk-muted);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] #startAufgaben .sa-form {
@@ -1874,45 +1925,51 @@
     border-top: 1px solid var(--tz-border-soft);
   }
 
-  /* ── Rechte Spalte unten: Abrechnungspuls (#tzGeld) ── */
+  /* ── Rechte Spalte unten: Abrechnungspuls (#tzGeld) als voller Carbon-Black-Monolith ── */
+  :root:not([data-design="neu"]) #panel-overview[data-tz="1"] > #tzGeld {
+    background: var(--tz-blk-bg);
+    border-color: var(--tz-blk-border);
+    box-shadow: var(--tz-shadow-hero);
+  }
+
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-pulse {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1px;
-    background: var(--tz-border-soft);
+    background: var(--tz-blk-border);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-pulse-cell {
-    background: var(--tz-surface);
+    background: var(--tz-blk-bg-elev);
     border: 0;
-    padding: 12px 14px;
+    padding: 13px 14px;
     text-align: left;
     font: inherit;
     cursor: pointer;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 3px;
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-pulse-cell:hover {
-    background: var(--tz-hover);
+    background: var(--tz-blk-bg-hover);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-pulse-lbl {
     font-size: 11.5px;
-    color: var(--tz-muted);
+    color: var(--tz-blk-muted);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-pulse-val {
-    font-size: 15px;
-    font-weight: 600;
+    font-size: 15.5px;
+    font-weight: 500;
     font-variant-numeric: tabular-nums;
-    color: var(--tz-ink);
+    color: var(--tz-blk-ink);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-pulse-sub {
     font-size: 11.5px;
-    color: var(--tz-faint);
+    color: var(--tz-blk-faint);
     font-variant-numeric: tabular-nums;
   }
 
