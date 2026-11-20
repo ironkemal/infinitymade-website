@@ -6,7 +6,7 @@ import {
 
 const raeume = [
   { id: 'R', name: 'Raum 1', plaetze: 1, business_id: 'B' },
-  { id: 'W', name: 'Wärme', plaetze: 2, business_id: 'B' },
+  { id: 'W', name: 'Wärme', ausstattung: ['Gruppenraum'], plaetze: 2, business_id: 'B' },
   { id: 'E', name: 'Einzelpraxis', plaetze: 1, business_id: null },
 ];
 const termine = [

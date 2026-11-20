@@ -8,6 +8,7 @@
  * der Mitarbeiterzuordnung ab, meist den Standard-Standort; ein Raum an Standort B würde dann abgewiesen.
  */
 import { raeumeDesStandorts, raumAuswahl, raumKonflikt } from './raum-plan.js';
+import { mountTerminKonflikte } from './termin-konflikte.js';
 import { ladeAbwesenheiten } from './abwesenheit.js?v=20261031';
 import { ladeSondertage, warnungFuerTag } from './sondertag.js?v=20261119physio';
 
@@ -300,9 +301,12 @@ function mountTerminmaske() {
     stand.tag = vonISO;
     if (!raeume.length) return;
     stand.anfang = wert;
-    zeichne(wert);
+    const zielraum = modal.dataset.zielraum;
+    if (zielraum !== undefined) { delete modal.dataset.zielraum; stand.manuell = !zielraum || raeume.some(r => r.id === zielraum); }
+    zeichne(stand.manuell ? zielraum : wert);
     huelle.hidden = false;
     stand.bereit = true;
+    modal.dispatchEvent(new Event('termin:neu-pruefen'));
   }
 
   new MutationObserver(() => {
@@ -352,13 +356,7 @@ function mountAktionspanel() {
     if (!termin) return;
     const felder = felderAusWahl(auswahl.value, raeume);
     if (!Object.keys(felder).length) return;
-    const weiter = await terminWarnungen({
-      id: termin.id, empId: termin.user_id, startIso: termin.start_time, endIso: termin.end_time, raumId: felder.room_id,
-    });
-    if (!weiter) return;
-    const { error } = await kontext.supabase.from('bookings').update(felder).eq('id', termin.id);
-    if (error) kontext.showToast('Raum konnte nicht gespeichert werden.', 'error');
-    else kontext.showToast('Raum gespeichert.', 'success');
+    await kontext.verschiebeRaumTermin(termin.id, felder.room_id || '', null);
   });
   return stand;
 }
@@ -385,6 +383,7 @@ export async function raumAktionsTermin(termin) {
 /** Einmal beim Start. `getDauerMin` liefert die Dauer aus der Maske. */
 export function raumAuswahlVerdrahten(deps) {
   kontext = { ...deps };
+  mountTerminKonflikte(deps);
   kontext.modal = mountTerminmaske();
   kontext.aktion = mountAktionspanel();
 }

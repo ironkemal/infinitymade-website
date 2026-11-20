@@ -73,6 +73,7 @@ import { normalisiereGeschlecht } from './lib/geschlecht.js';
 import { mailKanal, speichereGmailMailversand, meldeVerbindungsfehler } from './lib/mail.js';
 import { raumFelderFuerTermin } from './lib/raum-zuordnung.js';
 import { raumLeistungenFelder, raumBuchungsFehler, raumNameFuerBuchung } from './lib/raum-automatik.js';
+import { terminPlanungHandler } from './booking/termin-planung.js';
 import { ladeStandortPlan, planErlaubt } from './lib/standort-plan-laden.js';
 import { starteIpAbgleich } from './merkez-istemci/ip-abgleich.js';
 import { starteFristen } from './dsgvo/fristen.js';
@@ -1100,6 +1101,7 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
 }
 
 // 2. Booking Routes (Get Slots & Create)
+app.post('/api/booking/termin-pruefen', requireAuthAI, terminPlanungHandler({ sb: supabase, grenzen: berlinDayBoundsUTC }));
 app.post('/api/booking/get-slots', slotsLookupLimiter, async (req, res) => {
   const { userId, date, duration, businessId, serviceId } = req.body; // date: YYYY-MM-DD
   if (!userId || !date || !duration) return res.status(400).json({ error: 'Missing params' });
@@ -2367,6 +2369,13 @@ app.post('/api/booking/batch-create-explicit', requireAuthAI, async (req, res) =
     validatedBusinessId = biz.id;
   }
 
+  // Ein abweichender Serienraum muss demselben Mandanten und ausgewählten Standort gehören.
+  const einzelRaeume = new Map();
+  for (const id of new Set(slots.map(s => s.roomId).filter(Boolean))) {
+    const wahl = await raumFelderFuerTermin(supabase, id, ownerId);
+    if (!wahl.ok || (validatedBusinessId && wahl.felder.business_id !== validatedBusinessId)) return res.status(400).json({error: 'Raum am Standort nicht verfügbar.'});
+    einzelRaeume.set(id, wahl.felder);
+  }
   const planStandortId = raum.felder.business_id || validatedBusinessId || null;
   const employeeIds = Array.from(new Set(slots.map(s => s?.employeeId).filter(Boolean)));
   const planZeilen = planStandortId ? await ladeStandortPlan(supabase, { ownerId, employeeIds }) : [];
@@ -2414,12 +2423,12 @@ app.post('/api/booking/batch-create-explicit', requireAuthAI, async (req, res) =
         lead_id: bezugLeadId,
         ...raumLeistungen.felder,
         ...(validatedBusinessId ? { business_id: validatedBusinessId } : {}),
-        ...raum.felder
+        ...(einzelRaeume.get(s.roomId) || raum.felder)
       }).select().single();
       if (error) {
         conflicts.push({ slot: s, reason: error.code === '23P01' ? 'Slot bereits belegt' : raumBuchungsFehler(error) || 'Datenbankfehler' });
       } else {
-        created.push({ id: bk.id, date: s.date, time: s.time, employeeId: s.employeeId });
+        created.push({ id: bk.id, date: s.date, time: s.time, employeeId: s.employeeId, start_time: bk.start_time, end_time: bk.end_time });
       }
     } catch (err) {
       conflicts.push({ slot: s, reason: 'Datenbankfehler' });

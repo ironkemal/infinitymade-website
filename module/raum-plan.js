@@ -69,7 +69,7 @@ export function belegungen(raumId, termine, start, ende, { ohneTerminId = null }
  */
 export function raumKonflikt(raum, termine, start, ende, optionen = {}) {
   const konflikte = belegungen(raum.id, termine, start, ende, optionen);
-  return { voll: konflikte.length >= (raum.plaetze ?? 1), konflikte };
+  return { voll: konflikte.length >= (raum.ausstattung?.some(a => a.trim().toLowerCase() === 'gruppenraum') ? raum.plaetze ?? 1 : 1), konflikte };
 }
 
 /** Für die Raumwahl: jeder Raum mit `voll` und Anzahl belegter Plätze. Freie zuerst. */

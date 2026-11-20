@@ -157,7 +157,7 @@ function schreiben(modus) {
  * @param {object} modell      Ergebnis von spaltenModell
  * @param {object} opts        { termine, heute, blockHtml, farbeFuer, kuerzelFuer, onTermin }
  */
-export function rasterZeichnen(doc, host, modell, { termine, heute, blockHtml, farbeFuer, kuerzelFuer, onTermin }) {
+export function rasterZeichnen(doc, host, modell, { termine, heute, blockHtml, farbeFuer, kuerzelFuer, onTermin, onVerschieben }) {
   const { von, bis } = rasterStunden(termine);
   host.dataset.von = von;
   host.dataset.bis = bis;
@@ -198,6 +198,14 @@ export function rasterZeichnen(doc, host, modell, { termine, heute, blockHtml, f
       const slot = doc.createElement('div');
       slot.className = 'dv-slot';
       if (heute && minuten + DV_SLOT_MIN <= nowMin) slot.classList.add('dv-slot--past');
+      if (onVerschieben && !spalte.ohneRaum) {
+        slot.addEventListener('dragover', e => { if (e.dataTransfer.types.includes('application/x-praxura-termin')) e.preventDefault(); });
+        slot.addEventListener('drop', e => {
+          const id = e.dataTransfer.getData('application/x-praxura-termin');
+          if (!modell.spalten.some(s => s.eintraege.some(z => z.termin.id === id))) return;
+          e.preventDefault(); onVerschieben(id, spalte.id, minuten);
+        });
+      }
       slots.appendChild(slot);
     }
 
@@ -207,6 +215,10 @@ export function rasterZeichnen(doc, host, modell, { termine, heute, blockHtml, f
       const block = doc.createElement('div');
       block.className = 'dv-booking-block' + (g.hoehe <= 28 ? ' dv-booking-block--compact' : '') + (eintrag.ueberbelegt ? ' raum-ueberbelegt' : '');
       block.dataset.terminId = b.id;
+      if (onVerschieben && b.status === 'confirmed') {
+        block.draggable = true;
+        block.addEventListener('dragstart', e => e.dataTransfer.setData('application/x-praxura-termin', b.id));
+      }
       block._termin = b;
       block.style.top = `${g.top}px`;
       block.style.height = `${g.hoehe}px`;
@@ -312,6 +324,7 @@ export function mountRaumTagesansicht(deps, doc = globalThis.document) {
         blockHtml: deps.blockHtml,
         farbeFuer: deps.farbeFuer,
         kuerzelFuer: b => mitarbeiterKuerzel(team.find(m => m.id === b.user_id)?.business_name || ''),
+        onVerschieben: (id, roomId, minute) => deps.verschiebeRaumTermin?.(id, roomId, datum + 'T' + String(Math.floor(minute / 60)).padStart(2,'0') + ':' + String(minute % 60).padStart(2,'0')),
         onTermin: id => deps.oeffneTermin?.(id),
       });
       anzeigen(true);

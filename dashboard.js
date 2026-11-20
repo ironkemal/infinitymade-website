@@ -107,7 +107,7 @@ import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from 
 import { oeffneMailAngebotModal, istPodoOhneRechnung } from './module/termin-mail-angebot.js?v=20260929a';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20261026p';
-import { pruefeArbeitszeit } from './module/arbeitszeit-pruefung.js?v=20260928';
+import { serieFreigabe, terminFreigabe } from './module/termin-konflikte.js';
 import { migrierePhysioAltlast, ZERTIFIKAT_PFLICHT, zertifikateMitDeckung, PHYSIO_KATALOG_ERGAENZUNG } from './module/physio-katalog-migration.js?v=20261030k11';
 import { bucheErgaenzendMit } from './module/ergaenzend-mitbuchen.js?v=20261119physio';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
@@ -3972,7 +3972,7 @@ async function initBkGroupPatientAutocomplete() {
   });
 }
 
-async function openBookingModal(b) {
+async function openBookingModal(b, verschiebung = null) {
   if (b?.status === 'cancelled') { showToast('Dieser Termin ist abgesagt.', 'warning'); return; }
   if (!b) { await prefillBookingModal(null); return; }
   const ownerId = getOwnerId();
@@ -3983,7 +3983,8 @@ async function openBookingModal(b) {
   document.getElementById('bkWlMatchBtn').hidden = false;
   document.getElementById('bkDeleteBtn').hidden = false;
   document.getElementById('bkMoveBtn').hidden = false;
-  document.getElementById('bkStart').value = alsDatetimeLocal(b.start_time); // UTC → Ortszeit, wie beim Speichern (QA 26.09.2026)
+  if (verschiebung?.roomId !== undefined) document.getElementById('bookingModal').dataset.zielraum = verschiebung.roomId;
+  document.getElementById('bkStart').value = verschiebung?.start || alsDatetimeLocal(b.start_time); // UTC → Ortszeit, wie beim Speichern (QA 26.09.2026)
   document.getElementById('bkCustomer').value = b.customer_name || '';
   document.getElementById('bkCustomerId').value = b.lead_id || '';
   document.getElementById('bkPhone').value = b.customer_phone || '';
@@ -4306,32 +4307,13 @@ function placeGhost(slotEl, empId, text, ev, slotPx = DV_SLOT_PX) {
 
 async function doMoveBooking(startStr, empId) {
   if (!moveBooking) return;
-  const tl = T.de;
-  const s = new Date(startStr + ':00');
-  const e = new Date(moveBooking.end_time);
-  const oldS = new Date(moveBooking.start_time);
-  const durMs = e - oldS;
-  const newE = new Date(s.getTime() + durMs);
-  if (!await terminWarnungen({ id: moveBooking.id, empId: empId || moveBooking.user_id, startIso: s.toISOString(), endIso: newE.toISOString() })) return;
-  const payload = {
-    start_time: s.toISOString(), end_time: newE.toISOString()
-  };
-  if (empId && empId !== moveBooking.user_id) payload.user_id = empId;
-  const { error } = await supabase.from('bookings').update(payload).eq('id', moveBooking.id);
-  if (error) {
-    // 23P01 ist die Doppelbuchungs-Sperre der Datenbank. Ohne diese Uebersetzung
-    // sah der Praxisinhaber rohen Postgres-Text.
-    showToast(error.code === '23P01' ? tl.move_conflict : `${tl.move_error}: ${error.message}`, 'error');
-    return;
-  }
-  moveBooking = null;
-  if (moveGhostEl) { moveGhostEl.remove(); moveGhostEl = null; }
-  updateMoveBanner();
-  showToast(tl.move_done);
-  await renderCalendarView();
-  if (typeof scheduleDate !== 'undefined' && toISODate(dayViewDate) === toISODate(scheduleDate)) {
-    loadScheduleBookings(scheduleDate);
-  }
+  const booking = moveBooking;
+  cancelMoveBooking();
+  await openBookingModal(booking);
+  const zeit = document.getElementById('bkStart'), person = document.getElementById('bkEmployee');
+  zeit.value = startStr.slice(0,16);
+  if (empId && empId !== person.value) { person.value = empId; person.dispatchEvent(new Event('change', { bubbles: true })); }
+  zeit.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 function populateEmpSelects(selectedId = null) {
@@ -4717,32 +4699,6 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   if (!srvId) { terminFehler('Bitte eine Leistung auswählen.'); return; }
   if (!startV) { terminFehler('Bitte Datum und Uhrzeit auswählen.'); return; }
 
-  const wechsel = id && document.getElementById('bkEmployee').dataset.bisher !== empId;
-  const belegt = new Set(leseLeistungen().map(z => z.serviceId).filter(Boolean));
-  const gewaehlt = servicesCache.filter(s => belegt.has(s.id));
-  if ((!id || wechsel) && gewaehlt.some(s => s.employee_services?.length && !s.employee_services.some(es => es.employee_id === empId))) {
-    terminFehler('Eine gewählte Leistung ist dieser Person nicht zugeordnet. Bitte Leistung oder Therapeut:in ändern.'); return;
-  }
-  if (!id || wechsel) {
-    const pflicht = gewaehlt.filter(s => s.required_certificate);
-    if (pflicht.length) {
-      const { data: qCerts } = await supabase.from('therapist_certificates')
-        .select('certificate').eq('profile_id', empId);
-      const fehlend = pflicht.filter(s => !(qCerts || []).some(c => c.certificate === s.required_certificate));
-      if (fehlend.length) {
-        const empObj = teamMembers.find(t => t.id === empId);
-        const empName = [empObj?.owner_first_name, empObj?.owner_last_name].filter(Boolean).join(' ') || (empObj?.business_name && !empObj.business_name.includes('@') ? empObj.business_name : 'Die ausgewählte Person');
-        const proceed = await showConfirmModal({
-          title: '⚠️ Qualifikationswarnung',
-          message: `${empName}: Für ${fehlend.map(s => `„${s.title}“ (${s.required_certificate})`).join(', ')} fehlt der Zertifikatsnachweis. Die Leistung kann bei der GKV-Abrechnung abgelehnt werden.\n\nTrotzdem buchen?`,
-          confirmText: 'Trotzdem buchen',
-          cancelText: 'Abbrechen'
-        });
-        if (!proceed) return;
-      }
-    }
-  }
-
   // Robust customer resolution: if hidden fields are empty but the search
   // input shows a name, try to match a lead and use it.
   if (!custId) {
@@ -4768,7 +4724,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   }
 
   const startDate = new Date(startV);
-  if (await sondertagGesperrt(startDate.toISOString(), id || null)) return; // Sondertag sperrt vor ALLEN Rückfragen, auch Frequenz (canli-test 07.11.)
+  if (!document.getElementById('bkSeriesToggle').checked && await sondertagGesperrt(startDate.toISOString(), id || null)) return; // Sondertag sperrt vor ALLEN Rückfragen, auch Frequenz (canli-test 07.11.)
   // Frequenz WARNT nur (Beta-2, 12.08.2026, Quelle frequenz-pruefung.js) — die Beginn-Frist direkt darunter ist dagegen ein BLOCK (§15 HeilM-RL).
   {
     // Massgeblich ist das versteckte Feld, nicht der zuletzt angeklickte
@@ -4802,30 +4758,6 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     }
   }
 
-  const now = new Date();
-  if (startDate < now) {
-    const proceedPast = await showConfirmModal({
-      title: 'Termin in der Vergangenheit',
-      message: 'Dieser Termin liegt in der Vergangenheit. Möchten Sie ihn trotzdem eintragen?',
-      confirmText: 'Trotzdem eintragen',
-      cancelText: 'Abbrechen'
-    });
-    if (!proceedPast) return;
-  }
-
-  // Working hours: warnen statt blockieren (Ops #307). Logik in module/arbeitszeit-pruefung.js.
-  {
-    const dow = startDate.getDay();
-    const { data: wh } = await supabase.from('working_hours')
-      .select('start_time,end_time,is_active').eq('user_id', empId).eq('day_of_week', dow).eq('is_active', true);
-    const warnung = pruefeArbeitszeit({ wh, startDate });
-    if (warnung) {
-      const proceed = await showConfirmModal({ title: warnung.titel, message: warnung.meldung, confirmText: 'Trotzdem eintragen', cancelText: 'Abbrechen', variant: 'warning' });
-      if (!proceed) return;
-      notes = [notes, warnung.notiz].filter(Boolean).join('\n');
-    }
-  }
-
   // Dauer-Feld ist frei editierbar (Beta-Feedback 03.09.2026) — sein Wert gewinnt, sonst der Katalogwert der Leistung.
   let dur = leseDauer() || ownerServices.find(s => s.id === srvId)?.duration_minutes || STANDARD_DAUER_MIN;
 
@@ -4842,35 +4774,27 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
 
   const startIso = new Date(startV).toISOString();
   const endIso = new Date(new Date(startV).getTime() + totalBlockMin * 60000).toISOString();
-  if (!await terminWarnungen({ id: id || null, empId, startIso, endIso, raumId: raumWahl.room_id })) return; // Abwesenheit, Raum: warnen, nicht sperren
   const isSeries = document.getElementById('bkSeriesToggle').checked && !id;
+  if (!isSeries && !await terminFreigabe(totalBlockMin)) return;
   if (isSeries) {
-    const dateStr = startV.substring(0, 10);
-    const timeStr = startV.substring(11, 16);
     const count = Number(document.getElementById('bkAnzahl').value);
     if (!Number.isInteger(count) || count < 1 || count > 52) { terminFehler('Bitte eine Anzahl von 1 bis 52 Terminen eingeben.'); return; }
-    const recInfo = frequenzToSeries(document.getElementById('bkSeriesRecurrence').value);
-    const checked = Array.from(document.querySelectorAll('#bkSeriesWeekdays input:checked')).map(cb => parseInt(cb.value));
-    const durMin = dur;
+    const slots = await serieFreigabe(computeSeriesPreview().map(date => ({date, time: startV.slice(11,16), employeeId: empId})), totalBlockMin);
+    if (!slots?.length) return;
     const payload = {
       userId: empId,
       ownerId: getOwnerId(),
       serviceId: srvId,
-      startDate: dateStr,
-      time: timeStr,
-      recurrence: recInfo.recurrence,
-      intervalDays: recInfo.intervalDays,
-      weekdays: checked,
-      count: count,
+      slots,
       customerName: cust,
       // Ohne `leadId` legte die Serie jeden Termin ohne Patientenbezug an — der Fußbefund-Knopf blieb dann unsichtbar und der Terminzettel fand die Geschwistertermine nicht (17.08.2026).
       leadId: custId || null,
       customerPhone: phone || null,
       notes: notes || null,
-      duration: durMin, roomId: raumWahl.room_id || null, raumServiceIds: raumWahl.raum_service_ids, businessId: currentBusiness?.id || null,
+      duration: totalBlockMin, roomId: raumWahl.room_id || null, raumServiceIds: raumWahl.raum_service_ids, businessId: currentBusiness?.id || null,
       hausbesuch: document.getElementById('bkHausbesuch').checked || false
     };
-    const res = await fetch(API + '/booking/batch-create', {
+    const res = await fetch(API + '/booking/batch-create-explicit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (await supabase.auth.getSession()).data.session?.access_token },
       body: JSON.stringify(payload)
@@ -4882,7 +4806,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     // Ops 235 / S1.10: jeder Serientermin traegt dieselbe Leistungskombination.
     await speichereLeistungenFuerErstellte(created, { showToast });
     closeModal('bookingModal');
-    await refreshBookingViews(); serieNachpruefen({ raumId: raumWahl.room_id, empId, termine: created });
+    await refreshBookingViews();
 
     if (created.length && window._physioFlow?.prescription_id) await meldePodoSerienBindung(supabase, { ownerId: getOwnerId(), prescriptionId: window._physioFlow.prescription_id, created, emit, toast: showToast });
     // Terminbestätigung drucken dialog — pass patient email if available
@@ -4923,7 +4847,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
         
       if (upErr) {
         console.error('[group parent update]', upErr);
-        terminFehler(upErr.message || t('err_generic'));
+        terminFehler(bookingErrMsg(upErr));
         return;
       }
       
@@ -5767,6 +5691,9 @@ document.getElementById('aiSuggestConfirm').addEventListener('click', async () =
     hausbesuch, roomId: raumFelder()?.room_id || null, raumServiceIds: raumFelder()?.raum_service_ids, businessId: currentBusiness?.id || null
   };
 
+  const checkedSlots = await serieFreigabe(payload.slots, payload.duration);
+  if (!checkedSlots?.length) return;
+  payload.slots = checkedSlots;
   const batchToken = (await supabase.auth.getSession()).data.session?.access_token;
   try {
     const res = await fetch(AI_BATCH_URL, {
@@ -11595,7 +11522,7 @@ document.getElementById('pwChangeBtn').addEventListener('click', async () => {
 
 wireAboButtons({ istKutu: IST_KUTU, portalRedirect: _doStripePortalRedirect });
 
-planungVerdrahten({ supabase, getOwnerId, apiBase: API, getToken: async () => (await supabase.auth.getSession()).data.session?.access_token, getEigeneId: () => currentProfile?.id, getRolle: () => currentProfile?.role, getDetailEmpId: () => detailEmpId, getStandorte: () => myBusinesses, getTagDatum: () => toISODate(dayViewDate), getBusinessId: () => currentBusiness?.id || null, istInhaber: () => currentProfile?.role === 'owner', getTeam: () => teamMembers, blockHtml: b => renderBookingSlotInner(b, []) + terminHinweiseHtml(b), farbeFuer: b => { const f = terminFarben(b, { teamMembers, empFarben: EMP_COLORS }); return { ...f, hintergrund: mitDeckkraft(f.flaeche, '25', '15%') }; }, oeffneTermin: async id => openBookingActionModal(await ladeTerminVollstaendig(supabase, { id })), getServices: () => servicesCache, getLeistungen: () => leseLeistungen(), getDauerMin: () => leseDauer() || ownerServices.find(s => s.id === document.getElementById('bkService')?.value)?.duration_minutes, showToast, showConfirmModal });
+planungVerdrahten({ supabase, getOwnerId, apiBase: API, getToken: async () => (await supabase.auth.getSession()).data.session?.access_token, getEigeneId: () => currentProfile?.id, getRolle: () => currentProfile?.role, getDetailEmpId: () => detailEmpId, getStandorte: () => myBusinesses, getTagDatum: () => toISODate(dayViewDate), getBusinessId: () => currentBusiness?.id || null, istInhaber: () => currentProfile?.role === 'owner', getTeam: () => teamMembers, blockHtml: b => renderBookingSlotInner(b, []) + terminHinweiseHtml(b), farbeFuer: b => { const f = terminFarben(b, { teamMembers, empFarben: EMP_COLORS }); return { ...f, hintergrund: mitDeckkraft(f.flaeche, '25', '15%') }; }, verschiebeRaumTermin: async (id, roomId, start) => openBookingModal(await ladeTerminVollstaendig(supabase, { id }), {roomId,start}), oeffneTermin: async id => openBookingActionModal(await ladeTerminVollstaendig(supabase, { id })), getServices: () => servicesCache, getLeistungen: () => leseLeistungen(), getDauerMin: () => leseDauer() || ownerServices.find(s => s.id === document.getElementById('bkService')?.value)?.duration_minutes, showToast, showConfirmModal });
 // DSGVO Art. 15/17 — Export & Kontolöschung via module/dsgvo-client.js
 dsgvoVerdrahten({ apiBase: API, getToken: async () => (await supabase.auth.getSession()).data.session?.access_token, showToast, showConfirmModal, showInputModal, signOut: () => supabase.auth.signOut(), istKutu: IST_KUTU });
 

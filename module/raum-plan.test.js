@@ -62,8 +62,8 @@ test('Bearbeiten ignoriert den eigenen Termin', () => {
   assert.equal(raumKonflikt(R, termine, start, ende, { ohneTerminId: 'a' }).voll, false);
 });
 
-test('Plätze: Wärmeraum warnt erst, wenn alle belegt sind', () => {
-  const waerme = { ...R, plaetze: 2 };
+test('Plätze: Gruppenraum warnt erst, wenn alle belegt sind', () => {
+  const waerme = { ...R, ausstattung: ['Gruppenraum'], plaetze: 2 };
   const termine = [termin('a', '09:00', '09:30')];
   assert.equal(raumKonflikt(waerme, termine, start, ende).voll, false);
   assert.equal(raumKonflikt(waerme, [...termine, termin('b', '09:10', '09:40')], start, ende).voll, true);
