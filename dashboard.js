@@ -44,7 +44,7 @@ import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnun
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20261004m116';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261005g';
 import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261004m116';
-import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261118v914'; import { pruefePatientPflicht } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { ladeUeberblickAnsicht } from './module/ueberblick-ansicht.js?v=20261119ubl3';
+import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261118v914'; import { pruefePatientPflicht, patientKontaktFehler } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { ladeUeberblickAnsicht } from './module/ueberblick-ansicht.js?v=20261119ubl3';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
 import { ladeStatusJePatient, oeffneStatusDialogFuer, verordnungStatusInfo } from './module/abrechnungsstatus.js?v=20261117f2';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261117v906';
@@ -7737,7 +7737,9 @@ document.querySelectorAll('input[name="lead_insurance_type"]').forEach(r => {
   });
 });
 
-document.getElementById('leadSaveBtn').addEventListener('click', async () => {
+import { bestaetigePatientNeuanlage } from './module/patient-dublette.js';
+const leadSaveGuard = createPendingGuard(() => document.getElementById('leadSaveBtn'), e => showToast(e.message || t('err_generic'), 'error'));
+document.getElementById('leadSaveBtn').addEventListener('click', () => leadSaveGuard(async () => {
   const id = document.getElementById('lead-id').value;
   const firstName = document.getElementById('lead-first-name').value.trim();
   const lastName = document.getElementById('lead-last-name').value.trim();
@@ -7754,7 +7756,6 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     plz = document.getElementById('lead-plz').value.trim() || null;
     hausbesuch = document.getElementById('lead-hausbesuch').checked;
 
-    // Hausbesuch işaretliyse adres zorunlu (Fahrtenbuch.md §1)
     if (hausbesuch) {
       const missing = [];
       if (!street) missing.push('Strasse');
@@ -7764,13 +7765,11 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
         showToast('Hausbesuch erfordert: ' + missing.join(', '), 'error');
         return;
       }
-      if (!/^\d{5}$/.test(plz)) {
-        showToast('PLZ muss 5-stellig sein.', 'error');
-        return;
-      }
     }
   }
-
+  const email = document.getElementById('lead-email').value.trim() || null;
+  const kontaktFehler = patientKontaktFehler(plz, email);
+  if (kontaktFehler) { showToast(kontaktFehler, 'error'); return; }
   let versichertennummer = null, versichertenstatus = null;
   if (isPraxisSector(sector)) {
     versichertennummer = document.getElementById('lead-krankenkassennummer').value.trim() || null;
@@ -7791,7 +7790,6 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     }
   }
 
-  // S3.1: geburtsdatum/hausbesuch = Spalten; metadata wird zusammengefuehrt (OCR-Schluessel bleiben)
   const formMeta = {};
   if (isPraxisSector(sector)) {
     formMeta.krankenkasse = document.getElementById('lead-krankenkasse').value || null;
@@ -7813,7 +7811,7 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     handy: document.getElementById('lead-handy').value.trim() || null,
     handy_normalized: normalize_phone_js(document.getElementById('lead-handy').value.trim()),
     geschlecht: normalisiereGeschlecht(document.getElementById('lead-geschlecht').value),
-    email: document.getElementById('lead-email').value.trim() || null,
+    email,
     street,
     plz,
     city: city || null,
@@ -7829,7 +7827,7 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     insurance_type: document.querySelector('input[name="lead_insurance_type"]:checked')?.value || null
   };
 
-  // Adres değiştiyse cache'lenmiş rota geçersiz → temizle (Wave 3 Berechnen'de yeniden hesaplanır)
+  if (!id && !await bestaetigePatientNeuanlage({ sb: supabase, bizScope, patient: payload, bestaetige: showConfirmModal })) return;
   if (id) {
     const prev = (Array.isArray(leadsCache) ? leadsCache : []).find(l => l.id === id) || {};
     if (prev.street !== street || prev.plz !== plz || (prev.city || null) !== (city || null)) {
@@ -7871,7 +7869,7 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
       if (window.bkSelectLead) window.bkSelectLead(savedLead.id);
     }
   }
-});
+}));
 
 // Patienten-Import aus CSV (Praxiswechsel) → module/patienten-import.js. Ersetzt den
 // Google-Maps-Lead-Import, der hier bis 20.10.2026 hing.

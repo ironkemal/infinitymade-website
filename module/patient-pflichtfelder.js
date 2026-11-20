@@ -4,7 +4,7 @@
 // nie geprüft, und ein Geburtsdatum 01.01.2030 ging durch. Die Datumsregel (nicht vor 1900,
 // nicht in der Zukunft) gibt es schon im Termin-Widget — hier wiederverwendet, nur der Text
 // spricht die Praxis an statt den Patienten.
-import { validateBirthDate } from '../widget/booking-widget.logic.js?v=20261012';
+import { validateBirthDate, validateContact } from '../widget/booking-widget.logic.js?v=20261012';
 
 /**
  * @param {object} p
@@ -25,4 +25,9 @@ export function pruefePatientPflicht({ geburtsdatum, versicherungsart, praxis, h
     return 'Bitte die Versicherungsart wählen (GKV oder privat).';
   }
   return null;
+}
+
+export function patientKontaktFehler(plz, email) {
+  if (plz && !/^\d{5}$/.test(plz)) return 'Bitte eine fünfstellige Postleitzahl eingeben.';
+  return validateContact(email, '').email;
 }
