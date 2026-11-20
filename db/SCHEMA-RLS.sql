@@ -3,9 +3,9 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261111121954 0121_rechnungen_modulrecht
--- EXPORTED AT:        2026-11-10T15:39:37Z (gezielt fortgeschrieben 2026-11-10: 0119)
--- ERZEUGT AM:         2026-11-10
+-- LAST MIGRATION:     20261120212231 praxura_0124_bis_0129_physio_qa
+-- EXPORTED AT:        2026-11-20T21:23:54.185529Z
+-- ERZEUGT AM:         2026-11-20
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
@@ -14,8 +14,8 @@
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        197
---   functions:           154
---   triggers:            182
+--   functions:           159
+--   triggers:            185
 --   indexes:             380
 --   auth_triggers:       1
 --   publication_tables:  8
@@ -32,7 +32,7 @@
 -- ----------------------------------------------------------------------------
 -- PUBLICATIONS:
 --   Publication: "supabase_realtime" (all_tables: false, tables: [public.bookings])
---   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_11_06, realtime.messages_2026_11_07, realtime.messages_2026_11_08, realtime.messages_2026_11_09, realtime.messages_2026_11_10, realtime.messages_2026_11_11, realtime.messages_2026_11_12])
+--   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_11_17, realtime.messages_2026_11_18, realtime.messages_2026_11_19, realtime.messages_2026_11_20, realtime.messages_2026_11_21, realtime.messages_2026_11_22, realtime.messages_2026_11_23])
 
 -- AUTH NON-INTERNAL TRIGGERS (OUTSIDE PUBLIC INVENTORY — REFERENCE ONLY):
 --   Trigger: "on_auth_user_created" ON auth."users" (enabled: O)
@@ -2077,6 +2077,7 @@ AS $function$
 $function$
 ;
 ALTER FUNCTION public.abrechnungszugriff_erlaubt(p_user uuid, p_business uuid) OWNER TO postgres;
+COMMENT ON FUNCTION public.abrechnungszugriff_erlaubt(p_user uuid, p_business uuid) IS '0121: Modul ''abrechnung'' für die Praxis, nur für den Aufrufer selbst, nur aktive Mitarbeiter derselben Praxis. Spiegel von get_my_permissions.';
 
 CREATE OR REPLACE FUNCTION public.add_credits(p_user_id uuid, p_credits integer)
  RETURNS void
@@ -2975,8 +2976,7 @@ DECLARE
   online boolean := true;
   hat_leistung boolean := false;
 BEGIN
-  -- Alle Schreibwege serialisieren ihre Raumentscheidung am selben Standort. Eine
-  -- explizite manuelle Wahl prüft trotzdem keine Kapazität (bestehende Warnregel).
+  -- Explizite Wahl und automatische Zuweisung laufen unter demselben Standort-Lock.
   PERFORM pg_advisory_xact_lock(hashtextextended('raum:' || NEW.owner_id::text || ':' || COALESCE(NEW.business_id::text, '-'), 0));
   -- 0108: Raum gelöscht (FK ON DELETE SET NULL). Der alte Raum ist im selben Statement schon weg; nicht
   -- neu zuteilen, sonst scheitert das Löschen, wenn kein Ersatzraum frei ist (auch bei vergangenen Terminen).
@@ -2985,6 +2985,14 @@ BEGIN
     NEW.room_automatisch := false;
     RETURN NEW;
   END IF;
+  -- Ein bereits stattgefundener Termin darf seine damalige Raumbelegung behalten.
+  IF TG_OP = 'UPDATE' AND OLD.status = 'confirmed' AND NEW.status = 'completed'
+     AND (NEW.owner_id, NEW.business_id, NEW.user_id, NEW.room_id, NEW.room_automatisch, NEW.hausbesuch,
+          NEW.service_id, NEW.raum_service_ids, NEW.start_time, NEW.end_time, NEW.group_parent_id)
+         IS NOT DISTINCT FROM
+         (OLD.owner_id, OLD.business_id, OLD.user_id, OLD.room_id, OLD.room_automatisch, OLD.hausbesuch,
+          OLD.service_id, OLD.raum_service_ids, OLD.start_time, OLD.end_time, OLD.group_parent_id)
+  THEN RETURN NEW; END IF;
   automatisch := NEW.room_id IS NULL;
   IF TG_OP = 'UPDATE' THEN
     automatisch := automatisch OR (OLD.room_automatisch AND NEW.room_automatisch AND NEW.room_id IS NOT DISTINCT FROM OLD.room_id);
@@ -3023,14 +3031,26 @@ BEGIN
   END IF;
   IF NOT automatisch THEN
     NEW.room_automatisch := false;
-    RETURN NEW;
+    IF NEW.status IN ('cancelled','no_show') OR (TG_OP = 'UPDATE' AND OLD.group_parent_id IS NULL
+       AND OLD.status NOT IN ('cancelled','no_show') AND OLD.owner_id IS NOT DISTINCT FROM NEW.owner_id
+       AND OLD.room_id IS NOT DISTINCT FROM NEW.room_id
+       AND OLD.service_id IS NOT DISTINCT FROM NEW.service_id AND OLD.raum_service_ids IS NOT DISTINCT FROM NEW.raum_service_ids
+       AND OLD.business_id IS NOT DISTINCT FROM NEW.business_id AND OLD.start_time IS NOT DISTINCT FROM NEW.start_time AND OLD.end_time IS NOT DISTINCT FROM NEW.end_time)
+    THEN RETURN NEW; END IF;
+    IF NOT EXISTS (
+      SELECT 1 FROM public.rooms r WHERE r.id = NEW.room_id AND r.owner_id = NEW.owner_id
+        AND r.business_id IS NOT DISTINCT FROM NEW.business_id
+    ) THEN
+      RAISE EXCEPTION 'Raum gehört nicht zu diesem Mandanten oder Standort.' USING ERRCODE = '23514';
+    END IF;
+  ELSE
+    NEW.room_id := NULL;
+    NEW.room_automatisch := false;
+    IF NEW.hausbesuch IS TRUE OR NEW.status IN ('cancelled', 'no_show') THEN RETURN NEW; END IF;
+    IF hat_leistung AND online THEN RETURN NEW; END IF;
   END IF;
-  NEW.room_id := NULL;
-  NEW.room_automatisch := false;
-  IF NEW.hausbesuch IS TRUE OR NEW.status IN ('cancelled', 'no_show') THEN RETURN NEW; END IF;
-  IF hat_leistung AND online THEN RETURN NEW; END IF;
   SELECT COALESCE(array_agg(DISTINCT e ORDER BY e), '{}') INTO erforderlich FROM unnest(erforderlich) e;
-  IF cardinality(erforderlich) = 0 AND NOT EXISTS (
+  IF automatisch AND cardinality(erforderlich) = 0 AND NOT EXISTS (
     SELECT 1 FROM public.rooms r WHERE r.owner_id = NEW.owner_id
       AND r.business_id IS NOT DISTINCT FROM NEW.business_id AND r.aktiv
   ) THEN RETURN NEW; END IF;
@@ -3040,8 +3060,9 @@ BEGIN
   SELECT r.id INTO geeignet FROM public.rooms r
   WHERE r.owner_id = NEW.owner_id AND r.business_id IS NOT DISTINCT FROM NEW.business_id
     AND r.aktiv AND r.ausstattung @> erforderlich
-    AND r.plaetze > (
-      SELECT count(*) FROM public.bookings b WHERE b.owner_id = NEW.owner_id AND b.room_id = r.id
+    AND (automatisch OR r.id = NEW.room_id)
+    AND NOT EXISTS (
+      SELECT 1 FROM public.bookings b WHERE b.owner_id = NEW.owner_id AND b.room_id = r.id
         AND b.id IS DISTINCT FROM NEW.id AND b.group_parent_id IS NULL
         AND b.status IS DISTINCT FROM 'cancelled' AND b.status IS DISTINCT FROM 'no_show'
         AND b.start_time < NEW.end_time AND b.end_time > NEW.start_time
@@ -3050,7 +3071,7 @@ BEGIN
     RAISE EXCEPTION 'Kein freier Raum mit der benötigten Ausstattung am Terminstandort verfügbar. Bitte Zeit oder Raumwahl prüfen.' USING ERRCODE = 'P0001';
   END IF;
   NEW.room_id := geeignet;
-  NEW.room_automatisch := true;
+  NEW.room_automatisch := automatisch;
   RETURN NEW;
 END;
 $function$
@@ -4103,6 +4124,7 @@ END;
 $function$
 ;
 ALTER FUNCTION public.invoices_mandant_fest() OWNER TO postgres;
+COMMENT ON FUNCTION public.invoices_mandant_fest() IS '0119: Browser-Rollen duerfen invoices.owner_id nicht aendern (Mandantenwechsel). Test: db/tests/0081_security_boundaries.test.sql.';
 
 CREATE OR REPLACE FUNCTION public.is_admin()
  RETURNS boolean
@@ -4114,6 +4136,28 @@ AS $function$
 $function$
 ;
 ALTER FUNCTION public.is_admin() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.messreihe_eingabe_pruefen()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+BEGIN
+  IF NULLIF(btrim(NEW.koerperteil), '') IS NULL OR NEW.wert < 0 OR
+     NEW.wert > (CASE NEW.typ
+       WHEN 'VAS' THEN 10
+       WHEN 'ROM' THEN 360
+       WHEN 'kraft' THEN CASE WHEN NEW.einheit = 'MFT' THEN 5 ELSE 999 END
+       ELSE 999
+     END) THEN
+    RAISE EXCEPTION 'Körperteil und gültigen Wert für den gewählten Messtyp angeben.'
+      USING ERRCODE = '23514', CONSTRAINT = 'messreihen_eingabe_check';
+  END IF;
+  RETURN NEW;
+END;
+$function$
+;
+ALTER FUNCTION public.messreihe_eingabe_pruefen() OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.messreihen_befund_mandant_pruefen()
  RETURNS trigger
@@ -4726,6 +4770,73 @@ END;
 $function$
 ;
 ALTER FUNCTION public.physio_befunde_versionieren() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.physio_beginn_nach_terminabschluss()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+BEGIN
+  UPDATE public.prescriptions rx SET behandlungsbeginn = tage.beginn
+  FROM (
+    SELECT s.prescription_id, min((s.done_at AT TIME ZONE 'Europe/Berlin')::date) AS beginn
+    FROM public.prescription_sessions s
+    WHERE s.booking_id = NEW.id AND s.status = 'done'
+    GROUP BY s.prescription_id
+  ) tage
+  WHERE rx.id = tage.prescription_id AND rx.therapie_bereich = 'physio'
+    AND rx.status IN ('confirmed','in_therapy') AND tage.beginn IS NOT NULL
+    AND (rx.behandlungsbeginn IS NULL OR rx.behandlungsbeginn > tage.beginn);
+  RETURN NEW;
+END;
+$function$
+;
+ALTER FUNCTION public.physio_beginn_nach_terminabschluss() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.physio_sitzungsplan_initialisieren(p_id uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+DECLARE
+  rx public.prescriptions%ROWTYPE;
+  items jsonb;
+BEGIN
+  SELECT * INTO rx FROM public.prescriptions WHERE id = p_id
+    AND therapie_bereich = 'physio' AND status IN ('confirmed','in_therapy')
+    AND abrechnung_status IS NULL
+    AND belegnummer IS NULL AND abrechnung_id IS NULL FOR UPDATE;
+  IF NOT FOUND OR EXISTS (SELECT 1 FROM public.prescription_sessions WHERE prescription_id = p_id) THEN
+    RETURN;
+  END IF;
+  items := CASE WHEN jsonb_typeof(rx.heilmittel_items) = 'array' THEN rx.heilmittel_items ELSE '[]'::jsonb END;
+  IF NOT EXISTS (SELECT FROM jsonb_array_elements(items) item WHERE item->>'einheiten' IS NOT NULL) THEN
+    items := jsonb_build_array(jsonb_build_object('einheiten', rx.anzahl_einheiten, 'doppelbehandlung', rx.doppelbehandlung));
+  END IF;
+  INSERT INTO public.prescription_sessions(prescription_id, session_number, heilmittel_index)
+  SELECT p_id, row_number() OVER (ORDER BY platz, n), platz - 1
+  FROM jsonb_array_elements(items) WITH ORDINALITY AS zeile(item, platz)
+  CROSS JOIN LATERAL generate_series(1, CASE WHEN item->>'einheiten' ~ '^[0-9]{1,6}$'
+    THEN ceil((item->>'einheiten')::numeric /
+      CASE WHEN item->>'doppelbehandlung' = 'true' THEN 2 ELSE 1 END)::integer ELSE 0 END) n
+  ON CONFLICT (prescription_id, session_number) DO NOTHING;
+END;
+$function$
+;
+ALTER FUNCTION public.physio_sitzungsplan_initialisieren(p_id uuid) OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.physio_sitzungsplan_nach_bestaetigung()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+BEGIN
+  PERFORM public.physio_sitzungsplan_initialisieren(NEW.id);
+  RETURN NEW;
+END;
+$function$
+;
+ALTER FUNCTION public.physio_sitzungsplan_nach_bestaetigung() OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.physio_storage_readable(p_path text)
  RETURNS boolean
@@ -6627,6 +6738,7 @@ END;
 $function$
 ;
 ALTER FUNCTION public.rechnung_zahlung_storno_referenz_pruefen() OWNER TO postgres;
+COMMENT ON FUNCTION public.rechnung_zahlung_storno_referenz_pruefen() IS 'Teil 1 Rechnungsrechte: Storno-Zeile muss auf Zahlung derselben Rechnung/Praxis zeigen, Betrag = -Original, kein Storno eines Storno.';
 
 CREATE OR REPLACE FUNCTION public.search_diagnosen(p_q text, p_bereich text DEFAULT NULL::text, p_kind text DEFAULT 'both'::text, p_limit integer DEFAULT 25)
  RETURNS TABLE(kind text, code text, titel text, bereich text, terminal boolean, in_sector boolean, rank real)
@@ -7053,6 +7165,110 @@ $function$
 ;
 ALTER FUNCTION public.set_warteliste_updated_at() OWNER TO postgres;
 
+CREATE OR REPLACE FUNCTION public.sitzung_abschliessen(p_booking_id uuid, p_startzeit timestamp with time zone, p_notiz text)
+ RETURNS uuid[]
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+DECLARE
+  mandant uuid := public.auth_tenant_id();
+  termin public.bookings%ROWTYPE;
+  rx public.prescriptions%ROWTYPE;
+  rx_ids uuid[];
+  items jsonb;
+  verarbeitet uuid[] := '{}';
+  rx_id uuid;
+  erbracht integer;
+  offen integer;
+  weitere integer;
+  faellig boolean;
+  max_ergaenzend integer;
+  beginn date;
+  soll_status text;
+  soll_abrechnung text;
+  soll_beginn date;
+BEGIN
+  IF mandant IS NULL OR auth.uid() IS NULL THEN
+    RAISE EXCEPTION USING ERRCODE='PT401', MESSAGE='ANMELDUNG';
+  END IF;
+  SELECT * INTO termin FROM public.bookings WHERE id=p_booking_id
+    AND (owner_id=mandant OR (owner_id IS NULL AND user_id=auth.uid())) FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION USING ERRCODE='PT404', MESSAGE='TERMIN_FEHLT'; END IF;
+  IF termin.start_time IS DISTINCT FROM p_startzeit OR p_startzeit IS NULL THEN
+    RAISE EXCEPTION USING ERRCODE='PT409', MESSAGE='TERMIN_GEAENDERT';
+  END IF;
+  IF termin.start_time > statement_timestamp() THEN RAISE EXCEPTION USING ERRCODE='PT409', MESSAGE='ZUKUNFT'; END IF;
+  IF termin.status IS NULL OR termin.status NOT IN ('confirmed','completed') OR termin.no_show THEN RAISE EXCEPTION USING ERRCODE='PT409', MESSAGE='STATUS'; END IF;
+  IF termin.is_group AND termin.group_parent_id IS NULL THEN RAISE EXCEPTION USING ERRCODE='PT409', MESSAGE='GRUPPE'; END IF;
+  IF termin.verordnung_id IS NOT NULL THEN RAISE EXCEPTION USING ERRCODE='PT409', MESSAGE='PODO'; END IF;
+  IF termin.hausbesuch AND coalesce(termin.fahrt_status,'') NOT IN ('fahrt_arrived','fahrt_return_pending','fahrt_completed') THEN
+    RAISE EXCEPTION USING ERRCODE='PT409', MESSAGE='FAHRT';
+  END IF;
+
+  PERFORM id FROM public.prescription_sessions WHERE booking_id=termin.id ORDER BY id FOR UPDATE;
+  SELECT array_agg(DISTINCT prescription_id ORDER BY prescription_id) INTO rx_ids
+    FROM public.prescription_sessions WHERE booking_id=termin.id;
+  IF rx_ids IS NULL THEN RAISE EXCEPTION USING ERRCODE='PT409', MESSAGE='KEINE_SITZUNG'; END IF;
+
+  FOREACH rx_id IN ARRAY rx_ids LOOP
+    SELECT * INTO rx FROM public.prescriptions WHERE id=rx_id AND owner_id=mandant FOR UPDATE;
+    IF NOT FOUND THEN RAISE EXCEPTION USING ERRCODE='PT409', MESSAGE='VERORDNUNG_FEHLT'; END IF;
+    IF rx.status='parsed' THEN RAISE EXCEPTION USING ERRCODE='PT409', MESSAGE='ENTWURF'; END IF;
+    IF rx.therapie_bereich='podo' THEN RAISE EXCEPTION USING ERRCODE='PT409', MESSAGE='PODO'; END IF;
+    IF EXISTS (SELECT FROM public.prescription_sessions WHERE booking_id=termin.id AND prescription_id=rx.id
+      AND (status NOT IN ('planned','done') OR (status='planned' AND rx.status IN ('billed','cancelled')))) THEN
+      RAISE EXCEPTION USING ERRCODE='PT409', MESSAGE='STATUS';
+    END IF;
+    IF rx.status IN ('billed','cancelled') THEN CONTINUE; END IF;
+
+    UPDATE public.prescription_sessions SET status='done', done_at=termin.start_time,
+      notes=coalesce(nullif(p_notiz,''),notes)
+      WHERE booking_id=termin.id AND prescription_id=rx.id AND status='planned';
+    IF EXISTS (SELECT FROM public.prescription_sessions WHERE booking_id=termin.id AND prescription_id=rx.id AND status<>'done') THEN
+      RAISE EXCEPTION USING ERRCODE='PT409', MESSAGE='STATUS';
+    END IF;
+    SELECT count(*) FILTER (WHERE status='done'), count(*) FILTER (WHERE status='planned' AND booking_id IS NOT NULL),
+      count(*) FILTER (WHERE status='done' AND ergaenzend_erbracht),
+      min((done_at AT TIME ZONE 'Europe/Berlin')::date) FILTER (WHERE status='done')
+      INTO erbracht, offen, weitere, beginn FROM public.prescription_sessions WHERE prescription_id=rx.id;
+    IF rx.ergaenzend_position IS NOT NULL THEN
+      max_ergaenzend := coalesce(nullif(rx.ergaenzend_einheiten,0),nullif(rx.vorrangig_einheiten,0),rx.anzahl_einheiten,0);
+      UPDATE public.prescription_sessions SET ergaenzend_erbracht=true
+        WHERE id IN (SELECT id FROM public.prescription_sessions
+          WHERE prescription_id=rx.id AND booking_id=termin.id AND status='done' AND NOT ergaenzend_erbracht
+          ORDER BY session_number LIMIT greatest(0,max_ergaenzend-weitere));
+    END IF;
+
+    items := CASE WHEN jsonb_typeof(rx.heilmittel_items) = 'array' THEN rx.heilmittel_items ELSE '[]'::jsonb END;
+    IF EXISTS (SELECT FROM jsonb_array_elements(items) it WHERE it->>'einheiten' IS NOT NULL) THEN
+      SELECT sum(ceil((it->>'einheiten')::numeric / CASE WHEN it->>'doppelbehandlung'='true' THEN 2 ELSE 1 END))
+        INTO weitere FROM jsonb_array_elements(items) it WHERE it->>'einheiten' ~ '^[0-9]+$';
+    ELSE
+      weitere := ceil(rx.anzahl_einheiten::numeric / CASE WHEN rx.doppelbehandlung THEN 2 ELSE 1 END);
+    END IF;
+    faellig := offen=0 AND erbracht >= coalesce(weitere,0);
+    soll_beginn := CASE WHEN rx.therapie_bereich='physio' THEN least(rx.behandlungsbeginn,beginn) ELSE rx.behandlungsbeginn END;
+    soll_status := CASE WHEN rx.status IN ('confirmed','in_therapy') THEN CASE WHEN faellig THEN 'completed' ELSE 'in_therapy' END ELSE rx.status END;
+    soll_abrechnung := CASE WHEN faellig AND rx.abrechnung_status IS NULL AND rx.abrechnung_status_manuell_am IS NULL THEN 'bereit' ELSE rx.abrechnung_status END;
+    IF (soll_beginn,soll_status,soll_abrechnung) IS DISTINCT FROM (rx.behandlungsbeginn,rx.status,rx.abrechnung_status) THEN
+      UPDATE public.prescriptions SET behandlungsbeginn=soll_beginn, status=soll_status, abrechnung_status=soll_abrechnung WHERE id=rx.id;
+      IF NOT FOUND THEN RAISE EXCEPTION USING ERRCODE='PT409', MESSAGE='VERORDNUNG_FEHLT'; END IF;
+    END IF;
+    verarbeitet := array_append(verarbeitet,rx.id);
+  END LOOP;
+
+  IF termin.status <> 'completed' OR (termin.hausbesuch AND termin.fahrt_status='fahrt_arrived') THEN
+    UPDATE public.bookings SET status='completed',
+      fahrt_status=CASE WHEN hausbesuch AND fahrt_status='fahrt_arrived' THEN 'fahrt_return_pending' ELSE fahrt_status END
+      WHERE id=termin.id;
+    IF NOT FOUND THEN RAISE EXCEPTION USING ERRCODE='PT409', MESSAGE='TERMIN_GEAENDERT'; END IF;
+  END IF;
+  RETURN verarbeitet;
+END;
+$function$
+;
+ALTER FUNCTION public.sitzung_abschliessen(p_booking_id uuid, p_startzeit timestamp with time zone, p_notiz text) OWNER TO postgres;
+
 CREATE OR REPLACE FUNCTION public.sperre_clientschreibzugriff()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -7346,6 +7562,7 @@ END;
 $function$
 ;
 ALTER FUNCTION public.warteliste_referenzen_pruefen() OWNER TO postgres;
+COMMENT ON FUNCTION public.warteliste_referenzen_pruefen() IS 'Teil 1 Rechnungsrechte: lead/service/booking der Warteliste müssen zum Mandanten der Zeile gehören (FK ignoriert RLS).';
 
 CREATE OR REPLACE FUNCTION public.whoami()
  RETURNS jsonb
@@ -7518,6 +7735,8 @@ CREATE TRIGGER codex_192_booking_after_cancel AFTER UPDATE OF status ON bookings
 
 CREATE TRIGGER codex_192_booking_before_write BEFORE INSERT OR UPDATE ON bookings FOR EACH ROW EXECUTE FUNCTION codex_192_booking_before_write();
 
+CREATE TRIGGER physio_beginn_nach_terminabschluss AFTER UPDATE OF status ON bookings FOR EACH ROW WHEN (new.status = 'completed'::text AND old.status IS DISTINCT FROM new.status) EXECUTE FUNCTION physio_beginn_nach_terminabschluss();
+
 CREATE TRIGGER physio_v1_no_truncate BEFORE TRUNCATE ON bookings FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_no_truncate();
 
 CREATE TRIGGER physio_v1_source BEFORE INSERT OR DELETE OR UPDATE ON bookings FOR EACH ROW EXECUTE FUNCTION physio_v1_tenant_guard();
@@ -7618,6 +7837,8 @@ CREATE TRIGGER trg_sync_leads_location BEFORE INSERT OR UPDATE OF lat, lng ON le
 
 CREATE TRIGGER trg_set_mahnung_nr BEFORE INSERT ON mahnungen FOR EACH ROW WHEN (new.mahnung_nr IS NULL OR new.mahnung_nr = 0) EXECUTE FUNCTION set_next_mahnung_nr();
 
+CREATE TRIGGER messreihen_eingabe_check BEFORE INSERT OR UPDATE OF typ, wert, einheit, koerperteil ON messreihen FOR EACH ROW EXECUTE FUNCTION messreihe_eingabe_pruefen();
+
 CREATE TRIGGER trg_zz_messreihen_befund BEFORE INSERT OR UPDATE OF befund_id, owner_id, lead_id ON messreihen FOR EACH ROW EXECUTE FUNCTION messreihen_befund_mandant_pruefen();
 
 CREATE TRIGGER mitarbeiter_anstellung_updated_at BEFORE UPDATE ON mitarbeiter_anstellung FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
@@ -7682,6 +7903,8 @@ CREATE TRIGGER physio_v1_source BEFORE INSERT OR DELETE OR UPDATE ON prescriptio
 
 CREATE TRIGGER physio_v1_source_statement BEFORE INSERT OR DELETE OR UPDATE ON prescription_sessions FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_tenant_statement_guard();
 
+CREATE TRIGGER physio_sitzungsplan_nach_bestaetigung AFTER INSERT OR UPDATE OF status ON prescriptions FOR EACH ROW WHEN (new.therapie_bereich = 'physio'::text AND (new.status = ANY (ARRAY['confirmed'::text, 'in_therapy'::text]))) EXECUTE FUNCTION physio_sitzungsplan_nach_bestaetigung();
+
 CREATE TRIGGER physio_v1_no_truncate BEFORE TRUNCATE ON prescriptions FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_no_truncate();
 
 CREATE TRIGGER physio_v1_source BEFORE INSERT OR DELETE OR UPDATE ON prescriptions FOR EACH ROW EXECUTE FUNCTION physio_v1_tenant_guard();
@@ -7720,9 +7943,9 @@ CREATE TRIGGER trg_sync_profiles_clinic_location BEFORE INSERT OR UPDATE OF clin
 
 CREATE TRIGGER trg_prevent_rechnung_zahlungen_mod BEFORE DELETE OR UPDATE ON rechnung_zahlungen FOR EACH ROW EXECUTE FUNCTION prevent_rechnung_zahlungen_mod();
 
-CREATE TRIGGER trg_rechnung_zahlung_storno_referenz BEFORE INSERT ON rechnung_zahlungen FOR EACH ROW EXECUTE FUNCTION rechnung_zahlung_storno_referenz_pruefen();
-
 CREATE TRIGGER trg_pruefe_rechnung_zahlung_owner BEFORE INSERT ON rechnung_zahlungen FOR EACH ROW EXECUTE FUNCTION pruefe_rechnung_zahlung_owner();
+
+CREATE TRIGGER trg_rechnung_zahlung_storno_referenz BEFORE INSERT ON rechnung_zahlungen FOR EACH ROW EXECUTE FUNCTION rechnung_zahlung_storno_referenz_pruefen();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON referral_drafts FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
@@ -7772,9 +7995,9 @@ CREATE TRIGGER set_timestamp_vehicles BEFORE UPDATE ON vehicles FOR EACH ROW EXE
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON vehicles FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
-CREATE TRIGGER trg_warteliste_updated_at BEFORE UPDATE ON warteliste FOR EACH ROW EXECUTE FUNCTION set_warteliste_updated_at();
-
 CREATE TRIGGER trg_warteliste_referenzen BEFORE INSERT OR UPDATE OF lead_id, service_id, matched_booking_id ON warteliste FOR EACH ROW EXECUTE FUNCTION warteliste_referenzen_pruefen();
+
+CREATE TRIGGER trg_warteliste_updated_at BEFORE UPDATE ON warteliste FOR EACH ROW EXECUTE FUNCTION set_warteliste_updated_at();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON working_hours FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
@@ -11394,6 +11617,11 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=longtransactionsenabled() column=- grantee=PUBLIC privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=longtransactionsenabled() column=- grantee=service_role privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=longtransactionsenabled() column=- grantee=supabase_admin privilege=EXECUTE grantor=supabase_admin grantable=NO
+-- ACL: type=FUNCTION schema=public object=messreihe_eingabe_pruefen() column=- grantee=anon privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=messreihe_eingabe_pruefen() column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=messreihe_eingabe_pruefen() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=messreihe_eingabe_pruefen() column=- grantee=PUBLIC privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=messreihe_eingabe_pruefen() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=messreihen_befund_mandant_pruefen() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=messreihen_befund_mandant_pruefen() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=mitarbeiter_zuordnen(p_owner uuid, p_mitarbeiter uuid, p_limit  column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
@@ -11687,6 +11915,19 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=physio_befunde_unveraenderlich() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=physio_befunde_versionieren() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=physio_befunde_versionieren() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_beginn_nach_terminabschluss() column=- grantee=anon privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_beginn_nach_terminabschluss() column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_beginn_nach_terminabschluss() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_beginn_nach_terminabschluss() column=- grantee=PUBLIC privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_beginn_nach_terminabschluss() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_sitzungsplan_initialisieren(p_id uuid) column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_sitzungsplan_initialisieren(p_id uuid) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_sitzungsplan_initialisieren(p_id uuid) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_sitzungsplan_nach_bestaetigung() column=- grantee=anon privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_sitzungsplan_nach_bestaetigung() column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_sitzungsplan_nach_bestaetigung() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_sitzungsplan_nach_bestaetigung() column=- grantee=PUBLIC privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_sitzungsplan_nach_bestaetigung() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=physio_storage_readable(p_path text) column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=physio_storage_readable(p_path text) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=physio_v1_catalog_guard() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
@@ -12058,6 +12299,9 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=similarity(text, text) column=- grantee=PUBLIC privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=similarity(text, text) column=- grantee=service_role privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=similarity(text, text) column=- grantee=supabase_admin privilege=EXECUTE grantor=supabase_admin grantable=NO
+-- ACL: type=FUNCTION schema=public object=sitzung_abschliessen(p_booking_id uuid, p_startzeit timestamp w column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=sitzung_abschliessen(p_booking_id uuid, p_startzeit timestamp w column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=sitzung_abschliessen(p_booking_id uuid, p_startzeit timestamp w column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=sperre_clientschreibzugriff() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=sperre_clientschreibzugriff() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=spheroid_in(cstring) column=- grantee=anon privilege=EXECUTE grantor=supabase_admin grantable=NO

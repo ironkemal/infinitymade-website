@@ -3,9 +3,9 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261111121954 0121_rechnungen_modulrecht
--- EXPORTED AT:        2026-11-10T15:39:37Z (gezielt fortgeschrieben 2026-11-10: 0119, nur SCHEMA-RLS betroffen)
--- ERZEUGT AM:         2026-11-10
+-- LAST MIGRATION:     20261120212231 praxura_0124_bis_0129_physio_qa
+-- EXPORTED AT:        2026-11-20T21:23:54.185529Z
+-- ERZEUGT AM:         2026-11-20
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
@@ -14,8 +14,8 @@
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        197
---   functions:           151
---   triggers:            180
+--   functions:           159
+--   triggers:            185
 --   indexes:             380
 --   auth_triggers:       1
 --   publication_tables:  8
@@ -4095,6 +4095,9 @@ ALTER TABLE ONLY public.time_offs
 
 ALTER TABLE ONLY public.time_offs
   ADD CONSTRAINT time_offs_type_check CHECK (type = ANY (ARRAY['urlaub'::text, 'krank'::text, 'frei'::text, 'elternzeit'::text]));
+
+ALTER TABLE ONLY public.time_offs
+  ADD CONSTRAINT time_offs_zeitraum CHECK (end_date >= start_date) NOT VALID;
 
 CREATE TABLE public.trip_history (
   id uuid DEFAULT gen_random_uuid() NOT NULL,
