@@ -1,3 +1,4 @@
+-- SaaS: ausstehend (Freigabe erforderlich). Lokal versioniert und geprüft.
 -- Neue Messwerte und Änderungen der Messangaben prüfen. Ein technisches
 -- UPDATE, etwa ein FK mit ON DELETE SET NULL, darf Altwerte behalten.
 CREATE FUNCTION public.messreihe_eingabe_pruefen()

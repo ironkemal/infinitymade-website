@@ -1,3 +1,4 @@
+-- SaaS: ausstehend (Freigabe erforderlich). Lokal versioniert und geprüft.
 -- Prüft neue und geänderte Einträge. Historische Einträge bleiben erhalten.
 DO $$
 BEGIN

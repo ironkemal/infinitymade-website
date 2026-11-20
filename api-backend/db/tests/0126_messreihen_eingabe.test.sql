@@ -12,7 +12,7 @@ CREATE TABLE public.messreihen (
 );
 INSERT INTO public.physio_befunde VALUES (1);
 INSERT INTO public.messreihen VALUES ('Chrome1911-Alt', 'VAS', 15, 'Punkte', NULL, 1);
-\ir ../../../db/entwuerfe/0126_messreihen_eingabe.sql
+\ir ../migrations/0126_messreihen_eingabe.sql
 
 DELETE FROM public.physio_befunde WHERE id = 1;
 DO $$

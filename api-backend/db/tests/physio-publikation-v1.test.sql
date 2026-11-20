@@ -52,9 +52,11 @@ INSERT INTO public.terapeut_zertifikat(owner_id,ik_nummer) VALUES('11111111-1111
 INSERT INTO public.leads(id,owner_id,title) VALUES('33333333-3333-4333-8333-333333333333','11111111-1111-4111-8111-111111111111','SYNTHETIC');
 INSERT INTO public.prescriptions(id,owner_id,patient_id,status,rezeptart,rezept_typ,therapie_bereich,kostentraeger_ik,krankenkasse_ik,heilmittel_position,anzahl_einheiten)
  VALUES('44444444-4444-4444-8444-444444444444','11111111-1111-4111-8111-111111111111','33333333-3333-4333-8333-333333333333',
- 'confirmed','kassen','standard','physio','100000001','100000001','X0501',1);
+ 'parsed','kassen','standard','physio','100000001','100000001','X0501',1);
 INSERT INTO public.prescription_sessions(id,prescription_id,session_number,status,done_at)
  VALUES('55555555-5555-4555-8555-555555555555','44444444-4444-4444-8444-444444444444',1,'done','2026-11-01 10:00Z');
+-- Der feste Schlüssel gehört zum Abrechnungsfixture. 0124 belässt vorhandene Sitzungen beim Bestätigen.
+UPDATE public.prescriptions SET status='confirmed' WHERE id='44444444-4444-4444-8444-444444444444';
 CREATE TEMP TABLE physio_ctx(k text PRIMARY KEY,v jsonb);
 GRANT ALL ON physio_ctx TO service_role,authenticated;
 INSERT INTO physio_ctx VALUES('payload','{"vkz":"01","bereich":"physio","prescription_ids":["44444444-4444-4444-8444-444444444444"],"session_ids":["55555555-5555-4555-8555-555555555555"],"kostentraeger_ik":"100000001","empfaenger_ik":"100000003"}');
@@ -280,9 +282,10 @@ ROLLBACK;
 \if :{?physio_concurrency}
 CREATE EXTENSION dblink;
 INSERT INTO public.prescriptions(id,owner_id,patient_id,status,rezeptart,rezept_typ,therapie_bereich,kostentraeger_ik,krankenkasse_ik,heilmittel_position,anzahl_einheiten)
- VALUES('64444444-4444-4444-8444-444444444444','11111111-1111-4111-8111-111111111111','33333333-3333-4333-8333-333333333333','confirmed','kassen','standard','physio','100000001','100000001','X0501',1);
+ VALUES('64444444-4444-4444-8444-444444444444','11111111-1111-4111-8111-111111111111','33333333-3333-4333-8333-333333333333','parsed','kassen','standard','physio','100000001','100000001','X0501',1);
 INSERT INTO public.prescription_sessions(id,prescription_id,session_number,status,done_at)
  VALUES('65555555-5555-4555-8555-555555555555','64444444-4444-4444-8444-444444444444',1,'done','2026-11-01 10:00Z');
+UPDATE public.prescriptions SET status='confirmed' WHERE id='64444444-4444-4444-8444-444444444444';
 CREATE TABLE public.qa_physio_jobs(i integer PRIMARY KEY,payload jsonb,reserved jsonb,package jsonb,manifest jsonb);
 GRANT SELECT ON public.qa_physio_jobs TO service_role;
 INSERT INTO public.qa_physio_jobs(i,payload,package)

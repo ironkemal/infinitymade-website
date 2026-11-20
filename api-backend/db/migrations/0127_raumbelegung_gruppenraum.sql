@@ -1,3 +1,4 @@
+-- SaaS: ausstehend (Freigabe erforderlich). Lokal versioniert und geprüft.
 -- Kapazitätsprüfung für manuelle und automatische Raumwahl. Keine Bestandsänderung.
 CREATE OR REPLACE FUNCTION public.booking_raum_automatisch()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public
@@ -67,10 +68,17 @@ BEGIN
   IF NOT automatisch THEN
     NEW.room_automatisch := false;
     IF NEW.status IN ('cancelled','no_show') OR (TG_OP = 'UPDATE' AND OLD.group_parent_id IS NULL
-       AND OLD.status NOT IN ('cancelled','no_show') AND OLD.room_id IS NOT DISTINCT FROM NEW.room_id
+       AND OLD.status NOT IN ('cancelled','no_show') AND OLD.owner_id IS NOT DISTINCT FROM NEW.owner_id
+       AND OLD.room_id IS NOT DISTINCT FROM NEW.room_id
        AND OLD.service_id IS NOT DISTINCT FROM NEW.service_id AND OLD.raum_service_ids IS NOT DISTINCT FROM NEW.raum_service_ids
        AND OLD.business_id IS NOT DISTINCT FROM NEW.business_id AND OLD.start_time IS NOT DISTINCT FROM NEW.start_time AND OLD.end_time IS NOT DISTINCT FROM NEW.end_time)
     THEN RETURN NEW; END IF;
+    IF NOT EXISTS (
+      SELECT 1 FROM public.rooms r WHERE r.id = NEW.room_id AND r.owner_id = NEW.owner_id
+        AND r.business_id IS NOT DISTINCT FROM NEW.business_id
+    ) THEN
+      RAISE EXCEPTION 'Raum gehört nicht zu diesem Mandanten oder Standort.' USING ERRCODE = '23514';
+    END IF;
   ELSE
     NEW.room_id := NULL;
     NEW.room_automatisch := false;
@@ -104,3 +112,9 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+
+-- Die Ausführung bleibt dem Trigger und der Backend-Rolle vorbehalten.
+REVOKE EXECUTE ON FUNCTION public.booking_raum_automatisch() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.booking_raum_automatisch() FROM anon;
+REVOKE EXECUTE ON FUNCTION public.booking_raum_automatisch() FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.booking_raum_automatisch() TO service_role;

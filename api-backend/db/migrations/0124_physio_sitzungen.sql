@@ -1,3 +1,4 @@
+-- SaaS: ausstehend (Freigabe erforderlich). Lokal versioniert und geprüft.
 -- Entwürfe bleiben ohne buchbare Einheiten. Beim Bestätigen entsteht der
 -- erste Sitzungsplan in derselben Transaktion, auch ohne Browser-Nacharbeit.
 CREATE FUNCTION public.physio_sitzungsplan_initialisieren(p_id uuid)

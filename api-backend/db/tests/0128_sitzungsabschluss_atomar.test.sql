@@ -1,8 +1,8 @@
 -- Nur in einer leeren Testdatenbank. Alle Änderungen liegen in einer Transaktion.
 \set ON_ERROR_STOP on
 BEGIN;
-CREATE ROLE anon;
-CREATE ROLE authenticated;
+DO $$ BEGIN CREATE ROLE anon; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE ROLE authenticated; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 CREATE SCHEMA auth;
 CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$ SELECT '19111111-1111-4111-8111-111111111111'::uuid $$;
 CREATE FUNCTION public.auth_tenant_id() RETURNS uuid LANGUAGE sql AS $$ SELECT auth.uid() $$;
@@ -15,7 +15,7 @@ CREATE TABLE public.prescriptions(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   abrechnung_status text, abrechnung_status_manuell_am timestamptz);
 CREATE TABLE public.prescription_sessions(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), prescription_id uuid REFERENCES public.prescriptions,
   booking_id uuid REFERENCES public.bookings, session_number integer, status text DEFAULT 'planned', done_at timestamptz, notes text, ergaenzend_erbracht boolean DEFAULT false);
-\ir ../../../db/entwuerfe/0128_sitzungsabschluss_atomar.sql
+\ir ../migrations/0128_sitzungsabschluss_atomar.sql
 CREATE FUNCTION public.chrome1911_fehler() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
   IF current_setting('chrome1911.schreibfehler',true)='ja' THEN RAISE EXCEPTION USING ERRCODE='CH191',MESSAGE='Chrome1911 Schreibfehler'; END IF;

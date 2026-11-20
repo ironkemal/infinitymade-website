@@ -1,15 +1,15 @@
 -- Nur in einer leeren lokalen Testdatenbank mit psql -f ausführen.
 \set ON_ERROR_STOP on
 BEGIN;
-CREATE ROLE anon;
-CREATE ROLE authenticated;
-CREATE ROLE service_role;
+DO $$ BEGIN CREATE ROLE anon; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE ROLE authenticated; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE ROLE service_role; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 CREATE TABLE public.prescriptions(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), therapie_bereich text DEFAULT 'physio', status text, abrechnung_status text, abrechnung_id uuid, belegnummer text, heilmittel_items jsonb, anzahl_einheiten integer, doppelbehandlung boolean, behandlungsbeginn date);
 CREATE TABLE public.bookings(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), status text);
 CREATE TABLE public.prescription_sessions(prescription_id uuid REFERENCES public.prescriptions, session_number integer, heilmittel_index integer, status text DEFAULT 'planned', booking_id uuid REFERENCES public.bookings, done_at timestamptz, UNIQUE(prescription_id,session_number));
 -- Altbestand vor der Migration
 INSERT INTO public.prescriptions(status,anzahl_einheiten) VALUES ('confirmed',4),('billed',8),('parsed',2);
-\ir ../../../db/entwuerfe/0124_physio_sitzungen.sql
+\ir ../migrations/0124_physio_sitzungen.sql
 \ir ../physio-sitzungen-nachziehen.sql
 \ir ../physio-sitzungen-nachziehen.sql
 DO $$

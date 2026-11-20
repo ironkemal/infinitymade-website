@@ -1,4 +1,5 @@
--- Lokaler Entwurf. Ausführung nach 0124, gemeinsam mit der neuen Abschlussroute.
+-- SaaS: ausstehend (Freigabe erforderlich). Lokal versioniert und geprüft.
+-- Setzt 0124 voraus und stellt die Transaktion für die Abschlussroute bereit.
 CREATE FUNCTION public.sitzung_abschliessen(p_booking_id uuid, p_startzeit timestamptz, p_notiz text)
 RETURNS uuid[] LANGUAGE plpgsql SECURITY INVOKER SET search_path = '' AS $$
 DECLARE
