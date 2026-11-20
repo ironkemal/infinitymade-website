@@ -196,6 +196,16 @@ test('blockiert Verordnungs-Entwurf, Podologie-Bereich, Fremdmandant und bereits
   }
 });
 
+test('Chrome1911: Termin ohne zugeordnete Einheit bleibt offen', async () => {
+  const { sb, state } = baueStub({ termin: standardTermin() });
+  const handler = createSitzungsabschluss({ clientFuerToken: () => sb, jetzt: () => JETZT });
+  const res = await rufeAuf(handler);
+  assert.equal(res.status, 409);
+  assert.match(res.body.error, /offene Einheit/);
+  assert.equal(state.termin.status, 'confirmed');
+  assert.deepEqual(state.bookingUpdates, []);
+});
+
 test('schließt Physio-Kombi-Termin mit Notiz ab und setzt Leistungsdatum auf Terminbeginn', async () => {
   const { sb, state } = baueStub({
     termin: standardTermin(),

@@ -3005,6 +3005,8 @@ async function renderBkActionFahrtState(booking, isOwn) {
   const fahrtEndGroup = document.getElementById('bkActionFahrtEndGroup');
   const doneGroup = document.getElementById('bkActionDoneGroup');
 
+  document.getElementById('bkActionStartBtn').textContent = terminIstPodo(booking, getSector())
+    ? 'Behandlung dokumentieren' : 'Sitzung abschließen';
   // Reset
   hbInfo.hidden = true;
   fahrtStartGroup.hidden = true;
@@ -3377,9 +3379,9 @@ async function handleTerminStarten() {
   sitzungsabschlussLaeuft = true;
   try {
     const notiz = b.hausbesuch ? '' : await showInputModal({
-      title: 'Sitzungsnotiz (optional)', message: 'Kurze Notiz zur Sitzung:',
+      title: 'Sitzung abschließen', message: 'Sitzungsnotiz (optional). Beim Abschließen wird die zugeordnete Einheit als erbracht gezählt.',
       inputPlaceholder: 'z. B. Fortschritt, Beobachtungen, nächste Schritte…',
-      confirmText: 'Sitzung abschließen', cancelText: 'Ohne Notiz', cancelValue: '',
+      confirmText: 'Sitzung abschließen', cancelText: 'Abbrechen',
     });
     if (notiz === null) return;
     const { data: { session } } = await supabase.auth.getSession();
@@ -3420,32 +3422,22 @@ async function handleTerminStarten() {
   }
   closeBkActionPanel();
 
-  // Erste Sitzung → Anamnese, sonst Notizen. Die Zahl kam bis hierher aus dem
-  // Text eines Anzeigefeldes im Panel; das Feld gibt es nicht mehr, gerechnet
-  // wird jetzt direkt.
-  const sessionNum = (await calculateSessionInfo(patientName, patientPhone, b.id, ownerId))?.current || 1;
-
-  let leadId = null;
-  if (patientName) {
-    const cleanName = parseNameMitGeburt(patientName).name.toLowerCase();
-    const { data: leads } = await bizScope(supabase.from('leads')
-      .select('id,first_name,last_name,title,phone,metadata')
-      .eq('owner_id', ownerId), 'patients');
-    if (leads && leads.length > 0) {
-      const lead = leads.find(l => {
-        const composed = [l.first_name, l.last_name].filter(Boolean).join(' ').toLowerCase();
-        const titleLc = (l.title || '').toLowerCase();
-        return composed === cleanName || titleLc === cleanName;
-      }) || (patientPhone ? leads.find(l => l.phone === patientPhone) : null);
-      if (lead) leadId = lead.id;
+  try {
+    const leadId = await findeLeadIdZuTermin(supabase, b, ownerId, { leads: leadsCache });
+    if (!leadId) {
+      showToast('Sitzung gespeichert. Die Patientenakte konnte nicht zugeordnet werden.', 'warning');
+      return;
     }
-  }
-
-  if (sessionNum === 1) {
-    oeffneAnamneseFuer(leadId);
-  } else {
-    prefillNotesPatientId = leadId;
-    switchPanel('notizen');
+    const info = await calculateSessionInfo(patientName, patientPhone, b.id, ownerId);
+    if (info?.current === 1) {
+      showToast('Erste Sitzung abgeschlossen. Die Anamnese für diesen Patienten wird geöffnet.');
+      oeffneAnamneseFuer(leadId);
+    } else {
+      prefillNotesPatientId = leadId;
+      switchPanel('notizen');
+    }
+  } catch {
+    showToast('Sitzung gespeichert. Bitte die Dokumentation in der Patientenakte öffnen.', 'warning');
   }
 }
 

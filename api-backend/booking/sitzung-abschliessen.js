@@ -47,6 +47,9 @@ export function createSitzungsabschluss({ clientFuerToken, jetzt = Date.now }) {
       if (sitzungsFehler) throw sitzungsFehler;
       /** @type {any[]} */
       const sitzungen = sitzungenRoh || [];
+      if (!sitzungen.length) {
+        return res.status(409).json({ error: 'Diesem Termin ist keine Sitzung zugeordnet. Bitte den Termin bearbeiten und eine offene Einheit der bestätigten Verordnung auswählen.' });
+      }
       if (sitzungen.some(s => s.prescriptions?.owner_id !== tenantId)) {
         return res.status(409).json({ error: 'Die verknüpfte Verordnung konnte nicht geprüft werden.' });
       }
