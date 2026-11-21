@@ -1,8 +1,8 @@
 {
- "erzeugt": "2026-11-20",
+ "erzeugt": "2026-11-21",
  "quellen": {
-  "schema": "db/SCHEMA.sql (Stand 2026-11-20)",
-  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-11-20)",
+  "schema": "db/SCHEMA.sql (Stand 2026-11-21)",
+  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-11-21)",
   "register": "db/REGISTER.md"
  },
  "anzahl": 110,
@@ -830,7 +830,7 @@
     {
      "name": "init",
      "file": "dashboard.js",
-     "start": 13950,
+     "start": 13919,
      "module": [],
      "uiPfad": []
     },
@@ -938,7 +938,7 @@
     {
      "name": "neuerBkKanal",
      "file": "dashboard.js",
-     "start": 13999,
+     "start": 13968,
      "module": [],
      "uiPfad": []
     }
@@ -1090,7 +1090,7 @@
     {
      "name": "loadAerzte",
      "file": "dashboard.js",
-     "start": 12912,
+     "start": 12881,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1186,7 +1186,7 @@
     {
      "name": "deleteAerzte",
      "file": "dashboard.js",
-     "start": 12971,
+     "start": 12940,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1196,7 +1196,7 @@
     {
      "name": "editAerzte",
      "file": "dashboard.js",
-     "start": 12980,
+     "start": 12949,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1535,7 +1535,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2367,
+     "start": 2356,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1813,7 +1813,8 @@
    "erwaehnt": [
     "api-backend/attendance-report.test.js",
     "api-backend/dsgvo/klassifikation.js",
-    "api-backend/dsgvo/loeschen.js"
+    "api-backend/dsgvo/loeschen.js",
+    "tools/browser-probe/anwesenheit-probe.mjs"
    ],
    "register": true,
    "status": "aktiv",
@@ -1824,7 +1825,7 @@
     {
      "name": "fetchHistory",
      "file": "attendance.js",
-     "start": 91,
+     "start": 94,
      "module": [],
      "uiPfad": []
     }
@@ -2032,7 +2033,7 @@
     {
      "name": "loadB2B",
      "file": "dashboard.js",
-     "start": 9914,
+     "start": 9900,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2081,7 +2082,7 @@
     {
      "name": "renderB2B",
      "file": "dashboard.js",
-     "start": 9921,
+     "start": 9907,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2274,7 +2275,7 @@
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 6744,
+     "start": 6730,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2328,7 +2329,7 @@
     {
      "name": "storniereZuzahlung",
      "file": "dashboard.js",
-     "start": 5913,
+     "start": 5895,
      "module": [],
      "uiPfad": []
     }
@@ -2744,14 +2745,14 @@
     {
      "name": "ladeOwnerHandlungsbedarf",
      "file": "module/tageszentrale-ansicht.js",
-     "start": 196,
+     "start": 233,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "ladeUeberblickAnsicht",
      "file": "module/ueberblick-ansicht.js",
-     "start": 1187,
+     "start": 1233,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2798,61 +2799,14 @@
     {
      "name": "montiereTageszentrale",
      "file": "module/tageszentrale-ansicht.js",
-     "start": 75,
+     "start": 81,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "scope",
-     "file": "module/tageszentrale-ansicht.js",
-     "start": 204,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
-     ]
-    },
-    {
-     "name": "scope",
      "file": "module/ueberblick-ansicht.js",
-     "start": 1212,
+     "start": 1258,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3280,7 +3234,7 @@
     {
      "name": "calculateSessionInfo",
      "file": "dashboard.js",
-     "start": 2334,
+     "start": 2323,
      "module": [],
      "uiPfad": []
     },
@@ -4074,7 +4028,7 @@
     {
      "name": "ladeUeberblickAnsicht",
      "file": "module/ueberblick-ansicht.js",
-     "start": 1187,
+     "start": 1233,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4168,7 +4122,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1463,
+     "start": 1466,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4215,7 +4169,7 @@
     {
      "name": "loadEmpDaySchedule",
      "file": "dashboard.js",
-     "start": 9602,
+     "start": 9588,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4262,7 +4216,7 @@
     {
      "name": "loadLeads",
      "file": "dashboard.js",
-     "start": 6573,
+     "start": 6559,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4309,7 +4263,7 @@
     {
      "name": "loadScheduleBookings",
      "file": "dashboard.js",
-     "start": 1220,
+     "start": 1222,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4370,7 +4324,7 @@
     {
      "name": "montiereTageszentrale",
      "file": "module/tageszentrale-ansicht.js",
-     "start": 75,
+     "start": 81,
      "module": [],
      "uiPfad": []
     },
@@ -4835,14 +4789,14 @@
     {
      "name": "pruefeMorgenFallsAbend",
      "file": "module/tageszentrale-ansicht.js",
-     "start": 164,
+     "start": 200,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "raumAktionsTermin",
      "file": "module/raum-auswahl.js",
-     "start": 294,
+     "start": 297,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4896,7 +4850,7 @@
     {
      "name": "renderDayView",
      "file": "dashboard.js",
-     "start": 1842,
+     "start": 1831,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4943,7 +4897,7 @@
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1144,
+     "start": 1145,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5037,7 +4991,7 @@
     {
      "name": "renderOverviewMonthly",
      "file": "dashboard.js",
-     "start": 12170,
+     "start": 12156,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5084,7 +5038,7 @@
     {
      "name": "renderOverviewWeekly",
      "file": "dashboard.js",
-     "start": 12075,
+     "start": 12061,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5225,7 +5179,7 @@
     {
      "name": "scope",
      "file": "module/ueberblick-ansicht.js",
-     "start": 1212,
+     "start": 1258,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5669,7 +5623,7 @@
     {
      "name": "zeigeVerordnungenFuerTermin",
      "file": "module/termin-verordnung.js",
-     "start": 512,
+     "start": 563,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5788,7 +5742,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 2866,
+     "start": 2849,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5838,7 +5792,7 @@
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 3318,
+     "start": 3302,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5848,7 +5802,7 @@
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 3807,
+     "start": 3791,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5928,7 +5882,7 @@
     {
      "name": "loadGroupParticipants",
      "file": "dashboard.js",
-     "start": 3692,
+     "start": 3676,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6028,7 +5982,7 @@
     {
      "name": "markArrivedHandler",
      "file": "dashboard.js",
-     "start": 3184,
+     "start": 3168,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6058,7 +6012,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2367,
+     "start": 2356,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6108,7 +6062,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3228,
+     "start": 3212,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6118,7 +6072,7 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 3106,
+     "start": 3090,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6361,7 +6315,7 @@
     {
      "name": "loadEmpHours",
      "file": "dashboard.js",
-     "start": 9662,
+     "start": 9648,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6412,7 +6366,7 @@
     {
      "name": "renderHoursGrid",
      "file": "dashboard.js",
-     "start": 8496,
+     "start": 8482,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6523,6 +6477,7 @@
     "api-backend/dsgvo/klassifikation.js",
     "module/termin-rechtstexte.test.js",
     "tools/box-standort-abnahme.test.js",
+    "tools/browser-probe/anwesenheit-probe.mjs",
     "tools/browser-probe/redesign-fixture.js",
     "tools/check-anon-grants.mjs",
     "tools/check-anon-grants.test.js",
@@ -6537,14 +6492,14 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 13461,
+     "start": 13430,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "fetchBusinesses",
      "file": "attendance.js",
-     "start": 111,
+     "start": 114,
      "module": [],
      "uiPfad": []
     },
@@ -6707,7 +6662,7 @@
     {
      "name": "deleteBusiness",
      "file": "dashboard.js",
-     "start": 13808,
+     "start": 13777,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6787,7 +6742,7 @@
     {
      "name": "toggleStandortDay",
      "file": "dashboard.js",
-     "start": 8472,
+     "start": 8458,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6837,7 +6792,7 @@
     {
      "name": "wireBusinessModal",
      "file": "dashboard.js",
-     "start": 13725,
+     "start": 13694,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6937,7 +6892,7 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 9372,
+     "start": 9358,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6986,7 +6941,7 @@
     {
      "name": "loadSettings",
      "file": "dashboard.js",
-     "start": 10376,
+     "start": 10362,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7230,7 +7185,7 @@
     {
      "name": "renderHoursMiniCal",
      "file": "dashboard.js",
-     "start": 8589,
+     "start": 8575,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7376,7 +7331,7 @@
     {
      "name": "saveSpecialDays",
      "file": "dashboard.js",
-     "start": 8692,
+     "start": 8678,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7518,7 +7473,7 @@
     {
      "name": "loadDataSharing",
      "file": "dashboard.js",
-     "start": 13929,
+     "start": 13898,
      "module": [],
      "uiPfad": []
     }
@@ -7527,7 +7482,7 @@
     {
      "name": "saveDataSharing",
      "file": "dashboard.js",
-     "start": 13571,
+     "start": 13540,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7834,7 +7789,7 @@
     {
      "name": "loadVorlagenPanel",
      "file": "dashboard.js",
-     "start": 10641,
+     "start": 10627,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7881,7 +7836,7 @@
     {
      "name": "openVorlagenEdit",
      "file": "dashboard.js",
-     "start": 11084,
+     "start": 11070,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7930,7 +7885,7 @@
     {
      "name": "_enterAnsichtEditMode",
      "file": "dashboard.js",
-     "start": 11002,
+     "start": 10988,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7980,7 +7935,7 @@
     {
      "name": "commit",
      "file": "dashboard.js",
-     "start": 11234,
+     "start": 11220,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8030,7 +7985,7 @@
     {
      "name": "deleteVorlage",
      "file": "dashboard.js",
-     "start": 11202,
+     "start": 11188,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8080,7 +8035,7 @@
     {
      "name": "duplicateVorlage",
      "file": "dashboard.js",
-     "start": 11211,
+     "start": 11197,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8130,7 +8085,7 @@
     {
      "name": "openVorlagenAnsicht",
      "file": "dashboard.js",
-     "start": 10912,
+     "start": 10898,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8180,7 +8135,7 @@
     {
      "name": "saveVorlage",
      "file": "dashboard.js",
-     "start": 11172,
+     "start": 11158,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -8191,7 +8146,7 @@
     {
      "name": "seedDefaultVorlagen",
      "file": "dashboard.js",
-     "start": 11258,
+     "start": 11244,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -8251,7 +8206,7 @@
     {
      "name": "startVorlagenInlineRename",
      "file": "dashboard.js",
-     "start": 11227,
+     "start": 11213,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8422,7 +8377,7 @@
     {
      "name": "loadPatientDetailMails",
      "file": "dashboard.js",
-     "start": 7311,
+     "start": 7297,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8582,7 +8537,7 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 13461,
+     "start": 13430,
      "module": [],
      "uiPfad": []
     },
@@ -8610,7 +8565,7 @@
     {
      "name": "loadEmpPermissions",
      "file": "dashboard.js",
-     "start": 9176,
+     "start": 9162,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8657,7 +8612,7 @@
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 8795,
+     "start": 8781,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8784,7 +8739,7 @@
     {
      "name": "renderEmpStandortList",
      "file": "dashboard.js",
-     "start": 9218,
+     "start": 9204,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8835,7 +8790,7 @@
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 9071,
+     "start": 9057,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8885,7 +8840,7 @@
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 9319,
+     "start": 9305,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9007,7 +8962,7 @@
     {
      "name": "loadEmpPermissions",
      "file": "dashboard.js",
-     "start": 9176,
+     "start": 9162,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9054,7 +9009,7 @@
     {
      "name": "renderEmpStandortList",
      "file": "dashboard.js",
-     "start": 9218,
+     "start": 9204,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9101,7 +9056,7 @@
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 9071,
+     "start": 9057,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9227,7 +9182,7 @@
     {
      "name": "renderEmpPermGrid",
      "file": "dashboard.js",
-     "start": 9285,
+     "start": 9271,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9286,7 +9241,7 @@
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 9319,
+     "start": 9305,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9451,7 +9406,7 @@
     {
      "name": "openBookingFromRxPreset",
      "file": "dashboard.js",
-     "start": 14239,
+     "start": 14208,
      "module": [],
      "uiPfad": []
     }
@@ -9470,7 +9425,7 @@
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 9754,
+     "start": 9740,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9952,7 +9907,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1463,
+     "start": 1466,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9999,7 +9954,7 @@
     {
      "name": "loadFbFahrten",
      "file": "dashboard.js",
-     "start": 14914,
+     "start": 14881,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10048,7 +10003,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3228,
+     "start": 3212,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -10058,7 +10013,7 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 3106,
+     "start": 3090,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -10183,7 +10138,7 @@
     {
      "name": "loadFeedbacks",
      "file": "dashboard.js",
-     "start": 12344,
+     "start": 12313,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10298,7 +10253,7 @@
     {
      "name": "renderEmpPermGrid",
      "file": "dashboard.js",
-     "start": 9285,
+     "start": 9271,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10345,7 +10300,7 @@
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 9319,
+     "start": 9305,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10764,7 +10719,7 @@
     {
      "name": "ladeUeberblickAnsicht",
      "file": "module/ueberblick-ansicht.js",
-     "start": 1187,
+     "start": 1233,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10811,7 +10766,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1463,
+     "start": 1466,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10858,7 +10813,7 @@
     {
      "name": "loadPatientDetailRechnungen",
      "file": "dashboard.js",
-     "start": 7373,
+     "start": 7359,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10905,7 +10860,7 @@
     {
      "name": "loadRechnungen",
      "file": "dashboard.js",
-     "start": 12416,
+     "start": 12385,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11006,7 +10961,7 @@
     {
      "name": "scope",
      "file": "module/ueberblick-ansicht.js",
-     "start": 1212,
+     "start": 1258,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11202,7 +11157,7 @@
     {
      "name": "saveInvoice",
      "file": "dashboard.js",
-     "start": 12583,
+     "start": 12552,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -11404,7 +11359,7 @@
     {
      "name": "ladeKostentraegerNamen",
      "file": "dashboard.js",
-     "start": 14492,
+     "start": 14459,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11744,7 +11699,7 @@
     {
      "name": "loadKkList",
      "file": "dashboard.js",
-     "start": 14377,
+     "start": 14344,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12025,7 +11980,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 2866,
+     "start": 2849,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12079,7 +12034,7 @@
     {
      "name": "initBkCustomerAutocomplete",
      "file": "dashboard.js",
-     "start": 4021,
+     "start": 4005,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12126,7 +12081,7 @@
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 3807,
+     "start": 3791,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12173,7 +12128,7 @@
     {
      "name": "initCalRightPanel",
      "file": "dashboard.js",
-     "start": 2773,
+     "start": 2756,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12220,14 +12175,14 @@
     {
      "name": "initWlPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 16144,
+     "start": 16111,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "ladeAktiveVerordnungen",
      "file": "module/verordnung-uebersicht.js",
-     "start": 195,
+     "start": 253,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12570,7 +12525,7 @@
     {
      "name": "ladeUeberblickAnsicht",
      "file": "module/ueberblick-ansicht.js",
-     "start": 1187,
+     "start": 1233,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12812,7 +12767,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1463,
+     "start": 1466,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12906,7 +12861,7 @@
     {
      "name": "loadB2C",
      "file": "dashboard.js",
-     "start": 10004,
+     "start": 9990,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12953,7 +12908,7 @@
     {
      "name": "loadBkLeads",
      "file": "dashboard.js",
-     "start": 4031,
+     "start": 4015,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13000,7 +12955,7 @@
     {
      "name": "loadInvPatients",
      "file": "dashboard.js",
-     "start": 12445,
+     "start": 12414,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13047,7 +13002,7 @@
     {
      "name": "loadLeads",
      "file": "dashboard.js",
-     "start": 6573,
+     "start": 6559,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13094,7 +13049,7 @@
     {
      "name": "loadNotizen",
      "file": "dashboard.js",
-     "start": 11698,
+     "start": 11684,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13141,7 +13096,7 @@
     {
      "name": "loadPatientDetailMails",
      "file": "dashboard.js",
-     "start": 7311,
+     "start": 7297,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13350,7 +13305,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2367,
+     "start": 2356,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13397,7 +13352,7 @@
     {
      "name": "openBookingModal",
      "file": "dashboard.js",
-     "start": 3931,
+     "start": 3915,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13545,7 +13500,7 @@
     {
      "name": "renderBkActionFahrtState",
      "file": "dashboard.js",
-     "start": 2964,
+     "start": 2947,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13592,7 +13547,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3228,
+     "start": 3212,
      "module": [],
      "uiPfad": []
     },
@@ -13646,7 +13601,7 @@
     {
      "name": "scope",
      "file": "module/ueberblick-ansicht.js",
-     "start": 1212,
+     "start": 1258,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13776,7 +13731,7 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 3441,
+     "start": 3425,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -13836,7 +13791,7 @@
     {
      "name": "initSchnellerfassung",
      "file": "dashboard.js",
-     "start": 15855,
+     "start": 15822,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -13867,7 +13822,7 @@
     {
      "name": "maybeOfferAppointmentConfirmEmail",
      "file": "dashboard.js",
-     "start": 6088,
+     "start": 6074,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -14343,7 +14298,7 @@
     {
      "name": "refreshMessreihen",
      "file": "dashboard.js",
-     "start": 7103,
+     "start": 7089,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14443,7 +14398,7 @@
     {
      "name": "saveMessung",
      "file": "dashboard.js",
-     "start": 7227,
+     "start": 7213,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15997,7 +15952,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1463,
+     "start": 1466,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16044,7 +15999,7 @@
     {
      "name": "loadPatientDetailNotes",
      "file": "dashboard.js",
-     "start": 7286,
+     "start": 7272,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16091,7 +16046,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2367,
+     "start": 2356,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16267,6 +16222,8 @@
     "module/rezept-patientenfeld.js",
     "module/tageszentrale-ansicht.js",
     "module/ueberblick-ansicht.js",
+    "module/verordnung-fristen-laden.js",
+    "module/verordnung-fristen-laden.test.js",
     "tools/browser-probe/termin-anfrage-bis-liste-probe.mjs",
     "tools/funktionskarte-mcp.test.js",
     "tools/schema-dokumente.test.js"
@@ -16606,6 +16563,7 @@
     "module/rezeptinfo-geld.test.js",
     "module/startseite-handlungsbedarf-laden.js",
     "module/startseite-handlungsbedarf-laden.test.js",
+    "module/verordnung-uebersicht.test.js",
     "tools/browser-probe/billing-loader-503-probe.html",
     "tools/browser-probe/v602-handlungsbedarf.mjs"
    ],
@@ -16719,7 +16677,7 @@
     {
      "name": "ladeAktiveVerordnungen",
      "file": "module/verordnung-uebersicht.js",
-     "start": 195,
+     "start": 253,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17611,7 +17569,7 @@
     {
      "name": "ladeUeberblickAnsicht",
      "file": "module/ueberblick-ansicht.js",
-     "start": 1187,
+     "start": 1233,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17658,7 +17616,7 @@
     {
      "name": "scope",
      "file": "module/ueberblick-ansicht.js",
-     "start": 1212,
+     "start": 1258,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17707,7 +17665,7 @@
     {
      "name": "erledigeAufgabe",
      "file": "module/ueberblick-ansicht.js",
-     "start": 924,
+     "start": 970,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18240,6 +18198,7 @@
     "api-backend/dsgvo/loeschen.js",
     "api-backend/lib/therapiebericht.test.js",
     "module/booking-status-korrektur.test.js",
+    "module/serien-termine.test.js",
     "module/sitzung-bindung.test.js",
     "module/startseite-handlungsbedarf-laden.js",
     "module/startseite-handlungsbedarf-laden.test.js",
@@ -18256,7 +18215,7 @@
     {
      "name": "decorateBookingTitleWithSession",
      "file": "dashboard.js",
-     "start": 5983,
+     "start": 5965,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18357,7 +18316,7 @@
     {
      "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 4986,
+     "start": 4968,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18526,7 +18485,7 @@
     {
      "name": "waehleVerordnung",
      "file": "module/termin-verordnung.js",
-     "start": 185,
+     "start": 217,
      "module": [],
      "uiPfad": []
     },
@@ -18749,7 +18708,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 2866,
+     "start": 2849,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18809,7 +18768,7 @@
     {
      "name": "linkBookingsToPrescriptionSessions",
      "file": "dashboard.js",
-     "start": 5996,
+     "start": 5978,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -19135,6 +19094,20 @@
      "uiPfad": [
       "ortak yardımcı — 37 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "baueRxAbfrage",
+     "file": "module/verordnung-uebersicht.js",
+     "start": 297,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "baueVoAbfrage",
+     "file": "module/verordnung-uebersicht.js",
+     "start": 315,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "bereichFuerAbrechnung",
@@ -19517,7 +19490,7 @@
     {
      "name": "ladeAktiveVerordnungen",
      "file": "module/verordnung-uebersicht.js",
-     "start": 195,
+     "start": 253,
      "module": [
       "abrechnung",
       "anamnese",
@@ -19609,11 +19582,98 @@
      ]
     },
     {
-     "name": "ladeOwnerHandlungsbedarf",
-     "file": "module/tageszentrale-ansicht.js",
-     "start": 196,
-     "module": [],
-     "uiPfad": []
+     "name": "ladeOffeneVerordnungenPaginiert",
+     "file": "module/verordnung-fristen-laden.js",
+     "start": 33,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 37 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "ladePatientenEntwuerfe",
+     "file": "module/termin-verordnung.js",
+     "start": 540,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 37 modülden çağrılıyor"
+     ]
     },
     {
      "name": "ladeRx",
@@ -19679,54 +19739,7 @@
     {
      "name": "ladeTerminVerordnungen",
      "file": "module/termin-verordnung.js",
-     "start": 477,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
-     ]
-    },
-    {
-     "name": "ladeUeberblickAnsicht",
-     "file": "module/ueberblick-ansicht.js",
-     "start": 1187,
+     "start": 509,
      "module": [
       "abrechnung",
       "anamnese",
@@ -19961,14 +19974,14 @@
     {
      "name": "linkBookingsToPrescriptionSessions",
      "file": "dashboard.js",
-     "start": 5996,
+     "start": 5978,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 6744,
+     "start": 6730,
      "module": [
       "abrechnung",
       "anamnese",
@@ -20015,7 +20028,7 @@
     {
      "name": "loadPatRxTable",
      "file": "dashboard.js",
-     "start": 16739,
+     "start": 16706,
      "module": [
       "abrechnung",
       "anamnese",
@@ -20058,18 +20071,11 @@
      "uiPfad": [
       "ortak yardımcı — 37 modülden çağrılıyor"
      ]
-    },
-    {
-     "name": "loadPhysioRezKpis",
-     "file": "dashboard.js",
-     "start": 1616,
-     "module": [],
-     "uiPfad": []
     },
     {
      "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 4986,
+     "start": 4968,
      "module": [
       "abrechnung",
       "anamnese",
@@ -20112,13 +20118,6 @@
      "uiPfad": [
       "ortak yardımcı — 37 modülden çağrılıyor"
      ]
-    },
-    {
-     "name": "montiereTageszentrale",
-     "file": "module/tageszentrale-ansicht.js",
-     "start": 75,
-     "module": [],
-     "uiPfad": []
     },
     {
      "name": "oeffneFolgetermin",
@@ -20264,7 +20263,7 @@
     {
      "name": "oeffneZaaVerordnung",
      "file": "dashboard.js",
-     "start": 14613,
+     "start": 14580,
      "module": [],
      "uiPfad": []
     },
@@ -20318,7 +20317,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2367,
+     "start": 2356,
      "module": [
       "abrechnung",
       "anamnese",
@@ -20478,100 +20477,6 @@
      "uiPfad": []
     },
     {
-     "name": "scope",
-     "file": "module/tageszentrale-ansicht.js",
-     "start": 204,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
-     ]
-    },
-    {
-     "name": "scope",
-     "file": "module/ueberblick-ansicht.js",
-     "start": 1212,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
-     ]
-    },
-    {
      "name": "snapshotsMitGrund",
      "file": "module/rechnung-snapshot.js",
      "start": 33,
@@ -20675,7 +20580,7 @@
     {
      "name": "therapeutName",
      "file": "dashboard.js",
-     "start": 6364,
+     "start": 6350,
      "module": [],
      "uiPfad": []
     },
@@ -21003,7 +20908,7 @@
     {
      "name": "flipAbrechnungStatus",
      "file": "dashboard.js",
-     "start": 6965,
+     "start": 6951,
      "module": [
       "abrechnung",
       "anamnese",
@@ -21053,7 +20958,7 @@
     {
      "name": "kassiereZuzahlung",
      "file": "dashboard.js",
-     "start": 5838,
+     "start": 5820,
      "module": [
       "abrechnung",
       "anamnese",
@@ -21283,7 +21188,7 @@
     {
      "name": "storniereZuzahlung",
      "file": "dashboard.js",
-     "start": 5913,
+     "start": 5895,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -21293,7 +21198,7 @@
     {
      "name": "triggerStorno",
      "file": "dashboard.js",
-     "start": 15306,
+     "start": 15273,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -21438,15 +21343,14 @@
     "module/rezeptinfo-geld.js",
     "module/sitzung-bindung.js",
     "module/sitzungsfortschritt.js",
-    "module/tageszentrale-ansicht.js",
     "module/termin-aktionen.js",
     "module/termin-folge.js",
     "module/termin-leistungen.js",
     "module/termin-panel.js",
     "module/termin-verordnung.js",
-    "module/ueberblick-ansicht.js",
     "module/verordnung-detail.js",
     "module/verordnung-einheiten.js",
+    "module/verordnung-fristen-laden.js",
     "module/verordnung-import.js",
     "module/verordnung-termine.js",
     "module/verordnung-uebersicht.js",
@@ -21498,7 +21402,7 @@
   },
   {
    "name": "profiles",
-   "spalten": 92,
+   "spalten": 93,
    "fkRaus": [
     "auth.users",
     "profiles"
@@ -21530,6 +21434,7 @@
     "api-backend/lib/therapiebericht.test.js",
     "module/stempel.test.js",
     "module/terminerinnerung-einstellung.test.js",
+    "tools/browser-probe/anwesenheit-probe.mjs",
     "tools/browser-probe/mail-signatur-isoliert.mjs",
     "tools/browser-probe/redesign-fixture.js",
     "tools/browser-probe/terminerinnerung-probe.html",
@@ -21595,7 +21500,7 @@
     {
      "name": "fetchBusinesses",
      "file": "attendance.js",
-     "start": 111,
+     "start": 114,
      "module": [],
      "uiPfad": []
     },
@@ -21623,7 +21528,7 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 3441,
+     "start": 3425,
      "module": [],
      "uiPfad": []
     },
@@ -21691,7 +21596,7 @@
     {
      "name": "ladeAbwesenheitenUndTeam",
      "file": "module/ueberblick-ansicht.js",
-     "start": 1135,
+     "start": 1181,
      "module": [
       "abrechnung",
       "anamnese",
@@ -21918,7 +21823,7 @@
     {
      "name": "loadFahrtenbuchPanel",
      "file": "dashboard.js",
-     "start": 14862,
+     "start": 14829,
      "module": [
       "abrechnung",
       "anamnese",
@@ -21965,7 +21870,7 @@
     {
      "name": "loadFbFahrten",
      "file": "dashboard.js",
-     "start": 14914,
+     "start": 14881,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22012,7 +21917,7 @@
     {
      "name": "loadFbReports",
      "file": "dashboard.js",
-     "start": 15216,
+     "start": 15183,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22059,7 +21964,7 @@
     {
      "name": "loadHoursPanel",
      "file": "dashboard.js",
-     "start": 8387,
+     "start": 8373,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22113,7 +22018,7 @@
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 8795,
+     "start": 8781,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22242,7 +22147,7 @@
     {
      "name": "proceedToOwnerCheck",
      "file": "dashboard.js",
-     "start": 3474,
+     "start": 3458,
      "module": [],
      "uiPfad": []
     },
@@ -22263,7 +22168,7 @@
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 9071,
+     "start": 9057,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22399,7 +22304,7 @@
     {
      "name": "resolveAuth",
      "file": "api-backend/billing/api/statistik.routes.js",
-     "start": 25,
+     "start": 111,
      "module": [],
      "uiPfad": []
     },
@@ -22434,7 +22339,7 @@
     {
      "name": "saveEmployee",
      "file": "dashboard.js",
-     "start": 11874,
+     "start": 11860,
      "module": [],
      "uiPfad": []
     },
@@ -22686,7 +22591,7 @@
     {
      "name": "ensureBookingSlug",
      "file": "dashboard.js",
-     "start": 11488,
+     "start": 11474,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -22696,7 +22601,7 @@
     {
      "name": "ensureClinicLocation",
      "file": "dashboard.js",
-     "start": 4521,
+     "start": 4504,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -22706,7 +22611,7 @@
     {
      "name": "ensureCompanyCode",
      "file": "dashboard.js",
-     "start": 11471,
+     "start": 11457,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -22726,7 +22631,7 @@
     {
      "name": "initAnfragenPanel",
      "file": "dashboard.js",
-     "start": 17457,
+     "start": 17424,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22866,7 +22771,7 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 9372,
+     "start": 9358,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22916,7 +22821,7 @@
     {
      "name": "openStripePortal",
      "file": "dashboard.js",
-     "start": 1679,
+     "start": 1668,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -23856,7 +23761,7 @@
     {
      "name": "findMatchingServiceId",
      "file": "dashboard.js",
-     "start": 2854,
+     "start": 2837,
      "module": [
       "abrechnung",
       "anamnese",
@@ -23910,7 +23815,7 @@
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 9754,
+     "start": 9740,
      "module": [
       "abrechnung",
       "anamnese",
@@ -23964,7 +23869,7 @@
     {
      "name": "loadServices",
      "file": "dashboard.js",
-     "start": 7761,
+     "start": 7747,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24206,7 +24111,7 @@
     {
      "name": "updateBkDuration",
      "file": "dashboard.js",
-     "start": 4318,
+     "start": 4301,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24269,7 +24174,7 @@
     {
      "name": "autoSeedGkvServices",
      "file": "dashboard.js",
-     "start": 7782,
+     "start": 7768,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24319,7 +24224,7 @@
     {
      "name": "ensureBlankoBonusServices",
      "file": "dashboard.js",
-     "start": 6185,
+     "start": 6171,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -24330,7 +24235,7 @@
     {
      "name": "migratePodologieLegacyServices",
      "file": "dashboard.js",
-     "start": 7969,
+     "start": 7955,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24442,7 +24347,7 @@
     {
      "name": "renderServices",
      "file": "dashboard.js",
-     "start": 8158,
+     "start": 8144,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24504,7 +24409,7 @@
     {
      "name": "wireBusinessModal",
      "file": "dashboard.js",
-     "start": 13725,
+     "start": 13694,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -25153,7 +25058,7 @@
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 9754,
+     "start": 9740,
      "module": [
       "abrechnung",
       "anamnese",
@@ -25256,7 +25161,7 @@
     {
      "name": "loadEmpCertificates",
      "file": "dashboard.js",
-     "start": 9840,
+     "start": 9826,
      "module": [
       "abrechnung",
       "anamnese",
@@ -25483,7 +25388,7 @@
     {
      "name": "ladeAbwesenheitenUndTeam",
      "file": "module/ueberblick-ansicht.js",
-     "start": 1135,
+     "start": 1181,
      "module": [
       "abrechnung",
       "anamnese",
@@ -25577,7 +25482,7 @@
     {
      "name": "loadEmpDaySchedule",
      "file": "dashboard.js",
-     "start": 9602,
+     "start": 9588,
      "module": [
       "abrechnung",
       "anamnese",
@@ -25624,7 +25529,7 @@
     {
      "name": "loadEmpUrlaubSection",
      "file": "dashboard.js",
-     "start": 8987,
+     "start": 8973,
      "module": [
       "abrechnung",
       "anamnese",
@@ -25734,7 +25639,7 @@
     {
      "name": "deleteEmpTimeOff",
      "file": "dashboard.js",
-     "start": 9043,
+     "start": 9029,
      "module": [
       "abrechnung",
       "anamnese",
@@ -25784,7 +25689,7 @@
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 8795,
+     "start": 8781,
      "module": [
       "abrechnung",
       "anamnese",
@@ -25844,7 +25749,7 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 9372,
+     "start": 9358,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26017,7 +25922,7 @@
     {
      "name": "loadPatientDetailUeberweisung",
      "file": "dashboard.js",
-     "start": 7349,
+     "start": 7335,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26268,14 +26173,14 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 13461,
+     "start": 13430,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "bootScheduleViewToggle",
      "file": "dashboard.js",
-     "start": 11944,
+     "start": 11930,
      "module": [],
      "uiPfad": []
     }
@@ -26284,7 +26189,7 @@
     {
      "name": "saveUserPref",
      "file": "dashboard.js",
-     "start": 12023,
+     "start": 12009,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26334,7 +26239,7 @@
     {
      "name": "switchBusiness",
      "file": "dashboard.js",
-     "start": 13887,
+     "start": 13856,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -26413,21 +26318,21 @@
     {
      "name": "loadVehiclesForPicker",
      "file": "dashboard.js",
-     "start": 3066,
+     "start": 3050,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3228,
+     "start": 3212,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 3106,
+     "start": 3090,
      "module": [],
      "uiPfad": []
     }
@@ -26436,7 +26341,7 @@
     {
      "name": "loadFbVehicles",
      "file": "dashboard.js",
-     "start": 15058,
+     "start": 15025,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26486,7 +26391,7 @@
     {
      "name": "saveVehicleEditCore",
      "file": "dashboard.js",
-     "start": 15170,
+     "start": 15137,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -26571,14 +26476,14 @@
     {
      "name": "ladeOwnerHandlungsbedarf",
      "file": "module/tageszentrale-ansicht.js",
-     "start": 196,
+     "start": 233,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "ladeUeberblickAnsicht",
      "file": "module/ueberblick-ansicht.js",
-     "start": 1187,
+     "start": 1233,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26625,7 +26530,7 @@
     {
      "name": "loadWarteliste",
      "file": "dashboard.js",
-     "start": 16020,
+     "start": 15987,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26673,61 +26578,14 @@
     {
      "name": "montiereTageszentrale",
      "file": "module/tageszentrale-ansicht.js",
-     "start": 75,
+     "start": 81,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "scope",
-     "file": "module/tageszentrale-ansicht.js",
-     "start": 204,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
-     ]
-    },
-    {
-     "name": "scope",
      "file": "module/ueberblick-ansicht.js",
-     "start": 1212,
+     "start": 1258,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26776,7 +26634,7 @@
     {
      "name": "initWlModal",
      "file": "dashboard.js",
-     "start": 16178,
+     "start": 16145,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -27064,7 +26922,7 @@
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1144,
+     "start": 1145,
      "module": [
       "abrechnung",
       "anamnese",
@@ -27111,7 +26969,7 @@
     {
      "name": "renderHoursGrid",
      "file": "dashboard.js",
-     "start": 8496,
+     "start": 8482,
      "module": [
       "abrechnung",
       "anamnese",
@@ -27158,7 +27016,7 @@
     {
      "name": "renderHoursMiniCal",
      "file": "dashboard.js",
-     "start": 8589,
+     "start": 8575,
      "module": [
       "abrechnung",
       "anamnese",
@@ -27265,7 +27123,7 @@
     {
      "name": "loadEmpHours",
      "file": "dashboard.js",
-     "start": 9662,
+     "start": 9648,
      "module": [
       "abrechnung",
       "anamnese",
@@ -27528,7 +27386,7 @@
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 6744,
+     "start": 6730,
      "module": [
       "abrechnung",
       "anamnese",
@@ -27575,7 +27433,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2367,
+     "start": 2356,
      "module": [
       "abrechnung",
       "anamnese",
@@ -27675,7 +27533,7 @@
     {
      "name": "wireBefreiungCard",
      "file": "dashboard.js",
-     "start": 7035,
+     "start": 7021,
      "module": [
       "abrechnung",
       "anamnese",

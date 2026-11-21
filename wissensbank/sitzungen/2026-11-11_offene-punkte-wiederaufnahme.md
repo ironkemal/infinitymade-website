@@ -52,18 +52,17 @@ Herkunft: [[2026-11-19_physio-launch-stufe1-sitzung-auth-raeume-ueberblick]] (`b
 - Kemal: Box `L1–L7` und 4 Partnerfragen (`#13`, `#14`, `#1`, `#22`) laut `Physio/LAUNCH-P1.md`.
 - Stufe 2 / extern: AZE-Antwort auf `TSOL0101–0105` (Betreff `590537440`) abwarten; Entlassmanagement-Freigabe (`0112–0115`) + Tages-Zuzahlung (`#22`).
 
-## Nachtrag 20.–21.11.2026 — Migrationen 0124–0129, QA-Fixes F-01–F-13 & Verordnungsliste-Pagination
+## Nachtrag 20.–21.11.2026 — Migrationen 0105/0122/0124–0129, QA-Fixes F-01–F-13, N-1–N-3 & Verordnungsliste-Pagination
 
-Herkunft: `fortschritte/2026-11-20.md`, `fortschritte/2026-11-21.md`, [[2026-11-21_dashboard-ueberblick-qa-fixes]] (`6a61ac95` auf `origin/main` + lokale Pagination-Umstellung vom 21.11.). **Erledigt und nicht erneut öffnen:**
-- **Migrationen `0124`–`0129`** am 20.11.2026 live auf SaaS angewandt (`20261120212231 praxura_0124_bis_0129_physio_qa`), `db/SCHEMA.sql` & `db/SCHEMA-RLS.sql` exportiert.
+Herkunft: `fortschritte/2026-11-20.md`, `fortschritte/2026-11-21.md`, [[2026-11-21_dashboard-ueberblick-qa-fixes]]. **Erledigt und nicht erneut öffnen:**
+- **Migrationen `0124`–`0129`** am 20.11.2026 live auf SaaS angewandt (`20261120212231 praxura_0124_bis_0129_physio_qa`), **Migrationen `0105` + `0122`** am 21.11.2026 live auf SaaS angewandt (`20261121181746 0105_mail_signaturen`, `20261121181821 0122_diagnosegruppen_heilm_rl_bereinigen`, `1358660d`), `db/SCHEMA.sql`, `db/SCHEMA-RLS.sql`, `db/NUTZUNG.json` & `db/NUTZUNG.md` aktualisiert.
+- **Physio-Sitzungs-Nachlauf (`api-backend/db/physio-sitzungen-nachziehen.sql`):** Am 21.11.2026 mit Melih-GO live auf SaaS (`njvuclullotbksskpwgk`) ausgeführt (`5 → 0`, `ed05ce19`).
 - **Fach-/Produktentscheidungen (20.11.):** Gruppenraumregel per `0129` umgesetzt (1 Haupttermin je Raum, Gruppenteilnehmende teilen den Raum); GPS-Check-in entfernt & auf `attendance.html` blockiert; Zuweiser bleibt; Rechnungsvorgaben je Praxis zurückgestellt.
-- **Dashboard- & Überblick-QA-Fixes (`F-01`–`F-13` + `9.1`–`9.6`)** am 21.11. vollständig umgesetzt, lokal + Playwright verifiziert, gemergt (`629094db`) und gepusht (`6a61ac95`).
-- **Verordnungsliste & Kopfleisten-Suche Pagination (`module/verordnung-uebersicht.js`, `module/kopf-dokumente.js`):** Beide `prescriptions`-Töpfe von `.limit(200)` auf stabile Keyset-Pagination (`id ASC`, 200er-Seiten, bis 5000 je Topf) umgestellt; `podologie_behandlungen` in 100er-UUID-Blöcken + 500er-Keyset-Seiten geladen; lokal mit Unit-Tests, `typecheck` und Browser-Probes verifiziert (lokal committet auf `main`, Push nach GO).
+- **Dashboard- & Überblick-QA-Fixes (`F-01`–`F-13` + `9.1`–`9.6`, `N-1`–`N-3`):** Vollständig umgesetzt (`629094db`, `6a61ac95`, `f535b207`), Null-Schutz für `querySelectorAll` gehärtet (`f94606ab`). Live-Lesetest Teil 1 im QA-Mandanten „TEST-Physio QA“ bestanden (`F-01`–`F-12`, `9.3a/b`, `9.4a/b`, `9.5/9.6`, `F-13` bei `562 px` Hell/Dunkel, `0` Konsolen-/HTTP-Fehler).
+- **Verordnungsliste & Kopfleisten-Suche Pagination (`module/verordnung-uebersicht.js`, `module/kopf-dokumente.js`, `c16e9d02`):** Beide `prescriptions`-Töpfe auf stabile Keyset-Pagination (`id ASC`, 200er-Seiten, bis 5.000 je Topf) + `podologie_behandlungen` auf 100er-UUID-Blöcke & 500er-Keyset-Seiten umgestellt; am 21.11. live im QA-Mandanten bestätigt (`order=id.asc&limit=200`, `200 OK`, Datum absteigend, Muster-13-Öffnen, Fristen-Gleichstand `7 = 7`).
 
-**Verbleibend für Physio-Launch Stufe 1 (Stand 21.11.2026):**
-- **Push-GO:** Lokale Commits vom 21.11. (Verordnungsliste-Pagination + Doku-Abgleich) nach Melihs GO pushen.
-- ~~**Optionales DB-GO:** Einmal-Skript `api-backend/db/physio-sitzungen-nachziehen.sql`~~ — **Erledigt 21.11.2026 (Melih-GO):** `api-backend/db/physio-sitzungen-nachziehen.sql` live auf SaaS (`njvuclullotbksskpwgk`) ausgeführt — offene, unabgerechnete Physio-Verordnungen ohne Sitzungsplan: 5 → 0. Reiner Daten-Nachlauf, keine Schema-Änderung.
-- **Melih (Live-Abnahme):** Aktualisierte Checkliste `canli-test/2026-11-19-physio-launch-checkliste.md` (Blöcke A–D inkl. Live-Schreibtests Teil D & echte Smartphones iOS/Android).
+**Verbleibend für Physio-Launch Stufe 1 (Stand 21.11.2026 abends — kein Code/DB mehr offen):**
+- **Melih (Live-Schreibtests & Geräte):** Restpunkte aus `canli-test/2026-11-19-physio-launch-checkliste.md` — Block A (QA-Datenpflege Praxisanschrift/DATEV), Block B (Passwort, Google-OAuth, Kamera-Barcode, GPS-freies Check-in live), Block C (Feiertage/Sondertag, Räume/Gruppenraumregel, Mitarbeiter anlegen/F11/entfernen, Physio-Sitzung abschließen `0/6 → 1/6`), Block D Schreibtests (Termin anlegen/verschieben/stornieren, Praxis vs. Meine & Standortwechsel, Zuzahlung + Storno, Responsive/Dark Mode auf echten Zielbreiten `1440 / 768 / 390 / 320 px` inkl. echter iOS/Android-Geräte).
 - **Kemal:** Box `L1–L7` und 4 Partnerfragen (`#13`, `#14`, `#1`, `#22`) laut `Physio/LAUNCH-P1.md`.
 - **Stufe 2 / extern:** AZE-Antwort auf `TSOL0101–0105` (Betreff `590537440`) abwarten; Entlassmanagement-Freigabe (`0112–0115`) + Tages-Zuzahlung (`#22`).
 
