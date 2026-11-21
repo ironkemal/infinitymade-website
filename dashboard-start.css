@@ -1236,18 +1236,22 @@
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
-    flex-shrink: 0;
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 100%;
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-btn {
-    height: 36px;
-    padding: 0 13px;
+    min-height: 36px;
+    height: auto;
+    padding: 8px 13px;
     border-radius: 9px;
     border: 1px solid rgba(255, 255, 255, 0.24);
     background: transparent;
     color: var(--tz-hero-ink);
     font: inherit;
     font-size: 12.5px;
+    line-height: 1.4;
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
@@ -2035,6 +2039,20 @@
 
     :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-pulse {
       grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (max-width: 480px) {
+    :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-cta {
+      width: 100%;
+    }
+
+    :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-hero-btn {
+      flex: 1 1 auto;
+      min-height: 44px;
+      max-width: 100%;
+      white-space: normal;
+      text-align: center;
     }
   }
 }
