@@ -33,7 +33,7 @@
  * eine Abrechnung, die nie kommt.
  */
 
-import { abschlussSperrgrund } from './termin-aktionsleiste.js?v=20261120';
+import { abschlussSperrgrund } from './termin-aktionsleiste.js?v=20261121f11';
 import { aufLangenDruck } from './langer-druck.js?v=20260822';
 import { verdrahteAuswahl } from './kalender-auswahl.js?v=20261020';
 

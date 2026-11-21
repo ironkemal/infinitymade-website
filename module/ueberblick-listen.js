@@ -5,7 +5,7 @@
 import { datumDe } from './datum.js?v=20261001a';
 import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20261121f01';
 import { alsBerlinDatum } from './berlin-datum.js';
-import { rxGeschlossen } from './termin-verordnung.js?v=20261119serie';
+import { rxGeschlossen } from './termin-verordnung.js?v=20261121f11';
 
 /**
  * Legacy-Helfer (Fund 8, QA TEST-Physio 17.11.2026):

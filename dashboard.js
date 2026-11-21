@@ -1,7 +1,7 @@
 import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261103mail1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261103mail1';
 import { oeffneLeistungsRaum, leistungsRaumPayload } from './module/leistungs-raum.js?v=20261103raum';
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
-import { planungVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261120raum2';
+import { planungVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261121f11';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
 import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261103mail1';
@@ -93,10 +93,10 @@ import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
 import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261115v703';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20261101u';
-import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261117p33';
+import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261121f11';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261118s1';
 import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261117c5'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
-import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261119serie';
+import { rendereVeroKarten, ladeTerminVerordnungen, ladePatientenEntwuerfe, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261121f11';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl, bindeAnTerminNachAnlage } from './module/verordnung-anlegen.js?v=20261117p33';
 import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261117p33';
@@ -124,7 +124,7 @@ import { farbwahlFuer } from './module/leistung-farbwahl.js?v=20260830';
 import { ladeAbwesenheiten, istAbwesend, abwesenheitsGrund, abwesenheitFreigeben } from './module/abwesenheit.js?v=20261031';
 import { renderLeistungenListe, renderGkvKatalog, normalisiereTyp, kostentraegerTyp } from './module/leistungen-liste.js?v=20260903';
 import { ermittleKostentraegerSpalte, kostentraegerSpalteDa } from './module/kostentraeger-spalte.js?v=20260903';
-import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20261120';
+import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20261121f11';
 import { TERMIN_SELECT, RX_JOIN, ladeTerminVollstaendig } from './module/termin-laden.js?v=20261103r';
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWartend } from './module/warteliste-nachruecker.js?v=20260903b';
 import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20261105sperre';
@@ -138,7 +138,7 @@ import {
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
   verteileOffeneSitzungen, zeichneRezeptFortschritt, uebernimmSerienfrequenzAusRx, setFreqValue,
 } from './module/termin-aktionen.js?v=20261117p33';
-import { verdrahteAktionsleiste, zeigeAbschlussAktion, abschlussSperrgrund } from './module/termin-aktionsleiste.js?v=20261120'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m';
+import { verdrahteAktionsleiste, zeigeAbschlussAktion, abschlussSperrgrund, abschlussErlaubtImPanel } from './module/termin-aktionsleiste.js?v=20261121f11'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m';
 import { gleicheSitzungenAb, terminZielToplam } from './module/sitzung-abgleich.js?v=20261103q';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20261103q';
 import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-km.js?v=20261021m'; import { terminHinweiseHtml } from './module/termin-hinweise.js?v=20261021s'; import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText, verdrahteSerienStarttag } from './module/serien-termine.js?v=20261119serie'; const resetSerienStarttag = verdrahteSerienStarttag();
@@ -2603,14 +2603,6 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
     if (isOwn) updateNoShowButton(booking.start_time);
   }
 
-  // Load prescription sessions panel (Unvergebene Heilmittel)
-  // Die gewaehlte Verordnung steuert auch den Block "Aktive Verordnung" unten:
-  // blaettert man oben weiter, wechseln unten die unvergebenen Einheiten mit.
-  // Ohne Termin bekommt der Block einen Ersatzkontext: er braucht nur Patient
-  // und Name, um die Einheiten zu zeichnen und ziehbar zu machen.
-  loadRxSessionsPanel(booking || { lead_id: leadVorgabe.id, customer_name: patientName }, rx?.id || null)
-    .catch(e => console.error('[loadRxSessionsPanel]', e));
-
   // --- Hasta profil kartı + aktif reçeteler ---
   let leadId = booking?.lead_id || leadVorgabe?.id || null;
   // Fallback: booking may have customer_phone but no lead_id (older bookings)
@@ -2630,6 +2622,8 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
       if (fl) leadId = fl.id;
     }
   }
+  loadRxSessionsPanel(booking || { lead_id: leadVorgabe.id, customer_name: patientName }, rx?.id || null, Boolean(leadId))
+    .catch(e => console.error('[loadRxSessionsPanel]', e));
   const patientCard = document.getElementById('bkPatientCard');
   if (patientCard) patientCard.hidden = true;
   // Zuruecksetzen, sonst traegt der naechste Termin die Anrede des vorigen
@@ -2649,11 +2643,12 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
 
   if (leadId) {
     // Lead + aktif Heilmittelverordnungen paralel yükle
-    const [{ data: lead }, { data: aktiveRxs }, { data: anamneseData }, { data: patNotesData }, { data: zuzahlBefreiung }] = await Promise.all([
+    const [{ data: lead }, { data: aktiveRxs }, { data: entwuerfe }, { data: anamneseData }, { data: patNotesData }, { data: zuzahlBefreiung }] = await Promise.all([
       supabase.from('leads')
         .select('id,first_name,last_name,title,phone,email,geburtsdatum,geschlecht,street,plz,city,krankenkasse,versichertennummer,distance_km,metadata,status,insurance_type')
         .eq('id', leadId).maybeSingle(),
       ladeTerminVerordnungen(supabase, { leadId, vordId: rx?.id || booking?.verordnung_id || null }).then(data => ({ data })),
+      ladePatientenEntwuerfe(supabase, { leadId }).then(data => ({ data })),
       supabase.from('anamnese')
         .select('hauptbeschwerde,diagnose,schmerz_skala,schmerz_art,medikamente,allergien,vorerkrankungen,arzt_name,besondere_wuensche,notizen,created_at')
         .eq('patient_id', leadId)
@@ -2717,11 +2712,10 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
     const veroCards = document.getElementById('bkVeroPanelCards');
     if (veroWrap && veroCards) {
       rendereVeroKarten({
-        container: veroCards, rxs: aktiveRxs, escapeHtml, sb: supabase, ownerId, leadId,
-        // Hier waehlt eine Karte, WELCHE Verordnung das Panel zeigt — sie fuellt
-        // nicht die Terminmaske (das tut selectVerordnung in #bookingModal).
+        container: veroCards, rxs: aktiveRxs, entwuerfe, escapeHtml, sb: supabase, ownerId, leadId,
         onSelect: (gewaehlt) => openBookingActionModal(booking, { ...opts, rxId: gewaehlt.id }),
         onAnlegen: () => oeffneAnlegenWahl(leadId, booking?.id),
+        onEntwurfOeffnen: (e) => { closeBkActionPanel(); switchPanel('verordnungen'); if (!oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle: e?.therapie_bereich === 'podo' ? 'podologie' : 'physio', id: e?.id, rolle: currentProfile?.role, apiBase: API })) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); },
       });
       veroWrap.hidden = false;
     }
@@ -2959,11 +2953,12 @@ async function renderBkActionFahrtState(booking, isOwn) {
   const fahrtEndGroup = document.getElementById('bkActionFahrtEndGroup');
   const doneGroup = document.getElementById('bkActionDoneGroup');
 
-  zeigeAbschlussAktion(booking, terminIstPodo(booking, getSector()));
+  const istPodo = terminIstPodo(booking, getSector());
+  zeigeAbschlussAktion(booking, istPodo);
   hbInfo.hidden = true;
   fahrtStartGroup.hidden = true;
   arrivedGroup.hidden = true;
-  startTerminGroup.hidden = !isOwn;
+  startTerminGroup.hidden = !abschlussErlaubtImPanel(booking, { isOwn, podologie: istPodo });
   fahrtEndGroup.hidden = true;
   doneGroup.hidden = true;
 
@@ -3040,7 +3035,7 @@ async function renderBkActionFahrtState(booking, isOwn) {
     startTerminGroup.hidden = true;
   } else if (s === 'fahrt_arrived') {
     // Termin Starten aktif (mevcut buton)
-    startTerminGroup.hidden = false;
+    startTerminGroup.hidden = !abschlussErlaubtImPanel(booking, { isOwn, podologie: istPodo });
   } else if (s === 'fahrt_return_pending') {
     // Termin gestartet (S3.13: vorher 'in_progress', vom DB-CHECK abgelehnt)
     startTerminGroup.hidden = true;
@@ -3307,12 +3302,12 @@ async function saveFahrtEndHandler() {
 async function handleTerminStarten() {
   if (!bkActionBookingCache || sitzungsabschlussLaeuft) return;
   const b = bkActionBookingCache;
-  const sperre = abschlussSperrgrund(b);
+  const istPodoTermin = terminIstPodo(b, getSector());
+  if (!abschlussErlaubtImPanel(b, { isOwn: true, podologie: istPodoTermin })) { showToast('Dieser Termin ist bereits abgeschlossen oder nicht mehr offen.', 'info'); return; } const sperre = abschlussSperrgrund(b);
   if (sperre) { showToast(sperre, 'warning'); return; }
   const patientName = b.customer_name || '';
   const patientPhone = b.customer_phone || '';
   const ownerId = getOwnerId();
-  const istPodoTermin = terminIstPodo(b, getSector()); // s. module/podo-behandlungen-oeffnen.js
 
   if (istPodoTermin) {
     if (!b.hausbesuch) closeBkActionPanel();
@@ -4970,7 +4965,7 @@ function podoBehandlungenDeps() {
  *   Pfeilen gewaehlt. Ohne Angabe die zum Termin verknuepfte — sonst zeigte
  *   der Block eine andere Verordnung als die Rezeptinfo darueber.
  */
-async function loadRxSessionsPanel(booking, rxId = null) {
+async function loadRxSessionsPanel(booking, rxId = null, hatPatient = false) {
   const panel = document.getElementById('bkRxSessionsPanel');
   if (!panel) return;
 
@@ -4985,7 +4980,7 @@ async function loadRxSessionsPanel(booking, rxId = null) {
       .maybeSingle();
     prescriptionId = linkedSession?.prescription_id || null;
   }
-  if (!prescriptionId) return (await zeichnePodoEinheiten({ sb: supabase, ownerId: getOwnerId(), booking, aufBehandlungen: oeffnePodoBehandlungen, aufSerie: verteileOffeneEinheiten })) || zeichneSitzungenLeer('keineVo', { t });
+  if (!prescriptionId) return (await zeichnePodoEinheiten({ sb: supabase, ownerId: getOwnerId(), booking, aufBehandlungen: oeffnePodoBehandlungen, aufSerie: verteileOffeneEinheiten })) || (hatPatient ? (panel.hidden = true) : zeichneSitzungenLeer('keineVo', { t }));
   const linkedSession = { prescription_id: prescriptionId };
 
   const { data: rx } = await supabase.from('prescriptions')
