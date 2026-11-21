@@ -2372,3 +2372,14 @@ Negative Schrittweite als mögliche Endlosschleife im Quellcode bestätigt; Rout
 - [x] Neuer Patient (Schreibanfragen blockiert, 0 Versuche): Geburtsdatum 01.01.2030 → „Das Geburtsdatum darf nicht in der Zukunft liegen."; ohne Versicherungsart → „Bitte die Versicherungsart wählen (GKV oder privat)."; Dialog bleibt offen, mit ✕ geschlossen.
 - [x] Rechnungen: Menü öffnet Liste; INV-2026-0003 ansehen → „Bezahlt am 17.11.2026" (keine Zahlungsfrist), Datum 17.11.2026, Bankblock ausgeblendet (leer), IK in Praxisdaten, Spalten Einzelpreis/Betrag, DMRZ-Knopf deaktiviert (Privatrechnung). 0 pageerror.
 - [ ] Nicht geprüft (menschlich/Geräte): Passwort ändern, Google-OAuth, Kamera-Scan, GPS-Check-in.
+
+### Migrationen 0105 (Mail-Fußzeile) + 0122 (Diagnosegruppen HeilM-RL) nach Live-Anwendung (`20261121181746` / `20261121181821`) — nav: `b2c`/`b2b` → „Konfiguration“ · `verordnungen` — Test-Mandant, Inhaber — Live 21.11.2026 (Melih, manuell) — GEÇTİ (B1 Rest offen)
+**Kapılar:** DB-Abfrage direkt danach (Claude, Management-API, nur Zähler): Spalte + CHECK vorhanden, Diagnosegruppen 44 aktiv / 59 gesamt, 0 Alt-DGs aktiv, `SB1=10 · PS2=20 · ST1=10 · SAS/CF=NULL`. Kein Backend-Deploy nötig; Frontend-Code war schon auf `main`.
+**Beklenen:** Fußzeilenvorlage speichert und bleibt nach F5. Die 15 Alt-DGs vor 2021 (`AT1..3`, `EX1..4`, `LY1..3`, `SM`, `WS1..2`, `ZN1..2`) werden nicht mehr angeboten bzw. abgelehnt; gültige Physio-DGs (`AT, CS, EX, GE, LY, PN, SO1–SO5, WS, ZN`) werden angenommen. Ergo/Logo-Höchstmengen warnen. Bestandsverordnungen mit Alt-DG öffnen weiter.
+**Bağımlı ekranlar:** Muster-13-Maske (`module/verordnung-regelsatz-cache.js`, `verordnung-pruefung.js`), Diagnosesuche (`katalog-suche.js` → `search_diagnosen()`), Mail-Versand (`/api/gmail/send` prüft Fußzeile).
+- [x] 0105: Vorlage anlegen + speichern ohne Fehler, nach F5 vorhanden. (Mailversand selbst nicht getestet.)
+- [x] 0122 B1: `AT1`, `WS1` sowie `EX1`, `EX2`, `WS2`, `ZN1` werden bei Physio abgelehnt — gewollt, alle in der Liste der 15 deaktivierten Alt-DGs. `WS3` wird abgelehnt — gewollt, existiert in der DB nicht. `SO1` angenommen.
+- [x] 0122 B2: Höchstmenge `SB1`/`ST1` = 10, `PS2` = 20, jeweils korrekte Warnung. Erscheint erst bei „Verordnung prüfen“, nicht beim Tippen (bisheriges Verhalten, nicht durch 0122).
+- [x] 0122 B3: alle 13 Bestandsverordnungen mit DG `WS`, `WS1`, `WS2`, `EX3` öffnen normal.
+- [ ] B1-Rest für das Abnahmekriterium: übrige gültige Physio-DGs (`WS, EX, ZN, CS, AT, PN, GE, LY, SO2–SO5`) eingeben — keine darf abgelehnt werden.
+- Anomalie (Text, kein Fehler von 0122): Alt-DGs werden mit „gehört nicht zum Fachbereich Physiotherapie“ abgelehnt — irreführend, treffender wäre „veraltet seit HeilM-RL 2021, bitte neue DG wählen“. Vorschlag fürs Ops-Board (Teknik).
