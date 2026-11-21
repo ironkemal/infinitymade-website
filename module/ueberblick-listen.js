@@ -388,7 +388,7 @@ export function rezKpiAuswerten(rezepte, heuteIso) {
 
 /**
  * Filtert Rezepte mit offenem Prüfbedarf:
- *  - Kassen-Absetzungen (`abrechnung_status === 'absetzung'`) — höchste Priorität
+ *  - Kassen-Absetzungen (`abrechnung_status` in `'rejected' | 'teilabsetzung'` laut DB-CHECK) — höchste Priorität
  *  - Noch unbestätigte OCR-Scans (`status === 'parsed'`)
  *
  * @param {Array<Record<string, any>>} rezepte
@@ -396,7 +396,9 @@ export function rezKpiAuswerten(rezepte, heuteIso) {
 export function rezeptPruefbedarfAufbereiten(rezepte) {
   const out = [];
   for (const rx of rezepte || []) {
-    const absetzung = rx?.abrechnung_status === 'absetzung';
+    if (!rx || rxGeschlossen(rx)) continue;
+    const istTeilabsetzung = rx?.abrechnung_status === 'teilabsetzung';
+    const absetzung = rx?.abrechnung_status === 'rejected' || istTeilabsetzung;
     const scanOffen = rx?.status === 'parsed';
     if (!absetzung && !scanOffen) continue;
     const lead = rx?.leads || null;
@@ -410,8 +412,8 @@ export function rezeptPruefbedarfAufbereiten(rezepte) {
       telefon: telefonLink(lead?.handy || lead?.phone),
       art: absetzung ? 'absetzung' : 'scan',
       schwere: absetzung ? 'danger' : 'warning',
-      etikett: absetzung ? 'Absetzung' : 'Scan offen',
-      hinweis: absetzung ? 'Kassen-Absetzung prüfen' : 'Rezept-Scan bestätigen',
+      etikett: istTeilabsetzung ? 'Teilabsetzung' : absetzung ? 'Absetzung' : 'Scan offen',
+      hinweis: istTeilabsetzung ? 'Teilabsetzung prüfen' : absetzung ? 'Kassen-Absetzung prüfen' : 'Rezept-Scan bestätigen',
       kontextMeta: kontextMeta || 'Verordnung',
       ausgestelltDe: rx?.ausstellungsdatum ? datumMitJahr(rx.ausstellungsdatum) : '—',
     });

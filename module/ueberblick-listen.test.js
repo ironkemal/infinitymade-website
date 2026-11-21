@@ -241,14 +241,23 @@ test('telefonLink & rezeptPruefbedarfAufbereiten (Absetzungen vor Scans)', () =>
 
   const p = rezeptPruefbedarfAufbereiten([
     { id: 'r1', status: 'parsed', abrechnung_status: null, ausstellungsdatum: '2026-11-18', heilmittel: 'KG', leads: { first_name: 'Anna', last_name: 'Scan' } },
-    { id: 'r2', status: 'confirmed', abrechnung_status: 'absetzung', ausstellungsdatum: '2026-10-10', heilmittel: 'MT', leads: { first_name: 'Bernd', last_name: 'Kasse' } },
+    { id: 'r2', status: 'confirmed', abrechnung_status: 'rejected', ausstellungsdatum: '2026-10-10', heilmittel: 'MT', leads: { first_name: 'Bernd', last_name: 'Kasse' } },
+    { id: 'r2b', status: 'confirmed', abrechnung_status: 'teilabsetzung', ausstellungsdatum: '2026-10-12', heilmittel: 'KG', leads: { first_name: 'Clara', last_name: 'Teil' } },
     { id: 'r3', status: 'confirmed', abrechnung_status: 'bereit', ausstellungsdatum: '2026-11-01', heilmittel: 'MLD', leads: { first_name: 'Ok', last_name: 'Fall' } },
+    // Nicht existierender Altstring 'absetzung' darf nicht als Absetzung matchen
+    { id: 'r4', status: 'confirmed', abrechnung_status: 'absetzung', ausstellungsdatum: '2026-10-11', heilmittel: 'KG', leads: { first_name: 'Alt', last_name: 'String' } },
+    // Geschlossene stornierte VO darf nicht in Prüfbedarf landen
+    { id: 'r5', status: 'cancelled', abrechnung_status: 'rejected', ausstellungsdatum: '2026-10-11', heilmittel: 'KG', leads: { first_name: 'Storno', last_name: 'Fall' } },
   ]);
-  assert.equal(p.length, 2);
+  assert.equal(p.length, 3);
   assert.equal(p[0].art, 'absetzung');
+  assert.equal(p[0].etikett, 'Absetzung');
   assert.equal(p[0].schwere, 'danger');
-  assert.equal(p[1].art, 'scan');
-  assert.equal(p[1].schwere, 'warning');
+  assert.equal(p[1].art, 'absetzung');
+  assert.equal(p[1].etikett, 'Teilabsetzung');
+  assert.equal(p[1].schwere, 'danger');
+  assert.equal(p[2].art, 'scan');
+  assert.equal(p[2].schwere, 'warning');
 });
 
 test('Überblick-Ansicht und Panel-Markup enthalten keine Emojis', () => {
