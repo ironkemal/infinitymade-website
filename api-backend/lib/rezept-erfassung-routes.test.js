@@ -6,7 +6,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { validiereBarcodeErfassung, computedMitErfassung } from './rezept-erfassung.js';
 import { heilmittelPositionAufloesen, kartenIkNormalisieren, artFelderAusRezept,
-  rezeptartWechselPruefen, bgFelderAusRezept, bgAenderungGesperrt, entlassFelderAusRezept } from './rezept-felder.js';
+  rezeptartWechselPruefen, bgFelderAusRezept, bgAenderungGesperrt, entlassFelderAusRezept,
+  ermittleGueltigBis } from './rezept-felder.js';
 import { statusAusAbrechnungStatus } from '../billing/utils/einreichbar.js';
 import { normalisiereGeschlecht } from './geschlecht.js';
 import { pruefeHeilmittelItems } from './heilmittel-items-pruefen.js';
@@ -99,6 +100,7 @@ function fixture({ existing, foreignPatient=false, validationOk=true, prescripti
     supabase, validiereBarcodeErfassung, computedMitErfassung,
     heilmittelPositionAufloesen, kartenIkNormalisieren, artFelderAusRezept,
     rezeptartWechselPruefen, bgFelderAusRezept, bgAenderungGesperrt, entlassFelderAusRezept,
+    ermittleGueltigBis,
     statusAusAbrechnungStatus, normalisiereGeschlecht, pruefeHeilmittelItems,
     kostentraegerIkAufloesen:async()=>null,
     /** @param {unknown} _db @param {string} tenantId @param {unknown} input @param {Record<string, any>} options */

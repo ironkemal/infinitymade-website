@@ -44,7 +44,7 @@ import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnun
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20261004m116';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261005g';
 import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261004m116';
-import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261118v914'; import { pruefePatientPflicht, patientKontaktFehler } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { ladeUeberblickAnsicht } from './module/ueberblick-ansicht.js?v=20261120tz5'; import { aktivitaetZeileHtml } from './module/aktivitaet-zeile.js?v=20261119start1';
+import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261118v914'; import { pruefePatientPflicht, patientKontaktFehler } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { ladeUeberblickAnsicht } from './module/ueberblick-ansicht.js?v=20261121f01'; import { aktivitaetZeileHtml } from './module/aktivitaet-zeile.js?v=20261119start1'; import { rezKpiAuswerten } from './module/ueberblick-listen.js?v=20261121f01'; import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_KPI } from './module/verordnung-fristen-laden.js?v=20261121f01';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
 import { ladeStatusJePatient, oeffneStatusDialogFuer, verordnungStatusInfo } from './module/abrechnungsstatus.js?v=20261117f2';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261117v906';
@@ -66,7 +66,7 @@ import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-prue
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, pruefeSertHeilmittelFehler, istPatientNeu, scanHerkunft, nurIcdKode, vorauswahlArtAusPatient, bgHinweiseAusMaske, maskeIstKasse }
   from './module/verordnung-maske.js?v=20261117p33'; import { istKasse } from './module/rezeptart.js?v=20261006a'; import { feiertageKnopf } from './module/feiertage-knopf.js?v=20261110fn';
-import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20261004m113';
+import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20261121f01';
 import { pruefeBarcodeBestaetigung } from './module/rezept-barcode-bestaetigung.js?v=20261007m3';
 import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20261007m3';
 import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=20261115v703';
@@ -1621,23 +1621,11 @@ async function loadPhysioRezKpis() {
   if (!isPraxisSector(getSector())) { block.style.display = 'none'; return; }
 
   const ownerId = getOwnerId();
-  const { data, error } = await bizScope(supabase
-    .from('prescriptions')
-    .select('id, status, gueltig_bis, patient_id, heilmittel, behandlungsbeginn')
-    .eq('owner_id', ownerId)
-    .not('status', 'in', '(completed,billed,cancelled)'), 'patients');
+  const { data, error } = await ladeOffeneVerordnungenPaginiert(supabase, { ownerId, select: RX_FRISTEN_SELECT_KPI, bizScope });
   if (error) { console.warn('[rez-kpi]', error); block.dataset.pxStatus = 'fehler'; block.style.display = 'none'; return; }
-  // V9.05 (gkv-302 17.11.2026, HeilM-RL § 15): Beginnfrist erledigt, wenn rechtzeitig begonnen; verspäteter Beginn bleibt überfällig. Kalendertage Europe/Berlin als Text.
-  const berlinTag = (d) => d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' }), today = berlinTag(new Date()), soonCutoff = berlinTag(new Date(Date.now() + 7 * 86400000));
-
-  const overdue = [], soon = [], active = [];
-  for (const rx of (data || [])) {
-    const gb = typeof rx.gueltig_bis === 'string' ? rx.gueltig_bis.slice(0, 10) : null, bb = typeof rx.behandlungsbeginn === 'string' ? rx.behandlungsbeginn.slice(0, 10) : null;
-    const begonnen = !!bb && bb <= today, verspaetet = begonnen && !!gb && bb > gb;
-    if (gb && (verspaetet || (!begonnen && gb < today))) overdue.push(rx);
-    else if (gb && !begonnen && gb <= soonCutoff) soon.push(rx);
-    if (rx.status === 'in_therapy') active.push(rx);
-  }
+  // F-01: Dieselbe Behandlungsbeginn-Berechnung (HeilM-RL § 15) wie Überblick (`fristenAuswerten`).
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+  const { overdue, soon, active } = rezKpiAuswerten(data, today);
   _rezKpiCache = { overdue, soon, active };
 
   document.getElementById('rezKpiOverdue').textContent = overdue.length;
@@ -13986,7 +13974,7 @@ async function init() {
       const ansichtKontext = { uid: () => currentSession?.user?.id, rolle: () => currentProfile?.role, scope: () => [currentSession?.user?.id, currentProfile?.role, getOwnerId(), currentBusiness?.id].join(':') };
       startansicht = (await import('./module/startseite-ansicht.js?v=20261118v908')).montiereStartansicht({ ...ansichtKontext, sektor: getSector, api: () => API, springe: switchPanel, akte: id => window.openPatientDetail?.(id), neuLaden: loadTodayBookings, anfragenLaden: () => loadAnfragen('pending'), behandler: () => teamMembers.map(m => ({ id: m.id, name: m.business_name || m.full_name || (m.email || '').split('@')[0] })), hb: { supabase, ownerId: () => getOwnerId(), businessId: () => currentBusiness?.id ?? null, patientsGemeinsam: () => dataSharing.patients === true } });
       (await import('./module/anamnese-abschnitte.js?v=20261114v402')).montiereAnamneseAbschnitte(ansichtKontext); try { (await import('./module/shell-ansicht.js?v=20261117v906')).montiereShellansicht({ ...ansichtKontext, name: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', suche: { ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, oeffnePatient: id => window.openPatientDetail?.(id), dokumente: { kontext: () => ({ supabase, rolle: currentProfile?.role, uid: currentSession?.user?.id, ownerId: getOwnerId(), businessId: currentBusiness?.id ?? null, patientsGemeinsam: dataSharing.patients === true, financeGemeinsam: dataSharing.finance === true }), ladeRechnungen: loadRechnungen, oeffneRechnung: id => { switchPanel('rechnungen'); return openInvView(id); }, oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); const ok = oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API }); if (!ok) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); return ok; } } } }); } catch (e) { console.error('[init] shell', e); }
-    } else { startansicht = (await import('./module/tageszentrale-ansicht.js?v=20261120tz5')).montiereTageszentrale({ supabase, api: () => API, getOwnerId, getUserId: () => currentSession?.user?.id || null, istOwner: () => currentProfile?.role === 'owner', getName: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', getTeam: () => teamMembers.map(m => ({ id: m.id, name: m.business_name || m.full_name || (m.email || '').split('@')[0] })), bizScope, oeffneTerminNeu: (s) => prefillBookingModal(s || null), oeffneTerminAktion: (b) => openBookingActionModal(b), oeffnePatient: (id) => window.openPatientDetail?.(id), oeffnePatientNeu: () => openLeadModal(null), oeffneRezeptNeu: () => openRezeptModal(null, null), oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); if (!oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API })) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); }, oeffneAnfrage: async (id) => { await switchPanel('anfragen'); if (id) setTimeout(() => showAnfrageDetail(id), 220); }, oeffneWarteliste: async (id) => { await switchPanel('warteliste'); if (id) setTimeout(() => window.openWlEntry?.(id), 180); }, wechslePanel: switchPanel, oeffneKalenderTag: (tagIso) => { dayViewDate = new Date(`${tagIso}T12:00:00`); switchPanel('calendar'); setCalendarView('day'); } }); }
+    } else { startansicht = (await import('./module/tageszentrale-ansicht.js?v=20261121f01')).montiereTageszentrale({ supabase, api: () => API, getOwnerId, getUserId: () => currentSession?.user?.id || null, istOwner: () => currentProfile?.role === 'owner', getName: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', getTeam: () => teamMembers.map(m => ({ id: m.id, name: m.business_name || m.full_name || (m.email || '').split('@')[0] })), bizScope, oeffneTerminNeu: (s) => prefillBookingModal(s || null), oeffneTerminAktion: (b) => openBookingActionModal(b), oeffnePatient: (id) => window.openPatientDetail?.(id), oeffnePatientNeu: () => openLeadModal(null), oeffneRezeptNeu: () => openRezeptModal(null, null), oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); if (!oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API })) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); }, oeffneAnfrage: async (id) => { await switchPanel('anfragen'); if (id) setTimeout(() => showAnfrageDetail(id), 220); }, oeffneWarteliste: async (id) => { await switchPanel('warteliste'); if (id) setTimeout(() => window.openWlEntry?.(id), 180); }, wechslePanel: switchPanel, oeffneKalenderTag: (tagIso) => { dayViewDate = new Date(`${tagIso}T12:00:00`); switchPanel('calendar'); setCalendarView('day'); } }); }
     await renderOverview();
     try { await renderGapsForDate(scheduleDate); dbg('[init] gapsForDate ok'); } catch (e) { console.error('[init] renderGapsForDate error', e); }
     setupScheduleNav();

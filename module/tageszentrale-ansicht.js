@@ -27,7 +27,8 @@ import {
   therapieberichteAufbereiten,
   anfragenAufbereiten,
   wartelisteAufbereiten,
-} from './ueberblick-listen.js?v=20261119ubl4';
+} from './ueberblick-listen.js?v=20261121f01';
+import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_VOLL } from './verordnung-fristen-laden.js?v=20261121f01';
 import { ladeGeld, monatText } from './startseite-geld.js?v=20261114b03';
 import { fmtEur } from './geld.js?v=20260909';
 import { on } from './signal.js?v=20260813';
@@ -210,22 +211,16 @@ export function montiereTageszentrale(k) {
     if (!ownerId) return;
     bedarfGeladen = true;
     bedarfStartMs = Date.now();
-    const scope = (q, typ) => (typeof k.bizScope === 'function' ? k.bizScope(q, typ) : q);
     const heuteIso = berlinIsoTag();
 
     try {
       const [rxRes, anfRes, wlRes] = await Promise.all([
         hatPanel('verordnungen')
-          ? scope(
-              k.supabase
-                .from('prescriptions')
-                .select('id,patient_id,ausstellungsdatum,behandlungsbeginn,status,abrechnung_status,is_dringend,heilmittel,diagnosegruppe,therapie_bereich,bericht_angefordert,bericht_status,leads!patient_id(id,first_name,last_name,phone,handy)')
-                .eq('owner_id', ownerId)
-                .not('status', 'in', '(completed,billed,rejected)')
-                .order('ausstellungsdatum', { ascending: true })
-                .limit(150),
-              'patients'
-            )
+          ? ladeOffeneVerordnungenPaginiert(k.supabase, {
+              ownerId,
+              select: RX_FRISTEN_SELECT_VOLL,
+              bizScope: k.bizScope,
+            })
           : Promise.resolve({ data: [] }),
         hatPanel('anfragen')
           ? k.supabase

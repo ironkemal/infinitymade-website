@@ -3,8 +3,9 @@
 //
 // Reine Funktionen ohne DOM- oder Supabase-Abhängigkeit, vollständig unit-testbar.
 import { datumDe } from './datum.js?v=20261001a';
-import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20261004m113';
+import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20261121f01';
 import { alsBerlinDatum } from './berlin-datum.js';
+import { rxGeschlossen } from './termin-verordnung.js?v=20261119serie';
 
 /**
  * Legacy-Helfer (Fund 8, QA TEST-Physio 17.11.2026):
@@ -240,6 +241,7 @@ export function fristenAuswerten(rezepte, heuteIso) {
   const gruppen = new Map();
 
   for (const rx of rezepte || []) {
+    if (!rx || rxGeschlossen(rx)) continue;
     const lead = rx?.leads || null;
     const patientName = [lead?.first_name, lead?.last_name].filter(Boolean).join(' ').trim() || 'Ohne Namen';
     const patientId = rx?.patient_id || lead?.id || null;
@@ -358,6 +360,33 @@ export function fristenAuswerten(rezepte, heuteIso) {
 }
 
 /**
+ * Kennzahlen für die Dashboard-Rezeptkarte (`#physioRezKpi`) aus derselben
+ * Berechnungsquelle wie der Überblick (`fristenAuswerten`), damit „überfällig“
+ * und „in ≤7 Tagen“ auf Dashboard und Überblick garantiert übereinstimmen (F-01).
+ *
+ * - Entwürfe (`status === 'parsed'`) zählen mit.
+ * - Geschlossene Verordnungen (`completed`, `billed`, `cancelled` sowie
+ *   abgerechnete/stornierte/archivierte Podologie-VOs via `rxGeschlossen`) werden
+ *   ausgeschlossen.
+ *
+ * @param {Array<Record<string, any>>} rezepte
+ * @param {string} heuteIso  'YYYY-MM-DD' (Europe/Berlin)
+ * @returns {{ overdue: Array<Record<string, any>>, soon: Array<Record<string, any>>, active: Array<Record<string, any>>, fristen: FristEintrag[] }}
+ */
+export function rezKpiAuswerten(rezepte, heuteIso) {
+  const offene = (rezepte || []).filter(rx => rx && !rxGeschlossen(rx));
+  const fristen = fristenAuswerten(offene, heuteIso);
+  const overdue = fristen
+    .filter(f => f.kategorie === 'ueberfaellig')
+    .map(f => ({ ...f, id: f.rxId, patient_id: f.patientId }));
+  const soon = fristen
+    .filter(f => f.kategorie === 'bald')
+    .map(f => ({ ...f, id: f.rxId, patient_id: f.patientId }));
+  const active = offene.filter(rx => rx.status === 'in_therapy');
+  return { overdue, soon, active, fristen };
+}
+
+/**
  * Filtert Rezepte mit offenem Prüfbedarf:
  *  - Kassen-Absetzungen (`abrechnung_status === 'absetzung'`) — höchste Priorität
  *  - Noch unbestätigte OCR-Scans (`status === 'parsed'`)
@@ -396,7 +425,7 @@ export function rezeptPruefbedarfAufbereiten(rezepte) {
  */
 export function therapieberichteAufbereiten(rezepte) {
   return (rezepte || [])
-    .filter(rx => rx?.bericht_angefordert && rx?.bericht_status === 'offen')
+    .filter(rx => rx && !rxGeschlossen(rx) && rx?.bericht_angefordert && rx?.bericht_status === 'offen')
     .map(rx => {
       const lead = rx?.leads || null;
       const patientName = [lead?.first_name, lead?.last_name].filter(Boolean).join(' ').trim() || 'Ohne Namen';

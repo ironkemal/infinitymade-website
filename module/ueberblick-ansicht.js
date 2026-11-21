@@ -33,7 +33,8 @@ import {
   abwesenheitenAufbereiten,
   nichtErscheinerAufbereiten,
   suchePasst,
-} from './ueberblick-listen.js?v=20261119ubl4';
+} from './ueberblick-listen.js?v=20261121f01';
+import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_VOLL } from './verordnung-fristen-laden.js?v=20261121f01';
 import { alsBerlinDatum, berlinTagesgrenzen } from './berlin-datum.js';
 import { fmtEur } from './geld.js?v=20260909';
 import { on } from './signal.js?v=20260813';
@@ -1224,16 +1225,11 @@ export async function ladeUeberblickAnsicht(ctx) {
     'patients'
   );
 
-  const rxPromise = scope(
-    supabase
-      .from('prescriptions')
-      .select('id, patient_id, ausstellungsdatum, behandlungsbeginn, status, abrechnung_status, is_dringend, heilmittel, diagnosegruppe, therapie_bereich, bericht_angefordert, bericht_status, leads!patient_id(id, first_name, last_name, phone, handy)')
-      .eq('owner_id', ownerId)
-      .not('status', 'in', '(completed,billed,rejected)')
-      .order('ausstellungsdatum', { ascending: true })
-      .limit(150),
-    'patients'
-  );
+  const rxPromise = ladeOffeneVerordnungenPaginiert(supabase, {
+    ownerId,
+    select: RX_FRISTEN_SELECT_VOLL,
+    bizScope,
+  });
 
   const gebPromise = scope(
     supabase

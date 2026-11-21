@@ -66,7 +66,7 @@
  */
 
 import { ladePodoTermine, istVergeben } from './verordnung-termine.js?v=20261102a';
-import { pruefeBehandlungsbeginn } from './heilmittel-fristen.js?v=20261004m113';
+import { pruefeBehandlungsbeginn } from './heilmittel-fristen.js?v=20261121f01';
 
 export const TOLERANZ_WERKTAGE = 2;
 export const UNTERBRECHUNG_TAGE = 12 * 7;          // Podologie-Vertrag § 7 Abs. 7

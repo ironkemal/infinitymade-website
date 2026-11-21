@@ -392,3 +392,18 @@ export function entlassFelderAusRezept(rezept = {}) {
   } else if (day !== null) reject('Ohne bestätigtes Entlassmanagement muss das Entlassdatum null sein.');
   return { entlassmanagement: status, entlassungsdatum: /** @type {string | null} */ (day) };
 }
+
+/**
+ * Leitet den in `prescriptions.gueltig_bis` zu speichernden ISO-Tag aus dem
+ * Validator-Ergebnis ab (F-01).
+ *
+ * - Blankoverordnungen liefern `computed.gueltig_bis` (16-Wochen-Gültigkeitsende).
+ * - Standard- und LHB/BVB-Verordnungen liefern `computed.latest_start_date`
+ *   (Beginnfrist 14/28 Tage nach HeilM-RL § 15), aber kein `gueltig_bis`.
+ *
+ * @param {{ gueltig_bis?: ?string, latest_start_date?: ?string, behandlungsbeginn_spaetestens?: ?string } | null | undefined} computed
+ * @returns {?string}
+ */
+export function ermittleGueltigBis(computed) {
+  return computed?.gueltig_bis || computed?.latest_start_date || null;
+}

@@ -105,7 +105,7 @@ import { podBehandlungsdatumVorschlag } from './podo-behandlungsdatum-vorwahl.js
 import { hausbesuchGesperrt, hausbesuchSpeicherFehler, HAUSBESUCH_HINWEIS } from './podo-hausbesuch.js?v=20260929a';
 // Reform S1.9 (29.09.2026): Behandlungsbeginn-Frist (§15 HeilM-RL) nicht mehr
 // zweimal von Hand nachrechnen (hier + vordAlerts unten) — ein Ort, eine Regel.
-import { behandlungsbeginnFrist, pruefeBehandlungsbeginn } from './heilmittel-fristen.js?v=20261004m113';
+import { behandlungsbeginnFrist, pruefeBehandlungsbeginn } from './heilmittel-fristen.js?v=20261121f01';
 import { zeigeFahrtBeenden, fahrtBeendenHinweisHtml } from './fahrt-beenden.js?v=20261001b';
 // Reform S4 Paket 2 (Konsey 30.09.2026, 1a/1b): aufklappbarer Fußbefund + Folgetermin-Frage.
 import { FOLGE_FRAGE, fussbefundBoxHtml, ladeLetzterBefund, ladeTagesTermin, folgeAusgangstermin, frageFolgetermin,

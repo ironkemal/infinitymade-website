@@ -12,6 +12,7 @@ import {
   bgAenderungGesperrt,
   bgFehltFuerRechnung,
   nichtGkvAbrechenbarMeldung,
+  ermittleGueltigBis,
 } from './rezept-felder.js';
 
 // ── kartenIkNormalisieren ───────────────────────────────────────────────────
@@ -537,4 +538,12 @@ test('Entlassdaten reject coercion, half updates, invalid dates and Blanko', () 
     { entlassmanagement: true, entlassungsdatum: '2026-01-02', is_blanko: true },
   ];
   for (const input of invalid) assert.throws(() => entlassFelderAusRezept(input), { code: 'ENTLASSDATEN_UNGUELTIG' });
+});
+
+test('F-01 ermittleGueltigBis: nutzt latest_start_date für Standard/LHB und erhält gueltig_bis bei Blanko', () => {
+  assert.equal(ermittleGueltigBis({ latest_start_date: '2026-11-25' }), '2026-11-25');
+  assert.equal(ermittleGueltigBis({ gueltig_bis: '2027-02-17', behandlungsbeginn_spaetestens: '2026-11-25' }), '2027-02-17');
+  assert.equal(ermittleGueltigBis({ gueltig_bis: null, latest_start_date: '2026-11-25' }), '2026-11-25');
+  assert.equal(ermittleGueltigBis({}), null);
+  assert.equal(ermittleGueltigBis(null), null);
 });

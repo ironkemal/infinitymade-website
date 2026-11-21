@@ -41,7 +41,7 @@
  */
 
 import { parseIcdList, matchIcdToDg, passendeUnterkodes } from '../icd-dg-match.js?v=20261001b';
-import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20261004m113';
+import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20261121f01';
 import { dgWurzel, bereichSchluessel, icdInBereichen } from './verordnung-regeln.js?v=20261119physio';
 import { POD_HEILMITTEL_KATALOG, POD_HEILMITTEL_DGS } from './podo-heilmittel-katalog.js?v=20261001g';
 import { lanrPruefzifferWarnung } from './lanr-pruefung.js?v=20260929r';

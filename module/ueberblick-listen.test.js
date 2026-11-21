@@ -8,6 +8,7 @@ import {
   abwesenheitTyp,
   wochenAuslastungAufbereiten,
   fristenAuswerten,
+  rezKpiAuswerten,
   therapieberichteAufbereiten,
   rezeptPruefbedarfAufbereiten,
   anfragenAufbereiten,
@@ -114,6 +115,62 @@ test('fristenAuswerten & therapieberichteAufbereiten', () => {
   const berichte = therapieberichteAufbereiten(rezepte);
   assert.equal(berichte.length, 1);
   assert.equal(berichte[0].rxId, 'rx-2');
+});
+
+test('F-01 rezKpiAuswerten: Dashboard und Überblick liefern identische Zahlen inkl. Entwurf und ohne geschlossene VOs', () => {
+  const heute = '2026-11-21';
+  // 28 Tage ab 2026-10-28 = 2026-11-25 (in 4 Tagen <= 7 Tage)
+  const rezepte = [
+    {
+      id: 'rx-entwurf', patient_id: 'p-1', status: 'parsed', gueltig_bis: null,
+      ausstellungsdatum: '2026-10-28', behandlungsbeginn: null, is_dringend: false,
+      heilmittel: 'KG', diagnosegruppe: 'WS2', therapie_bereich: 'physio',
+      leads: { id: 'p-1', first_name: 'Änne', last_name: 'TEST-Größer' },
+    },
+    {
+      id: 'rx-bestaetigt', patient_id: 'p-2', status: 'confirmed', gueltig_bis: null,
+      ausstellungsdatum: '2026-10-28', behandlungsbeginn: null, is_dringend: false,
+      heilmittel: 'MT', diagnosegruppe: 'EX2', therapie_bereich: 'physio',
+      leads: { id: 'p-2', first_name: 'Jörg', last_name: 'TEST-Müller' },
+    },
+    {
+      id: 'rx-therapie-1', patient_id: 'p-3', status: 'in_therapy', gueltig_bis: null,
+      ausstellungsdatum: '2026-10-20', behandlungsbeginn: '2026-11-01', is_dringend: false,
+      therapie_bereich: 'physio',
+    },
+    {
+      id: 'rx-therapie-2', patient_id: 'p-4', status: 'in_therapy', gueltig_bis: null,
+      ausstellungsdatum: '2026-10-22', behandlungsbeginn: '2026-11-05', is_dringend: false,
+      therapie_bereich: 'physio',
+    },
+    // Stornierte VO darf NICHT zählen (auch wenn fristnah)
+    {
+      id: 'rx-storno', patient_id: 'p-5', status: 'cancelled', gueltig_bis: null,
+      ausstellungsdatum: '2026-10-20', behandlungsbeginn: null, is_dringend: false,
+      therapie_bereich: 'physio',
+    },
+    // Bereits bezahlte Podologie-VO (status='confirmed', abrechnung_status='paid') darf NICHT zählen
+    {
+      id: 'rx-podo-paid', patient_id: 'p-6', status: 'confirmed', abrechnung_status: 'paid',
+      ausstellungsdatum: '2026-10-20', behandlungsbeginn: null, is_dringend: false,
+      therapie_bereich: 'podo',
+    },
+  ];
+
+  const kpi = rezKpiAuswerten(rezepte, heute);
+  const ublFristen = fristenAuswerten(rezepte, heute);
+  assert.equal(kpi.overdue.length, 0);
+  assert.equal(kpi.soon.length, 2);
+  assert.equal(kpi.active.length, 2);
+  assert.equal(kpi.soon.length, ublFristen.filter(f => f.kategorie === 'bald').length);
+  assert.equal(kpi.overdue.length, ublFristen.filter(f => f.kategorie === 'ueberfaellig').length);
+  assert.deepEqual(kpi.soon.map(x => x.patient_id).sort(), ['p-1', 'p-2']);
+
+  // Leere Praxis
+  const leer = rezKpiAuswerten([], heute);
+  assert.equal(leer.overdue.length, 0);
+  assert.equal(leer.soon.length, 0);
+  assert.equal(leer.active.length, 0);
 });
 
 test('anfragenAufbereiten, wartelisteAufbereiten, aufgabenAufbereiten, rechnungenAufbereiten', () => {
