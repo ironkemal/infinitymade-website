@@ -20,7 +20,7 @@ import {
   lueckenFiltern,
   zeitleisteZusammenfuehren,
   handlungsbedarfZusammenfassen,
-} from './tageszentrale-logik.js?v=20261120tz5';
+} from './tageszentrale-logik.js?v=20261121f05';
 import {
   addiereTageIso,
   fristenAuswerten,
@@ -104,6 +104,28 @@ export function montiereTageszentrale(k) {
   geldEl.hidden = true;
   colLeftEl.append(heroEl, planEl);
 
+  // F-05: Kopfzeile und Nav-Buttons (‹ / Heute / › / Raster) bleiben stabil im DOM,
+  // damit schnelle Klicks nicht durch innerHTML-Neubau zwischen mousedown/mouseup verloren gehen.
+  planEl.innerHTML = `
+    <div class="tz-card-head">
+      <div class="tz-card-title-wrap">
+        <h3 class="tz-card-title" data-tz-plan-titel>Tagesplan</h3>
+        <span class="tz-card-count" data-tz-plan-count></span>
+      </div>
+      <div class="tz-head-tools">
+        <button type="button" class="tz-mini-btn tz-mini-btn--ico" data-tz-step="prev" aria-label="Vorheriger Tag">‹</button>
+        <button type="button" class="tz-mini-btn" data-tz-step="today">Heute</button>
+        <button type="button" class="tz-mini-btn tz-mini-btn--ico" data-tz-step="next" aria-label="Nächster Tag">›</button>
+        <button type="button" class="tz-mini-btn" data-tz-act="raster">${ICO_GRID}<span>Raster</span></button>
+      </div>
+    </div>
+    <div data-tz-plan-inhalt></div>
+  `;
+  const planTitelEl = planEl.querySelector('[data-tz-plan-titel]');
+  const planCountEl = planEl.querySelector('[data-tz-plan-count]');
+  const planRasterBtn = planEl.querySelector('[data-tz-act="raster"]');
+  const planInhaltEl = planEl.querySelector('[data-tz-plan-inhalt]');
+
   // Reihenfolge als direkte Kinder von #panel-overview (bestehende Knoten wie #startAufgaben,
   // #physioRezKpi und .today-section behalten ihre Elternbeziehung parentElement.id === 'panel-overview'!).
   panel.prepend(headEl, colLeftEl, bedarfEl, geldEl);
@@ -131,6 +153,7 @@ export function montiereTageszentrale(k) {
   let bedarfGeladen = false;
   let geldGeladen = false;
   let bedarfStartMs = 0;
+  let letzterTerminLauf = 0;
 
   const teamMap = () => {
     const m = new Map();
@@ -194,6 +217,7 @@ export function montiereTageszentrale(k) {
         istOwner: true,
       });
       state.morgenDaten = { iso: morgenIso, anzahl: auf.gesamt, erster: auf.alle[0] || null };
+      if (state.zielIso !== heuteIso) return;
       renderHead();
       renderHero();
       renderPlan();
@@ -506,23 +530,12 @@ export function montiereTageszentrale(k) {
       ? '<div class="tz-warn-foot">Freie Zeiten konnten nicht geladen werden.</div>'
       : '';
 
-    planEl.innerHTML = `
-      <div class="tz-card-head">
-        <div class="tz-card-title-wrap">
-          <h3 class="tz-card-title">${esc(titel)}</h3>
-          <span class="tz-card-count">${esc(zaehler)}</span>
-        </div>
-        <div class="tz-head-tools">
-          <button type="button" class="tz-mini-btn tz-mini-btn--ico" data-tz-step="prev" aria-label="Vorheriger Tag">‹</button>
-          <button type="button" class="tz-mini-btn" data-tz-step="today">Heute</button>
-          <button type="button" class="tz-mini-btn tz-mini-btn--ico" data-tz-step="next" aria-label="Nächster Tag">›</button>
-          <button type="button" class="tz-mini-btn ${state.rasterOffen ? 'is-active' : ''}" data-tz-act="raster">${ICO_GRID}<span>Raster</span></button>
-        </div>
-      </div>
-      ${chipsHtml}
-      <div class="tz-tl-body">${bodyHtml}</div>
-      ${fehlerHinweis}
-    `;
+    if (planTitelEl) planTitelEl.textContent = titel;
+    if (planCountEl) planCountEl.textContent = zaehler;
+    if (planRasterBtn) planRasterBtn.classList.toggle('is-active', state.rasterOffen);
+    if (planInhaltEl) {
+      planInhaltEl.innerHTML = `${chipsHtml}<div class="tz-tl-body">${bodyHtml}</div>${fehlerHinweis}`;
+    }
   };
 
   const renderBedarf = () => {
@@ -787,12 +800,18 @@ export function montiereTageszentrale(k) {
 
   return {
     termine(info = {}) {
+      if (typeof info.lauf === 'number') {
+        if (info.lauf < letzterTerminLauf) return;
+        letzterTerminLauf = info.lauf;
+      }
       if (info.date instanceof Date) {
         state.date = info.date;
         state.zielIso = berlinIsoTag(info.date);
       }
       if (info.laden) {
         state.laden = true;
+        leseLueckenAusDom();
+        renderHead();
         renderHero();
         renderPlan();
         return;

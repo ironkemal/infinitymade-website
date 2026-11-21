@@ -2,6 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {
+  berlinIsoTag,
+  erstelleLaufWaechter,
+  tagVerschiebenDatum,
   tageszeitGruss,
   dauerKurzText,
   buchungenFuerTagAufbereiten,
@@ -92,6 +95,29 @@ test('handlungsbedarfZusammenfassen priorisiert überfällige Fristen, Anfragen,
   assert.equal(erg.eintraege.length, 4);
   assert.equal(erg.eintraege[0].kategorie, 'frist');
   assert.equal(erg.eintraege[1].kategorie, 'anfrage');
+});
+
+test('F-05 erstelleLaufWaechter & tagVerschiebenDatum: schnelle Klicks ohne Versatz und veraltete Antworten verwerfen', () => {
+  const w = erstelleLaufWaechter();
+  const l1 = w.start();
+  const l2 = w.start();
+  const l3 = w.start();
+  assert.equal(w.istAktuell(l1), false);
+  assert.equal(w.istAktuell(l2), false);
+  assert.equal(w.istAktuell(l3), true);
+  assert.equal(w.aktuell(), l3);
+
+  // Heute (Sa 21.11.2026) + 3x "‹" ohne Pause -> Mi 18.11.2026
+  const heute = new Date('2026-11-21T14:00:00+01:00');
+  let d = tagVerschiebenDatum(heute, 0, heute);
+  d = tagVerschiebenDatum(d, -1, heute);
+  d = tagVerschiebenDatum(d, -1, heute);
+  d = tagVerschiebenDatum(d, -1, heute);
+  assert.equal(berlinIsoTag(d), '2026-11-18');
+
+  // DST-Wechsel März (29.03.2026): 30.03. - 2 Tage = 28.03.
+  const dst = new Date('2026-03-30T12:00:00+02:00');
+  assert.equal(berlinIsoTag(tagVerschiebenDatum(tagVerschiebenDatum(dst, -1), -1)), '2026-03-28');
 });
 
 test('Tageszentrale-Module enthalten keine Emojis', () => {

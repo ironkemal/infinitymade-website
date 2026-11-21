@@ -13,6 +13,38 @@ export function berlinIsoTag(jetzt = new Date()) {
   return jetzt.toLocaleDateString('sv-SE', { timeZone: TZ });
 }
 
+/**
+ * Monotoner Laufzähler (Generation-Guard) gegen überholte asynchrone Antworten
+ * bei schnellen Klicks auf die Datumsnavigation (F-05).
+ */
+export function erstelleLaufWaechter() {
+  let nr = 0;
+  return {
+    start() { return ++nr; },
+    /** @param {number} lauf */
+    istAktuell(lauf) { return lauf === nr; },
+    aktuell() { return nr; },
+  };
+}
+
+/**
+ * Verschiebt ein Datum um `deltaTage` Kalendertage in Europe/Berlin (DST-sicher).
+ * `deltaTage === 0` liefert den heutigen Berliner Kalendertag.
+ * Rückgabe ist ein Date um 12:00 Uhr Ortszeit des Zieltags (kein Mitternachts-Drift).
+ *
+ * @param {Date|null|undefined} datum
+ * @param {number} deltaTage
+ * @param {Date} [heute]
+ * @returns {Date}
+ */
+export function tagVerschiebenDatum(datum, deltaTage, heute = new Date()) {
+  const basisIso = deltaTage === 0 ? berlinIsoTag(heute) : berlinIsoTag(datum || heute);
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(basisIso);
+  if (!m) return new Date(heute);
+  const u = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]) + deltaTage));
+  return new Date(`${u.toISOString().slice(0, 10)}T12:00:00`);
+}
+
 /** @param {Date} [jetzt] */
 export function berlinMinuten(jetzt = new Date()) {
   const teile = new Intl.DateTimeFormat('de-DE', {

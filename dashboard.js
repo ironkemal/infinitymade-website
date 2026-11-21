@@ -44,7 +44,7 @@ import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnun
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20261004m116';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261005g';
 import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261004m116';
-import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261118v914'; import { pruefePatientPflicht, patientKontaktFehler } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { ladeUeberblickAnsicht, fokussiereUeberblickBereich } from './module/ueberblick-ansicht.js?v=20261121f10'; import { aktivitaetZeileHtml } from './module/aktivitaet-zeile.js?v=20261119start1'; import { rezKpiAuswerten } from './module/ueberblick-listen.js?v=20261121f01b'; import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_KPI } from './module/verordnung-fristen-laden.js?v=20261121f01';
+import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261118v914'; import { pruefePatientPflicht, patientKontaktFehler } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { ladeUeberblickAnsicht, fokussiereUeberblickBereich } from './module/ueberblick-ansicht.js?v=20261121f10'; import { aktivitaetZeileHtml } from './module/aktivitaet-zeile.js?v=20261119start1'; import { rezKpiAuswerten } from './module/ueberblick-listen.js?v=20261121f01b'; import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_KPI } from './module/verordnung-fristen-laden.js?v=20261121f01'; import { erstelleLaufWaechter, tagVerschiebenDatum } from './module/tageszentrale-logik.js?v=20261121f05';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
 import { ladeStatusJePatient, oeffneStatusDialogFuer, verordnungStatusInfo } from './module/abrechnungsstatus.js?v=20261117f2';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261117v906';
@@ -1141,7 +1141,9 @@ function findGaps(whStart, whEnd, bookings) {
   } catch (e) { console.error('[findGaps]', e); return []; }
 }
 
+const scheduleLauf = erstelleLaufWaechter(), gapsLauf = erstelleLaufWaechter();
 async function renderGapsForDate(date) {
+  const lauf = gapsLauf.start();
   try {
     const tz = 'Europe/Berlin';
     const container = document.getElementById('gapsList');
@@ -1164,7 +1166,7 @@ async function renderGapsForDate(date) {
     const { data: whAll, error: whFehler } = await supabase.from('working_hours')
       .select('day_of_week,start_time,end_time,is_active')
       .eq('user_id', ownerId)
-      .eq('is_active', true); if (whFehler) throw whFehler;
+      .eq('is_active', true); if (!gapsLauf.istAktuell(lauf)) return; if (whFehler) throw whFehler;
     const whMap = {};
     whAll?.forEach(r => whMap[r.day_of_week] = r);
 
@@ -1175,7 +1177,7 @@ async function renderGapsForDate(date) {
       .eq('user_id', currentSession.user.id)
       .gte('start_time', dayStart.toISOString()).lte('start_time', dayEndIso)
       .neq('status', 'cancelled').order('start_time');
-    const { data: bookings, error: bookingsFehler } = await q; if (bookingsFehler) throw bookingsFehler; // V9.03 (podoloji 16.11.2026): Ladefehler nie als freie Zeit zeigen (Doppelbuchung)
+    const { data: bookings, error: bookingsFehler } = await q; if (!gapsLauf.istAktuell(lauf)) return; if (bookingsFehler) throw bookingsFehler; // V9.03 (podoloji 16.11.2026): Ladefehler nie als freie Zeit zeigen (Doppelbuchung)
 
     const totalEl = document.getElementById('gapsTotal');
     const wh = whMap[dayDow];
@@ -1214,24 +1216,24 @@ async function renderGapsForDate(date) {
         <div class="gap-card-time">${g.start} - ${g.end}</div>
       </div>`;
     }).join('');
-  } catch (e) { console.error('[renderGapsForDate]', e); const c = document.getElementById('gapsList'), t = document.getElementById('gapsTotal'); if (c) c.innerHTML = '<div class="gap-empty gap-fehler">Freie Zeiten konnten nicht geladen werden.</div>'; if (t) t.textContent = '–'; }
+  } catch (e) { if (!gapsLauf.istAktuell(lauf)) return; console.error('[renderGapsForDate]', e); const c = document.getElementById('gapsList'), t = document.getElementById('gapsTotal'); if (c) c.innerHTML = '<div class="gap-empty gap-fehler">Freie Zeiten konnten nicht geladen werden.</div>'; if (t) t.textContent = '–'; }
 }
 
 async function loadScheduleBookings(date) {
-  scheduleDate = date; startansicht?.termine({ laden: true, date });
+  const lauf = scheduleLauf.start();
+  scheduleDate = date; startansicht?.termine({ laden: true, date, lauf });
   const loadingEl = document.getElementById('upcoming-bookings-loading');
   const emptyEl = document.getElementById('upcoming-bookings-empty');
   const gridEl = document.getElementById('upcoming-bookings-list');
   const labelEl = document.getElementById('scheduleDateLabel');
   loadingEl.hidden = false; emptyEl.hidden = true; gridEl.hidden = true;
 
-  const today = new Date();
-  const isToday = date.toDateString() === today.toDateString();
+  const tz = 'Europe/Berlin';
+  const dStr = date.toLocaleDateString('sv-SE', { timeZone: tz });
+  const isToday = dStr === new Date().toLocaleDateString('sv-SE', { timeZone: tz });
   const fmtDate = new Intl.DateTimeFormat('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }).format(date);
   labelEl.textContent = isToday ? 'Heutige Termine' : fmtDate;
 
-  const tz = 'Europe/Berlin';
-  const dStr = date.toLocaleDateString('sv-SE', { timeZone: tz });
   const dStart = new Date(dStr + 'T00:00:00').toISOString();
   const dEnd = new Date(dStr + 'T23:59:59').toISOString();
   const ownerId = getOwnerId();
@@ -1242,7 +1244,8 @@ async function loadScheduleBookings(date) {
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
 
-  loadingEl.hidden = true; startansicht?.termine({ bookings: bookings || [], error: bookingsError, date });
+  if (!scheduleLauf.istAktuell(lauf)) return;
+  loadingEl.hidden = true; startansicht?.termine({ bookings: bookings || [], error: bookingsError, date, lauf });
 
   const nowIso = new Date().toISOString();
   let displayBookings = bookings || [];
@@ -12245,24 +12248,25 @@ async function renderOverviewMonthly(date) {
 
 function shiftScheduleDate(direction) {
   // direction: -1 (geri) | +1 (ileri) | 0 (bugün)
-  const d = direction === 0 ? new Date() : new Date(scheduleDate);
-  if (direction !== 0) {
-    if (scheduleView === 'weekly') d.setDate(d.getDate() + 7 * direction);
-    else if (scheduleView === 'monthly') d.setMonth(d.getMonth() + direction);
-    else d.setDate(d.getDate() + direction);
+  if (direction === 0 || scheduleView === 'daily') {
+    scheduleDate = tagVerschiebenDatum(scheduleDate, direction);
+    return scheduleDate;
   }
+  const d = new Date(scheduleDate);
+  if (scheduleView === 'weekly') d.setDate(d.getDate() + 7 * direction);
+  else if (scheduleView === 'monthly') d.setMonth(d.getMonth() + direction);
   scheduleDate = d;
   return d;
 }
 
 async function refreshActiveScheduleView() {
+  const d = scheduleDate;
   if (scheduleView === 'daily') {
-    await loadScheduleBookings(scheduleDate);
-    await renderGapsForDate(scheduleDate);
+    await Promise.all([loadScheduleBookings(d), renderGapsForDate(d)]);
   } else if (scheduleView === 'weekly') {
-    await Promise.all([renderOverviewWeekly(scheduleDate), loadScheduleBookings(scheduleDate), renderGapsForDate(scheduleDate)]);
+    await Promise.all([renderOverviewWeekly(d), loadScheduleBookings(d), renderGapsForDate(d)]);
   } else if (scheduleView === 'monthly') {
-    await Promise.all([renderOverviewMonthly(scheduleDate), loadScheduleBookings(scheduleDate), renderGapsForDate(scheduleDate)]);
+    await Promise.all([renderOverviewMonthly(d), loadScheduleBookings(d), renderGapsForDate(d)]);
   }
 }
 
@@ -12307,28 +12311,10 @@ function setupScheduleNav() {
     });
   });
 
-  const gPrev = document.getElementById('gapsPrev');
-  const gNext = document.getElementById('gapsNext');
-  const gToday = document.getElementById('gapsToday');
-  if (gPrev) gPrev.addEventListener('click', async () => {
-    ovEmpPage = 0;
-    const d = new Date(scheduleDate);
-    d.setDate(d.getDate() - 1);
-    await loadScheduleBookings(d);
-    await renderGapsForDate(d);
-  });
-  if (gNext) gNext.addEventListener('click', async () => {
-    ovEmpPage = 0;
-    const d = new Date(scheduleDate);
-    d.setDate(d.getDate() + 1);
-    await loadScheduleBookings(d);
-    await renderGapsForDate(d);
-  });
-  if (gToday) gToday.addEventListener('click', async () => {
-    ovEmpPage = 0;
-    await loadScheduleBookings(new Date());
-    await renderGapsForDate(new Date());
-  });
+  const stepGaps = (delta) => { ovEmpPage = 0; const d = tagVerschiebenDatum(scheduleDate, delta); scheduleDate = d; void Promise.all([loadScheduleBookings(d), renderGapsForDate(d)]); };
+  document.getElementById('gapsPrev')?.addEventListener('click', () => stepGaps(-1));
+  document.getElementById('gapsNext')?.addEventListener('click', () => stepGaps(+1));
+  document.getElementById('gapsToday')?.addEventListener('click', () => stepGaps(0));
 }
 
 async function loadFeedbacks() {
@@ -13974,7 +13960,7 @@ async function init() {
       const ansichtKontext = { uid: () => currentSession?.user?.id, rolle: () => currentProfile?.role, scope: () => [currentSession?.user?.id, currentProfile?.role, getOwnerId(), currentBusiness?.id].join(':') };
       startansicht = (await import('./module/startseite-ansicht.js?v=20261121f02')).montiereStartansicht({ ...ansichtKontext, sektor: getSector, api: () => API, springe: switchPanel, akte: id => window.openPatientDetail?.(id), neuLaden: loadTodayBookings, anfragenLaden: () => loadAnfragen('pending'), behandler: () => teamMembers.map(m => ({ id: m.id, name: m.business_name || m.full_name || (m.email || '').split('@')[0] })), hb: { supabase, ownerId: () => getOwnerId(), businessId: () => currentBusiness?.id ?? null, patientsGemeinsam: () => dataSharing.patients === true } });
       (await import('./module/anamnese-abschnitte.js?v=20261114v402')).montiereAnamneseAbschnitte(ansichtKontext); try { (await import('./module/shell-ansicht.js?v=20261117v906')).montiereShellansicht({ ...ansichtKontext, name: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', suche: { ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, oeffnePatient: id => window.openPatientDetail?.(id), dokumente: { kontext: () => ({ supabase, rolle: currentProfile?.role, uid: currentSession?.user?.id, ownerId: getOwnerId(), businessId: currentBusiness?.id ?? null, patientsGemeinsam: dataSharing.patients === true, financeGemeinsam: dataSharing.finance === true }), ladeRechnungen: loadRechnungen, oeffneRechnung: id => { switchPanel('rechnungen'); return openInvView(id); }, oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); const ok = oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API }); if (!ok) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); return ok; } } } }); } catch (e) { console.error('[init] shell', e); }
-    } else { startansicht = (await import('./module/tageszentrale-ansicht.js?v=20261121f10')).montiereTageszentrale({ supabase, api: () => API, getOwnerId, getUserId: () => currentSession?.user?.id || null, istOwner: () => currentProfile?.role === 'owner', getName: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', getTeam: () => teamMembers.map(m => ({ id: m.id, name: m.business_name || m.full_name || (m.email || '').split('@')[0] })), bizScope, oeffneTerminNeu: (s) => prefillBookingModal(s || null), oeffneTerminAktion: (b) => openBookingActionModal(b), oeffnePatient: (id) => window.openPatientDetail?.(id), oeffnePatientNeu: () => openLeadModal(null), oeffneRezeptNeu: () => openRezeptModal(null, null), oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); if (!oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API })) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); }, oeffneAnfrage: async (id) => { await switchPanel('anfragen'); if (id) setTimeout(() => showAnfrageDetail(id), 220); }, oeffneWarteliste: async (id) => { await switchPanel('warteliste'); if (id) setTimeout(() => window.openWlEntry?.(id), 180); }, oeffneUeberblickFristen: () => { fokussiereUeberblickBereich('deadlines', { fristTab: 'alle' }); switchPanel('ueberblick'); }, wechslePanel: switchPanel, oeffneKalenderTag: (tagIso) => { dayViewDate = new Date(`${tagIso}T12:00:00`); switchPanel('calendar'); setCalendarView('day'); } }); }
+    } else { startansicht = (await import('./module/tageszentrale-ansicht.js?v=20261121f05')).montiereTageszentrale({ supabase, api: () => API, getOwnerId, getUserId: () => currentSession?.user?.id || null, istOwner: () => currentProfile?.role === 'owner', getName: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', getTeam: () => teamMembers.map(m => ({ id: m.id, name: m.business_name || m.full_name || (m.email || '').split('@')[0] })), bizScope, oeffneTerminNeu: (s) => prefillBookingModal(s || null), oeffneTerminAktion: (b) => openBookingActionModal(b), oeffnePatient: (id) => window.openPatientDetail?.(id), oeffnePatientNeu: () => openLeadModal(null), oeffneRezeptNeu: () => openRezeptModal(null, null), oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); if (!oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API })) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); }, oeffneAnfrage: async (id) => { await switchPanel('anfragen'); if (id) setTimeout(() => showAnfrageDetail(id), 220); }, oeffneWarteliste: async (id) => { await switchPanel('warteliste'); if (id) setTimeout(() => window.openWlEntry?.(id), 180); }, oeffneUeberblickFristen: () => { fokussiereUeberblickBereich('deadlines', { fristTab: 'alle' }); switchPanel('ueberblick'); }, wechslePanel: switchPanel, oeffneKalenderTag: (tagIso) => { dayViewDate = new Date(`${tagIso}T12:00:00`); switchPanel('calendar'); setCalendarView('day'); } }); }
     await renderOverview();
     try { await renderGapsForDate(scheduleDate); dbg('[init] gapsForDate ok'); } catch (e) { console.error('[init] renderGapsForDate error', e); }
     setupScheduleNav();
