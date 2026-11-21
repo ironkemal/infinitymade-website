@@ -102,6 +102,7 @@ function schliesseAllePopovers() {
  */
 export function loescheMarkierungen(wurzel = document) {
   schliesseAllePopovers();
+  if (!wurzel || typeof wurzel.querySelectorAll !== 'function') return;
   wurzel.querySelectorAll('.vo-mark-fehler, .vo-mark-warnung').forEach(el => {
     el.classList.remove('vo-mark-fehler', 'vo-mark-warnung');
     if (el.dataset.voTitelAlt !== undefined) {

@@ -29,9 +29,12 @@
 
 ## Block D — Live-Schreibtests Dashboard / Überblick & Mobilgeräte (`F-01`–`F-13`, 5 Min.)
 12. **Tagesplan & Raster (`F-03`, `F-04`, `F-05`):** Auf dem Dashboard einen künftigen Tag wählen → „Termin anlegen“ / Klick auf freien Raster-Slot übernimmt das gewählte Datum; Termin speichern, verschieben und stornieren. Bei vergangenem Tag springt „Termin anlegen“ mit Hinweis auf heute.
-13. **Praxis vs. Meine & Standortwechsel:** Umschalter im Tagesplan/Kalender sowie Standortwechsel im QA-Mandanten testen → Zähler, Termine und Listen aktualisieren sauber ohne Race-Flackern.
+13. **Praxis vs. Meine & Standortwechsel:** Umschalter im Tagesplan/Kalender sowie im Überblick (`.ubl-scope-btn`: Praxis / Meine) und Standortwechsel im QA-Mandanten testen → Zähler, Termine und Listen aktualisieren sauber ohne Race-Flackern.
 14. **Zuzahlung + Storno (`F-02`, `9.3a/b`):** Im QA-Mandanten eine Test-Zuzahlung verbuchen und anschließend stornieren → Dashboard-Kachel `#tzGeld` („Monat laufend · Journal“) und Statistik (`Europe/Berlin`) bilden Eingang und Storno konsistent ab.
-15. **Echte Smartphones (`F-13`):** Dashboard (`#panel-overview`), Überblick (`#panel-ueberblick`) und Kalender kurz auf echtem iOS- und Android-Gerät öffnen → kein horizontaler Überlauf, Buttons & Links gut tippbar.
+15. **Responsive & Dark Mode (`F-13`, echte Zielbreiten):** Dashboard (`#panel-overview`), Überblick (`#panel-ueberblick`) und Verordnungen in Hell und Dunkel auf **`1440 px`, `768 px`, `390 px` und `320 px`** (Fenster manuell auf Zielbreite ziehen bzw. echtes iOS/Android-Gerät) prüfen → `document.documentElement.scrollWidth <= window.innerWidth`, Buttons & Links gut tippbar (`≥ 44 px`).
+16. **Hinweis zur Suche (klassisches SaaS-Design vs. Pilot-Design `neu`):**
+    - Im **klassischen SaaS-Design** (aktueller Standard für „TEST-Physio QA“) gibt es **keine** globale Kopfleisten-Suche mit Suchbereich „Verordnung“ und keinen „Teilbestand“-Hinweis. Geprüft werden stattdessen die Verordnungsliste (`#panel-verordnungen`: Keyset-Pagination `order=id.asc&limit=200`, Datum absteigend, Klick öffnet Muster-13) sowie das Überblick-Suchfeld (`#ublSearchInput`, `Strg+K`, Klick auf „Rezept“ öffnet `#verordnungen`) — **bereits live bestanden am 21.11.2026**.
+    - Die **Kopfleisten-Suche** (`.px-suche` mit Suchbereich `Patient / Verordnung / Rechnung` und Teilbestand-Hinweis ab `5.000` je Topf in `.px-suche-hinweis`) ist **nur** im Pilot-Design (`data-design="neu"` über Server-Env `DESIGN_NEU_PILOT_TENANTS` + Rolle `owner`) aktiv — ab `900 px` direkt in der Kopfleiste, unter `900 px` über die Lupe (`.px-suche-knopf`).
 
 ---
 
@@ -40,5 +43,5 @@
 - Rechnungsrechte `0120` + `0121` (Option A: aktive Mitarbeiter mit Modulrecht `abrechnung`, inaktive Mitarbeiter gesperrt, Storno-/Wartelisten-Grenzen) → live angewandt und geprüft am 11.11. (`fortschritte/2026-11-11.md`).
 - Schreibender Basis-Live-Test (Patient anlegen/bearbeiten mit Datumsprüfung, Rechnungsentwurf `INV-2026-0004`, Arbeitszeiten) → bestanden am 18.11.
 - Migrationen `0124`–`0129` (inkl. Gruppenraumregel `0129`) → live auf SaaS angewandt am 20.11. (`20261120212231 praxura_0124_bis_0129_physio_qa`); GPS-Check-in entfernt & blockiert. *(**Erledigt 21.11.2026 (Melih-GO):** `api-backend/db/physio-sitzungen-nachziehen.sql` live auf SaaS (`njvuclullotbksskpwgk`) ausgeführt — offene, unabgerechnete Physio-Verordnungen ohne Sitzungsplan: 5 → 0. Reiner Daten-Nachlauf, keine Schema-Änderung.)*
-- Dashboard-/Überblick-QA-Fixes `F-01`–`F-13` + `9.1`–`9.6` → lokal & Playwright geprüft und am 21.11. gepusht (`6a61ac95`); Keyset-Pagination in `module/verordnung-uebersicht.js` lokal verifiziert (wartet auf Push-GO).
+- **Teilabnahme Live-Lesetests am 21.11.2026 (`dc2d27ab` / `c16e9d02`, „TEST-Physio QA“):** Deploy `?v=20261121pag1` bestätigt; `#verordnungen` Keyset-Pagination (`order=id.asc&limit=200`, `200 OK`, kein `414`, 13 Zeilen absteigend nach Datum, Klick öffnet Muster-13); `#ueberblick` Suche (`#ublSearchInput`, `Strg+K`, Klick „Rezept“ → `#verordnungen`); Fristen-Gleichstand Dashboard = Überblick (`7 = 7`); alle beobachteten Supabase-Abfragen `200 OK`; Framing-Schutz (`X-Frame-Options: SAMEORIGIN` + `frame-ancestors 'self'`) bestätigt.
 - § 302 Physio-DTA / Entlassmanagement `0112`–`0115` → **Stufe 2** (nicht auf dem kritischen Pfad von Stufe 1, siehe `Physio/LAUNCH-P1.md`).
