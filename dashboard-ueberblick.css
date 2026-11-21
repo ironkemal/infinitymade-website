@@ -11,57 +11,57 @@
   #panel-ueberblick {
     --ubl-radius: 16px;
     --ubl-radius-sm: 10px;
-    --ubl-shadow: 0 1px 2px rgba(15, 20, 28, 0.05), 0 8px 20px -12px rgba(15, 20, 28, 0.10);
-    /* Tier 1: Einzelner Carbon-Black-Fokusanker (Kachel 1 "Termine heute" + aktive Mikro-Pills) */
-    --ubl-blk-bg: #10151F;
-    --ubl-blk-bg-hover: #1A2333;
-    --ubl-blk-ink: #F5F7FA;
-    --ubl-blk-muted: #A3B0C2;
-    --ubl-blk-faint: #8896AB;
-    /* Tier 2 & 3: Kühle Steel-Slate-Kennzahlenkacheln & Steel-Mist-Kartenköpfe */
-    --ubl-slate-bg: #EDF2F8;
-    --ubl-slate-hover: #E3EAF4;
-    --ubl-slate-border: #C2CFE0;
-    --ubl-head-bg: #EFF3F8;
-    --ubl-tabs-bg: #F6F8FB;
-    --ubl-card-border: #C7D0DC;
+    --ubl-shadow: 0 1px 2px rgba(20, 22, 26, 0.05), 0 8px 20px -12px rgba(20, 22, 26, 0.09);
+    /* Tier 1: Einzelner, leicht aufgehellter Anthrazit-Fokusanker (Kachel 1 "Termine heute" + aktive Mikro-Pills) */
+    --ubl-blk-bg: #23262D;
+    --ubl-blk-bg-hover: #2C3038;
+    --ubl-blk-ink: #F7F7F8;
+    --ubl-blk-muted: #B8BCC5;
+    --ubl-blk-faint: #9CA1AB;
+    /* Tier 2 & 3: Reine weiße Kennzahlenkacheln & neutrale Stein-Kartenköpfe (ohne Blaustich) */
+    --ubl-slate-bg: #FFFFFF;
+    --ubl-slate-hover: #F5F5F7;
+    --ubl-slate-border: #D4D5DA;
+    --ubl-head-bg: #F5F5F7;
+    --ubl-tabs-bg: #F1F1F3;
+    --ubl-card-border: #D4D5DA;
   }
 
   :root:not([data-design="neu"]) #panel-ueberblick {
     --bg-card-solid: #FFFFFF;
-    --bg-sunken: #EFF2F6;
-    --bg-hover: #E4EBF3;
-    --border: #C7D0DC;
-    --border-strong: #AAB6C6;
-    --text-main: #0F141C;
-    --text-muted: #525E6F;
-    --primary: #10151F;
+    --bg-sunken: #F1F1F3;
+    --bg-hover: #F4F4F6;
+    --border: #D4D5DA;
+    --border-strong: #B4B7C0;
+    --text-main: #16181D;
+    --text-muted: #555861;
+    --primary: #23262D;
   }
 
   [data-theme="dark"] #panel-ueberblick {
     --ubl-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 8px 22px -12px rgba(0, 0, 0, 0.45);
-    --ubl-blk-bg: #0A0D14;
-    --ubl-blk-bg-hover: #151C28;
-    --ubl-blk-ink: #F5F7FA;
-    --ubl-blk-muted: #A8B5C7;
-    --ubl-blk-faint: #8E9CB0;
-    --ubl-slate-bg: #1B222F;
-    --ubl-slate-hover: #232C3C;
-    --ubl-slate-border: #334054;
-    --ubl-head-bg: #1E2531;
-    --ubl-tabs-bg: #141922;
-    --ubl-card-border: #313B4B;
+    --ubl-blk-bg: #22252C;
+    --ubl-blk-bg-hover: #2A2E37;
+    --ubl-blk-ink: #F7F7F8;
+    --ubl-blk-muted: #B8BCC5;
+    --ubl-blk-faint: #9CA1AB;
+    --ubl-slate-bg: #181A1F;
+    --ubl-slate-hover: #22252C;
+    --ubl-slate-border: #323640;
+    --ubl-head-bg: #20232A;
+    --ubl-tabs-bg: #14161A;
+    --ubl-card-border: #323640;
   }
 
   :root[data-theme="dark"]:not([data-design="neu"]) #panel-ueberblick {
-    --bg-card-solid: #171B22;
-    --bg-sunken: #12161C;
-    --bg-hover: #232A36;
-    --border: #313B4B;
-    --border-strong: #435064;
-    --text-main: #F1F4F8;
-    --text-muted: #9AA5B4;
-    --primary: #F1F4F8;
+    --bg-card-solid: #181A1F;
+    --bg-sunken: #14161A;
+    --bg-hover: #24272F;
+    --border: #323640;
+    --border-strong: #4A4F5C;
+    --text-main: #F3F4F6;
+    --text-muted: #A5A9B4;
+    --primary: #F3F4F6;
   }
 
   [data-design="neu"] #panel-ueberblick {

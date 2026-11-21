@@ -956,71 +956,71 @@
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] {
     --tz-canvas: var(--bg-main, #F6F3EF);
     --tz-surface: #FFFFFF;
-    --tz-band: #EFF2F6;
-    --tz-sunken: #EBF0F5;
-    --tz-hover: #F3F6F9;
-    --tz-border: #C7D0DC;
-    --tz-border-soft: #DFE5EE;
-    --tz-border-strong: #7C8A9E;
-    --tz-ink: #0F141C;
-    --tz-muted: #4E5A6B;
-    --tz-faint: #677487;
-    --tz-primary: #121721;
+    --tz-band: #F5F5F7;
+    --tz-sunken: #F1F1F3;
+    --tz-hover: #F4F4F6;
+    --tz-border: #D4D5DA;
+    --tz-border-soft: #E5E6EA;
+    --tz-border-strong: #8E919B;
+    --tz-ink: #16181D;
+    --tz-muted: #555861;
+    --tz-faint: #70747E;
+    --tz-primary: #23262D;
     --tz-primary-fg: #FFFFFF;
-    --tz-accent: #283548;
-    --tz-accent-soft: #E4EBF3;
-    --tz-accent-border: #B3C1D4;
-    --tz-hero-bg: #10151F;
-    --tz-hero-border: #232D3F;
-    --tz-hero-ink: #F5F7FA;
-    --tz-hero-muted: #A3B0C2;
-    --tz-hero-accent: #CBD5E1;
-    --tz-hero-pill-bg: rgba(203, 213, 225, 0.14);
-    --tz-hero-pill-fg: #E2E8F0;
+    --tz-accent: #23262D;
+    --tz-accent-soft: #F1F2F4;
+    --tz-accent-border: #C7C9D0;
+    --tz-hero-bg: #23262D;
+    --tz-hero-border: #353943;
+    --tz-hero-ink: #F7F7F8;
+    --tz-hero-muted: #B8BCC5;
+    --tz-hero-accent: #D8DBE2;
+    --tz-hero-pill-bg: rgba(255, 255, 255, 0.12);
+    --tz-hero-pill-fg: #F2F3F5;
     --tz-danger: var(--danger, #B42318);
     --tz-ok: var(--success, #067647);
-    --tz-shadow: 0 1px 2px rgba(15, 20, 28, 0.05), 0 8px 20px -14px rgba(15, 20, 28, 0.11);
-    --tz-shadow-hero: 0 12px 28px -14px rgba(12, 16, 23, 0.36);
+    --tz-shadow: 0 1px 2px rgba(20, 22, 26, 0.05), 0 8px 20px -14px rgba(20, 22, 26, 0.10);
+    --tz-shadow-hero: 0 12px 26px -14px rgba(20, 22, 28, 0.28);
     --tz-r: 14px;
     --tz-r-lg: 16px;
-    --tz-slate-bg: #EBF0F7;
-    --tz-slate-head: #E1E8F2;
-    --tz-slate-hover: #E0E8F2;
-    --tz-slate-border: #C0CDDF;
+    --tz-slate-bg: #FFFFFF;
+    --tz-slate-head: #F5F5F7;
+    --tz-slate-hover: #F6F6F8;
+    --tz-slate-border: #D4D5DA;
   }
 
   :root:not([data-design="neu"])[data-theme="dark"] #panel-overview[data-tz="1"] {
     --tz-canvas: var(--bg-main, #181614);
-    --tz-surface: #171B22;
-    --tz-band: #1E2531;
-    --tz-sunken: #12161C;
-    --tz-hover: #232A36;
-    --tz-border: #313B4B;
-    --tz-border-soft: #232B37;
-    --tz-border-strong: #5D6B7E;
-    --tz-ink: #F3F5F8;
-    --tz-muted: #A3AFBF;
-    --tz-faint: #8290A3;
-    --tz-primary: #F3F5F8;
-    --tz-primary-fg: #10151F;
-    --tz-accent: #CBD5E1;
-    --tz-accent-soft: #222A36;
-    --tz-accent-border: #414F63;
-    --tz-hero-bg: #0A0D14;
-    --tz-hero-border: #263144;
-    --tz-hero-ink: #F5F7FA;
-    --tz-hero-muted: #B0BCCB;
-    --tz-hero-accent: #CBD5E1;
-    --tz-hero-pill-bg: rgba(203, 213, 225, 0.14);
-    --tz-hero-pill-fg: #E2E8F0;
+    --tz-surface: #181A1F;
+    --tz-band: #20232A;
+    --tz-sunken: #14161A;
+    --tz-hover: #24272F;
+    --tz-border: #323640;
+    --tz-border-soft: #252830;
+    --tz-border-strong: #636875;
+    --tz-ink: #F3F4F6;
+    --tz-muted: #A5A9B4;
+    --tz-faint: #858A96;
+    --tz-primary: #F3F4F6;
+    --tz-primary-fg: #181A1F;
+    --tz-accent: #D5D8E0;
+    --tz-accent-soft: #23262E;
+    --tz-accent-border: #444956;
+    --tz-hero-bg: #22252C;
+    --tz-hero-border: #383C47;
+    --tz-hero-ink: #F7F7F8;
+    --tz-hero-muted: #B8BCC5;
+    --tz-hero-accent: #D8DBE2;
+    --tz-hero-pill-bg: rgba(255, 255, 255, 0.12);
+    --tz-hero-pill-fg: #F2F3F5;
     --tz-danger: #F97066;
     --tz-ok: #47CD89;
-    --tz-shadow: 0 2px 4px rgba(0, 0, 0, 0.34), 0 10px 24px -14px rgba(0, 0, 0, 0.54);
-    --tz-shadow-hero: 0 14px 32px -14px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(226, 232, 240, 0.08);
-    --tz-slate-bg: #1B222F;
-    --tz-slate-head: #222B3B;
-    --tz-slate-hover: #242E3F;
-    --tz-slate-border: #334054;
+    --tz-shadow: 0 2px 4px rgba(0, 0, 0, 0.32), 0 10px 24px -14px rgba(0, 0, 0, 0.50);
+    --tz-shadow-hero: 0 14px 30px -14px rgba(0, 0, 0, 0.56), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    --tz-slate-bg: #181A1F;
+    --tz-slate-head: #20232A;
+    --tz-slate-hover: #24272F;
+    --tz-slate-border: #323640;
   }
 
   /* Zweispaltiges Raster: links Fokus + Tagesplan bündig in #tzColLeft (ohne Lücke!),
@@ -1495,6 +1495,7 @@
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-tl-row.is-now {
     background: var(--tz-accent-soft);
+    box-shadow: inset 3px 0 0 var(--tz-primary);
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-tl-time {
