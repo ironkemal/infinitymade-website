@@ -3,7 +3,7 @@
 > Üretim: 2026-11-21 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4859 fonksiyon** (4737 JS · 95 bash · 27 ps1) · 596 dosya · 42 sidebar modülü
+**4861 fonksiyon** (4739 JS · 95 bash · 27 ps1) · 596 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -532,7 +532,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `loescheAufgabe()` — [module/start-aufgaben.js:498](module/start-aufgaben.js#L498-L532) · 35 satır · praxis_aufgaben:delete
 
 **Yol 2 — `erledigeAufgabe()`** · Ekran: ortak yardımcı — 37 modülden çağrılıyor
-- `erledigeAufgabe()` — [module/ueberblick-ansicht.js:925](module/ueberblick-ansicht.js#L925-L954) · 30 satır · praxis_aufgaben:update
+- `erledigeAufgabe()` — [module/ueberblick-ansicht.js:969](module/ueberblick-ansicht.js#L969-L998) · 30 satır · praxis_aufgaben:update
 
 ## Çift render adayları — aynı DOM id'ye HTML basan, birbirini çağırmayan fonksiyonlar
 

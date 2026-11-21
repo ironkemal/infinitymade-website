@@ -554,7 +554,7 @@ export function montiereTageszentrale(k) {
         <button type="button" class="tz-mini-link" data-tz-act="ueberblick">Überblick ›</button>
       </div>
       <div class="tz-kpi-strip">
-        <button type="button" class="tz-kpi-cell" data-tz-panel="verordnungen">
+        <button type="button" class="tz-kpi-cell" data-tz-act="ueberblick-fristen">
           <span class="tz-kpi-n ${counts.fristenUeberfaellig > 0 ? 'is-danger' : ''}">${counts.fristen}</span>
           <span class="tz-kpi-l">Fristen</span>
         </button>
@@ -694,6 +694,10 @@ export function montiereTageszentrale(k) {
     else if (act === 'neu-patient') k.oeffnePatientNeu?.();
     else if (act === 'neu-vo') k.oeffneRezeptNeu?.();
     else if (act === 'ueberblick') k.wechslePanel?.('ueberblick');
+    else if (act === 'ueberblick-fristen') {
+      if (typeof /** @type {any} */ (k).oeffneUeberblickFristen === 'function') /** @type {any} */ (k).oeffneUeberblickFristen();
+      else k.wechslePanel?.('ueberblick');
+    }
     else if (act === 'kalender') k.oeffneKalenderTag?.(state.zielIso);
     else if (act === 'morgen') {
       document.getElementById('gapsNext')?.click();

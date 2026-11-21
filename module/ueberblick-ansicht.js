@@ -121,6 +121,50 @@ let laufNr = 0;
 let aktiverKontext = null;
 let signalTimer = null;
 let signaleAktiv = false;
+/** @type {{ ziel: string, fristTab?: string } | null} */
+let ausstehenderFokus = null;
+
+/**
+ * Merkt einen Zielbereich im Überblick vor (z. B. Sprung von Dashboard „Fristen“
+ * direkt zu `#ublDeadlinesSection` mit Tab „Alle“ und geleerter Suche, F-10).
+ *
+ * @param {'deadlines' | 'vorgaenge' | 'rechnungen' | 'noshows' | 'vacations'} ziel
+ * @param {{ fristTab?: 'alle' | 'ueberfaellig' | 'bald' | 'geplant' | 'abrechnung' | 'berichte' | 'pruefbedarf' }} [opts]
+ */
+export function fokussiereUeberblickBereich(ziel, { fristTab } = {}) {
+  ausstehenderFokus = { ziel, fristTab };
+  if (fristTab) state.fristTab = fristTab;
+  if (state.suche) {
+    state.suche = '';
+    if (typeof document !== 'undefined') {
+      const sEl = /** @type {HTMLInputElement | null} */ (document.getElementById('ublSearch'));
+      const cEl = document.getElementById('ublSearchClear');
+      if (sEl) sEl.value = '';
+      if (cEl) cEl.hidden = true;
+    }
+  }
+}
+
+function wendeAusstehendenFokusAn() {
+  if (!ausstehenderFokus) return;
+  const { ziel, fristTab } = ausstehenderFokus;
+  ausstehenderFokus = null;
+  if (fristTab && state.fristTab !== fristTab) {
+    state.fristTab = fristTab;
+    renderDeadlines();
+  }
+  const zielId = {
+    deadlines: 'ublDeadlinesSection',
+    vorgaenge: 'ublVorgaengeSection',
+    rechnungen: 'ublVorgaengeSection',
+    noshows: 'ublNoShowSection',
+    vacations: 'ublVacationSection',
+  }[ziel];
+  const el = typeof document !== 'undefined' && zielId ? document.getElementById(zielId) : null;
+  if (el && typeof el.scrollIntoView === 'function') {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
 
 const inLeiste = (panel) => !!document.querySelector(`#sidebarNav .sidebar-item[data-panel="${panel}"]`);
 const nurMeine = () => state.scopeModus === 'meine' && !!state.userId;
@@ -1396,4 +1440,5 @@ export async function ladeUeberblickAnsicht(ctx) {
   state.geladenUm = uhrzeitJetztBerlin();
   refreshBtn?.classList.remove('is-loading');
   renderAlles();
+  wendeAusstehendenFokusAn();
 }
