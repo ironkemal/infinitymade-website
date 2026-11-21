@@ -17,6 +17,7 @@ import {
   rechnungenAufbereiten,
   geburtstageAufbereiten,
   abwesenheitenAufbereiten,
+  abwesenheitKachelAuswerten,
   nichtErscheinerAufbereiten,
   telefonLink,
   initialen,
@@ -225,6 +226,24 @@ test('geburtstageAufbereiten, abwesenheitenAufbereiten, nichtErscheinerAufbereit
   ], '2026-11-19', 30);
   assert.equal(abw[0].name, 'Tom Klein');
   assert.equal(abw[0].istAktiv, true);
+
+  // F-07 / 9.6: Kachel rechnet fest auf 14 Tage mit Untertitel „heute aktiv: X“
+  const abw14 = abwesenheitenAufbereiten([
+    { id: '1', start_date: '2026-12-07T00:00:00Z', end_date: '2026-12-13T00:00:00Z', type: 'urlaub', profiles: { business_name: 'QA Testtherapeut' } },
+  ], '2026-11-21', 14);
+  const kachel0 = abwesenheitKachelAuswerten(abw14);
+  assert.equal(kachel0.anzahl, 0);
+  assert.equal(kachel0.heuteAktiv, 0);
+  assert.equal(kachel0.untertitel, 'heute aktiv: 0');
+
+  const kachelAktiv = abwesenheitKachelAuswerten(abw.slice(0, 1), { aufgabenAnzahl: 2, ueberfAufgaben: 1 });
+  assert.equal(kachelAktiv.anzahl, 1);
+  assert.equal(kachelAktiv.heuteAktiv, 1);
+  assert.equal(kachelAktiv.untertitel, 'heute aktiv: 1 · 2 Aufgaben (1 fällig)');
+
+  const kachelZukunft = abwesenheitKachelAuswerten([{ istAktiv: false }]);
+  assert.equal(kachelZukunft.anzahl, 1);
+  assert.equal(kachelZukunft.untertitel, 'heute aktiv: 0');
 
   const ns = nichtErscheinerAufbereiten([
     { id: 'b1', lead_id: 'l1', customer_name: 'Paul Muster', start_time: '2026-11-18T13:30:00Z', services: { title: 'Krankengymnastik' } },

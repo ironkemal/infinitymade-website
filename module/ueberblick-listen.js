@@ -676,6 +676,33 @@ export function abwesenheitenAufbereiten(zeilen, heuteIso, tageVoraus = 14) {
 }
 
 /**
+ * Kennzahl und Untertitel der Abwesenheiten-Kachel im Überblick (F-07 / 9.6):
+ * fester Zeitraum (nächste 14 Tage), entkoppelt vom 14/30-Tage-Listenfilter,
+ * mit eindeutigem Untertitel „heute aktiv: X“.
+ *
+ * @param {Array<{ istAktiv?: boolean }>} abwesenheiten14T
+ * @param {{ aufgabenAnzahl?: number, ueberfAufgaben?: number, aufgabenFehler?: boolean, abwesenheitenFehler?: boolean }} [opts]
+ * @returns {{ anzahl: number, heuteAktiv: number, untertitel: string }}
+ */
+export function abwesenheitKachelAuswerten(
+  abwesenheiten14T,
+  { aufgabenAnzahl = 0, ueberfAufgaben = 0, aufgabenFehler = false, abwesenheitenFehler = false } = {}
+) {
+  const liste = Array.isArray(abwesenheiten14T) ? abwesenheiten14T : [];
+  const heuteAktiv = liste.filter(a => !!a?.istAktiv).length;
+  if (abwesenheitenFehler) {
+    return { anzahl: 0, heuteAktiv: 0, untertitel: 'Nicht verfügbar' };
+  }
+  const teile = [
+    `heute aktiv: ${heuteAktiv}`,
+    !aufgabenFehler && aufgabenAnzahl > 0
+      ? `${aufgabenAnzahl} ${aufgabenAnzahl === 1 ? 'Aufgabe' : 'Aufgaben'}${ueberfAufgaben > 0 ? ` (${ueberfAufgaben} fällig)` : ''}`
+      : '',
+  ].filter(Boolean);
+  return { anzahl: liste.length, heuteAktiv, untertitel: teile.join(' · ') };
+}
+
+/**
  * Bereitet die letzten Nicht-Erscheiner sauber für die Darstellung auf.
  *
  * @param {Array<Record<string, any>>} bookings

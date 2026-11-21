@@ -30,7 +30,7 @@ import {
   therapieberichteAufbereiten,
   anfragenAufbereiten,
   wartelisteAufbereiten,
-} from './ueberblick-listen.js?v=20261121f01b';
+} from './ueberblick-listen.js?v=20261121f07';
 import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_VOLL } from './verordnung-fristen-laden.js?v=20261121f01';
 import { ladeGeld, monatText } from './startseite-geld.js?v=20261121f02';
 import { wendeRasterScrollAn } from './tageszentrale-raster.js?v=20261121f04';
