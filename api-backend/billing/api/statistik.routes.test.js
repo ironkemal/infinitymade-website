@@ -216,3 +216,64 @@ test('Zusatz 9.3a: statistikMonatsfenster & berlinMonatKey (Europe/Berlin + kein
   assert.equal(berlinMonatKey('2026-06-30T22:30:00.000Z'), '2026-07'); // 01.07. 00:30 CEST
   assert.equal(berlinMonatKey('2026-06-30T21:59:59.000Z'), '2026-06'); // 30.06. 23:59 CEST
 });
+
+test('Zusatz 9.3b: Storno-Klassifizierung nach Originalbeleg (kein negatives bezahlt bei Rechnungs-Storno)', async (t) => {
+  const { istForderungsBeleg } = await import('./statistik.routes.js');
+  const origMap = new Map([
+    ['orig-zuz', 'zuzahlung'],
+    ['orig-aus', 'ausfall'],
+    ['orig-rec', 'rechnung'],
+    ['orig-bar', 'barverkauf'],
+  ]);
+
+  assert.equal(istForderungsBeleg({ type: 'zuzahlung' }, origMap), true);
+  assert.equal(istForderungsBeleg({ type: 'ausfall' }, origMap), true);
+  assert.equal(istForderungsBeleg({ type: 'rechnung' }, origMap), false);
+  assert.equal(istForderungsBeleg({ type: 'barverkauf' }, origMap), false);
+
+  // Storno folgt Originaltyp über storno_von
+  assert.equal(istForderungsBeleg({ type: 'storno', storno_von: 'orig-zuz' }, origMap), true);
+  assert.equal(istForderungsBeleg({ type: 'storno', storno_von: 'orig-aus' }, origMap), true);
+  assert.equal(istForderungsBeleg({ type: 'storno', storno_von: 'orig-rec' }, origMap), false);
+  assert.equal(istForderungsBeleg({ type: 'storno', storno_von: 'orig-bar' }, origMap), false);
+
+  // Altstornos ohne storno_von: invoice_id vs. prescription_id vs. unreferenziert
+  assert.equal(istForderungsBeleg({ type: 'storno', storno_von: null, invoice_id: 'inv-1', prescription_id: null }, origMap), false);
+  assert.equal(istForderungsBeleg({ type: 'storno', storno_von: null, invoice_id: null, prescription_id: 'rx-1' }, origMap), true);
+  assert.equal(istForderungsBeleg({ type: 'storno', storno_von: null, invoice_id: null, prescription_id: null }, origMap), true);
+
+  // End-to-End am Router: Rechnungs-Storno (im Zeitraum + außerhalb des Fensters) drückt bezahlt NICHT ins Negative
+  const nowIso = new Date().toISOString();
+  const belege = [
+    { id: 'b-zuz', created_at: nowIso, amount_eur: 20, type: 'zuzahlung', prescription_id: prescriptionId, invoice_id: null, storno_von: null },
+    { id: 'b-rec', created_at: nowIso, amount_eur: 50, type: 'rechnung', prescription_id: null, invoice_id: 'inv-1', storno_von: null },
+    { id: 'b-rec-storno', created_at: nowIso, amount_eur: -50, type: 'storno', prescription_id: null, invoice_id: 'inv-1', storno_von: 'b-rec' },
+    { id: 'b-old-rec-storno', created_at: nowIso, amount_eur: -30, type: 'storno', prescription_id: null, invoice_id: null, storno_von: 'b-old-rec' },
+  ];
+  let lookedUpOldStorno = false;
+  t.mock.method(globalThis, 'fetch', async (input) => {
+    const url = new URL(input instanceof Request ? input.url : input);
+    const reply = (body) => new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json', 'Content-Range': '*/0' } });
+    if (url.pathname === '/auth/v1/user') return reply({ id: userId });
+    const table = url.pathname.slice('/rest/v1/'.length);
+    if (table === 'profiles') return reply({ id: userId, role: 'owner', owner_id: null });
+    if (table === 'belegliste' && url.searchParams.get('select') === 'id,type') {
+      assert.equal(url.searchParams.get('owner_id'), `eq.${userId}`);
+      assert.equal(url.searchParams.get('id'), 'in.(b-old-rec)');
+      lookedUpOldStorno = true;
+      return reply([{ id: 'b-old-rec', type: 'rechnung' }]);
+    }
+    if (table === 'belegliste' && url.searchParams.has('created_at')) return reply(belege);
+    return reply([]);
+  });
+  const { default: router } = await import('./statistik.routes.js');
+  const handler = router.stack.find(layer => layer.route?.path === '/statistik' && layer.route.methods.get).route.stack[0].handle;
+  const response = { statusCode: 200, body: null, status(c) { this.statusCode = c; return this; }, json(b) { this.body = b; return this; } };
+  await handler({ headers: { authorization: 'Bearer synthetic-token' }, query: { monate: '1' } }, response);
+  assert.equal(response.statusCode, 200);
+  assert.equal(lookedUpOldStorno, true);
+  assert.equal(response.body.monatlich.length, 1);
+  // umsatz = 20 + 50 - 50 - 30 = -10 (alle Kassenbuch-Buchungen), bezahlt = +20 (nur Zuzahlung, Rechnungs-Stornos zählen nicht!)
+  assert.equal(response.body.monatlich[0].umsatz, -10);
+  assert.equal(response.body.monatlich[0].bezahlt, 20);
+});

@@ -63,6 +63,37 @@ export function statistikMonatsfenster(monate, jetzt = new Date()) {
   };
 }
 
+const FORDERUNGS_BASIS_TYPEN = new Set(['zuzahlung', 'ausfall']);
+
+/**
+ * Entscheidet, ob ein Kassenbuch-Beleg in die Reihe `bezahlt` (Forderungen:
+ * Zuzahlung + Ausfall inkl. deren Stornos) gehört (Zusatz 9.3b).
+ *
+ * - `zuzahlung`, `ausfall`: immer ja
+ * - `rechnung`, `barverkauf`, sonstige: nein (nur in `umsatz`)
+ * - `storno`: folgt dem Originalbeleg (`storno_von`), sofern bekannt.
+ *   Ohne `storno_von` (Altstorno / Rezept-Saldo-Storno):
+ *   - `invoice_id` ohne `prescription_id` → Rechnungs-Storno → nein
+ *   - `prescription_id` gesetzt → Zuzahlungs-Storno → ja
+ *   - weder noch (Altstorno ohne Referenz) → konservativ ja (Abwärtskompatibilität)
+ *
+ * @param {{ type?: string | null, storno_von?: string | null, prescription_id?: string | null, invoice_id?: string | null }} b
+ * @param {Map<string, string>} [originalTypById]
+ * @returns {boolean}
+ */
+export function istForderungsBeleg(b, originalTypById = new Map()) {
+  if (!b || !b.type) return false;
+  if (FORDERUNGS_BASIS_TYPEN.has(b.type)) return true;
+  if (b.type !== 'storno') return false;
+  if (b.storno_von) {
+    const origTyp = originalTypById.get(String(b.storno_von));
+    if (origTyp) return FORDERUNGS_BASIS_TYPEN.has(origTyp);
+  }
+  if (b.invoice_id && !b.prescription_id) return false;
+  if (b.prescription_id) return true;
+  return true;
+}
+
 const router = express.Router();
 /** @type {import('@supabase/supabase-js').SupabaseClient<any>} */
 const supabase = createClient(
@@ -145,7 +176,7 @@ router.get('/statistik', async (/** @type {import('express').Request} */ req, /*
       //    Gesamtumsatz.
       supabase
         .from('belegliste')
-        .select('created_at, amount_eur, type')
+        .select('id, created_at, amount_eur, type, prescription_id, invoice_id, storno_von')
         .eq('owner_id', tenantId)
         .gte('created_at', cutoffIso),
 
@@ -245,16 +276,39 @@ router.get('/statistik', async (/** @type {import('express').Request} */ req, /*
     //             die Reihe, die im Diagramm gegen "offen" gestellt wird.
     //             Ein Barverkauf hat mit offenen Forderungen nichts zu tun und
     //             würde den Vergleich verfälschen.
-    const FORDERUNGS_TYPEN = new Set(['zuzahlung', 'ausfall', 'storno']);
+    const belege = belegResult.data || [];
+    /** @type {Map<string, string>} */
+    const originalTypById = new Map();
+    for (const b of belege) {
+      if (b?.id && b?.type) originalTypById.set(String(b.id), String(b.type));
+    }
+    const fehlendeStornoZiele = [...new Set(
+      belege
+        .filter(b => b?.type === 'storno' && b.storno_von && !originalTypById.has(String(b.storno_von)))
+        .map(b => String(b.storno_von))
+    )];
+    for (let i = 0; i < fehlendeStornoZiele.length; i += 200) {
+      const block = fehlendeStornoZiele.slice(i, i + 200);
+      const { data, error } = await supabase
+        .from('belegliste')
+        .select('id, type')
+        .eq('owner_id', tenantId)
+        .in('id', block);
+      if (error) return res.status(500).json({ error: 'belegliste: ' + error.message });
+      for (const orig of (data || [])) {
+        if (orig?.id && orig?.type) originalTypById.set(String(orig.id), String(orig.type));
+      }
+    }
+
     /** @type {Record<string, number>} */
     const umsatzByMonth = {};
     /** @type {Record<string, number>} */
     const bezahltByMonth = {};
-    for (const b of (belegResult.data || [])) {
+    for (const b of belege) {
       const key = berlinMonatKey(b.created_at); // "2026-04" in Europe/Berlin
       const betrag = Number(b.amount_eur || 0);
       umsatzByMonth[key] = (umsatzByMonth[key] || 0) + betrag;
-      if (FORDERUNGS_TYPEN.has(b.type)) {
+      if (istForderungsBeleg(b, originalTypById)) {
         bezahltByMonth[key] = (bezahltByMonth[key] || 0) + betrag;
       }
     }
