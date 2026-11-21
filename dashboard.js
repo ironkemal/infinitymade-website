@@ -44,7 +44,7 @@ import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnun
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20261004m116';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261005g';
 import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261004m116';
-import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261118v914'; import { pruefePatientPflicht, patientKontaktFehler } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { ladeUeberblickAnsicht, fokussiereUeberblickBereich } from './module/ueberblick-ansicht.js?v=20261121f07'; import { aktivitaetZeileHtml } from './module/aktivitaet-zeile.js?v=20261119start1'; import { rezKpiAuswerten } from './module/ueberblick-listen.js?v=20261121f07'; import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_KPI } from './module/verordnung-fristen-laden.js?v=20261121f01'; import { erstelleLaufWaechter, tagVerschiebenDatum } from './module/tageszentrale-logik.js?v=20261121f06'; import { berechneRasterScrollTop, scrollRasterSichtbar, verdrahteRasterSlot } from './module/tageszentrale-raster.js?v=20261121f04';
+import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261118v914'; import { pruefePatientPflicht, patientKontaktFehler } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { ladeUeberblickAnsicht, fokussiereUeberblickBereich } from './module/ueberblick-ansicht.js?v=20261121f07'; import { aktivitaetZeileHtml } from './module/aktivitaet-zeile.js?v=20261119start1'; import { rezKpiAuswerten } from './module/ueberblick-listen.js?v=20261121f07'; import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_KPI } from './module/verordnung-fristen-laden.js?v=20261121f01'; import { erstelleLaufWaechter, tagVerschiebenDatum } from './module/tageszentrale-logik.js?v=20261121f06'; import { berechneRasterScrollTop, scrollRasterSichtbar, verdrahteRasterSlot } from './module/tageszentrale-raster.js?v=20261121f04'; import { erstellePanelVerlauf } from './module/panel-verlauf.js?v=20261121f08';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
 import { ladeStatusJePatient, oeffneStatusDialogFuer, verordnungStatusInfo } from './module/abrechnungsstatus.js?v=20261117f2';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261117v906';
@@ -761,7 +761,7 @@ async function gehZuEinstellung(sectionId, focusId) {
   if (focusId) setTimeout(() => document.getElementById(focusId)?.focus(), 400);
 }
 window.gehZuEinstellung = gehZuEinstellung;
-
+const panelVerlauf = erstellePanelVerlauf({ wechslePanel: (id) => switchPanel(id), getAktiv: () => activePanel, existiert: (id) => !!document.getElementById('panel-' + id) });
 async function switchPanel(id) {
   if (currentProfile?.role === 'employee' && SIDEBAR_TO_MODULE[id] && !hasModuleAccess(SIDEBAR_TO_MODULE[id])) { showToast('Keine Berechtigung für diesen Bereich.', 'error'); return; }
   // Aktif panelin grubunu otomatik aç
@@ -783,7 +783,7 @@ async function switchPanel(id) {
   if (id !== 'calendar' && moveBooking) cancelMoveBooking();
   if (activePanel === 'calendar' && id !== 'calendar') closeBkActionPanel();
   if (id !== 'notizen') notizenController.invalidate();
-  if (id === 'b2b' || id === 'b2c') document.querySelectorAll((id === 'b2c' ? '#b2cAiMessages' : '#aiMessages') + ' [data-mail-feedback]').forEach(el => el.remove()); activePanel = id;
+  if (id === 'b2b' || id === 'b2c') document.querySelectorAll((id === 'b2c' ? '#b2cAiMessages' : '#aiMessages') + ' [data-mail-feedback]').forEach(el => el.remove()); activePanel = id; panelVerlauf.merkePanel(id);
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   const target = document.getElementById('panel-' + id);
   if (target) target.classList.add('active');
@@ -1060,7 +1060,7 @@ async function renderOverview() {
   const status = currentProfile.plan_status;
 
   if (params.get('welcome') === '1') {
-    history.replaceState({}, '', location.pathname);
+    history.replaceState({}, '', location.pathname + (location.hash || ''));
     document.getElementById('welcome-banner').hidden = false;
   } else if (status === 'past_due' && !IST_KUTU) { // Box: kein Abo/Stripe (KUTU_DEVIR C3)
     document.getElementById('pastdue-banner').hidden = false;
@@ -11844,7 +11844,7 @@ async function handleGmailCallback() {
     currentProfile.b2b_from_email = decodeURIComponent(email);
     gmailConnectedEmail = currentProfile.b2b_from_email;
   }
-  window.history.replaceState({}, '', window.location.pathname);
+  window.history.replaceState({}, '', window.location.pathname + (window.location.hash || ''));
   showToast('Gmail verbunden: ' + (gmailConnectedEmail || ''));
   if (qp.get('mailversand')) { renderMailversandSettings({ profile: currentProfile, apiBase: API, getToken: async () => (await supabase.auth.getSession())?.data?.session?.access_token || null, showToast, showConfirmModal }); gehZuEinstellung('settingsMailversandSection'); } else switchPanel('b2b');
 }
@@ -14043,7 +14043,7 @@ async function init() {
         adminLink.href = 'https://admin.praxura.de/';
       }
     }
-    initBeleglisteUI();
+    initBeleglisteUI(); panelVerlauf.verdrahte(); await panelVerlauf.startPanelAusUrl();
   } catch (e) {
     throw e;
   } finally {
