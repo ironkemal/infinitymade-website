@@ -290,3 +290,21 @@ test('Überblick-Ansicht und Panel-Markup enthalten keine Emojis', () => {
   const ansicht = fs.readFileSync(new URL('./ueberblick-ansicht.js', import.meta.url), 'utf8');
   assert.equal(emojiRe.test(ansicht), false, 'ueberblick-ansicht.js ohne Emojis');
 });
+
+test('N-2 & N-3: Wochenleiste zählt Gruppentermin-Kinder nicht doppelt, Singular/Plural und owner-weit wie Dashboard', () => {
+  const jetzt = new Date('2026-11-21T10:00:00Z');
+  const w = wochenAuslastungAufbereiten([
+    { id: 'b1', user_id: 'u1', start_time: '2026-11-24T09:00:00Z', status: 'confirmed', hausbesuch: false, group_parent_id: null },
+    { id: 'b2', user_id: 'u2', start_time: '2026-11-24T11:30:00Z', status: 'confirmed', hausbesuch: true, group_parent_id: null },
+    { id: 'b3-child', user_id: 'u2', start_time: '2026-11-24T11:30:00Z', status: 'confirmed', hausbesuch: false, group_parent_id: 'b2' },
+  ], '2026-11-21', jetzt);
+  const di = w.tage.find(t => t.tagIso === '2026-11-24');
+  assert.equal(di?.anzahl, 2, 'Beide Haupttermine (zwei Mitarbeiter) werden gezählt, Gruppenkind nicht');
+  assert.equal(di?.hausbesuche, 1);
+
+  const ansicht = fs.readFileSync(new URL('./ueberblick-ansicht.js', import.meta.url), 'utf8');
+  assert.match(ansicht, /t\.anzahl === 1 \? 'Termin' : 'Termine'/, 'Singular/Plural für Termine im Wochen-aria-label');
+  assert.match(ansicht, /t\.hausbesuche === 1 \? 'Hausbesuch' : 'Hausbesuche'/, 'Singular/Plural für Hausbesuche');
+  assert.match(ansicht, /aria-label="\$\{escStandard\(titel\)\}"/, 'Explizites aria-label an den Wochen-Buttons');
+  assert.doesNotMatch(ansicht, /const wochePromise = scope\(/, 'wochePromise lädt owner-weit ohne bizScope wie Dashboard/Kalender');
+});

@@ -34,7 +34,7 @@ import {
   abwesenheitKachelAuswerten,
   nichtErscheinerAufbereiten,
   suchePasst,
-} from './ueberblick-listen.js?v=20261121f07';
+} from './ueberblick-listen.js?v=20261121ubl2';
 import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_VOLL } from './verordnung-fristen-laden.js?v=20261121f01';
 import { alsBerlinDatum, berlinTagesgrenzen } from './berlin-datum.js';
 import { fmtEur } from './geld.js?v=20260909';
@@ -407,9 +407,11 @@ function renderWeekStrip() {
       t.anzahl === 0 ? 'is-zero' : '',
     ].filter(Boolean).join(' ');
     const label = t.istHeute ? 'Heute' : `${t.wochentag} ${t.tagKurz}`;
-    const titel = `${t.wochentag} ${t.tagKurz}: ${t.anzahl} Termine${t.hausbesuche > 0 ? `, davon ${t.hausbesuche} Hausbesuche` : ''} — klicken für Tagesansicht`;
+    const terminWort = t.anzahl === 1 ? 'Termin' : 'Termine';
+    const hbWort = t.hausbesuche === 1 ? 'Hausbesuch' : 'Hausbesuche';
+    const titel = `${t.wochentag} ${t.tagKurz}: ${t.anzahl} ${terminWort}${t.hausbesuche > 0 ? `, davon ${t.hausbesuche} ${hbWort}` : ''} — klicken für Tagesansicht`;
     return `
-      <button type="button" class="${klassen}" data-ubl-cal-date="${escStandard(t.tagIso)}" title="${escStandard(titel)}">
+      <button type="button" class="${klassen}" data-ubl-cal-date="${escStandard(t.tagIso)}" title="${escStandard(titel)}" aria-label="${escStandard(titel)}">
         <span class="ubl-day-num">${t.anzahl}</span>
         <span class="ubl-day-track" aria-hidden="true">
           ${t.prozent > 0 ? `<span class="ubl-day-bar" style="height:${t.prozent}%"></span>` : ''}
@@ -1255,17 +1257,17 @@ export async function ladeUeberblickAnsicht(ctx) {
 
   const scope = (q, cat) => (typeof bizScope === 'function' ? bizScope(q, cat) : q);
 
-  const wochePromise = scope(
-    supabase
-      .from('bookings')
-      .select('id, user_id, start_time, status, hausbesuch')
-      .eq('owner_id', ownerId)
-      .gte('start_time', startGrenze)
-      .lt('start_time', endGrenze)
-      .neq('status', 'cancelled')
-      .limit(400),
-    'patients'
-  );
+  // N-3: Termine owner-weit (cross-business) laden — exakt wie Dashboard-Tagesplan
+  // (`loadScheduleBookings`) und Hauptkalender (Tag/Woche/Monat), damit die
+  // Terminzahlen pro Tag über alle Ansichten übereinstimmen.
+  const wochePromise = supabase
+    .from('bookings')
+    .select('id, user_id, start_time, status, hausbesuch, group_parent_id')
+    .eq('owner_id', ownerId)
+    .gte('start_time', startGrenze)
+    .lt('start_time', endGrenze)
+    .neq('status', 'cancelled')
+    .limit(400);
 
   const rxPromise = ladeOffeneVerordnungenPaginiert(supabase, {
     ownerId,

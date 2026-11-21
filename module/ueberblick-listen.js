@@ -173,7 +173,7 @@ export function wochenAuslastungAufbereiten(bookings, heuteIso, jetzt = new Date
 
   for (const b of bookings || []) {
     if (!b?.start_time) continue;
-    if (b.status === 'cancelled') continue;
+    if (b.status === 'cancelled' || b.group_parent_id) continue;
     const tagIso = alsBerlinDatum(b.start_time);
     const slot = nachTag.get(tagIso);
     if (!slot) continue;
