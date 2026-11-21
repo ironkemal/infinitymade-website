@@ -17,7 +17,7 @@ function harness({ denied = false } = {}) {
     currentProfile: { role: denied ? 'employee' : 'owner' },
     SIDEBAR_TO_MODULE: { team: 'team' }, hasModuleAccess: () => !denied,
     showToast() {}, getSidebarItems: () => [], moveBooking: null,
-    notizenController: { invalidate() {} }, activePanel: 'calendar', bkActionTimer: 123,
+    notizenController: { invalidate() {} }, panelVerlauf: { merkePanel() {} }, activePanel: 'calendar', bkActionTimer: 123,
     document: {
       querySelectorAll: () => [],
       getElementById: id => id === 'bkActionModal' ? modal : id === 'mainArea' ? { style: { removeProperty: name => padding.delete(name) } } : { classList: { add() {} } },
