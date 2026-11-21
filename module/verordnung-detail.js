@@ -76,7 +76,7 @@ import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialog
 // übernommen statt einer dritten eigenen „ist das noch aktiv"-Liste.
 import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20261031k3';
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261031k3';
-import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20261117p33';
+import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20261121pag1';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20261101u';
 import { zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
 import { einheitenAenderungErlaubt, pruefeNeueMenge, speichereEinheiten, physioKorrekturErlaubt, oeffnePhysioEinheitenDialog } from './verordnung-einheiten.js?v=20261103q';

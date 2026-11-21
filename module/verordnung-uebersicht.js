@@ -165,6 +165,58 @@ export { istBehandlungseinheit };
    Laden
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/** Standard-Seitengröße und Obergrenze für stabile ID-Keyset-Pagination (bis 5000 je Topf). */
+const STANDARD_SEITENGROESSE = 200;
+const STANDARD_MAX_SEITEN = 25;
+/** Max. UUIDs je `.in('verordnung_id', ...)`-Aufruf (verhindert PostgREST-414 und 1000-Zeilen-Kappung). */
+const BEHANDLUNG_ID_CHUNK = 100;
+const BEHANDLUNG_SEITENGROESSE = 500;
+
+/**
+ * Lädt eine PostgREST-Abfrage seitenweise über stabile `id ASC`-Keyset-Pagination.
+ *
+ * @param {() => any} baueAbfrage  Erzeugt eine frische Filter-Builder-Kette je Seite
+ * @param {{ seitenGroesse?: number, maxSeiten?: number }} [opts]
+ * @returns {Promise<Array>}
+ */
+async function ladeSeitenweise(
+  baueAbfrage,
+  { seitenGroesse = STANDARD_SEITENGROESSE, maxSeiten = STANDARD_MAX_SEITEN } = {}
+) {
+  const groesse = Math.max(1, Number(seitenGroesse) || STANDARD_SEITENGROESSE);
+  const seitenLimit = Math.max(1, Number(maxSeiten) || STANDARD_MAX_SEITEN);
+  const gesamt = [];
+  let cursor = null;
+
+  for (let seite = 0; seite < seitenLimit; seite++) {
+    let q = baueAbfrage().order('id', { ascending: true }).limit(groesse);
+    if (cursor !== null) {
+      if (typeof q.gt !== 'function') break;
+      q = q.gt('id', cursor);
+    }
+    const { data, error } = await q;
+    if (error) {
+      console.error('[verordnung-uebersicht]', error.message);
+      return gesamt;
+    }
+    if (!Array.isArray(data) || data.length === 0) break;
+
+    const letzter = data[data.length - 1]?.id ?? null;
+    if (letzter === null) {
+      gesamt.push(...data);
+      break;
+    }
+    if (cursor !== null && String(letzter) <= String(cursor)) {
+      console.warn('[verordnung-uebersicht] Pagination abgebrochen: nicht-monotoner Cursor');
+      break;
+    }
+    gesamt.push(...data);
+    cursor = letzter;
+    if (data.length < groesse) break;
+  }
+  return gesamt;
+}
+
 /**
  * Alle Verordnungen aus BEIDEN Töpfen — je nach Aufruf für einen Patienten
  * oder für die ganze Praxis.
@@ -179,6 +231,11 @@ export { istBehandlungseinheit };
  * einer vierten Ladefunktion. Die drei bestehenden Lader und warum sie sich
  * unterscheiden, stehen im Kopf dieser Datei.
  *
+ * Seit 21.11.2026 werden beide Töpfe per Keyset-Pagination (`id ASC`, 200er-Seiten,
+ * bis `maxSeiten = 25`, also bis 5000 je Topf) geladen statt bei 200 abzuschneiden.
+ * Die endgültige Sortierung (`ausstellungsdatum DESC`) erfolgt weiterhin unten auf
+ * der vereinten Liste.
+ *
  * @param {object} sb        Supabase-Client
  * @param {object} opts
  * @param {string} opts.ownerId
@@ -186,20 +243,18 @@ export { istBehandlungseinheit };
  *        praxisweit geladen — dann tragen die Zeilen den Patientennamen.
  * @param {boolean} [opts.nurAktive=true]  `false` lädt auch abgeschlossene,
  *        abgerechnete und stornierte Verordnungen (Seite „Verordnungen").
- * @param {number} [opts.limit=200]  greift nur praxisweit.
+ * @param {number} [opts.limit=200]       Seitengröße je PostgREST-Abruf.
+ * @param {number} [opts.maxSeiten=25]    Maximale Seitenzahl je Topf.
  * @returns {Promise<Array>} normalisierte Liste, neueste zuerst:
  *   [{ id, quelle:'physio'|'podologie', datum, titel, diagnose, nummer,
  *      nachname, vorname, patientennummer, leadId,
  *      erbracht, verordnet, status, dringend, hausbesuch, ziel }]
  */
-export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = true, limit = 200 } = {}) {
+export async function ladeAktiveVerordnungen(
+  sb,
+  { ownerId, leadId, nurAktive = true, limit = STANDARD_SEITENGROESSE, maxSeiten = STANDARD_MAX_SEITEN } = {}
+) {
   if (!sb || !ownerId) return [];
-
-  const frag = async (q) => {
-    const { data, error } = await q;
-    if (error) { console.error('[verordnung-uebersicht]', error.message); return []; }
-    return data || [];
-  };
 
   // Beide Töpfe parallel. Der `leads`-Verbund kommt IMMER mit, aus zwei
   // Gründen: praxisweit steht der Name in der Zeile (die Liste zeigt Nachname
@@ -223,51 +278,55 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
   // Motor hier „LANR fehlt", wo die Detailansicht — die den Join hat — nichts
   // zu melden hatte: zwei Urteile über dieselbe Verordnung. Gefunden von
   // `canli-test`, 05.09.2026.
-  let rxQ = sb.from('prescriptions')
-    .select('id, patient_id, ausstellungsdatum, gueltig_bis, diagnosegruppe, icd10, heilmittel, ' +
-            'anzahl_einheiten, frequenz, status, is_dringend, hausbesuch, ' +
-            'belegnummer, verordnungsnummer, prescription_sessions(id, status), ' +
-            'therapie_bereich, icd10_2, leitsymptomatik, pat_leitsymptomatik, ' +
-            'heilmittel_position, heilmittel_items, behandlungsbeginn, ' +
-            'versichertennummer, krankenkasse_ik, kostentraeger_ik, doctor_lanr, doctor_bsnr, rezeptart, ' +
-            'leads!patient_id(first_name, last_name, patientennummer, versichertennummer), aerzte!arzt_id(lanr, bsnr)')
-    .eq('owner_id', ownerId)
-    // Pflichtfilter (siehe Kopf) — sonst erscheint eine podologische Zeile
-    // zusätzlich hier. `.or()` statt `.neq()`: Altbestand vor Einführung des
-    // Felds führt `therapie_bereich = NULL`, und `<> 'podo'` liesse NULL-
-    // Zeilen in SQL aus dem Ergebnis fallen.
-    .or('therapie_bereich.is.null,therapie_bereich.neq.podo');
-  let voQ = sb.from('prescriptions')
-    .select('id, patient_id, patient_name, ausstellungsdatum, diagnosegruppe, icd10, icd10_2, ' +
-            'anzahl_einheiten, frequenz, status, abrechnung_status, is_dringend, hausbesuch, rezeptart, ' +
-            'behandlungsanlass, heilmittel_items, belegnummer, verordnungsnummer, ' +
-            'leitsymptomatik, pat_leitsymptomatik, heilmittel, heilmittel_position, behandlungsbeginn, ' +
-            'versichertennummer, krankenkasse_ik, kostentraeger_ik, doctor_lanr, doctor_bsnr, ' +
-            'leads!patient_id(first_name, last_name, patientennummer, versichertennummer), aerzte!arzt_id(lanr, bsnr)')
-    .eq('owner_id', ownerId)
-    // Gegenstück zum obigen Filter — Pflicht, nicht Kosmetik (siehe Kopf).
-    .eq('therapie_bereich', 'podo');
+  const rxSelect =
+    'id, patient_id, ausstellungsdatum, gueltig_bis, diagnosegruppe, icd10, heilmittel, ' +
+    'anzahl_einheiten, frequenz, status, is_dringend, hausbesuch, ' +
+    'belegnummer, verordnungsnummer, prescription_sessions(id, status), ' +
+    'therapie_bereich, icd10_2, leitsymptomatik, pat_leitsymptomatik, ' +
+    'heilmittel_position, heilmittel_items, behandlungsbeginn, ' +
+    'versichertennummer, krankenkasse_ik, kostentraeger_ik, doctor_lanr, doctor_bsnr, rezeptart, ' +
+    'leads!patient_id(first_name, last_name, patientennummer, versichertennummer), aerzte!arzt_id(lanr, bsnr)';
+  const voSelect =
+    'id, patient_id, patient_name, ausstellungsdatum, diagnosegruppe, icd10, icd10_2, ' +
+    'anzahl_einheiten, frequenz, status, abrechnung_status, is_dringend, hausbesuch, rezeptart, ' +
+    'behandlungsanlass, heilmittel_items, belegnummer, verordnungsnummer, ' +
+    'leitsymptomatik, pat_leitsymptomatik, heilmittel, heilmittel_position, behandlungsbeginn, ' +
+    'versichertennummer, krankenkasse_ik, kostentraeger_ik, doctor_lanr, doctor_bsnr, ' +
+    'leads!patient_id(first_name, last_name, patientennummer, versichertennummer), aerzte!arzt_id(lanr, bsnr)';
 
-  if (leadId) {
-    rxQ = rxQ.eq('patient_id', leadId);
-    voQ = voQ.eq('patient_id', leadId);
-  } else {
-    rxQ = rxQ.limit(limit);
-    voQ = voQ.limit(limit);
-  }
+  const baueRxAbfrage = () => {
+    let q = sb.from('prescriptions')
+      .select(rxSelect)
+      .eq('owner_id', ownerId)
+      // Pflichtfilter (siehe Kopf) — sonst erscheint eine podologische Zeile
+      // zusätzlich hier. `.or()` statt `.neq()`: Altbestand vor Einführung des
+      // Felds führt `therapie_bereich = NULL`, und `<> 'podo'` liesse NULL-
+      // Zeilen in SQL aus dem Ergebnis fallen.
+      .or('therapie_bereich.is.null,therapie_bereich.neq.podo');
+    if (leadId) q = q.eq('patient_id', leadId);
+    // Der Filter „läuft noch" gilt nur in der Akte. Die Seite „Verordnungen"
+    // zeigt auch Abgerechnetes — dort ist gerade der Statuswechsel die
+    // Information, und eine Verordnung, die nach der Abrechnung aus der Liste
+    // verschwindet, sieht aus wie ein Datenverlust.
+    if (nurAktive) q = q.not('status', 'in', `(${PHYSIO_ABGESCHLOSSEN.map(s => `"${s}"`).join(',')})`);
+    return q;
+  };
 
-  // Der Filter „läuft noch" gilt nur in der Akte. Die Seite „Verordnungen"
-  // zeigt auch Abgerechnetes — dort ist gerade der Statuswechsel die
-  // Information, und eine Verordnung, die nach der Abrechnung aus der Liste
-  // verschwindet, sieht aus wie ein Datenverlust.
-  if (nurAktive) {
-    rxQ = rxQ.not('status', 'in', `(${PHYSIO_ABGESCHLOSSEN.map(s => `"${s}"`).join(',')})`);
-    voQ = voQ.or(`${PODO_ARBEITSLISTE_OR},${PODO_ABGERECHNET_OR}`);
-  }
+  const baueVoAbfrage = () => {
+    let q = sb.from('prescriptions')
+      .select(voSelect)
+      .eq('owner_id', ownerId)
+      // Gegenstück zum obigen Filter — Pflicht, nicht Kosmetik (siehe Kopf).
+      .eq('therapie_bereich', 'podo');
+    if (leadId) q = q.eq('patient_id', leadId);
+    if (nurAktive) q = q.or(`${PODO_ARBEITSLISTE_OR},${PODO_ABGERECHNET_OR}`);
+    return q;
+  };
 
+  const seitenOpts = { seitenGroesse: limit, maxSeiten };
   const [rxs, vordsRoh, lead] = await Promise.all([
-    frag(rxQ.order('ausstellungsdatum', { ascending: false })),
-    frag(voQ.order('ausstellungsdatum', { ascending: false })),
+    ladeSeitenweise(baueRxAbfrage, seitenOpts),
+    ladeSeitenweise(baueVoAbfrage, seitenOpts),
     leadId
       ? (async () => {
           const { data } = await sb.from('leads').select('patientennummer').eq('id', leadId).maybeSingle();
@@ -284,6 +343,8 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
 
   // Behandlungen erst jetzt, denn sie hängen an der Verordnung und nicht am
   // Patienten — `podologie_behandlungen` führt kein lead_id.
+  // In 100er-UUID-Blöcken + seitenweise laden: vermeidet PostgREST-414 bei
+  // >200 Verordnungen sowie die 1000-Zeilen-Standardkappung bei vielen Behandlungen.
   let behsProVord = new Map();
   if (vords.length) {
     // `hpnr_codes` MUSS mitkommen: `istBehandlungseinheit` entscheidet daran,
@@ -291,14 +352,21 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
     // allein tut das nicht). Ohne die Spalte sah die Funktion immer `undefined`
     // und zählte jede Zeile mit — die Regel war zwar geschrieben, wirkte hier
     // aber nie. Gefunden beim Umbau der Seite „Verordnungen" (02.09.2026).
-    const behs = await frag(sb.from('podologie_behandlungen')
-      .select('id, verordnung_id, behandlungsdatum, hpnr_codes')
-      .eq('owner_id', ownerId)
-      .is('storniert_am', null)        // stornierte Behandlungen zaehlen nicht (Migration 0026)
-      .in('verordnung_id', vords.map(v => v.id)));
-    for (const b of behs) {
-      if (!behsProVord.has(b.verordnung_id)) behsProVord.set(b.verordnung_id, []);
-      behsProVord.get(b.verordnung_id).push(b);
+    const vordIds = vords.map(v => v.id).filter(Boolean);
+    for (let i = 0; i < vordIds.length; i += BEHANDLUNG_ID_CHUNK) {
+      const chunk = vordIds.slice(i, i + BEHANDLUNG_ID_CHUNK);
+      const behs = await ladeSeitenweise(
+        () => sb.from('podologie_behandlungen')
+          .select('id, verordnung_id, behandlungsdatum, hpnr_codes')
+          .eq('owner_id', ownerId)
+          .is('storniert_am', null)        // stornierte Behandlungen zaehlen nicht (Migration 0026)
+          .in('verordnung_id', chunk),
+        { seitenGroesse: BEHANDLUNG_SEITENGROESSE, maxSeiten }
+      );
+      for (const b of behs) {
+        if (!behsProVord.has(b.verordnung_id)) behsProVord.set(b.verordnung_id, []);
+        behsProVord.get(b.verordnung_id).push(b);
+      }
     }
   }
 

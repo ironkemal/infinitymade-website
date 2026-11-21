@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   ladeAktiveVerordnungen, physioZaehler, podoZaehler,
 } from './verordnung-uebersicht.js';
+import { mitFehlerMelder } from './kopf-dokumente.js';
 
 // Warum es diese Datei gibt:
 // Der Anlass war Beta-1 (Beta-Podologe, 08.08.2026): Nagelspange (UI2)
@@ -28,12 +29,31 @@ import {
  * Abfragen dieselben Zeilen zurück — das genau ist die Doppelzählung, die die
  * echten Filter verhindern sollen. Der Mock muss sie deshalb ausführen.
  */
-function fakeSb(tabellen) {
+function fakeSb(tabellen, { onQuery, fehlerBei } = {}) {
   const kette = (tabelle) => {
     const zeilen = tabellen[tabelle] || [];
     let bedingungen = [];
+    let sortierung = null;
+    let begrenzung = null;
+    const meta = { tabelle, inGroessen: [], gtWerte: [] };
 
     const passt = (row) => bedingungen.every(b => b(row));
+    const ergebnis = () => {
+      if (onQuery) onQuery(meta);
+      if (fehlerBei && fehlerBei(meta)) {
+        return { data: null, error: { message: 'Simulierter Abfragefehler' } };
+      }
+      let out = zeilen.filter(passt);
+      if (sortierung) {
+        const { col, ascending } = sortierung;
+        out = [...out].sort((a, b) => {
+          const cmp = String(a[col] ?? '').localeCompare(String(b[col] ?? ''));
+          return ascending ? cmp : -cmp;
+        });
+      }
+      if (begrenzung != null) out = out.slice(0, begrenzung);
+      return { data: out, error: null };
+    };
 
     const selbst = {
       select: () => selbst,
@@ -46,7 +66,16 @@ function fakeSb(tabellen) {
         bedingungen.push(row => row[col] === val);
         return selbst;
       },
-      in: (col, arr) => { bedingungen.push(row => arr.includes(row[col])); return selbst; },
+      gt: (col, val) => {
+        meta.gtWerte.push([col, val]);
+        bedingungen.push(row => String(row[col] ?? '') > String(val));
+        return selbst;
+      },
+      in: (col, arr) => {
+        meta.inGroessen.push([col, arr.length]);
+        bedingungen.push(row => arr.includes(row[col]));
+        return selbst;
+      },
       // `.is(col, null)` — seit Migration 0026 filtert der Lesepfad
       // `.is('storniert_am', null)`. Echt gefiltert statt durchgereicht:
       // die Fixtures tragen das Feld nicht, `undefined == null` ist wahr.
@@ -75,10 +104,13 @@ function fakeSb(tabellen) {
         bedingungen.push(row => klauseln.some(k => k(row)));
         return selbst;
       },
-      limit: () => selbst,
-      order: () => Promise.resolve({ data: zeilen.filter(passt), error: null }),
-      maybeSingle: () => Promise.resolve({ data: zeilen.filter(passt)[0] || null, error: null }),
-      then: (res) => res({ data: zeilen.filter(passt), error: null }),
+      limit: (n) => { begrenzung = n; return selbst; },
+      order: (col, opts = {}) => { sortierung = { col, ascending: opts.ascending !== false }; return selbst; },
+      maybeSingle: () => {
+        const res = ergebnis();
+        return Promise.resolve({ data: res.data?.[0] || null, error: res.error });
+      },
+      then: (res, rej) => Promise.resolve(ergebnis()).then(res, rej),
     };
     return selbst;
   };
@@ -285,5 +317,148 @@ test('gesendete Podologie-Verordnung erscheint auch bei nurAktive:true — sonst
 
   assert.equal(liste.length, 1);
   assert.equal(liste[0].id, 'v1');
+});
+
+/* ── Pagination & Chunking (21.11.2026) ──────────────────────────────────── */
+
+test('praxisweit: Keyset-Pagination lädt >200 Physio- und >200 Podo-Verordnungen vollständig ohne Duplikate', async () => {
+  const prescriptions = [];
+  const podologie_behandlungen = [];
+  for (let i = 1; i <= 245; i++) {
+    const nr = String(i).padStart(4, '0');
+    const tag = String((i % 28) + 1).padStart(2, '0');
+    const monat = String((i % 9) + 1).padStart(2, '0');
+    prescriptions.push({
+      id: `physio-${nr}`,
+      patient_id: `p-${nr}`,
+      ausstellungsdatum: `2026-${monat}-${tag}`,
+      status: 'in_therapy',
+      anzahl_einheiten: 6,
+      prescription_sessions: [{ status: 'done' }],
+    });
+  }
+  for (let i = 1; i <= 230; i++) {
+    const nr = String(i).padStart(4, '0');
+    prescriptions.push({
+      id: `podo-${nr}`,
+      therapie_bereich: 'podo',
+      patient_id: `pp-${nr}`,
+      ausstellungsdatum: i === 230 ? '2026-12-31' : '2026-06-01',
+      diagnosegruppe: 'DF2',
+      anzahl_einheiten: 4,
+    });
+    podologie_behandlungen.push({ id: `beh-${nr}-a`, verordnung_id: `podo-${nr}` });
+    podologie_behandlungen.push({ id: `beh-${nr}-b`, verordnung_id: `podo-${nr}` });
+  }
+
+  const queries = [];
+  const liste = await ladeAktiveVerordnungen(
+    fakeSb({ prescriptions, podologie_behandlungen }, { onQuery: m => queries.push(m) }),
+    { ownerId: 'o1', nurAktive: false },
+  );
+
+  assert.equal(liste.length, 475);
+  assert.equal(new Set(liste.map(v => v.id)).size, 475, 'keine Duplikate über Seitengrenzen');
+  assert.equal(liste[0].id, 'podo-0230', 'Endsortierung bleibt ausstellungsdatum DESC');
+  assert.equal(liste.find(v => v.id === 'podo-0230').erbracht, 2, 'Behandlungen über alle Chunks gezählt');
+  assert.equal(liste.find(v => v.id === 'podo-0001').erbracht, 2);
+
+  const rxQueries = queries.filter(q => q.tabelle === 'prescriptions');
+  assert.ok(rxQueries.length >= 4, `erwartet >=4 paginierte prescriptions-Abfragen, bekam ${rxQueries.length}`);
+  assert.ok(rxQueries.some(q => q.gtWerte.length > 0), 'Folgeseiten nutzen .gt(id, cursor)');
+
+  const behQueries = queries.filter(q => q.tabelle === 'podologie_behandlungen');
+  assert.equal(behQueries.length, 3, '230 Podo-IDs in 100/100/30-Blöcke aufgeteilt');
+  for (const q of behQueries) {
+    assert.ok(q.inGroessen.every(([, len]) => len <= 100), 'kein .in()-Block größer als 100 UUIDs');
+  }
+});
+
+test('podologie_behandlungen paginiert auch innerhalb eines Blocks über >500 Zeilen', async () => {
+  const prescriptions = Array.from({ length: 10 }, (_, i) => ({
+    id: `podo-${String(i + 1).padStart(3, '0')}`,
+    therapie_bereich: 'podo',
+    patient_id: 'p1',
+    ausstellungsdatum: '2026-08-01',
+    diagnosegruppe: 'DF2',
+    anzahl_einheiten: 60,
+  }));
+  const podologie_behandlungen = [];
+  for (let i = 1; i <= 10; i++) {
+    const vid = `podo-${String(i).padStart(3, '0')}`;
+    for (let j = 1; j <= 55; j++) {
+      podologie_behandlungen.push({
+        id: `b-${String(i).padStart(3, '0')}-${String(j).padStart(3, '0')}`,
+        verordnung_id: vid,
+      });
+    }
+  }
+
+  const behQueries = [];
+  const liste = await ladeAktiveVerordnungen(
+    fakeSb({ prescriptions, podologie_behandlungen }, {
+      onQuery: m => { if (m.tabelle === 'podologie_behandlungen') behQueries.push(m); },
+    }),
+    { ownerId: 'o1', nurAktive: false },
+  );
+
+  assert.equal(behQueries.length, 2, '550 Behandlungen in 500 + 50 paginiert');
+  assert.equal(behQueries[1].gtWerte.length, 1);
+  assert.ok(liste.every(v => v.erbracht === 55), 'jede Verordnung zählt alle 55 Behandlungen');
+});
+
+test('nicht-monotoner Cursor bricht Pagination sicher ab ohne Endlosschleife oder Duplikate', async () => {
+  let aufrufe = 0;
+  const kaputterSb = {
+    from: (tabelle) => {
+      const b = {
+        select: () => b, eq: () => b, or: () => b, not: () => b, is: () => b, in: () => b,
+        order: () => b, limit: () => b, gt: () => b,
+        then: (res) => {
+          if (tabelle !== 'prescriptions') return res({ data: [], error: null });
+          aufrufe++;
+          return res({
+            data: [
+              { id: 'rx-1', status: 'in_therapy', anzahl_einheiten: 6, ausstellungsdatum: '2026-08-01' },
+              { id: 'rx-2', status: 'in_therapy', anzahl_einheiten: 6, ausstellungsdatum: '2026-08-02' },
+            ],
+            error: null,
+          });
+        },
+      };
+      return b;
+    },
+  };
+
+  const liste = await ladeAktiveVerordnungen(kaputterSb, { ownerId: 'o1', limit: 2, maxSeiten: 10 });
+  assert.equal(aufrufe, 4, 'je Topf genau 2 Abrufe (Seite 1 + Abbruch bei Seite 2)');
+  assert.equal(liste.filter(v => v.quelle === 'physio').length, 2, 'keine doppelte Aufnahme der wiederholten Seite');
+});
+
+test('Abfragefehler liefert sauber ohne Abbruch und bleibt mit mitFehlerMelder kompatibel', async () => {
+  const mOk = mitFehlerMelder(fakeSb({
+    prescriptions: [
+      { id: 'rx-1', status: 'in_therapy', anzahl_einheiten: 6 },
+      { id: 'rx-2', status: 'in_therapy', anzahl_einheiten: 6 },
+      { id: 'rx-3', status: 'in_therapy', anzahl_einheiten: 6 },
+    ],
+  }));
+  const ok = await ladeAktiveVerordnungen(mOk.client, { ownerId: 'o1', limit: 2 });
+  assert.equal(ok.length, 3);
+  assert.equal(mOk.fehler(), false);
+
+  const mFail = mitFehlerMelder(fakeSb(
+    {
+      prescriptions: [
+        { id: 'rx-1', status: 'in_therapy', anzahl_einheiten: 6 },
+        { id: 'rx-2', status: 'in_therapy', anzahl_einheiten: 6 },
+        { id: 'rx-3', status: 'in_therapy', anzahl_einheiten: 6 },
+      ],
+    },
+    { fehlerBei: m => m.gtWerte.length > 0 },
+  ));
+  const teil = await ladeAktiveVerordnungen(mFail.client, { ownerId: 'o1', limit: 2 });
+  assert.equal(teil.length, 2, 'liefert bis zum Seitenfehler ohne Wurf');
+  assert.equal(mFail.fehler(), true, 'mitFehlerMelder erkennt Fehler auch auf Folgeseite');
 });
 

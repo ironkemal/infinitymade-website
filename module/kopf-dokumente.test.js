@@ -63,10 +63,12 @@ test('Verordnungen: unbekannter Scope → keine Quelle', async () => {
   assert.equal((await s.laden('verordnung')).status, 'unbekannt'); assert.equal(calls.vo, 0);
 });
 
-test('Verordnungen: Teilbestand ab 200 je Topf', async () => {
-  const vo = Array.from({ length: 200 }, (_, i) => ({ id: `${String(i).padStart(8, '0')}-5555-4555-8555-555555555555`, quelle: 'physio', leadId: P1 }));
-  const r = await suche({ vo }).s.laden('verordnung');
-  assert.equal(r.teilbestand, true); assert.match(dokumentHinweis('verordnung', r), /Teilbestand/);
+test('Verordnungen: Teilbestand erst ab 5000 je Topf (nach Keyset-Pagination)', async () => {
+  const mk = n => Array.from({ length: n }, (_, i) => ({ id: `${String(i).padStart(8, '0')}-5555-4555-8555-555555555555`, quelle: 'physio', leadId: P1 }));
+  const voll = await suche({ vo: mk(250) }).s.laden('verordnung');
+  assert.equal(voll.teilbestand, false); assert.equal(dokumentHinweis('verordnung', voll), '');
+  const teil = await suche({ vo: mk(5000) }).s.laden('verordnung');
+  assert.equal(teil.teilbestand, true); assert.match(dokumentHinweis('verordnung', teil), /Teilbestand/);
 });
 
 test('Rechnungen: Fehler = nicht verfügbar, fremde Zeilen = Fehler, Finance-Standort', async () => {

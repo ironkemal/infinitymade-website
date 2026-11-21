@@ -3,7 +3,7 @@
  * aa032d91 (rettung/design-wip-20261031): keine eigene Leseansicht, keine geänderten Renderer — Treffer öffnen die
  * vorhandenen Panels (Rechnungen: openInvView, Verordnungen: verordnung-liste.js).
  * Quellen sind ausschließlich vorhandene Lader:
- *   - Verordnungen: ladeAktiveVerordnungen (owner_id, ≤ 200 je Topf) + Standortgrenze aus ladeHandlungsbedarfScope.
+ *   - Verordnungen: ladeAktiveVerordnungen (owner_id, Keyset-paginiert bis 5000 je Topf) + Standortgrenze aus ladeHandlungsbedarfScope.
  *   - Rechnungen: loadRechnungen aus dashboard.js (owner_id + bizScope 'finance'), nur das Ergebnis DIESES Laufs.
  * guvenlik 13.11.2026 (kein Veto, Auflagen): Generation nach jedem await, Kontextschlüssel inkl. Sharing/Design/Leiste,
  * Fehler = „nicht verfügbar“ statt altem Cache, Teilbestand sichtbar, kein Betrag in Treffern, keine Rohzeilen in Logs,
@@ -14,7 +14,8 @@ import { ladeHandlungsbedarfScope } from './startseite-handlungsbedarf-karte.js?
 const UUID = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 // PostgREST liefert ohne Bereich höchstens 1000 Zeilen; loadRechnungen setzt kein limit.
 const RECHNUNGEN_MAX = 1000;
-const VO_JE_TOPF = 200;
+// Entspricht STANDARD_SEITENGROESSE (200) * STANDARD_MAX_SEITEN (25) in verordnung-uebersicht.js.
+const VO_JE_TOPF = 5000;
 
 export const DOKUMENT_ARTEN = ['verordnung', 'rechnung'];
 

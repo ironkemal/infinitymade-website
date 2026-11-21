@@ -3,7 +3,7 @@
 > Üretim: 2026-11-21 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4887 fonksiyon** (4765 JS · 95 bash · 27 ps1) · 598 dosya · 42 sidebar modülü
+**4889 fonksiyon** (4767 JS · 95 bash · 27 ps1) · 598 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -584,7 +584,7 @@ Bunları birleştirme — birleştirilecek olsaydı zaten tek dosya olurdu.
 - `kartenIkNormalisieren()` — [module/krankenkasse-suche.js:169](module/krankenkasse-suche.js#L169-L172) — Spiegel von `kartenIkNormalisieren()` in `api-backend/lib/rezept-felder
 - `leitsymptomatikAlsBitmaske()` — [api-backend/billing/dta/leitsymptomatik.js:59](api-backend/billing/dta/leitsymptomatik.js#L59-L97) — Spiegel von `leitsymptomatikListe()` in `module/verordnung-pruefung
 - `leitsymptomatikListe()` — [module/verordnung-pruefung.js:116](module/verordnung-pruefung.js#L116-L128) — Spiegel von `api-backend/billing/dta/leitsymptomatik
-- `pruefTitel()` — [module/verordnung-uebersicht.js:515](module/verordnung-uebersicht.js#L515-L521) — Spiegel von `pruefTitel` in module/verordnung-liste
+- `pruefTitel()` — [module/verordnung-uebersicht.js:583](module/verordnung-uebersicht.js#L583-L589) — Spiegel von `pruefTitel` in module/verordnung-liste
 - `zuVieleBehandlungenJeTag()` — [module/podo-behandlungstag-regel.js:84](module/podo-behandlungstag-regel.js#L84-L99) — Spiegel von behandlungstageJeDatum/TAGESHOECHSTZAHL in api-backend/billing/utils/behandlungstage
 
 ## Aynı ada sahip birden fazla tanım
@@ -618,7 +618,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `zahl` — api-backend/lib/datev.js:358 · api-backend/lib/gps-checkin.js:12 · module/frequenz-pruefung.js:150 · module/rechnung-summen.js:14 · module/rezept-in-maske.js:223 · module/startseite-darstellung.js:168 · module/startseite-geld.js:18
 - `fehler` — api-backend/billing/api/artefakt-historie.js:37 · api-backend/billing/api/artefakt-registry.js:21 · api-backend/billing/api/physio-publikation-ablauf.js:23 · api-backend/billing/codes/physio-leistungszeilen.js:32 · api-backend/lib/gmail-senden.js:66 · module/therapiebericht.js:205
 - `feld` — module/abrechnung-auswahl.js:985 · module/datev-einstellungen.js:71 · module/fussbefund.js:307 · module/mailversand.js:287 · module/rezeptinfo-geld.js:385 · module/termin-konflikte.js:3
-- `laden` — module/kopf-dokumente.js:54 · module/mailversand.js:193 · module/mein-urlaub.js:6 · module/plz.js:40 · module/start-aufgaben.js:351 · module/startseite-handlungsbedarf-karte.js:44
+- `laden` — module/kopf-dokumente.js:55 · module/mailversand.js:193 · module/mein-urlaub.js:6 · module/plz.js:40 · module/start-aufgaben.js:351 · module/startseite-handlungsbedarf-karte.js:44
 - `lesen` — cookie-consent.js:101 · module/mail-signatur-editor.js:24 · module/raum-tagesansicht.js:138 · module/rezept-barcode-scan.js:90 · module/startseite-handlungsbedarf-karte.js:40 · module/startseite-handlungsbedarf-laden.js:123
 - `load` — module/patient-notizen.js:36 · module/rezept-patientenkopf.js:28 · ops/board.js:111 · ops/decisions.js:7 · ops/meetings.js:7 · ops/wissen.js:49
 - `log` — installieren/install.sh:19 · onprem/backup.sh:47 · onprem/deinstallieren.sh:37 · onprem/install.sh:68 · onprem/restore.sh:44 · onprem/update.sh:59
@@ -627,11 +627,11 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `zeigeFehler` — module/abrechnung-detail.js:576 · module/abrechnung-detail.js:618 · module/verordnung-einheiten.js:552 · module/zuzahlung-befreiung.js:150 · module/zuzahlung-korrektur.js:208 · widget/booking-widget.js:362
 - `add` — api-backend/ai/pii-mask.js:295 · api-backend/billing/dta/output-validator.js:164 · api-backend/lib/verbindungen.js:38 · module/feiertage.js:57 · module/podo-vorgeschichte.js:37
 - `anwenden` — module/kalender-auswahl.js:69 · module/rechnung-steuer.js:295 · module/schublade-neu.js:42 · module/tageszentrale-raster.js:85 · module/termin-konflikte.js:28
-- `datumDe` — api-backend/lib/mail-entwurf.js:29 · module/datum.js:78 · module/ehemalige-mitarbeiter.js:27 · module/kopf-dokumente.js:35 · module/standort-plan.js:394
+- `datumDe` — api-backend/lib/mail-entwurf.js:29 · module/datum.js:78 · module/ehemalige-mitarbeiter.js:27 · module/kopf-dokumente.js:36 · module/standort-plan.js:394
 - `main` — api-backend/check_diagnosegruppen_icd.js:101 · api-backend/merkez-istemci/kayit.js:230 · api-backend/preise_autoupdate.mjs:211 · api-backend/preise_pruefen.mjs:261 · api-backend/sync_heilmittel_katalog.js:159
 - `markiere` — module/kalender-auswahl.js:46 · module/leistung-farbwahl.js:51 · module/planung-bruecke.js:138 · module/verordnung-liste.js:301 · widget/booking-widget.js:107
 - `oeffne` — module/kalender-kontextmenue.js:122 · module/kopf-suche-ansicht.js:122 · module/leiste-flyout.js:64 · module/leistungen-liste.js:190 · module/verordnung-liste.js:253
-- `oeffnen` — dashboard.js:7026 · module/fussbefund.js:1078 · module/kopf-dokumente.js:108 · module/raum-auswahl.js:203 · module/rechnung-mail.js:63
+- `oeffnen` — dashboard.js:7026 · module/fussbefund.js:1078 · module/kopf-dokumente.js:109 · module/raum-auswahl.js:203 · module/rechnung-mail.js:63
 
 ## Shell (onprem/)
 
