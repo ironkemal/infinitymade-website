@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-21",
  "dateien": 596,
- "funktionen": 4856,
+ "funktionen": 4859,
  "module": [
   "abrechnung",
   "anamnese",
@@ -16898,12 +16898,93 @@
    "uiPfad": []
   },
   {
+   "name": "monatVerschieben",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/billing/api/statistik.routes.js",
+   "start": 19,
+   "end": 24,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [
+    "statistikMonatsfenster"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "berlinMonatKey",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/billing/api/statistik.routes.js",
+   "start": 31,
+   "end": 36,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "berlinHeute"
+   ],
+   "calledBy": [
+    "(datei) api-backend/billing/api/statistik.routes.js"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "statistikMonatsfenster",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/billing/api/statistik.routes.js",
+   "start": 45,
+   "end": 64,
+   "lines": 20,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "berlinMonatsgrenzen",
+    "berlinTagesgrenzen",
+    "monatVerschieben"
+   ],
+   "calledBy": [
+    "(datei) api-backend/billing/api/statistik.routes.js"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "resolveAuth",
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/statistik.routes.js",
-   "start": 25,
-   "end": 44,
+   "start": 80,
+   "end": 99,
    "lines": 20,
    "spiegelHinweis": null,
    "tables": [
@@ -16939,8 +17020,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/billing/api/statistik.routes.js",
-   "start": 187,
-   "end": 200,
+   "start": 236,
+   "end": 249,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -17029,8 +17110,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/statistik.routes.js",
-   "start": 344,
-   "end": 369,
+   "start": 388,
+   "end": 413,
    "lines": 26,
    "spiegelHinweis": null,
    "tables": [],
@@ -17056,8 +17137,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/billing/api/statistik.routes.js",
-   "start": 388,
-   "end": 443,
+   "start": 432,
+   "end": 487,
    "lines": 56,
    "spiegelHinweis": null,
    "tables": [],
@@ -36575,6 +36656,7 @@
    "calls": [],
    "calledBy": [
     "(datei) api-backend/billing/api/abrechnung.routes.js",
+    "berlinMonatKey",
     "berlinMonatsgrenzen",
     "berlinTagVon",
     "bgFelderAusRezept",
@@ -36786,6 +36868,7 @@
     "erinnerungsLauf",
     "ladeUeberblickAnsicht",
     "nurZiffern",
+    "statistikMonatsfenster",
     "tagesgrenzen",
     "termineAnTagen"
    ],
@@ -36854,7 +36937,9 @@
     "berlinHeute",
     "berlinTagesgrenzen"
    ],
-   "calledBy": [],
+   "calledBy": [
+    "statistikMonatsfenster"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -125528,6 +125613,7 @@
     "erinnerungsLauf",
     "ladeUeberblickAnsicht",
     "nurZiffern",
+    "statistikMonatsfenster",
     "tagesgrenzen",
     "termineAnTagen"
    ],
@@ -256775,6 +256861,7 @@
    ],
    "calledBy": [
     "(datei) api-backend/billing/api/abrechnung.routes.js",
+    "berlinMonatKey",
     "berlinMonatsgrenzen",
     "berlinTagVon",
     "bgFelderAusRezept",
@@ -277965,7 +278052,6 @@
    "domRender": false,
    "calls": [],
    "calledBy": [
-    "(datei) api-backend/billing/api/statistik.routes.js",
     "boardNotice",
     "render",
     "toggleMenu",
@@ -297940,7 +298026,7 @@
    "name": "r2",
    "orte": [
     "api-backend/billing/api/abrechnung.routes.js:2543",
-    "api-backend/billing/api/statistik.routes.js:187",
+    "api-backend/billing/api/statistik.routes.js:236",
     "api-backend/billing/api/zuzahlung.routes.js:47",
     "api-backend/billing/dta/builder.js:137",
     "api-backend/billing/dta/preflight.js:1113",
@@ -298037,7 +298123,7 @@
     "api-backend/billing/api/mahnwesen.routes.js:29",
     "api-backend/billing/api/podo-empfangsnachweis.routes.js:14",
     "api-backend/billing/api/rechnung-zahlung.routes.js:92",
-    "api-backend/billing/api/statistik.routes.js:25",
+    "api-backend/billing/api/statistik.routes.js:80",
     "api-backend/billing/api/verordnung-status.routes.js:53",
     "api-backend/billing/api/warteliste.routes.js:29",
     "api-backend/billing/api/zuzahlung.routes.js:53"

@@ -7,6 +7,61 @@ import { createClient } from '@supabase/supabase-js';
 import { istZuzahlungBezahlt, saldoJeRezept } from '../zuzahlung/bezahlt.js';
 import { loadTherapeutenStatistik } from '../statistik/therapeuten.js';
 import { heilmittelSchluessel } from '../statistik/heilmittel-schluessel.js';
+import { berlinHeute, berlinMonatsgrenzen, berlinTagesgrenzen } from '../../lib/berlin-tag.js';
+
+/**
+ * Verschiebt ein Jahr/Monat-Paar per reiner Monatsarithmetik (kein Date.setMonth-Überlauf).
+ * @param {number} jahr
+ * @param {number} monatNr  1..12
+ * @param {number} delta
+ * @returns {string} 'YYYY-MM'
+ */
+function monatVerschieben(jahr, monatNr, delta) {
+  const gesamt = jahr * 12 + (monatNr - 1) + delta;
+  const j = Math.floor(gesamt / 12);
+  const m = ((gesamt % 12) + 12) % 12 + 1;
+  return `${String(j).padStart(4, '0')}-${String(m).padStart(2, '0')}`;
+}
+
+/**
+ * Gruppiert einen Zeitstempel in seinen Berliner Kalendermonat ('YYYY-MM').
+ * @param {unknown} zeitstempel
+ * @returns {string}
+ */
+export function berlinMonatKey(zeitstempel) {
+  if (typeof zeitstempel === 'string' && /^\d{4}-\d{2}$/.test(zeitstempel)) return zeitstempel;
+  const d = zeitstempel instanceof Date ? zeitstempel : new Date(String(zeitstempel || ''));
+  if (Number.isNaN(d.getTime())) return String(zeitstempel || '').slice(0, 7);
+  return berlinHeute(d).slice(0, 7);
+}
+
+/**
+ * Berechnet das exakte Monatsfenster in Europe/Berlin (DST-sicher, ohne
+ * Monatsende-Überlauf wie bei `setMonth` an Tagen 29–31; Zusatz 9.3a).
+ *
+ * @param {number} monate  1..12
+ * @param {Date} [jetzt]
+ */
+export function statistikMonatsfenster(monate, jetzt = new Date()) {
+  const aktuell = berlinMonatsgrenzen(jetzt);
+  if (!aktuell) throw new Error('Ungültiger Zeitpunkt für Statistikfenster');
+  const [jahr, monatNr] = aktuell.monat.split('-').map(Number);
+  const monateListe = Array.from({ length: monate }, (_, idx) =>
+    monatVerschieben(jahr, monatNr, -(monate - 1 - idx))
+  );
+  const ersterMonat = monateListe[0];
+  const vorMonat = monatVerschieben(jahr, monatNr, -1);
+  const cutoffGrenze = berlinTagesgrenzen(`${ersterMonat}-01`);
+  const vorMonatGrenze = berlinTagesgrenzen(`${vorMonat}-01`);
+  if (!cutoffGrenze || !vorMonatGrenze) throw new Error('Berliner Monatsgrenzen nicht bestimmbar');
+  return {
+    monateListe,
+    cutoffIso: cutoffGrenze.von,
+    cutoffDate: `${ersterMonat}-01`,
+    startOfThisMonth: aktuell.von,
+    startOfLastMonth: vorMonatGrenze.von,
+  };
+}
 
 const router = express.Router();
 /** @type {import('@supabase/supabase-js').SupabaseClient<any>} */
@@ -61,20 +116,14 @@ router.get('/statistik', async (/** @type {import('express').Request} */ req, /*
     // Clamp monate: 1..12, default 6
     const monate = Math.min(12, Math.max(1, parseInt(String(req.query.monate ?? ''), 10) || 6));
 
-    // Cutoff date: now minus N months (JS-native, no raw SQL needed)
-    const cutoff = new Date();
-    cutoff.setMonth(cutoff.getMonth() - monate);
-    const cutoffIso = cutoff.toISOString();
-
-    // Start of current month (UTC midnight)
-    const nowForMonth = new Date();
-    const startOfThisMonth = new Date(Date.UTC(nowForMonth.getUTCFullYear(), nowForMonth.getUTCMonth(), 1)).toISOString();
-
-    // Start of last month
-    const startOfLastMonth = new Date(Date.UTC(nowForMonth.getUTCFullYear(), nowForMonth.getUTCMonth() - 1, 1)).toISOString();
-
-    // Date-only cutoff for `date` columns (ausstellungsdatum)
-    const cutoffDate = cutoffIso.slice(0, 10);
+    // Monatsgrenzen in Europe/Berlin (ohne UTC-Drift und ohne setMonth-Überlauf an Tagen 29–31)
+    const {
+      monateListe,
+      cutoffIso,
+      cutoffDate,
+      startOfThisMonth,
+      startOfLastMonth,
+    } = statistikMonatsfenster(monate);
 
     // Zehn Abfragen parallel. Die Zahlungseingänge laufen bewusst danach,
     // weil sie auf die Rezept-IDs aus Abfrage 5 eingegrenzt werden.
@@ -202,7 +251,7 @@ router.get('/statistik', async (/** @type {import('express').Request} */ req, /*
     /** @type {Record<string, number>} */
     const bezahltByMonth = {};
     for (const b of (belegResult.data || [])) {
-      const key = b.created_at.slice(0, 7); // "2026-04"
+      const key = berlinMonatKey(b.created_at); // "2026-04" in Europe/Berlin
       const betrag = Number(b.amount_eur || 0);
       umsatzByMonth[key] = (umsatzByMonth[key] || 0) + betrag;
       if (FORDERUNGS_TYPEN.has(b.type)) {
@@ -251,21 +300,16 @@ router.get('/statistik', async (/** @type {import('express').Request} */ req, /*
     const ausfallRows = ausfallResult.error ? [] : (ausfallResult.data || []);
     for (const a of ausfallRows) {
       if (a.status !== 'offen') continue;
-      const key = a.created_at.slice(0, 7);
+      const key = berlinMonatKey(a.created_at);
       offenByMonth[key] = (offenByMonth[key] || 0) + Number(a.amount_eur || 0);
     }
 
-    const monatlich = [];
-    for (let i = monate - 1; i >= 0; i--) {
-      // UTC wie die Schlüssel aus created_at.slice(0, 7); vorher Lokalzeit + toISOString (Review V6.B03, 14.11.2026).
-      const key = new Date(Date.UTC(nowForMonth.getUTCFullYear(), nowForMonth.getUTCMonth() - i, 1)).toISOString().slice(0, 7);
-      monatlich.push({
-        monat: key,
-        umsatz: r2(umsatzByMonth[key]),    // alle Belegarten — Bedeutung wie bisher
-        bezahlt: r2(bezahltByMonth[key]),  // nur Forderungen, gehört zu `offen`
-        offen: r2(offenByMonth[key]),
-      });
-    }
+    const monatlich = monateListe.map((key) => ({
+      monat: key,
+      umsatz: r2(umsatzByMonth[key]),    // alle Belegarten — Bedeutung wie bisher
+      bezahlt: r2(bezahltByMonth[key]),  // nur Forderungen, gehört zu `offen`
+      offen: r2(offenByMonth[key]),
+    }));
 
     // ── 2. Patient stats ─────────────────────────────────────────────────────
     const allLeads = leadsResult.data || [];

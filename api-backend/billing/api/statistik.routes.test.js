@@ -187,3 +187,32 @@ test('B01 R-06: Statistik-Rollengrenze am echten Router und Supabase-SDK', async
     assert.equal(payments[0].url.searchParams.get('type'), 'in.(zuzahlung,storno)');
   });
 });
+
+test('Zusatz 9.3a: statistikMonatsfenster & berlinMonatKey (Europe/Berlin + kein Monatsende-Überlauf)', async () => {
+  const { statistikMonatsfenster, berlinMonatKey } = await import('./statistik.routes.js');
+
+  // Monatsende-Überlauf: 31.03.2026 mit monate=1 darf NICHT auf 03.03. springen
+  const maerz31 = statistikMonatsfenster(1, new Date('2026-03-31T10:00:00Z'));
+  assert.deepEqual(maerz31.monateListe, ['2026-03']);
+  assert.equal(maerz31.cutoffDate, '2026-03-01');
+  assert.equal(maerz31.cutoffIso, '2026-02-28T23:00:00.000Z'); // 01.03.2026 00:00 CET
+  assert.equal(maerz31.startOfThisMonth, '2026-02-28T23:00:00.000Z');
+  assert.equal(maerz31.startOfLastMonth, '2026-01-31T23:00:00.000Z');
+
+  // Jahreswechsel + 6 Monate rückwärts am 31.01.2026
+  const jan31 = statistikMonatsfenster(6, new Date('2026-01-31T12:00:00Z'));
+  assert.deepEqual(jan31.monateListe, ['2025-08', '2025-09', '2025-10', '2025-11', '2025-12', '2026-01']);
+  assert.equal(jan31.cutoffDate, '2025-08-01');
+  assert.equal(jan31.cutoffIso, '2025-07-31T22:00:00.000Z'); // 01.08.2025 00:00 CEST
+
+  // Mitternachtsgrenze in Europe/Berlin (UTC noch Vormonat, Berlin schon neuer Monat)
+  const kurzNachMitternachtNov = statistikMonatsfenster(1, new Date('2026-10-31T23:30:00Z'));
+  assert.deepEqual(kurzNachMitternachtNov.monateListe, ['2026-11']);
+  assert.equal(kurzNachMitternachtNov.cutoffIso, '2026-10-31T23:00:00.000Z'); // 01.11.2026 00:00 CET
+
+  // Beleg-Gruppierung in Europe/Berlin statt UTC (Winterzeit CET & Sommerzeit CEST)
+  assert.equal(berlinMonatKey('2026-10-31T23:30:00.000Z'), '2026-11'); // 01.11. 00:30 CET
+  assert.equal(berlinMonatKey('2026-10-31T22:59:59.000Z'), '2026-10'); // 31.10. 23:59 CET
+  assert.equal(berlinMonatKey('2026-06-30T22:30:00.000Z'), '2026-07'); // 01.07. 00:30 CEST
+  assert.equal(berlinMonatKey('2026-06-30T21:59:59.000Z'), '2026-06'); // 30.06. 23:59 CEST
+});
