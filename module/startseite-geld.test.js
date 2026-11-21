@@ -12,11 +12,18 @@ const ANTWORT = {
 const sb = (token = 't') => ({ auth: { getSession: async () => ({ data: { session: token ? { access_token: token } : null } }) } });
 const antwort = (status, body) => async () => ({ ok: status < 400, status, json: async () => body });
 
-test('geldAuswerten liest nur die Kartenwerte, letzter Monat = laufender', () => {
+test('geldAuswerten liest alle Zahlungen laut Zahlungsjournal (umsatz), letzter Monat = laufender', () => {
   assert.deepEqual(geldAuswerten(ANTWORT), {
-    monat: '2026-11', kassiert: 84.5,
+    monat: '2026-11', kassiert: 500,
     zuzahlungen: { anzahl: 3, summe: 30 }, ausfall: { anzahl: 1, summe: 42 }, offenGesamt: 72, mahnungenOffen: 3,
   });
+});
+
+test('F-02 geldAuswerten: Privatrechnung (12,96 € in umsatz, 0 in bezahlt) und 0 € leere Praxis', () => {
+  const rechnung = geldAuswerten({ monatlich: [{ monat: '2026-11', umsatz: 12.96, bezahlt: 0, offen: 0 }] });
+  assert.equal(rechnung.kassiert, 12.96);
+  const leer = geldAuswerten({ monatlich: [{ monat: '2026-11', umsatz: 0, bezahlt: 0, offen: 0 }] });
+  assert.equal(leer.kassiert, 0);
 });
 
 test('geldAuswerten: kaputte Antwort → null, fehlende Felder → null statt 0', () => {
@@ -26,7 +33,8 @@ test('geldAuswerten: kaputte Antwort → null, fehlende Felder → null statt 0'
   assert.equal(d.kassiert, null);
   assert.equal(d.zuzahlungen.summe, null);
   assert.equal(d.mahnungenOffen, null);
-  assert.equal(geldAuswerten({ monatlich: [{ bezahlt: 'NaN' }], offene_zuzahlungen: -1 }).zuzahlungen.anzahl, null);
+  assert.equal(geldAuswerten({ monatlich: [{ umsatz: 'NaN' }], offene_zuzahlungen: -1 }).zuzahlungen.anzahl, null);
+  assert.equal(geldAuswerten({ monatlich: [{ umsatz: 'NaN', bezahlt: 10 }] }).kassiert, null);
 });
 
 test('ladeGeld: ruft nur /billing/statistik?monate=1 mit Bearer-Token', async () => {
@@ -58,7 +66,7 @@ test('geldHtml: laden, fehler (mit Erneut), ok ohne Arztdaten und ohne „Umsatz
   assert.match(f, /data-aktion="geld-neu"/);
   assert.doesNotMatch(f, /0,00/);
   const ok = geldHtml({ status: 'ok', daten: geldAuswerten(ANTWORT) });
-  assert.match(ok, /84,50 €/);
+  assert.match(ok, /500,00 €/);
   assert.match(ok, /3 · 30,00 €/);
   assert.match(ok, /1 · 42,00 €/);
   assert.doesNotMatch(ok, /Umsatz|darf nicht/);

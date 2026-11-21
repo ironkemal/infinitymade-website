@@ -29,7 +29,7 @@ import {
   wartelisteAufbereiten,
 } from './ueberblick-listen.js?v=20261121f01b';
 import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_VOLL } from './verordnung-fristen-laden.js?v=20261121f01';
-import { ladeGeld, monatText } from './startseite-geld.js?v=20261114b03';
+import { ladeGeld, monatText } from './startseite-geld.js?v=20261121f02';
 import { fmtEur } from './geld.js?v=20260909';
 import { on } from './signal.js?v=20260813';
 
@@ -592,10 +592,10 @@ export function montiereTageszentrale(k) {
         <button type="button" class="tz-mini-link" data-tz-panel="statistik">Auswertungen ›</button>
       </div>
       <div class="tz-pulse">
-        <button type="button" class="tz-pulse-cell" data-tz-panel="statistik">
+        <button type="button" class="tz-pulse-cell" data-tz-panel="statistik" title="Alle Zahlungen laut Zahlungsjournal (alle Standorte), Stornos abgezogen">
           <span class="tz-pulse-lbl">Kassiert</span>
           <span class="tz-pulse-val">${esc(fmt(d.kassiert))}</span>
-          <span class="tz-pulse-sub">Monat laufend</span>
+          <span class="tz-pulse-sub">Monat laufend · Journal</span>
         </button>
         <button type="button" class="tz-pulse-cell" data-tz-panel="rechnungen">
           <span class="tz-pulse-lbl">Zuzahlung</span>

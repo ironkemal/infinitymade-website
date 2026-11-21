@@ -35,7 +35,7 @@ try {
   assert.equal(owner.stand.sichtbar, true, 'Inhaberin: Karte sichtbar');
   assert.match(owner.stand.text, /Alle Standorte/, 'Hinweis „Alle Standorte“ (guvenlik-Auflage 5)');
   assert.match(owner.stand.text, /Kassiert im Oktober/, 'Monat aus der Statistik');
-  assert.match(owner.stand.text, /316,50 €/, 'kassiert');
+  assert.match(owner.stand.text, /1\.230,00 €/, 'kassiert laut Zahlungsjournal');
   assert.match(owner.stand.text, /Zuzahlungen offen ?4 · 60,00 €/, 'Zuzahlungen offen');
   assert.match(owner.stand.text, /Ausfallrechnungen offen ?1 · 42,00 €/, 'Ausfall offen');
   assert.match(owner.stand.text, /Mahnungen offen ?2/, 'Mahnungen offen');
@@ -50,9 +50,26 @@ try {
   assert.equal(ma.stat, 0, 'Mitarbeiterin: kein Statistik-Request');
   erg.ma = { karte: ma.stand.karte, stat: ma.stat };
 
-  const alt = await lauf({ design: 'alt', rolle: 'owner' });
-  assert.equal(alt.stat, 0, 'Alt-Design: kein Statistik-Request');
-  erg.alt = { stat: alt.stat };
+  const alt = await lauf({ design: 'alt', rolle: 'owner' }, async (page) => {
+    await page.waitForFunction(() => !document.getElementById('tzGeld')?.hidden, null, { timeout: 10000 }).catch(() => {});
+    return page.evaluate(() => {
+      const g = document.getElementById('tzGeld');
+      return { sichtbar: !!g && !g.hidden, text: g?.textContent.replace(/\s+/g, ' ').trim() || '' };
+    });
+  });
+  assert.equal(alt.stat, 1, 'Standard-Design (Tageszentrale, Inhaber): genau ein Statistik-Request');
+  assert.equal(alt.extra.sichtbar, true, 'Standard-Design: #tzGeld sichtbar');
+  assert.match(alt.extra.text, /1\.230,00 €/, 'Standard-Design: Kassiert laut Zahlungsjournal');
+  assert.match(alt.extra.text, /Monat laufend · Journal/, 'Standard-Design: Journal-Beschriftung');
+  assert.doesNotMatch(alt.extra.text, /Umsatz/, 'Standard-Design: kein „Umsatz“');
+  erg.alt = { stat: alt.stat, sichtbar: alt.extra.sichtbar };
+
+  const altMa = await lauf({ design: 'alt', rolle: 'employee' }, async (page) =>
+    page.evaluate(() => ({ hidden: !!document.getElementById('tzGeld')?.hidden }))
+  );
+  assert.equal(altMa.stat, 0, 'Standard-Design (Mitarbeiter): kein Statistik-Request');
+  assert.equal(altMa.extra.hidden, true, 'Standard-Design (Mitarbeiter): #tzGeld ausgeblendet');
+  erg.altMa = { stat: altMa.stat, hidden: altMa.extra.hidden };
 
   const fehl = await lauf({ design: 'neu', rolle: 'owner', szenario: 'fehler' });
   assert.match(fehl.stand.text, /gerade nicht verfügbar/, 'Fehler: „nicht verfügbar“');

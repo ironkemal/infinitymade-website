@@ -6,9 +6,10 @@
  * stehen schon in billing/zuzahlung/bezahlt.js (offen/bezahlt) und billing/api/statistik.routes.js (Kassenbuch);
  * eine zweite Rechnung wäre eine dritte Kopie. Diese Datei rechnet nichts nach, sie liest nur aus.
  *
- * E10/E13 (Melih 26.10.): „Kassiert diesen Monat“ = Forderungseingänge laut Kassenbuch (Zuzahlung, Ausfall, minus
- * Stornos), das Wort „Umsatz“ wird nicht verwendet. Was die Statistik nicht liefert (Kassenzahlungen, „bereit zur
- * Abrechnung ≈ €“, VKZ03 „Bei Kasse gefordert“), zeigt die Karte nicht als Zahl, sondern als Sprung in den Bereich.
+ * F-02 (21.11.2026): „Kassiert“ zeigt alle Zahlungseingänge laut Zahlungsjournal
+ * (`monat.umsatz` aus `belegliste`, abzüglich Stornos — deckungsgleich mit dem
+ * Zahlungsjournal). Das Wort „Umsatz“ wird in der UI weiterhin nicht verwendet.
+ * Kassenzahlungen und „bereit zur Abrechnung“ stehen getrennt unter §302-Abrechnung.
  * Unbekannt ist nie 0 €: fehlt ein Wert oder ist er nicht endlich, steht „–“ bzw. „nicht verfügbar“.
  */
 import { fmtEur } from './geld.js?v=20260909';
@@ -23,7 +24,7 @@ export function geldAuswerten(json) {
   const monat = json.monatlich.at(-1);
   return {
     monat: typeof monat?.monat === 'string' ? monat.monat : null,
-    kassiert: zahl(monat?.bezahlt),
+    kassiert: zahl(monat?.umsatz),
     zuzahlungen: { anzahl: anzahl(json.offene_zuzahlungen), summe: zahl(json.offene_zuzahlungen_summe) },
     ausfall: { anzahl: anzahl(json.ausfallrechnungen?.offen), summe: zahl(json.ausfallrechnungen?.offen_summe) },
     offenGesamt: zahl(json.offen_gesamt_summe),
@@ -79,6 +80,6 @@ export function geldHtml(zustand) {
     ${offenZeile('Zuzahlungen offen', d.zuzahlungen)}
     ${offenZeile('Ausfallrechnungen offen', d.ausfall)}
     <div class="px-geld-zeile"><span class="lbl">Mahnungen offen</span><span class="zahl">${esc(mahn)}</span></div>
-    <p class="px-geld-fuss">Kassiert = Zuzahlungen und Ausfallrechnungen laut Belegliste, Stornos abgezogen. Kassenzahlungen und „bereit zur Abrechnung“ stehen unter §302-Abrechnung.</p>
+    <p class="px-geld-fuss">Kassiert = alle Zahlungseingänge laut Zahlungsjournal (Belegliste), Stornos abgezogen. Kassenzahlungen und „bereit zur Abrechnung“ stehen unter §302-Abrechnung.</p>
   </div>`;
 }
