@@ -954,7 +954,7 @@
      Königsblau/Cyan und ohne warmen Beige-Stich.
      ========================================================================== */
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] {
-    --tz-canvas: var(--bg-main, #F6F3EF);
+    --tz-canvas: var(--bg-main, #FAFAFB);
     --tz-surface: #FFFFFF;
     --tz-band: #F5F5F7;
     --tz-sunken: #F1F1F3;

@@ -36,162 +36,171 @@
   --radius-sm: 6px;
 }
 :root:not([data-theme="dark"]) {
-  --bg-main: #F7F4EF;
+  --bg-main: #FAFAFB;
   --bg-card: #FFFFFF;
   --bg-card-solid: #FFFFFF;
-  --bg-sidebar: #F6F1EA;
+  --bg-sidebar: #FFFFFF;
   --bg-topbar: #FFFFFF;
   --bg-input: #FFFFFF;
-  --bg-hover: rgba(43, 35, 28, 0.05);
-  --primary: #4F4136;
-  --primary-hover: #3B3028;
-  --primary-dim: rgba(79, 65, 54, 0.10);
-  --text-main: #2B231C;
-  /* vorher #7A6F61 — auf dem Hintergrund knapp unter 4,5:1 */
-  --text-muted: #6E6255;
-  --border: rgba(43, 35, 28, 0.09);
-  --border-strong: rgba(43, 35, 28, 0.17);
+  --bg-hover: #F3F4F6;
+  --primary: #23262D;
+  --primary-hover: #181A20;
+  --primary-dim: #F1F2F4;
+  --text-main: #16181D;
+  --text-muted: #555861;
+  --border: #E2E4E9;
+  --border-strong: #9CA0AB;
 
-  --nav-active: #EADFD0;
-  --focus-ring: #A48565;
-  --today: #B4532A;
-  --grid-hour: rgba(43, 35, 28, 0.10);
-  --grid-half: rgba(43, 35, 28, 0.05);
-  --grid-quarter: rgba(43, 35, 28, 0.035);
+  --nav-active: #ECEEF2;
+  --focus-ring: #23262D;
+  --today: #D92D20;
+  --grid-hour: rgba(15, 20, 28, 0.09);
+  --grid-half: rgba(15, 20, 28, 0.045);
+  --grid-quarter: rgba(15, 20, 28, 0.028);
 }
 
 [data-theme="dark"] {
-  --bg-card: #201C15;
-  --bg-sidebar: #17140F;
-  --bg-topbar: #17140F;
-  --bg-input: #1A1712;
-  --primary: #C9AB8F;
-  --primary-hover: #DCC4A8;
-  --primary-dim: rgba(201, 171, 143, 0.16);
-  --nav-active: rgba(201, 171, 143, 0.16);
-  --focus-ring: #C9AB8F;
-  --today: #E08A63;
-  --grid-hour: rgba(245, 240, 230, 0.10);
-  --grid-half: rgba(245, 240, 230, 0.05);
-  --grid-quarter: rgba(245, 240, 230, 0.03);
+  --bg-card: #181A1F;
+  --bg-sidebar: #14161A;
+  --bg-topbar: #181A1F;
+  --bg-input: #14161A;
+  --primary: #F3F4F6;
+  --primary-hover: #D8DBE2;
+  --primary-dim: rgba(243, 244, 246, 0.14);
+  --nav-active: #262A33;
+  --focus-ring: #D8DBE2;
+  --today: #F97066;
+  --grid-hour: rgba(243, 244, 246, 0.10);
+  --grid-half: rgba(243, 244, 246, 0.05);
+  --grid-quarter: rgba(243, 244, 246, 0.03);
 }
 
 /* Bildschirm-Palette der bisherigen Oberfläche. Die Aktivierung des neuen
    Designs bleibt separat; dessen Tokens und Druckfarben werden nicht berührt. */
 @media screen {
   :root:not([data-design="neu"]):not([data-theme="dark"]) {
-    --bg-main: #F4F6F9;
+    --bg-main: #FAFAFB;
     --bg-card: #FFFFFF;
     --bg-card-solid: #FFFFFF;
     --bg-sidebar: #FFFFFF;
     --bg-topbar: #FFFFFF;
     --bg-input: #FFFFFF;
-    --bg-hover: #F2F4F7;
-    --bg-warm: #F2F4F7;
-    --primary: #0B0F17;
-    --primary-hover: #1F2633;
-    --primary-dim: #EEF0F3;
-    --text-main: #0B0F17;
-    --text-muted: #475467;
-    --text-faint: #667085;
-    --border: #E6E9EE;
-    --border-strong: #8A93A0;
-    --nav-active: #EEF0F3;
-    --accent: #2563EB;
-    --focus-ring: #2563EB;
-    --today: #2563EB;
-    --bronze: #475467;
-    --bronze-deep: #344054;
-    --emerald-deep: #0B0F17;
-    --highlight: #D0D5DD;
+    --bg-hover: #F3F4F6;
+    --bg-warm: #F5F5F7;
+    --primary: #23262D;
+    --primary-hover: #181A20;
+    --primary-dim: #F1F2F4;
+    --text-main: #16181D;
+    --text-muted: #555861;
+    --text-faint: #70747E;
+    --border: #E2E4E9;
+    --border-strong: #9CA0AB;
+    --nav-active: #ECEEF2;
+    --accent: #23262D;
+    --focus-ring: #23262D;
+    --today: #D92D20;
+    --bronze: #555861;
+    --bronze-deep: #343842;
+    --emerald-deep: #23262D;
+    --highlight: #D4D5DA;
     --primary-lux: var(--primary);
     --bronze-lux: var(--bronze);
-    --dark-lux: #0B0F17;
+    --dark-lux: #16181D;
     --glass-bg-light: #FFFFFF;
-    --glass-bg-dark: #14171D;
-    --glass-border-light: #E6E9EE;
-    --glass-border-dark: #22262E;
-    --grid-hour: rgba(11, 15, 23, 0.10);
-    --grid-half: rgba(11, 15, 23, 0.05);
-    --grid-quarter: rgba(11, 15, 23, 0.035);
+    --glass-bg-dark: #181A1F;
+    --glass-border-light: #E2E4E9;
+    --glass-border-dark: #2A2E37;
+    --grid-hour: rgba(15, 20, 28, 0.09);
+    --grid-half: rgba(15, 20, 28, 0.045);
+    --grid-quarter: rgba(15, 20, 28, 0.028);
   }
 
   :root:not([data-design="neu"])[data-theme="dark"] {
-    --bg-main: #0B0D12;
-    --bg-card: #14171D;
-    --bg-card-solid: #14171D;
-    --bg-sidebar: #101318;
-    --bg-topbar: #14171D;
-    --bg-input: #101318;
-    --bg-hover: #1E232B;
-    --bg-warm: #1A1E25;
-    --primary: #F1F3F6;
+    --bg-main: #111317;
+    --bg-card: #181A1F;
+    --bg-card-solid: #181A1F;
+    --bg-sidebar: #14161A;
+    --bg-topbar: #181A1F;
+    --bg-input: #14161A;
+    --bg-hover: #24272F;
+    --bg-warm: #20232A;
+    --primary: #F3F4F6;
     --primary-hover: #D9DEE5;
-    --primary-dim: #22262F;
-    --text-main: #F1F3F6;
-    --text-muted: #A6AEBB;
-    --text-faint: #8A93A0;
-    --border: #22262E;
-    --border-strong: #6B7482;
-    --nav-active: #22262F;
-    --accent: #60A5FA;
-    --focus-ring: #60A5FA;
-    --today: #60A5FA;
-    --bronze: #A6AEBB;
+    --primary-dim: #24272F;
+    --text-main: #F3F4F6;
+    --text-muted: #A5A9B4;
+    --text-faint: #858A96;
+    --border: #2C303A;
+    --border-strong: #636875;
+    --nav-active: #262A33;
+    --accent: #E2E4E9;
+    --focus-ring: #E2E4E9;
+    --today: #F97066;
+    --bronze: #A5A9B4;
     --bronze-deep: #D9DEE5;
-    --emerald-deep: #F1F3F6;
-    --highlight: #344054;
+    --emerald-deep: #F3F4F6;
+    --highlight: #323640;
     --primary-lux: var(--primary);
     --bronze-lux: var(--bronze);
-    --dark-lux: #0B0D12;
+    --dark-lux: #111317;
     --glass-bg-light: #FFFFFF;
-    --glass-bg-dark: #14171D;
-    --glass-border-light: #E6E9EE;
-    --glass-border-dark: #22262E;
-    --grid-hour: rgba(241, 243, 246, 0.10);
-    --grid-half: rgba(241, 243, 246, 0.05);
-    --grid-quarter: rgba(241, 243, 246, 0.03);
+    --glass-bg-dark: #181A1F;
+    --glass-border-light: #E2E4E9;
+    --glass-border-dark: #2C303A;
+    --grid-hour: rgba(243, 244, 246, 0.10);
+    --grid-half: rgba(243, 244, 246, 0.05);
+    --grid-quarter: rgba(243, 244, 246, 0.03);
   }
 
-  /* Gemeinsame Bildschirmfarben für alle Panels beider Dashboard-Designs. */
+  /* Gemeinsame helle/neutrale Bildschirmfarben für alle Panels (kein warmer Beige-Stich). */
   :root:not([data-theme="dark"]) body {
-    --bg-main: #F6F3EF;
-    --bg-hover: #F5EDE6;
-    --bg-warm: #FBF1E8;
-    --bg-sunken: #F0EBE5;
-    --border: #D4CBC2;
+    --bg-main: #FAFAFB;
+    --bg-card: #FFFFFF;
+    --bg-card-solid: #FFFFFF;
+    --bg-sidebar: #FFFFFF;
+    --bg-topbar: #FFFFFF;
+    --bg-input: #FFFFFF;
+    --bg-hover: #F3F4F6;
+    --bg-warm: #F5F5F7;
+    --bg-sunken: #F1F2F4;
+    --border: #E2E4E9;
     --border-color: var(--border);
-    --border-strong: #85786B;
+    --border-strong: #9CA0AB;
     --border-input: var(--border-strong);
-    --text-main: #302B27;
-    --text-muted: #60564F;
+    --text-main: #16181D;
+    --text-muted: #555861;
     --text-sub: var(--text-muted);
-    --primary: #573B30;
-    --primary-hover: #442E25;
-    --accent: #944D33;
+    --primary: #23262D;
+    --primary-hover: #181A20;
+    --accent: #23262D;
     --focus-ring: var(--accent);
-    --focus-halo: rgba(148, 77, 51, 0.22);
-    --nav-active: #F1DCCC;
+    --focus-halo: rgba(35, 38, 45, 0.18);
+    --nav-active: #ECEEF2;
     --primary-dim: var(--bg-warm);
   }
 
+  /* Im Terminkalender den Seitenhintergrund komplett reinweiß halten. */
+  :root:not([data-theme="dark"]) body:has(#panel-calendar.active) {
+    --bg-main: #FFFFFF;
+  }
+
   :root[data-theme="dark"] body {
-    --bg-main: #181614;
-    --bg-card: #24211F;
+    --bg-main: #111317;
+    --bg-card: #181A1F;
     --bg-card-solid: var(--bg-card);
     --bg-topbar: var(--bg-card);
-    --bg-sidebar: #201D1B;
-    --bg-input: #1E1B19;
-    --bg-elevated: #302B28;
+    --bg-sidebar: #14161A;
+    --bg-input: #14161A;
+    --bg-elevated: #22252C;
     --bg-sunken: var(--bg-input);
-    --bg-hover: #362F2A;
-    --bg-warm: #392F28;
-    --border: #4A4039;
+    --bg-hover: #24272F;
+    --bg-warm: #20232A;
+    --border: #323640;
     --border-color: var(--border);
-    --accent: #E6A989;
+    --accent: #E2E4E9;
     --focus-ring: var(--accent);
-    --focus-halo: rgba(230, 169, 137, 0.24);
-    --nav-active: #50382C;
+    --focus-halo: rgba(226, 228, 233, 0.22);
+    --nav-active: #262A33;
     --primary-dim: var(--bg-warm);
   }
 
@@ -199,16 +208,16 @@
     box-shadow: inset 3px 0 var(--accent);
   }
   #panel-overview {
-    --overview-head-bg: #FBF1E8;
-    --overview-head-text: #302C28;
-    --overview-head-muted: #60584E;
-    --overview-head-border: #CEB6A3;
+    --overview-head-bg: #F5F5F7;
+    --overview-head-text: #16181D;
+    --overview-head-muted: #555861;
+    --overview-head-border: #D4D5DA;
   }
   [data-theme="dark"] #panel-overview {
-    --overview-head-bg: #302C28;
-    --overview-head-text: #FAF7F2;
-    --overview-head-muted: #DAD2C8;
-    --overview-head-border: #73695D;
+    --overview-head-bg: #20232A;
+    --overview-head-text: #F3F4F6;
+    --overview-head-muted: #A5A9B4;
+    --overview-head-border: #323640;
   }
   #panel-overview #welcomeOverview {
     --primary: var(--overview-head-text);
@@ -225,8 +234,8 @@
     opacity: 1;
   }
 
-  :root:not([data-design="neu"]) .dv-col-highlight { background: var(--bg-hover); }
-  :root:not([data-design="neu"]) .dv-slot--past { background-color: var(--bg-hover); }
+  :root:not([data-design="neu"]) .dv-col-highlight { background: var(--bg-card-solid); }
+  :root:not([data-design="neu"]) .dv-slot--past { background-color: rgba(15, 20, 28, 0.012); }
   :root:not([data-design="neu"]) ::selection { color: var(--text-main); background: var(--nav-active); }
   :root:not([data-design="neu"]) :is(input, textarea) { caret-color: var(--accent); }
 }
@@ -403,9 +412,9 @@ h1 em, h2 em, h3 em { font-style: normal; font-weight: inherit; color: var(--pri
     var(--grid-quarter) calc(50% + 0.5px), transparent calc(50% + 0.5px));
 }
 
-.dv-col-header { font-size: 13px; border-bottom-color: var(--border); }
-.dv-col-highlight { background: rgba(164, 133, 101, 0.04); }
-.dv-col-highlight .dv-col-header { background: var(--nav-active); color: var(--text-main); font-weight: 600; }
+.dv-col-header { font-size: 13px; border-bottom-color: var(--border); background: var(--bg-card-solid); }
+.dv-col-highlight { background: var(--bg-card-solid); }
+.dv-col-highlight .dv-col-header { background: var(--bg-sunken, #F3F4F6); color: var(--text-main); font-weight: 600; }
 
 /* Terminblöcke: Leistungsfarbe als ruhige Fläche, ohne Rahmen. Den Rand setzt
    dashboard.js inline (borderColor + 3px borderLeft für den Mitarbeiter).
@@ -415,7 +424,7 @@ h1 em, h2 em, h3 em { font-style: normal; font-weight: inherit; color: var(--pri
 .dv-booking-block, .wv-booking-block { border-radius: 5px; }
 .day-view-grid .dv-booking-block {
   border: 0 !important;
-  box-shadow: inset 0 0 0 1px rgba(43, 35, 28, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(15, 20, 28, 0.06);
   padding: 5px 8px;
 }
 .week-view-grid .wv-booking-block, .week-view-grid .dv-booking-block { border-left-width: 2px !important; }
@@ -424,7 +433,7 @@ h1 em, h2 em, h3 em { font-style: normal; font-weight: inherit; color: var(--pri
    Aufhellen — auf hellen Flächen wurde der Block dabei fast weiß). */
 .dv-booking-block:hover {
   transform: none !important;
-  box-shadow: inset 0 0 0 1px rgba(43, 35, 28, 0.10) !important;
+  box-shadow: inset 0 0 0 1px rgba(15, 20, 28, 0.10) !important;
   filter: brightness(0.97) !important;
 }
 [data-theme="dark"] .dv-booking-block:hover { filter: brightness(1.12) !important; }
@@ -440,10 +449,9 @@ h1 em, h2 em, h3 em { font-style: normal; font-weight: inherit; color: var(--pri
 #panel-calendar > .panel-header > div:first-child { display: none; }
 #panel-calendar .cal-view-date { font-size: 22px; font-weight: 600; }
 
-/* Vergangene Zeit nur andeuten: bei einem Blick am Nachmittag war sonst der
-   ganze Vormittag ausgegraut, samt Uhrzeiten. */
-.dv-slot--past { background-color: rgba(43, 35, 28, 0.022); }
-[data-theme="dark"] .dv-slot--past { background-color: rgba(245, 240, 230, 0.025); }
+/* Vergangene Zeit nur minimal andeuten, damit das Kalenderraster klar weiß bleibt. */
+.dv-slot--past { background-color: rgba(15, 20, 28, 0.012); }
+[data-theme="dark"] .dv-slot--past { background-color: rgba(243, 244, 246, 0.02); }
 .dv-time-col .dv-slot--past .dv-time-label { opacity: 0.75; }
 .dv-time-label { font-size: 11.5px; }
 
@@ -505,7 +513,7 @@ h1 em, h2 em, h3 em { font-style: normal; font-weight: inherit; color: var(--pri
 
 /* Der zuletzt geöffnete Termin (module/kalender-auswahl.js). */
 .termin-gewaehlt {
-  box-shadow: 0 0 0 2px var(--primary), 0 6px 14px -6px rgba(43, 35, 28, 0.35) !important;
+  box-shadow: 0 0 0 2px var(--primary), 0 6px 14px -6px rgba(15, 20, 28, 0.30) !important;
   z-index: 5 !important;
   opacity: 1 !important;
   filter: none !important;
@@ -537,7 +545,7 @@ h1 em, h2 em, h3 em { font-style: normal; font-weight: inherit; color: var(--pri
 /* ── 6. Seitenbereich „Termin" (#bkActionModal) ─────────────────────────── */
 /* Die Karten tragen ihren Rahmen inline (dashboard.html) — deshalb !important.
    Aus Kästen in Kästen werden Abschnitte mit einer Trennlinie. */
-#bkActionModal { box-shadow: -16px 0 32px -26px rgba(43, 35, 28, 0.45); }
+#bkActionModal { box-shadow: -16px 0 32px -26px rgba(15, 20, 28, 0.38); }
 #bkActionModal .modal-header { border-bottom: 1px solid var(--border); }
 #bkActionModal .modal-title { font-size: 15px; }
 #bkActionModal :is(#bkDetailCard, #bkPatientCard, #bkVerlaufCard, #bkAnamneseCard, #bkPatNotesCard) {
@@ -611,7 +619,7 @@ h1 em, h2 em, h3 em { font-style: normal; font-weight: inherit; color: var(--pri
   padding: 12px 20px;
   background: var(--bg-card-solid);
   border-top: 1px solid var(--border);
-  box-shadow: 0 -10px 20px -18px rgba(43, 35, 28, 0.35);
+  box-shadow: 0 -10px 20px -18px rgba(15, 20, 28, 0.28);
 }
 .bk-fuss > .form-group { margin-bottom: 8px; }
 .bk-fuss .btn-primary { min-height: 38px; }
