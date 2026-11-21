@@ -1405,6 +1405,12 @@
   }
 
   :root:not([data-design="neu"]) #panel-overview[data-tz="1"] .tz-mini-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 10px 8px;
+    margin: -10px -8px;
     border: 0;
     background: transparent;
     color: var(--tz-muted);

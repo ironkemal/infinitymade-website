@@ -824,7 +824,7 @@ function renderNoShows() {
   if (state.laedt && !state.geladenUm) { listEl.innerHTML = skelettHtml(2); return; }
   if (state.noShowsFehler) { listEl.innerHTML = leerHtml('Nicht-Erscheiner konnten nicht geladen werden.'); return; }
   if (!gefiltert.length) {
-    listEl.innerHTML = leerHtml(state.suche.trim() ? 'Keine Treffer.' : 'Niemand ist zuletzt nicht erschienen.');
+    listEl.innerHTML = leerHtml(state.suche.trim() ? 'Keine Treffer.' : 'Keine versäumten Termine zuletzt.');
     return;
   }
 
