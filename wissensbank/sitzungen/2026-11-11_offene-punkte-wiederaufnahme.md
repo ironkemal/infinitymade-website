@@ -62,7 +62,7 @@ Herkunft: `fortschritte/2026-11-20.md`, `fortschritte/2026-11-21.md`, [[2026-11-
 
 **Verbleibend für Physio-Launch Stufe 1 (Stand 21.11.2026):**
 - **Push-GO:** Lokale Commits vom 21.11. (Verordnungsliste-Pagination + Doku-Abgleich) nach Melihs GO pushen.
-- **Optionales DB-GO:** Einmal-Skript `api-backend/db/physio-sitzungen-nachziehen.sql` nur nach explizitem GO ausführen, falls bestehende Physio-Altdaten nachgezogen werden sollen.
+- ~~**Optionales DB-GO:** Einmal-Skript `api-backend/db/physio-sitzungen-nachziehen.sql`~~ — **Erledigt 21.11.2026 (Melih-GO):** `api-backend/db/physio-sitzungen-nachziehen.sql` live auf SaaS (`njvuclullotbksskpwgk`) ausgeführt — offene, unabgerechnete Physio-Verordnungen ohne Sitzungsplan: 5 → 0. Reiner Daten-Nachlauf, keine Schema-Änderung.
 - **Melih (Live-Abnahme):** Aktualisierte Checkliste `canli-test/2026-11-19-physio-launch-checkliste.md` (Blöcke A–D inkl. Live-Schreibtests Teil D & echte Smartphones iOS/Android).
 - **Kemal:** Box `L1–L7` und 4 Partnerfragen (`#13`, `#14`, `#1`, `#22`) laut `Physio/LAUNCH-P1.md`.
 - **Stufe 2 / extern:** AZE-Antwort auf `TSOL0101–0105` (Betreff `590537440`) abwarten; Entlassmanagement-Freigabe (`0112–0115`) + Tages-Zuzahlung (`#22`).
