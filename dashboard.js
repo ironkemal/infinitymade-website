@@ -16930,7 +16930,7 @@ async function loadAnwesenheitSidePanel() {
     return;
   }
 
-  if (empView) empView.style.display = 'none';
+  if (empView) empView.style.display = 'block';
   if (ownerView) ownerView.style.display = 'block';
 
   // Varsayılan tarih aralığı: bu haftanın başı → bugün
