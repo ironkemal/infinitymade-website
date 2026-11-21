@@ -9,6 +9,8 @@ tags: [sitzung, uebersicht]
 
 **Bei „Was ist noch offen?“:** [[2026-11-11_offene-punkte-wiederaufnahme]] zuerst lesen, dann neuere Belege und führende Restmatrix abgleichen. Enthält Restpunkte, Zuständigkeiten, externe Mitwirkung und Rückstellungen.
 
+Aktuelle Ergänzung (21.11.): [[2026-11-21_dashboard-ueberblick-qa-fixes]] — Alle 13 Dashboard-/Überblick-QA-Fehler (`F-01`–`F-13`) + Zusätze `9.1`–`9.6` (Fristen-Angleichung, DST/Pagination, Kassiert-Journal, Berlin-Statistik & Storno-Originaltyp, Hash-Routing `#ueberblick`, Raster-Klick, Detailpanel, Team-Check-in für Inhaber, 44-px-Klickflächen & 320/390/768-px-Responsive) auf `main` gemergt (`629094db`); `5.780` Tests + `typecheck` + Browser-Probes grün; Live-Abnahme der Schreibabläufe mit Testkonto & Smartphones offen.
+
 Aktuelle Ergänzung (20.11.): [[2026-11-20_raumbelegung-gruppentermine-anwesenheit]] — QA-Nachprüfung für Standort-Check-in, Raumautomatik und Physio-Serien (`5d4de74d`). SaaS-Schema bis 0129 geprüft. Fachliche Live-Abnahme, Bestandsnachzug und Rechnungsvorgaben je Praxis bleiben offen.
 
 Aktuelle Ergänzung (20.11.): [[2026-11-20_dashboard-und-ueberblick-redesign]] — Dashboard (`#panel-overview`) im Standard-Design nach `DESIGN.md` neu aufgebaut (`dashboard-start.css`, `module/aktivitaet-zeile.js`, `module/start-aufgaben.js` ohne Emojis/Seitenbalken/Olivgold, `dashboard.js` `-34` Zeilen auf `17641`) und Überblick (`#panel-ueberblick`) feingeschliffen (Mobile-Tabs, `Nicht erschienen`-Stapelung, Dark-Mode-Chart, `[data-design="neu"]`-Zeilenhöhe); `3.033` Frontend- und `355` Tool-Tests + Browser-Probes (`layout`, `v303`, `v602`) grün (`713c5429`), Push auf `origin/main` freigegeben.
@@ -56,6 +58,7 @@ Aktuelle Bugfix-Übergabe: [[2026-11-17_praxura-bugfix-uebergabe]] — P1–P3 l
 
 | Datum | Ticket | Notiz | Stand beim Schreiben |
 |---|---|---|---|
+| 2026-11-21 | Dashboard- & Überblick-QA (`F-01`–`F-13` + `9.1`–`9.6`) | [[2026-11-21_dashboard-ueberblick-qa-fixes]] | Auf `main` gemergt (`629094db`), `5.780` JS-Tests + `typecheck` + `npm run probe` + `v6b03-geld` grün, `dashboard.js` `17.487` Zeilen. Live-Schreibtests mit Testkonto & Smartphones offen. |
 | 2026-11-20 | Physio-QA / Entscheidungen und Nachprüfung | [[2026-11-20_raumbelegung-gruppentermine-anwesenheit]] | `5d4de74d`, 5.763 JavaScript- und 50 PostgreSQL-Tests grün. Raum 75/75, Physio 41/41 lokal. SaaS 0124–0129 bestätigt. Fachliche Live-Abnahme offen. |
 | 2026-11-20 | Redesign / Dashboard & Überblick | [[2026-11-20_dashboard-und-ueberblick-redesign]] | Dashboard (`#panel-overview`) nach `DESIGN.md` neu gestaltet (`dashboard-start.css`, `module/aktivitaet-zeile.js`, `module/start-aufgaben.js`), Überblick feingeschliffen; `3.033` Frontend- + `355` Tool-Tests, `typecheck`, `redesign-wachen`, Browser-Probes (`layout`, `v303`, `v602`) grün (`713c5429`); Push auf `origin/main`, Live-Sichtprüfung nach Deploy offen. |
 | 2026-11-19 | Physio-Launch Stufe 1 / AZE | [[2026-11-19_physio-launch-stufe1-sitzung-auth-raeume-ueberblick]] | QA-Nachprüfung und Push `173acb73`, Raumprobe 66/66, Physio 41/41, `npm test` komplett grün (`3.031`/`2.242`/`355`/`109`), 0081 über `0120`/`0121` komplett zu, Raum-Concurrency `0104` auf Postgres 17.11 bewiesen, 15-Min-Live-Checkliste bereit, AZE-Antwort & Box `L1–L7` offen. |
