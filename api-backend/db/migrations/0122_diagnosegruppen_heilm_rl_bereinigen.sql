@@ -1,7 +1,9 @@
--- ENTWURF — NICHT aktiv, nicht in api-backend/db/migrations, nicht live angewandt (GO nötig).
--- Maßgabe onprem O-129 / G7 (2026-11-14): gemeinsame Tabelle `public.diagnosegruppen`
--- darf erst NACH Ausführung auf der Live-SaaS-Datenbank in `api-backend/db/migrations/`
--- übernommen werden; bis dahin kein Migrationseintrag und keine `ausstehend`/`box-only`-Deklaration.
+-- 0122 Diagnosegruppen auf HeilM-RL-Stand bereinigen (reine Datenänderung, keine Schemaänderung).
+-- SaaS: angewandt 21.11.2026 (Supabase-Migration 20261121181821 0122_diagnosegruppen_heilm_rl_bereinigen,
+--   Melih-GO; Probelauf mit Rollback vorab: 44 aktiv / 59 gesamt, 0 Verordnungen verändert).
+-- Maßgabe onprem O-129 / G7 (2026-11-14): gemeinsame Tabelle `public.diagnosegruppen` erst NACH
+-- Live-SaaS-Ausführung in die Kette übernommen — erfüllt; vorher Entwurf unter db/entwuerfe/.
+-- ZAEHLER: alle zehn unverändert (migrations/README Kural 6, reine Datenänderung).
 --
 -- Ziel (HeilM-RL 15.05.2025, iK 05.08.2025 — Abgleich mit api-backend/ai/catalogs/rezept-optionen.js):
 --   1. Veraltete Alt-DGs vor 2021 (`AT1..3`, `EX1..4`, `LY1..3`, `SM`, `WS1..2`, `ZN1..2`, 15 Codes)
@@ -11,15 +13,8 @@
 --   3. Ernährungstherapie (`SAS`, `CF`, HeilM-RL Zweiter Teil V Z. 5127–5231) ergänzen;
 --      `hoechstmenge` bleibt NULL („je nach Bedarf für maximal 12 Wochen“, keine orientierende Menge).
 --   4. Selbstprüfung im DO-Block: exakt 44 aktive Diagnosegruppen und >= 59 Zeilen gesamt.
---
--- Manuelle Rollout-Schritte nach Live-SaaS-Ausführung:
---   1. Dieses SQL auf der Live-SaaS-DB ausführen (z. B. via Supabase Dashboard / SQL Editor).
---   2. Danach `node tools/seed-generieren.mjs diagnosegruppen` (falls Box-Seed-Auffrischung gewünscht)
---      bzw. als nächste freie Migration nach `api-backend/db/migrations/0122_diagnosegruppen_heilm_rl_bereinigen.sql`
---      überführen (reine Datenänderung, counter-neutral nach `migrations/README.md` Kural 6).
---   3. `api-backend/db/erwartete-zaehler.json` (`bis_version` + `_hinweis_0122`, Zähler unverändert) aktualisieren.
---   4. `db/REGISTER.md` + `PRUEFSTAND.md` (Entwurf-Verweis entfernen) aktualisieren und `sh tools/check-onprem.sh` prüfen.
-
+--      Box: Ausgangsstand ist der Seed 0011 (57 Zeilen) + 0014/0047 — derselbe Stand wie SaaS vor 0122.
+--   Inneres BEGIN/COMMIT wie 0058/0059; migrate.js toleriert es (Warnung, kein Fehler).
 BEGIN;
 
 -- 1. Veraltete Physio-Alt-DGs (14 Alt-Codes + 'SM') deaktivieren (kein DELETE)

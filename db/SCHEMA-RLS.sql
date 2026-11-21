@@ -3,14 +3,14 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261120212231 praxura_0124_bis_0129_physio_qa
--- EXPORTED AT:        2026-11-20T21:23:54.185529Z
--- ERZEUGT AM:         2026-11-20
+-- LAST MIGRATION:     20261121181821 0122_diagnosegruppen_heilm_rl_bereinigen
+-- EXPORTED AT:        2026-11-21T18:18:48.699264Z
+-- ERZEUGT AM:         2026-11-21
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       110
---   table_columns:       1595
+--   table_columns:       1596
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        197
@@ -32,7 +32,7 @@
 -- ----------------------------------------------------------------------------
 -- PUBLICATIONS:
 --   Publication: "supabase_realtime" (all_tables: false, tables: [public.bookings])
---   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_11_17, realtime.messages_2026_11_18, realtime.messages_2026_11_19, realtime.messages_2026_11_20, realtime.messages_2026_11_21, realtime.messages_2026_11_22, realtime.messages_2026_11_23])
+--   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_11_18, realtime.messages_2026_11_19, realtime.messages_2026_11_20, realtime.messages_2026_11_21, realtime.messages_2026_11_22, realtime.messages_2026_11_23, realtime.messages_2026_11_24])
 
 -- AUTH NON-INTERNAL TRIGGERS (OUTSIDE PUBLIC INVENTORY — REFERENCE ONLY):
 --   Trigger: "on_auth_user_created" ON auth."users" (enabled: O)

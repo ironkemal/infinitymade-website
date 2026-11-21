@@ -3,14 +3,14 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261120212231 praxura_0124_bis_0129_physio_qa
--- EXPORTED AT:        2026-11-20T21:23:54.185529Z
--- ERZEUGT AM:         2026-11-20
+-- LAST MIGRATION:     20261121181821 0122_diagnosegruppen_heilm_rl_bereinigen
+-- EXPORTED AT:        2026-11-21T18:18:48.699264Z
+-- ERZEUGT AM:         2026-11-21
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       110
---   table_columns:       1595
+--   table_columns:       1596
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        197
@@ -3575,7 +3575,8 @@ CREATE TABLE public.profiles (
   praxis_datenschutz_url text,
   datev_einstellungen jsonb DEFAULT '{}'::jsonb NOT NULL,
   fax_mail_muster text,
-  physio_source_revision bigint DEFAULT 0 NOT NULL
+  physio_source_revision bigint DEFAULT 0 NOT NULL,
+  mail_signatur_einstellungen jsonb DEFAULT '{"vorlagen": [], "standard_id": ""}'::jsonb NOT NULL
 );
 --   FK id -> auth.users(id)
 --   FK owner_id -> profiles(id)
@@ -3595,6 +3596,7 @@ COMMENT ON COLUMN public.profiles.praxis_impressum_url IS 'Impressum der Praxis 
 COMMENT ON COLUMN public.profiles.praxis_datenschutz_url IS 'Datenschutzerklärung der Praxis (Art. 13 DSGVO), nur https, ≤500. Leer -> erzeugte Seite „Datenschutzhinweise zur Terminanfrage" (legal-de 09.10.2026). anon nur über public_praxis_angaben().';
 COMMENT ON COLUMN public.profiles.datev_einstellungen IS 'DATEV-EXTF-Kopf + Erlöskonten: {beraternummer, mandantennummer, wj_beginn (MM-TT), sachkontenlaenge, kontenrahmen (SKR03|SKR04), erloeskonten:{gkv,privat,selbstzahler,bg,zuzahlung,ausfall}, gkv_geldkonto}. Leer = Export verweigert mit Hinweis. Form und Standardwerte in module/datev-einstellungen.js.';
 COMMENT ON COLUMN public.profiles.fax_mail_muster IS 'Fax-to-Mail Adressmuster mit genau einem {nummer}-Platzhalter vor dem @ (O-231).';
+COMMENT ON COLUMN public.profiles.mail_signatur_einstellungen IS 'Strukturierte Mail-Fußzeilenvorlagen der Praxis: vorlagen[] und standard_id. Kein HTML; bestehende Owner-Profil-RLS.';
 
 ALTER TABLE ONLY public.profiles
   ADD CONSTRAINT profiles_anrede_check CHECK (anrede = ANY (ARRAY['Herr'::text, 'Frau'::text, 'Divers'::text]));
@@ -3619,6 +3621,9 @@ ALTER TABLE ONLY public.profiles
 
 ALTER TABLE ONLY public.profiles
   ADD CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_mail_signaturen_groesse CHECK (jsonb_typeof(mail_signatur_einstellungen) = 'object'::text AND COALESCE(jsonb_typeof(mail_signatur_einstellungen -> 'vorlagen'::text) = 'array'::text, false) AND jsonb_array_length(mail_signatur_einstellungen -> 'vorlagen'::text) <= 10 AND octet_length(mail_signatur_einstellungen::text) <= 80000);
 
 ALTER TABLE ONLY public.profiles
   ADD CONSTRAINT profiles_onboarding_step_check CHECK (onboarding_step = ANY (ARRAY['account'::text, 'business'::text, 'billing'::text, 'owner'::text, 'services'::text, 'hours'::text, 'whatsapp'::text, 'templates'::text, 'plan'::text, 'done'::text]));

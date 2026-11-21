@@ -15,7 +15,7 @@
 > **Neue Tabelle → Eintrag in `REGISTER.md`, im selben Commit.** Der pre-commit-Hook
 > (`tools/check-tabellen-register.sh`) bricht sonst ab. Gepflegt vom Agenten `db-ustasi`.
 
-**Exportstand:** `2026-11-20T21:23:54.185529Z`, SaaS-Supabase nach `20261120212231 praxura_0124_bis_0129_physio_qa`. Beide Dateien wurden vollständig aus dem Strukturkatalog erzeugt. Gemessen wurden 110 Tabellen, 159 Funktionen, 185 Trigger und 197 RLS-Policies. Export mit `tools/schema-export-katalog.sql` und `tools/schema-dokumente.mjs`. Freigaben und Tabellenhistorie stehen in `REGISTER.md`. Migration `0110` bleibt Box-only.
+**Exportstand:** `2026-11-21T18:18:48.699264Z`, SaaS-Supabase nach `20261121181821 0122_diagnosegruppen_heilm_rl_bereinigen` (davor `20261121181746 0105_mail_signaturen`). Beide Dateien wurden vollständig aus dem Strukturkatalog erzeugt. Gemessen wurden 110 Tabellen, 159 Funktionen, 185 Trigger, 197 RLS-Policies und 1596 Tabellenspalten (+1 durch `0105`; `0122` ist reine Datenänderung). Export mit `tools/schema-export-katalog.sql` und `tools/schema-dokumente.mjs`. Freigaben und Tabellenhistorie stehen in `REGISTER.md`. Migration `0110` bleibt Box-only.
 **Projekt:** Supabase `njvuclullotbksskpwgk` (Produkt).
 Das Ops-Dashboard liegt in einem **anderen** Projekt (`farkaejociddtgqkusvm`) — nicht verwechseln.
 
