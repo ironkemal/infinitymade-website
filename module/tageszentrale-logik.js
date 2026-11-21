@@ -45,6 +45,53 @@ export function tagVerschiebenDatum(datum, deltaTage, heute = new Date()) {
   return new Date(`${u.toISOString().slice(0, 10)}T12:00:00`);
 }
 
+/**
+ * Bestimmt den vorbelegten Startzeitpunkt (`YYYY-MM-DDTHH:MM`) für „Termin anlegen“
+ * und „Neuer Termin“ auf dem Dashboard (F-03, Zusatz 9.4a/9.4b).
+ *
+ * - Heute: erste freie Lücke oder nächste freie 15-Min.-Uhrzeit in Europe/Berlin (ab 09:00).
+ * - Zukunft: gewählter Tag + erste freie Lücke oder 09:00 (wie Monatsansicht).
+ * - Vergangenheit: weicht auf heute + nächste freie Zeit aus und liefert einen Hinweis,
+ *   damit die bestehende `bkStart.min`-Sperre erhalten bleibt.
+ *
+ * @param {string|null|undefined} zielIso
+ * @param {{ heuteIso?: string, luecken?: Array<{ start?: string }>, jetzt?: Date }} [opts]
+ * @returns {{ startIso: string, aufHeuteAusgewichen: boolean, hinweis: string | null }}
+ */
+export function terminStartFuerTag(zielIso, { heuteIso, luecken = [], jetzt = new Date() } = {}) {
+  const heute = heuteIso || berlinIsoTag(jetzt);
+  const ziel = typeof zielIso === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(zielIso) ? zielIso : heute;
+  const jetztMin = berlinMinuten(jetzt);
+  const naechsteHeute = (offeneLuecken) => {
+    const erste = Array.isArray(offeneLuecken) ? offeneLuecken.find((l) => /^\d{2}:\d{2}$/.test(String(l?.start || ''))) : null;
+    if (erste?.start) return erste.start;
+    if (jetztMin < 9 * 60) return '09:00';
+    const aufgerundet = Math.ceil((jetztMin + 1) / 15) * 15;
+    return minutenZuHhMm(aufgerundet <= 23 * 60 + 45 ? aufgerundet : jetztMin);
+  };
+
+  if (ziel < heute) {
+    return {
+      startIso: `${heute}T${naechsteHeute([])}`,
+      aufHeuteAusgewichen: true,
+      hinweis: 'Vergangener Tag gewählt – Terminbeginn wurde auf heute vorbelegt.',
+    };
+  }
+  if (ziel === heute) {
+    return {
+      startIso: `${heute}T${naechsteHeute(luecken)}`,
+      aufHeuteAusgewichen: false,
+      hinweis: null,
+    };
+  }
+  const erste = Array.isArray(luecken) ? luecken.find((l) => /^\d{2}:\d{2}$/.test(String(l?.start || ''))) : null;
+  return {
+    startIso: `${ziel}T${erste?.start || '09:00'}`,
+    aufHeuteAusgewichen: false,
+    hinweis: null,
+  };
+}
+
 /** @param {Date} [jetzt] */
 export function berlinMinuten(jetzt = new Date()) {
   const teile = new Intl.DateTimeFormat('de-DE', {

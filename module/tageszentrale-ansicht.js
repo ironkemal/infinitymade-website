@@ -13,6 +13,7 @@
 
 import {
   berlinIsoTag,
+  terminStartFuerTag,
   tageszeitGruss,
   datumLangDeutsch,
   dauerKurzText,
@@ -20,7 +21,7 @@ import {
   lueckenFiltern,
   zeitleisteZusammenfuehren,
   handlungsbedarfZusammenfassen,
-} from './tageszentrale-logik.js?v=20261121f05';
+} from './tageszentrale-logik.js?v=20261121f03';
 import {
   addiereTageIso,
   fristenAuswerten,
@@ -702,7 +703,11 @@ export function montiereTageszentrale(k) {
     const actBtn = target.closest('[data-tz-act]');
     if (!actBtn) return;
     const act = actBtn.getAttribute('data-tz-act');
-    if (act === 'neu-termin') k.oeffneTerminNeu?.(null);
+    if (act === 'neu-termin') {
+      const vorschlag = terminStartFuerTag(state.zielIso, { luecken: state.luecken });
+      if (vorschlag.hinweis) k.showToast?.(vorschlag.hinweis, 'info');
+      k.oeffneTerminNeu?.(vorschlag.startIso);
+    }
     else if (act === 'scan') document.getElementById('rezeptScanBtn')?.click();
     else if (act === 'neu-patient') k.oeffnePatientNeu?.();
     else if (act === 'neu-vo') k.oeffneRezeptNeu?.();

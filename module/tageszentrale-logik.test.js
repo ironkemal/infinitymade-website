@@ -5,6 +5,7 @@ import {
   berlinIsoTag,
   erstelleLaufWaechter,
   tagVerschiebenDatum,
+  terminStartFuerTag,
   tageszeitGruss,
   dauerKurzText,
   buchungenFuerTagAufbereiten,
@@ -118,6 +119,32 @@ test('F-05 erstelleLaufWaechter & tagVerschiebenDatum: schnelle Klicks ohne Vers
   // DST-Wechsel März (29.03.2026): 30.03. - 2 Tage = 28.03.
   const dst = new Date('2026-03-30T12:00:00+02:00');
   assert.equal(berlinIsoTag(tagVerschiebenDatum(tagVerschiebenDatum(dst, -1), -1)), '2026-03-28');
+});
+
+test('F-03 terminStartFuerTag: Zukunft, Heute und Ausweichen bei Vergangenheitstag mit Hinweis', () => {
+  const jetzt = new Date('2026-11-21T14:22:00+01:00');
+  // Zukunft mit freier Lücke
+  const zukLuecke = terminStartFuerTag('2026-11-24', { heuteIso: '2026-11-21', luecken: [{ start: '10:30' }], jetzt });
+  assert.equal(zukLuecke.startIso, '2026-11-24T10:30');
+  assert.equal(zukLuecke.aufHeuteAusgewichen, false);
+  assert.equal(zukLuecke.hinweis, null);
+  // Zukunft ohne Lücken (z. B. Wochenende) -> 09:00
+  const zukLeer = terminStartFuerTag('2026-11-22', { heuteIso: '2026-11-21', luecken: [], jetzt });
+  assert.equal(zukLeer.startIso, '2026-11-22T09:00');
+  assert.equal(zukLeer.aufHeuteAusgewichen, false);
+  // Heute mit Lücke -> bleibt heute mit Lückenbeginn
+  const heuteLuecke = terminStartFuerTag('2026-11-21', { heuteIso: '2026-11-21', luecken: [{ start: '15:00' }], jetzt });
+  assert.equal(heuteLuecke.startIso, '2026-11-21T15:00');
+  assert.equal(heuteLuecke.aufHeuteAusgewichen, false);
+  // Heute ohne Lücken -> nächste 15-Min.-Uhrzeit in Europe/Berlin
+  const heuteOhne = terminStartFuerTag('2026-11-21', { heuteIso: '2026-11-21', luecken: [], jetzt });
+  assert.equal(heuteOhne.startIso, '2026-11-21T14:30');
+  assert.equal(heuteOhne.aufHeuteAusgewichen, false);
+  // Vergangenheit -> weicht auf heute + nächste freie Zeit aus, mit Hinweis
+  const verg = terminStartFuerTag('2026-11-19', { heuteIso: '2026-11-21', luecken: [], jetzt });
+  assert.equal(verg.startIso, '2026-11-21T14:30');
+  assert.equal(verg.aufHeuteAusgewichen, true);
+  assert.match(verg.hinweis || '', /heute/i);
 });
 
 test('Tageszentrale-Module enthalten keine Emojis', () => {
