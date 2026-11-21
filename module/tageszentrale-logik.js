@@ -13,6 +13,85 @@ export function berlinIsoTag(jetzt = new Date()) {
   return jetzt.toLocaleDateString('sv-SE', { timeZone: TZ });
 }
 
+/**
+ * Monotoner Laufzähler (Generation-Guard) gegen überholte asynchrone Antworten
+ * bei schnellen Klicks auf die Datumsnavigation (F-05).
+ */
+export function erstelleLaufWaechter() {
+  let nr = 0;
+  return {
+    start() { return ++nr; },
+    /** @param {number} lauf */
+    istAktuell(lauf) { return lauf === nr; },
+    aktuell() { return nr; },
+  };
+}
+
+/**
+ * Verschiebt ein Datum um `deltaTage` Kalendertage in Europe/Berlin (DST-sicher).
+ * `deltaTage === 0` liefert den heutigen Berliner Kalendertag.
+ * Rückgabe ist ein Date um 12:00 Uhr Ortszeit des Zieltags (kein Mitternachts-Drift).
+ *
+ * @param {Date|null|undefined} datum
+ * @param {number} deltaTage
+ * @param {Date} [heute]
+ * @returns {Date}
+ */
+export function tagVerschiebenDatum(datum, deltaTage, heute = new Date()) {
+  const basisIso = deltaTage === 0 ? berlinIsoTag(heute) : berlinIsoTag(datum || heute);
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(basisIso);
+  if (!m) return new Date(heute);
+  const u = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]) + deltaTage));
+  return new Date(`${u.toISOString().slice(0, 10)}T12:00:00`);
+}
+
+/**
+ * Bestimmt den vorbelegten Startzeitpunkt (`YYYY-MM-DDTHH:MM`) für „Termin anlegen“
+ * und „Neuer Termin“ auf dem Dashboard (F-03, Zusatz 9.4a/9.4b).
+ *
+ * - Heute: erste freie Lücke oder nächste freie 15-Min.-Uhrzeit in Europe/Berlin (ab 09:00).
+ * - Zukunft: gewählter Tag + erste freie Lücke oder 09:00 (wie Monatsansicht).
+ * - Vergangenheit: weicht auf heute + nächste freie Zeit aus und liefert einen Hinweis,
+ *   damit die bestehende `bkStart.min`-Sperre erhalten bleibt.
+ *
+ * @param {string|null|undefined} zielIso
+ * @param {{ heuteIso?: string, luecken?: Array<{ start?: string }>, jetzt?: Date }} [opts]
+ * @returns {{ startIso: string, aufHeuteAusgewichen: boolean, hinweis: string | null }}
+ */
+export function terminStartFuerTag(zielIso, { heuteIso, luecken = [], jetzt = new Date() } = {}) {
+  const heute = heuteIso || berlinIsoTag(jetzt);
+  const ziel = typeof zielIso === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(zielIso) ? zielIso : heute;
+  const jetztMin = berlinMinuten(jetzt);
+  const naechsteHeute = (offeneLuecken) => {
+    const erste = Array.isArray(offeneLuecken) ? offeneLuecken.find((l) => /^\d{2}:\d{2}$/.test(String(l?.start || ''))) : null;
+    if (erste?.start) return erste.start;
+    if (jetztMin < 9 * 60) return '09:00';
+    const aufgerundet = Math.ceil((jetztMin + 1) / 15) * 15;
+    return minutenZuHhMm(aufgerundet <= 23 * 60 + 45 ? aufgerundet : jetztMin);
+  };
+
+  if (ziel < heute) {
+    return {
+      startIso: `${heute}T${naechsteHeute([])}`,
+      aufHeuteAusgewichen: true,
+      hinweis: 'Vergangener Tag gewählt – Terminbeginn wurde auf heute vorbelegt.',
+    };
+  }
+  if (ziel === heute) {
+    return {
+      startIso: `${heute}T${naechsteHeute(luecken)}`,
+      aufHeuteAusgewichen: false,
+      hinweis: null,
+    };
+  }
+  const erste = Array.isArray(luecken) ? luecken.find((l) => /^\d{2}:\d{2}$/.test(String(l?.start || ''))) : null;
+  return {
+    startIso: `${ziel}T${erste?.start || '09:00'}`,
+    aufHeuteAusgewichen: false,
+    hinweis: null,
+  };
+}
+
 /** @param {Date} [jetzt] */
 export function berlinMinuten(jetzt = new Date()) {
   const teile = new Intl.DateTimeFormat('de-DE', {
@@ -56,6 +135,63 @@ export function dauerKurzText(min) {
   if (h > 0 && m > 0) return `${h} h ${m} min`;
   if (h > 0) return `${h} h`;
   return `${m} min`;
+}
+
+/** @param {number} n */
+export function terminAnzahlText(n) {
+  return n === 1 ? '1 Termin' : `${n} Termine`;
+}
+
+/**
+ * Liefert Pill, Titel und Meta-Text für den leeren/abgeschlossenen Hero-Zustand
+ * abhängig von Zeitbezug (heute, Vergangenheit, Zukunft) und Tagesbelegung (F-06).
+ *
+ * @param {{
+ *   istHeute?: boolean,
+ *   istVergangenheit?: boolean,
+ *   gesamt?: number,
+ *   erledigt?: number,
+ *   lueckenMin?: number,
+ *   lueckenFehler?: boolean,
+ * }} [opts]
+ * @returns {{ pill: string, titel: string, meta: string }}
+ */
+export function heroLeerStatusTexte({
+  istHeute = false,
+  istVergangenheit = false,
+  gesamt = 0,
+  erledigt = 0,
+  lueckenMin = 0,
+  lueckenFehler = false,
+} = {}) {
+  const hatTermine = gesamt > 0;
+  const standardMeta = !lueckenFehler && lueckenMin > 0
+    ? `${dauerKurzText(lueckenMin)} buchbare Zeit verfügbar.`
+    : 'Neuen Termin anlegen oder nächsten Tag prüfen.';
+
+  if (istHeute) {
+    return hatTermine
+      ? { pill: 'Alle heutigen Termine erledigt', titel: 'Feierabend im Tagesplan', meta: standardMeta }
+      : { pill: 'Keine offenen Termine heute', titel: 'Tag ist aktuell frei', meta: standardMeta };
+  }
+  if (istVergangenheit) {
+    return hatTermine
+      ? {
+          pill: 'Alle Termine abgeschlossen',
+          titel: 'Tag abgeschlossen',
+          meta: erledigt === gesamt
+            ? `${terminAnzahlText(gesamt)} abgeschlossen.`
+            : `${erledigt} von ${gesamt} Terminen abgeschlossen.`,
+        }
+      : {
+          pill: 'Keine Termine an diesem Tag',
+          titel: 'Keine Termine dokumentiert',
+          meta: 'Nächsten Tag prüfen oder neuen Termin für heute anlegen.',
+        };
+  }
+  return hatTermine
+    ? { pill: 'Alle Termine erledigt', titel: 'Keine offenen Termine', meta: standardMeta }
+    : { pill: 'Keine Termine geplant', titel: 'Tag ist aktuell frei', meta: standardMeta };
 }
 
 /** @param {Date} [jetzt] */

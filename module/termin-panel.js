@@ -405,7 +405,7 @@ export function zeichneSitzungenLeer(art, { t, aufBehandlungen } = {}) {
  */
 export function setzeSitzungenKopf(geschlossen) {
   const titel = el('bkRxSessionsTitel');
-  if (titel) titel.textContent = geschlossen ? 'Verordnung' : 'Aktive Verordnung';
+  if (titel) titel.textContent = geschlossen ? 'Sitzungen (abgeschlossen)' : 'Sitzungen & Einheiten';
   const hinweis = el('bkRxGeschlossenHinweis');
   if (hinweis) {
     hinweis.hidden = !geschlossen;

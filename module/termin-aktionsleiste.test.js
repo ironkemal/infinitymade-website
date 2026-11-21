@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SICHTBARE_AKTIONEN, MENUE_AKTIONEN, verordnungsZiel } from './termin-aktionsleiste.js';
+import { SICHTBARE_AKTIONEN, MENUE_AKTIONEN, verordnungsZiel, abschlussErlaubtImPanel } from './termin-aktionsleiste.js';
 import { TERMIN_AKTIONEN, setzeAktionsSichtbarkeit } from './termin-panel.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -93,4 +93,15 @@ test('Folgetermin bleibt ausserhalb der Podologie zu, in der Podologie folgt er 
   } finally {
     delete globalThis.document;
   }
+});
+
+test('F-11 abschlussErlaubtImPanel: Physio nur offen; Podologie erlaubt auch completed (Dokumentation), nie no_show/storniert', () => {
+  assert.equal(abschlussErlaubtImPanel({ status: 'confirmed' }, { isOwn: true, podologie: false }), true);
+  assert.equal(abschlussErlaubtImPanel({ status: 'confirmed' }, { isOwn: false, podologie: false }), false);
+  assert.equal(abschlussErlaubtImPanel({ status: 'completed' }, { isOwn: true, podologie: false }), false);
+  assert.equal(abschlussErlaubtImPanel({ status: 'completed' }, { isOwn: true, podologie: true }), true);
+  assert.equal(abschlussErlaubtImPanel({ status: 'no_show' }, { isOwn: true, podologie: false }), false);
+  assert.equal(abschlussErlaubtImPanel({ status: 'no_show' }, { isOwn: true, podologie: true }), false);
+  assert.equal(abschlussErlaubtImPanel({ status: 'cancelled' }, { isOwn: true, podologie: true }), false);
+  assert.equal(abschlussErlaubtImPanel(null, { isOwn: true }), false);
 });

@@ -50,11 +50,33 @@ const el = (id) => (typeof document !== 'undefined' ? document.getElementById(id
 
 /**
  * Wie der Abschluss-Endpunkt ab Terminbeginn freigeben.
- * @param {{start_time?: string}|null} termin
+ * @param {{start_time?: string, status?: string}|null} termin
  * @param {number} [jetzt]
  */
 export function abschlussSperrgrund(termin, jetzt = Date.now()) {
   return Date.parse(termin?.start_time || '') > jetzt ? 'Termin liegt in der Zukunft' : '';
+}
+
+/**
+ * Darf der Button „Sitzung abschließen“ / „Behandlung dokumentieren“ im
+ * Termin-Detailpanel angezeigt werden (F-11)?
+ * - Nur bei eigenen Terminen.
+ * - Physio/Standard: nur bei offenen Terminen (`status === 'confirmed'` oder leer);
+ *   bereits erledigte (`completed`), nicht erschienene (`no_show`) oder abgesagte
+ *   (`cancelled`) Termine zeigen keinen Abschluss-Button.
+ * - Podologie: vergangene Termine werden beim Öffnen automatisch auf `completed`
+ *   gesetzt, bevor dokumentiert wurde — daher bleibt `completed` dort erlaubt
+ *   (nur `no_show`/`cancelled` gesperrt).
+ *
+ * @param {{status?: string|null}|null|undefined} termin
+ * @param {{isOwn?: boolean, podologie?: boolean}} [opts]
+ * @returns {boolean}
+ */
+export function abschlussErlaubtImPanel(termin, { isOwn = true, podologie = false } = {}) {
+  if (!isOwn || !termin) return false;
+  const status = termin.status || 'confirmed';
+  if (podologie) return status === 'confirmed' || status === 'completed';
+  return status === 'confirmed';
 }
 
 /**

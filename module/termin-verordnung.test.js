@@ -707,3 +707,38 @@ test('waehleVerordnung P1: MT-Sitzung (index 1) Auswahl setzt Leistung auf MT un
   assert.equal(serviceSetRx.heilmittel, 'Manuelle Therapie');
   assert.equal(el.bkSessionPickerInfo.textContent, 'Sitzung 2 von 12 ausgewählt (MT)');
 });
+
+test('F-11 rendereVeroKarten: nennt vorhandenen Entwurf statt zur Doppelanlage aufzufordern', () => {
+  const children = [];
+  const mkEl = (tag) => {
+    const node = {
+      tagName: tag.toUpperCase(), className: '', style: { cssText: '' }, innerHTML: '', textContent: '',
+      children: [], listeners: {},
+      appendChild(c) { this.children.push(c); return c; },
+      addEventListener(ev, fn) { this.listeners[ev] = fn; },
+    };
+    return node;
+  };
+  globalThis.document = { createElement: mkEl };
+  try {
+    const container = { innerHTML: '', appendChild(c) { children.push(c); return c; } };
+    let geoeffnet = null;
+    rendereVeroKarten({
+      container,
+      rxs: [],
+      entwuerfe: [{ id: 'rx-draft-1', status: 'parsed', ausstellungsdatum: '2026-11-19', anzahl_einheiten: 6, heilmittel: 'KG' }],
+      escapeHtml: (s) => String(s ?? ''),
+      onAnlegen: () => {},
+      onEntwurfOeffnen: (e) => { geoeffnet = e.id; },
+    });
+    assert.equal(children[0].className, 'bk-vero-entwurf-hinweis');
+    assert.match(children[0].innerHTML, /Entwurf vorhanden \(19\.11\.2026 · 0\/6\)/);
+    assert.doesNotMatch(children[0].innerHTML, /keine aktive Verordnung hinterlegt/i);
+    const btn = children[0].children.find(c => c.tagName === 'BUTTON');
+    assert.ok(btn, 'Entwurf-prüfen-Button vorhanden');
+    btn.listeners.click();
+    assert.equal(geoeffnet, 'rx-draft-1');
+  } finally {
+    delete globalThis.document;
+  }
+});

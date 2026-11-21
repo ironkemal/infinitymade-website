@@ -38,7 +38,7 @@ import { datumDe } from './datum.js?v=20261001a';
  */
 
 import { parseIcdList, dgsAcceptingIcd } from '../icd-dg-match.js?v=20261001b';
-import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20261004m113';
+import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20261121f01';
 import { NAGEL_WERTE, nagelLabel } from './eingangsbefundung-regel.js?v=20261003a';
 import { sitzungsplan } from './sitzungsplan.js?v=20261003a';
 import { TOPF } from './verordnung-topf.js?v=20260930c';

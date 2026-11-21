@@ -44,7 +44,7 @@ import { createFormularSignierenRouter } from './routes/formular-signieren.js';
 import { istKutu, appBaseUrl } from './lib/dagitim.js';
 import { mailEntwurfStattVersand, entwurfBestaetigt, entwurfAbgelehnt, entwurfGegenangebot, entwurfNachricht } from './lib/mail-entwurf.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
-import { heilmittelPositionAufloesen, kostentraegerIkAufloesen, kartenIkNormalisieren, artFelderAusRezept, rezeptartWechselPruefen, bgFelderAusRezept, bgAenderungGesperrt, entlassFelderAusRezept } from './lib/rezept-felder.js';
+import { heilmittelPositionAufloesen, kostentraegerIkAufloesen, kartenIkNormalisieren, artFelderAusRezept, rezeptartWechselPruefen, bgFelderAusRezept, bgAenderungGesperrt, entlassFelderAusRezept, ermittleGueltigBis } from './lib/rezept-felder.js';
 import { validiereBarcodeErfassung, computedMitErfassung } from './lib/rezept-erfassung.js';
 import { statusAusAbrechnungStatus } from './billing/utils/einreichbar.js';
 import { requireAuth as requireAuthAI } from './ai/auth.js';
@@ -2669,7 +2669,7 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         // Kostenträger-IK immer daraus abgeleitet (lib/rezept-felder.js).
         krankenkasse_ik: kartenIkNormalisieren(patient.krankenkasse_ik),
         kostentraeger_ik: kostentraegerIk,
-        gueltig_bis: validation.computed?.gueltig_bis || null,
+        gueltig_bis: ermittleGueltigBis(validation.computed),
         computed: computedMitErfassung(validation.computed, erfassung),
         warnings: validation.warnings || null,
         blockers_overridden: proceed_anyway ? (validation.blockers || null) : null,
@@ -2930,7 +2930,7 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
       doctor_bsnr: arzt.bsnr || null,
       krankenkasse_ik: kartenIkNormalisieren(patient.krankenkasse_ik),
       kostentraeger_ik: kostentraegerIk,
-      gueltig_bis: validation.computed?.gueltig_bis || null,
+      gueltig_bis: ermittleGueltigBis(validation.computed),
       computed: computed?.erfassung ? { ...(validation.computed || {}), erfassung: computed.erfassung } : (validation.computed || null),
       warnings: validation.warnings || null,
       blockers_overridden: proceed_anyway ? (validation.blockers || null) : null,

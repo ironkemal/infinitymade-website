@@ -49,10 +49,10 @@ import { sitzungsplan } from './sitzungsplan.js?v=20261003a';
 import { ladeVorgeschichte } from './podo-vorgeschichte.js?v=20261021v';
 import { positionVon } from './podo-geplant.js?v=20261010zc';
 import { istVergeben, ladePodoTermine, bindeTermin, podoBelegung } from './verordnung-termine.js?v=20261102a';
-import { zeigeSitzungenArbeit, setzeSitzungenKopf } from './termin-panel.js?v=20261117p33';
+import { zeigeSitzungenArbeit, setzeSitzungenKopf } from './termin-panel.js?v=20261121f11';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './sitzungen-ansicht.js?v=20260919';
 import { serienAnzahl, serienKnopfText } from './serien-termine.js?v=20261119serie';
-import { rxGeschlossen } from './termin-verordnung.js?v=20261119serie';
+import { rxGeschlossen } from './termin-verordnung.js?v=20261121f11';
 
 /** Klartext der Befundpositionen — dieselben Namen wie im Sitzungsplan. */
 const BEFUND_NAME = Object.freeze({

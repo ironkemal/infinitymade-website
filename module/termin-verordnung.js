@@ -93,11 +93,43 @@ function anlegenKnopf(onAnlegen, leer) {
  * `sb`/`ownerId` (Aufrufer reicht sie nicht) läuft nur der bisherige,
  * synchrone Zweig.
  */
-export function rendereVeroKarten({ container, rxs, onSelect, onAnlegen = null, escapeHtml, sb = null, ownerId = null, leadId = null, katalog = null }) {
+export function rendereVeroKarten({ container, rxs, onSelect, onAnlegen = null, escapeHtml, sb = null, ownerId = null, leadId = null, katalog = null, entwuerfe = [], onEntwurfOeffnen = null }) {
   if (!container) return;
   container.innerHTML = '';
 
   if (!rxs?.length) {
+    if (Array.isArray(entwuerfe) && entwuerfe.length > 0) {
+      const e = entwuerfe[0];
+      const datum = e?.ausstellungsdatum
+        ? new Date(e.ausstellungsdatum).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+        : '—';
+      const total = e?.anzahl_einheiten || 0;
+      const hm = formatMultiHeilmittelTitel(e, katalog);
+      const box = document.createElement('div');
+      box.className = 'bk-vero-entwurf-hinweis';
+      box.style.cssText = 'padding:10px 12px;border-radius:10px;border:1px solid var(--warning,#d97706);background:var(--warning-dim,rgba(217,119,6,0.08));display:flex;flex-direction:column;gap:8px;';
+      const mehr = entwuerfe.length > 1 ? ` (+${entwuerfe.length - 1} weitere)` : '';
+      box.innerHTML = `
+        <div style="font-size:12px;font-weight:700;color:var(--text-main);">Entwurf vorhanden (${escapeHtml(datum)} · 0/${total})${escapeHtml(mehr)}</div>
+        <div style="font-size:11.5px;color:var(--text-muted);line-height:1.4;">${escapeHtml(hm)} ist als Entwurf gespeichert. Bitte zuerst prüfen und bestätigen, statt eine doppelte Verordnung anzulegen.</div>
+      `;
+      if (typeof onEntwurfOeffnen === 'function') {
+        const oeffnenBtn = document.createElement('button');
+        oeffnenBtn.type = 'button';
+        oeffnenBtn.className = 'btn btn-primary';
+        oeffnenBtn.style.cssText = 'width:100%;justify-content:center;font-size:12px;';
+        oeffnenBtn.textContent = 'Entwurf prüfen & bestätigen';
+        oeffnenBtn.addEventListener('click', () => onEntwurfOeffnen(e));
+        box.appendChild(oeffnenBtn);
+      }
+      container.appendChild(box);
+      if (onAnlegen) {
+        const neuBtn = anlegenKnopf(onAnlegen, false);
+        neuBtn.style.marginTop = '6px';
+        container.appendChild(neuBtn);
+      }
+      return;
+    }
     // Ohne Anlegen-Weg bleibt nur die Feststellung — sonst spricht der Knopf.
     if (!onAnlegen) {
       container.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:4px 0 6px;">Keine aktive Verordnung vorhanden.</div>';
@@ -496,6 +528,25 @@ export async function ladeTerminVerordnungen(sb, { leadId, vordId = null } = {})
     .eq('patient_id', leadId)
     .maybeSingle();
   return extra ? [extra, ...rxs] : rxs;
+}
+
+/**
+ * Lädt unbestätigte Verordnungs-Entwürfe (`status === 'parsed'`) eines Patienten,
+ * damit das Termin-Detailpanel auf einen vorhandenen Entwurf hinweist statt zur
+ * Doppelanlage aufzufordern (F-11).
+ *
+ * @returns {Promise<object[]>}
+ */
+export async function ladePatientenEntwuerfe(sb, { leadId } = {}) {
+  if (!sb || !leadId) return [];
+  const { data } = await sb
+    .from('prescriptions')
+    .select('id,status,ausstellungsdatum,anzahl_einheiten,heilmittel,heilmittel_items,diagnosegruppe,therapie_bereich')
+    .eq('patient_id', leadId)
+    .eq('status', 'parsed')
+    .order('created_at', { ascending: false })
+    .limit(5);
+  return data || [];
 }
 
 /**

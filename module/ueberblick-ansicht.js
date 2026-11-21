@@ -31,9 +31,11 @@ import {
   rechnungenAufbereiten,
   geburtstageAufbereiten,
   abwesenheitenAufbereiten,
+  abwesenheitKachelAuswerten,
   nichtErscheinerAufbereiten,
   suchePasst,
-} from './ueberblick-listen.js?v=20261119ubl4';
+} from './ueberblick-listen.js?v=20261121f07';
+import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_VOLL } from './verordnung-fristen-laden.js?v=20261121f01';
 import { alsBerlinDatum, berlinTagesgrenzen } from './berlin-datum.js';
 import { fmtEur } from './geld.js?v=20260909';
 import { on } from './signal.js?v=20260813';
@@ -120,6 +122,50 @@ let laufNr = 0;
 let aktiverKontext = null;
 let signalTimer = null;
 let signaleAktiv = false;
+/** @type {{ ziel: string, fristTab?: string } | null} */
+let ausstehenderFokus = null;
+
+/**
+ * Merkt einen Zielbereich im Überblick vor (z. B. Sprung von Dashboard „Fristen“
+ * direkt zu `#ublDeadlinesSection` mit Tab „Alle“ und geleerter Suche, F-10).
+ *
+ * @param {'deadlines' | 'vorgaenge' | 'rechnungen' | 'noshows' | 'vacations'} ziel
+ * @param {{ fristTab?: 'alle' | 'ueberfaellig' | 'bald' | 'geplant' | 'abrechnung' | 'berichte' | 'pruefbedarf' }} [opts]
+ */
+export function fokussiereUeberblickBereich(ziel, { fristTab } = {}) {
+  ausstehenderFokus = { ziel, fristTab };
+  if (fristTab) state.fristTab = fristTab;
+  if (state.suche) {
+    state.suche = '';
+    if (typeof document !== 'undefined') {
+      const sEl = /** @type {HTMLInputElement | null} */ (document.getElementById('ublSearch'));
+      const cEl = document.getElementById('ublSearchClear');
+      if (sEl) sEl.value = '';
+      if (cEl) cEl.hidden = true;
+    }
+  }
+}
+
+function wendeAusstehendenFokusAn() {
+  if (!ausstehenderFokus) return;
+  const { ziel, fristTab } = ausstehenderFokus;
+  ausstehenderFokus = null;
+  if (fristTab && state.fristTab !== fristTab) {
+    state.fristTab = fristTab;
+    renderDeadlines();
+  }
+  const zielId = {
+    deadlines: 'ublDeadlinesSection',
+    vorgaenge: 'ublVorgaengeSection',
+    rechnungen: 'ublVorgaengeSection',
+    noshows: 'ublNoShowSection',
+    vacations: 'ublVacationSection',
+  }[ziel];
+  const el = typeof document !== 'undefined' && zielId ? document.getElementById(zielId) : null;
+  if (el && typeof el.scrollIntoView === 'function') {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
 
 const inLeiste = (panel) => !!document.querySelector(`#sidebarNav .sidebar-item[data-panel="${panel}"]`);
 const nurMeine = () => state.scopeModus === 'meine' && !!state.userId;
@@ -162,8 +208,8 @@ function gefilterteNoShows() {
   return nurMeine() ? state.noShows.filter(n => n.userId === state.userId) : state.noShows;
 }
 
-function gefilterteAbwesenheiten() {
-  const alle = abwesenheitenAufbereiten(state.abwesenheitenRoh, state.heuteIso, state.abwesenheitTage);
+function gefilterteAbwesenheiten(tage = state.abwesenheitTage) {
+  const alle = abwesenheitenAufbereiten(state.abwesenheitenRoh, state.heuteIso, tage);
   return nurMeine() ? alle.filter(a => a.employeeId === state.userId) : alle;
 }
 
@@ -288,19 +334,17 @@ function renderMetricBar() {
     : (state.noShowsFehler ? 'Nicht verfügbar' : noShows.length > 0 ? 'Nachfassen empfohlen' : 'Keine Ausfälle');
   const m4Focus = zeigtFinanz ? 'rechnungen' : 'noshows';
 
-  // 5. Abwesenheiten & Aufgaben (einheitlich numerisch wie Spalten 1–4)
-  const abw = gefilterteAbwesenheiten();
-  const aktivAbw = abw.filter(a => a.istAktiv).length;
+  // 5. Abwesenheiten (fester 14-Tage-Zeitraum, entkoppelt vom Listenfilter; F-07 / 9.6)
+  const abw14 = gefilterteAbwesenheiten(14);
   const ueberfAufg = aufg.filter(a => a.ueberfaellig).length;
-  const m5Val = val(abw.length, state.abwesenheitenFehler);
-  const m5Sub = state.abwesenheitenFehler
-    ? 'Nicht verfügbar'
-    : [
-        aktivAbw > 0 ? `${aktivAbw} heute` : 'Team vollzählig',
-        !state.aufgabenFehler && aufg.length > 0
-          ? `${aufg.length} ${aufg.length === 1 ? 'Aufgabe' : 'Aufgaben'}${ueberfAufg > 0 ? ` (${ueberfAufg} fällig)` : ''}`
-          : '',
-      ].filter(Boolean).join(' · ');
+  const abwKachel = abwesenheitKachelAuswerten(abw14, {
+    aufgabenAnzahl: aufg.length,
+    ueberfAufgaben: ueberfAufg,
+    aufgabenFehler: state.aufgabenFehler,
+    abwesenheitenFehler: state.abwesenheitenFehler,
+  });
+  const m5Val = val(abwKachel.anzahl, state.abwesenheitenFehler);
+  const m5Sub = abwKachel.untertitel;
 
   el.innerHTML = `
     <button type="button" class="ubl-metric" data-ubl-cal-date="${escStandard(state.heuteIso)}">
@@ -324,7 +368,7 @@ function renderMetricBar() {
       <span class="ubl-metric-sub">${escStandard(m4Sub)}</span>
     </button>
     <button type="button" class="ubl-metric" data-ubl-focus="vacations">
-      <span class="ubl-metric-lbl">Abwesenheiten</span>
+      <span class="ubl-metric-lbl">Abwesenheiten (14 T.)</span>
       <span class="ubl-metric-val">${escStandard(m5Val)}</span>
       <span class="ubl-metric-sub">${escStandard(m5Sub)}</span>
     </button>
@@ -408,7 +452,7 @@ function renderDeadlines() {
   const hatAbsetzung = pruefSuche.some(p => p.art === 'absetzung');
 
   if (countEl) {
-    countEl.textContent = String(state.fristen.length);
+    countEl.textContent = String(z.alle);
     countEl.classList.toggle('is-danger', z.ueberfaellig > 0 || hatAbsetzung);
   }
 
@@ -775,12 +819,12 @@ function renderNoShows() {
     suchePasst(state.suche, [n.name, n.datumDe, n.leistung, n.vorText])
   );
 
-  if (countEl) countEl.textContent = String(basis.length);
+  if (countEl) countEl.textContent = String(gefiltert.length);
 
   if (state.laedt && !state.geladenUm) { listEl.innerHTML = skelettHtml(2); return; }
   if (state.noShowsFehler) { listEl.innerHTML = leerHtml('Nicht-Erscheiner konnten nicht geladen werden.'); return; }
   if (!gefiltert.length) {
-    listEl.innerHTML = leerHtml(state.suche.trim() ? 'Keine Treffer.' : 'Niemand ist zuletzt nicht erschienen.');
+    listEl.innerHTML = leerHtml(state.suche.trim() ? 'Keine Treffer.' : 'Keine versäumten Termine zuletzt.');
     return;
   }
 
@@ -828,7 +872,7 @@ function renderVacations() {
   const liste = gefilterteAbwesenheiten();
   const gefiltert = liste.filter(v => suchePasst(state.suche, [v.name, v.typLabel, v.zeitraum, v.statusLabel]));
 
-  if (countEl) countEl.textContent = String(liste.length);
+  if (countEl) countEl.textContent = String(gefiltert.length);
 
   if (state.laedt && !state.geladenUm) { listEl.innerHTML = skelettHtml(2); return; }
   if (state.abwesenheitenFehler) { listEl.innerHTML = leerHtml('Abwesenheiten konnten nicht geladen werden.'); return; }
@@ -873,7 +917,7 @@ function renderBirthdays() {
   const liste = geburtstageAufbereiten(state.geburtstageRoh, state.heuteIso, state.geburtstagTage);
   const gefiltert = liste.filter(g => suchePasst(state.suche, [g.name, g.datumKurz, g.abstandLabel]));
 
-  if (countEl) countEl.textContent = String(liste.length);
+  if (countEl) countEl.textContent = String(gefiltert.length);
 
   if (state.laedt && !state.geladenUm) { listEl.innerHTML = skelettHtml(2); return; }
   if (state.geburtstageFehler) { listEl.innerHTML = leerHtml('Geburtstage konnten nicht geladen werden.'); return; }
@@ -1061,7 +1105,6 @@ function verdrahteEinmal() {
       const t = Number(abwBtn.getAttribute('data-ubl-abw-tage'));
       if (t === 14 || t === 30) {
         state.abwesenheitTage = t;
-        renderMetricBar();
         renderVacations();
       }
       return;
@@ -1224,16 +1267,11 @@ export async function ladeUeberblickAnsicht(ctx) {
     'patients'
   );
 
-  const rxPromise = scope(
-    supabase
-      .from('prescriptions')
-      .select('id, patient_id, ausstellungsdatum, behandlungsbeginn, status, abrechnung_status, is_dringend, heilmittel, diagnosegruppe, therapie_bereich, bericht_angefordert, bericht_status, leads!patient_id(id, first_name, last_name, phone, handy)')
-      .eq('owner_id', ownerId)
-      .not('status', 'in', '(completed,billed,rejected)')
-      .order('ausstellungsdatum', { ascending: true })
-      .limit(150),
-    'patients'
-  );
+  const rxPromise = ladeOffeneVerordnungenPaginiert(supabase, {
+    ownerId,
+    select: RX_FRISTEN_SELECT_VOLL,
+    bizScope,
+  });
 
   const gebPromise = scope(
     supabase
@@ -1400,4 +1438,5 @@ export async function ladeUeberblickAnsicht(ctx) {
   state.geladenUm = uhrzeitJetztBerlin();
   refreshBtn?.classList.remove('is-loading');
   renderAlles();
+  wendeAusstehendenFokusAn();
 }

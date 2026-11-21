@@ -22,6 +22,16 @@ test('behandlungsbeginnFrist: fehlende/ungültige Eingabe ergibt null', () => {
   assert.equal(behandlungsbeginnFrist(null, false), null);
   assert.equal(behandlungsbeginnFrist('', false), null);
   assert.equal(behandlungsbeginnFrist('kein-datum', false), null);
+  assert.equal(behandlungsbeginnFrist('2026-02-30', false), null);
+});
+
+test('behandlungsbeginnFrist: Sommerzeit-/Winterzeit-Wechsel verschiebt keinen Kalendertag (DST-sicher)', () => {
+  // März-Zeitumstellung (29.03.2026 CET -> CEST): 10.03. + 28 Tage = 07.04., nicht 06.04.
+  assert.equal(behandlungsbeginnFrist('2026-03-10', false), '2026-04-07');
+  assert.equal(behandlungsbeginnFrist('2026-03-20', true), '2026-04-03');
+  // Oktober-Zeitumstellung (25.10.2026 CEST -> CET): 10.10. + 28 Tage = 07.11.
+  assert.equal(behandlungsbeginnFrist('2026-10-10', false), '2026-11-07');
+  assert.equal(behandlungsbeginnFrist('2026-10-20', true), '2026-11-03');
 });
 
 // ── pruefeBehandlungsbeginn ──────────────────────────────────────────────────

@@ -53,10 +53,20 @@ export const BEHANDLUNGSBEGINN_TAGE = { dringend: 14, normal: 28 };
  */
 export function behandlungsbeginnFrist(ausstellungsdatum, istDringend) {
   if (!ausstellungsdatum) return null;
+  const tage = istDringend ? BEHANDLUNGSBEGINN_TAGE.dringend : BEHANDLUNGSBEGINN_TAGE.normal;
+  const roh = String(ausstellungsdatum).trim();
+  const m = /^(\d{4})-(\d{2})-(\d{2})(?:$|[T\s])/.exec(roh);
+  if (m) {
+    const j = Number(m[1]), mo = Number(m[2]), t = Number(m[3]);
+    const d = new Date(Date.UTC(j, mo - 1, t));
+    if (d.getUTCFullYear() !== j || d.getUTCMonth() !== mo - 1 || d.getUTCDate() !== t) return null;
+    d.setUTCDate(d.getUTCDate() + tage);
+    return d.toISOString().slice(0, 10);
+  }
   const d = new Date(ausstellungsdatum);
   if (Number.isNaN(d.getTime())) return null;
-  d.setDate(d.getDate() + (istDringend ? BEHANDLUNGSBEGINN_TAGE.dringend : BEHANDLUNGSBEGINN_TAGE.normal));
-  return d.toISOString().split('T')[0];
+  d.setUTCDate(d.getUTCDate() + tage);
+  return d.toISOString().slice(0, 10);
 }
 
 /**

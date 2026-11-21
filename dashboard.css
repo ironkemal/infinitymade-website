@@ -3483,6 +3483,21 @@ textarea {
   transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
   text-align: center;
   position: relative;
+  min-width: 0;
+}
+
+.emp-card .emp-neuer-code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.3;
+  text-align: center;
+  justify-content: center;
+  max-width: 100%;
+  height: auto;
+}
+
+#anwOwnerView {
+  margin-bottom: 16px;
 }
 
 /* Expanded leave details must fit even the smallest employee grid column. */

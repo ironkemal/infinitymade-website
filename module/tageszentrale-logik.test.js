@@ -2,8 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {
+  berlinIsoTag,
+  erstelleLaufWaechter,
+  tagVerschiebenDatum,
+  terminStartFuerTag,
   tageszeitGruss,
   dauerKurzText,
+  terminAnzahlText,
+  heroLeerStatusTexte,
   buchungenFuerTagAufbereiten,
   lueckenFiltern,
   zeitleisteZusammenfuehren,
@@ -92,6 +98,109 @@ test('handlungsbedarfZusammenfassen priorisiert überfällige Fristen, Anfragen,
   assert.equal(erg.eintraege.length, 4);
   assert.equal(erg.eintraege[0].kategorie, 'frist');
   assert.equal(erg.eintraege[1].kategorie, 'anfrage');
+});
+
+test('F-05 erstelleLaufWaechter & tagVerschiebenDatum: schnelle Klicks ohne Versatz und veraltete Antworten verwerfen', () => {
+  const w = erstelleLaufWaechter();
+  const l1 = w.start();
+  const l2 = w.start();
+  const l3 = w.start();
+  assert.equal(w.istAktuell(l1), false);
+  assert.equal(w.istAktuell(l2), false);
+  assert.equal(w.istAktuell(l3), true);
+  assert.equal(w.aktuell(), l3);
+
+  // Heute (Sa 21.11.2026) + 3x "‹" ohne Pause -> Mi 18.11.2026
+  const heute = new Date('2026-11-21T14:00:00+01:00');
+  let d = tagVerschiebenDatum(heute, 0, heute);
+  d = tagVerschiebenDatum(d, -1, heute);
+  d = tagVerschiebenDatum(d, -1, heute);
+  d = tagVerschiebenDatum(d, -1, heute);
+  assert.equal(berlinIsoTag(d), '2026-11-18');
+
+  // DST-Wechsel März (29.03.2026): 30.03. - 2 Tage = 28.03.
+  const dst = new Date('2026-03-30T12:00:00+02:00');
+  assert.equal(berlinIsoTag(tagVerschiebenDatum(tagVerschiebenDatum(dst, -1), -1)), '2026-03-28');
+});
+
+test('F-03 terminStartFuerTag: Zukunft, Heute und Ausweichen bei Vergangenheitstag mit Hinweis', () => {
+  const jetzt = new Date('2026-11-21T14:22:00+01:00');
+  // Zukunft mit freier Lücke
+  const zukLuecke = terminStartFuerTag('2026-11-24', { heuteIso: '2026-11-21', luecken: [{ start: '10:30' }], jetzt });
+  assert.equal(zukLuecke.startIso, '2026-11-24T10:30');
+  assert.equal(zukLuecke.aufHeuteAusgewichen, false);
+  assert.equal(zukLuecke.hinweis, null);
+  // Zukunft ohne Lücken (z. B. Wochenende) -> 09:00
+  const zukLeer = terminStartFuerTag('2026-11-22', { heuteIso: '2026-11-21', luecken: [], jetzt });
+  assert.equal(zukLeer.startIso, '2026-11-22T09:00');
+  assert.equal(zukLeer.aufHeuteAusgewichen, false);
+  // Heute mit Lücke -> bleibt heute mit Lückenbeginn
+  const heuteLuecke = terminStartFuerTag('2026-11-21', { heuteIso: '2026-11-21', luecken: [{ start: '15:00' }], jetzt });
+  assert.equal(heuteLuecke.startIso, '2026-11-21T15:00');
+  assert.equal(heuteLuecke.aufHeuteAusgewichen, false);
+  // Heute ohne Lücken -> nächste 15-Min.-Uhrzeit in Europe/Berlin
+  const heuteOhne = terminStartFuerTag('2026-11-21', { heuteIso: '2026-11-21', luecken: [], jetzt });
+  assert.equal(heuteOhne.startIso, '2026-11-21T14:30');
+  assert.equal(heuteOhne.aufHeuteAusgewichen, false);
+  // Vergangenheit -> weicht auf heute + nächste freie Zeit aus, mit Hinweis
+  const verg = terminStartFuerTag('2026-11-19', { heuteIso: '2026-11-21', luecken: [], jetzt });
+  assert.equal(verg.startIso, '2026-11-21T14:30');
+  assert.equal(verg.aufHeuteAusgewichen, true);
+  assert.match(verg.hinweis || '', /heute/i);
+});
+
+test('F-06 terminAnzahlText und heroLeerStatusTexte decken alle 6 Kombinationen ab', () => {
+  assert.equal(terminAnzahlText(0), '0 Termine');
+  assert.equal(terminAnzahlText(1), '1 Termin');
+  assert.equal(terminAnzahlText(2), '2 Termine');
+
+  // 1. Heute & gesamt > 0 (mit freien Lücken und ohne)
+  assert.deepEqual(
+    heroLeerStatusTexte({ istHeute: true, istVergangenheit: false, gesamt: 3, erledigt: 3, lueckenMin: 90, lueckenFehler: false }),
+    { pill: 'Alle heutigen Termine erledigt', titel: 'Feierabend im Tagesplan', meta: '1 h 30 min buchbare Zeit verfügbar.' },
+  );
+  assert.deepEqual(
+    heroLeerStatusTexte({ istHeute: true, istVergangenheit: false, gesamt: 3, erledigt: 3, lueckenMin: 90, lueckenFehler: true }),
+    { pill: 'Alle heutigen Termine erledigt', titel: 'Feierabend im Tagesplan', meta: 'Neuen Termin anlegen oder nächsten Tag prüfen.' },
+  );
+
+  // 2. Heute & gesamt === 0
+  assert.deepEqual(
+    heroLeerStatusTexte({ istHeute: true, istVergangenheit: false, gesamt: 0, erledigt: 0, lueckenMin: 45, lueckenFehler: false }),
+    { pill: 'Keine offenen Termine heute', titel: 'Tag ist aktuell frei', meta: '45 min buchbare Zeit verfügbar.' },
+  );
+  assert.deepEqual(
+    heroLeerStatusTexte({ istHeute: true, istVergangenheit: false, gesamt: 0, erledigt: 0, lueckenMin: 0, lueckenFehler: false }),
+    { pill: 'Keine offenen Termine heute', titel: 'Tag ist aktuell frei', meta: 'Neuen Termin anlegen oder nächsten Tag prüfen.' },
+  );
+
+  // 3. Vergangenheit & gesamt > 0 (alle erledigt vs. teilweise)
+  assert.deepEqual(
+    heroLeerStatusTexte({ istHeute: false, istVergangenheit: true, gesamt: 1, erledigt: 1, lueckenMin: 120, lueckenFehler: false }),
+    { pill: 'Alle Termine abgeschlossen', titel: 'Tag abgeschlossen', meta: '1 Termin abgeschlossen.' },
+  );
+  assert.deepEqual(
+    heroLeerStatusTexte({ istHeute: false, istVergangenheit: true, gesamt: 3, erledigt: 2, lueckenMin: 0, lueckenFehler: false }),
+    { pill: 'Alle Termine abgeschlossen', titel: 'Tag abgeschlossen', meta: '2 von 3 Terminen abgeschlossen.' },
+  );
+
+  // 4. Vergangenheit & gesamt === 0
+  assert.deepEqual(
+    heroLeerStatusTexte({ istHeute: false, istVergangenheit: true, gesamt: 0, erledigt: 0, lueckenMin: 60, lueckenFehler: false }),
+    { pill: 'Keine Termine an diesem Tag', titel: 'Keine Termine dokumentiert', meta: 'Nächsten Tag prüfen oder neuen Termin für heute anlegen.' },
+  );
+
+  // 5. Zukunft & gesamt > 0 (alle erledigt)
+  assert.deepEqual(
+    heroLeerStatusTexte({ istHeute: false, istVergangenheit: false, gesamt: 2, erledigt: 2, lueckenMin: 60, lueckenFehler: false }),
+    { pill: 'Alle Termine erledigt', titel: 'Keine offenen Termine', meta: '1 h buchbare Zeit verfügbar.' },
+  );
+
+  // 6. Zukunft & gesamt === 0
+  assert.deepEqual(
+    heroLeerStatusTexte({ istHeute: false, istVergangenheit: false, gesamt: 0, erledigt: 0, lueckenMin: 0, lueckenFehler: false }),
+    { pill: 'Keine Termine geplant', titel: 'Tag ist aktuell frei', meta: 'Neuen Termin anlegen oder nächsten Tag prüfen.' },
+  );
 });
 
 test('Tageszentrale-Module enthalten keine Emojis', () => {

@@ -13,22 +13,27 @@
 
 import {
   berlinIsoTag,
+  terminStartFuerTag,
   tageszeitGruss,
   datumLangDeutsch,
   dauerKurzText,
+  terminAnzahlText,
+  heroLeerStatusTexte,
   buchungenFuerTagAufbereiten,
   lueckenFiltern,
   zeitleisteZusammenfuehren,
   handlungsbedarfZusammenfassen,
-} from './tageszentrale-logik.js?v=20261120tz5';
+} from './tageszentrale-logik.js?v=20261121f06';
 import {
   addiereTageIso,
   fristenAuswerten,
   therapieberichteAufbereiten,
   anfragenAufbereiten,
   wartelisteAufbereiten,
-} from './ueberblick-listen.js?v=20261119ubl4';
-import { ladeGeld, monatText } from './startseite-geld.js?v=20261114b03';
+} from './ueberblick-listen.js?v=20261121f07';
+import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_VOLL } from './verordnung-fristen-laden.js?v=20261121f01';
+import { ladeGeld, monatText } from './startseite-geld.js?v=20261121f02';
+import { wendeRasterScrollAn } from './tageszentrale-raster.js?v=20261121f04';
 import { fmtEur } from './geld.js?v=20260909';
 import { on } from './signal.js?v=20260813';
 
@@ -103,6 +108,28 @@ export function montiereTageszentrale(k) {
   geldEl.hidden = true;
   colLeftEl.append(heroEl, planEl);
 
+  // F-05: Kopfzeile und Nav-Buttons (‹ / Heute / › / Raster) bleiben stabil im DOM,
+  // damit schnelle Klicks nicht durch innerHTML-Neubau zwischen mousedown/mouseup verloren gehen.
+  planEl.innerHTML = `
+    <div class="tz-card-head">
+      <div class="tz-card-title-wrap">
+        <h3 class="tz-card-title" data-tz-plan-titel>Tagesplan</h3>
+        <span class="tz-card-count" data-tz-plan-count></span>
+      </div>
+      <div class="tz-head-tools">
+        <button type="button" class="tz-mini-btn tz-mini-btn--ico" data-tz-step="prev" aria-label="Vorheriger Tag">‹</button>
+        <button type="button" class="tz-mini-btn" data-tz-step="today">Heute</button>
+        <button type="button" class="tz-mini-btn tz-mini-btn--ico" data-tz-step="next" aria-label="Nächster Tag">›</button>
+        <button type="button" class="tz-mini-btn" data-tz-act="raster">${ICO_GRID}<span>Raster</span></button>
+      </div>
+    </div>
+    <div data-tz-plan-inhalt></div>
+  `;
+  const planTitelEl = planEl.querySelector('[data-tz-plan-titel]');
+  const planCountEl = planEl.querySelector('[data-tz-plan-count]');
+  const planRasterBtn = planEl.querySelector('[data-tz-act="raster"]');
+  const planInhaltEl = planEl.querySelector('[data-tz-plan-inhalt]');
+
   // Reihenfolge als direkte Kinder von #panel-overview (bestehende Knoten wie #startAufgaben,
   // #physioRezKpi und .today-section behalten ihre Elternbeziehung parentElement.id === 'panel-overview'!).
   panel.prepend(headEl, colLeftEl, bedarfEl, geldEl);
@@ -130,6 +157,7 @@ export function montiereTageszentrale(k) {
   let bedarfGeladen = false;
   let geldGeladen = false;
   let bedarfStartMs = 0;
+  let letzterTerminLauf = 0;
 
   const teamMap = () => {
     const m = new Map();
@@ -193,6 +221,7 @@ export function montiereTageszentrale(k) {
         istOwner: true,
       });
       state.morgenDaten = { iso: morgenIso, anzahl: auf.gesamt, erster: auf.alle[0] || null };
+      if (state.zielIso !== heuteIso) return;
       renderHead();
       renderHero();
       renderPlan();
@@ -210,22 +239,16 @@ export function montiereTageszentrale(k) {
     if (!ownerId) return;
     bedarfGeladen = true;
     bedarfStartMs = Date.now();
-    const scope = (q, typ) => (typeof k.bizScope === 'function' ? k.bizScope(q, typ) : q);
     const heuteIso = berlinIsoTag();
 
     try {
       const [rxRes, anfRes, wlRes] = await Promise.all([
         hatPanel('verordnungen')
-          ? scope(
-              k.supabase
-                .from('prescriptions')
-                .select('id,patient_id,ausstellungsdatum,behandlungsbeginn,status,abrechnung_status,is_dringend,heilmittel,diagnosegruppe,therapie_bereich,bericht_angefordert,bericht_status,leads!patient_id(id,first_name,last_name,phone,handy)')
-                .eq('owner_id', ownerId)
-                .not('status', 'in', '(completed,billed,rejected)')
-                .order('ausstellungsdatum', { ascending: true })
-                .limit(150),
-              'patients'
-            )
+          ? ladeOffeneVerordnungenPaginiert(k.supabase, {
+              ownerId,
+              select: RX_FRISTEN_SELECT_VOLL,
+              bizScope: k.bizScope,
+            })
           : Promise.resolve({ data: [] }),
         hatPanel('anfragen')
           ? k.supabase
@@ -396,15 +419,23 @@ export function montiereTageszentrale(k) {
       return;
     }
 
+    const leer = heroLeerStatusTexte({
+      istHeute,
+      istVergangenheit: state.zielIso < heuteIso,
+      gesamt: auf.gesamt,
+      erledigt: auf.erledigt,
+      lueckenMin: state.lueckenMin,
+      lueckenFehler: state.lueckenFehler,
+    });
     heroEl.innerHTML = `
       <div class="tz-hero-kicker">
-        <span class="tz-live-pill tz-live-pill--calm"><span class="tz-live-dot"></span>${istHeute ? (auf.gesamt > 0 ? 'Alle heutigen Termine erledigt' : 'Keine offenen Termine heute') : 'Keine Termine geplant'}</span>
+        <span class="tz-live-pill tz-live-pill--calm"><span class="tz-live-dot"></span>${esc(leer.pill)}</span>
         ${auf.gesamt > 0 ? `<span class="tz-hero-room">${auf.erledigt} / ${auf.gesamt} abgeschlossen</span>` : ''}
       </div>
       <div class="tz-hero-body">
         <div class="tz-hero-info">
-          <h3 class="tz-hero-name">${auf.gesamt > 0 ? 'Feierabend im Tagesplan' : 'Tag ist aktuell frei'}</h3>
-          <div class="tz-hero-meta">${!state.lueckenFehler && state.lueckenMin > 0 ? `${esc(dauerKurzText(state.lueckenMin))} buchbare Zeit verfügbar.` : 'Neuen Termin anlegen oder nächsten Tag prüfen.'}</div>
+          <h3 class="tz-hero-name">${esc(leer.titel)}</h3>
+          <div class="tz-hero-meta">${esc(leer.meta)}</div>
         </div>
         <div class="tz-hero-cta">
           <button type="button" class="tz-hero-btn tz-hero-btn--solid" data-tz-act="neu-termin">Termin anlegen</button>
@@ -434,7 +465,7 @@ export function montiereTageszentrale(k) {
       ? 'Tagesplan'
       : new Intl.DateTimeFormat('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }).format(state.date);
     const zaehler = [
-      auf.offen > 0 ? `${auf.offen} offen` : `${auf.gesamt} Termine`,
+      auf.offen > 0 ? `${auf.offen} offen` : terminAnzahlText(auf.gesamt),
       !state.lueckenFehler && state.luecken.length > 0 ? `${state.luecken.length} Lücke${state.luecken.length === 1 ? '' : 'n'}` : '',
     ].filter(Boolean).join(' · ');
 
@@ -511,23 +542,12 @@ export function montiereTageszentrale(k) {
       ? '<div class="tz-warn-foot">Freie Zeiten konnten nicht geladen werden.</div>'
       : '';
 
-    planEl.innerHTML = `
-      <div class="tz-card-head">
-        <div class="tz-card-title-wrap">
-          <h3 class="tz-card-title">${esc(titel)}</h3>
-          <span class="tz-card-count">${esc(zaehler)}</span>
-        </div>
-        <div class="tz-head-tools">
-          <button type="button" class="tz-mini-btn tz-mini-btn--ico" data-tz-step="prev" aria-label="Vorheriger Tag">‹</button>
-          <button type="button" class="tz-mini-btn" data-tz-step="today">Heute</button>
-          <button type="button" class="tz-mini-btn tz-mini-btn--ico" data-tz-step="next" aria-label="Nächster Tag">›</button>
-          <button type="button" class="tz-mini-btn ${state.rasterOffen ? 'is-active' : ''}" data-tz-act="raster">${ICO_GRID}<span>Raster</span></button>
-        </div>
-      </div>
-      ${chipsHtml}
-      <div class="tz-tl-body">${bodyHtml}</div>
-      ${fehlerHinweis}
-    `;
+    if (planTitelEl) planTitelEl.textContent = titel;
+    if (planCountEl) planCountEl.textContent = zaehler;
+    if (planRasterBtn) planRasterBtn.classList.toggle('is-active', state.rasterOffen);
+    if (planInhaltEl) {
+      planInhaltEl.innerHTML = `${chipsHtml}<div class="tz-tl-body">${bodyHtml}</div>${fehlerHinweis}`;
+    }
   };
 
   const renderBedarf = () => {
@@ -559,7 +579,7 @@ export function montiereTageszentrale(k) {
         <button type="button" class="tz-mini-link" data-tz-act="ueberblick">Überblick ›</button>
       </div>
       <div class="tz-kpi-strip">
-        <button type="button" class="tz-kpi-cell" data-tz-panel="verordnungen">
+        <button type="button" class="tz-kpi-cell" data-tz-act="ueberblick-fristen">
           <span class="tz-kpi-n ${counts.fristenUeberfaellig > 0 ? 'is-danger' : ''}">${counts.fristen}</span>
           <span class="tz-kpi-l">Fristen</span>
         </button>
@@ -597,10 +617,10 @@ export function montiereTageszentrale(k) {
         <button type="button" class="tz-mini-link" data-tz-panel="statistik">Auswertungen ›</button>
       </div>
       <div class="tz-pulse">
-        <button type="button" class="tz-pulse-cell" data-tz-panel="statistik">
+        <button type="button" class="tz-pulse-cell" data-tz-panel="statistik" title="Alle Zahlungen laut Zahlungsjournal (alle Standorte), Stornos abgezogen">
           <span class="tz-pulse-lbl">Kassiert</span>
           <span class="tz-pulse-val">${esc(fmt(d.kassiert))}</span>
-          <span class="tz-pulse-sub">Monat laufend</span>
+          <span class="tz-pulse-sub">Monat laufend · Journal</span>
         </button>
         <button type="button" class="tz-pulse-cell" data-tz-panel="rechnungen">
           <span class="tz-pulse-lbl">Zuzahlung</span>
@@ -694,11 +714,19 @@ export function montiereTageszentrale(k) {
     const actBtn = target.closest('[data-tz-act]');
     if (!actBtn) return;
     const act = actBtn.getAttribute('data-tz-act');
-    if (act === 'neu-termin') k.oeffneTerminNeu?.(null);
+    if (act === 'neu-termin') {
+      const vorschlag = terminStartFuerTag(state.zielIso, { luecken: state.luecken });
+      if (vorschlag.hinweis) k.showToast?.(vorschlag.hinweis, 'info');
+      k.oeffneTerminNeu?.(vorschlag.startIso);
+    }
     else if (act === 'scan') document.getElementById('rezeptScanBtn')?.click();
     else if (act === 'neu-patient') k.oeffnePatientNeu?.();
     else if (act === 'neu-vo') k.oeffneRezeptNeu?.();
     else if (act === 'ueberblick') k.wechslePanel?.('ueberblick');
+    else if (act === 'ueberblick-fristen') {
+      if (typeof /** @type {any} */ (k).oeffneUeberblickFristen === 'function') /** @type {any} */ (k).oeffneUeberblickFristen();
+      else k.wechslePanel?.('ueberblick');
+    }
     else if (act === 'kalender') k.oeffneKalenderTag?.(state.zielIso);
     else if (act === 'morgen') {
       document.getElementById('gapsNext')?.click();
@@ -706,6 +734,7 @@ export function montiereTageszentrale(k) {
       state.rasterOffen = !state.rasterOffen;
       panel.dataset.tzRaster = state.rasterOffen ? '1' : '0';
       renderPlan();
+      if (state.rasterOffen) wendeRasterScrollAn(document.getElementById('upcoming-bookings-list'));
     }
   };
 
@@ -788,12 +817,18 @@ export function montiereTageszentrale(k) {
 
   return {
     termine(info = {}) {
+      if (typeof info.lauf === 'number') {
+        if (info.lauf < letzterTerminLauf) return;
+        letzterTerminLauf = info.lauf;
+      }
       if (info.date instanceof Date) {
         state.date = info.date;
         state.zielIso = berlinIsoTag(info.date);
       }
       if (info.laden) {
         state.laden = true;
+        leseLueckenAusDom();
+        renderHead();
         renderHero();
         renderPlan();
         return;

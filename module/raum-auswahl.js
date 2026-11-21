@@ -280,7 +280,7 @@ function mountAktionspanel() {
   huelle.hidden = true;
   huelle.innerHTML = '<label class="form-label" for="bkActRaumAuswahl">Raum</label>'
     + '<select id="bkActRaumAuswahl" class="form-select"></select>'
-    + '<button type="button" class="btn-ghost" id="bkActRaumSpeichern" style="margin-top:6px">Raum zuweisen</button>';
+    + '<button type="button" class="btn btn-primary" id="bkActRaumSpeichern" style="margin-top:8px;width:100%;justify-content:center;">Raum zuweisen</button>';
   ziel.append(huelle);
   const stand = { huelle, auswahl: huelle.querySelector('select'), termin: null, raeume: [] };
   huelle.querySelector('button').addEventListener('click', async () => {

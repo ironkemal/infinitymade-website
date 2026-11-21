@@ -8,6 +8,7 @@ import {
   abwesenheitTyp,
   wochenAuslastungAufbereiten,
   fristenAuswerten,
+  rezKpiAuswerten,
   therapieberichteAufbereiten,
   rezeptPruefbedarfAufbereiten,
   anfragenAufbereiten,
@@ -16,6 +17,7 @@ import {
   rechnungenAufbereiten,
   geburtstageAufbereiten,
   abwesenheitenAufbereiten,
+  abwesenheitKachelAuswerten,
   nichtErscheinerAufbereiten,
   telefonLink,
   initialen,
@@ -116,6 +118,62 @@ test('fristenAuswerten & therapieberichteAufbereiten', () => {
   assert.equal(berichte[0].rxId, 'rx-2');
 });
 
+test('F-01 rezKpiAuswerten: Dashboard und Überblick liefern identische Zahlen inkl. Entwurf und ohne geschlossene VOs', () => {
+  const heute = '2026-11-21';
+  // 28 Tage ab 2026-10-28 = 2026-11-25 (in 4 Tagen <= 7 Tage)
+  const rezepte = [
+    {
+      id: 'rx-entwurf', patient_id: 'p-1', status: 'parsed', gueltig_bis: null,
+      ausstellungsdatum: '2026-10-28', behandlungsbeginn: null, is_dringend: false,
+      heilmittel: 'KG', diagnosegruppe: 'WS2', therapie_bereich: 'physio',
+      leads: { id: 'p-1', first_name: 'Änne', last_name: 'TEST-Größer' },
+    },
+    {
+      id: 'rx-bestaetigt', patient_id: 'p-2', status: 'confirmed', gueltig_bis: null,
+      ausstellungsdatum: '2026-10-28', behandlungsbeginn: null, is_dringend: false,
+      heilmittel: 'MT', diagnosegruppe: 'EX2', therapie_bereich: 'physio',
+      leads: { id: 'p-2', first_name: 'Jörg', last_name: 'TEST-Müller' },
+    },
+    {
+      id: 'rx-therapie-1', patient_id: 'p-3', status: 'in_therapy', gueltig_bis: null,
+      ausstellungsdatum: '2026-10-20', behandlungsbeginn: '2026-11-01', is_dringend: false,
+      therapie_bereich: 'physio',
+    },
+    {
+      id: 'rx-therapie-2', patient_id: 'p-4', status: 'in_therapy', gueltig_bis: null,
+      ausstellungsdatum: '2026-10-22', behandlungsbeginn: '2026-11-05', is_dringend: false,
+      therapie_bereich: 'physio',
+    },
+    // Stornierte VO darf NICHT zählen (auch wenn fristnah)
+    {
+      id: 'rx-storno', patient_id: 'p-5', status: 'cancelled', gueltig_bis: null,
+      ausstellungsdatum: '2026-10-20', behandlungsbeginn: null, is_dringend: false,
+      therapie_bereich: 'physio',
+    },
+    // Bereits bezahlte Podologie-VO (status='confirmed', abrechnung_status='paid') darf NICHT zählen
+    {
+      id: 'rx-podo-paid', patient_id: 'p-6', status: 'confirmed', abrechnung_status: 'paid',
+      ausstellungsdatum: '2026-10-20', behandlungsbeginn: null, is_dringend: false,
+      therapie_bereich: 'podo',
+    },
+  ];
+
+  const kpi = rezKpiAuswerten(rezepte, heute);
+  const ublFristen = fristenAuswerten(rezepte, heute);
+  assert.equal(kpi.overdue.length, 0);
+  assert.equal(kpi.soon.length, 2);
+  assert.equal(kpi.active.length, 2);
+  assert.equal(kpi.soon.length, ublFristen.filter(f => f.kategorie === 'bald').length);
+  assert.equal(kpi.overdue.length, ublFristen.filter(f => f.kategorie === 'ueberfaellig').length);
+  assert.deepEqual(kpi.soon.map(x => x.patient_id).sort(), ['p-1', 'p-2']);
+
+  // Leere Praxis
+  const leer = rezKpiAuswerten([], heute);
+  assert.equal(leer.overdue.length, 0);
+  assert.equal(leer.soon.length, 0);
+  assert.equal(leer.active.length, 0);
+});
+
 test('anfragenAufbereiten, wartelisteAufbereiten, aufgabenAufbereiten, rechnungenAufbereiten', () => {
   const heute = '2026-11-19';
   const anf = anfragenAufbereiten([
@@ -169,6 +227,24 @@ test('geburtstageAufbereiten, abwesenheitenAufbereiten, nichtErscheinerAufbereit
   assert.equal(abw[0].name, 'Tom Klein');
   assert.equal(abw[0].istAktiv, true);
 
+  // F-07 / 9.6: Kachel rechnet fest auf 14 Tage mit Untertitel „heute aktiv: X“
+  const abw14 = abwesenheitenAufbereiten([
+    { id: '1', start_date: '2026-12-07T00:00:00Z', end_date: '2026-12-13T00:00:00Z', type: 'urlaub', profiles: { business_name: 'QA Testtherapeut' } },
+  ], '2026-11-21', 14);
+  const kachel0 = abwesenheitKachelAuswerten(abw14);
+  assert.equal(kachel0.anzahl, 0);
+  assert.equal(kachel0.heuteAktiv, 0);
+  assert.equal(kachel0.untertitel, 'heute aktiv: 0');
+
+  const kachelAktiv = abwesenheitKachelAuswerten(abw.slice(0, 1), { aufgabenAnzahl: 2, ueberfAufgaben: 1 });
+  assert.equal(kachelAktiv.anzahl, 1);
+  assert.equal(kachelAktiv.heuteAktiv, 1);
+  assert.equal(kachelAktiv.untertitel, 'heute aktiv: 1 · 2 Aufgaben (1 fällig)');
+
+  const kachelZukunft = abwesenheitKachelAuswerten([{ istAktiv: false }]);
+  assert.equal(kachelZukunft.anzahl, 1);
+  assert.equal(kachelZukunft.untertitel, 'heute aktiv: 0');
+
   const ns = nichtErscheinerAufbereiten([
     { id: 'b1', lead_id: 'l1', customer_name: 'Paul Muster', start_time: '2026-11-18T13:30:00Z', services: { title: 'Krankengymnastik' } },
   ], '2026-11-19');
@@ -184,14 +260,23 @@ test('telefonLink & rezeptPruefbedarfAufbereiten (Absetzungen vor Scans)', () =>
 
   const p = rezeptPruefbedarfAufbereiten([
     { id: 'r1', status: 'parsed', abrechnung_status: null, ausstellungsdatum: '2026-11-18', heilmittel: 'KG', leads: { first_name: 'Anna', last_name: 'Scan' } },
-    { id: 'r2', status: 'confirmed', abrechnung_status: 'absetzung', ausstellungsdatum: '2026-10-10', heilmittel: 'MT', leads: { first_name: 'Bernd', last_name: 'Kasse' } },
+    { id: 'r2', status: 'confirmed', abrechnung_status: 'rejected', ausstellungsdatum: '2026-10-10', heilmittel: 'MT', leads: { first_name: 'Bernd', last_name: 'Kasse' } },
+    { id: 'r2b', status: 'confirmed', abrechnung_status: 'teilabsetzung', ausstellungsdatum: '2026-10-12', heilmittel: 'KG', leads: { first_name: 'Clara', last_name: 'Teil' } },
     { id: 'r3', status: 'confirmed', abrechnung_status: 'bereit', ausstellungsdatum: '2026-11-01', heilmittel: 'MLD', leads: { first_name: 'Ok', last_name: 'Fall' } },
+    // Nicht existierender Altstring 'absetzung' darf nicht als Absetzung matchen
+    { id: 'r4', status: 'confirmed', abrechnung_status: 'absetzung', ausstellungsdatum: '2026-10-11', heilmittel: 'KG', leads: { first_name: 'Alt', last_name: 'String' } },
+    // Geschlossene stornierte VO darf nicht in Prüfbedarf landen
+    { id: 'r5', status: 'cancelled', abrechnung_status: 'rejected', ausstellungsdatum: '2026-10-11', heilmittel: 'KG', leads: { first_name: 'Storno', last_name: 'Fall' } },
   ]);
-  assert.equal(p.length, 2);
+  assert.equal(p.length, 3);
   assert.equal(p[0].art, 'absetzung');
+  assert.equal(p[0].etikett, 'Absetzung');
   assert.equal(p[0].schwere, 'danger');
-  assert.equal(p[1].art, 'scan');
-  assert.equal(p[1].schwere, 'warning');
+  assert.equal(p[1].art, 'absetzung');
+  assert.equal(p[1].etikett, 'Teilabsetzung');
+  assert.equal(p[1].schwere, 'danger');
+  assert.equal(p[2].art, 'scan');
+  assert.equal(p[2].schwere, 'warning');
 });
 
 test('Überblick-Ansicht und Panel-Markup enthalten keine Emojis', () => {
