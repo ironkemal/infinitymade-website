@@ -10,7 +10,7 @@
  *   (`renderDayView`), mit Doppelklick-Entprellung und Tastaturbedienung.
  */
 
-import { berlinMinuten } from './tageszentrale-logik.js?v=20261121f03';
+import { berlinMinuten } from './tageszentrale-logik.js?v=20261121f06';
 
 let letzterSlotKlickMs = 0;
 

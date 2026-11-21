@@ -17,11 +17,13 @@ import {
   tageszeitGruss,
   datumLangDeutsch,
   dauerKurzText,
+  terminAnzahlText,
+  heroLeerStatusTexte,
   buchungenFuerTagAufbereiten,
   lueckenFiltern,
   zeitleisteZusammenfuehren,
   handlungsbedarfZusammenfassen,
-} from './tageszentrale-logik.js?v=20261121f03';
+} from './tageszentrale-logik.js?v=20261121f06';
 import {
   addiereTageIso,
   fristenAuswerten,
@@ -417,15 +419,23 @@ export function montiereTageszentrale(k) {
       return;
     }
 
+    const leer = heroLeerStatusTexte({
+      istHeute,
+      istVergangenheit: state.zielIso < heuteIso,
+      gesamt: auf.gesamt,
+      erledigt: auf.erledigt,
+      lueckenMin: state.lueckenMin,
+      lueckenFehler: state.lueckenFehler,
+    });
     heroEl.innerHTML = `
       <div class="tz-hero-kicker">
-        <span class="tz-live-pill tz-live-pill--calm"><span class="tz-live-dot"></span>${istHeute ? (auf.gesamt > 0 ? 'Alle heutigen Termine erledigt' : 'Keine offenen Termine heute') : 'Keine Termine geplant'}</span>
+        <span class="tz-live-pill tz-live-pill--calm"><span class="tz-live-dot"></span>${esc(leer.pill)}</span>
         ${auf.gesamt > 0 ? `<span class="tz-hero-room">${auf.erledigt} / ${auf.gesamt} abgeschlossen</span>` : ''}
       </div>
       <div class="tz-hero-body">
         <div class="tz-hero-info">
-          <h3 class="tz-hero-name">${auf.gesamt > 0 ? 'Feierabend im Tagesplan' : 'Tag ist aktuell frei'}</h3>
-          <div class="tz-hero-meta">${!state.lueckenFehler && state.lueckenMin > 0 ? `${esc(dauerKurzText(state.lueckenMin))} buchbare Zeit verfügbar.` : 'Neuen Termin anlegen oder nächsten Tag prüfen.'}</div>
+          <h3 class="tz-hero-name">${esc(leer.titel)}</h3>
+          <div class="tz-hero-meta">${esc(leer.meta)}</div>
         </div>
         <div class="tz-hero-cta">
           <button type="button" class="tz-hero-btn tz-hero-btn--solid" data-tz-act="neu-termin">Termin anlegen</button>
@@ -455,7 +465,7 @@ export function montiereTageszentrale(k) {
       ? 'Tagesplan'
       : new Intl.DateTimeFormat('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }).format(state.date);
     const zaehler = [
-      auf.offen > 0 ? `${auf.offen} offen` : `${auf.gesamt} Termine`,
+      auf.offen > 0 ? `${auf.offen} offen` : terminAnzahlText(auf.gesamt),
       !state.lueckenFehler && state.luecken.length > 0 ? `${state.luecken.length} Lücke${state.luecken.length === 1 ? '' : 'n'}` : '',
     ].filter(Boolean).join(' · ');
 

@@ -137,6 +137,63 @@ export function dauerKurzText(min) {
   return `${m} min`;
 }
 
+/** @param {number} n */
+export function terminAnzahlText(n) {
+  return n === 1 ? '1 Termin' : `${n} Termine`;
+}
+
+/**
+ * Liefert Pill, Titel und Meta-Text für den leeren/abgeschlossenen Hero-Zustand
+ * abhängig von Zeitbezug (heute, Vergangenheit, Zukunft) und Tagesbelegung (F-06).
+ *
+ * @param {{
+ *   istHeute?: boolean,
+ *   istVergangenheit?: boolean,
+ *   gesamt?: number,
+ *   erledigt?: number,
+ *   lueckenMin?: number,
+ *   lueckenFehler?: boolean,
+ * }} [opts]
+ * @returns {{ pill: string, titel: string, meta: string }}
+ */
+export function heroLeerStatusTexte({
+  istHeute = false,
+  istVergangenheit = false,
+  gesamt = 0,
+  erledigt = 0,
+  lueckenMin = 0,
+  lueckenFehler = false,
+} = {}) {
+  const hatTermine = gesamt > 0;
+  const standardMeta = !lueckenFehler && lueckenMin > 0
+    ? `${dauerKurzText(lueckenMin)} buchbare Zeit verfügbar.`
+    : 'Neuen Termin anlegen oder nächsten Tag prüfen.';
+
+  if (istHeute) {
+    return hatTermine
+      ? { pill: 'Alle heutigen Termine erledigt', titel: 'Feierabend im Tagesplan', meta: standardMeta }
+      : { pill: 'Keine offenen Termine heute', titel: 'Tag ist aktuell frei', meta: standardMeta };
+  }
+  if (istVergangenheit) {
+    return hatTermine
+      ? {
+          pill: 'Alle Termine abgeschlossen',
+          titel: 'Tag abgeschlossen',
+          meta: erledigt === gesamt
+            ? `${terminAnzahlText(gesamt)} abgeschlossen.`
+            : `${erledigt} von ${gesamt} Terminen abgeschlossen.`,
+        }
+      : {
+          pill: 'Keine Termine an diesem Tag',
+          titel: 'Keine Termine dokumentiert',
+          meta: 'Nächsten Tag prüfen oder neuen Termin für heute anlegen.',
+        };
+  }
+  return hatTermine
+    ? { pill: 'Alle Termine erledigt', titel: 'Keine offenen Termine', meta: standardMeta }
+    : { pill: 'Keine Termine geplant', titel: 'Tag ist aktuell frei', meta: standardMeta };
+}
+
 /** @param {Date} [jetzt] */
 export function tageszeitGruss(jetzt = new Date()) {
   const min = berlinMinuten(jetzt);
