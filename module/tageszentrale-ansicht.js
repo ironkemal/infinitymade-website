@@ -31,6 +31,7 @@ import {
 } from './ueberblick-listen.js?v=20261121f01b';
 import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_VOLL } from './verordnung-fristen-laden.js?v=20261121f01';
 import { ladeGeld, monatText } from './startseite-geld.js?v=20261121f02';
+import { wendeRasterScrollAn } from './tageszentrale-raster.js?v=20261121f04';
 import { fmtEur } from './geld.js?v=20260909';
 import { on } from './signal.js?v=20260813';
 
@@ -723,6 +724,7 @@ export function montiereTageszentrale(k) {
       state.rasterOffen = !state.rasterOffen;
       panel.dataset.tzRaster = state.rasterOffen ? '1' : '0';
       renderPlan();
+      if (state.rasterOffen) wendeRasterScrollAn(document.getElementById('upcoming-bookings-list'));
     }
   };
 
