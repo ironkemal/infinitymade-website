@@ -7257,6 +7257,15 @@ textarea:focus-visible,
   .theme-toggle:active { transform: none !important; }
 }
 
+/* R-01 auch im Alt-Design (Testbox 22.11.2026, iPhone mit „Bewegung reduzieren“): der Block oben
+   setzt `* { transform: none !important }` und hebt `.sidebar { transform: translateX(-100%) }` auf —
+   die Leiste lag dauerhaft über dem Inhalt, der Menüknopf änderte sichtbar nichts. Die eigene
+   Eigenschaft `translate` bleibt davon unberührt (Neu-Design: design/shell.css V2.11). */
+@media (max-width: 1024px) and (prefers-reduced-motion: reduce) {
+  .sidebar { translate: -100% 0; visibility: hidden; }
+  .sidebar.open { translate: 0 0; visibility: visible; }
+}
+
 /* ===== 302 Wizard Styles ===== */
 .wizard-nav {
   display: flex;
