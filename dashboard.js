@@ -8,7 +8,7 @@ import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261103mai
 import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261103mail1';
 import { zeigeKiRueckfrageDialog } from './module/ki-rueckfrage.js?v=20261115v703';
 import { dsgvoVerdrahten } from './module/dsgvo-client.js?v=20261002';
-import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, verdrahteEinrichtungscodeKnoepfe, mitarbeiterEntfernen } from './module/mitarbeiter-zugang.js?v=20261118s1';
+import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, verdrahteEinrichtungscodeKnoepfe, mitarbeiterEntfernen } from './module/mitarbeiter-zugang.js?v=20261122o251'; import { rechteReiterVorbereiten, standortAnlegenOeffnen } from './module/rechte-ohne-standort.js?v=20261122o251';
 import { DEFAULT_VORLAGE_SEEDS, fehlendeSeedZeilen, seedeVorlagen } from './module/vorlagen-seed.js?v=20260929';
 import { aktiveSitzungszeilen } from './module/sitzung-aktiv.js?v=20260914';
 import { storniereTermin } from './module/termin-storno.js?v=20260908';
@@ -9160,7 +9160,7 @@ const RBAC_MODULES = [
 ];
 
 async function loadEmpPermissions(empId) {
-  if (currentProfile.role !== 'owner' || !currentBusiness?.id) return;
+  if (currentProfile.role !== 'owner' || !rechteReiterVorbereiten(document, { hatStandort: !!currentBusiness?.id, onStandortAnlegen: () => standortAnlegenOeffnen({ wechslePanel: switchPanel }) })) return; // O-251: ohne Standort erklären statt verstecken
   const tab = document.getElementById('empTabPermissions');
   if (tab) tab.hidden = false;
 
@@ -11873,7 +11873,7 @@ async function saveEmployee() {
     const r = await mitarbeiterAnlegen({ vorname: firstName, nachname: lastName, email, telefon: document.getElementById('ae-phone')?.value.trim() || null }, { token });
     closeModal('addEmployeeModal');
     await loadTeam();
-    await zeigeEinrichtungscode(r.einrichtungscode, r.gueltig_bis, firstName + ' ' + lastName);
+    await zeigeEinrichtungscode(r.einrichtungscode, r.gueltig_bis, firstName + ' ' + lastName, { standortFehlt: r.standort_fehlt === true }); // O-251
   } catch (e) {
     showToast('Fehler: ' + e.message, 'error');
   }

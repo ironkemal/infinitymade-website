@@ -166,9 +166,11 @@ export async function mitarbeiterEntfernen(mitarbeiterId, options = {}) {
  * @param {string} code
  * @param {string} gueltigBis ISO-Datumsstring
  * @param {string} [name] Name des Mitarbeiters
+ * @param {{ standortFehlt?: boolean }} [hinweise] standortFehlt: Backend konnte keinem Standort
+ *   zuordnen (O-251) — der Code funktioniert, die Anmeldung aber erst nach dem ersten Standort.
  * @returns {Promise<void>}
  */
-export function zeigeEinrichtungscode(code, gueltigBis, name = '') {
+export function zeigeEinrichtungscode(code, gueltigBis, name = '', hinweise = {}) {
   return new Promise((resolve) => {
     if (typeof document === 'undefined') {
       resolve();
@@ -219,6 +221,9 @@ export function zeigeEinrichtungscode(code, gueltigBis, name = '') {
         <p style="font-size:13px;color:var(--text-muted);margin:0 0 20px 0;">
           Gültig bis ${dateStr}.
         </p>
+        ${hinweise.standortFehlt ? `<p id="ecStandortFehlt" style="font-size:13px;line-height:1.5;color:var(--text-main);background:var(--warning-dim, rgba(217,119,6,0.08));border:1px solid var(--warning, #d97706);border-radius:8px;padding:10px 12px;margin:0 0 20px 0;">
+          Ihre Praxis hat noch keinen Standort. Die Anmeldung klappt erst, wenn Sie unter Einstellungen → Geschäfte einen Standort angelegt und danach in der Mitarbeiterkarte unter „Berechtigungen“ einmal gespeichert haben.
+        </p>` : ''}
         <div style="display:flex;justify-content:flex-end;">
           <button class="btn-primary" id="ecCloseBtn" type="button" style="padding:10px 20px;font-size:14px;font-weight:600;border-radius:6px;cursor:pointer;">Schließen</button>
         </div>

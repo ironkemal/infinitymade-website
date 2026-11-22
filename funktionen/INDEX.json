@@ -1,7 +1,7 @@
 {
- "erzeugt": "2026-11-21",
- "dateien": 598,
- "funktionen": 4889,
+ "erzeugt": "2026-11-22",
+ "dateien": 600,
+ "funktionen": 4892,
  "module": [
   "abrechnung",
   "anamnese",
@@ -19256,12 +19256,14 @@
    "calls": [],
    "calledBy": [
     "(datei) api-backend/merkez-istemci/ip-abgleich.js",
+    "(datei) api-backend/routes/mitarbeiter-zugang.js",
     "(datei) api-backend/server.js",
     "(datei) icd-dg-match.js",
     "(datei) module/fussbefund.js",
     "(datei) module/langer-druck.js",
     "(datei) module/mitarbeiter-zugang.js",
     "(datei) module/rechnung-bruecke.js",
+    "(datei) module/rechte-ohne-standort.js",
     "(datei) module/tageszentrale-raster.js",
     "(datei) module/termin-aktionen.js",
     "(datei) module/termin-folge.js",
@@ -49819,8 +49821,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/routes/mitarbeiter-zugang.js",
-   "start": 328,
-   "end": 341,
+   "start": 336,
+   "end": 349,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [
@@ -49850,8 +49852,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/routes/mitarbeiter-zugang.js",
-   "start": 352,
-   "end": 366,
+   "start": 360,
+   "end": 374,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [
@@ -49881,8 +49883,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/routes/mitarbeiter-zugang.js",
-   "start": 574,
-   "end": 589,
+   "start": 582,
+   "end": 597,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -52095,8 +52097,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/setup/router.js",
-   "start": 66,
-   "end": 73,
+   "start": 67,
+   "end": 74,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -52120,8 +52122,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/setup/router.js",
-   "start": 82,
-   "end": 90,
+   "start": 83,
+   "end": 91,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [
@@ -52147,8 +52149,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/setup/router.js",
-   "start": 91,
-   "end": 99,
+   "start": 92,
+   "end": 100,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [
@@ -52176,8 +52178,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/setup/router.js",
-   "start": 129,
-   "end": 137,
+   "start": 130,
+   "end": 138,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -52204,8 +52206,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/setup/router.js",
-   "start": 135,
-   "end": 136,
+   "start": 136,
+   "end": 137,
    "lines": 2,
    "spiegelHinweis": null,
    "tables": [],
@@ -52281,8 +52283,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/setup/router.js",
-   "start": 141,
-   "end": 148,
+   "start": 142,
+   "end": 149,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -52308,8 +52310,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/setup/router.js",
-   "start": 153,
-   "end": 179,
+   "start": 154,
+   "end": 180,
    "lines": 27,
    "spiegelHinweis": null,
    "tables": [
@@ -52385,6 +52387,35 @@
    "calledBy": [
     "(datei) api-backend/server.js",
     "billigePruefungenLaufen"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "legeStandardStandortAn",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/setup/standard-standort.js",
+   "start": 20,
+   "end": 43,
+   "lines": 24,
+   "spiegelHinweis": null,
+   "tables": [
+    "businesses"
+   ],
+   "rpcs": [],
+   "writes": [
+    "businesses:insert"
+   ],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [
+    "(datei) api-backend/setup/router.js"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -78915,11 +78946,14 @@
    "domRender": true,
    "calls": [
     "escapeHtml",
+    "rechteReiterVorbereiten",
     "renderEmpPermGrid",
     "renderEmpStandortList",
-    "saveEmpPermissions"
+    "saveEmpPermissions",
+    "standortAnlegenOeffnen"
    ],
    "calledBy": [
+    "(datei) module/rechte-ohne-standort.js",
     "openEmpDetail"
    ],
    "modules": [
@@ -79003,6 +79037,7 @@
     "t"
    ],
    "calledBy": [
+    "(datei) module/rechte-ohne-standort.js",
     "loadEmpPermissions"
    ],
    "modules": [
@@ -87935,11 +87970,52 @@
    "calledBy": [
     "bootBusinessSwitcher",
     "deleteBusiness",
+    "standortAnlegenOeffnen",
     "wireBusinessModal"
    ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
   },
   {
    "name": "updateBizSlugPreview",
@@ -87965,9 +88041,49 @@
    "calledBy": [
     "openBusinessModal"
    ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
   },
   {
    "name": "openBusinessModal",
@@ -88008,9 +88124,49 @@
    "calledBy": [
     "renderBusinessesSection"
    ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
   },
   {
    "name": "wireBusinessModal",
@@ -88055,9 +88211,49 @@
    "calledBy": [
     "renderBusinessesSection"
    ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
   },
   {
    "name": "v",
@@ -88162,9 +88358,49 @@
    "calledBy": [
     "renderBusinessesSection"
    ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
   },
   {
    "name": "renderBizSwitcher",
@@ -88197,9 +88433,49 @@
     "deleteBusiness",
     "wireBusinessModal"
    ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
   },
   {
    "name": "wireBizSwitcherEvents",
@@ -155226,7 +155502,8 @@
    "calledBy": [
     "createDokumentSuche",
     "laden",
-    "runMigrationsMitGeduld"
+    "runMigrationsMitGeduld",
+    "standortAnlegenOeffnen"
    ],
    "modules": [
     "abrechnung",
@@ -169077,9 +169354,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/mitarbeiter-zugang.js",
-   "start": 171,
-   "end": 252,
-   "lines": 82,
+   "start": 173,
+   "end": 257,
+   "lines": 85,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -169151,8 +169428,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/mitarbeiter-zugang.js",
-   "start": 230,
-   "end": 233,
+   "start": 235,
+   "end": 238,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -169176,8 +169453,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/mitarbeiter-zugang.js",
-   "start": 261,
-   "end": 264,
+   "start": 266,
+   "end": 269,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -169241,8 +169518,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/mitarbeiter-zugang.js",
-   "start": 271,
-   "end": 296,
+   "start": 276,
+   "end": 301,
    "lines": 26,
    "spiegelHinweis": null,
    "tables": [],
@@ -177273,6 +177550,7 @@
     "zuordnungsSchritt"
    ],
    "calledBy": [
+    "(datei) module/mitarbeiter-zugang.js",
     "oeffnePatientenImport",
     "schritt1"
    ],
@@ -207392,6 +207670,146 @@
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
+  },
+  {
+   "name": "rechteReiterVorbereiten",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/rechte-ohne-standort.js",
+   "start": 28,
+   "end": 61,
+   "lines": 34,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [
+    "empTabPermissions",
+    "tab-permissions"
+   ],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [
+    "(datei) module/rechte-ohne-standort.js",
+    "loadEmpPermissions"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "standortAnlegenOeffnen",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/rechte-ohne-standort.js",
+   "start": 69,
+   "end": 77,
+   "lines": 9,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [
+    "addBusinessBtn",
+    "settingsBusinessesSection"
+   ],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "renderBusinessesSection",
+    "warte"
+   ],
+   "calledBy": [
+    "loadEmpPermissions"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
   },
   {
    "name": "g",
@@ -261887,12 +262305,14 @@
    ],
    "calledBy": [
     "(datei) api-backend/merkez-istemci/ip-abgleich.js",
+    "(datei) api-backend/routes/mitarbeiter-zugang.js",
     "(datei) api-backend/server.js",
     "(datei) icd-dg-match.js",
     "(datei) module/fussbefund.js",
     "(datei) module/langer-druck.js",
     "(datei) module/mitarbeiter-zugang.js",
     "(datei) module/rechnung-bruecke.js",
+    "(datei) module/rechte-ohne-standort.js",
     "(datei) module/tageszentrale-raster.js",
     "(datei) module/termin-aktionen.js",
     "(datei) module/termin-folge.js",
@@ -295469,6 +295889,305 @@
    ]
   },
   {
+   "tabelle": "businesses",
+   "anzahl": 7,
+   "pfade": [
+    {
+     "leitfunktion": "kontoLoeschenIntern",
+     "funktionen": [
+      {
+       "name": "kontoLoeschenIntern",
+       "file": "api-backend/dsgvo/loeschen.js",
+       "start": 112,
+       "end": 839,
+       "lines": 728,
+       "writes": [
+        "businesses:update"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "legeStandardStandortAn",
+     "funktionen": [
+      {
+       "name": "legeStandardStandortAn",
+       "file": "api-backend/setup/standard-standort.js",
+       "start": 20,
+       "end": 43,
+       "lines": 24,
+       "writes": [
+        "businesses:insert"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "toggleStandortDay",
+     "funktionen": [
+      {
+       "name": "toggleStandortDay",
+       "file": "dashboard.js",
+       "start": 8458,
+       "end": 8478,
+       "lines": 21,
+       "writes": [
+        "businesses:update"
+       ],
+       "modules": [
+        "abrechnung",
+        "anamnese",
+        "anfragen",
+        "b2b",
+        "b2c",
+        "bkActionArrivedBtn",
+        "bkActionFahrtEndBtn",
+        "bkActionFahrtStartBtn",
+        "bkActionHbCopyBtn",
+        "doctors",
+        "fahrtenbuch",
+        "fbFahrtenExportCsv",
+        "fbFahrtenExportProt",
+        "fbFahrtenExportVerz",
+        "fbFahrtenRefresh",
+        "fbReportRefresh",
+        "fbVehicleAddBtn",
+        "feSaveBtn",
+        "fsAddVehicleBtn",
+        "fsSaveBtn",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "mahnwesen",
+        "notizen",
+        "patientDetailModal",
+        "podologie-billing",
+        "rechnungen",
+        "rezeptModal",
+        "services",
+        "settings",
+        "statistik",
+        "team",
+        "ueberblick",
+        "vehEditSaveBtn",
+        "verordnungen",
+        "vorlagen"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 37 modülden çağrılıyor"
+       ]
+      }
+     ]
+    },
+    {
+     "leitfunktion": "wireBusinessModal",
+     "funktionen": [
+      {
+       "name": "wireBusinessModal",
+       "file": "dashboard.js",
+       "start": 13694,
+       "end": 13775,
+       "lines": 82,
+       "writes": [
+        "businesses:update",
+        "businesses:insert"
+       ],
+       "modules": [
+        "abrechnung",
+        "anamnese",
+        "anfragen",
+        "b2b",
+        "b2c",
+        "bkActionArrivedBtn",
+        "bkActionFahrtEndBtn",
+        "bkActionFahrtStartBtn",
+        "bkActionHbCopyBtn",
+        "doctors",
+        "fahrtenbuch",
+        "fbFahrtenExportCsv",
+        "fbFahrtenExportProt",
+        "fbFahrtenExportVerz",
+        "fbFahrtenRefresh",
+        "fbReportRefresh",
+        "fbVehicleAddBtn",
+        "feSaveBtn",
+        "fsAddVehicleBtn",
+        "fsSaveBtn",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "mahnwesen",
+        "notizen",
+        "patientDetailModal",
+        "podologie-billing",
+        "rechnungen",
+        "rezeptModal",
+        "services",
+        "settings",
+        "statistik",
+        "team",
+        "ueberblick",
+        "vehEditSaveBtn",
+        "verordnungen",
+        "vorlagen"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 37 modülden çağrılıyor"
+       ]
+      }
+     ]
+    },
+    {
+     "leitfunktion": "deleteBusiness",
+     "funktionen": [
+      {
+       "name": "deleteBusiness",
+       "file": "dashboard.js",
+       "start": 13777,
+       "end": 13794,
+       "lines": 18,
+       "writes": [
+        "businesses:delete"
+       ],
+       "modules": [
+        "abrechnung",
+        "anamnese",
+        "anfragen",
+        "b2b",
+        "b2c",
+        "bkActionArrivedBtn",
+        "bkActionFahrtEndBtn",
+        "bkActionFahrtStartBtn",
+        "bkActionHbCopyBtn",
+        "doctors",
+        "fahrtenbuch",
+        "fbFahrtenExportCsv",
+        "fbFahrtenExportProt",
+        "fbFahrtenExportVerz",
+        "fbFahrtenRefresh",
+        "fbReportRefresh",
+        "fbVehicleAddBtn",
+        "feSaveBtn",
+        "fsAddVehicleBtn",
+        "fsSaveBtn",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "mahnwesen",
+        "notizen",
+        "patientDetailModal",
+        "podologie-billing",
+        "rechnungen",
+        "rezeptModal",
+        "services",
+        "settings",
+        "statistik",
+        "team",
+        "ueberblick",
+        "vehEditSaveBtn",
+        "verordnungen",
+        "vorlagen"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 37 modülden çağrılıyor"
+       ]
+      }
+     ]
+    },
+    {
+     "leitfunktion": "mountPraxisStandort",
+     "funktionen": [
+      {
+       "name": "mountPraxisStandort",
+       "file": "module/praxis-standort.js",
+       "start": 99,
+       "end": 179,
+       "lines": 81,
+       "writes": [
+        "businesses:update"
+       ],
+       "modules": [],
+       "uiPfad": []
+      },
+      {
+       "name": "setzen",
+       "file": "module/praxis-standort.js",
+       "start": 151,
+       "end": 175,
+       "lines": 25,
+       "writes": [
+        "businesses:update"
+       ],
+       "modules": [
+        "abrechnung",
+        "anamnese",
+        "anfragen",
+        "b2b",
+        "b2c",
+        "bkActionArrivedBtn",
+        "bkActionFahrtEndBtn",
+        "bkActionFahrtStartBtn",
+        "bkActionHbCopyBtn",
+        "doctors",
+        "fahrtenbuch",
+        "fbFahrtenExportCsv",
+        "fbFahrtenExportProt",
+        "fbFahrtenExportVerz",
+        "fbFahrtenRefresh",
+        "fbReportRefresh",
+        "fbVehicleAddBtn",
+        "feSaveBtn",
+        "fsAddVehicleBtn",
+        "fsSaveBtn",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "mahnwesen",
+        "notizen",
+        "patientDetailModal",
+        "podologie-billing",
+        "rechnungen",
+        "rezeptModal",
+        "services",
+        "settings",
+        "statistik",
+        "team",
+        "ueberblick",
+        "vehEditSaveBtn",
+        "verordnungen",
+        "vorlagen"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 37 modülden çağrılıyor"
+       ]
+      }
+     ]
+    },
+    {
+     "leitfunktion": "bindBusiness",
+     "funktionen": [
+      {
+       "name": "bindBusiness",
+       "file": "onboarding.js",
+       "start": 401,
+       "end": 463,
+       "lines": 63,
+       "writes": [
+        "businesses:update",
+        "businesses:insert"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    }
+   ]
+  },
+  {
    "tabelle": "document_vorlagen",
    "anzahl": 7,
    "pfade": [
@@ -296181,208 +296900,6 @@
    ]
   },
   {
-   "tabelle": "businesses",
-   "anzahl": 6,
-   "pfade": [
-    {
-     "leitfunktion": "kontoLoeschenIntern",
-     "funktionen": [
-      {
-       "name": "kontoLoeschenIntern",
-       "file": "api-backend/dsgvo/loeschen.js",
-       "start": 112,
-       "end": 839,
-       "lines": 728,
-       "writes": [
-        "businesses:update"
-       ],
-       "modules": [],
-       "uiPfad": []
-      }
-     ]
-    },
-    {
-     "leitfunktion": "toggleStandortDay",
-     "funktionen": [
-      {
-       "name": "toggleStandortDay",
-       "file": "dashboard.js",
-       "start": 8458,
-       "end": 8478,
-       "lines": 21,
-       "writes": [
-        "businesses:update"
-       ],
-       "modules": [
-        "abrechnung",
-        "anamnese",
-        "anfragen",
-        "b2b",
-        "b2c",
-        "bkActionArrivedBtn",
-        "bkActionFahrtEndBtn",
-        "bkActionFahrtStartBtn",
-        "bkActionHbCopyBtn",
-        "doctors",
-        "fahrtenbuch",
-        "fbFahrtenExportCsv",
-        "fbFahrtenExportProt",
-        "fbFahrtenExportVerz",
-        "fbFahrtenRefresh",
-        "fbReportRefresh",
-        "fbVehicleAddBtn",
-        "feSaveBtn",
-        "fsAddVehicleBtn",
-        "fsSaveBtn",
-        "fussstatus",
-        "hours",
-        "kunden",
-        "mahnwesen",
-        "notizen",
-        "patientDetailModal",
-        "podologie-billing",
-        "rechnungen",
-        "rezeptModal",
-        "services",
-        "settings",
-        "statistik",
-        "team",
-        "ueberblick",
-        "vehEditSaveBtn",
-        "verordnungen",
-        "vorlagen"
-       ],
-       "uiPfad": [
-        "ortak yardımcı — 37 modülden çağrılıyor"
-       ]
-      }
-     ]
-    },
-    {
-     "leitfunktion": "wireBusinessModal",
-     "funktionen": [
-      {
-       "name": "wireBusinessModal",
-       "file": "dashboard.js",
-       "start": 13694,
-       "end": 13775,
-       "lines": 82,
-       "writes": [
-        "businesses:update",
-        "businesses:insert"
-       ],
-       "modules": [],
-       "uiPfad": []
-      }
-     ]
-    },
-    {
-     "leitfunktion": "deleteBusiness",
-     "funktionen": [
-      {
-       "name": "deleteBusiness",
-       "file": "dashboard.js",
-       "start": 13777,
-       "end": 13794,
-       "lines": 18,
-       "writes": [
-        "businesses:delete"
-       ],
-       "modules": [],
-       "uiPfad": []
-      }
-     ]
-    },
-    {
-     "leitfunktion": "mountPraxisStandort",
-     "funktionen": [
-      {
-       "name": "mountPraxisStandort",
-       "file": "module/praxis-standort.js",
-       "start": 99,
-       "end": 179,
-       "lines": 81,
-       "writes": [
-        "businesses:update"
-       ],
-       "modules": [],
-       "uiPfad": []
-      },
-      {
-       "name": "setzen",
-       "file": "module/praxis-standort.js",
-       "start": 151,
-       "end": 175,
-       "lines": 25,
-       "writes": [
-        "businesses:update"
-       ],
-       "modules": [
-        "abrechnung",
-        "anamnese",
-        "anfragen",
-        "b2b",
-        "b2c",
-        "bkActionArrivedBtn",
-        "bkActionFahrtEndBtn",
-        "bkActionFahrtStartBtn",
-        "bkActionHbCopyBtn",
-        "doctors",
-        "fahrtenbuch",
-        "fbFahrtenExportCsv",
-        "fbFahrtenExportProt",
-        "fbFahrtenExportVerz",
-        "fbFahrtenRefresh",
-        "fbReportRefresh",
-        "fbVehicleAddBtn",
-        "feSaveBtn",
-        "fsAddVehicleBtn",
-        "fsSaveBtn",
-        "fussstatus",
-        "hours",
-        "kunden",
-        "mahnwesen",
-        "notizen",
-        "patientDetailModal",
-        "podologie-billing",
-        "rechnungen",
-        "rezeptModal",
-        "services",
-        "settings",
-        "statistik",
-        "team",
-        "ueberblick",
-        "vehEditSaveBtn",
-        "verordnungen",
-        "vorlagen"
-       ],
-       "uiPfad": [
-        "ortak yardımcı — 37 modülden çağrılıyor"
-       ]
-      }
-     ]
-    },
-    {
-     "leitfunktion": "bindBusiness",
-     "funktionen": [
-      {
-       "name": "bindBusiness",
-       "file": "onboarding.js",
-       "start": 401,
-       "end": 463,
-       "lines": 63,
-       "writes": [
-        "businesses:update",
-        "businesses:insert"
-       ],
-       "modules": [],
-       "uiPfad": []
-      }
-     ]
-    }
-   ]
-  },
-  {
    "tabelle": "services",
    "anzahl": 6,
    "pfade": [
@@ -296615,8 +297132,48 @@
        "writes": [
         "services:insert"
        ],
-       "modules": [],
-       "uiPfad": []
+       "modules": [
+        "abrechnung",
+        "anamnese",
+        "anfragen",
+        "b2b",
+        "b2c",
+        "bkActionArrivedBtn",
+        "bkActionFahrtEndBtn",
+        "bkActionFahrtStartBtn",
+        "bkActionHbCopyBtn",
+        "doctors",
+        "fahrtenbuch",
+        "fbFahrtenExportCsv",
+        "fbFahrtenExportProt",
+        "fbFahrtenExportVerz",
+        "fbFahrtenRefresh",
+        "fbReportRefresh",
+        "fbVehicleAddBtn",
+        "feSaveBtn",
+        "fsAddVehicleBtn",
+        "fsSaveBtn",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "mahnwesen",
+        "notizen",
+        "patientDetailModal",
+        "podologie-billing",
+        "rechnungen",
+        "rezeptModal",
+        "services",
+        "settings",
+        "statistik",
+        "team",
+        "ueberblick",
+        "vehEditSaveBtn",
+        "verordnungen",
+        "vorlagen"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 37 modülden çağrılıyor"
+       ]
       }
      ]
     },
@@ -297316,8 +297873,8 @@
       {
        "name": "austrittVermerken",
        "file": "api-backend/routes/mitarbeiter-zugang.js",
-       "start": 352,
-       "end": 366,
+       "start": 360,
+       "end": 374,
        "lines": 15,
        "writes": [
         "mitarbeiter_anstellung:upsert"
@@ -298190,8 +298747,8 @@
       {
        "name": "standortplanAufraeumen",
        "file": "api-backend/routes/mitarbeiter-zugang.js",
-       "start": 328,
-       "end": 341,
+       "start": 336,
+       "end": 349,
        "lines": 14,
        "writes": [
         "employee_standort_plan:delete"
@@ -299697,7 +300254,7 @@
   {
    "name": "fmt",
    "orte": [
-    "api-backend/setup/router.js:135",
+    "api-backend/setup/router.js:136",
     "dashboard.js:1130",
     "dashboard.js:6993",
     "dashboard.js:8744",

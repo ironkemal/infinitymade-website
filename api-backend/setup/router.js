@@ -34,6 +34,7 @@ import { KUTU_OWNER_PLAN } from '../lib/dagitim.js';
 import { brandingFelderPruefen } from './branding-felder.js';
 import { pruefePasswort } from '../lib/passwort-regel.js';
 import { setupKapisi, jetonAbgelaufen } from './kapi.js';
+import { legeStandardStandortAn } from './standard-standort.js';
 
 /**
  * @typedef {{ body?: Record<string, unknown>, method: string, path: string }} SetupRequest
@@ -256,6 +257,12 @@ router.post('/owner', async (/** @type {SetupRequest} */ req, /** @type {SetupRe
   if (profileErr) {
     return res.status(500).json({ error: 'Konto angelegt, Profil konnte aber nicht vervollständigt werden', detail: profileErr.message });
   }
+
+  // 2b. Ersten Standort anlegen wie das SaaS-Onboarding (O-251/O-250, onprem 22.11.2026):
+  // VOR dem Jeton-Verbrauch, nicht blockierend — ein zweiter Versuch von Schritt 2 ist
+  // nach createUser ohnehin nicht möglich, der Rest fällt auf den O-250-Knopf zurück.
+  const standort = await legeStandardStandortAn(supabase, { ownerId, businessName: business_name.trim(), sector });
+  if (standort.status === 'fehler') console.warn('[setup] Standard-Standort nicht angelegt (nicht blockierend):', standort.fehler);
 
   // 3. Jeton verbrauchen — EIN bedingtes UPDATE, keine Konkurrenz möglich
   // (db/migrations/0005_praxura_setup.sql, Festlegung 2). Läuft NACH der

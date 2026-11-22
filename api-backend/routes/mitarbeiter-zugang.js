@@ -249,7 +249,11 @@ router.post('/team/mitarbeiter', requireAuth, createEmployeeLimiter, async (req,
         if (whErr) console.warn('[mitarbeiter-zugang] working_hours Fehler (nicht blockierend):', whErr.message);
       }
 
-      // Zuordnung zum Standard-Standort und Mitarbeiter-Gruppe
+      // Zuordnung zum Standard-Standort und Mitarbeiter-Gruppe. Ohne Standort bleibt der
+      // Mitarbeiter unzugeordnet und kann sich nicht anmelden (O-251) — das wird jetzt
+      // gemeldet statt still übersprungen; die Box-Einrichtung legt den Standort seit
+      // 22.11.2026 selbst an (setup/standard-standort.js).
+      let standortFehlt = false;
       try {
         const { data: defaultBiz } = await supabase
           .from('businesses')
@@ -266,11 +270,14 @@ router.post('/team/mitarbeiter', requireAuth, createEmployeeLimiter, async (req,
             .eq('name', 'Mitarbeiter')
             .maybeSingle();
 
-          await supabase.from('employee_business_assignments').upsert({
+          const { error: zuordnungErr } = await supabase.from('employee_business_assignments').upsert({
             employee_id: newUserId,
             business_id: defaultBiz.id,
             group_id: mitGroup?.id || null,
           }, { onConflict: 'employee_id,business_id' });
+          if (zuordnungErr) { standortFehlt = true; console.warn('[mitarbeiter-zugang] Standort-Zuordnung fehlgeschlagen (nicht blockierend):', zuordnungErr.message); }
+        } else {
+          standortFehlt = true;
         }
       } catch (bizErr) {
         console.warn('[mitarbeiter-zugang] business-assignment Fehler (nicht blockierend):', (/** @type {any} */ (bizErr)).message);
@@ -294,6 +301,7 @@ router.post('/team/mitarbeiter', requireAuth, createEmployeeLimiter, async (req,
         email,
         einrichtungscode: formattedCode,
         gueltig_bis: gueltigBis,
+        ...(standortFehlt ? { standort_fehlt: true } : {}),
       });
 
     } catch (setupErr) {
