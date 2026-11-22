@@ -152,6 +152,14 @@ Dieser Weg steht gleichwertig neben Weg A und B.
       freigeben (für Notfälle steht die browserbasierte Web-Konsole von Hetzner bereit)
   - **Ausgehend:** Keine Regeln einschränken (die Box benötigt ausgehenden Zugang
     für System-Updates, Zertifikatsabrufe und den Namensdienst).
+  - **Quelle bei `22/tcp`** ist die IP **Ihres Internetanschlusses** (anzeigen z. B. mit
+    https://ifconfig.me), **nicht** die IP des Servers. Mit der Server-IP sperren Sie sich aus.
+  - ⚠️ **Firewall auf den Server anwenden:** Regeln allein wirken nicht. In der Firewall
+    Reiter **Ressourcen → Anwenden auf → Server** → Ihren Server wählen. Danach darf oben
+    nicht mehr „Nicht angewendet" stehen. *(Testbox 22.11.2026: Regeln angelegt, aber nie
+    angewendet — alle Ports waren aus dem Internet erreichbar.)*
+  - **Prüfen** (von einem anderen Rechner aus): `nc -vz <server-ip> 5432` muss mit einer
+    **Zeitüberschreitung** enden. „Connection refused" heißt: die Firewall greift nicht.
 - **Installation durchführen:** Verbinden Sie sich per SSH mit Ihrem Server und
   führen Sie denselben Befehl wie bei Weg A aus (Servertyp **CX**/**CPX**, nicht
   CAX — ARM wird nicht unterstützt):
