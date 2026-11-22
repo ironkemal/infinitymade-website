@@ -3509,6 +3509,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 | **Kutuda ne olur** | Bugün zararsız — §3.4 Kural 3 zaten durak listesinin **boş kalmasını** istiyor (mimarinin kendisi migration'ları sürüm-bağımsız tutuyor, §3.3). Ama bir gün gerçekten bir durak ilan etmek zorunda kalınırsa (istisnai, kabul edilen bir tasarım kırılması), bugünkü mekanizma o duraği **atlar** — kutu sessizce geçer, tam da kuralın önlemeye çalıştığı şey |
 | **Çözüm** | O-43/Faz 2.9'un işi: `onprem/releases.json` (geçmiş sürümlerin durak listesi, image'la değil **ayrı bir kanaldan** — ya da bundle'a şimdiye kadarki tüm sürümlerin özet durak bilgisini taşıyan küçük bir ek dosya olarak eklenir). `X.Y.Z`'nin artık var olması (O-25) bu gereksinimi ilk kez **ifade edilebilir** kılıyor — önceden "hangi aralık" sorusunun bile bir cevabı yoktu |
 | **Durum** | `offen` (O-43/Faz 2.9'a bağlı, R11 — onprem-review, 12.09.2026). Uygulanana kadar **hiçbir sürüm `durak:true` ilan edilemez** — zaten §3.4 Kural 3'ün istediği şey, burada yalnız mekanik bir hatırlatmaya döndü |
+| **Ön kontrol (22.11.2026)** | Melih'in `mindest_von` önerisi bu maddenin "bundle'a özet durak bilgisi" seçeneğinin en ucuz hâli — `releases.json` beklemeden kapatır, **GEÇER, KAYITLA**. Şartlar: (1) `tools/onprem-manifest.mjs` `mindest_von`'u bir önceki manifestten **korur** (durak/elle_adim gibi, `:163-176`), `--durak` verilen sürümde kendini yazar; boş = kısıt yok. (2) `update.sh`: kurulu `surum` (STAND_FILE; `surum` X.Y.Z zorunlu, `onprem-manifest.mjs:177`) `sort -V` ile `mindest_von`'dan küçükse mevcut `durumu_yaz "durak"` yolu, hiçbir dosyaya dokunmadan. Kurulu sürüm **boş/okunamaz** ise de dur (eski kutu bilinmiyor = güvenli taraf). (3) Durak sürümünün `:X.Y.Z` etiketi GHCR'de **kalıcı** kalmalı — kutu oraya `--surum` ile basamak basamak çıkacak; bugün silen workflow yok (`.github/workflows/` `delete-package-versions` = 0) ama bu bir kural olarak RELEASE-STANDARD §3.4'e yazılmalı. (4) WSL kutusunda 1-atlama testi (0.x → durak → sonraki). Acil değil: bugün durak yok (§3.4 Kural 3); O-248 major kapısı bu madde kapanana kadar major yükseltmeyi zaten reddeder. Durum `offen` → builder alınca `geplant` |
 
 ---
 
@@ -6571,6 +6572,7 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Çözüm** | Faz 2.1c (ön kontrol) — `builder`: **(a) Ölçüm (yarınki beta denemesinde, en ucuz an):** kurulum bitince `docker system df` ve `df -h` çıktısı not edilir; tabanı bu sayı belirler (image toplamı × 2 + DB/storage payı + 5 GB). **(b)** `update.sh` başarılı sağlık kontrolünden **sonra** `docker image prune -f` (yalnız etiketsiz/dangling; J6 gereği geri alma image'a dönmediği için güvenli — `update.sh:842`). **(c)** `update.sh:218` kapısına mutlak alt sınır ekle (ör. yüzde **ve** ≥ ölçülen image boyutu kadar GB). **(d)** Belgeler aynı commit'te: RELEASE-STANDARD §5.2/§5.3 "asgari 15 GB, önerilen 40 GB" + playbook §4.1/2.1c satırı aynı ifadeyle (playbook'taki sayı kilitli karar değil, K/G listesinde yok). (b)+(c) yapılmadan 15-39 GB aralığı yalnız beta/deneme için kabul edilir, satışta CX33 |
 | **Durum** | `geplant` — Faz 2.1c. (a) ölçümü beta denemesine bağlı; (b)-(d) küçük iş. Kapanış: ölçülmüş sayı yoruma yazılmış + prune + mutlak kapı + belgeler tutarlı |
 | **Not (22.10.2026, akşam)** | (a) ölçümünün en ucuz anı geldi: `balken-dampf-21` 0.7.0'dan 0.7.1'e (`e28bde5c`) güncellenecek. Güncellemeden **önce ve sonra** `docker system df` + `df -h` alınırsa hem image toplamı (a) hem de prune'suz güncellemenin bıraktığı kalıntı (b'nin gerekçesi) tek seferde ölçülür. Kod tarafı değişmedi (`4e48af7e`) |
+| **Ön kontrol (22.11.2026, Melih planı "güncellemeler yıllarca, ≤1 saat")** | (b) **ŞARTLI GEÇER**, şu biçimde: (1) yalnız sonuç `ok` iken, Schritt 10 sağlık YEŞİL'den sonra. (2) `docker image prune -f` (dangling) + **hedefli** `docker rmi` — bu koşuda değişen eski `VERSION_*` / `PRAXURA_*_IMAGE` referansları (update.sh eskiyi ve yeniyi biliyor), hata yutulur. `docker image prune -af` **kullanılmaz**: kutu sunucusunda müşterinin başka konteynerleri olabilir, `-a` onların kullanılmayan image'larını da siler; `--filter until=` image'ın *oluşturulma* tarihine bakar, son kullanıma değil (Supabase image'ları aylar önce build edilmiş → filtre fiilen boş). (3) Eski image'a bağımlılık **yok**: `backup.sh:417` yalnız digest okur, `restore.sh:545` mevcut `.env`'deki image'ı ister, yoksa çeker; J6 geri alma image'a dönmez. (4) Kutuda prune C:'ye yer geri vermez (WSL vhdx) — O-158 (2) `--set-sparse` yapılmadan Windows kutusunda kazanç yok (`installieren/install.ps1`'de `sparse` = 0). **(e) YENİ, kaçan:** disk kapısı `update.sh:217-221` `fehler` + `exit 1` yapıyor ve `durumu_yaz()` (:315) / `bildirim_degerlendir()` (:388) **ondan sonra** tanımlı → disk dolu kutu stand dosyası yazmadan, bildirim atmadan her gece **sessizce** durur (O-82 sınıfı). (b) ile aynı commit'te kapı `durumu_yaz "disk_voll"` (ya da eşdeğer) yolundan çıkmalı; metindeki `docker system prune` önerisi `docker image prune -f` ile değişmeli (system prune müşterinin durdurulmuş konteynerlerini de siler) |
 
 ### O-212 — Kurulum sonu akışı: hesapsız kutuda kullanıcı login ekranında kalıyor (Einrichtungscode ↔ setup-jeton karışıyor) 🟡 **geplant — kod çalışma ağacında, commit yok (22.10.2026)**
 
@@ -6988,3 +6990,42 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Kutuda ne olur** | Läuft gegen die lokale DB der Box, kein Ausgang, offline voll funktionsfähig; Daten verlassen die Box nicht (G1). Kein neues Secret (G2), kein n8n (G3), kein neuer Cloud-Pfad (G8 — Express statt Vercel). Image: `Dockerfile` kopiert `lib/` und `routes/` als ganze Verzeichnisse (:44, :46) → neue Dateien inkl. Unterordner `lib/startseite/` kommen ohne Änderung mit. `tools/onprem-manifest.mjs`/`onprem/manifest.json` betreffen nur Bundle-Dateien (compose/env), nicht api-Quellcode → keine Anpassung |
 | **Çözüm** | `unkritisch` für die Verteilung. **Port-Falle (Crash beider Deployments):** `lib/startseite/geld.js:1` importiert `berlinMonatsgrenzen` aus `lib/berlin-tag.js` — auf main **nicht exportiert** (main: 4 Exporte, rettung: 5, rettung :75). Ohne Mitportierung → SyntaxError beim Import → `server.js` startet nicht, Watchtower rollt es auf SaaS aus, Box bleibt nach Update unten. Später „freie Zeit/Wochenauslastung“ (`slot-nachweis.js`, `verfuegbarkeit*.js`) beobachtet `getAvailableSlots` inkl. Google-Freebusy (`verfuegbarkeit-engine.js:96,113`) → eigene Vorprüfung vor dem Port (Tip A bestehend, Box ohne Google-Verbindung muss sauber `nicht verbunden` liefern) |
 | **Durum** | `unkritisch` (nur Vorprüfung, nicht portiert) |
+
+---
+
+### O-247 — Konteyner log rotasyonu yok: `json-file` loglar kutuda sınırsız büyür 🟡 **geplant (ön kontrol 22.11.2026)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `onprem/docker-compose.yml`'de `logging:` = 0, `install.sh`'ta `daemon.json` yok → Docker varsayılanı `json-file`, boyut sınırı yok. `onprem/RELEASE-STANDARD.md:649` bunu açıkça istiyor ("log rotasyonu compose'da sabitlenir"), kod karşılığı hiç yazılmadı |
+| **Nerede** | `onprem/docker-compose.yml` (9 servis, `logging` = 0) · `onprem/install.sh` (`daemon.json` = 0) · `onprem/RELEASE-STANDARD.md:649` |
+| **Tip** | F/G (kutunun bakımı; dış çağrı, sır, şema yok) |
+| **Kutuda ne olur** | Yıllar ölçeğinde `/var/lib/docker/containers/*/*-json.log` diski doldurur → O-213'teki %8 kapısı güncellemeyi durdurur, sonra Postgres yazamaz. Prune bunu çözmez (log çalışan konteynerin) |
+| **Çözüm** | **ŞARTLI GEÇER** — compose'a `x-logging: &log` (`json-file`, `max-size: 10m`, `max-file: 3`) + her servise `logging: *log`. Compose, manifest'le `update.sh` üzerinden **mevcut** kutulara da gider; `daemon.json` yolu **reddedildi**: müşterinin host'unda global ayar değiştirir, `dockerd` restart ister ve yalnız yeni kurulumlara gider (G7 ruhu: tek yol). Şartlar: (1) `node tools/onprem-manifest.mjs` ile sha tazelenir (aynı commit); compose'u elle değiştirmiş kutu J3'te bilinçli olarak durur — bu doğru davranış. (2) Değişiklik **bütün** konteynerleri o gece yeniden yaratır (db dahil, gece ~1 dk kesinti) — Schritt 10 sağlık kapısı bunu zaten ölçüyor; `docker compose config` CI bundle-smoke'ta geçmeli. (3) Rotasyon yalnız yeniden yaratılan konteynerde etkili — yeniden yaratma tam da istenen. Sahibi builder, O-213 ile aynı sürüm |
+| **Durum** | `geplant` — sıradaki kutu sürümü (O-213 (b)/(e) ile birlikte) |
+
+---
+
+### O-248 — Postgres major sürümü kapısız: `VERSION_POSTGRES` major değişirse eski veri dizini açılmaz 🟡 **geplant (ön kontrol 22.11.2026)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Postgres sürümü compose'da değil `onprem/.env.template:27` (`VERSION_POSTGRES=17.6.1.136`); `update.sh` VERSION_* birleştirmesi (§7J) yeni değeri kutuya **otomatik** yazar. Major değişimi (17→18) `pg_upgrade` ister; ne repo'da ne kutuda bir kapı var (`PG_VERSION` kontrolü = 0) |
+| **Nerede** | `onprem/.env.template:27` · `onprem/docker-compose.yml:77` · `onprem/update.sh` (VERSION birleştirme, Schritt 10 sağlık) |
+| **Tip** | D-komşusu (veri dizini formatı) + G |
+| **Kutuda ne olur** | Yeni image eski veri dizinini reddeder → sağlık düşer → J6 dosyaları geri alır (veri bozulmaz) → ertesi gece **aynı döngü**, kutu kalıcı olarak geri_alindi'de. O-220'nin 17.6→17.11 bump'ı aynı major, etkilenmez |
+| **Çözüm** | **GEÇER** (kutuya kod gitmez) — `tools/check-onprem.sh`: staged `onprem/.env.template`'teki `VERSION_POSTGRES` ilk alanı HEAD'dekinden farklıysa **red**. `durak:true` istisnası şimdilik **verilmez**: O-75 açıkken durak güvenilir değil; major yükseltme ayrı bir proje (pg_upgrade yolu + yedek + WSL testi), kapı onu bilinçli açılmaya zorlar. Kaçış mevcut `SKIP_ONPREM_GATE=1`. İleride (O-75 kapanınca) kutu tarafı ikinci savunma: `update.sh` yeni major ≠ veri dizinindeki `PG_VERSION` ise hiçbir dosyaya dokunmadan `durak` |
+| **Durum** | `geplant` — builder, O-247 ile aynı tur |
+
+---
+
+### O-249 — Docker Engine / Compose için asgari sürüm hiç tanımlanmadı 🔴 **offen (ön kontrol 22.11.2026)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `onprem/RELEASE-STANDARD.md:432` "Docker ≥ sürüm X" — X hiç doldurulmadı. `install.sh:500` yalnız `docker compose` eklentisinin **varlığına** bakar; `update.sh` hiç bakmaz. Docker'ı biz kurmuyoruz (`install.sh:496`) ve Docker'ın apt deposu Ubuntu'nun varsayılan güvenlik-güncellemesi kapsamında değil → kutunun Docker'ı yıllarca kurulduğu sürümde kalabilir |
+| **Nerede** | `onprem/RELEASE-STANDARD.md:432` · `onprem/install.sh:496-500` · `onprem/update.sh` (sürüm kontrolü = 0) |
+| **Tip** | G |
+| **Kutuda ne olur** | Bugün sorun yok. Yıllar sonra yeni bir compose özelliği (O-247'nin `x-` anchor'ı bile) eski Compose'da `update.sh`'ın ortasında anlaşılmaz bir hatayla düşer; hangi kutunun hangi Docker'da olduğunu bilmiyoruz. Kutuda `docker.sock` mount'u yok (`docker-compose.yml` = 0) → Docker 29'un API taban artışı gibi değişiklikler bizi bugün ısırmıyor |
+| **Çözüm** | Ucuz: `update.sh` her koşuda `docker version` + `docker compose version` çıktısını `praxura-stand.json`'a yazar (O-191 status kanalı görür); asgari sürüm ölçülen beta kutularından seçilip `install.sh`/`update.sh`'ta `durak` olarak uygulanır. Sahibi builder, faz: 2.1c |
+| **Durum** | `offen` — faz/kart bağlanana kadar her raporda gösterilir |
