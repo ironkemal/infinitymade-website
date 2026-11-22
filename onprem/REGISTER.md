@@ -7029,3 +7029,29 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Kutuda ne olur** | Bugün sorun yok. Yıllar sonra yeni bir compose özelliği (O-247'nin `x-` anchor'ı bile) eski Compose'da `update.sh`'ın ortasında anlaşılmaz bir hatayla düşer; hangi kutunun hangi Docker'da olduğunu bilmiyoruz. Kutuda `docker.sock` mount'u yok (`docker-compose.yml` = 0) → Docker 29'un API taban artışı gibi değişiklikler bizi bugün ısırmıyor |
 | **Çözüm** | Ucuz: `update.sh` her koşuda `docker version` + `docker compose version` çıktısını `praxura-stand.json`'a yazar (O-191 status kanalı görür); asgari sürüm ölçülen beta kutularından seçilip `install.sh`/`update.sh`'ta `durak` olarak uygulanır. Sahibi builder, faz: 2.1c |
 | **Durum** | `offen` — faz/kart bağlanana kadar her raporda gösterilir |
+
+---
+
+### O-250 — Kutuda ilk Standort anlegbar değildi: „＋ Neues Geschäft hinzufügen" boş listede ölü ✅ **gelöst (Live-Abnahme Hetzner-Testbox 22.11.2026, beta 0.7.1)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Box-Setup bilinçli olarak `businesses` satırı açmaz (`dashboard.js:13471`). `renderBusinessesSection()` boş listede **erken dönüyordu** — `addBusinessBtn`, tık delegasyonu ve `wireBusinessModal()` bağlanmadan önce. Buton görünür ama hiçbir şey yapmıyordu |
+| **Nerede** | `dashboard.js` `renderBusinessesSection()` (:13587) · Test `module/standort-erster-button.test.js` |
+| **Tip** | G (kutu yolu, UI) · O-224'ün devamı (kutuda `isEnterprise()` true olunca açığa çıktı) |
+| **Kutuda ne olur** | Fix öncesi: taze kurulan kutuda ilk Standort hiç açılamıyordu → Standort'a bağlı her şey (switcher, Datenfreigabe, çalışan ataması, O-251) zincirleme kapalı. SaaS etkilenmez (orada boş liste yolu bu sırayla çizilmiyor), fix iki dağıtımda aynı kod (G7) |
+| **Çözüm** | Bağlama boş-liste dönüşünün **önüne** alındı; test fix öncesi kırmızı, sonrası yeşil. Dış çağrı/şema/env/sır yok — G1/G2/G3/G8 dokunulmadı |
+| **Durum** | `gelöst` — commit `c0634f09` (22.11.2026), push Melih'in GO'suna bağlı. Kutu kabulü: sonraki beta image'ında ilk Standort'u gerçek kutuda açıp O-224 kabul listesine devam |
+
+---
+
+### O-251 — Standort yokken açılan çalışan sessizce atamasız kalır → hiç giriş yapamaz 🔴 **offen (Live-Abnahme Hetzner-Testbox 22.11.2026, beta 0.7.1) — Kemal entscheidet**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Çalışan oluşturulurken `is_default` Standort aranır; yoksa `employee_business_assignments` satırı **atlanır**, yalnız `console.warn`. Girişte `loadModulePermissions` `currentBusiness` bulamaz → „Praxisstandort und Zugriffsrechte konnten nicht bestätigt werden" ve çıkış. Owner'ın „Berechtigungen" sekmesi de Standort olmadan görünmez (`loadEmpPermissions` `currentBusiness` ister). Owner'a hiçbir uyarı yok |
+| **Nerede** | `api-backend/routes/mitarbeiter-zugang.js:253-275` (`defaultBiz` null → skip) · `dashboard.js:563` (`loadModulePermissions`) · `dashboard.js:9162` (`loadEmpPermissions`) |
+| **Tip** | G (kutu kurulum sırası) · H-komşusu (yetki satırı eksik) · çözüm seçeneğine göre D |
+| **Kutuda ne olur** | Sıra „önce Team, sonra Standort" olursa (taze kutuda doğal sıra, O-250) çalışan kalıcı olarak kilitli; Standort sonradan açılsa bile **mevcut** çalışanlar atamasız kalır (UI ilk Standort'a geriye dönük atama yapmaz). SaaS'ta da aynı kod yolu var: `businesses` satırı olmayan tek-praxis owner'ın çalışanı aynı hataya düşer — yani yalnız kutu sorunu değil. Launch-relevant: P1 (çalışanlı, 2 Standort, L5/M3) |
+| **Çözüm** | **Tavsiye: (2)+(3), (1) değil.** (2) ilk Standort açıldığında owner'ın atamasız çalışanlarını otomatik ata — yeri bir migration'da `AFTER INSERT ON businesses WHERE is_default` trigger'ı (mevcut `trg_seed_default_groups` gruplarını kullanır, `ON CONFLICT DO NOTHING`); böylece zaten kurulmuş kutular ve SaaS aynı yoldan iyileşir (G7, tip D → zincir `api-backend/db/migrations/`). (3) ucuz emniyet: route atlanan atamayı yanıtta bildirir, Team panelinde „erst Standort anlegen" uyarısı. (1) Setup'ın Standort açması reddedildi: `:13471`'deki bilinçli kararı geri alır, yalnız yeni kutulara ve yalnız kutu yoluna gider (SaaS ve mevcut kutular bozuk kalır). Sahibi builder; `db-ustasi` trigger öncesi sorulur. G1/G2/G3/G8 dokunulmaz |
+| **Durum** | `offen` — Kemal kararı + faz/kart bağlanana kadar her raporda gösterilir; P1 Launch öncesi kapanmalı |
