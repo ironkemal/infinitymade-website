@@ -13593,6 +13593,19 @@ function renderBusinessesSection() {
   section.hidden = !showSection;
   if (!showSection) return;
 
+  // Verdrahten VOR dem Leer-Abbruch: frische Box hat keinen Standort, sonst bleibt der Button tot (Testbox 22.11.2026)
+  if (!section.dataset.wired) {
+    section.dataset.wired = '1';
+    document.getElementById('addBusinessBtn')?.addEventListener('click', () => openBusinessModal(null));
+    section.addEventListener('click', async (e) => {
+      const editId = e.target.dataset.editBusiness;
+      const delId  = e.target.dataset.deleteBusiness;
+      if (editId) openBusinessModal(myBusinesses.find(b => b.id === editId));
+      if (delId)  await deleteBusiness(delId);
+    });
+    wireBusinessModal();
+  }
+
   if (myBusinesses.length === 0) {
     listEl.innerHTML = '<div class="form-hint">Noch kein Geschäft. Fügen Sie eines hinzu.</div>';
     return;
@@ -13629,19 +13642,6 @@ function renderBusinessesSection() {
       navigator.clipboard.writeText(lnk).then(() => showToast(t('copied') || 'Link kopiert ✓'));
     });
   });
-
-  // Bind handlers (idempotent — set dataset.wired)
-  if (!section.dataset.wired) {
-    section.dataset.wired = '1';
-    document.getElementById('addBusinessBtn')?.addEventListener('click', () => openBusinessModal(null));
-    section.addEventListener('click', async (e) => {
-      const editId = e.target.dataset.editBusiness;
-      const delId  = e.target.dataset.deleteBusiness;
-      if (editId) openBusinessModal(myBusinesses.find(b => b.id === editId));
-      if (delId)  await deleteBusiness(delId);
-    });
-    wireBusinessModal();
-  }
 }
 
 function updateBizSlugPreview() {
