@@ -7041,7 +7041,7 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Tip** | G (kutu yolu, UI) · O-224'ün devamı (kutuda `isEnterprise()` true olunca açığa çıktı) |
 | **Kutuda ne olur** | Fix öncesi: taze kurulan kutuda ilk Standort hiç açılamıyordu → Standort'a bağlı her şey (switcher, Datenfreigabe, çalışan ataması, O-251) zincirleme kapalı. SaaS etkilenmez (orada boş liste yolu bu sırayla çizilmiyor), fix iki dağıtımda aynı kod (G7) |
 | **Çözüm** | Bağlama boş-liste dönüşünün **önüne** alındı; test fix öncesi kırmızı, sonrası yeşil. Dış çağrı/şema/env/sır yok — G1/G2/G3/G8 dokunulmadı |
-| **Durum** | `gelöst` — commit `c0634f09` (22.11.2026), push Melih'in GO'suna bağlı. Kutu kabulü: sonraki beta image'ında ilk Standort'u gerçek kutuda açıp O-224 kabul listesine devam |
+| **Durum** | `gelöst` — commit `c0634f09` (22.11.2026) · **live auf der Testbox geprüft 22.11.2026 21:00**: nach `update.sh --jetzt` (frontend:beta neu, `dashboard.js?v=20261122stb1`) erster Standort angelegt, „(Standard)", push Melih'in GO'suna bağlı. Kutu kabulü: sonraki beta image'ında ilk Standort'u gerçek kutuda açıp O-224 kabul listesine devam |
 
 ---
 
