@@ -1,5 +1,8 @@
 import { getKiConfig, updateOwnerOptIn, CURRENT_EINWILLIGUNG_VERSION, refreshKiControls } from './ki-client.js?v=20261103mail1';
 
+/** @param {unknown} t */
+const escapeText = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] || c));
+
 export async function mountKiEinstellungen(container, deps = {}) {
   if (!container) return;
 
@@ -79,6 +82,15 @@ export async function mountKiEinstellungen(container, deps = {}) {
             </span>
           </div>
         </div>
+
+        ${!isEffective ? `
+        <!-- Box-Test 22.11.2026: Grund und „was ohne KI weiter geht“ sichtbar machen (vorher nur ○ Deaktiviert). -->
+        <div id="kiAusHinweis" style="padding:10px 12px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;font-size:12.5px;color:var(--text-main);line-height:1.5;">
+          <strong>${escapeText(cfg.disabledReasonText || 'KI-Unterstützung ist ausgeschaltet.')}</strong><br>
+          Ohne KI arbeiten weiter: Serientermine (Vorschlag nach festen Regeln), Rezept-Barcode-Scan (lokal im Browser),
+          Verordnungsprüfung (regelbasiert) und alle übrigen Praxisfunktionen. Nur Mail-Assistent und Sprachdiktat brauchen die KI.
+          ${cfg.mode === 'aus' ? 'Auf diesem Server ist die KI vom Betreiber ausgeschaltet — Ihre Einwilligung allein schaltet sie nicht ein.' : ''}
+        </div>` : ''}
 
         <!-- Inhaber-Schalter -->
         <div style="background:var(--bg-card-solid);border:1px solid var(--border);border-radius:10px;padding:14px;">

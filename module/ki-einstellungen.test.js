@@ -86,3 +86,17 @@ test('ki-einstellungen: employee sees disabled checkbox with owner-only notice',
   assert.ok(content.includes('disabled'));
   assert.ok(content.includes('Nur der Praxisinhaber darf die KI-Einwilligung aktivieren oder widerrufen'));
 });
+
+test('ki-einstellungen: KI aus zeigt Grund, was ohne KI weiter geht, und Betreiber-Hinweis (Box-Test 22.11.)', async () => {
+  const { container } = createContainerFixture();
+  await mountKiEinstellungen(container, {
+    isOwner: () => true, getSessionToken: async () => 't', apiBase: '/api/ai',
+    fetchImpl: async () => ({ ok: true, json: async () => ({ success: true, active: false, mode: 'aus' }) }),
+  });
+  const html = container.innerHTML;
+  assert.ok(html.includes('id="kiAusHinweis"'));
+  assert.match(html, /Serientermine \(Vorschlag nach festen Regeln\)/);
+  assert.match(html, /Rezept-Barcode-Scan \(lokal im Browser\)/);
+  assert.match(html, /vom Betreiber ausgeschaltet/);
+  assert.doesNotMatch(html, /<script|undefined|null<\/strong>/);
+});
