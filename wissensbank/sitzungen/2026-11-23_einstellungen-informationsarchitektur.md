@@ -98,8 +98,7 @@ Namen nach `ux-copy`: kurz, Praxissprache, Substantiv, keine Technikbegriffe (�
 | **Paket & Abo** (`abo`) | Paket, Status, Abo verwalten · Paketinhalt *(nur SaaS; Box: Lizenzhinweis)* | Abo ist Praxissache, nicht „mein Konto“ |
 | **System** (`system`) | Systemstatus *(nur Inhaber + Box)* | unverändert |
 
-**Ärzteregister:** aus den Einstellungen herausnehmen und durch ↗ Ärzte ersetzen (Arbeitsbereich laut
-physio/fonksiyon-ustasi, F7). **Entscheidung Melih** (Frage 3).
+**Ärzteregister:** bleibt in den Einstellungen als Bereich **Ärzte** unter KOMMUNIKATION (Melih 23.11., Kap. 9).
 
 ### Zuordnung alt → neu (jeder heutige Abschnitt)
 
@@ -317,3 +316,18 @@ als nächsten realistischen Schritt. Das ist eine Richtungsentscheidung (Recht v
 5. KI: Stufe 1 in Stufe B — Anzeige ohne Migration sofort, „Aufgaben an/aus“ mit kleiner Migration (GO nötig)?
    Stufe 2 (lokales Modell zuerst [legal-de] vs. Azure-EU-BYOK zuerst [onprem], nur Box) als `/konsey`-Thema?
 6. F1 (Sprung in ausgeblendeten Bereich) ist eine **live Regression** — als Sofort-Fix vor Stufe B erlaubt?
+
+---
+
+## 9. Entscheidungen Melih (23.11.2026, abends)
+
+- **Struktur freigegeben** (5 Obergruppen, Bereiche wie Kap. 3).
+- **Verlinken** (nicht umhängen) für Öffnungszeiten & Räume, Leistungen, Vorlagen, Team, Termin-Anfrage-Automatik,
+  Patientenpost-Absender: In den Einstellungen steht ein Kasten „Auch hier einstellen:“ mit Knopf, der in den
+  bestehenden Bereich springt. Der Bereich selbst bleibt, wo er ist (auch für Mitarbeiter mit Recht).
+- **Ärzteverzeichnis bleibt in den Einstellungen** (kein Herausnehmen). Platz: eigener Bereich **Ärzte** unter
+  KOMMUNIKATION (neben „E-Mail & Fax“) — verordnende Ärzte, Fax/Mail an Ärzte. Panel „Ärzte“ bleibt zusätzlich.
+- **Neue Felder mit Migration warten** (Takt, Recall, Serien-Vorgaben, Fahrtpuffer, Nummernkreise) bis Partnerfragen
+  #24/#25 — Erinnerung im Gedächtnis gespeichert.
+- **F1 (Sprung in ausgeblendeten Bereich)** sofort behoben: `96b74152`, live.
+- KI: Melih hat Punkt 5 nicht verstanden → erneut einfach erklärt; Entscheidung offen.
