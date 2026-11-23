@@ -66,6 +66,14 @@
 
 name: praxura
 
+# O-247 (23.11.2026): Container-Logs begrenzen — ohne max-size waechst json-file
+# ueber Jahre unbegrenzt und fuellt die Platte (dann stoppt update.sh am 8-%-Tor).
+x-praxura-logging: &praxura-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
 
   # ─────────────────────────────────────────────────────────────────────────
@@ -76,6 +84,7 @@ services:
     # sha256:f371b5f3f2ac0a05703f33d6e6134515fb2498cab708fb948a0aeb7481467c00
     image: supabase/postgres:${VERSION_POSTGRES}
     restart: unless-stopped
+    logging: *praxura-logging
     volumes:
       # Init-Skripte von upstream — laufen NUR beim allerersten Start.
       # Herkunft und Aktualitaet: onprem/volumes/README.md
@@ -149,6 +158,7 @@ services:
     # sha256:385184459f57569c54c25209f51f3b2be99ddd7c4ce9e3555b5d3eea8447b7cf
     image: supabase/gotrue:${VERSION_GOTRUE}
     restart: unless-stopped
+    logging: *praxura-logging
     depends_on:
       db:
         condition: service_healthy
@@ -220,6 +230,7 @@ services:
     # sha256:54000f24847d01a2c2302e0041cf0618b875c57fb48507d743cfa9aaa50bf43c
     image: postgrest/postgrest:${VERSION_POSTGREST}
     restart: unless-stopped
+    logging: *praxura-logging
     depends_on:
       db:
         condition: service_healthy
@@ -255,6 +266,7 @@ services:
     # sha256:aa1c92c0cf326007563641730ec9da9c60478caa6853887775365fa2c097a471
     image: supabase/realtime:${VERSION_REALTIME}
     restart: unless-stopped
+    logging: *praxura-logging
     depends_on:
       db:
         condition: service_healthy
@@ -295,6 +307,7 @@ services:
     # sha256:c8eb9858eafec891a97c27125470aaad54703c3f4eb4d55ca7f1bf6c6411febf
     image: supabase/storage-api:${VERSION_STORAGE}
     restart: unless-stopped
+    logging: *praxura-logging
     depends_on:
       db:
         condition: service_healthy
@@ -359,6 +372,7 @@ services:
     # sha256:6addf50e6bd8d578314cb9ce4f2d2d1e3781d2edecef59f707e00c6e05d384f5
     image: kong/kong:${VERSION_KONG}
     restart: unless-stopped
+    logging: *praxura-logging
     # Ziel-VPS ist 2 vCPU (playbook 2.1c) — kein Swap, s. RELEASE-STANDARD.md.
     # 400m = gemessene ~180 MB (2 Worker) + Haelfte Puffer, nicht mehr geraten.
     mem_limit: 400m
@@ -415,6 +429,7 @@ services:
     container_name: praxura-api
     image: ${PRAXURA_API_IMAGE}
     restart: unless-stopped
+    logging: *praxura-logging
     # In der Box immer "always": Watchtower ersetzt das Image, der
     # Neustart soll das neue holen. Nur beim lokalen Test steht hier
     # "never", weil das Image dann von Hand gebaut ist.
@@ -567,6 +582,7 @@ services:
     pull_policy: ${PRAXURA_PULL_POLICY:-always}
     profiles: ["kurulum"]
     restart: "no"
+    logging: *praxura-logging
     entrypoint: ["node", "merkez-istemci/kayit.js"]
     environment:
       MERKEZ_URL: ${MERKEZ_URL:-}
@@ -588,6 +604,7 @@ services:
     container_name: praxura-caddy
     image: ${PRAXURA_FRONTEND_IMAGE}
     restart: unless-stopped
+    logging: *praxura-logging
     pull_policy: ${PRAXURA_PULL_POLICY:-always}
     depends_on:
       api:

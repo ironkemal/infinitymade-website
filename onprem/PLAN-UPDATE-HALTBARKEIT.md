@@ -1,10 +1,10 @@
 # Plan — Box-Updates über Jahre stabil halten
 
-> Stand: **geplant, nicht gebaut** (22.11.2026, Melih). Vorprüfung durch `onprem`-Agent:
+> Stand: **lokal umgesetzt & getestet (Schritte 1–5 + Timer-Zeitzone `Europe/Berlin`, 23.11.2026)** —
+> wartet auf Push-GO + CI-Image + Schritt 6 (Live-Abnahme auf der Testbox). Vorprüfung durch `onprem`-Agent:
 > kein Veto, Sicherfunde O-213 (b)/(e), O-247, O-248, O-249 (Commit `8e237af6`).
-> Umsetzung ≈ 30 Min. Reihenfolge-Vorgabe von Melih: **erst** Testbox mit heutigem Stand
-> installieren, **dann** diesen Plan bauen, pushen, Snapshot zurücksetzen, neu installieren
-> und Schritt 6 prüfen (Vorher/Nachher auf demselben Server).
+> Reihenfolge-Vorgabe von Melih: Testbox mit Vorher-Stand installiert (22.11.), jetzt Plan gebaut,
+> als Nächstes pushen, Schritt 6 prüfen + Snapshot zurücksetzen für saubere Neuinstallation.
 >
 > Vor dem Bauen: `onprem`-Agent kurz informieren („setze PLAN-UPDATE-HALTBARKEIT um"),
 > Änderungen an `update.sh`/Compose sind seine Pflichtkonsultation (CLAUDE.md).

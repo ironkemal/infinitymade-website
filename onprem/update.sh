@@ -229,11 +229,38 @@ zertifikat_pruefen || true
 
 # Disk-Gate erst NACH der Zertifikatsprüfung (guvenlik S-47, 08.10.2026): ein
 # voller Datenträger darf die Ablaufwarnung nicht stummschalten.
+# O-213 (e) (23.11.2026): bei < 8 % nicht stumm abbrechen — Status in STAND_FILE
+# schreiben (dateien-sha.json bleibt erhalten) und gedrosselt Alarm-Mail senden.
+SPEICHER_STAND="$STAND_DIR/son-speicher-bildirim.json"
+speicher_stand_schreiben() {
+  local sha_datei="$STAND_DIR/dateien-sha.json" dateien_json='{}'
+  [ -f "$sha_datei" ] && dateien_json="$(cat "$sha_datei" 2>/dev/null || echo '{}')"
+  cat > "$STAND_FILE.tmp" <<EOF
+{
+  "surum": "",
+  "sonuc": "speicher_voll",
+  "zaman": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "dateien": $dateien_json
+}
+EOF
+  mv "$STAND_FILE.tmp" "$STAND_FILE"
+}
 platz_frei_pct=$(df -P "$SCRIPT_DIR" | awk 'NR==2 {print 100 - $5}' | tr -d '%')
 if [ -n "$platz_frei_pct" ] && [ "$platz_frei_pct" -lt 8 ]; then
   fehler "Zu wenig freier Speicher für ein sicheres Update" "${platz_frei_pct}% frei" "mindestens 8% frei" \
-    "Speicher freigeben (alte Backups, Docker-Images: 'docker system prune'), dann erneut versuchen."
+    "Speicher freigeben (alte Sicherungen prüfen, ungenutzte Images: 'docker image prune'), dann erneut versuchen."
+  speicher_stand_schreiben 2>/dev/null || true
+  simdi="$(date -u +%s)"
+  letzte="$(grep -oE '[0-9]+' "$SPEICHER_STAND" 2>/dev/null | head -1 || true)"
+  if [ -z "$letzte" ] || [ $(( simdi - letzte )) -ge "$BILDIRIM_ARALIK_SANIYE" ]; then
+    if mail_gonder_container speicher_voll; then
+      printf '{ "son_gonderim_epoch": %s }\n' "$simdi" > "$SPEICHER_STAND" 2>/dev/null || true
+      ok "  Speicher-Warnung per Mail verschickt"
+    fi
+  fi
   exit 1
+else
+  rm -f "$SPEICHER_STAND"
 fi
 
 # ── Schritt 1 — nur das eigene Image ziehen ─────────────────────────────────
@@ -572,6 +599,22 @@ geri_yukle() {
     fi
   done
 }
+
+# O-213 (b) (23.11.2026): Image-Referenzen VOR dem .env-Abgleich merken, damit
+# Schritt 11 nach grünem Ergebnis (sonuc=ok) nur ersetzte alte Referenzen entfernt.
+aktuelle_images_sammeln() {
+  local v
+  v="$(env_wert VERSION_POSTGRES)";       [ -n "$v" ] && printf 'supabase/postgres:%s\n' "$v"
+  v="$(env_wert VERSION_GOTRUE)";         [ -n "$v" ] && printf 'supabase/gotrue:%s\n' "$v"
+  v="$(env_wert VERSION_POSTGREST)";      [ -n "$v" ] && printf 'postgrest/postgrest:%s\n' "$v"
+  v="$(env_wert VERSION_REALTIME)";       [ -n "$v" ] && printf 'supabase/realtime:%s\n' "$v"
+  v="$(env_wert VERSION_STORAGE)";        [ -n "$v" ] && printf 'supabase/storage-api:%s\n' "$v"
+  v="$(env_wert VERSION_KONG)";           [ -n "$v" ] && printf 'kong/kong:%s\n' "$v"
+  v="$(env_wert PRAXURA_API_IMAGE)";      [ -n "$v" ] && printf '%s\n' "$v"
+  v="$(env_wert PRAXURA_FRONTEND_IMAGE)"; [ -n "$v" ] && printf '%s\n' "$v"
+  return 0
+}
+VORHER_IMAGES="$(aktuelle_images_sammeln || true)"
 
 # ── .env birleştirme (J4) — anahtar bazında, metin merge DEĞİL ─────────────
 TABAN_ENV="$STAND_DIR/env.taban.template"
@@ -941,6 +984,19 @@ if [ "$sonuc" = "ok" ] || [ "$sonuc" = "schema_fehler" ]; then
   cp "$BIZIM_ENV" "$TABAN_ENV"
 fi
 if [ "$sonuc" = "ok" ]; then
+  # O-213 (b) (23.11.2026): Ersetzte alte Images + dangling-Schichten aufräumen —
+  # ausschließlich nach grüner Gesundheit + Bereitschaft (sonuc=ok). Kein -a,
+  # kein --filter until= (schützt fremde Container/Images auf dem Host).
+  NACHHER_IMAGES="$(aktuelle_images_sammeln || true)"
+  if [ -n "${VORHER_IMAGES:-}" ]; then
+    while IFS= read -r alt_img; do
+      [ -n "$alt_img" ] || continue
+      if ! printf '%s\n' "$NACHHER_IMAGES" | grep -Fxq "$alt_img"; then
+        docker rmi "$alt_img" >>"$LOG_FILE" 2>&1 || true
+      fi
+    done <<< "$VORHER_IMAGES"
+  fi
+  docker image prune -f >>"$LOG_FILE" 2>&1 || true
   # O-82: owner e-postası önbelleği yalnız burada tazelenir — DB'nin
   # erişilebilir olduğu kanıtlanmış tek an. `|| true`: önbellek tazeleme
   # başarısız olsa bile "ok" sonucu bundan etkilenmemeli.

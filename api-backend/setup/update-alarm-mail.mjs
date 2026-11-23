@@ -61,6 +61,8 @@ const METINLER = {
   // K2b.19 (S-53 Nr. 5): die lokale CA der Box ("eigene Adresse") erneuert sich nicht selbst.
   lokale_ca_laeuft_ab: 'Die Zertifizierungsstelle der Box läuft in weniger als 90 Tagen ab und erneuert sich nicht von selbst. Bitte den Support kontaktieren: Die Box braucht ein neues Zertifikat, das danach auf jedem Praxisgerät einmal neu importiert wird.',
   zertifikat_laeuft_ab: 'Das Sicherheitszertifikat der Box läuft in weniger als 21 Tagen ab und wurde noch nicht automatisch erneuert. Bitte prüfen, ob die Box Internetzugang hat; besteht das Problem weiter, den Support kontaktieren.',
+  // O-213 (e) (23.11.2026) — von update.sh am Disk-Tor (< 8 % frei); fester Text, nie Log-Auszug oder Pfad.
+  speicher_voll: 'Automatisches Update angehalten: auf dem Server ist zu wenig freier Speicherplatz (unter 8 %). Bitte alte Sicherungen prüfen oder ungenutzte Docker-Images bereinigen.',
 };
 
 const SICHERUNG = new Set(['sicherung_fehlgeschlagen', 'sicherungsschluessel_fehlt']);
@@ -70,7 +72,9 @@ const betreff = sonuc === 'ok'
     ? 'Praxura — nächtliche Sicherung braucht Aufmerksamkeit'
     : (sonuc === 'zertifikat_laeuft_ab' || sonuc === 'lokale_ca_laeuft_ab')
       ? 'Praxura — Zertifikat der Box läuft bald ab'
-      : 'Praxura — automatisches Update braucht Aufmerksamkeit';
+      : sonuc === 'speicher_voll'
+        ? 'Praxura — Speicherplatz auf der Box knapp'
+        : 'Praxura — automatisches Update braucht Aufmerksamkeit';
 const zeile = METINLER[sonuc] || `Automatisches Update: unbekannter Status "${sonuc}".`;
 
 const transport = kanal.transport();

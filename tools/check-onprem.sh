@@ -27,10 +27,29 @@ set -e
 repo_root=$(git rev-parse --show-toplevel)
 baseline_file="$repo_root/tools/.onprem-baseline"
 
+cd "$repo_root"
+
+# O-248 (23.11.2026): Postgres-Hauptversion im Index schützen — KEIN Skip-Schalter
+# und keine durak:true-Ausnahme (solange O-75 offen ist). Steht bewusst VOR
+# SKIP_ONPREM_GATE, damit die Sperre nicht versehentlich mitübersprungen wird.
+ERWARTETE_PG_MAJOR=17
+if git cat-file -e ":onprem/.env.template" 2>/dev/null; then
+  pg_ver=$(git show ":onprem/.env.template" | sed -n 's/^VERSION_POSTGRES=//p' | head -1 | tr -d ' \r')
+  pg_major=${pg_ver%%.*}
+  if [ -z "$pg_ver" ] || [ "$pg_major" != "$ERWARTETE_PG_MAJOR" ]; then
+    cat >&2 <<EOF
+
+  ✗ COMMIT REDDEDİLDİ — onprem O-248: Postgres-Hauptversion darf nicht ohne Upgrade-Pfad wechseln (pg_upgrade)
+    Index onprem/.env.template: VERSION_POSTGRES='${pg_ver:-<leer>}' (Hauptversion '${pg_major:-<leer>}', erwartet '$ERWARTETE_PG_MAJOR').
+    Kein Skip-Schalter, keine durak:true-Ausnahme (solange O-75 offen ist).
+
+EOF
+    exit 1
+  fi
+fi
+
 [ "$SKIP_ONPREM_GATE" = "1" ] && exit 0
 [ -f "$baseline_file" ] || exit 0
-
-cd "$repo_root"
 
 # Eşleşen SATIR sayısını toplar (git grep -c dosya başına satır sayısı verir).
 #

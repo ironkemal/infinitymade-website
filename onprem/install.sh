@@ -1358,7 +1358,7 @@ Description=Praxura On-Premise — nächtliches Update (Timer)
 # Praxis-Öffnungszeiten landen. Der eigentliche Schutz gegen schlechte
 # Releases ist das 72h-Soak vor :stable (RELEASE-STANDARD.md §6.3), nicht
 # dieser Zeitpunkt.
-OnCalendar=*-*-* 02:00:00
+OnCalendar=*-*-* 02:00:00 Europe/Berlin
 RandomizedDelaySec=7200
 Persistent=true
 
@@ -1368,7 +1368,7 @@ EOF
 
   systemctl daemon-reload
   systemctl enable --now praxura-update.timer >/dev/null 2>&1
-  ok "praxura-update.timer aktiv (nächtlich 02:00 + bis zu 2h Zufallsverzögerung)"
+  ok "praxura-update.timer aktiv (nächtlich 02:00 Europe/Berlin + bis zu 2h Zufallsverzögerung)"
 
   # ── Yedekleme zamanlayıcısı (O-26) — praxura-update.timer'DAN ÖNCE ─────────
   # onprem'in O-26 tasarım notu: nightly yedek migration-timer'dan (02:00 +
@@ -1400,7 +1400,7 @@ Description=Praxura On-Premise — gecelik yedek (Timer)
 [Timer]
 # 01:00 + dar jitter — praxura-update.timer'ın 02:00+2h penceresinden ÖNCE,
 # ikisi çakışmasın diye. .praxura-update.lock paylaşımı ek bir güvenlik ağı.
-OnCalendar=*-*-* 01:00:00
+OnCalendar=*-*-* 01:00:00 Europe/Berlin
 RandomizedDelaySec=900
 Persistent=true
 
@@ -1413,7 +1413,7 @@ EOF
   # bräche die Einrichtung vorher ab, würden nächtliche Sicherungen auf einen Schlüssel
   # verschlüsselt, den nie jemand gesehen hat.
   BACKUP_TIMER_EINSCHALTEN=1
-  ok "praxura-backup.timer eingerichtet (nächtlich 01:00 + bis zu 15 Min) — wird nach Bestätigung der Schlüssel eingeschaltet"
+  ok "praxura-backup.timer eingerichtet (nächtlich 01:00 Europe/Berlin + bis zu 15 Min) — wird nach Bestätigung der Schlüssel eingeschaltet"
 else
   warn "systemctl nicht gefunden — automatische Aktualisierung/Yedekleme NICHT eingerichtet. 'bash update.sh --jetzt' / 'bash backup.sh --sebep manuel' manuell/per Cron einrichten."
 fi
