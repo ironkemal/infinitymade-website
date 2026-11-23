@@ -184,3 +184,17 @@
 - **Cevap „hayır“ ise değişen:** Startseitenliste, Statusfarben/-texte, Spalten im Tagesansicht-Kalender.
 - **Öncelik:** 🟡 Redesign-Feinschliff
 - **Eklendi:** 2026-11-11 (physio-Bildabnahme Redesign) · **Cevap:** —
+
+### #24 — Terminraster: ein Takt für alle oder je Leistung/Therapeut?
+- **Soru (Almanca, partnere aynen):** „Arbeiten alle Therapeut:innen im gleichen Takt (z. B. 20 oder 30 Minuten), oder hängt die Länge von der Leistung ab (MT, MLD 45/60, KG-Gerät) bzw. von der Person? Planen Sie Pufferzeiten zwischen Terminen?"
+- **Varsayımımız:** Praxisweiter Takt (Standard 20 min, wählbar 15/20/25/30) + Dauer je Leistung als Vorgabe; kein fester Puffer. Heute ist das Raster fest im Code (`module/kalender-raster.js`), keine Einstellung.
+- **Cevap "hayır" ise değişen:** Takt je Therapeut → Feld in Team-/Arbeitszeit-Profil statt praxisweit; Puffer → zusätzliche Einstellung je Leistung, Slotberechnung (`/booking/get-slots`, Serienvorschlag) muss sie berücksichtigen.
+- **Öncelik:** 🟠 her gün sürtünme
+- **Eklendi:** 2026-11-23 (physio-Analyse Einstellungen) · **Cevap:** —
+
+### #25 — Wer ändert Einstellungen: nur Inhaber oder auch Empfang?
+- **Soru (Almanca, partnere aynen):** „Darf Ihr Empfang Öffnungszeiten, Schließtage, Leistungen/Preise und Textvorlagen selbst ändern — oder macht das nur die Inhaberin? Und tragen Therapeut:innen ihren Urlaub selbst ein?"
+- **Varsayımımız:** Empfang darf Schließtage, Vorlagen, Ärzte pflegen; Preise, Bank, IK/Abrechnung, Rechte nur Inhaber. Urlaub trägt der Therapeut als Antrag ein, Inhaber bestätigt.
+- **Cevap "hayır" ise değişen:** Eigene Rolle „Empfang“ mit Rechtebündel nötig (heute owner/employee); Rechte-Matrix in Team & Rechte und Sichtbarkeit der Einstellungsgruppen.
+- **Öncelik:** 🟠 her gün sürtünme
+- **Eklendi:** 2026-11-23 (physio-Analyse Einstellungen) · **Cevap:** —
