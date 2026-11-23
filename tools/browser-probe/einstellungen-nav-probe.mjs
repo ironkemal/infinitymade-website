@@ -56,6 +56,29 @@ try {
       await kontext.close();
     }
   }
+  // Mitarbeiter (Melih 23.11.2026): Einstellungen erreichbar, nur persönliche Abschnitte
+  {
+    const { kontext, page } = await oeffneDashboard(browser, { basis: server.basis, theme: 'hell', szenario: 'voll', breite: 1280, hoehe: 900, rolle: 'employee' });
+    const konsole = konsoleBeobachten(page);
+    try {
+      await wechsle(page, 'settings'); await ruhe(page, 600);
+      const aktiv = await page.evaluate(() => document.getElementById('panel-settings')?.classList.contains('active') || getComputedStyle(document.getElementById('panel-settings')).display !== 'none');
+      if (!aktiv) befunde.push('Mitarbeiter: Einstellungen nicht erreichbar');
+      await page.locator('.einst-nav').waitFor({ state: 'attached', timeout: 8000 });
+      const bereiche = await page.locator('.einst-nav-eintrag').allTextContents();
+      for (const verboten of ['Rechnung', 'Abrechnung', 'DATEV-Export', 'System', 'Standorte']) if (bereiche.includes(verboten)) befunde.push(`Mitarbeiter sieht Bereich „${verboten}“`);
+      await page.locator('.einst-suche').fill('a');
+      await ruhe(page, 200);
+      for (const id of ['settingsProfileSection', 'settingsBillingSection', 'settingsBrandingSection', 'settingsDsgvoSection']) if (await sichtbar(page, '#' + id)) befunde.push(`Mitarbeiter sieht ${id}`);
+      await page.locator('.einst-suche').fill('passwort');
+      await ruhe(page, 200);
+      const pw = await page.evaluate(() => [...document.querySelectorAll('.settings-section-title[data-i18n="set_password"]')].some((t) => t.closest('.settings-section').getClientRects().length > 0));
+      if (!pw) befunde.push('Mitarbeiter findet „Passwort“ nicht');
+    } finally {
+      sauber = konsoleAuswerten(konsole, 'einstellungen-nav Mitarbeiter') && sauber;
+      await kontext.close();
+    }
+  }
 } finally { await browser.close(); await server.stop?.(); server.close?.(); }
 
 console.log(JSON.stringify({ befunde }));

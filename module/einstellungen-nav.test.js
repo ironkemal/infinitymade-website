@@ -63,3 +63,14 @@ test('dashboard.html: jeder Abschnitt steht in einem Bereich, NACHGELADEN zeigt 
   const ohne = block.replace(/<div class="settings-group"[\s\S]*?(?=<div class="settings-group"|$)/g, '');
   assert.equal(/class="settings-section"/.test(ohne), false);
 });
+
+import { abschnittFuerRolle, MITARBEITER_ABSCHNITTE } from './einstellungen-nav.js';
+test('Mitarbeiter sehen nur persönliche Abschnitte, Inhaber alles (Melih 23.11.2026)', () => {
+  assert.equal(abschnittFuerRolle('i18n:set_password', false), true);
+  assert.equal(abschnittFuerRolle('i18n:set_integrations', false), true);
+  for (const praxis of ['settingsProfileSection', 'settingsBillingSection', 'settingsBrandingSection', 'settingsDsgvoSection', 'settingsAccountSection', 'settingsSystemSection', 'i18n:features_title', 'settingsKiSection']) {
+    assert.equal(abschnittFuerRolle(praxis, false), false, praxis);
+    assert.equal(abschnittFuerRolle(praxis, true), true, praxis);
+  }
+  assert.ok(MITARBEITER_ABSCHNITTE.size <= 5, 'Mitarbeiter-Liste bewusst klein halten');
+});

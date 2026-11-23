@@ -1,4 +1,4 @@
-import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261103mail1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261103mail1'; import { standorteFuerNutzer } from './module/standort-zuordnung.js?v=20261123sz1'; import { einstellungenKategorienAufbauen, einstellungenZeigeAbschnitt } from './module/einstellungen-nav.js?v=20261123en2';
+import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261103mail1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261103mail1'; import { standorteFuerNutzer } from './module/standort-zuordnung.js?v=20261123sz1'; import { einstellungenKategorienAufbauen, einstellungenZeigeAbschnitt } from './module/einstellungen-nav.js?v=20261123ma1';
 import { oeffneLeistungsRaum, leistungsRaumPayload } from './module/leistungs-raum.js?v=20261103raum';
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
 import { planungVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261121f11';
@@ -575,7 +575,7 @@ async function loadModulePermissions() {
 
 function hasModuleAccess(module) {
   // Owner her zaman tüm modüllere erişebilir (fallback)
-  if (currentProfile?.role === 'owner') return true;
+  if (currentProfile?.role === 'owner' || module === 'settings') return true; // settings = persönlicher Bereich für alle (Melih 23.11.2026); Praxis-Abschnitte blendet module/einstellungen-nav.js für Mitarbeiter aus
   if (!modulePermissions) return false;
   return modulePermissions[module] === true;
 }

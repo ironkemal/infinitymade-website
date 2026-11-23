@@ -107,6 +107,21 @@ export const NACHGELADEN = {
   settingsFormulareSection: 'dokumente',
   settingsMailversandSection: 'dokumente',
 };
+/**
+ * Mitarbeiter sehen nur persönliche Abschnitte (Melih 23.11.2026: „Mitarbeiter in die Einstellungen
+ * einbeziehen“). Alles andere sind Praxisdaten des Inhabers (Profil, Bank, Branding, DSGVO, Paket …),
+ * deren Formulare keine eigene Rollenprüfung haben — hier zentral ausgeblendet. Schlüssel = Abschnitts-ID
+ * oder 'i18n:<data-i18n des Titels>' für Abschnitte ohne ID.
+ */
+export const MITARBEITER_ABSCHNITTE = new Set(['i18n:set_password', 'i18n:set_integrations', 'settingsQuellenSection']);
+
+/** Reine Hilfe: darf diese Rolle den Abschnitt sehen? */
+export function abschnittFuerRolle(schluessel, istOwner) {
+  return !!istOwner || MITARBEITER_ABSCHNITTE.has(schluessel);
+}
+
+const abschnittSchluessel = (sec) => sec.id || ('i18n:' + (sec.querySelector('.settings-section-title')?.getAttribute('data-i18n') || ''));
+
 const HASH = '#settings/'; // Panel-Routing (panel-verlauf.js) nutzt den Teil vor „/“
 const SPEICHER = 'praxura.einstellungen.bereich';
 
@@ -134,7 +149,7 @@ export function bereichAusHash(h) {
 
 let kat = null; // Zustand des Kategorie-Modus
 
-const modulSichtbar = (el) => !!el && !el.hidden && el.style.display !== 'none';
+const modulSichtbar = (el) => !!el && !el.hidden && el.style.display !== 'none' && !el.hasAttribute('data-einst-rolle-aus');
 
 /**
  * Kategorie-Modus aufbauen bzw. aktualisieren. Bei jedem Öffnen der Einstellungen aufrufen.
@@ -172,7 +187,7 @@ export function einstellungenKategorienAufbauen(o = {}) {
     inhalt.before(layout); layout.append(nav, inhalt); inhalt.before(leer);
     inhalt.classList.add('einst-filter-aktiv');
     let gemerkt = null; try { gemerkt = globalThis.localStorage?.getItem(SPEICHER) || null; } catch { /* privater Modus */ }
-    kat = { doc, inhalt, liste, auswahl, suche, leer, aktiv: bereichAusHash(globalThis.location?.hash) || gemerkt, signatur: '', geplant: false };
+    kat = { istOwner: o.istOwner || (() => true), doc, inhalt, liste, auswahl, suche, leer, aktiv: bereichAusHash(globalThis.location?.hash) || gemerkt, signatur: '', geplant: false };
     liste.addEventListener('click', (e) => { const b = e.target.closest('[data-bereich]'); if (b) zeigeBereich(b.dataset.bereich, { fokus: true }); });
     auswahl.addEventListener('change', () => zeigeBereich(auswahl.value));
     suche.addEventListener('input', () => { kat.signatur = ''; anwenden(); });
@@ -199,6 +214,8 @@ function anwenden() {
   if (!kat) return;
   nachgeladeneEinordnen();
   const q = kat.suche.value;
+  const owner = !!kat.istOwner();
+  for (const s of kat.inhalt.querySelectorAll('.settings-section')) s.toggleAttribute('data-einst-rolle-aus', !abschnittFuerRolle(abschnittSchluessel(s), owner));
   const gruppen = [...kat.inhalt.querySelectorAll('.settings-group[data-einst]')];
   const zeilen = gruppen.map((g) => {
     const secs = [...g.querySelectorAll(':scope > .settings-section')];

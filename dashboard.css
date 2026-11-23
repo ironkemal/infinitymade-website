@@ -4374,6 +4374,7 @@ textarea {
 .einst-suche { width: 100%; margin-bottom: 8px; min-height: 40px; font-size: 14px; } /* 16 px schnitt den Platzhalter in 210 px ab */
 .einst-leer { margin: 0 0 12px; }
 .einst-filter-aktiv .settings-section[data-einst-aus],
+.einst-filter-aktiv .settings-section[data-einst-rolle-aus],
 .einst-filter-aktiv .settings-group[data-einst-leer],
 .einst-filter-aktiv .settings-group:not([data-einst-suche]) > .settings-group-label { display: none !important; }
 @media (max-width: 768px) {
