@@ -25,6 +25,7 @@ import {
   fristenAuswerten,
   therapieberichteAufbereiten,
   rezeptPruefbedarfAufbereiten,
+  umsatzRetterAufbereiten,
   anfragenAufbereiten,
   wartelisteAufbereiten,
   aufgabenAufbereiten,
@@ -34,8 +35,9 @@ import {
   abwesenheitKachelAuswerten,
   nichtErscheinerAufbereiten,
   suchePasst,
-} from './ueberblick-listen.js?v=20261123p3';
-import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_VOLL } from './verordnung-fristen-laden.js?v=20261121f01';
+} from './ueberblick-listen.js?v=20261123oa';
+import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_VOLL } from './verordnung-fristen-laden.js?v=20261123oa1';
+import { oeffneTagesplanDruckDialog } from './tagesplan-druck.js?v=20261123a';
 import { alsBerlinDatum, berlinTagesgrenzen } from './berlin-datum.js';
 import { fmtEur } from './geld.js?v=20260909';
 import { on } from './signal.js?v=20260813';
@@ -55,7 +57,7 @@ const HAKEN_SVG = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" s
  *   hatTeam: boolean,
  *   scopeModus: 'praxis'|'meine',
  *   suche: string,
- *   fristTab: 'alle'|'ueberfaellig'|'bald'|'geplant'|'abrechnung'|'berichte'|'pruefbedarf',
+ *   fristTab: 'alle'|'ueberfaellig'|'bald'|'geplant'|'abrechnung'|'berichte'|'pruefbedarf'|'umsatz',
  *   vorgangTab: 'anfragen'|'warteliste'|'aufgaben'|'rechnungen'|null,
  *   vorgangManuell: boolean,
  *   abwesenheitTage: 14|30,
@@ -65,6 +67,7 @@ const HAKEN_SVG = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" s
  *   fristen: any[],
  *   berichte: any[],
  *   pruefbedarf: any[],
+ *   umsatzRetter: any[],
  *   fristenFehler: boolean,
  *   anfragen: any[],
  *   anfragenFehler: boolean,
@@ -101,6 +104,7 @@ const state = {
   fristen: [],
   berichte: [],
   pruefbedarf: [],
+  umsatzRetter: [],
   fristenFehler: false,
   anfragen: [],
   anfragenFehler: false,
@@ -381,7 +385,22 @@ function renderWeekStrip() {
   const calLink = document.getElementById('ublWeekCalLink');
   if (!bodyEl) return;
 
-  if (calLink) calLink.hidden = !inLeiste('calendar');
+  const darfKalender = inLeiste('calendar');
+  if (calLink) {
+    calLink.hidden = !darfKalender;
+    let druckBtn = document.getElementById('ublTagesplanDruckBtn');
+    if (!druckBtn && calLink.parentElement) {
+      druckBtn = document.createElement('button');
+      druckBtn.id = 'ublTagesplanDruckBtn';
+      druckBtn.type = 'button';
+      druckBtn.className = calLink.className || 'ubl-card-link';
+      druckBtn.setAttribute('data-ubl-tagesplan-druck', '1');
+      druckBtn.style.marginRight = '10px';
+      druckBtn.textContent = 'Tagesplan drucken';
+      calLink.parentElement.insertBefore(druckBtn, calLink);
+    }
+    if (druckBtn) druckBtn.hidden = !darfKalender;
+  }
 
   if (state.laedt && !state.geladenUm) {
     bodyEl.innerHTML = skelettHtml(2);
@@ -441,6 +460,9 @@ function renderDeadlines() {
   const pruefSuche = state.pruefbedarf.filter(p =>
     suchePasst(state.suche, [p.patientName, p.etikett, p.hinweis, p.kontextMeta, p.ausgestelltDe])
   );
+  const umsatzSuche = state.umsatzRetter.filter(u =>
+    suchePasst(state.suche, [u.patientName, u.etikett, u.hinweis, u.kontextMeta, u.letzterTagDe])
+  );
 
   const z = {
     alle: fristenSuche.length,
@@ -450,12 +472,14 @@ function renderDeadlines() {
     abrechnung: fristenSuche.filter(f => f.kategorie === 'abrechnung').length,
     berichte: berichteSuche.length,
     pruefbedarf: pruefSuche.length,
+    umsatz: umsatzSuche.length,
   };
   const hatAbsetzung = pruefSuche.some(p => p.art === 'absetzung');
+  const hatUnterbrechung = umsatzSuche.some(u => u.schwere === 'danger');
 
   if (countEl) {
     countEl.textContent = String(z.alle);
-    countEl.classList.toggle('is-danger', z.ueberfaellig > 0 || hatAbsetzung);
+    countEl.classList.toggle('is-danger', z.ueberfaellig > 0 || hatAbsetzung || hatUnterbrechung);
   }
 
   if (filterEl) {
@@ -467,6 +491,7 @@ function renderDeadlines() {
       { id: 'abrechnung', label: 'Abrechnung', n: z.abrechnung },
       { id: 'berichte', label: 'Berichte', n: z.berichte },
       { id: 'pruefbedarf', label: 'Prüfung', n: z.pruefbedarf, danger: hatAbsetzung },
+      { id: 'umsatz', label: 'Nachfassen', n: z.umsatz, danger: hatUnterbrechung },
     ];
     filterEl.innerHTML = tabs.map(t => `
       <button type="button"
@@ -494,6 +519,57 @@ function renderDeadlines() {
 
   const kannVerordnung = inLeiste('verordnungen');
   const esc = aktiverKontext?.escapeHtml || escStandard;
+
+  if (state.fristTab === 'umsatz') {
+    if (!umsatzSuche.length) {
+      listEl.innerHTML = leerHtml(
+        state.suche.trim()
+          ? 'Keine Nachfass-Hinweise passend zur Suche.'
+          : 'Alle laufenden Verordnungen haben Folgetermine und liegen im Plan.'
+      );
+      if (footEl) footEl.hidden = true;
+      return;
+    }
+    listEl.innerHTML = umsatzSuche.map(u => {
+      const dotHtml = u.schwere === 'danger'
+        ? '<span class="ubl-dot ubl-dot--danger" aria-hidden="true"></span>'
+        : u.schwere === 'warning'
+          ? '<span class="ubl-dot ubl-dot--warn" aria-hidden="true"></span>'
+          : '';
+      const nameHtml = u.patientId
+        ? `<button type="button" class="ubl-name-btn" data-ubl-patient="${esc(u.patientId)}">${esc(u.patientName)}</button>`
+        : `<span class="ubl-name-plain">${esc(u.patientName)}</span>`;
+      const aktionen = [
+        u.telefon ? `<a class="ubl-link" href="${esc(u.telefon.href)}">Anrufen</a>` : '',
+        u.patientId ? `<button type="button" class="ubl-link" data-ubl-patient="${esc(u.patientId)}">Akte</button>` : '',
+        kannVerordnung && u.rxId ? `<button type="button" class="ubl-link" data-ubl-rx="${esc(u.rxId)}" data-ubl-quelle="${esc(u.quelle)}">Rezept</button>` : '',
+      ].filter(Boolean).join('<span class="ubl-dot-sep" aria-hidden="true">·</span>');
+      return `
+        <div class="ubl-row">
+          <div class="ubl-row-main">
+            <div class="ubl-row-top">
+              ${dotHtml}
+              ${nameHtml}
+              <span class="ubl-tag${u.schwere === 'danger' ? ' ubl-tag--danger' : u.schwere === 'neutral' ? ' ubl-tag--accent' : ''}">${esc(u.etikett)}</span>
+            </div>
+            <div class="ubl-meta">${esc(u.kontextMeta)}</div>
+          </div>
+          <div class="ubl-row-right">
+            <div class="ubl-val-col">
+              <span class="ubl-val-primary${u.schwere === 'danger' ? ' is-danger' : ''}">${esc(u.hinweis)}</span>
+              <span class="ubl-val-sub">Letzter Termin: ${esc(u.letzterTagDe)}</span>
+            </div>
+            ${aktionen ? `<div class="ubl-links">${aktionen}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+    if (footEl) {
+      footEl.hidden = false;
+      footEl.innerHTML = `<span>${umsatzSuche.length} ${umsatzSuche.length === 1 ? 'Verordnung' : 'Verordnungen'} zum Nachfassen</span><span>14-Tage-Unterbrechung · fehlende Folgetermine · Folgerezepte</span>`;
+    }
+    return;
+  }
 
   if (state.fristTab === 'pruefbedarf') {
     if (!pruefSuche.length) {
@@ -1081,10 +1157,22 @@ function verdrahteEinmal() {
       return;
     }
 
+    const tagesplanDruckBtn = target.closest('[data-ubl-tagesplan-druck]');
+    if (tagesplanDruckBtn && aktiverKontext?.supabase && aktiverKontext?.getOwnerId) {
+      oeffneTagesplanDruckDialog({
+        supabase: aktiverKontext.supabase,
+        ownerId: aktiverKontext.getOwnerId(),
+        datumIso: state.heuteIso || alsBerlinDatum(new Date()),
+        aktuellerUserId: state.userId,
+        toast: aktiverKontext.showToast,
+      });
+      return;
+    }
+
     const filterBtn = target.closest('[data-ubl-frist-filter]');
     if (filterBtn) {
       const f = filterBtn.getAttribute('data-ubl-frist-filter');
-      if (f === 'alle' || f === 'ueberfaellig' || f === 'bald' || f === 'geplant' || f === 'abrechnung' || f === 'berichte' || f === 'pruefbedarf') {
+      if (f === 'alle' || f === 'ueberfaellig' || f === 'bald' || f === 'geplant' || f === 'abrechnung' || f === 'berichte' || f === 'pruefbedarf' || f === 'umsatz') {
         state.fristTab = f;
         renderDeadlines();
       }
@@ -1176,6 +1264,34 @@ function verdrahteEinmal() {
       if (p) aktiverKontext?.wechslePanel?.(p);
     }
   });
+}
+
+async function ladeVerknuepfteVerordnungsdaten(supabase, ownerId, rxIds) {
+  const termine = [];
+  const sitzungen = [];
+  const CHUNK = 100;
+  for (let i = 0; i < rxIds.length; i += CHUNK) {
+    const teil = rxIds.slice(i, i + CHUNK);
+    const [bRes, sRes] = await Promise.allSettled([
+      supabase
+        .from('bookings')
+        .select('verordnung_id, start_time, status, group_parent_id')
+        .eq('owner_id', ownerId)
+        .in('verordnung_id', teil)
+        .neq('status', 'cancelled')
+        .is('group_parent_id', null)
+        .limit(1000),
+      supabase
+        .from('prescription_sessions')
+        .select('prescription_id, done_at, status')
+        .in('prescription_id', teil)
+        .eq('status', 'done')
+        .limit(1000),
+    ]);
+    if (bRes.status === 'fulfilled' && Array.isArray(bRes.value?.data)) termine.push(...bRes.value.data);
+    if (sRes.status === 'fulfilled' && Array.isArray(sRes.value?.data)) sitzungen.push(...sRes.value.data);
+  }
+  return { termine, sitzungen };
 }
 
 async function ladeAbwesenheitenUndTeam(supabase, ownerId, heuteIso) {
@@ -1371,10 +1487,27 @@ export async function ladeUeberblickAnsicht(ctx) {
     state.berichte = therapieberichteAufbereiten(rows);
     state.pruefbedarf = rezeptPruefbedarfAufbereiten(rows);
     state.fristenFehler = false;
+    // Umsatz-Retter: verknüpfte Termine & erledigte Sitzungen für laufende Verordnungen
+    // in sicheren 100-UUID-Blöcken nachladen (kein 414, blockiert übrige Ansicht nicht).
+    const gestarteteIds = rows
+      .filter(r => r?.id && r.status !== 'parsed' && r.behandlungsbeginn)
+      .map(r => r.id);
+    if (gestarteteIds.length) {
+      const { termine: verknTermine, sitzungen: verknSitzungen } = await ladeVerknuepfteVerordnungsdaten(
+        supabase,
+        ownerId,
+        gestarteteIds
+      );
+      if (meineNr !== laufNr) return;
+      state.umsatzRetter = umsatzRetterAufbereiten(rows, verknTermine, verknSitzungen, heuteIso);
+    } else {
+      state.umsatzRetter = [];
+    }
   } else {
     state.fristen = [];
     state.berichte = [];
     state.pruefbedarf = [];
+    state.umsatzRetter = [];
     state.fristenFehler = true;
   }
 

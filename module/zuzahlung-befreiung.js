@@ -44,9 +44,96 @@
  * das Nullsetzen des Betrags für die Rezepte, die der Trigger tatsächlich als
  * befreit markiert hat.
  */
-import { alsISODatum } from './datum.js?v=20261001a';
+import { alsISODatum, datumDe } from './datum.js?v=20261001a';
 
 const HEUTE = () => alsISODatum(new Date());
+
+/**
+ * Prüft Jahreswechsel-Hinweise für Zuzahlungsbefreiungen (rein, unit-testbar):
+ *
+ * 1. Neues Jahr ohne Eintrag, aber Vorjahr war befreit →
+ *    „War 2026 zuzahlungsbefreit (bis 31.12.2026) — neuen Befreiungsausweis für 2027 vorlegen lassen.“
+ * 2. Dezember mit laufender Befreiung, aber Folgejahr noch nicht hinterlegt →
+ *    „Befreiung 2026 läuft am 31.12.2026 aus — neuen Ausweis für 2027 bereits jetzt anfordern.“
+ *
+ * @param {Array<{ jahr?: number, befreit_ab?: string|null, befreit_bis?: string|null, nachweis_art?: string|null }> | null | undefined} zeilen
+ * @param {string} [heuteIso]  'YYYY-MM-DD'
+ * @returns {{
+ *   vorjahr: number,
+ *   zielJahr: number,
+ *   vorjahrBis: string,
+ *   nachweisArt: string,
+ *   vorschlagAb: string,
+ *   vorschlagBis: string,
+ *   istJahresende: boolean,
+ *   meldung: string,
+ * } | null}
+ */
+export function vorjahresBefreiungHinweis(zeilen, heuteIso = HEUTE()) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(heuteIso || '').trim());
+  if (!m) return null;
+  const aktuellesJahr = Number(m[1]);
+  const monat = Number(m[2]);
+  const liste = Array.isArray(zeilen) ? zeilen.filter(Boolean) : [];
+  if (!liste.length) return null;
+
+  const nachJahr = (j) => liste.find(z => Number(z.jahr) === j) || null;
+  const aktRow = nachJahr(aktuellesJahr);
+  const vorRow = nachJahr(aktuellesJahr - 1);
+  const folgeRow = nachJahr(aktuellesJahr + 1);
+
+  if (!aktRow && vorRow) {
+    const vorjahr = aktuellesJahr - 1;
+    const vorjahrBis = vorRow.befreit_bis || `${vorjahr}-12-31`;
+    return {
+      vorjahr,
+      zielJahr: aktuellesJahr,
+      vorjahrBis,
+      nachweisArt: vorRow.nachweis_art || 'bescheinigung',
+      vorschlagAb: `${aktuellesJahr}-01-01`,
+      vorschlagBis: `${aktuellesJahr}-12-31`,
+      istJahresende: false,
+      meldung: `War ${vorjahr} zuzahlungsbefreit (bis ${datumDe(vorjahrBis, vorjahrBis)}) — neuen Befreiungsausweis für ${aktuellesJahr} vorlegen lassen.`,
+    };
+  }
+
+  if (aktRow && monat === 12 && !folgeRow) {
+    const zielJahr = aktuellesJahr + 1;
+    const vorjahrBis = aktRow.befreit_bis || `${aktuellesJahr}-12-31`;
+    return {
+      vorjahr: aktuellesJahr,
+      zielJahr,
+      vorjahrBis,
+      nachweisArt: aktRow.nachweis_art || 'bescheinigung',
+      vorschlagAb: `${zielJahr}-01-01`,
+      vorschlagBis: `${zielJahr}-12-31`,
+      istJahresende: true,
+      meldung: `Befreiung ${aktuellesJahr} läuft am ${datumDe(vorjahrBis, vorjahrBis)} aus — neuen Ausweis für ${zielJahr} bereits jetzt anfordern.`,
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Lädt Vorjahr, aktuelles Jahr und Folgejahr eines Patienten in einer Abfrage
+ * und liefert ggf. den Jahreswechsel-Hinweis.
+ *
+ * @param {any} supabase
+ * @param {string} patientId
+ * @param {string} [heuteIso]
+ */
+export async function ladeVorjahresBefreiungHinweis(supabase, patientId, heuteIso = HEUTE()) {
+  if (!supabase || !patientId) return null;
+  const aktuellesJahr = Number(String(heuteIso).slice(0, 4)) || new Date().getFullYear();
+  const { data, error } = await supabase
+    .from('zuzahlung_befreiung')
+    .select('id, jahr, befreit_ab, befreit_bis, nachweis_art, notiz, beleg_url')
+    .eq('patient_id', patientId)
+    .in('jahr', [aktuellesJahr - 1, aktuellesJahr, aktuellesJahr + 1]);
+  if (error || !Array.isArray(data)) return null;
+  return vorjahresBefreiungHinweis(data, heuteIso);
+}
 
 /**
  * Öffnet das Formular. Auflösung: true, wenn gespeichert oder gelöscht wurde.
@@ -73,23 +160,29 @@ export async function oeffneBefreiungsFormular({
 
   // Vorhandene Zeile IMMER kennen, bevor das Formular aufgeht. Sonst legt der
   // zweite Einstieg eine Befreiung an, die es längst gibt, und überschreibt
-  // dabei „ab September" mit „ab 01.01.".
+  // dabei „ab September" mit „ab 01.01.". Gleichzeitig Vorjahr + Folgejahr
+  // mitladen, damit der Jahreswechsel-Hinweis (Dez/Jan) sofort erscheint.
+  const heuteIso = HEUTE();
+  const aktuellesJahr = Number(heuteIso.slice(0, 4)) || new Date().getFullYear();
+  let alleZeilen = [];
+  const { data: zeilenDaten } = await supabase
+    .from('zuzahlung_befreiung')
+    .select('id, jahr, befreit_ab, befreit_bis, nachweis_art, notiz, beleg_url')
+    .eq('patient_id', patientId)
+    .in('jahr', [aktuellesJahr - 1, aktuellesJahr, aktuellesJahr + 1]);
+  if (Array.isArray(zeilenDaten)) alleZeilen = zeilenDaten;
+
   let row = existing;
   if (row === undefined) {
-    const { data } = await supabase
-      .from('zuzahlung_befreiung')
-      .select('id, jahr, befreit_ab, befreit_bis, nachweis_art, notiz, beleg_url')
-      .eq('patient_id', patientId)
-      .eq('jahr', new Date().getFullYear())
-      .maybeSingle();
-    row = data || null;
+    row = alleZeilen.find(z => Number(z.jahr) === aktuellesJahr) || null;
   }
+  const wechselHinweis = vorjahresBefreiungHinweis(alleZeilen, heuteIso);
 
   return new Promise(resolve => {
     document.getElementById('_zbModal')?.remove();
 
-    const jahr = row?.jahr || new Date().getFullYear();
-    const ab = row?.befreit_ab || HEUTE();
+    const jahr = row?.jahr || aktuellesJahr;
+    const ab = row?.befreit_ab || heuteIso;
     const bis = row?.befreit_bis || `${jahr}-12-31`;
     const art = row?.nachweis_art || 'bescheinigung';
     const notiz = row?.notiz || '';
@@ -100,12 +193,20 @@ export async function oeffneBefreiungsFormular({
 
     const feld = 'width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg-input,var(--bg-card));color:var(--text-main);font-size:13px;font-family:inherit;';
     const label = 'margin-bottom:4px;color:var(--text-muted);font-size:12px;';
+    const wechselBannerHtml = wechselHinweis ? `
+      <div id="_zbVorjahrHinweis" style="margin-bottom:14px;padding:10px 12px;border:1px solid var(--warning,#d97706);border-radius:8px;background:color-mix(in srgb,var(--warning,#d97706) 10%,transparent);font-size:12px;line-height:1.45;color:var(--text-main);">
+        <div>${esc(wechselHinweis.meldung)}</div>
+        <button id="_zbUebernehmen" type="button" style="margin-top:8px;padding:5px 10px;border:1px solid var(--warning,#d97706);border-radius:6px;background:var(--bg-card-solid);color:var(--text-main);cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;">
+          Für ${wechselHinweis.zielJahr} vorbefüllen (01.01.–31.12.${wechselHinweis.zielJahr})
+        </button>
+      </div>` : '';
 
     overlay.innerHTML = `
       <div role="dialog" aria-modal="true" aria-labelledby="_zbTitle"
         style="background:var(--bg-card-solid);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:420px;width:100%;color:var(--text-main);font-family:inherit;">
         <div id="_zbTitle" style="font-size:15px;font-weight:700;margin-bottom:2px;">Zuzahlungsbefreiung</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">${esc(patientName)}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">${esc(patientName)}</div>
+        ${wechselBannerHtml}
         <div style="display:grid;gap:12px;">
           <label style="display:block;">
             <div style="${label}">Befreit ab</div>
@@ -158,6 +259,22 @@ export async function oeffneBefreiungsFormular({
 
     overlay.querySelector('#_zbCancel').onclick = () => schliessen(false);
     overlay.onclick = e => { if (e.target === overlay) schliessen(false); };
+
+    const uebernehmenBtn = overlay.querySelector('#_zbUebernehmen');
+    if (uebernehmenBtn && wechselHinweis) {
+      uebernehmenBtn.onclick = () => {
+        overlay.querySelector('#_zbAb').value = wechselHinweis.vorschlagAb;
+        overlay.querySelector('#_zbBis').value = wechselHinweis.vorschlagBis;
+        overlay.querySelector('#_zbArt').value = wechselHinweis.nachweisArt;
+        // Wenn aus Dezember heraus für das Folgejahr vorbefüllt wird, nicht versehentlich
+        // die aktive Zeile des laufenden Jahres löschen lassen.
+        const del = overlay.querySelector('#_zbDel');
+        if (del && wechselHinweis.istJahresende) del.style.display = 'none';
+        uebernehmenBtn.textContent = `Für ${wechselHinweis.zielJahr} vorbefüllt — jetzt Nachweis prüfen & speichern`;
+        uebernehmenBtn.disabled = true;
+        overlay.querySelector('#_zbFile')?.focus();
+      };
+    }
 
     const delBtn = overlay.querySelector('#_zbDel');
     if (delBtn) {

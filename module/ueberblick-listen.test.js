@@ -11,6 +11,7 @@ import {
   rezKpiAuswerten,
   therapieberichteAufbereiten,
   rezeptPruefbedarfAufbereiten,
+  umsatzRetterAufbereiten,
   anfragenAufbereiten,
   wartelisteAufbereiten,
   aufgabenAufbereiten,
@@ -307,4 +308,69 @@ test('N-2 & N-3: Wochenleiste zählt Gruppentermin-Kinder nicht doppelt, Singula
   assert.match(ansicht, /t\.hausbesuche === 1 \? 'Hausbesuch' : 'Hausbesuche'/, 'Singular/Plural für Hausbesuche');
   assert.match(ansicht, /aria-label="\$\{escStandard\(titel\)\}"/, 'Explizites aria-label an den Wochen-Buttons');
   assert.doesNotMatch(ansicht, /const wochePromise = scope\(/, 'wochePromise lädt owner-weit ohne bizScope wie Dashboard/Kalender');
+});
+
+test('umsatzRetterAufbereiten: erkennt 14-Tage-Unterbrechung (nicht Podologie), fehlende Folgetermine und Folgerezepte', () => {
+  const heute = '2026-11-23';
+  const rezepte = [
+    // 1) Physio: letzter Termin vor 15 Tagen, noch offen, kein Folgetermin -> danger Unterbrechung >14 T.
+    {
+      id: 'rx-u15', patient_id: 'p1', behandlungsbeginn: '2026-11-01', status: 'in_therapy',
+      therapie_bereich: 'physio', anzahl_einheiten: 6, heilmittel: 'KG', diagnosegruppe: 'WS2',
+      leads: { id: 'p1', first_name: 'Anna', last_name: 'Alt', phone: '030111' },
+    },
+    // 2) Physio: letzter Termin vor 11 Tagen, kein Folgetermin -> warning Unterbrechung droht (noch 3 T.)
+    {
+      id: 'rx-u11', patient_id: 'p2', behandlungsbeginn: '2026-11-01', status: 'in_therapy',
+      therapie_bereich: 'physio', anzahl_einheiten: 10, heilmittel: 'MT', diagnosegruppe: 'EX2',
+      leads: { id: 'p2', first_name: 'Bernd', last_name: 'Bald' },
+    },
+    // 3) Podologie: letzter Termin vor 20 Tagen, noch offen, kein Folgetermin -> KEINE 14-Tage-Unterbrechung, sondern Ohne Folgetermin!
+    {
+      id: 'rx-podo', patient_id: 'p3', behandlungsbeginn: '2026-11-03', status: 'in_therapy',
+      therapie_bereich: 'podo', anzahl_einheiten: 6, heilmittel: 'Podologische Behandlung',
+      leads: { id: 'p3', first_name: 'Clara', last_name: 'Podo' },
+    },
+    // 4) Physio: 5/6 absolviert + letzter Termin geplant -> Folgerezept anfordern (neutral)
+    {
+      id: 'rx-folge', patient_id: 'p4', behandlungsbeginn: '2026-10-20', status: 'in_therapy',
+      therapie_bereich: 'physio', anzahl_einheiten: 6, heilmittel: 'MLD',
+      leads: { id: 'p4', first_name: 'Dora', last_name: 'Folge' },
+    },
+    // 5) Noch nicht gestartet / OCR-Entwurf / geschlossen -> ignorieren
+    {
+      id: 'rx-neu', patient_id: 'p5', behandlungsbeginn: null, status: 'confirmed',
+      therapie_bereich: 'physio', anzahl_einheiten: 6, leads: { id: 'p5', first_name: 'Neu', last_name: 'X' },
+    },
+    {
+      id: 'rx-zu', patient_id: 'p6', behandlungsbeginn: '2026-10-01', status: 'completed',
+      therapie_bereich: 'physio', anzahl_einheiten: 6, leads: { id: 'p6', first_name: 'Zu', last_name: 'X' },
+    },
+  ];
+
+  const termine = [
+    { verordnung_id: 'rx-u15', start_time: '2026-11-08T09:00:00+01:00', status: 'completed' },
+    { verordnung_id: 'rx-u11', start_time: '2026-11-12T09:00:00+01:00', status: 'completed' },
+    { verordnung_id: 'rx-podo', start_time: '2026-11-03T09:00:00+01:00', status: 'completed' },
+    { verordnung_id: 'rx-folge', start_time: '2026-11-26T09:00:00+01:00', status: 'confirmed' },
+  ];
+  const sitzungen = [
+    { prescription_id: 'rx-folge', status: 'done', done_at: '2026-11-18T10:00:00+01:00' },
+    { prescription_id: 'rx-folge', status: 'done', done_at: '2026-11-15T10:00:00+01:00' },
+    { prescription_id: 'rx-folge', status: 'done', done_at: '2026-11-12T10:00:00+01:00' },
+    { prescription_id: 'rx-folge', status: 'done', done_at: '2026-11-08T10:00:00+01:00' },
+    { prescription_id: 'rx-folge', status: 'done', done_at: '2026-11-04T10:00:00+01:00' },
+  ];
+
+  const erg = umsatzRetterAufbereiten(rezepte, termine, sitzungen, heute);
+  assert.deepEqual(erg.map(e => [e.rxId, e.art, e.schwere]), [
+    ['rx-u15', 'unterbrechung', 'danger'],
+    ['rx-u11', 'unterbrechung', 'warning'],
+    ['rx-podo', 'ohne_folgetermin', 'warning'],
+    ['rx-folge', 'folgeverordnung', 'neutral'],
+  ]);
+  assert.match(erg[0].hinweis, /Seit 15 T\./);
+  assert.match(erg[1].hinweis, /Noch 3 Tage/);
+  assert.match(erg[2].hinweis, /Noch 5 von 6 Einheiten offen/);
+  assert.match(erg[3].hinweis, /5\/6 — Folgerezept beim Arzt anfordern/);
 });

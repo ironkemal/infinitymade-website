@@ -745,3 +745,162 @@ export function nichtErscheinerAufbereiten(bookings, heuteIso) {
     };
   });
 }
+
+const UMSATZ_SCHWERE_RANG = { danger: 0, warning: 1, neutral: 2 };
+const UMSATZ_ART_RANG = { unterbrechung: 0, ohne_folgetermin: 1, folgeverordnung: 2 };
+
+/**
+ * Umsatz-Retter & Versorgungssicherheit für laufende Verordnungen (Praxisinhaber-Prüfung, 23.11.2026):
+ *  1. Drohende / überschrittene 14-Tage-Unterbrechung (§ 16 Abs. 4 HeilM-RL — NICHT für Podologie,
+ *     dort gelten 4–6-Wochen-Intervalle laut FAK Nr. 11).
+ *  2. Laufende Verordnung mit noch offenen Einheiten, aber 0 geplanten Zukunftsterminen („eingeschlafenes Rezept“).
+ *  3. Folgeverordnung rechtzeitig anfordern (vorletzte / letzte Einheit erreicht).
+ *
+ * Reine Funktion ohne DOM-/Supabase-Abhängigkeit, vollständig unit-testbar.
+ *
+ * @param {Array<Record<string, any>>} rezepte
+ * @param {Array<Record<string, any>>} termine     verknüpfte `bookings` (mit `verordnung_id`, `start_time`, `status`)
+ * @param {Array<Record<string, any>>} sitzungen   erledigte `prescription_sessions` (`prescription_id`, `done_at`, `status`)
+ * @param {string} heuteIso                        'YYYY-MM-DD' (Europe/Berlin)
+ */
+export function umsatzRetterAufbereiten(rezepte, termine, sitzungen, heuteIso) {
+  /** @type {Map<string, Array<Record<string, any>>>} */
+  const termineJeRx = new Map();
+  for (const b of termine || []) {
+    if (!b?.verordnung_id || !b?.start_time) continue;
+    if (b.status === 'cancelled' || b.group_parent_id) continue;
+    const arr = termineJeRx.get(b.verordnung_id) || [];
+    arr.push(b);
+    termineJeRx.set(b.verordnung_id, arr);
+  }
+
+  /** @type {Map<string, Array<Record<string, any>>>} */
+  const sitzungenJeRx = new Map();
+  for (const s of sitzungen || []) {
+    if (!s?.prescription_id || s.status !== 'done') continue;
+    const arr = sitzungenJeRx.get(s.prescription_id) || [];
+    arr.push(s);
+    sitzungenJeRx.set(s.prescription_id, arr);
+  }
+
+  const out = [];
+  for (const rx of rezepte || []) {
+    if (!rx || !rx.id || rxGeschlossen(rx) || rx.status === 'parsed') continue;
+
+    const rxTermine = termineJeRx.get(rx.id) || [];
+    const rxSitzungen = sitzungenJeRx.get(rx.id) || [];
+    const gestartetDatum = rx.behandlungsbeginn ? String(rx.behandlungsbeginn).slice(0, 10) : null;
+
+    let vergangeneTermine = 0;
+    let letzterTag = gestartetDatum;
+    let naechsterTag = null;
+
+    for (const b of rxTermine) {
+      const tag = alsBerlinDatum(b.start_time);
+      if (!tag) continue;
+      if (b.status === 'completed' || (tag < heuteIso && b.status !== 'no_show')) {
+        vergangeneTermine += 1;
+        if (!letzterTag || tag > letzterTag) letzterTag = tag;
+      } else if (tag >= heuteIso && b.status !== 'no_show') {
+        if (!naechsterTag || tag < naechsterTag) naechsterTag = tag;
+      }
+    }
+
+    for (const s of rxSitzungen) {
+      const tag = s.done_at ? alsBerlinDatum(s.done_at) : null;
+      if (tag && (!letzterTag || tag > letzterTag)) letzterTag = tag;
+    }
+
+    const absolviert = Math.max(rxSitzungen.length, vergangeneTermine);
+    const istGestartet = !!gestartetDatum || absolviert > 0;
+    if (!istGestartet) continue;
+
+    const sollEinheiten = Number(rx.anzahl_einheiten) || Number(rx.vorrangig_einheiten) || 0;
+    const offeneEinheiten = sollEinheiten > 0 ? Math.max(0, sollEinheiten - absolviert) : null;
+    const istPodo = rx.therapie_bereich === 'podo';
+
+    let treffer = null;
+
+    // 1) 14-Tage-Unterbrechung (§ 16 Abs. 4 HeilM-RL) — bewusst NICHT für Podologie
+    if (!istPodo && (offeneEinheiten === null || offeneEinheiten > 0) && letzterTag) {
+      const tageSeit = tageDifferenzIso(letzterTag, heuteIso);
+      if (!naechsterTag && tageSeit !== null && tageSeit >= 14) {
+        treffer = {
+          art: 'unterbrechung',
+          schwere: 'danger',
+          etikett: 'Unterbrechung >14 T.',
+          hinweis: `Seit ${tageSeit} T. ohne Termin — Begründung prüfen`,
+        };
+      } else if (!naechsterTag && tageSeit !== null && tageSeit >= 9) {
+        const rest = Math.max(1, 14 - tageSeit);
+        treffer = {
+          art: 'unterbrechung',
+          schwere: 'warning',
+          etikett: 'Unterbrechung droht',
+          hinweis: rest === 1 ? 'Noch 1 Tag bis 14-Tage-Grenze' : `Noch ${rest} Tage bis 14-Tage-Grenze`,
+        };
+      } else if (naechsterTag) {
+        const abstand = tageDifferenzIso(letzterTag, naechsterTag);
+        if (abstand !== null && abstand > 14) {
+          treffer = {
+            art: 'unterbrechung',
+            schwere: 'warning',
+            etikett: 'Lücke >14 T.',
+            hinweis: `${abstand} T. zwischen Terminen — Begründung nötig`,
+          };
+        }
+      }
+    }
+
+    // 2) Laufendes Rezept mit offenen Einheiten, aber 0 geplanten Folgeterminen
+    if (!treffer && !naechsterTag && offeneEinheiten !== null && offeneEinheiten > 0) {
+      treffer = {
+        art: 'ohne_folgetermin',
+        schwere: 'warning',
+        etikett: 'Ohne Folgetermin',
+        hinweis: `Noch ${offeneEinheiten} von ${sollEinheiten} Einheiten offen`,
+      };
+    }
+
+    // 3) Vorletzte / letzte Sitzung erreicht → rechtzeitig Folgeverordnung anfordern
+    if (!treffer && sollEinheiten >= 2 && offeneEinheiten !== null && offeneEinheiten <= 1) {
+      treffer = {
+        art: 'folgeverordnung',
+        schwere: 'neutral',
+        etikett: offeneEinheiten === 0 ? 'Rezept voll' : 'Folgerezept',
+        hinweis: offeneEinheiten === 0
+          ? `${absolviert}/${sollEinheiten} erledigt — Abschluss / Folgerezept`
+          : `${absolviert}/${sollEinheiten} — Folgerezept beim Arzt anfordern`,
+      };
+    }
+
+    if (!treffer) continue;
+
+    const lead = rx.leads || null;
+    const patientName = [lead?.first_name, lead?.last_name].filter(Boolean).join(' ').trim() || 'Ohne Namen';
+    const kontextMeta = [rx.heilmittel, rx.diagnosegruppe].map(s => String(s || '').trim()).filter(Boolean).join(' · ');
+
+    out.push({
+      rxId: rx.id,
+      patientId: rx.patient_id || lead?.id || null,
+      quelle: istPodo ? 'podologie' : 'physio',
+      patientName,
+      telefon: telefonLink(lead?.handy || lead?.phone),
+      kontextMeta: kontextMeta || 'Verordnung',
+      letzterTagDe: letzterTag ? datumDe(letzterTag, '—') : '—',
+      naechsterTagDe: naechsterTag ? datumDe(naechsterTag, '—') : null,
+      absolviert,
+      sollEinheiten,
+      offeneEinheiten,
+      ...treffer,
+    });
+  }
+
+  return out.sort((a, b) => {
+    const sDiff = UMSATZ_SCHWERE_RANG[a.schwere] - UMSATZ_SCHWERE_RANG[b.schwere];
+    if (sDiff !== 0) return sDiff;
+    const aDiff = UMSATZ_ART_RANG[a.art] - UMSATZ_ART_RANG[b.art];
+    if (aDiff !== 0) return aDiff;
+    return a.patientName.localeCompare(b.patientName, 'de-DE');
+  });
+}

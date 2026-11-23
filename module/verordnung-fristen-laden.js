@@ -12,7 +12,7 @@
  */
 
 export const RX_FRISTEN_SELECT_VOLL =
-  'id,patient_id,ausstellungsdatum,behandlungsbeginn,status,abrechnung_status,is_dringend,heilmittel,diagnosegruppe,therapie_bereich,bericht_angefordert,bericht_status,leads!patient_id(id,first_name,last_name,phone,handy)';
+  'id,patient_id,ausstellungsdatum,behandlungsbeginn,status,abrechnung_status,is_dringend,heilmittel,diagnosegruppe,therapie_bereich,bericht_angefordert,bericht_status,anzahl_einheiten,frequenz,vorrangig_einheiten,ergaenzend_einheiten,leads!patient_id(id,first_name,last_name,phone,handy)';
 
 export const RX_FRISTEN_SELECT_KPI =
   'id,patient_id,ausstellungsdatum,behandlungsbeginn,status,abrechnung_status,is_dringend,heilmittel,diagnosegruppe,therapie_bereich';
