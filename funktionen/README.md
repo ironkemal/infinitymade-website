@@ -1412,3 +1412,12 @@ aber nicht als generierte App-Funktionen ausgewiesen. Keine manuelle Indexergän
 - `api-backend/ai/tasks/series-scheduler.js` `berichtOhneIds` (:40): KI-Serienbericht zeigte rohe Mitarbeiter-UUID (Live-Test 23.11.); Namen aus `payload.employees`.
 - `oeffneKalenderTag` (dashboard.js:13942, :16780): Objekt-Callback, daher nicht als eigener Kartennode; jetzt async + `await switchPanel` (Tag-Sprung-Regression).
 - Status: committet und auf der Karte (erzeugt 23.11.2026).
+
+### 23.11.2026 · Einstellungen nach Bereichen, ein Navigationsmodul (commits 0b1f4b00, 75c28550, 2740d67e)
+- `module/einstellungen-nav.js`: aus `redesign/praxura-v9-abnahme` unverändert übernommen (`einstellungenNavAufbauen` :49, `navEintraege` für `shell-neu.js`) und erweitert um `einstellungenKategorienAufbauen` (:143), `einstellungenZeigeAbschnitt` (:248), Hilfen `bereicheAus` (:114), `bereichWaehlen` (:119), `trifftSuche` (:124), `bereichAusHash` (:131), Konstante `NACHGELADEN`. Test `module/einstellungen-nav.test.js`.
+  - Niye: Pflichtpunkt 8 — Bereiche links, Suche, `#settings/<bereich>`, am Handy Auswahlliste. Hauptsession-Vorgabe „kein zweites Modul“.
+  - Nerede: `dashboard.js` `loadSettings` + `gehZuEinstellung`.
+- `module/einstellungen-navigation.js` (0b1f4b00) gelöscht — Kopie vermieden, keine Reste auf der Karte.
+- `module/panel-verlauf.js`: `panelAusHash` (:23) nimmt den Teil vor „/“, `merkePanel` (:66) behält `#<panel>/<unterpfad>`. Kopplung: jeder Hash mit Unterpfad landet jetzt im richtigen Panel.
+- Merge-Hinweis Redesign: `dashboard.js` importiert `einstellungen-nav.js?v=20261123en2`, `shell-neu.js` im Branch `?v=20261027s222` → beim Merge auf eine URL angleichen (Modulgraph-Test).
+- Status: committet und auf der Karte (erzeugt 23.11.2026), nicht gepusht.
