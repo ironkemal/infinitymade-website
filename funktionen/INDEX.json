@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-23",
- "dateien": 602,
- "funktionen": 4914,
+ "dateien": 603,
+ "funktionen": 4916,
  "module": [
   "abrechnung",
   "anamnese",
@@ -88858,6 +88858,7 @@
     "initRezeptScanner",
     "installiereArztSperreBanner",
     "invalidate",
+    "kanalStatusBehandler",
     "loadAerzte",
     "loadAnfragen",
     "loadAusfallConfig",
@@ -88961,6 +88962,7 @@
     "initAnamnese",
     "installiereArztSperreBanner",
     "invalidate",
+    "kanalStatusBehandler",
     "loadAerzte",
     "lsWireToggle",
     "montiereVerordnungPruefen",
@@ -200433,6 +200435,59 @@
    "uiPfad": []
   },
   {
+   "name": "kanalStatusBehandler",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/realtime-status.js",
+   "start": 19,
+   "end": 45,
+   "lines": 27,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "band"
+   ],
+   "calledBy": [
+    "init",
+    "neuerBkKanal"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "band",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/realtime-status.js",
+   "start": 23,
+   "end": 32,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [
+    "kanalStatusBehandler"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "mountRechnungsansicht",
    "kind": "function",
    "lang": "js",
@@ -211848,6 +211903,7 @@
     "(datei) module/mailversand.js",
     "(datei) module/patienten-import.js",
     "(datei) module/podologie-abrechnung.js",
+    "(datei) module/realtime-status.js",
     "(datei) module/tageszentrale-ansicht.js",
     "baueAusEnv",
     "beiAktivemPanel",

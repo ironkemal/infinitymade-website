@@ -4,7 +4,7 @@ import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
 import { planungVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261121f11';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
-import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261123kia1'; import { mountSystemstatus } from './module/systemstatus.js?v=20261123sys1';
+import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261123kia1'; import { mountSystemstatus } from './module/systemstatus.js?v=20261123sys1'; import { kanalStatusBehandler } from './module/realtime-status.js?v=20261123rt1';
 import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261103mail1';
 import { zeigeKiRueckfrageDialog } from './module/ki-rueckfrage.js?v=20261115v703';
 import { dsgvoVerdrahten } from './module/dsgvo-client.js?v=20261002';
@@ -13975,7 +13975,7 @@ async function init() {
         dbg('[realtime] booking change detected:', payload.eventType, payload.new?.id ?? payload.old?.id);
         emit('bookings:changed', { id: payload.new?.id ?? payload.old?.id, quelle: 'realtime' });
       })
-      .subscribe()); if (!(() => { try { return sessionStorage.getItem('praxura.kiosk.aktiv') === '1'; } catch { return false; } })()) neuerBkKanal();   // Kiosk nach F5: Kanal erst beim Verlassen (kiosk.js)
+      .subscribe(kanalStatusBehandler({ nachholen: () => emit('bookings:changed', { quelle: 'realtime-wieder' }) }))); if (!(() => { try { return sessionStorage.getItem('praxura.kiosk.aktiv') === '1'; } catch { return false; } })()) neuerBkKanal();   // Kiosk nach F5: Kanal erst beim Verlassen (kiosk.js)
 
     await handleGmailCallback();
     dbg('[init] gmail ok');
