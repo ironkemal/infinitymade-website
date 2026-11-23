@@ -8,7 +8,7 @@ import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261103mai
 import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261103mail1';
 import { zeigeKiRueckfrageDialog } from './module/ki-rueckfrage.js?v=20261115v703';
 import { dsgvoVerdrahten } from './module/dsgvo-client.js?v=20261002';
-import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, verdrahteEinrichtungscodeKnoepfe, mitarbeiterEntfernen } from './module/mitarbeiter-zugang.js?v=20261122o251'; import { rechteReiterVorbereiten, standortAnlegenOeffnen } from './module/rechte-ohne-standort.js?v=20261122o251';
+import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, verdrahteEinrichtungscodeKnoepfe, mitarbeiterEntfernen } from './module/mitarbeiter-zugang.js?v=20261122o251'; import { rechteReiterVorbereiten, standortAnlegenOeffnen } from './module/rechte-ohne-standort.js?v=20261122o251'; import { erstCheckinAnbieten } from './module/erst-checkin.js?v=20261123ec1';
 import { DEFAULT_VORLAGE_SEEDS, fehlendeSeedZeilen, seedeVorlagen } from './module/vorlagen-seed.js?v=20260929';
 import { aktiveSitzungszeilen } from './module/sitzung-aktiv.js?v=20260914';
 import { storniereTermin } from './module/termin-storno.js?v=20260908';
@@ -13939,7 +13939,7 @@ async function init() {
     await loadDataSharing();
     dbg('[init] dataSharing ok');
     await bootBusinessSwitcher();
-    dbg('[init] bizSwitcher ok');
+    dbg('[init] bizSwitcher ok'); void erstCheckinAnbieten({ supabase, userId: currentSession?.user?.id, standorte: myBusinesses, aktuellerStandortId: currentBusiness?.id || null, apiBase: API, getToken: async () => (await supabase.auth.getSession()).data.session?.access_token, showToast }).catch(e => console.warn('[erstCheckin]', e)); // Pflichtpunkt 7, legal-de: ein Klick statt Auto-Eintrag
     // Ausfallgebühr-Config (Owner-Level) laden + Einstellungsbereich rendern.
     // Unabhängig vom bizSwitcher, da Einzelpraxen keine businesses-Zeile haben.
     await loadAusfallConfig();
