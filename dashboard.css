@@ -4366,11 +4366,12 @@ textarea {
 .einst-nav { position: sticky; top: 12px; }
 .einst-nav-liste { display: flex; flex-direction: column; gap: 2px; padding: 6px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); }
 .einst-nav-eintrag { display: flex; align-items: center; text-decoration: none; text-align: left; padding: 9px 12px; min-height: 40px; border: 0; border-radius: 8px; background: none; color: var(--text-muted); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
-.einst-nav-eintrag:hover { background: var(--bg-hover, rgba(127, 127, 127, 0.08)); color: var(--text-main); }
-.einst-nav-eintrag[aria-current="page"] { background: rgba(34, 197, 94, 0.10); color: var(--primary); font-weight: 600; }
+.einst-nav-eintrag:hover { background: var(--bg-hover); color: var(--text-main); }
+/* aktiver Bereich: nur Variablen (dunkel/hell); Balken links wie .sidebar-item.active, sonst gleich der Hover-Fläche */
+.einst-nav-eintrag[aria-current="page"] { background: var(--primary-dim); box-shadow: inset 3px 0 0 var(--primary); color: var(--primary); font-weight: 600; }
 .einst-nav-eintrag:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
 .einst-nav-auswahl { display: none; width: 100%; }
-.einst-suche { width: 100%; margin-bottom: 8px; min-height: 40px; }
+.einst-suche { width: 100%; margin-bottom: 8px; min-height: 40px; font-size: 14px; } /* 16 px schnitt den Platzhalter in 210 px ab */
 .einst-leer { margin: 0 0 12px; }
 .einst-filter-aktiv .settings-section[data-einst-aus],
 .einst-filter-aktiv .settings-group[data-einst-leer],
@@ -4380,6 +4381,7 @@ textarea {
   .einst-nav { position: static; }
   .einst-nav-liste { display: none; }
   .einst-nav-auswahl { display: block; min-height: 44px; }
+  .einst-suche { min-height: 44px; font-size: 16px; } /* Touch-Ziel ≥ 44 px (vorher 41 px gemessen); 16 px gegen iOS-Zoom */
 }
 .settings-sections {
   display: flex;
