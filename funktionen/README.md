@@ -1402,3 +1402,13 @@ aber nicht als generierte App-Funktionen ausgewiesen. Keine manuelle Indexergän
 - Kopplung: Wer die Standbildung der Geldzeile oder `euroZustand` ändert, ändert damit auch die Folgetermin-Frage.
   Weitere Aufrufer von `showConfirmModal` sind nicht betroffen, solange sie kein `extraText` übergeben.
 - Status: geschrieben im Worktree `redesign-delta-20261112`, Commit und Kartentazeleme durch den Lead.
+
+### 23.11.2026 · Standorte je Mitarbeiter, Verspätung nach Dienstplan, KI-Bericht ohne IDs (commit e5c9552d)
+- `module/standort-zuordnung.js`: `sichtbareStandorte` (:18), `standorteFuerNutzer` (:34).
+  - Niye: `attendance.js` zeigte Mitarbeitern alle Standorte; eine Regel statt einer dritten Kopie.
+  - Nerede: `attendance.js` `fetchBusinesses` + `dashboard.js` `bootBusinessSwitcher` (Inline-Zuordnungsfilter dort entfernt, Kopie-Kandidat erledigt).
+- `api-backend/lib/standort-zuordnung.js` `mitarbeiterDarfStandort` (:14): Server-Gegenstück. Nerede: `/api/attendance/check-in`, nicht zugeordneter Standort → 403.
+- `api-backend/lib/anwesenheit-status.js` `anwesenheitStatus` (:18): ersetzt festes „late ab 09:00“ durch eigenen `working_hours`-Beginn; nutzt `arbeitsfenster` (termin-pruefung.js) und `berlinLocal` (booking/status.js) wieder, kein Neubau. Nerede: Check-in-Route.
+- `api-backend/ai/tasks/series-scheduler.js` `berichtOhneIds` (:40): KI-Serienbericht zeigte rohe Mitarbeiter-UUID (Live-Test 23.11.); Namen aus `payload.employees`.
+- `oeffneKalenderTag` (dashboard.js:13942, :16780): Objekt-Callback, daher nicht als eigener Kartennode; jetzt async + `await switchPanel` (Tag-Sprung-Regression).
+- Status: committet und auf der Karte (erzeugt 23.11.2026).
