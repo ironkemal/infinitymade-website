@@ -7,13 +7,16 @@
  * eine falsche Arbeitszeit-Aufzeichnung (BAG 13.09.2022, Art. 5 Abs. 1 lit. d DSGVO). Minimum:
  * ein Klick „Jetzt einstempeln" / „Später"; „Später" legt nichts an.
  *
- * „Allererster Login" = noch keine Zeile in `attendance` für diese Person (kein neues Schema).
+ * „Allererster Login" = Rolle Mitarbeiter UND Konto jünger als NEU_TAGE UND noch keine Zeile in
+ * `attendance` (kein neues Schema). Hauptsession-Review 23.11.: ohne Kontoalter hätte nach dem Deploy
+ * jeder Bestandsnutzer ohne Zeiterfassung einmal den Dialog bekommen. Inhaber nie automatisch fragen.
  * Nach „Später" fragt dieses Gerät nicht erneut (localStorage, reine Bequemlichkeit).
  * Standorte: die bereits gefilterte Liste aus bootBusinessSwitcher (Mitarbeiter sehen nur ihre
  * zugeordneten Standorte). Ein Standort → fest, mehrere → Auswahl, keiner → kein Dialog.
  * Der Server prüft kein GPS (POST /api/attendance/check-in ignoriert Koordinaten).
  */
 
+export const NEU_TAGE = 14;
 const merkerSchluessel = (/** @type {string} */ userId) => `praxura_erst_checkin_${userId}`;
 
 /** @param {string} s */
@@ -56,6 +59,9 @@ export async function nochNieEingestempelt(supabase, userId) {
  * @param {object} o
  * @param {any} o.supabase
  * @param {string} o.userId
+ * @param {string|null|undefined} o.rolle         profiles.role
+ * @param {string|null|undefined} o.kontoSeit     auth user created_at (ISO)
+ * @param {number} [o.jetzt]
  * @param {{ id: string, business_name?: string }[]} o.standorte
  * @param {string|null} [o.aktuellerStandortId]
  * @param {string} o.apiBase
@@ -64,10 +70,12 @@ export async function nochNieEingestempelt(supabase, userId) {
  * @param {Document} [o.doc]
  * @param {Storage|null} [o.speicher]
  * @param {typeof fetch} [o.fetchImpl]
- * @returns {Promise<'kein-standort'|'gemerkt'|'schon-eingestempelt'|'unbekannt'|'spaeter'|'eingestempelt'|'fehler'>}
+ * @returns {Promise<'keine-zielgruppe'|'kein-standort'|'gemerkt'|'schon-eingestempelt'|'unbekannt'|'spaeter'|'eingestempelt'|'fehler'>}
  */
 export async function erstCheckinAnbieten(o) {
   const speicher = o.speicher === undefined ? globalThis.localStorage : o.speicher;
+  const alterMs = (o.jetzt ?? Date.now()) - Date.parse(o.kontoSeit || '');
+  if (o.rolle !== 'employee' || !(alterMs >= 0 && alterMs < NEU_TAGE * 86400000)) return 'keine-zielgruppe';
   if (!o.userId || !o.standorte?.length) return 'kein-standort';
   if (lies(speicher, merkerSchluessel(o.userId))) return 'gemerkt';
   const nie = await nochNieEingestempelt(o.supabase, o.userId);

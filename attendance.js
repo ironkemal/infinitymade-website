@@ -284,8 +284,8 @@ async function init() {
     if (businesses.length > 1) {
       standortAuswahlNoetig = true;
       bizSelect.style.display = 'block';
-      bizSelect.innerHTML = '<option value="">— Standort wählen —</option>' +
-        businesses.map((b) => `<option value="${b.id}">${b.business_name}</option>`).join('');
+      // Optionen per DOM statt innerHTML: Standortnamen sind Eingaben der Praxis (Review 23.11.2026, XSS).
+      bizSelect.replaceChildren(new Option('— Standort wählen —', ''), ...businesses.map((b) => new Option(b.business_name || 'Standort', b.id)));
     } else if (businesses.length === 1) {
       selectedBizId = businesses[0].id;
     }

@@ -28,7 +28,8 @@ function dom() {
   return { doc, modal: () => modal };
 }
 const standorte = [{ id: 'A', business_name: 'Praxis <A>' }, { id: 'B', business_name: 'Praxis B' }];
-const basis = (/** @type {any} */ extra) => ({ userId: 'u1', apiBase: '/api', getToken: async () => 't', standorte: standorte.slice(0, 1), ...extra });
+const JETZT = Date.parse('2026-11-23T08:00Z');
+const basis = (/** @type {any} */ extra) => ({ userId: 'u1', rolle: 'employee', kontoSeit: '2026-11-22T18:00Z', jetzt: JETZT, apiBase: '/api', getToken: async () => 't', standorte: standorte.slice(0, 1), ...extra });
 
 test('ohne Standort, mit Merker oder mit vorhandener Anwesenheit: kein Dialog', async () => {
   assert.equal(await erstCheckinAnbieten(basis({ supabase: sb([]), standorte: [] })), 'kein-standort');
@@ -68,4 +69,13 @@ test('checkInAusfuehren: 409 = bereits, Fehlertext durchreichen', async () => {
   const antwort = (/** @type {number} */ status, /** @type {any} */ body) => async () => /** @type {any} */ ({ ok: status < 300, status, json: async () => body });
   assert.deepEqual(await checkInAusfuehren({ apiBase: '', token: 't', businessId: 'A', fetchImpl: antwort(409, {}) }), { ok: true, bereits: true });
   assert.deepEqual(await checkInAusfuehren({ apiBase: '', token: 't', businessId: 'A', fetchImpl: antwort(404, { error: 'Standort nicht gefunden' }) }), { ok: false, fehler: 'Standort nicht gefunden' });
+});
+
+test('Review 23.11.: Inhaber und Bestands-Mitarbeiter (Konto ≥ 14 Tage) bekommen keinen Dialog', async () => {
+  let gelesen = 0;
+  const zaehlendes = { from: () => { gelesen++; return sb([]).from(); } };
+  assert.equal(await erstCheckinAnbieten(basis({ supabase: zaehlendes, rolle: 'owner', speicher: speicher() })), 'keine-zielgruppe');
+  assert.equal(await erstCheckinAnbieten(basis({ supabase: zaehlendes, kontoSeit: '2026-10-01T08:00Z', speicher: speicher() })), 'keine-zielgruppe');
+  assert.equal(await erstCheckinAnbieten(basis({ supabase: zaehlendes, kontoSeit: null, speicher: speicher() })), 'keine-zielgruppe', 'unbekanntes Alter → nicht fragen');
+  assert.equal(gelesen, 0, 'keine DB-Abfrage für Nicht-Zielgruppe');
 });

@@ -201,8 +201,10 @@ export function zeigeEinrichtungscode(code, gueltigBis, name = '', hinweise = {}
     modal.className = 'modal-overlay';
     modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
 
-    const titleText = name
-      ? `Einrichtungscode für ${name}`
+    // Name ist Eingabe des Inhabers → maskieren, bevor er in innerHTML landet (Review 23.11.2026, XSS).
+    const nameSicher = String(name || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] || c));
+    const titleText = nameSicher
+      ? `Einrichtungscode für ${nameSicher}`
       : 'Einrichtungscode';
 
     modal.innerHTML = `
