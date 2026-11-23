@@ -3,9 +3,9 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261121181821 0122_diagnosegruppen_heilm_rl_bereinigen
--- EXPORTED AT:        2026-11-21T18:18:48.699264Z
--- ERZEUGT AM:         2026-11-21
+-- LAST MIGRATION:     20261123151007 0130_mitarbeiter_standort_zuordnung
+-- EXPORTED AT:        2026-11-23T15:11:02.074279Z
+-- ERZEUGT AM:         2026-11-23
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):

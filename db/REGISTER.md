@@ -117,7 +117,8 @@ Trigger-DDL und Funktionskörper vollständig, Zahlen im Dateikopf). `sqlTreffer
 - **Warum:** Ein Angestellter kann an mehreren Standorten arbeiten. Die Zuordnung passt weder in `profiles` (1:n) noch in `businesses`.
 - **Seit:** spätestens 22.05.2026 · `v25_rbac_employee_groups`
 - **Status:** aktiv
-- **Wer:** Team-Verwaltung (`renderEmpStandortList`, `saveEmpPermissions`), Buchungsseite, `api-backend/routes/mitarbeiter-zugang.js` (Einrichtungscode, seit 01.10.2026; vorher `confirm.html`).
+- **Wer:** Team-Verwaltung (`renderEmpStandortList`, `saveEmpPermissions`), Buchungsseite, `api-backend/routes/mitarbeiter-zugang.js` (Einrichtungscode, seit 01.10.2026; vorher `confirm.html`). Seit `0130` (O-251, 23.11.2026; SaaS angewandt 23.11.2026, Backfill 1) zusätzlich der Trigger `seed_default_groups_for_business()`: beim Anlegen eines Standorts werden aktive Mitarbeiter **ohne jede** Zuordnung diesem Standort + Gruppe „Mitarbeiter" zugeordnet.
+- **Achtung — ohne Zeile hier kann sich ein Mitarbeiter nicht anmelden** (`dashboard.js` `loadModulePermissions` braucht `currentBusiness`). Drei Schreiber decken die Reihenfolgen ab: Mitarbeiter nach Standort → Route; Standort nach Mitarbeiter → Trigger (0130); Hand → `saveEmpPermissions`. Die Box-Einrichtung legt den ersten Standort selbst an (`api-backend/setup/standard-standort.js`), wie das SaaS-Onboarding.
 
 ### `employee_groups`
 - **Warum:** Rollen oberhalb von „Inhaber/Angestellter" — Rezeption, Therapeut, Leitung. Wird beim Anlegen eines Standorts automatisch vorbefüllt.

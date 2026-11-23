@@ -7041,11 +7041,11 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Tip** | G (kutu yolu, UI) · O-224'ün devamı (kutuda `isEnterprise()` true olunca açığa çıktı) |
 | **Kutuda ne olur** | Fix öncesi: taze kurulan kutuda ilk Standort hiç açılamıyordu → Standort'a bağlı her şey (switcher, Datenfreigabe, çalışan ataması, O-251) zincirleme kapalı. SaaS etkilenmez (orada boş liste yolu bu sırayla çizilmiyor), fix iki dağıtımda aynı kod (G7) |
 | **Çözüm** | Bağlama boş-liste dönüşünün **önüne** alındı; test fix öncesi kırmızı, sonrası yeşil. Dış çağrı/şema/env/sır yok — G1/G2/G3/G8 dokunulmadı |
-| **Durum** | `gelöst` — commit `c0634f09` (22.11.2026) · **live auf der Testbox geprüft 22.11.2026 21:00**: nach `update.sh --jetzt` (frontend:beta neu, `dashboard.js?v=20261122stb1`) erster Standort angelegt, „(Standard)", push Melih'in GO'suna bağlı. Kutu kabulü: sonraki beta image'ında ilk Standort'u gerçek kutuda açıp O-224 kabul listesine devam |
+| **Durum** | `gelöst` — commit `c0634f09` (22.11.2026) · **live auf der Testbox geprüft 22.11.2026 21:00**: nach `update.sh --jetzt` (frontend:beta neu, `dashboard.js?v=20261122stb1`) erster Standort angelegt, „(Standard)", push Melih'in GO'suna bağlı. Kutu kabulü: sonraki beta image'ında ilk Standort'u gerçek kutuda açıp O-224 kabul listesine devam | Seit `e482d9fa` (O-251 A) legt die Einrichtung den ersten Standort selbst an; der Knopf bleibt Rückfall, falls dieser Insert scheitert.
 
 ---
 
-### O-251 — Standort yokken açılan çalışan sessizce atamasız kalır → hiç giriş yapamaz 🔴 **offen (Live-Abnahme Hetzner-Testbox 22.11.2026, beta 0.7.1) — Kemal entscheidet**
+### O-251 — Standort yokken açılan çalışan sessizce atamasız kalır → hiç giriş yapamaz 🟡 **kodda gelöst (e482d9fa + 0130, 23.11.2026), SaaS-Migration angewandt 23.11.2026, Box-Abnahme offen — Melih übernommen**
 
 | Alan | İçerik |
 |---|---|
@@ -7054,7 +7054,7 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Tip** | G (kutu kurulum sırası) · H-komşusu (yetki satırı eksik) · çözüm seçeneğine göre D |
 | **Kutuda ne olur** | Sıra „önce Team, sonra Standort" olursa (taze kutuda doğal sıra, O-250) çalışan kalıcı olarak kilitli; Standort sonradan açılsa bile **mevcut** çalışanlar atamasız kalır (UI ilk Standort'a geriye dönük atama yapmaz). SaaS'ta da aynı kod yolu var: `businesses` satırı olmayan tek-praxis owner'ın çalışanı aynı hataya düşer — yani yalnız kutu sorunu değil. Launch-relevant: P1 (çalışanlı, 2 Standort, L5/M3) |
 | **Çözüm** | **Tavsiye: (2)+(3), (1) değil.** (2) ilk Standort açıldığında owner'ın atamasız çalışanlarını otomatik ata — yeri bir migration'da `AFTER INSERT ON businesses WHERE is_default` trigger'ı (mevcut `trg_seed_default_groups` gruplarını kullanır, `ON CONFLICT DO NOTHING`); böylece zaten kurulmuş kutular ve SaaS aynı yoldan iyileşir (G7, tip D → zincir `api-backend/db/migrations/`). (3) ucuz emniyet: route atlanan atamayı yanıtta bildirir, Team panelinde „erst Standort anlegen" uyarısı. (1) Setup'ın Standort açması reddedildi: `:13471`'deki bilinçli kararı geri alır, yalnız yeni kutulara ve yalnız kutu yoluna gider (SaaS ve mevcut kutular bozuk kalır). Sahibi builder; `db-ustasi` trigger öncesi sorulur. G1/G2/G3/G8 dokunulmaz |
-| **Durum** | `offen` — Kemal kararı + faz/kart bağlanana kadar her raporda gösterilir; P1 Launch öncesi kapanmalı |
+| **Durum** | `kodda gelöst` (23.11.2026, Melih übernimmt laut PILOT-PLAN-Absprache 22.11.) — **(A) Wurzel** `e482d9fa`: Box-Einrichtung legt den Standard-Standort wie `onboarding.js` an (`api-backend/setup/standard-standort.js`, Schritt 2b in `setup/router.js`, vor dem Jeton-Verbrauch, nicht blockierend, 23505 = vorhanden). Korrektur: die frühere Ablehnung von (1) stützte sich auf `dashboard.js:13471`, dort steht aber keine Entscheidung gegen einen Standort, nur der Ist-Zustand. Route meldet `standort_fehlt`, Reiter „Berechtigungen“ erklärt sich ohne Standort (`module/rechte-ohne-standort.js`), Abnahme-Skript filtert nach Owner. **(B)** Migration `0130_mitarbeiter_standort_zuordnung.sql` (Trigger-Funktion + Backfill), da SaaS-Zählung 22.11. = 1 betroffener Mitarbeiter; PG17-Integrationstest grün. **Offen:** 0130 live auf SaaS (WARTET AUF MELIH) · Push · Abnahme auf frischer Box (Einrichtung → Mitarbeiter → Login).
 
 ### O-252 — Fremd-Host-Prüfung für Box-Images (Box-Test 22.11.2026, Problem 2) 🟢 **gelöst (23.11.2026)**
 

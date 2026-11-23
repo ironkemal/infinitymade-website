@@ -3,9 +3,9 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261121181821 0122_diagnosegruppen_heilm_rl_bereinigen
--- EXPORTED AT:        2026-11-21T18:18:48.699264Z
--- ERZEUGT AM:         2026-11-21
+-- LAST MIGRATION:     20261123151007 0130_mitarbeiter_standort_zuordnung
+-- EXPORTED AT:        2026-11-23T15:11:02.074279Z
+-- ERZEUGT AM:         2026-11-23
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
@@ -32,7 +32,7 @@
 -- ----------------------------------------------------------------------------
 -- PUBLICATIONS:
 --   Publication: "supabase_realtime" (all_tables: false, tables: [public.bookings])
---   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_11_18, realtime.messages_2026_11_19, realtime.messages_2026_11_20, realtime.messages_2026_11_21, realtime.messages_2026_11_22, realtime.messages_2026_11_23, realtime.messages_2026_11_24])
+--   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_11_19, realtime.messages_2026_11_20, realtime.messages_2026_11_21, realtime.messages_2026_11_22, realtime.messages_2026_11_23, realtime.messages_2026_11_24, realtime.messages_2026_11_25])
 
 -- AUTH NON-INTERNAL TRIGGERS (OUTSIDE PUBLIC INVENTORY — REFERENCE ONLY):
 --   Trigger: "on_auth_user_created" ON auth."users" (enabled: O)
@@ -6909,6 +6909,18 @@ BEGIN
     VALUES (v_sek_id, m, TRUE)
     ON CONFLICT (group_id, module) DO NOTHING;
   END LOOP;
+
+  -- O-251 (0130): Mitarbeiter, die vor dem ersten Standort angelegt wurden, diesem Standort zuordnen.
+  INSERT INTO public.employee_business_assignments (employee_id, business_id, group_id)
+  SELECT p.id, NEW.id, v_mit_id
+    FROM public.profiles p
+   WHERE p.owner_id = NEW.owner_id
+     AND p.role = 'employee'
+     AND p.is_active IS DISTINCT FROM false
+     AND NOT EXISTS (SELECT 1 FROM public.employee_business_assignments e WHERE e.employee_id = p.id)
+     AND NOT EXISTS (SELECT 1 FROM public.mitarbeiter_anstellung a
+                      WHERE a.employee_id = p.id AND a.austritt_am IS NOT NULL AND a.austritt_am <= current_date)
+  ON CONFLICT (employee_id, business_id) DO NOTHING;
 
   RETURN NEW;
 END $function$
