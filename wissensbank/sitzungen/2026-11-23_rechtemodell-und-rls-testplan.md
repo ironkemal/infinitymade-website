@@ -95,3 +95,26 @@ Code und kein Link ins Repo. (4) Ergebnis an `guvenlik` (Register). (5) Testkont
 **Entscheidungsbedarf (nicht Teil dieses Laufs):** Ob R1, R3 und R6 auf Datenebene nach Modulrecht oder Behandlungsteam
 eingeschränkt werden sollen, ist eine Produkt- und Sicherheitsentscheidung (`/konsey`, `guvenlik`, `legal-de`).
 Heute gilt: Wer nicht zum Behandlungsteam gehört, bekommt kein Mitarbeiterkonto (Hinweistext im Reiter).
+
+## Ergebnis Live-Lauf 23.11.2026 (SaaS, nur QA-Mandanten, kein neues Konto)
+
+Melih-Auftrag „offene Punkte abschließen“. Statt eines neuen Testkontos die zwei vorhandenen synthetischen
+QA-Mandanten (Podologie-QA = Praxis 1, Physio-QA = Praxis 2) mit ihren Mitarbeiter-/Inhaberkonten.
+Nur Zählungen und Statuscodes gelesen, keine Inhalte. Skript lag nur im Scratchpad.
+
+| # | Ergebnis | Beleg |
+|---|---|---|
+| R1 | ✅ Mitarbeiter liest Patienten der eigenen Praxis | 206, n > 0 |
+| R2 | ✅ Mandantengrenze dicht, **beide Richtungen**: leads, prescriptions, bookings, invoices, abrechnung, patient_dokumente, anamnese | je 0 Zeilen |
+| R3 | ℹ bestätigt Befund: Verordnungen nur nach Praxis gefiltert | 30 Zeilen |
+| R4 | ✅ echt geprüft: Inhaber setzt Einzelfreigabe `abrechnung=false` → Mitarbeiter sieht **0** Rechnungen (vorher 2); Freigabe danach gelöscht (204), wieder 2 | Override-Weg von `abrechnungszugriff_erlaubt` |
+| R5 | – nicht getrennt geprüft (QA-Mandanten haben je einen Standort mit Rechnungen) | |
+| R6 | ℹ bestätigt Befund: §302-Läufe ohne Modulrecht sichtbar | 17 Zeilen |
+| R7 | ✅ Selbst-Freischaltung abgelehnt | 403 / 42501 |
+| R8 | ✅ Selbst-Beförderung zum Inhaber abgelehnt, Rolle danach `employee` | 403 / 42501 |
+| R9 | – nicht prüfbar: kein QA-Konto mit `is_active=false` (keins angelegt) | |
+| R10 | – nicht prüfbar: im Bucket `patient-documents` liegt je Praxis nur ein Objekt, keins der beiden QA-Praxen | |
+
+Hinweis R4: beide QA-Mitarbeiter haben `abrechnung` über ihre Gruppe (0121 Option A) — der erste Lauf mit 18
+sichtbaren Rechnungen war also korrekt, kein Leck. Offene Befunde (R3/R6, Modulrechte nur für Rechnungen auf
+Datenebene) bleiben Entscheidung Melih/guvenlik; keine RLS-Änderung in diesem Lauf (Melih 22.11.).
