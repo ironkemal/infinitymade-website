@@ -84,3 +84,17 @@ test('F-08 erstellePanelVerlauf: pushState, Reload (#ueberblick) und Zurück (po
   assert.equal(await verlauf.startPanelAusUrl(), 'ueberblick');
   assert.equal(wechsel.length, anzahlVorher);
 });
+
+// Einstellungen-Bereiche als Unterpfad (23.11.2026): #settings/konto → Panel settings, Unterpfad bleibt stehen.
+import { panelAusHash as _pah, erstellePanelVerlauf as _epv } from './panel-verlauf.js';
+test('panelAusHash: Unterpfad gehört dem Panel', () => {
+  assert.equal(_pah('#settings/konto', { existiert: () => true }), 'settings');
+  assert.equal(_pah('#settings/<x>', { existiert: () => true }), 'settings');
+});
+test('merkePanel überschreibt #settings/<bereich> nicht mit #settings', async () => {
+  const pushes = [];
+  const win = { location: { pathname: '/dashboard.html', search: '', hash: '#settings/konto' }, history: { pushState: (...a) => pushes.push(a) }, addEventListener() {} };
+  const v = _epv({ wechslePanel: async () => {}, getAktiv: () => 'overview', existiert: () => true, win });
+  v.merkePanel?.('settings');
+  assert.deepEqual(pushes, []);
+});

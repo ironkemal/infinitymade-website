@@ -23,7 +23,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20261123en1" />
+  <link rel="stylesheet" href="dashboard.css?v=20261123en2" />
   <link rel="stylesheet" href="dashboard-feinschliff.css?v=20261121weiss1" />
   <link rel="stylesheet" href="praxura-design.css?v=20261114v805" />
   <link rel="stylesheet" href="design/shell.css?v=20261114v209c">
@@ -2619,12 +2619,12 @@
           </div>
 
           <div class="settings-sections">
-
-            <!-- ── GRUPPE 1: ALLGEMEIN ── -->
-            <div class="settings-group">
+            <!-- Gruppen = Bereiche der Einstellungen-Navigation (module/einstellungen-nav.js, Pflichtpunkt 8, 23.11.2026).
+                 Per JS angehängte Abschnitte (Rechtslinks, Mitarbeiter-App, Fax, Formulare, E-Mail-Versand) ordnet das Modul ihrer Gruppe zu. -->
+            <div class="settings-group" data-einst="allgemein">
               <div class="settings-group-label">Allgemein</div>
 
-              <div class="settings-section" id="settingsProfileSection">
+<div class="settings-section" id="settingsProfileSection">
                 <div class="settings-section-title" data-i18n="set_profile">Profil</div>
                 <div class="settings-section-body">
                   <div class="form-group">
@@ -2660,276 +2660,9 @@
                 </div>
               </div>
 
-              <!-- Ausfallgebühr (No-Show / kurzfristige Absage) — für alle Owner -->
-              <div class="settings-section" id="settingsAusfallSection" hidden>
-                <div class="settings-section-title">Ausfallgebühr</div>
-                <div class="settings-section-body">
-                  <p class="form-hint" style="margin-bottom:12px;">
-                    Bei No-Show oder kurzfristiger Absage kann automatisch eine private Ausfallrechnung angeboten werden.
-                  </p>
-                  <div class="form-group" style="margin-bottom:12px;">
-                    <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;">
-                      <input type="checkbox" id="setAusfallEnabled" style="width:18px;height:18px;accent-color:var(--primary);cursor:pointer;" />
-                      Ausfallgebühr aktivieren
-                    </label>
-                  </div>
-                  <div id="setAusfallFields" hidden>
-                    <div class="form-row">
-                      <div class="form-group">
-                        <label class="form-label">Berechnung</label>
-                        <select class="form-select" id="setAusfallMode">
-                          <option value="fixed">Fester Betrag (€)</option>
-                          <option value="percent">% des Behandlungspreises</option>
-                        </select>
-                      </div>
-                      <div class="form-group" style="max-width:160px;">
-                        <label class="form-label" id="setAusfallAmountLabel">Betrag (€)</label>
-                        <input class="form-input" id="setAusfallAmount" type="number" min="0" step="0.01" placeholder="z. B. 35,00" />
-                      </div>
-                      <div class="form-group" style="max-width:160px;">
-                        <label class="form-label">Absagefrist (Std.)</label>
-                        <input class="form-input" id="setAusfallCutoff" type="number" min="0" step="1" value="24" />
-                      </div>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Hinweistext auf der Rechnung (optional)</label>
-                      <textarea class="form-input" id="setAusfallHinweis" rows="2" placeholder="z. B. Verweis auf Ihre Ausfallvereinbarung vom Behandlungsbeginn"></textarea>
-                    </div>
-                    <div class="form-hint" style="font-size:12px;margin-bottom:12px;">⚠ Nur wirksam mit vom Patienten unterschriebener Ausfallvereinbarung. Das Ausfallhonorar ist Schadensersatz (umsatzsteuerfrei) und kann nicht über die Krankenkasse abgerechnet werden.</div>
-                  </div>
-                  <button class="btn-primary" id="setAusfallSaveBtn" type="button">Speichern</button>
-                </div>
-              </div>
-
-              <!-- Selbstzahler-Preisstufen — Owner-Einstellung (profiles.selbstzahler_stufen) -->
-              <div class="settings-section" id="settingsPreisstufenSection" hidden>
-                <div class="settings-section-title">Selbstzahler-Preisstufen</div>
-                <div class="settings-section-body">
-                  <p class="form-hint" style="margin-bottom:12px;">
-                    Sie benennen Ihre Preisstufen selbst — etwa einen Bestandspatienten-Preis
-                    und einen Hausbesuch-Preis. Beim Anlegen einer Rechnung setzt ein Klick
-                    den Betrag, daneben steht, was dieser Patient zuletzt bezahlt hat.
-                    Eine spätere Änderung wirkt nur auf neue Rechnungen: gestellte Rechnungen
-                    behalten ihren Betrag.
-                  </p>
-                  <div id="setStufenList" style="margin-bottom:12px;"></div>
-                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <button class="btn" id="setStufenAddBtn" type="button">＋ Preisstufe</button>
-                    <button class="btn-primary" id="setStufenSaveBtn" type="button">Speichern</button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Buchungskonten (Gegenkonten) — Owner-Einstellung (profiles.buchungskonten) -->
-              <div class="settings-section" id="settingsKontenSection" hidden>
-                <div class="settings-section-title">Buchungskonten</div>
-                <div class="settings-section-body">
-                  <p class="form-hint" style="margin-bottom:12px;">
-                    Beim Verbuchen eines Zahlungseingangs wählen Sie aus, wohin das Geld
-                    geflossen ist — Kasse, Bank, oder bei einem abgeschriebenen Restbetrag
-                    die Erlösschmälerung. Das sind die Angaben, die Ihr Steuerberater braucht.
-                    Solange Sie nichts ändern, gilt der Standardrahmen (SKR03).
-                    Ein Konto, auf das schon gebucht wurde, sollten Sie deaktivieren statt
-                    entfernen: bereits gebuchte Zahlungen behalten ohnehin ihre ursprüngliche
-                    Kontobezeichnung.
-                  </p>
-                  <div id="setKontenList" style="margin-bottom:12px;"></div>
-                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <button class="btn" id="setKontenAddBtn" type="button">＋ Konto</button>
-                    <button class="btn-primary" id="setKontenSaveBtn" type="button">Speichern</button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- DATEV-Export (22.10.2026) — Inhalt rendert module/datev-einstellungen.js -->
-              <div class="settings-section" id="settingsDatevSection" hidden>
-                <div class="settings-section-title">DATEV-Export</div>
-                <div class="settings-section-body"></div>
-              </div>
-
-              <!-- Terminerinnerung per E-Mail (06.11.2026, O-206) — Inhalt rendert module/terminerinnerung-einstellung.js; nur sichtbar, wo Migration 0110 angewandt ist -->
-              <div class="settings-section" id="settingsTerminerinnerungSection" hidden>
-                <div class="settings-section-title">Terminerinnerung</div>
-                <div class="settings-section-body"></div>
-              </div>
-
-              <!-- Legende der Fußgrafik (Podologie) — Owner-Einstellung -->
-              <div class="settings-section" id="settingsLegendeSection" hidden>
-                <div class="settings-section-title">Legende der Fußgrafik</div>
-                <div class="settings-section-body">
-                  <p class="form-hint" style="margin-bottom:12px;">
-                    Sie entscheiden, welches Zeichen im Fußbefund welchen Befund bedeutet.
-                    Bereits gesetzte Markierungen behalten ihre ursprüngliche Bedeutung —
-                    eine Umbenennung ändert keinen bestehenden Befund.
-                  </p>
-                  <div id="setLegendeList" style="margin-bottom:12px;"></div>
-                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <button class="btn" id="setLegendeAddBtn" type="button">＋ Eintrag</button>
-                    <button class="btn" id="setLegendeResetBtn" type="button">Standard wiederherstellen</button>
-                    <button class="btn-primary" id="setLegendeSaveBtn" type="button">Speichern</button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Geschäfte (Multi-Business, nur Enterprise/Paket 3) -->
-              <div class="settings-section" id="settingsBusinessesSection" hidden>
-                <div class="settings-section-title">Geschäfte</div>
-                <div class="settings-section-body">
-                  <p class="form-hint" style="margin-bottom:12px;">
-                    Verwalten Sie Ihre Standorte. Jedes Geschäft hat eigene Leistungen, Arbeitszeiten und Personal.
-                  </p>
-                  <div id="businessesList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
-                  <button class="btn-primary" id="addBusinessBtn" type="button">＋ Neues Geschäft hinzufügen</button>
-                </div>
-              </div>
-
-              <!-- Datenfreigabe zwischen Standorten (Multi-Business) -->
-              <div class="settings-section" id="settingsDataSharingSection" hidden>
-                <div class="settings-section-title">Datenfreigabe zwischen Standorten</div>
-                <div class="settings-section-body">
-                  <p class="form-hint" style="margin-bottom:14px;">
-                    Legen Sie fest, welche Daten über alle Ihre Standorte hinweg <strong>gemeinsam</strong> genutzt werden.
-                    Eingeschaltet = alle Standorte sehen dieselben Daten. Ausgeschaltet = die Anzeige bleibt je Standort
-                    getrennt. Das ist ein Anzeigefilter, kein Zugriffsschutz: Alle Standorte gehören zu derselben Praxis. <em>Termine/Kalender sind aus Sicherheitsgründen immer
-                    standortübergreifend sichtbar (zur Vermeidung von Mitarbeiter-Doppelbuchungen).</em>
-                  </p>
-                  <div id="dataSharingList" style="display:flex;flex-direction:column;gap:0;"></div>
-                  <button class="btn-primary" id="dataSharingSaveBtn" type="button" style="margin-top:14px;">Speichern</button>
-                </div>
-              </div>
-            </div><!-- /gruppe praxis -->
-
-            <!-- ── GRUPPE 2: FINANZEN ── -->
-            <div class="settings-group">
-              <div class="settings-group-label">Finanzen</div>
-
-              <div class="settings-section" id="settingsBillingSection">
-                <div class="settings-section-title">Rechnungsdaten</div>
-                <div class="settings-section-body">
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label class="form-label">Bank</label>
-                      <input class="form-input" id="setBankName" type="text" placeholder="z. B. Sparkasse Köln-Bonn" />
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">IBAN</label>
-                      <input class="form-input" id="setIban" type="text" placeholder="DE…" />
-                    </div>
-                    <div class="form-group" style="max-width:160px;">
-                      <label class="form-label">BIC</label>
-                      <input class="form-input" id="setBic" type="text" placeholder="COLSDE…" />
-                    </div>
-                  </div>
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label class="form-label">Steuernummer</label>
-                      <input class="form-input" id="setSteuernummer" type="text" placeholder="z. B. 220/5070/0815" />
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">USt-IdNr (optional)</label>
-                      <input class="form-input" id="setUstId" type="text" placeholder="DE…" />
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Steuerhinweis (erscheint auf Rechnung)</label>
-                    <select class="form-input" id="setTaxExemptSelect" style="margin-bottom:6px;">
-                      <option value="§4nr14a">§ 4 Nr. 14a UStG — Umsatzsteuerfreie Heilbehandlung</option>
-                      <option value="§4nr14b">§ 4 Nr. 14b UStG — Krankenhausbehandlung</option>
-                      <option value="§19">§ 19 Abs. 1 UStG — Kleinunternehmerregelung</option>
-                      <option value="19pct">19 % Umsatzsteuer (keine Befreiung)</option>
-                      <option value="custom">Eigene Eingabe…</option>
-                    </select>
-                    <input class="form-input" id="setTaxExempt" type="text" placeholder="z. B. Gemäß § 4 Nr. 14a UStG umsatzsteuerfrei" style="display:none;" />
-                    <div class="form-hint" id="setTaxExemptHint"></div>
-                  </div>
-                  <button class="btn-primary" id="billingSaveBtn">Rechnungsdaten speichern</button>
-                </div>
-              </div>
-
-              <div class="settings-section" id="settingsAbrechnungSection" style="display:none;">
-                <div class="settings-section-title">Abrechnung (Krankenkasse)</div>
-                <div class="settings-section-body">
-                  <div class="form-group">
-                    <label class="form-label">Institutionskennzeichen (IK)</label>
-                    <input class="form-input" id="setIkNumber" type="text" inputmode="numeric" maxlength="9" placeholder="9-stellig, z. B. 460123456" />
-                    <div class="form-hint">Wird von der ARGE-IK vergeben. Pflicht für §302 SGB V Sammelabrechnung.</div>
-                  </div>
-                  <button class="btn-primary" id="ikSaveBtn">IK speichern</button>
-                  <div id="certStatus" style="margin-top:12px;font-size:13px;color:var(--text-muted);">Noch kein ITSG-Zertifikat hinterlegt.</div>
-                  <div class="form-hint" style="margin-top:8px;">Das ITSG/Dakota-Zertifikat (.p12) wird beim Erstellen einer Abrechnung im Browser eingelesen und signiert die DTA-Datei lokal — der private Schlüssel verlässt Ihren Rechner nicht.</div>
-                  <div id="betriebsartMount"></div>
-                </div>
-              </div>
-
-              <div class="settings-section" id="settingsTiSection" style="display:none;">
-                <div class="settings-section-title">Telematikinfrastruktur (TI)</div>
-                <div class="settings-section-body">
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label class="form-label">KIM-Adresse</label>
-                      <input class="form-input" id="set-kim-adresse" type="text" placeholder="praxis@kim.example.de" />
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Telematik-ID</label>
-                      <input class="form-input" id="set-telematik-id" type="text" placeholder="1-2arv..." />
-                    </div>
-                  </div>
-                  <button class="btn-primary" id="tiSaveBtn">TI-Daten speichern</button>
-                </div>
-              </div>
-            </div><!-- /gruppe finanzen -->
-
-            <!-- ── GRUPPE 3: ABRECHNUNG & DOKUMENTE ── -->
-            <div class="settings-group">
-              <div class="settings-group-label">Abrechnung &amp; Dokumente</div>
-
-              <div class="settings-section" id="aerzteSection">
-                <div class="settings-section-title">Ärzte</div>
-                <div class="settings-section-body">
-                  <p class="text-muted" style="font-size:12px;margin:0 0 10px;">
-                    Ärzte werden beim Erfassen einer Verordnung automatisch aufgenommen.
-                    Erkannt werden sie an der LANR — die bleibt bei Namensänderung und
-                    Praxiswechsel gleich. Hier lassen sie sich ergänzen oder nachtragen.
-                  </p>
-                  <div id="aerzteList" style="margin-bottom:12px;"></div>
-                  <div class="form-row">
-                    <div class="form-group">
-                      <input class="form-input" id="aeName" type="text" placeholder="Arztname" />
-                    </div>
-                    <div class="form-group">
-                      <input class="form-input" id="aeLanr" type="text" inputmode="numeric" maxlength="9" placeholder="LANR (9-stellig)" />
-                    </div>
-                  </div>
-                  <div class="form-row">
-                    <div class="form-group">
-                      <input class="form-input" id="aeBsnr" type="text" inputmode="numeric" maxlength="9" placeholder="BSNR (9-stellig)" />
-                    </div>
-                    <div class="form-group">
-                      <input class="form-input" id="aeFach" type="text" placeholder="Fachrichtung" />
-                    </div>
-                  </div>
-                  <div class="form-row">
-                    <div class="form-group">
-                      <input class="form-input" id="aeTelefon" type="text" placeholder="Telefon" />
-                    </div>
-                    <div class="form-group">
-                      <input class="form-input" id="aeFax" type="text" placeholder="Fax" />
-                    </div>
-                  </div>
-                  <div class="form-row">
-                    <div class="form-group">
-                      <input class="form-input" id="aeEmail" type="email" placeholder="E-Mail" />
-                    </div>
-                    <div class="form-group">
-                      <input class="form-input" id="aeAdresse" type="text" placeholder="Straße, PLZ Ort" />
-                    </div>
-                  </div>
-                  <button class="btn-primary" id="aeAddBtn">Hinzufügen</button>
-                </div>
-              </div>
-
               <!-- Praxis-Branding -->
-              <div class="settings-section" id="settingsBrandingSection">
+              
+<div class="settings-section" id="settingsBrandingSection">
                 <div class="settings-section-title">Praxis-Branding</div>
                 <div class="settings-section-body">
                   <div class="form-group">
@@ -2983,57 +2716,75 @@
                 </div>
               </div>
 
-            </div><!-- /gruppe dokumente -->
+              <!-- Terminerinnerung per E-Mail (06.11.2026, O-206) — Inhalt rendert module/terminerinnerung-einstellung.js; nur sichtbar, wo Migration 0110 angewandt ist -->
+              
+<div class="settings-section" id="settingsTerminerinnerungSection" hidden>
+                <div class="settings-section-title">Terminerinnerung</div>
+                <div class="settings-section-body"></div>
+              </div>
 
-            <!-- ── GRUPPE 3: KONTO & ABONNEMENT ── -->
-            <div class="settings-group">
-              <div class="settings-group-label">Konto &amp; Abonnement</div>
-
-              <div class="settings-section" id="settingsAccountSection">
-                <div class="settings-section-title" data-i18n="set_account">Konto</div>
+              <!-- Ausfallgebühr (No-Show / kurzfristige Absage) — für alle Owner -->
+              
+<div class="settings-section" id="settingsAusfallSection" hidden>
+                <div class="settings-section-title">Ausfallgebühr</div>
                 <div class="settings-section-body">
-                  <div style="font-size:14px;color:var(--text-muted);margin-bottom:12px;" id="accEmail"></div>
-                  <div class="settings-info-row">
-                    <span class="settings-info-label" data-i18n="kpi_plan">Paket</span>
-                    <span class="settings-info-value" id="setPlanValue">—</span>
+                  <p class="form-hint" style="margin-bottom:12px;">
+                    Bei No-Show oder kurzfristiger Absage kann automatisch eine private Ausfallrechnung angeboten werden.
+                  </p>
+                  <div class="form-group" style="margin-bottom:12px;">
+                    <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;">
+                      <input type="checkbox" id="setAusfallEnabled" style="width:18px;height:18px;accent-color:var(--primary);cursor:pointer;" />
+                      Ausfallgebühr aktivieren
+                    </label>
                   </div>
-                  <div class="settings-info-row">
-                    <span class="settings-info-label" data-i18n="kpi_status">Status</span>
-                    <span class="settings-info-value" id="setStatusValue">—</span>
+                  <div id="setAusfallFields" hidden>
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label class="form-label">Berechnung</label>
+                        <select class="form-select" id="setAusfallMode">
+                          <option value="fixed">Fester Betrag (€)</option>
+                          <option value="percent">% des Behandlungspreises</option>
+                        </select>
+                      </div>
+                      <div class="form-group" style="max-width:160px;">
+                        <label class="form-label" id="setAusfallAmountLabel">Betrag (€)</label>
+                        <input class="form-input" id="setAusfallAmount" type="number" min="0" step="0.01" placeholder="z. B. 35,00" />
+                      </div>
+                      <div class="form-group" style="max-width:160px;">
+                        <label class="form-label">Absagefrist (Std.)</label>
+                        <input class="form-input" id="setAusfallCutoff" type="number" min="0" step="1" value="24" />
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Hinweistext auf der Rechnung (optional)</label>
+                      <textarea class="form-input" id="setAusfallHinweis" rows="2" placeholder="z. B. Verweis auf Ihre Ausfallvereinbarung vom Behandlungsbeginn"></textarea>
+                    </div>
+                    <div class="form-hint" style="font-size:12px;margin-bottom:12px;">⚠ Nur wirksam mit vom Patienten unterschriebener Ausfallvereinbarung. Das Ausfallhonorar ist Schadensersatz (umsatzsteuerfrei) und kann nicht über die Krankenkasse abgerechnet werden.</div>
                   </div>
-                  <div class="plan-badge" id="accPlanBadge" style="margin-top:12px;">—</div>
-                  <div id="subscriptionStatusBanner" hidden></div>
-                  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
-                    <button class="btn-ghost" id="subPortalBtn" data-i18n="sub_portal">Abonnement verwalten</button>
-                    <button class="btn-primary" id="subUpgradeBtn" data-i18n="sub_upgrade">Upgrade</button>
+                  <button class="btn-primary" id="setAusfallSaveBtn" type="button">Speichern</button>
+                </div>
+              </div>
+
+              <!-- Legende der Fußgrafik (Podologie) — Owner-Einstellung -->
+              
+<div class="settings-section" id="settingsLegendeSection" hidden>
+                <div class="settings-section-title">Legende der Fußgrafik</div>
+                <div class="settings-section-body">
+                  <p class="form-hint" style="margin-bottom:12px;">
+                    Sie entscheiden, welches Zeichen im Fußbefund welchen Befund bedeutet.
+                    Bereits gesetzte Markierungen behalten ihre ursprüngliche Bedeutung —
+                    eine Umbenennung ändert keinen bestehenden Befund.
+                  </p>
+                  <div id="setLegendeList" style="margin-bottom:12px;"></div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn" id="setLegendeAddBtn" type="button">＋ Eintrag</button>
+                    <button class="btn" id="setLegendeResetBtn" type="button">Standard wiederherstellen</button>
+                    <button class="btn-primary" id="setLegendeSaveBtn" type="button">Speichern</button>
                   </div>
                 </div>
               </div>
 
-              <div class="settings-section">
-                <div class="settings-section-title" data-i18n="features_title">Paketinhalt</div>
-                <div class="settings-section-body">
-                  <ul id="settingsFeatureList" class="feature-list"></ul>
-                </div>
-              </div>
-
-              <div class="settings-section">
-                <div class="settings-section-title" data-i18n="set_password">Passwort</div>
-                <div class="settings-section-body">
-                  <div class="form-group">
-                    <label class="form-label" data-i18n="set_new_pw">Neues Passwort</label>
-                    <input class="form-input" id="setPw" type="password" minlength="8" />
-                  </div>
-                  <button class="btn-primary" id="pwChangeBtn" data-i18n="set_change">Passwort ändern</button>
-                </div>
-              </div>
-            </div><!-- /gruppe konto -->
-
-            <!-- ── GRUPPE 4: INTEGRATIONEN & DATENSCHUTZ ── -->
-            <div class="settings-group">
-              <div class="settings-group-label">Integrationen &amp; Datenschutz</div>
-
-              <div class="settings-section">
+<div class="settings-section">
                 <div class="settings-section-title" data-i18n="set_integrations">Integrationen</div>
                 <div class="settings-section-body">
                   <div class="integration-row">
@@ -3046,20 +2797,15 @@
                     <button class="btn-ghost" id="googleCalBtn" data-i18n="btn_connect">Verbinden</button>
                   </div>
                 </div>
-              <!-- KI-Unterstützung (M4) -->
-              <div class="settings-section" id="settingsKiSection">
-                <div class="settings-section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 2a10 10 0 0 1 10 10"/></svg> KI-Unterstützung</div>
-                <div class="settings-section-body" id="kiEinstellungenMount"></div>
               </div>
+            </div>
 
-              <!-- Systemstatus (Box-Test 22.11.2026): nur Box + Inhaber, module/systemstatus.js blendet ein -->
-              <div class="settings-section" id="settingsSystemSection" hidden>
-                <div class="settings-section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg> System</div>
-                <div class="settings-section-body" data-systemstatus></div>
-              </div>
+            <div class="settings-group" data-einst="recht">
+              <div class="settings-group-label">Impressum &amp; Datenschutz</div>
 
               <!-- DSGVO Self-Service (Art. 15 + Art. 17) -->
-              <div class="settings-section" id="settingsDsgvoSection">
+              
+<div class="settings-section" id="settingsDsgvoSection">
                 <div class="settings-section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Datenschutz (DSGVO)</div>
                 <div class="settings-section-body">
                   <p style="font-size:13px;color:var(--text-muted);margin:0 0 14px;line-height:1.5;">
@@ -3080,7 +2826,8 @@
               </div>
 
               <!-- Quellenangabe § 63 UrhG (O-78) — Kaynak: onprem/NOTICE-QUELLEN.txt, ändert sich eines, ändern sich beide -->
-              <div class="settings-section" id="settingsQuellenSection">
+              
+<div class="settings-section" id="settingsQuellenSection">
                 <div class="settings-section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Datenquellen</div>
                 <div class="settings-section-body">
                   <p style="font-size:12px;color:var(--text-muted);margin:0;line-height:1.6;">
@@ -3095,7 +2842,294 @@
                   </p>
                 </div>
               </div>
-            </div><!-- /gruppe integrationen -->
+            </div>
+
+            <div class="settings-group" data-einst="team">
+              <div class="settings-group-label">Mitarbeiter &amp; Rechte</div>
+            </div>
+
+            <div class="settings-group" data-einst="standorte">
+              <div class="settings-group-label">Standorte</div>
+
+              <!-- Geschäfte (Multi-Business, nur Enterprise/Paket 3) -->
+              
+<div class="settings-section" id="settingsBusinessesSection" hidden>
+                <div class="settings-section-title">Geschäfte</div>
+                <div class="settings-section-body">
+                  <p class="form-hint" style="margin-bottom:12px;">
+                    Verwalten Sie Ihre Standorte. Jedes Geschäft hat eigene Leistungen, Arbeitszeiten und Personal.
+                  </p>
+                  <div id="businessesList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+                  <button class="btn-primary" id="addBusinessBtn" type="button">＋ Neues Geschäft hinzufügen</button>
+                </div>
+              </div>
+
+              <!-- Datenfreigabe zwischen Standorten (Multi-Business) -->
+              
+<div class="settings-section" id="settingsDataSharingSection" hidden>
+                <div class="settings-section-title">Datenfreigabe zwischen Standorten</div>
+                <div class="settings-section-body">
+                  <p class="form-hint" style="margin-bottom:14px;">
+                    Legen Sie fest, welche Daten über alle Ihre Standorte hinweg <strong>gemeinsam</strong> genutzt werden.
+                    Eingeschaltet = alle Standorte sehen dieselben Daten. Ausgeschaltet = die Anzeige bleibt je Standort
+                    getrennt. Das ist ein Anzeigefilter, kein Zugriffsschutz: Alle Standorte gehören zu derselben Praxis. <em>Termine/Kalender sind aus Sicherheitsgründen immer
+                    standortübergreifend sichtbar (zur Vermeidung von Mitarbeiter-Doppelbuchungen).</em>
+                  </p>
+                  <div id="dataSharingList" style="display:flex;flex-direction:column;gap:0;"></div>
+                  <button class="btn-primary" id="dataSharingSaveBtn" type="button" style="margin-top:14px;">Speichern</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-group" data-einst="dokumente">
+              <div class="settings-group-label">Dokumente &amp; Kommunikation</div>
+
+<div class="settings-section" id="aerzteSection">
+                <div class="settings-section-title">Ärzte</div>
+                <div class="settings-section-body">
+                  <p class="text-muted" style="font-size:12px;margin:0 0 10px;">
+                    Ärzte werden beim Erfassen einer Verordnung automatisch aufgenommen.
+                    Erkannt werden sie an der LANR — die bleibt bei Namensänderung und
+                    Praxiswechsel gleich. Hier lassen sie sich ergänzen oder nachtragen.
+                  </p>
+                  <div id="aerzteList" style="margin-bottom:12px;"></div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <input class="form-input" id="aeName" type="text" placeholder="Arztname" />
+                    </div>
+                    <div class="form-group">
+                      <input class="form-input" id="aeLanr" type="text" inputmode="numeric" maxlength="9" placeholder="LANR (9-stellig)" />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <input class="form-input" id="aeBsnr" type="text" inputmode="numeric" maxlength="9" placeholder="BSNR (9-stellig)" />
+                    </div>
+                    <div class="form-group">
+                      <input class="form-input" id="aeFach" type="text" placeholder="Fachrichtung" />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <input class="form-input" id="aeTelefon" type="text" placeholder="Telefon" />
+                    </div>
+                    <div class="form-group">
+                      <input class="form-input" id="aeFax" type="text" placeholder="Fax" />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <input class="form-input" id="aeEmail" type="email" placeholder="E-Mail" />
+                    </div>
+                    <div class="form-group">
+                      <input class="form-input" id="aeAdresse" type="text" placeholder="Straße, PLZ Ort" />
+                    </div>
+                  </div>
+                  <button class="btn-primary" id="aeAddBtn">Hinzufügen</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-group" data-einst="datev">
+              <div class="settings-group-label">DATEV-Export</div>
+
+              <!-- DATEV-Export (22.10.2026) — Inhalt rendert module/datev-einstellungen.js -->
+              
+<div class="settings-section" id="settingsDatevSection" hidden>
+                <div class="settings-section-title">DATEV-Export</div>
+                <div class="settings-section-body"></div>
+              </div>
+
+              <!-- Buchungskonten (Gegenkonten) — Owner-Einstellung (profiles.buchungskonten) -->
+              
+<div class="settings-section" id="settingsKontenSection" hidden>
+                <div class="settings-section-title">Buchungskonten</div>
+                <div class="settings-section-body">
+                  <p class="form-hint" style="margin-bottom:12px;">
+                    Beim Verbuchen eines Zahlungseingangs wählen Sie aus, wohin das Geld
+                    geflossen ist — Kasse, Bank, oder bei einem abgeschriebenen Restbetrag
+                    die Erlösschmälerung. Das sind die Angaben, die Ihr Steuerberater braucht.
+                    Solange Sie nichts ändern, gilt der Standardrahmen (SKR03).
+                    Ein Konto, auf das schon gebucht wurde, sollten Sie deaktivieren statt
+                    entfernen: bereits gebuchte Zahlungen behalten ohnehin ihre ursprüngliche
+                    Kontobezeichnung.
+                  </p>
+                  <div id="setKontenList" style="margin-bottom:12px;"></div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn" id="setKontenAddBtn" type="button">＋ Konto</button>
+                    <button class="btn-primary" id="setKontenSaveBtn" type="button">Speichern</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-group" data-einst="abrechnung">
+              <div class="settings-group-label">Abrechnung</div>
+
+<div class="settings-section" id="settingsAbrechnungSection" style="display:none;">
+                <div class="settings-section-title">Abrechnung (Krankenkasse)</div>
+                <div class="settings-section-body">
+                  <div class="form-group">
+                    <label class="form-label">Institutionskennzeichen (IK)</label>
+                    <input class="form-input" id="setIkNumber" type="text" inputmode="numeric" maxlength="9" placeholder="9-stellig, z. B. 460123456" />
+                    <div class="form-hint">Wird von der ARGE-IK vergeben. Pflicht für §302 SGB V Sammelabrechnung.</div>
+                  </div>
+                  <button class="btn-primary" id="ikSaveBtn">IK speichern</button>
+                  <div id="certStatus" style="margin-top:12px;font-size:13px;color:var(--text-muted);">Noch kein ITSG-Zertifikat hinterlegt.</div>
+                  <div class="form-hint" style="margin-top:8px;">Das ITSG/Dakota-Zertifikat (.p12) wird beim Erstellen einer Abrechnung im Browser eingelesen und signiert die DTA-Datei lokal — der private Schlüssel verlässt Ihren Rechner nicht.</div>
+                  <div id="betriebsartMount"></div>
+                </div>
+              </div>
+
+<div class="settings-section" id="settingsTiSection" style="display:none;">
+                <div class="settings-section-title">Telematikinfrastruktur (TI)</div>
+                <div class="settings-section-body">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">KIM-Adresse</label>
+                      <input class="form-input" id="set-kim-adresse" type="text" placeholder="praxis@kim.example.de" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Telematik-ID</label>
+                      <input class="form-input" id="set-telematik-id" type="text" placeholder="1-2arv..." />
+                    </div>
+                  </div>
+                  <button class="btn-primary" id="tiSaveBtn">TI-Daten speichern</button>
+                </div>
+              </div>
+
+              <!-- Selbstzahler-Preisstufen — Owner-Einstellung (profiles.selbstzahler_stufen) -->
+              
+<div class="settings-section" id="settingsPreisstufenSection" hidden>
+                <div class="settings-section-title">Selbstzahler-Preisstufen</div>
+                <div class="settings-section-body">
+                  <p class="form-hint" style="margin-bottom:12px;">
+                    Sie benennen Ihre Preisstufen selbst — etwa einen Bestandspatienten-Preis
+                    und einen Hausbesuch-Preis. Beim Anlegen einer Rechnung setzt ein Klick
+                    den Betrag, daneben steht, was dieser Patient zuletzt bezahlt hat.
+                    Eine spätere Änderung wirkt nur auf neue Rechnungen: gestellte Rechnungen
+                    behalten ihren Betrag.
+                  </p>
+                  <div id="setStufenList" style="margin-bottom:12px;"></div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn" id="setStufenAddBtn" type="button">＋ Preisstufe</button>
+                    <button class="btn-primary" id="setStufenSaveBtn" type="button">Speichern</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-group" data-einst="rechnung">
+              <div class="settings-group-label">Rechnung</div>
+
+<div class="settings-section" id="settingsBillingSection">
+                <div class="settings-section-title">Rechnungsdaten</div>
+                <div class="settings-section-body">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">Bank</label>
+                      <input class="form-input" id="setBankName" type="text" placeholder="z. B. Sparkasse Köln-Bonn" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">IBAN</label>
+                      <input class="form-input" id="setIban" type="text" placeholder="DE…" />
+                    </div>
+                    <div class="form-group" style="max-width:160px;">
+                      <label class="form-label">BIC</label>
+                      <input class="form-input" id="setBic" type="text" placeholder="COLSDE…" />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">Steuernummer</label>
+                      <input class="form-input" id="setSteuernummer" type="text" placeholder="z. B. 220/5070/0815" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">USt-IdNr (optional)</label>
+                      <input class="form-input" id="setUstId" type="text" placeholder="DE…" />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Steuerhinweis (erscheint auf Rechnung)</label>
+                    <select class="form-input" id="setTaxExemptSelect" style="margin-bottom:6px;">
+                      <option value="§4nr14a">§ 4 Nr. 14a UStG — Umsatzsteuerfreie Heilbehandlung</option>
+                      <option value="§4nr14b">§ 4 Nr. 14b UStG — Krankenhausbehandlung</option>
+                      <option value="§19">§ 19 Abs. 1 UStG — Kleinunternehmerregelung</option>
+                      <option value="19pct">19 % Umsatzsteuer (keine Befreiung)</option>
+                      <option value="custom">Eigene Eingabe…</option>
+                    </select>
+                    <input class="form-input" id="setTaxExempt" type="text" placeholder="z. B. Gemäß § 4 Nr. 14a UStG umsatzsteuerfrei" style="display:none;" />
+                    <div class="form-hint" id="setTaxExemptHint"></div>
+                  </div>
+                  <button class="btn-primary" id="billingSaveBtn">Rechnungsdaten speichern</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-group" data-einst="ki">
+              <div class="settings-group-label">KI-Unterstützung</div>
+
+              <!-- KI-Unterstützung (M4) -->
+              
+<div class="settings-section" id="settingsKiSection">
+                <div class="settings-section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 2a10 10 0 0 1 10 10"/></svg> KI-Unterstützung</div>
+                <div class="settings-section-body" id="kiEinstellungenMount"></div>
+              </div>
+            </div>
+
+            <div class="settings-group" data-einst="system">
+              <div class="settings-group-label">System</div>
+
+              <!-- Systemstatus (Box-Test 22.11.2026): nur Box + Inhaber, module/systemstatus.js blendet ein -->
+              
+<div class="settings-section" id="settingsSystemSection" hidden>
+                <div class="settings-section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg> System</div>
+                <div class="settings-section-body" data-systemstatus></div>
+              </div>
+            </div>
+
+            <div class="settings-group" data-einst="konto">
+              <div class="settings-group-label">Konto</div>
+
+<div class="settings-section" id="settingsAccountSection">
+                <div class="settings-section-title" data-i18n="set_account">Konto</div>
+                <div class="settings-section-body">
+                  <div style="font-size:14px;color:var(--text-muted);margin-bottom:12px;" id="accEmail"></div>
+                  <div class="settings-info-row">
+                    <span class="settings-info-label" data-i18n="kpi_plan">Paket</span>
+                    <span class="settings-info-value" id="setPlanValue">—</span>
+                  </div>
+                  <div class="settings-info-row">
+                    <span class="settings-info-label" data-i18n="kpi_status">Status</span>
+                    <span class="settings-info-value" id="setStatusValue">—</span>
+                  </div>
+                  <div class="plan-badge" id="accPlanBadge" style="margin-top:12px;">—</div>
+                  <div id="subscriptionStatusBanner" hidden></div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+                    <button class="btn-ghost" id="subPortalBtn" data-i18n="sub_portal">Abonnement verwalten</button>
+                    <button class="btn-primary" id="subUpgradeBtn" data-i18n="sub_upgrade">Upgrade</button>
+                  </div>
+                </div>
+              </div>
+
+<div class="settings-section">
+                <div class="settings-section-title" data-i18n="features_title">Paketinhalt</div>
+                <div class="settings-section-body">
+                  <ul id="settingsFeatureList" class="feature-list"></ul>
+                </div>
+              </div>
+
+<div class="settings-section">
+                <div class="settings-section-title" data-i18n="set_password">Passwort</div>
+                <div class="settings-section-body">
+                  <div class="form-group">
+                    <label class="form-label" data-i18n="set_new_pw">Neues Passwort</label>
+                    <input class="form-input" id="setPw" type="password" minlength="8" />
+                  </div>
+                  <button class="btn-primary" id="pwChangeBtn" data-i18n="set_change">Passwort ändern</button>
+                </div>
+              </div>
+            </div>
 
           </div><!-- /settings-sections -->
 
@@ -5982,7 +6016,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261123en1"></script>
+  <script type="module" src="dashboard.js?v=20261123en2"></script>
 </body>
 
 </html>

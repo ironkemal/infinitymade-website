@@ -23,7 +23,7 @@ test('KI settings mount precedes unrelated async integrations and billing render
  // Execute actual leading dashboard statements: no Supabase dependency needed.
  const prefix=body.slice(0,body.indexOf("  document.getElementById('setBiz')"))+'\n}';
  let mounted=false;
- const run=new Function('document','mountKiEinstellungen','API','supabase','currentProfile','currentSession','getOwnerId','showToast','showConfirmModal','mountSystemstatus','mountEinstellungenNavigation','switchPanel',prefix+'\nreturn loadSettings();');
+ const run=new Function('document','mountKiEinstellungen','API','supabase','currentProfile','currentSession','getOwnerId','showToast','showConfirmModal','mountSystemstatus','einstellungenKategorienAufbauen','switchPanel',prefix+'\nreturn loadSettings();');
  await run({getElementById:()=>({})},async()=>{mounted=true;},'/api',{}, {role:'owner'}, {user:{id:'synthetic'}},()=> 'synthetic',()=>{},()=>{},async()=>'versteckt',()=>null,async()=>{});
  assert.equal(mounted,true);
 });

@@ -34,6 +34,21 @@ try {
       await page.evaluate(() => window.gehZuEinstellung?.('settingsProfileSection'));
       await ruhe(page, 500);
       if (!(await sichtbar(page, '#settingsProfileSection'))) befunde.push(`${breite}px: gehZuEinstellung öffnet „Allgemein“ nicht`);
+      // KI-Bereich zeigt den KI-Abschnitt (Altfehler: offener „Integrationen“-Abschnitt schluckte KI/System/DSGVO)
+      if (breite === 1280) await page.locator('.einst-nav-eintrag', { hasText: 'KI-Unterstützung' }).click();
+      else await page.locator('.einst-nav-auswahl').selectOption({ label: 'KI-Unterstützung' });
+      await ruhe(page, 200);
+      if (!(await sichtbar(page, '#settingsKiSection'))) befunde.push(`${breite}px: Bereich „KI-Unterstützung“ zeigt den KI-Abschnitt nicht`);
+      // Suche über alle Bereiche
+      await page.locator('.einst-suche').fill('datev');
+      await ruhe(page, 200);
+      if (!(await sichtbar(page, '#settingsDatevSection'))) befunde.push(`${breite}px: Suche „datev“ findet DATEV-Export nicht`);
+      if (await sichtbar(page, '#settingsKiSection')) befunde.push(`${breite}px: Suche „datev“ zeigt weiter KI`);
+      await page.locator('.einst-suche').fill('');
+      // Deep-Link
+      await page.evaluate(() => { location.hash = '#settings/konto'; });
+      await ruhe(page, 300);
+      if (!(await sichtbar(page, '#settingsAccountSection'))) befunde.push(`${breite}px: #settings/konto öffnet „Konto“ nicht`);
       const quer = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1);
       if (quer) befunde.push(`${breite}px: horizontales Scrollen`);
     } finally {

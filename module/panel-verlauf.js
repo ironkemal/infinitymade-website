@@ -21,7 +21,8 @@ const PANEL_ID_RE = /^[a-z0-9-]+$/;
  * @returns {string}
  */
 export function panelAusHash(hash, { existiert } = {}) {
-  const roh = String(hash || '').replace(/^#/, '').trim().toLowerCase();
+  // Unterpfad (z. B. #settings/konto = Bereich der Einstellungen, 23.11.2026) gehört dem Panel selbst.
+  const roh = String(hash || '').replace(/^#/, '').trim().toLowerCase().split('/')[0];
   if (!roh || roh === 'overview') return 'overview';
   if (!PANEL_ID_RE.test(roh)) return 'overview';
   if (typeof existiert === 'function' && !existiert(roh)) return 'overview';
@@ -66,6 +67,7 @@ export function erstellePanelVerlauf({
     if (ausVerlauf || !win?.history || !win?.location) return;
     const zielUrl = urlFuerPanel(id, win.location);
     const aktuellUrl = `${win.location.pathname || '/'}${win.location.search || ''}${win.location.hash || ''}`;
+    if (String(win.location.hash || '').toLowerCase().startsWith(`#${id}/`)) return; // Unterpfad des Panels behalten
     if (zielUrl !== aktuellUrl) {
       win.history.pushState({ panel: id || 'overview' }, '', zielUrl);
     }

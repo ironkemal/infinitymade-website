@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-23",
  "dateien": 607,
- "funktionen": 4936,
+ "funktionen": 4940,
  "module": [
   "abrechnung",
   "anamnese",
@@ -8074,6 +8074,8 @@
     "createZuzahlungsforderungRouter",
     "dgVorschlag",
     "einmalJeSitzung",
+    "einstellungenKategorienAufbauen",
+    "einstellungenNavAufbauen",
     "emojisAus",
     "enterKioskMode",
     "erfasseVerordnung",
@@ -8088,6 +8090,7 @@
     "getUmlautVariants",
     "gleicheSitzungenAb",
     "goStep",
+    "gruppe",
     "gruppeVon",
     "gueltigBestaetigteIds",
     "handleAcceptFlow",
@@ -8116,7 +8119,6 @@
     "montiereShellansicht",
     "mountCalendar",
     "mountEinrichtungRing",
-    "mountEinstellungenNavigation",
     "mountStandortPlan",
     "moveTo",
     "musterAusZeilen",
@@ -8783,7 +8785,6 @@
     "sendeLauf",
     "senden",
     "setzeKopfInert",
-    "sichtbareKategorien",
     "sichtbareStandorte",
     "sollZeilen",
     "spaltenModell",
@@ -9555,7 +9556,6 @@
     "sendeLauf",
     "senden",
     "setzeKopfInert",
-    "sichtbareKategorien",
     "sichtbareStandorte",
     "sollZeilen",
     "spaltenModell",
@@ -21754,6 +21754,8 @@
     "createZuzahlungsforderungRouter",
     "dgVorschlag",
     "einmalJeSitzung",
+    "einstellungenKategorienAufbauen",
+    "einstellungenNavAufbauen",
     "emojisAus",
     "enterKioskMode",
     "erfasseVerordnung",
@@ -21768,6 +21770,7 @@
     "getUmlautVariants",
     "gleicheSitzungenAb",
     "goStep",
+    "gruppe",
     "gruppeVon",
     "gueltigBestaetigteIds",
     "handleAcceptFlow",
@@ -21796,7 +21799,6 @@
     "montiereShellansicht",
     "mountCalendar",
     "mountEinrichtungRing",
-    "mountEinstellungenNavigation",
     "mountStandortPlan",
     "moveTo",
     "musterAusZeilen",
@@ -37779,6 +37781,7 @@
     "setAnamChecks",
     "showAnfrageDetail",
     "showApp",
+    "sichtbar",
     "sitzungsplan",
     "sollZeilen",
     "spaltenAusFelder",
@@ -46527,6 +46530,8 @@
     "createZuzahlungsforderungRouter",
     "dgVorschlag",
     "einmalJeSitzung",
+    "einstellungenKategorienAufbauen",
+    "einstellungenNavAufbauen",
     "emojisAus",
     "enterKioskMode",
     "erfasseVerordnung",
@@ -46541,6 +46546,7 @@
     "getUmlautVariants",
     "gleicheSitzungenAb",
     "goStep",
+    "gruppe",
     "gruppeVon",
     "gueltigBestaetigteIds",
     "handleAcceptFlow",
@@ -46569,7 +46575,6 @@
     "montiereShellansicht",
     "mountCalendar",
     "mountEinrichtungRing",
-    "mountEinstellungenNavigation",
     "mountStandortPlan",
     "moveTo",
     "musterAusZeilen",
@@ -63066,6 +63071,7 @@
     "(datei) module/termin-leistungen.js",
     "_speichereBetriebsart",
     "createHandlungsbedarfKarte",
+    "einstellungenNavAufbauen",
     "erstelleApp",
     "init",
     "ladeHandlungsbedarfInput",
@@ -63081,6 +63087,7 @@
     "render",
     "renderBookingCalendar",
     "scanneRezeptLokal",
+    "sichtbar",
     "verarbeite"
    ],
    "modules": [
@@ -64976,7 +64983,8 @@
    "calledBy": [
     "handleGmailCallback",
     "oeffneBelegDruck",
-    "renderOverview"
+    "renderOverview",
+    "zeigeBereich"
    ],
    "modules": [
     "abrechnung",
@@ -81219,12 +81227,12 @@
    ],
    "domRender": true,
    "calls": [
+    "einstellungenKategorienAufbauen",
     "getOwnerId",
     "getSector",
     "initTaxExemptDropdown",
     "isPraxisSector",
     "loadAerzte",
-    "mountEinstellungenNavigation",
     "mountKiEinstellungen",
     "mountSystemstatus",
     "renderAbrechnungSettings",
@@ -97395,6 +97403,7 @@
     "loesePosition",
     "resolve",
     "setFreqValue",
+    "trifftSuche",
     "versicherungsart"
    ],
    "modules": [
@@ -121808,9 +121817,7 @@
    "calledBy": [
     "aktualisieren",
     "alleKodes",
-    "anwenden",
     "kopfMenue",
-    "mountEinstellungenNavigation",
     "mountTerminKonflikte",
     "onIcdChange",
     "start",
@@ -134572,80 +134579,13 @@
    "uiPfad": []
   },
   {
-   "name": "kategorieVon",
+   "name": "navEintraege",
    "kind": "function",
    "lang": "js",
-   "file": "module/einstellungen-navigation.js",
-   "start": 75,
-   "end": 79,
-   "lines": 5,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "domIds": [],
-   "domRenderIds": [],
-   "domRender": false,
-   "calls": [],
-   "calledBy": [
-    "anwenden",
-    "mountEinstellungenNavigation",
-    "zeigeAbschnitt"
-   ],
-   "modules": [
-    "abrechnung",
-    "anamnese",
-    "anfragen",
-    "b2b",
-    "b2c",
-    "bkActionArrivedBtn",
-    "bkActionFahrtEndBtn",
-    "bkActionFahrtStartBtn",
-    "bkActionHbCopyBtn",
-    "doctors",
-    "fahrtenbuch",
-    "fbFahrtenExportCsv",
-    "fbFahrtenExportProt",
-    "fbFahrtenExportVerz",
-    "fbFahrtenRefresh",
-    "fbReportRefresh",
-    "fbVehicleAddBtn",
-    "feSaveBtn",
-    "fsAddVehicleBtn",
-    "fsSaveBtn",
-    "fussstatus",
-    "hours",
-    "kunden",
-    "mahnwesen",
-    "notizen",
-    "patientDetailModal",
-    "podologie-billing",
-    "rechnungen",
-    "rezeptModal",
-    "services",
-    "settings",
-    "statistik",
-    "team",
-    "ueberblick",
-    "vehEditSaveBtn",
-    "verordnungen",
-    "vorlagen"
-   ],
-   "gemeinsam": true,
-   "uiPfad": [
-    "ortak yardımcı — 37 modülden çağrılıyor"
-   ]
-  },
-  {
-   "name": "sichtbareKategorien",
-   "kind": "function",
-   "lang": "js",
-   "file": "module/einstellungen-navigation.js",
-   "start": 86,
-   "end": 89,
-   "lines": 4,
+   "file": "module/einstellungen-nav.js",
+   "start": 13,
+   "end": 22,
+   "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -134656,11 +134596,13 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
-    "has"
+    "push"
    ],
    "calledBy": [
-    "anwenden",
-    "mountEinstellungenNavigation"
+    "lesen",
+    "montiereFormularAbschnitte",
+    "rebuild",
+    "sichtbar"
    ],
    "modules": [
     "abrechnung",
@@ -134707,13 +134649,13 @@
    ]
   },
   {
-   "name": "aktiveKategorie",
-   "kind": "function",
+   "name": "sichtbar",
+   "kind": "arrow",
    "lang": "js",
-   "file": "module/einstellungen-navigation.js",
-   "start": 95,
-   "end": 98,
-   "lines": 4,
+   "file": "module/einstellungen-nav.js",
+   "start": 24,
+   "end": 34,
+   "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -134723,10 +134665,31 @@
    "domIds": [],
    "domRenderIds": [],
    "domRender": false,
-   "calls": [],
+   "calls": [
+    "lesen",
+    "navEintraege",
+    "push"
+   ],
    "calledBy": [
-    "anwenden",
-    "mountEinstellungenNavigation"
+    "(datei) api-backend/setup/pruefungen.js",
+    "(datei) module/krankenkasse-suche.js",
+    "(datei) module/sondertag.js",
+    "(datei) module/verordnung-podo.js",
+    "(datei) module/zaa-fehler.js",
+    "akteReiterPlan",
+    "behandlungStornieren",
+    "fuellen",
+    "g",
+    "handlungsbedarfHtml",
+    "initBarcodeDialog",
+    "lesen",
+    "mountStandortplanReiter",
+    "nameQuelle",
+    "todoHtml",
+    "updateVehEditKindHint",
+    "validateStep4",
+    "z",
+    "zahlOk"
    ],
    "modules": [
     "abrechnung",
@@ -134773,12 +134736,210 @@
    ]
   },
   {
-   "name": "vonModulSichtbar",
+   "name": "lesen",
    "kind": "function",
    "lang": "js",
-   "file": "module/einstellungen-navigation.js",
-   "start": 101,
-   "end": 103,
+   "file": "module/einstellungen-nav.js",
+   "start": 26,
+   "end": 34,
+   "lines": 9,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "navEintraege",
+    "push",
+    "sichtbar"
+   ],
+   "calledBy": [
+    "(datei) api-backend/billing/api/abrechnung.routes.js",
+    "(datei) api-backend/db/schema-zaehler.js",
+    "(datei) module/anamnese.js",
+    "(datei) module/termin-leistungen.js",
+    "_speichereBetriebsart",
+    "createHandlungsbedarfKarte",
+    "einstellungenNavAufbauen",
+    "erstelleApp",
+    "init",
+    "ladeHandlungsbedarfInput",
+    "ladePraxisAngabenMitStandort",
+    "laden",
+    "markiereNichtErschienen",
+    "montiereStartansicht",
+    "mountMailSignaturen",
+    "mountRaumTagesansicht",
+    "notify",
+    "pruefeMaske",
+    "redraw",
+    "render",
+    "renderBookingCalendar",
+    "scanneRezeptLokal",
+    "sichtbar",
+    "verarbeite"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "markiere",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/einstellungen-nav.js",
+   "start": 40,
+   "end": 46,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "toggle"
+   ],
+   "calledBy": [
+    "anwenden",
+    "auswahlAufheben",
+    "einstellungenNavAufbauen",
+    "feldFehler",
+    "mountFarbwahl",
+    "mountSondertagAnzeige",
+    "oeffne",
+    "verdrahteAuswahl",
+    "verordnungenListeLaden"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "einstellungenNavAufbauen",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/einstellungen-nav.js",
+   "start": 49,
+   "end": 86,
+   "lines": 38,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [
+    "panel-settings"
+   ],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "add",
+    "lesen",
+    "markiere"
+   ],
+   "calledBy": [
+    "(datei) module/einstellungen-nav.js"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "bereicheAus",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/einstellungen-nav.js",
+   "start": 114,
+   "end": 116,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -134791,8 +134952,7 @@
    "domRender": false,
    "calls": [],
    "calledBy": [
-    "anwenden",
-    "mountEinstellungenNavigation"
+    "anwenden"
    ],
    "modules": [
     "abrechnung",
@@ -134839,13 +134999,13 @@
    ]
   },
   {
-   "name": "abschnittInfo",
+   "name": "bereichWaehlen",
    "kind": "function",
    "lang": "js",
-   "file": "module/einstellungen-navigation.js",
-   "start": 106,
-   "end": 109,
-   "lines": 4,
+   "file": "module/einstellungen-nav.js",
+   "start": 119,
+   "end": 121,
+   "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -134857,9 +135017,7 @@
    "domRender": false,
    "calls": [],
    "calledBy": [
-    "anwenden",
-    "mountEinstellungenNavigation",
-    "zeigeAbschnitt"
+    "anwenden"
    ],
    "modules": [
     "abrechnung",
@@ -134906,13 +135064,288 @@
    ]
   },
   {
-   "name": "mountEinstellungenNavigation",
+   "name": "trifftSuche",
    "kind": "function",
    "lang": "js",
-   "file": "module/einstellungen-navigation.js",
-   "start": 118,
-   "end": 227,
-   "lines": 110,
+   "file": "module/einstellungen-nav.js",
+   "start": 124,
+   "end": 128,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "norm"
+   ],
+   "calledBy": [
+    "anwenden"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "norm",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/einstellungen-nav.js",
+   "start": 125,
+   "end": 131,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "bereichAusHash"
+   ],
+   "calledBy": [
+    "(datei) ops/tools/regroup.mjs",
+    "blockerId",
+    "gespeicherterKodeHinweis",
+    "janein",
+    "leitBuchstabe",
+    "loesePosition",
+    "resolve",
+    "setFreqValue",
+    "trifftSuche",
+    "versicherungsart"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "bereichAusHash",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/einstellungen-nav.js",
+   "start": 131,
+   "end": 133,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [
+    "einstellungenKategorienAufbauen",
+    "gruppe",
+    "norm"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "modulSichtbar",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/einstellungen-nav.js",
+   "start": 137,
+   "end": 141,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [
+    "anwenden"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "einstellungenKategorienAufbauen",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/einstellungen-nav.js",
+   "start": 143,
+   "end": 188,
+   "lines": 46,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -134921,23 +135354,16 @@
    "storage": [],
    "domIds": [
     "panel-settings",
-    "settingsMitarbeiterAppSection"
+    "settingsTeamLinkSection"
    ],
    "domRenderIds": [],
    "domRender": false,
    "calls": [
-    "abschnittInfo",
-    "abschnitte",
     "add",
-    "aktiveKategorie",
-    "aktualisiere",
     "anwenden",
-    "kategorieVon",
-    "lies",
-    "merke",
-    "sichtbareKategorien",
-    "vonModulSichtbar",
-    "zeige"
+    "bereichAusHash",
+    "gruppe",
+    "zeigeBereich"
    ],
    "calledBy": [
     "loadSettings"
@@ -134987,162 +135413,97 @@
    ]
   },
   {
-   "name": "lies",
+   "name": "gruppe",
    "kind": "arrow",
    "lang": "js",
-   "file": "module/einstellungen-navigation.js",
-   "start": 127,
-   "end": 127,
-   "lines": 1,
+   "file": "module/einstellungen-nav.js",
+   "start": 148,
+   "end": 185,
+   "lines": 38,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "domIds": [],
+   "domIds": [
+    "settingsTeamLinkSection"
+   ],
    "domRenderIds": [],
    "domRender": false,
-   "calls": [],
-   "calledBy": [
-    "erstCheckinAnbieten",
-    "mountEinstellungenNavigation"
-   ],
-   "modules": [
-    "abrechnung",
-    "anamnese",
-    "anfragen",
-    "b2b",
-    "b2c",
-    "bkActionArrivedBtn",
-    "bkActionFahrtEndBtn",
-    "bkActionFahrtStartBtn",
-    "bkActionHbCopyBtn",
-    "doctors",
-    "fahrtenbuch",
-    "fbFahrtenExportCsv",
-    "fbFahrtenExportProt",
-    "fbFahrtenExportVerz",
-    "fbFahrtenRefresh",
-    "fbReportRefresh",
-    "fbVehicleAddBtn",
-    "feSaveBtn",
-    "fsAddVehicleBtn",
-    "fsSaveBtn",
-    "fussstatus",
-    "hours",
-    "kunden",
-    "mahnwesen",
-    "notizen",
-    "patientDetailModal",
-    "podologie-billing",
-    "rechnungen",
-    "rezeptModal",
-    "services",
-    "settings",
-    "statistik",
-    "team",
-    "ueberblick",
-    "vehEditSaveBtn",
-    "verordnungen",
-    "vorlagen"
-   ],
-   "gemeinsam": true,
-   "uiPfad": [
-    "ortak yardımcı — 37 modülden çağrılıyor"
-   ]
-  },
-  {
-   "name": "merke",
-   "kind": "arrow",
-   "lang": "js",
-   "file": "module/einstellungen-navigation.js",
-   "start": 128,
-   "end": 128,
-   "lines": 1,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "domIds": [],
-   "domRenderIds": [],
-   "domRender": false,
-   "calls": [],
-   "calledBy": [
-    "(datei) module/rechnung-mail.js",
-    "aktualisieren",
-    "erstCheckinAnbieten",
-    "montiereShellansicht",
-    "mountEinstellungenNavigation",
-    "zeige"
-   ],
-   "modules": [
-    "abrechnung",
-    "anamnese",
-    "anfragen",
-    "b2b",
-    "b2c",
-    "bkActionArrivedBtn",
-    "bkActionFahrtEndBtn",
-    "bkActionFahrtStartBtn",
-    "bkActionHbCopyBtn",
-    "doctors",
-    "fahrtenbuch",
-    "fbFahrtenExportCsv",
-    "fbFahrtenExportProt",
-    "fbFahrtenExportVerz",
-    "fbFahrtenRefresh",
-    "fbReportRefresh",
-    "fbVehicleAddBtn",
-    "feSaveBtn",
-    "fsAddVehicleBtn",
-    "fsSaveBtn",
-    "fussstatus",
-    "hours",
-    "kunden",
-    "mahnwesen",
-    "notizen",
-    "patientDetailModal",
-    "podologie-billing",
-    "rechnungen",
-    "rezeptModal",
-    "services",
-    "settings",
-    "statistik",
-    "team",
-    "ueberblick",
-    "vehEditSaveBtn",
-    "verordnungen",
-    "vorlagen"
-   ],
-   "gemeinsam": true,
-   "uiPfad": [
-    "ortak yardımcı — 37 modülden çağrılıyor"
-   ]
-  },
-  {
-   "name": "abschnitte",
-   "kind": "arrow",
-   "lang": "js",
-   "file": "module/einstellungen-navigation.js",
-   "start": 174,
-   "end": 174,
-   "lines": 1,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "domIds": [],
-   "domRenderIds": [],
-   "domRender": false,
-   "calls": [],
-   "calledBy": [
+   "calls": [
+    "add",
     "anwenden",
-    "mountEinstellungenNavigation"
+    "bereichAusHash",
+    "zeigeBereich"
+   ],
+   "calledBy": [
+    "einstellungenKategorienAufbauen"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "nachgeladeneEinordnen",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/einstellungen-nav.js",
+   "start": 190,
+   "end": 196,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [
+    "anwenden"
    ],
    "modules": [
     "abrechnung",
@@ -135190,12 +135551,12 @@
   },
   {
    "name": "anwenden",
-   "kind": "arrow",
+   "kind": "function",
    "lang": "js",
-   "file": "module/einstellungen-navigation.js",
-   "start": 176,
-   "end": 200,
-   "lines": 25,
+   "file": "module/einstellungen-nav.js",
+   "start": 198,
+   "end": 235,
+   "lines": 38,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -135206,23 +135567,22 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
-    "abschnittInfo",
-    "abschnitte",
-    "aktiveKategorie",
-    "kategorieVon",
-    "sichtbareKategorien",
-    "vonModulSichtbar",
-    "zeige"
+    "bereichWaehlen",
+    "bereicheAus",
+    "modulSichtbar",
+    "nachgeladeneEinordnen",
+    "trifftSuche"
    ],
    "calledBy": [
     "aktiv",
-    "mountEinstellungenNavigation",
+    "einstellungenKategorienAufbauen",
+    "gruppe",
     "mountLeistungsart",
     "verdrahteAuswahl",
     "verdrahteSchublade",
     "wendeRasterScrollAn",
     "zeige",
-    "zeigeAbschnitt"
+    "zeigeBereich"
    ],
    "modules": [
     "abrechnung",
@@ -135269,13 +135629,13 @@
    ]
   },
   {
-   "name": "zeige",
-   "kind": "arrow",
+   "name": "zeigeBereich",
+   "kind": "function",
    "lang": "js",
-   "file": "module/einstellungen-navigation.js",
-   "start": 203,
-   "end": 203,
-   "lines": 1,
+   "file": "module/einstellungen-nav.js",
+   "start": 238,
+   "end": 257,
+   "lines": 20,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -135286,90 +135646,15 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
+    "_kategorienZuruecksetzen",
     "anwenden",
-    "merke"
+    "einstellungenZeigeAbschnitt",
+    "gehZuEinstellung"
    ],
    "calledBy": [
-    "aktualisieren",
-    "alleKodes",
-    "anwenden",
-    "kopfMenue",
-    "mountEinstellungenNavigation",
-    "mountTerminKonflikte",
-    "onIcdChange",
-    "start",
-    "terminFreigabe",
-    "unveraendert",
-    "verdrahteIcdDg"
-   ],
-   "modules": [
-    "abrechnung",
-    "anamnese",
-    "anfragen",
-    "b2b",
-    "b2c",
-    "bkActionArrivedBtn",
-    "bkActionFahrtEndBtn",
-    "bkActionFahrtStartBtn",
-    "bkActionHbCopyBtn",
-    "doctors",
-    "fahrtenbuch",
-    "fbFahrtenExportCsv",
-    "fbFahrtenExportProt",
-    "fbFahrtenExportVerz",
-    "fbFahrtenRefresh",
-    "fbReportRefresh",
-    "fbVehicleAddBtn",
-    "feSaveBtn",
-    "fsAddVehicleBtn",
-    "fsSaveBtn",
-    "fussstatus",
-    "hours",
-    "kunden",
-    "mahnwesen",
-    "notizen",
-    "patientDetailModal",
-    "podologie-billing",
-    "rechnungen",
-    "rezeptModal",
-    "services",
-    "settings",
-    "statistik",
-    "team",
-    "ueberblick",
-    "vehEditSaveBtn",
-    "verordnungen",
-    "vorlagen"
-   ],
-   "gemeinsam": true,
-   "uiPfad": [
-    "ortak yardımcı — 37 modülden çağrılıyor"
-   ]
-  },
-  {
-   "name": "zeigeAbschnitt",
-   "kind": "arrow",
-   "lang": "js",
-   "file": "module/einstellungen-navigation.js",
-   "start": 207,
-   "end": 213,
-   "lines": 7,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "domIds": [],
-   "domRenderIds": [],
-   "domRender": false,
-   "calls": [
-    "abschnittInfo",
-    "anwenden",
-    "kategorieVon"
-   ],
-   "calledBy": [
-    "einstellungenZeigeAbschnitt"
+    "einstellungenKategorienAufbauen",
+    "einstellungenZeigeAbschnitt",
+    "gruppe"
    ],
    "modules": [
     "abrechnung",
@@ -135419,10 +135704,10 @@
    "name": "einstellungenZeigeAbschnitt",
    "kind": "function",
    "lang": "js",
-   "file": "module/einstellungen-navigation.js",
-   "start": 230,
-   "end": 232,
-   "lines": 3,
+   "file": "module/einstellungen-nav.js",
+   "start": 248,
+   "end": 253,
+   "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -135433,10 +135718,11 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
-    "zeigeAbschnitt"
+    "zeigeBereich"
    ],
    "calledBy": [
-    "gehZuEinstellung"
+    "gehZuEinstellung",
+    "zeigeBereich"
    ],
    "modules": [
     "abrechnung",
@@ -135483,12 +135769,12 @@
    ]
   },
   {
-   "name": "_zuruecksetzen",
+   "name": "_kategorienZuruecksetzen",
    "kind": "function",
    "lang": "js",
-   "file": "module/einstellungen-navigation.js",
-   "start": 235,
-   "end": 235,
+   "file": "module/einstellungen-nav.js",
+   "start": 256,
+   "end": 256,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -135500,10 +135786,52 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [],
-   "calledBy": [],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "calledBy": [
+    "zeigeBereich"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
   },
   {
    "name": "ausfallRegelText",
@@ -136410,52 +136738,11 @@
    "domRender": false,
    "calls": [],
    "calledBy": [
-    "erstCheckinAnbieten",
-    "mountEinstellungenNavigation"
+    "erstCheckinAnbieten"
    ],
-   "modules": [
-    "abrechnung",
-    "anamnese",
-    "anfragen",
-    "b2b",
-    "b2c",
-    "bkActionArrivedBtn",
-    "bkActionFahrtEndBtn",
-    "bkActionFahrtStartBtn",
-    "bkActionHbCopyBtn",
-    "doctors",
-    "fahrtenbuch",
-    "fbFahrtenExportCsv",
-    "fbFahrtenExportProt",
-    "fbFahrtenExportVerz",
-    "fbFahrtenRefresh",
-    "fbReportRefresh",
-    "fbVehicleAddBtn",
-    "feSaveBtn",
-    "fsAddVehicleBtn",
-    "fsSaveBtn",
-    "fussstatus",
-    "hours",
-    "kunden",
-    "mahnwesen",
-    "notizen",
-    "patientDetailModal",
-    "podologie-billing",
-    "rechnungen",
-    "rezeptModal",
-    "services",
-    "settings",
-    "statistik",
-    "team",
-    "ueberblick",
-    "vehEditSaveBtn",
-    "verordnungen",
-    "vorlagen"
-   ],
-   "gemeinsam": true,
-   "uiPfad": [
-    "ortak yardımcı — 37 modülden çağrılıyor"
-   ]
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
   },
   {
    "name": "merke",
@@ -136479,9 +136766,7 @@
     "(datei) module/rechnung-mail.js",
     "aktualisieren",
     "erstCheckinAnbieten",
-    "montiereShellansicht",
-    "mountEinstellungenNavigation",
-    "zeige"
+    "montiereShellansicht"
    ],
    "modules": [
     "abrechnung",
@@ -140180,6 +140465,8 @@
     "createZuzahlungsforderungRouter",
     "dgVorschlag",
     "einmalJeSitzung",
+    "einstellungenKategorienAufbauen",
+    "einstellungenNavAufbauen",
     "emojisAus",
     "enterKioskMode",
     "erfasseVerordnung",
@@ -140194,6 +140481,7 @@
     "getUmlautVariants",
     "gleicheSitzungenAb",
     "goStep",
+    "gruppe",
     "gruppeVon",
     "gueltigBestaetigteIds",
     "handleAcceptFlow",
@@ -140222,7 +140510,6 @@
     "montiereShellansicht",
     "mountCalendar",
     "mountEinrichtungRing",
-    "mountEinstellungenNavigation",
     "mountStandortPlan",
     "moveTo",
     "musterAusZeilen",
@@ -140455,8 +140742,10 @@
     "push"
    ],
    "calledBy": [
+    "lesen",
     "montiereFormularAbschnitte",
-    "rebuild"
+    "rebuild",
+    "sichtbar"
    ],
    "modules": [
     "abrechnung",
@@ -151464,9 +151753,7 @@
    "calledBy": [
     "aktualisieren",
     "alleKodes",
-    "anwenden",
     "kopfMenue",
-    "mountEinstellungenNavigation",
     "mountTerminKonflikte",
     "onIcdChange",
     "start",
@@ -151605,6 +151892,7 @@
    "calledBy": [
     "anwenden",
     "auswahlAufheben",
+    "einstellungenNavAufbauen",
     "feldFehler",
     "mountFarbwahl",
     "mountSondertagAnzeige",
@@ -151707,13 +151995,14 @@
    ],
    "calledBy": [
     "aktiv",
-    "mountEinstellungenNavigation",
+    "einstellungenKategorienAufbauen",
+    "gruppe",
     "mountLeistungsart",
     "verdrahteAuswahl",
     "verdrahteSchublade",
     "wendeRasterScrollAn",
     "zeige",
-    "zeigeAbschnitt"
+    "zeigeBereich"
    ],
    "modules": [
     "abrechnung",
@@ -157930,9 +158219,7 @@
    "calledBy": [
     "aktualisieren",
     "alleKodes",
-    "anwenden",
     "kopfMenue",
-    "mountEinstellungenNavigation",
     "mountTerminKonflikte",
     "onIcdChange",
     "start",
@@ -158853,6 +159140,7 @@
     "g",
     "handlungsbedarfHtml",
     "initBarcodeDialog",
+    "lesen",
     "mountStandortplanReiter",
     "nameQuelle",
     "todoHtml",
@@ -164663,6 +164951,7 @@
    "calledBy": [
     "anwenden",
     "auswahlAufheben",
+    "einstellungenNavAufbauen",
     "feldFehler",
     "mountFarbwahl",
     "mountSondertagAnzeige",
@@ -167081,6 +167370,7 @@
     "(datei) module/termin-leistungen.js",
     "_speichereBetriebsart",
     "createHandlungsbedarfKarte",
+    "einstellungenNavAufbauen",
     "erstelleApp",
     "init",
     "ladeHandlungsbedarfInput",
@@ -167096,6 +167386,7 @@
     "render",
     "renderBookingCalendar",
     "scanneRezeptLokal",
+    "sichtbar",
     "verarbeite"
    ],
    "modules": [
@@ -172726,8 +173017,8 @@
    "lang": "js",
    "file": "module/panel-verlauf.js",
    "start": 23,
-   "end": 29,
-   "lines": 7,
+   "end": 30,
+   "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -172792,8 +173083,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/panel-verlauf.js",
-   "start": 39,
-   "end": 44,
+   "start": 40,
+   "end": 45,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -172858,9 +173149,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/panel-verlauf.js",
-   "start": 56,
-   "end": 110,
-   "lines": 55,
+   "start": 57,
+   "end": 112,
+   "lines": 56,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -172887,9 +173178,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/panel-verlauf.js",
-   "start": 65,
-   "end": 72,
-   "lines": 8,
+   "start": 66,
+   "end": 74,
+   "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -172954,8 +173245,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/panel-verlauf.js",
-   "start": 74,
-   "end": 85,
+   "start": 76,
+   "end": 87,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [],
@@ -173023,8 +173314,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/panel-verlauf.js",
-   "start": 87,
-   "end": 93,
+   "start": 89,
+   "end": 95,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -173091,8 +173382,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/panel-verlauf.js",
-   "start": 90,
-   "end": 90,
+   "start": 92,
+   "end": 92,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -173116,8 +173407,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/panel-verlauf.js",
-   "start": 95,
-   "end": 107,
+   "start": 97,
+   "end": 109,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -177813,6 +178104,7 @@
     "loesePosition",
     "resolve",
     "setFreqValue",
+    "trifftSuche",
     "versicherungsart"
    ],
    "modules": [
@@ -184369,6 +184661,7 @@
    "calledBy": [
     "anwenden",
     "auswahlAufheben",
+    "einstellungenNavAufbauen",
     "feldFehler",
     "mountFarbwahl",
     "mountSondertagAnzeige",
@@ -184658,6 +184951,7 @@
     "g",
     "handlungsbedarfHtml",
     "initBarcodeDialog",
+    "lesen",
     "mountStandortplanReiter",
     "nameQuelle",
     "todoHtml",
@@ -192055,6 +192349,8 @@
     "createZuzahlungsforderungRouter",
     "dgVorschlag",
     "einmalJeSitzung",
+    "einstellungenKategorienAufbauen",
+    "einstellungenNavAufbauen",
     "emojisAus",
     "enterKioskMode",
     "erfasseVerordnung",
@@ -192069,6 +192365,7 @@
     "getUmlautVariants",
     "gleicheSitzungenAb",
     "goStep",
+    "gruppe",
     "gruppeVon",
     "gueltigBestaetigteIds",
     "handleAcceptFlow",
@@ -192097,7 +192394,6 @@
     "montiereShellansicht",
     "mountCalendar",
     "mountEinrichtungRing",
-    "mountEinstellungenNavigation",
     "mountStandortPlan",
     "moveTo",
     "musterAusZeilen",
@@ -200113,6 +200409,7 @@
     "(datei) module/termin-leistungen.js",
     "_speichereBetriebsart",
     "createHandlungsbedarfKarte",
+    "einstellungenNavAufbauen",
     "erstelleApp",
     "init",
     "ladeHandlungsbedarfInput",
@@ -200128,6 +200425,7 @@
     "render",
     "renderBookingCalendar",
     "scanneRezeptLokal",
+    "sichtbar",
     "verarbeite"
    ],
    "modules": [
@@ -205989,13 +206287,14 @@
    ],
    "calledBy": [
     "aktiv",
-    "mountEinstellungenNavigation",
+    "einstellungenKategorienAufbauen",
+    "gruppe",
     "mountLeistungsart",
     "verdrahteAuswahl",
     "verdrahteSchublade",
     "wendeRasterScrollAn",
     "zeige",
-    "zeigeAbschnitt"
+    "zeigeBereich"
    ],
    "modules": [
     "abrechnung",
@@ -208920,7 +209219,6 @@
     "push"
    ],
    "calledBy": [
-    "mountEinstellungenNavigation",
     "oeffneZahlungseingang"
    ],
    "modules": [
@@ -212228,6 +212526,7 @@
     "(datei) module/termin-leistungen.js",
     "_speichereBetriebsart",
     "createHandlungsbedarfKarte",
+    "einstellungenNavAufbauen",
     "erstelleApp",
     "init",
     "ladeHandlungsbedarfInput",
@@ -212243,6 +212542,7 @@
     "render",
     "renderBookingCalendar",
     "scanneRezeptLokal",
+    "sichtbar",
     "verarbeite"
    ],
    "modules": [
@@ -217785,13 +218085,14 @@
    ],
    "calledBy": [
     "aktiv",
-    "mountEinstellungenNavigation",
+    "einstellungenKategorienAufbauen",
+    "gruppe",
     "mountLeistungsart",
     "verdrahteAuswahl",
     "verdrahteSchublade",
     "wendeRasterScrollAn",
     "zeige",
-    "zeigeAbschnitt"
+    "zeigeBereich"
    ],
    "modules": [
     "abrechnung",
@@ -218821,9 +219122,7 @@
     "(datei) module/rechnung-mail.js",
     "aktualisieren",
     "erstCheckinAnbieten",
-    "montiereShellansicht",
-    "mountEinstellungenNavigation",
-    "zeige"
+    "montiereShellansicht"
    ],
    "modules": [
     "abrechnung",
@@ -232309,6 +232608,7 @@
     "(datei) module/termin-leistungen.js",
     "_speichereBetriebsart",
     "createHandlungsbedarfKarte",
+    "einstellungenNavAufbauen",
     "erstelleApp",
     "init",
     "ladeHandlungsbedarfInput",
@@ -232324,6 +232624,7 @@
     "render",
     "renderBookingCalendar",
     "scanneRezeptLokal",
+    "sichtbar",
     "verarbeite"
    ],
    "modules": [
@@ -233460,6 +233761,7 @@
     "(datei) module/termin-leistungen.js",
     "_speichereBetriebsart",
     "createHandlungsbedarfKarte",
+    "einstellungenNavAufbauen",
     "erstelleApp",
     "init",
     "ladeHandlungsbedarfInput",
@@ -233475,6 +233777,7 @@
     "render",
     "renderBookingCalendar",
     "scanneRezeptLokal",
+    "sichtbar",
     "verarbeite"
    ],
    "modules": [
@@ -237424,13 +237727,14 @@
    "calls": [],
    "calledBy": [
     "aktiv",
-    "mountEinstellungenNavigation",
+    "einstellungenKategorienAufbauen",
+    "gruppe",
     "mountLeistungsart",
     "verdrahteAuswahl",
     "verdrahteSchublade",
     "wendeRasterScrollAn",
     "zeige",
-    "zeigeAbschnitt"
+    "zeigeBereich"
    ],
    "modules": [
     "abrechnung",
@@ -238630,6 +238934,7 @@
     "loesePosition",
     "resolve",
     "setFreqValue",
+    "trifftSuche",
     "versicherungsart"
    ],
    "modules": [
@@ -242312,13 +242617,14 @@
    ],
    "calledBy": [
     "aktiv",
-    "mountEinstellungenNavigation",
+    "einstellungenKategorienAufbauen",
+    "gruppe",
     "mountLeistungsart",
     "verdrahteAuswahl",
     "verdrahteSchublade",
     "wendeRasterScrollAn",
     "zeige",
-    "zeigeAbschnitt"
+    "zeigeBereich"
    ],
    "modules": [
     "abrechnung",
@@ -242387,9 +242693,7 @@
    "calledBy": [
     "aktualisieren",
     "alleKodes",
-    "anwenden",
     "kopfMenue",
-    "mountEinstellungenNavigation",
     "mountTerminKonflikte",
     "onIcdChange",
     "start",
@@ -263049,6 +263353,7 @@
    "calledBy": [
     "anwenden",
     "auswahlAufheben",
+    "einstellungenNavAufbauen",
     "feldFehler",
     "mountFarbwahl",
     "mountSondertagAnzeige",
@@ -289892,6 +290197,7 @@
     "loesePosition",
     "resolve",
     "setFreqValue",
+    "trifftSuche",
     "versicherungsart"
    ],
    "modules": [
@@ -292628,6 +292934,7 @@
    "calledBy": [
     "anwenden",
     "auswahlAufheben",
+    "einstellungenNavAufbauen",
     "feldFehler",
     "mountFarbwahl",
     "mountSondertagAnzeige",
@@ -303311,6 +303618,19 @@
    "aynalar": []
   },
   {
+   "name": "lesen",
+   "orte": [
+    "cookie-consent.js:101",
+    "module/einstellungen-nav.js:26",
+    "module/mail-signatur-editor.js:24",
+    "module/raum-tagesansicht.js:138",
+    "module/rezept-barcode-scan.js:115",
+    "module/startseite-handlungsbedarf-karte.js:40",
+    "module/startseite-handlungsbedarf-laden.js:123"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "onEsc",
    "orte": [
     "dashboard.js:5798",
@@ -303352,7 +303672,7 @@
   {
    "name": "anwenden",
    "orte": [
-    "module/einstellungen-navigation.js:176",
+    "module/einstellungen-nav.js:198",
     "module/kalender-auswahl.js:69",
     "module/rechnung-steuer.js:295",
     "module/schublade-neu.js:42",
@@ -303398,18 +303718,6 @@
    "aynalar": []
   },
   {
-   "name": "lesen",
-   "orte": [
-    "cookie-consent.js:101",
-    "module/mail-signatur-editor.js:24",
-    "module/raum-tagesansicht.js:138",
-    "module/rezept-barcode-scan.js:115",
-    "module/startseite-handlungsbedarf-karte.js:40",
-    "module/startseite-handlungsbedarf-laden.js:123"
-   ],
-   "aynalar": []
-  },
-  {
    "name": "load",
    "orte": [
     "module/patient-notizen.js:36",
@@ -303430,6 +303738,18 @@
     "onprem/install.sh:68",
     "onprem/restore.sh:44",
     "onprem/update.sh:59"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "markiere",
+   "orte": [
+    "module/einstellungen-nav.js:40",
+    "module/kalender-auswahl.js:46",
+    "module/leistung-farbwahl.js:51",
+    "module/planung-bruecke.js:138",
+    "module/verordnung-liste.js:301",
+    "widget/booking-widget.js:107"
    ],
    "aynalar": []
   },
@@ -303503,13 +303823,13 @@
    "aynalar": []
   },
   {
-   "name": "markiere",
+   "name": "norm",
    "orte": [
-    "module/kalender-auswahl.js:46",
-    "module/leistung-farbwahl.js:51",
-    "module/planung-bruecke.js:138",
-    "module/verordnung-liste.js:301",
-    "widget/booking-widget.js:107"
+    "katalog-suche.js:414",
+    "module/einstellungen-nav.js:125",
+    "module/patienten-import.js:118",
+    "module/termin-aktionen.js:609",
+    "ops/tools/regroup.mjs:77"
    ],
    "aynalar": []
   },
@@ -303576,17 +303896,6 @@
     "onprem/install.sh:70",
     "onprem/restore.sh:46",
     "onprem/update.sh:61"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "zeige",
-   "orte": [
-    "module/app-installieren.js:34",
-    "module/einstellungen-navigation.js:203",
-    "module/icd-dg-verdrahtung.js:177",
-    "module/kopf-menue.js:51",
-    "module/termin-konflikte.js:35"
    ],
    "aynalar": []
   },
@@ -303751,16 +304060,6 @@
    "aynalar": []
   },
   {
-   "name": "norm",
-   "orte": [
-    "katalog-suche.js:414",
-    "module/patienten-import.js:118",
-    "module/termin-aktionen.js:609",
-    "ops/tools/regroup.mjs:77"
-   ],
-   "aynalar": []
-  },
-  {
    "name": "pruefen",
    "orte": [
     "module/kvnr.js:111",
@@ -303807,6 +304106,16 @@
     "module/planung-bruecke.js:118",
     "module/raum-tagesansicht.js:292",
     "module/standort-plan.js:540"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "zeige",
+   "orte": [
+    "module/app-installieren.js:34",
+    "module/icd-dg-verdrahtung.js:177",
+    "module/kopf-menue.js:51",
+    "module/termin-konflikte.js:35"
    ],
    "aynalar": []
   },
@@ -303991,15 +304300,6 @@
    "aynalar": []
   },
   {
-   "name": "merke",
-   "orte": [
-    "module/einstellungen-navigation.js:128",
-    "module/erst-checkin.js:28",
-    "module/shell-ansicht.js:28"
-   ],
-   "aynalar": []
-  },
-  {
    "name": "n",
    "orte": [
     "api-backend/billing/dta/auftragsdatei.js:36",
@@ -304149,6 +304449,15 @@
     "admin.js:22",
     "dashboard.js:939",
     "module/kiosk.js:57"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "sichtbar",
+   "orte": [
+    "module/einstellungen-nav.js:24",
+    "module/kopf-profil.js:34",
+    "module/planung-bruecke.js:203"
    ],
    "aynalar": []
   },
@@ -304879,14 +305188,6 @@
    "aynalar": []
   },
   {
-   "name": "lies",
-   "orte": [
-    "module/einstellungen-navigation.js:127",
-    "module/erst-checkin.js:26"
-   ],
-   "aynalar": []
-  },
-  {
    "name": "loadEnv",
    "orte": [
     "ops/tools/ingest.mjs:37",
@@ -304943,6 +305244,14 @@
    "aynalar": []
   },
   {
+   "name": "merke",
+   "orte": [
+    "module/erst-checkin.js:28",
+    "module/shell-ansicht.js:28"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "meta_hmac_berechnen",
    "orte": [
     "onprem/backup.sh:454",
@@ -304971,6 +305280,14 @@
    "orte": [
     "module/raum-plan.js:39",
     "module/startseite-darstellung.js:41"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "navEintraege",
+   "orte": [
+    "module/einstellungen-nav.js:13",
+    "module/formular-abschnitte.js:8"
    ],
    "aynalar": []
   },
@@ -305337,14 +305654,6 @@
    "aynalar": []
   },
   {
-   "name": "sichtbar",
-   "orte": [
-    "module/kopf-profil.js:34",
-    "module/planung-bruecke.js:203"
-   ],
-   "aynalar": []
-  },
-  {
    "name": "signaturHtml",
    "orte": [
     "api-backend/lib/mail-signatur.js:62",
@@ -305588,7 +305897,7 @@
    "name": "verdrahte",
    "orte": [
     "module/fussbefund.js:1418",
-    "module/panel-verlauf.js:87"
+    "module/panel-verlauf.js:89"
    ],
    "aynalar": []
   },
