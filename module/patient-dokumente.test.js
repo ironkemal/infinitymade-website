@@ -120,3 +120,31 @@ test('KATEGORIEN: enthaelt alle 6 erlaubten DB-Kategorien mit korrekten Bezeichn
   assert.equal(KATEGORIEN.formular_signiert, 'Unterschriebenes Formular');
   assert.equal(KATEGORIEN.sonstiges, 'Sonstiges');
 });
+
+// Box-Test 22.11.2026, Befund 5 (Upload): Die Browser-Prüfung muss genau die Grenzen des Buckets
+// abbilden (0093: file_size_limit + allowed_mime_types auf patient-documents). Driften sie auseinander,
+// lehnt entweder der Server still ab (Meldung „Fehler beim Hochladen“) oder der Browser zu streng.
+// Zugriffsschutz liegt serverseitig: Storage-Policy patient_documents_owner_all (erster Ordner = Praxis)
+// und RLS patient_dokumente — Live-Nachweis im RLS-Testplan R10 (wissensbank/sitzungen/2026-11-23_…).
+import { readFileSync as _lies } from 'node:fs';
+test('Upload-Grenzen: Browser = Bucket (Größe 10 MB, PDF/PNG/JPEG/WEBP)', () => {
+  const sql = _lies(new URL('../api-backend/db/migrations/0093_physio_akte_dokumente.sql', import.meta.url), 'utf8');
+  const block = sql.slice(sql.indexOf('UPDATE storage.buckets'), sql.indexOf("WHERE id = 'patient-documents'"));
+  const limit = Number(/file_size_limit\s*=\s*(\d+)/.exec(block)?.[1]);
+  const mimes = [...block.matchAll(/'([a-z]+\/[a-z.+-]+)'/g)].map(m => m[1]).sort();
+  assert.equal(limit, 10485760);
+  assert.deepEqual(mimes, ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']);
+  for (const type of mimes) {
+    const endung = { 'application/pdf': 'pdf', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[type];
+    assert.deepEqual(pruefeDatei({ name: `a.${endung}`, size: limit, type }), { ok: true }, `${type} an der Grenze erlaubt`);
+  }
+  assert.equal(pruefeDatei({ name: 'a.pdf', size: limit + 1, type: 'application/pdf' }).ok, false, 'ein Byte zu viel abgelehnt');
+  assert.equal(pruefeDatei({ name: 'a.gif', size: 10, type: 'image/gif' }).ok, false, 'Typ außerhalb des Buckets abgelehnt');
+});
+
+test('Upload-Pfad beginnt mit der Praxis-ID (Storage-Policy) und lässt keinen Ordnerwechsel zu', () => {
+  const p = bauePfad({ ownerId: 'owner-1', leadId: 'lead-1', name: '../../owner-2/geheim.pdf', uuid: 'u1' });
+  assert.equal(p.split('/')[0], 'owner-1');
+  assert.equal(p.split('/').length, 4, 'Dateiname enthält keinen Schrägstrich mehr');
+  assert.ok(!p.includes('owner-2/'));
+});
