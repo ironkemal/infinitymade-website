@@ -473,7 +473,7 @@ let selectedEmployeeId = null;
 let calEmpFilter = 'all';
 let ownerServices = [];
 let activePanel = 'overview';
-let calendarView = 'day';
+let calendarView = 'week'; // Pflichtpunkt 1 (23.11.2026): Kalender öffnet in der Woche
 let dayViewDate = new Date();
 let monthViewYear = new Date().getFullYear();
 let monthViewMonth = new Date().getMonth();
@@ -801,7 +801,7 @@ async function switchPanel(id) {
     showMyBookingLink();
     renderCalEmpChips();
     document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
-    setCalendarView('day');
+    setCalendarView('week'); // Pflichtpunkt 1: Woche zuerst; „Tag öffnen“ (Startseite) setzt danach selbst 'day'
   }
   if (id === 'fahrtenbuch') loadFahrtenbuchPanel();
   if (id === 'kunden') { loadLeads(); initPatTableView(); }
