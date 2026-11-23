@@ -45,6 +45,7 @@ cd "$repo_root"
 #   onprem/           on-prem belgeleri — kendilerinden bahsederler
 #   ai chatbot proje/ terk edilmiş proje (CLAUDE.md: arşivlik)
 #   index-old.html    ölü kopya
+# tools/fremde-hosts.mjs ist ausgenommen: Prüfer-Allowlist, nennt bestehende Hosts nur mit Begründung (23.11.2026).
 zaehle() {
   muster=$1
   shift
@@ -57,6 +58,7 @@ zaehle() {
     ':(exclude)node_modules/' \
     ':(exclude)index-old.html' \
     ':(exclude)ai chatbot proje/' \
+    ':(exclude)tools/fremde-hosts.mjs' \
     2>/dev/null | awk -F: '{s+=$NF} END{print s+0}'
 }
 
@@ -487,6 +489,24 @@ if [ -n "$starter_ihlal" ]; then
       O-176: Starter und Paket kommen aus verschiedenen Quellen (praxura.de vs. Image) —
       ihre einzige Schnittstelle ist --kanal= und die Image-Basis aus onprem/.env.template.
       Çıkış: Abweichung angleichen (onprem-Agent fragen, wenn die Basis wirklich wechselt).
+"
+fi
+
+# Box-Test 22.11.2026, Problem 2 (onprem 23.11.2026): kein unbekannter oder ungeschalteter
+# Fremdhost in den Box-Images (Frontend + Backend), keine festen Hosts in der Box-CSP.
+# Prüfer + Allowlist mit Begründungen: tools/fremde-hosts.mjs (Test: tools/fremde-hosts.test.js).
+fremdhost_ihlal=""
+if git diff --cached --name-only 2>/dev/null | grep -qE '\.(js|mjs|html|css|json)$|Dockerfile$|onprem/Caddyfile$'; then
+  if ! fremdhost_aus=$(node tools/fremde-hosts.mjs 2>&1); then
+    fremdhost_ihlal="$fremdhost_aus"
+  fi
+fi
+if [ -n "$fremdhost_ihlal" ]; then
+  ihlal="$ihlal
+    $fremdhost_ihlal
+      G1: Die Box spricht nur mit gewollten Zielen (api-backend/lib/verbindungen.js).
+      Çıkış: Host in tools/fremde-hosts.mjs ERLAUBT mit Klasse + Grund eintragen; lädt er
+      von selbst, vorher onprem fragen.
 "
 fi
 
