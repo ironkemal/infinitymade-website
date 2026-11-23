@@ -332,8 +332,14 @@ export async function renderWoche({
       // Auch in der Wochenansicht: ohne Uhrzeit muss man den Block gegen die
       // Zeitleiste am Rand halten.
       const zeit = start.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      // Box-Test 22.11.2026 (Test K): Der Patientenname stand nur im Hover-Text — auf dem Handy
+      // gibt es kein Hover, auch am Desktop musste man jeden Block anfahren. Name vor Leistung,
+      // CSS kürzt mit Auslassungspunkten (.wv-booking-name). Keine Datenschutz-Absicht vermerkt;
+      // die Tagesansicht zeigt den Namen seit jeher.
+      const name = (b.customer_name || '').trim();
       block.innerHTML = `<span style="font-variant-numeric:tabular-nums;opacity:0.85;">${escapeHtml(zeit)}</span> `
-        + escapeHtml(b.services?.title || 'Termin');
+        + (name ? `<span class="wv-booking-name">${escapeHtml(name)}</span> ` : '')
+        + `<span class="wv-booking-leistung">${escapeHtml(b.services?.title || 'Termin')}</span>`;
 
       // Ohne stopPropagation zählt der Klick zusätzlich als Klick auf das
       // Rasterfeld darunter — im Verschieben-Modus würde der Termin dabei auf

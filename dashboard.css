@@ -1871,6 +1871,10 @@ textarea {
   overflow: hidden;
   cursor: pointer;
 }
+/* Box-Test 22.11.2026 (Test K): Name vor Leistung, auch auf dem Handy sichtbar.
+   28 px Mindesthöhe × 12 px Zeilenhöhe = 2 Zeilen: Uhrzeit + Name, darunter Leistung. */
+.wv-booking-name { font-weight: 600; overflow-wrap: anywhere; }
+.wv-booking-leistung { opacity: 0.8; }
 
 .dv-time-col {
   width: 56px;

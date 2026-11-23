@@ -152943,8 +152943,8 @@
    "lang": "js",
    "file": "module/kalender-woche.js",
    "start": 120,
-   "end": 354,
-   "lines": 235,
+   "end": 360,
+   "lines": 241,
    "spiegelHinweis": null,
    "tables": [
     "bookings"
