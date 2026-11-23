@@ -1,4 +1,4 @@
-import { brandingAus } from './branding.js?v=20261118s1';
+import { brandingAus } from './branding.js?v=20261123sp1';
 import { normalisiereSignatur, signaturHtml, signaturText, pruefeSignatur } from './mail-signatur.js';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function signaturEinstellungen(p) {

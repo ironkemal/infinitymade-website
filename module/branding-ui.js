@@ -10,8 +10,8 @@
  * Verdrahtung: `mountBrandingExtras(ctx)` einmal aus dashboard.js. Gezeichnet wird, sobald
  * der Abschnitt sichtbar wird (IntersectionObserver) und nach jeder Änderung.
  */
-import { brandingAus, brandingLuecken } from './branding.js?v=20261118s1';
-import { stempelHochladen, stempelEntfernen, ladeStempelDataUrl } from './stempel.js?v=20261006g';
+import { brandingAus, brandingLuecken } from './branding.js?v=20261123sp1';
+import { stempelHochladen, stempelEntfernen, ladeStempelDataUrl } from './stempel.js?v=20261123sp1';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -36,14 +36,17 @@ export function mountBrandingExtras(ctx, doc = document) {
     const l = brandingLuecken(b);
     const ziel = $('brandingLuecken');
     if (!ziel) return;
-    const zeile = (x) => `<li><a href="#" data-sprung="${esc(x.ziel)}">${esc(x.label)}</a></li>`;
+    const zeile = (x) => `<li><a href="#" data-sprung="${esc(x.ziel)}" data-feld="${esc(x.feld || '')}">${esc(x.label)}</a></li>`;
     ziel.innerHTML = !l.pflicht.length && !l.soll.length
       ? '<div class="form-hint" style="color:var(--success,#22c55e);">✓ Alle Angaben für Ihre Rechnungen sind vorhanden.</div>'
       : `${l.pflicht.length ? `<div class="form-hint"><strong>Für Rechnungen nötig:</strong></div><ul class="branding-liste">${l.pflicht.map(zeile).join('')}</ul>` : ''}`
         + `${l.soll.length ? `<div class="form-hint"><strong>Empfohlen:</strong></div><ul class="branding-liste">${l.soll.map(zeile).join('')}</ul>` : ''}`;
     ziel.querySelectorAll('[data-sprung]').forEach((a) => a.addEventListener('click', (ev) => {
       ev.preventDefault();
-      doc.getElementById(a.dataset.sprung)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Bereich der Einstellungen öffnen, dann scrollen + Feld fokussieren (vorher nur scrollIntoView → Ziel lag
+      // im ausgeblendeten Bereich, Knopf wirkte tot; Regression aus der Bereichs-Navigation, 23.11.2026).
+      if (typeof globalThis.gehZuEinstellung === 'function') void globalThis.gehZuEinstellung(a.dataset.sprung, a.dataset.feld || undefined);
+      else doc.getElementById(a.dataset.sprung)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }));
   }
 

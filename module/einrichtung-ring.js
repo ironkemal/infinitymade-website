@@ -8,7 +8,7 @@
  *   Spiel, Kemal 22.10.2026: offene Aufgaben mit „+X %", erledigte abgehakt, Meldung beim Abhaken).
  * - Farben nur über Theme-Variablen.
  */
-import { einrichtungFortschritt, ringStrich } from './einrichtung-fortschritt.js?v=20261022q';
+import { einrichtungFortschritt, ringStrich } from './einrichtung-fortschritt.js?v=20261123sp1';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const R = 11;

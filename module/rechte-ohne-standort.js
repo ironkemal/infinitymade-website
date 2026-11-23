@@ -67,7 +67,9 @@ export function rechteReiterVorbereiten(doc, { hatStandort, onStandortAnlegen })
  * @param {{ wechslePanel: (id: string) => unknown, doc?: Document, warte?: (ms: number) => Promise<void> }} o
  */
 export async function standortAnlegenOeffnen({ wechslePanel, doc = document, warte = ms => new Promise(r => setTimeout(r, ms)) }) {
-  await wechslePanel('settings');
+  // gehZuEinstellung öffnet auch den Bereich „Standorte“ (Bereichs-Navigation, 23.11.2026); ohne ihn nur Panelwechsel.
+  if (typeof globalThis.gehZuEinstellung === 'function') await globalThis.gehZuEinstellung('settingsBusinessesSection');
+  else await wechslePanel('settings');
   await warte(150); // renderBusinessesSection() läuft beim Panelwechsel asynchron
   const abschnitt = doc.getElementById('settingsBusinessesSection');
   if (!abschnitt || abschnitt.hidden) return false;

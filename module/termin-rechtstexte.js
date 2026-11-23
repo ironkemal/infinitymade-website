@@ -10,9 +10,9 @@
 // Spaltenrecht dort auch Mitarbeiterzeilen öffnen würde (guvenlik S-56, Vorabbewertung K2b.15).
 // Alles Fremde geht mit textContent bzw. esc() in die Seite (guvenlik: Praxisname auf anon-Seite).
 
-import { httpsUrl } from './branding.js?v=20261118s1';
+import { httpsUrl } from './branding.js?v=20261123sp1';
 import { renderTerminDatenschutz } from './einwilligung-texte.js?v=20261030k4';
-import { rechtslinksFuerKutu } from './ueber.js?v=20261009k15';
+import { rechtslinksFuerKutu } from './ueber.js?v=20261123sp1';
 
 export const ANKER = '#datenschutzhinweise';
 export const NICHT_EINGERICHTET = 'Die Online-Terminvereinbarung dieser Praxis ist noch nicht eingerichtet. Bitte vereinbaren Sie Ihren Termin telefonisch oder direkt in der Praxis.';

@@ -25,10 +25,10 @@ import { datumDe } from './datum.js?v=20261001a';
  */
 
 import { bgEmpfaengerBlock, bgAusZeile, mitKassenfeldern } from './bg-angaben.js?v=20261010zc';
-import { brandingAus, ausstellerSnapshot } from './branding.js?v=20261118s1';
+import { brandingAus, ausstellerSnapshot } from './branding.js?v=20261123sp1';
 import { setzeDmrzKnopf } from './rechnung-dmrz.js?v=20261117p24';
 import { typKennzeichen } from './rechnung-summen.js?v=20261118s1';
-import { ladeStempelDataUrl } from './stempel.js?v=20261006g';
+import { ladeStempelDataUrl } from './stempel.js?v=20261123sp1';
 import { belegDruckUrl } from './beleg-druck.js?v=20261021zd';
 import { mountRechnungMail, merkeRechnungFuerMail } from './rechnung-mail.js?v=20261109';
 
@@ -142,7 +142,7 @@ export function renderInvList() {
   });
 }
 
-import { zeigeRechnungsPraxisHinweis } from './rechnung-snapshot.js?v=20261118s1';
+import { zeigeRechnungsPraxisHinweis } from './rechnung-snapshot.js?v=20261123sp1';
 
 export async function openInvView(invoiceId) {
   if (!invoiceId) return;

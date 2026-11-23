@@ -56,6 +56,50 @@ try {
       await kontext.close();
     }
   }
+  // Sprünge aus anderen Bereichen (Regression 23.11.2026): Ziel muss sichtbar UND im Bild sein, Feld fokussiert.
+  {
+    const { kontext, page } = await oeffneDashboard(browser, { basis: server.basis, theme: 'hell', szenario: 'voll', breite: 1280, hoehe: 900, rolle: 'owner' });
+    const konsole = konsoleBeobachten(page);
+    const imBild = (id) => page.evaluate((i) => { const e = document.getElementById(i); if (!e || !e.getClientRects().length || getComputedStyle(e).display === 'none') return false; const r = e.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; }, id);
+    try {
+      await wechsle(page, 'settings'); await ruhe(page, 600);
+      // a) „Was fehlt noch?“ im Briefkopf: jeden Link prüfen, der in einen ANDEREN Bereich zeigt
+      const links = await page.evaluate(() => [...document.querySelectorAll('#settingsBrandingSection [data-sprung]')].map((a) => ({ ziel: a.dataset.sprung, feld: a.dataset.feld || '' })));
+      let geprueft = 0;
+      for (const l of links) {
+        await page.evaluate(() => { location.hash = '#settings/allgemein'; });
+        await ruhe(page, 250);
+        const link = page.locator(`#settingsBrandingSection [data-sprung="${l.ziel}"][data-feld="${l.feld}"]`).first();
+        if (!(await link.isVisible())) continue;
+        await link.click(); await ruhe(page, 700);
+        geprueft++;
+        if (!(await imBild(l.ziel))) befunde.push(`„Was fehlt noch?“ → ${l.ziel}: Ziel nicht sichtbar/im Bild`);
+        if (l.feld) {
+          const fokus = await page.evaluate(() => document.activeElement?.id || '');
+          if (fokus !== l.feld) befunde.push(`„Was fehlt noch?“ → ${l.ziel}: Feld ${l.feld} nicht fokussiert (aktiv: ${fokus || '—'})`);
+        }
+      }
+      console.log(`Sprünge „Was fehlt noch?“ geprüft: ${geprueft}`);
+      if (!geprueft) befunde.push('„Was fehlt noch?“: kein Sprung-Link im Szenario — Probe greift nicht');
+      // b) Einrichtungsring (Kopfzeile): jeden offenen Punkt anklicken
+      await wechsle(page, 'overview'); await ruhe(page, 400);
+      const ringZiele = await page.evaluate(() => [...document.querySelectorAll('#einrichtungPopover [data-ziel]')].map((b) => b.dataset.ziel));
+      let ring = 0;
+      for (const ziel of [...new Set(ringZiele)]) {
+        await wechsle(page, 'overview'); await ruhe(page, 300);
+        const knopf = page.locator('#einrichtungRing, [aria-controls="einrichtungPopover"]').first();
+        if (!(await knopf.isVisible().catch(() => false))) break;
+        await knopf.click(); await ruhe(page, 200);
+        await page.locator(`#einrichtungPopover [data-ziel="${ziel}"]`).first().click(); await ruhe(page, 800);
+        ring++;
+        if (!(await imBild(ziel))) befunde.push(`Einrichtungsring → ${ziel}: Ziel nicht sichtbar/im Bild`);
+      }
+      console.log(`Sprünge Einrichtungsring geprüft: ${ring}`);
+    } finally {
+      sauber = konsoleAuswerten(konsole, 'einstellungen-nav Sprünge') && sauber;
+      await kontext.close();
+    }
+  }
   // Mitarbeiter (Melih 23.11.2026): Einstellungen erreichbar, nur persönliche Abschnitte
   {
     const { kontext, page } = await oeffneDashboard(browser, { basis: server.basis, theme: 'hell', szenario: 'voll', breite: 1280, hoehe: 900, rolle: 'employee' });

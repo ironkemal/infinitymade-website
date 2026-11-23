@@ -64983,9 +64983,15 @@
     "switchPanel"
    ],
    "calledBy": [
+    "$",
+    "(datei) dashboard.js",
+    "darf",
     "handleGmailCallback",
+    "mountBrandingExtras",
     "oeffneBelegDruck",
     "renderOverview",
+    "standortAnlegenOeffnen",
+    "zeichneLuecken",
     "zeigeBereich"
    ],
    "modules": [
@@ -127911,8 +127917,8 @@
    "lang": "js",
    "file": "module/branding-ui.js",
    "start": 27,
-   "end": 100,
-   "lines": 74,
+   "end": 103,
+   "lines": 77,
    "spiegelHinweis": null,
    "tables": [
     "profiles"
@@ -127935,6 +127941,7 @@
     "brandingLuecken",
     "darf",
     "esc",
+    "gehZuEinstellung",
     "istOwner",
     "ladeStempelDataUrl",
     "ownerId",
@@ -127959,8 +127966,8 @@
    "lang": "js",
    "file": "module/branding-ui.js",
    "start": 31,
-   "end": 48,
-   "lines": 18,
+   "end": 51,
+   "lines": 21,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -127974,6 +127981,7 @@
     "brandingAus",
     "brandingLuecken",
     "esc",
+    "gehZuEinstellung",
     "istOwner",
     "zeichneLuecken"
    ],
@@ -127988,8 +127996,8 @@
    "lang": "js",
    "file": "module/branding-ui.js",
    "start": 32,
-   "end": 48,
-   "lines": 17,
+   "end": 51,
+   "lines": 20,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -128003,6 +128011,7 @@
     "brandingAus",
     "brandingLuecken",
     "esc",
+    "gehZuEinstellung",
     "istOwner",
     "zeichneLuecken"
    ],
@@ -128066,8 +128075,8 @@
    "lang": "js",
    "file": "module/branding-ui.js",
    "start": 34,
-   "end": 48,
-   "lines": 15,
+   "end": 51,
+   "lines": 18,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -128080,7 +128089,8 @@
    "calls": [
     "brandingAus",
     "brandingLuecken",
-    "esc"
+    "esc",
+    "gehZuEinstellung"
    ],
    "calledBy": [
     "$",
@@ -128211,8 +128221,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/branding-ui.js",
-   "start": 50,
-   "end": 63,
+   "start": 53,
+   "end": 66,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -128281,8 +128291,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/branding-ui.js",
-   "start": 65,
-   "end": 65,
+   "start": 68,
+   "end": 68,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -210137,8 +210147,8 @@
    "lang": "js",
    "file": "module/rechte-ohne-standort.js",
    "start": 69,
-   "end": 77,
-   "lines": 9,
+   "end": 79,
+   "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -210152,6 +210162,7 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
+    "gehZuEinstellung",
     "renderBusinessesSection",
     "warte"
    ],
@@ -297166,8 +297177,8 @@
        "name": "mountBrandingExtras",
        "file": "module/branding-ui.js",
        "start": 27,
-       "end": 100,
-       "lines": 74,
+       "end": 103,
+       "lines": 77,
        "writes": [
         "profiles:update"
        ],

@@ -121,7 +121,7 @@ export function brandingLuecken(b) {
   if (!b.steuer.hinweis) f(pflicht, 'steuer_hinweis', 'Hinweis zur Steuerbefreiung', 'settingsBillingSection', 'setTaxExemptSelect');
   if (!b.bank.iban) f(soll, 'bank', 'Bankverbindung (IBAN)', 'settingsBillingSection', 'setIban');
   if (!b.telefon) f(soll, 'telefon', 'Telefonnummer', 'settingsProfileSection', 'setPhone');
-  if (!b.ik) f(soll, 'ik', 'Institutionskennzeichen (IK)', 'settingsBillingSection', 'setIkNumber');
+  if (!b.ik) f(soll, 'ik', 'Institutionskennzeichen (IK)', 'settingsAbrechnungSection', 'setIkNumber');
   if (!b.logoUrl) f(optional, 'logo', 'Praxis-Logo', ZIEL, 'setBrandingLogo');
   if (!b.stempelPfad) f(optional, 'stempel', 'Praxisstempel');
   if (!b.fusszeile) f(optional, 'fusszeile', 'Fußzeile', ZIEL, 'setBrandingFooter');

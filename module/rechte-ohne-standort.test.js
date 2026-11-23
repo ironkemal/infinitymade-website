@@ -80,3 +80,16 @@ test('Standort anlegen: wechselt zu Einstellungen und öffnet das Formular, wenn
   assert.equal(await standortAnlegenOeffnen({ wechslePanel: () => {}, doc: d.doc, warte: async () => {} }), false);
   assert.equal(geoeffnet, 1);
 });
+
+test('Standort anlegen öffnet über gehZuEinstellung auch den Bereich „Standorte“ (Bereichs-Navigation, 23.11.2026)', async () => {
+  const d = dom();
+  d.ids.settingsBusinessesSection = element('settingsBusinessesSection', false);
+  d.ids.addBusinessBtn = element('addBusinessBtn');
+  /** @type {string[]} */ const gesprungen = []; /** @type {string[]} */ const panels = [];
+  globalThis.gehZuEinstellung = async (id) => { gesprungen.push(id); };
+  try {
+    assert.equal(await standortAnlegenOeffnen({ wechslePanel: id => panels.push(id), doc: d.doc, warte: async () => {} }), true);
+    assert.deepEqual(gesprungen, ['settingsBusinessesSection']);
+    assert.deepEqual(panels, [], 'kein zusätzlicher Panelwechsel');
+  } finally { delete globalThis.gehZuEinstellung; }
+});
