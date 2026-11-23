@@ -4361,7 +4361,7 @@ textarea {
 /* ============================
    PANEL 8: EINSTELLUNGEN
    ============================ */
-/* Seitennavigation (module/einstellungen-navigation.js, Pflichtpunkt 8, 23.11.2026) */
+/* Seitennavigation (module/einstellungen-nav.js, Pflichtpunkt 8 + Phase 7b, 23.11.2026) */
 .einst-layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 20px; align-items: start; max-width: 800px; }
 .einst-nav { position: sticky; top: 12px; }
 .einst-nav-liste { display: flex; flex-direction: column; gap: 2px; padding: 6px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); }
@@ -4376,7 +4376,22 @@ textarea {
 .einst-filter-aktiv .settings-section[data-einst-aus],
 .einst-filter-aktiv .settings-section[data-einst-rolle-aus],
 .einst-filter-aktiv .settings-group[data-einst-leer],
-.einst-filter-aktiv .settings-group:not([data-einst-suche]) > .settings-group-label { display: none !important; }
+.einst-filter-aktiv .settings-group[data-einst-suche] > .settings-group-hint { display: none !important; }
+/* Obergruppen-Überschrift in der Navigation (PERSÖNLICH, PRAXIS …) */
+.einst-nav-ober { padding: 12px 12px 4px; font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--text-muted); }
+.einst-nav-ober:first-child { padding-top: 4px; }
+/* Bereichstitel + Kurzbeschreibung über dem Inhalt (wie Claude Desktop / Linear) */
+.einst-filter-aktiv .settings-group > .settings-group-label { font-size: 15px; font-weight: 700; letter-spacing: 0; text-transform: none; color: var(--text-main); padding: 14px 20px 2px; background: none; border-bottom: 0; }
+.settings-group-hint { margin: 0; padding: 0 20px 12px; font-size: 13px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+/* „Auch hier einstellen“: Verweise in Arbeitsbereiche */
+.einst-verweis-liste { display: flex; flex-direction: column; gap: 6px; }
+.einst-verweis-knopf { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-card-solid); color: var(--text-main); font: inherit; font-size: 14px; text-align: left; cursor: pointer; }
+.einst-verweis-knopf:hover { background: var(--bg-hover); }
+.einst-verweis-knopf:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+.einst-verweis-knopf span { color: var(--text-muted); }
+/* Gefahrenzone (Konto & Daten löschen) */
+.einst-gefahrenzone { margin-top: 18px; padding: 14px; border: 1px solid var(--danger); border-radius: 10px; background: var(--danger-dim); }
+.einst-gefahrenzone-titel { font-size: 12px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--danger); margin-bottom: 6px; }
 @media (max-width: 768px) {
   .einst-layout { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .einst-nav { position: static; }

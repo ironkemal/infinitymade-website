@@ -23,7 +23,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20261123ma1" />
+  <link rel="stylesheet" href="dashboard.css?v=20261123b1" />
   <link rel="stylesheet" href="dashboard-feinschliff.css?v=20261121weiss1" />
   <link rel="stylesheet" href="praxura-design.css?v=20261114v805" />
   <link rel="stylesheet" href="design/shell.css?v=20261114v209c">
@@ -2621,10 +2621,43 @@
           </div>
 
           <div class="settings-sections">
-            <!-- Gruppen = Bereiche der Einstellungen-Navigation (module/einstellungen-nav.js, Pflichtpunkt 8, 23.11.2026).
-                 Per JS angehängte Abschnitte (Rechtslinks, Mitarbeiter-App, Fax, Formulare, E-Mail-Versand) ordnet das Modul ihrer Gruppe zu. -->
-            <div class="settings-group" data-einst="allgemein">
-              <div class="settings-group-label">Allgemein</div>
+            <!-- Bereiche der Einstellungen (module/einstellungen-nav.js, Phase 7b, Konzept wissensbank/sitzungen/2026-11-23_einstellungen-informationsarchitektur.md).
+                 data-einst = Bereich (Deep-Link #settings/<bereich>), data-einst-ober = Überschrift in der Navigation.
+                 Per JS angehängte Abschnitte und Verweis-Kästen ordnet das Modul zu. -->
+            <div class="settings-group" data-einst="konto" data-einst-ober="PERSÖNLICH">
+              <div class="settings-group-label">Mein Konto</div>
+              <p class="settings-group-hint">Gilt nur für Sie persönlich.</p>
+
+<div class="settings-section" id="settingsPasswortSection">
+                <div class="settings-section-title" data-i18n="set_password">Passwort</div>
+                <div class="settings-section-body">
+                  <div class="form-group">
+                    <label class="form-label" data-i18n="set_new_pw">Neues Passwort</label>
+                    <input class="form-input" id="setPw" type="password" minlength="8" />
+                  </div>
+                  <button class="btn-primary" id="pwChangeBtn" data-i18n="set_change">Passwort ändern</button>
+                </div>
+              </div>
+
+<div class="settings-section" id="settingsGoogleSection">
+                <div class="settings-section-title" data-i18n="set_integrations">Integrationen</div>
+                <div class="settings-section-body">
+                  <div class="integration-row">
+                    <span class="integration-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+                    <div class="integration-info">
+                      <div class="integration-name">Google Calendar</div>
+                      <div class="integration-status" id="googleCalStatus" data-i18n="status_disconnected">Nicht verbunden
+                      </div>
+                    </div>
+                    <button class="btn-ghost" id="googleCalBtn" data-i18n="btn_connect">Verbinden</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-group" data-einst="praxis" data-einst-ober="PRAXIS">
+              <div class="settings-group-label">Praxisdaten</div>
+              <p class="settings-group-hint">Name, Anschrift und Standorte Ihrer Praxis.</p>
 
 <div class="settings-section" id="settingsProfileSection">
                 <div class="settings-section-title" data-i18n="set_profile">Profil</div>
@@ -2662,10 +2695,147 @@
                 </div>
               </div>
 
+              <!-- Geschäfte (Multi-Business, nur Enterprise/Paket 3) -->
+              
+<div class="settings-section" id="settingsBusinessesSection" hidden>
+                <div class="settings-section-title">Standorte</div>
+                <div class="settings-section-body">
+                  <p class="form-hint" style="margin-bottom:12px;">
+                    Verwalten Sie Ihre Standorte. Jedes Geschäft hat eigene Leistungen, Arbeitszeiten und Personal.
+                  </p>
+                  <div id="businessesList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+                  <button class="btn-primary" id="addBusinessBtn" type="button">＋ Neues Geschäft hinzufügen</button>
+                </div>
+              </div>
+
+              <!-- Datenfreigabe zwischen Standorten (Multi-Business) -->
+              
+<div class="settings-section" id="settingsDataSharingSection" hidden>
+                <div class="settings-section-title">Datenfreigabe zwischen Standorten</div>
+                <div class="settings-section-body">
+                  <p class="form-hint" style="margin-bottom:14px;">
+                    Legen Sie fest, welche Daten über alle Ihre Standorte hinweg <strong>gemeinsam</strong> genutzt werden.
+                    Eingeschaltet = alle Standorte sehen dieselben Daten. Ausgeschaltet = die Anzeige bleibt je Standort
+                    getrennt. Das ist ein Anzeigefilter, kein Zugriffsschutz: Alle Standorte gehören zu derselben Praxis. <em>Termine/Kalender sind aus Sicherheitsgründen immer
+                    standortübergreifend sichtbar (zur Vermeidung von Mitarbeiter-Doppelbuchungen).</em>
+                  </p>
+                  <div id="dataSharingList" style="display:flex;flex-direction:column;gap:0;"></div>
+                  <button class="btn-primary" id="dataSharingSaveBtn" type="button" style="margin-top:14px;">Speichern</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-group" data-einst="termine" data-einst-ober="PRAXIS">
+              <div class="settings-group-label">Termine &amp; Online-Buchung</div>
+              <p class="settings-group-hint">Erinnern, Absagen und Ihre Online-Terminseite.</p>
+
+              <!-- Terminerinnerung per E-Mail (06.11.2026, O-206) — Inhalt rendert module/terminerinnerung-einstellung.js; nur sichtbar, wo Migration 0110 angewandt ist -->
+              
+<div class="settings-section" id="settingsTerminerinnerungSection" hidden>
+                <div class="settings-section-title">Terminerinnerung</div>
+                <div class="settings-section-body"></div>
+              </div>
+
+              <!-- Ausfallgebühr (No-Show / kurzfristige Absage) — für alle Owner -->
+              
+<div class="settings-section" id="settingsAusfallSection" hidden>
+                <div class="settings-section-title">Ausfallgebühr</div>
+                <div class="settings-section-body">
+                  <p class="form-hint" style="margin-bottom:12px;">
+                    Bei No-Show oder kurzfristiger Absage kann automatisch eine private Ausfallrechnung angeboten werden.
+                  </p>
+                  <div class="form-group" style="margin-bottom:12px;">
+                    <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;">
+                      <input type="checkbox" id="setAusfallEnabled" style="width:18px;height:18px;accent-color:var(--primary);cursor:pointer;" />
+                      Ausfallgebühr aktivieren
+                    </label>
+                  </div>
+                  <div id="setAusfallFields" hidden>
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label class="form-label">Berechnung</label>
+                        <select class="form-select" id="setAusfallMode">
+                          <option value="fixed">Fester Betrag (€)</option>
+                          <option value="percent">% des Behandlungspreises</option>
+                        </select>
+                      </div>
+                      <div class="form-group" style="max-width:160px;">
+                        <label class="form-label" id="setAusfallAmountLabel">Betrag (€)</label>
+                        <input class="form-input" id="setAusfallAmount" type="number" min="0" step="0.01" placeholder="z. B. 35,00" />
+                      </div>
+                      <div class="form-group" style="max-width:160px;">
+                        <label class="form-label">Absagefrist (Std.)</label>
+                        <input class="form-input" id="setAusfallCutoff" type="number" min="0" step="1" value="24" />
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Hinweistext auf der Rechnung (optional)</label>
+                      <textarea class="form-input" id="setAusfallHinweis" rows="2" placeholder="z. B. Verweis auf Ihre Ausfallvereinbarung vom Behandlungsbeginn"></textarea>
+                    </div>
+                    <div class="form-hint" style="font-size:12px;margin-bottom:12px;">⚠ Nur wirksam mit vom Patienten unterschriebener Ausfallvereinbarung. Das Ausfallhonorar ist Schadensersatz (umsatzsteuerfrei) und kann nicht über die Krankenkasse abgerechnet werden.</div>
+                  </div>
+                  <button class="btn-primary" id="setAusfallSaveBtn" type="button">Speichern</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-group" data-einst="leistungen" data-einst-ober="PRAXIS">
+              <div class="settings-group-label">Leistungen &amp; Preise</div>
+              <p class="settings-group-hint">Preise für Selbstzahler und Ihre Leistungen.</p>
+
+              <!-- Selbstzahler-Preisstufen — Owner-Einstellung (profiles.selbstzahler_stufen) -->
+              
+<div class="settings-section" id="settingsPreisstufenSection" hidden>
+                <div class="settings-section-title">Selbstzahler-Preisstufen</div>
+                <div class="settings-section-body">
+                  <p class="form-hint" style="margin-bottom:12px;">
+                    Sie benennen Ihre Preisstufen selbst — etwa einen Bestandspatienten-Preis
+                    und einen Hausbesuch-Preis. Beim Anlegen einer Rechnung setzt ein Klick
+                    den Betrag, daneben steht, was dieser Patient zuletzt bezahlt hat.
+                    Eine spätere Änderung wirkt nur auf neue Rechnungen: gestellte Rechnungen
+                    behalten ihren Betrag.
+                  </p>
+                  <div id="setStufenList" style="margin-bottom:12px;"></div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn" id="setStufenAddBtn" type="button">＋ Preisstufe</button>
+                    <button class="btn-primary" id="setStufenSaveBtn" type="button">Speichern</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-group" data-einst="dokumentation" data-einst-ober="PRAXIS">
+              <div class="settings-group-label">Behandlung &amp; Dokumentation</div>
+              <p class="settings-group-hint">Formulare und Vorgaben für die Dokumentation.</p>
+
+              <!-- Legende der Fußgrafik (Podologie) — Owner-Einstellung -->
+              
+<div class="settings-section" id="settingsLegendeSection" hidden>
+                <div class="settings-section-title">Legende der Fußgrafik</div>
+                <div class="settings-section-body">
+                  <p class="form-hint" style="margin-bottom:12px;">
+                    Sie entscheiden, welches Zeichen im Fußbefund welchen Befund bedeutet.
+                    Bereits gesetzte Markierungen behalten ihre ursprüngliche Bedeutung —
+                    eine Umbenennung ändert keinen bestehenden Befund.
+                  </p>
+                  <div id="setLegendeList" style="margin-bottom:12px;"></div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn" id="setLegendeAddBtn" type="button">＋ Eintrag</button>
+                    <button class="btn" id="setLegendeResetBtn" type="button">Standard wiederherstellen</button>
+                    <button class="btn-primary" id="setLegendeSaveBtn" type="button">Speichern</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-group" data-einst="briefkopf" data-einst-ober="PRAXIS">
+              <div class="settings-group-label">Briefkopf &amp; Belege</div>
+              <p class="settings-group-hint">So sehen Rechnungen, Quittungen und Briefe aus.</p>
+
               <!-- Praxis-Branding -->
               
 <div class="settings-section" id="settingsBrandingSection">
-                <div class="settings-section-title">Praxis-Branding</div>
+                <div class="settings-section-title">Briefkopf &amp; Logo</div>
                 <div class="settings-section-body">
                   <div class="form-group">
                     <label class="form-label">Praxis-Logo</label>
@@ -2717,174 +2887,140 @@
                   </div>
                 </div>
               </div>
+            </div>
 
-              <!-- Terminerinnerung per E-Mail (06.11.2026, O-206) — Inhalt rendert module/terminerinnerung-einstellung.js; nur sichtbar, wo Migration 0110 angewandt ist -->
+            <div class="settings-group" data-einst="team" data-einst-ober="PRAXIS">
+              <div class="settings-group-label">Team</div>
+              <p class="settings-group-hint">Mitarbeiter, Rechte und die App für Mitarbeiter.</p>
+            </div>
+
+            <div class="settings-group" data-einst="kasse" data-einst-ober="ABRECHNUNG">
+              <div class="settings-group-label">Krankenkasse</div>
+              <p class="settings-group-hint">Abrechnung mit den Krankenkassen und Telematikinfrastruktur.</p>
+
+<div class="settings-section" id="settingsAbrechnungSection" style="display:none;">
+                <div class="settings-section-title">Kassenabrechnung (§ 302)</div>
+                <div class="settings-section-body">
+                  <div class="form-group">
+                    <label class="form-label">Institutionskennzeichen (IK)</label>
+                    <input class="form-input" id="setIkNumber" type="text" inputmode="numeric" maxlength="9" placeholder="9-stellig, z. B. 460123456" />
+                    <div class="form-hint">Wird von der ARGE-IK vergeben. Pflicht für §302 SGB V Sammelabrechnung.</div>
+                  </div>
+                  <button class="btn-primary" id="ikSaveBtn">IK speichern</button>
+                  <div id="certStatus" style="margin-top:12px;font-size:13px;color:var(--text-muted);">Noch kein ITSG-Zertifikat hinterlegt.</div>
+                  <div class="form-hint" style="margin-top:8px;">Das ITSG/Dakota-Zertifikat (.p12) wird beim Erstellen einer Abrechnung im Browser eingelesen und signiert die DTA-Datei lokal — der private Schlüssel verlässt Ihren Rechner nicht.</div>
+                  <div id="betriebsartMount"></div>
+                </div>
+              </div>
+
+<div class="settings-section" id="settingsTiSection" style="display:none;">
+                <div class="settings-section-title">Telematikinfrastruktur (TI)</div>
+                <div class="settings-section-body">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">KIM-Adresse</label>
+                      <input class="form-input" id="set-kim-adresse" type="text" placeholder="praxis@kim.example.de" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Telematik-ID</label>
+                      <input class="form-input" id="set-telematik-id" type="text" placeholder="1-2arv..." />
+                    </div>
+                  </div>
+                  <button class="btn-primary" id="tiSaveBtn">TI-Daten speichern</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-group" data-einst="rechnung" data-einst-ober="ABRECHNUNG">
+              <div class="settings-group-label">Rechnung</div>
+              <p class="settings-group-hint">Pflichtangaben auf jeder Rechnung.</p>
+
+<div class="settings-section" id="settingsBillingSection">
+                <div class="settings-section-title">Bank &amp; Steuer</div>
+                <div class="settings-section-body">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">Bank</label>
+                      <input class="form-input" id="setBankName" type="text" placeholder="z. B. Sparkasse Köln-Bonn" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">IBAN</label>
+                      <input class="form-input" id="setIban" type="text" placeholder="DE…" />
+                    </div>
+                    <div class="form-group" style="max-width:160px;">
+                      <label class="form-label">BIC</label>
+                      <input class="form-input" id="setBic" type="text" placeholder="COLSDE…" />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">Steuernummer</label>
+                      <input class="form-input" id="setSteuernummer" type="text" placeholder="z. B. 220/5070/0815" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">USt-IdNr (optional)</label>
+                      <input class="form-input" id="setUstId" type="text" placeholder="DE…" />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Steuerhinweis (erscheint auf Rechnung)</label>
+                    <select class="form-input" id="setTaxExemptSelect" style="margin-bottom:6px;">
+                      <option value="§4nr14a">§ 4 Nr. 14a UStG — Umsatzsteuerfreie Heilbehandlung</option>
+                      <option value="§4nr14b">§ 4 Nr. 14b UStG — Krankenhausbehandlung</option>
+                      <option value="§19">§ 19 Abs. 1 UStG — Kleinunternehmerregelung</option>
+                      <option value="19pct">19 % Umsatzsteuer (keine Befreiung)</option>
+                      <option value="custom">Eigene Eingabe…</option>
+                    </select>
+                    <input class="form-input" id="setTaxExempt" type="text" placeholder="z. B. Gemäß § 4 Nr. 14a UStG umsatzsteuerfrei" style="display:none;" />
+                    <div class="form-hint" id="setTaxExemptHint"></div>
+                  </div>
+                  <button class="btn-primary" id="billingSaveBtn">Rechnungsdaten speichern</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-group" data-einst="buchhaltung" data-einst-ober="ABRECHNUNG">
+              <div class="settings-group-label">Buchhaltung</div>
+              <p class="settings-group-hint">Export für Steuerberatung und Buchhaltung.</p>
+
+              <!-- DATEV-Export (22.10.2026) — Inhalt rendert module/datev-einstellungen.js -->
               
-<div class="settings-section" id="settingsTerminerinnerungSection" hidden>
-                <div class="settings-section-title">Terminerinnerung</div>
+<div class="settings-section" id="settingsDatevSection" hidden>
+                <div class="settings-section-title">DATEV-Export</div>
                 <div class="settings-section-body"></div>
               </div>
 
-              <!-- Ausfallgebühr (No-Show / kurzfristige Absage) — für alle Owner -->
+              <!-- Buchungskonten (Gegenkonten) — Owner-Einstellung (profiles.buchungskonten) -->
               
-<div class="settings-section" id="settingsAusfallSection" hidden>
-                <div class="settings-section-title">Ausfallgebühr</div>
+<div class="settings-section" id="settingsKontenSection" hidden>
+                <div class="settings-section-title">Buchungskonten</div>
                 <div class="settings-section-body">
                   <p class="form-hint" style="margin-bottom:12px;">
-                    Bei No-Show oder kurzfristiger Absage kann automatisch eine private Ausfallrechnung angeboten werden.
+                    Beim Verbuchen eines Zahlungseingangs wählen Sie aus, wohin das Geld
+                    geflossen ist — Kasse, Bank, oder bei einem abgeschriebenen Restbetrag
+                    die Erlösschmälerung. Das sind die Angaben, die Ihr Steuerberater braucht.
+                    Solange Sie nichts ändern, gilt der Standardrahmen (SKR03).
+                    Ein Konto, auf das schon gebucht wurde, sollten Sie deaktivieren statt
+                    entfernen: bereits gebuchte Zahlungen behalten ohnehin ihre ursprüngliche
+                    Kontobezeichnung.
                   </p>
-                  <div class="form-group" style="margin-bottom:12px;">
-                    <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;">
-                      <input type="checkbox" id="setAusfallEnabled" style="width:18px;height:18px;accent-color:var(--primary);cursor:pointer;" />
-                      Ausfallgebühr aktivieren
-                    </label>
-                  </div>
-                  <div id="setAusfallFields" hidden>
-                    <div class="form-row">
-                      <div class="form-group">
-                        <label class="form-label">Berechnung</label>
-                        <select class="form-select" id="setAusfallMode">
-                          <option value="fixed">Fester Betrag (€)</option>
-                          <option value="percent">% des Behandlungspreises</option>
-                        </select>
-                      </div>
-                      <div class="form-group" style="max-width:160px;">
-                        <label class="form-label" id="setAusfallAmountLabel">Betrag (€)</label>
-                        <input class="form-input" id="setAusfallAmount" type="number" min="0" step="0.01" placeholder="z. B. 35,00" />
-                      </div>
-                      <div class="form-group" style="max-width:160px;">
-                        <label class="form-label">Absagefrist (Std.)</label>
-                        <input class="form-input" id="setAusfallCutoff" type="number" min="0" step="1" value="24" />
-                      </div>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Hinweistext auf der Rechnung (optional)</label>
-                      <textarea class="form-input" id="setAusfallHinweis" rows="2" placeholder="z. B. Verweis auf Ihre Ausfallvereinbarung vom Behandlungsbeginn"></textarea>
-                    </div>
-                    <div class="form-hint" style="font-size:12px;margin-bottom:12px;">⚠ Nur wirksam mit vom Patienten unterschriebener Ausfallvereinbarung. Das Ausfallhonorar ist Schadensersatz (umsatzsteuerfrei) und kann nicht über die Krankenkasse abgerechnet werden.</div>
-                  </div>
-                  <button class="btn-primary" id="setAusfallSaveBtn" type="button">Speichern</button>
-                </div>
-              </div>
-
-              <!-- Legende der Fußgrafik (Podologie) — Owner-Einstellung -->
-              
-<div class="settings-section" id="settingsLegendeSection" hidden>
-                <div class="settings-section-title">Legende der Fußgrafik</div>
-                <div class="settings-section-body">
-                  <p class="form-hint" style="margin-bottom:12px;">
-                    Sie entscheiden, welches Zeichen im Fußbefund welchen Befund bedeutet.
-                    Bereits gesetzte Markierungen behalten ihre ursprüngliche Bedeutung —
-                    eine Umbenennung ändert keinen bestehenden Befund.
-                  </p>
-                  <div id="setLegendeList" style="margin-bottom:12px;"></div>
+                  <div id="setKontenList" style="margin-bottom:12px;"></div>
                   <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <button class="btn" id="setLegendeAddBtn" type="button">＋ Eintrag</button>
-                    <button class="btn" id="setLegendeResetBtn" type="button">Standard wiederherstellen</button>
-                    <button class="btn-primary" id="setLegendeSaveBtn" type="button">Speichern</button>
-                  </div>
-                </div>
-              </div>
-
-<div class="settings-section">
-                <div class="settings-section-title" data-i18n="set_integrations">Integrationen</div>
-                <div class="settings-section-body">
-                  <div class="integration-row">
-                    <span class="integration-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-                    <div class="integration-info">
-                      <div class="integration-name">Google Calendar</div>
-                      <div class="integration-status" id="googleCalStatus" data-i18n="status_disconnected">Nicht verbunden
-                      </div>
-                    </div>
-                    <button class="btn-ghost" id="googleCalBtn" data-i18n="btn_connect">Verbinden</button>
+                    <button class="btn" id="setKontenAddBtn" type="button">＋ Konto</button>
+                    <button class="btn-primary" id="setKontenSaveBtn" type="button">Speichern</button>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div class="settings-group" data-einst="recht">
-              <div class="settings-group-label">Impressum &amp; Datenschutz</div>
-
-              <!-- DSGVO Self-Service (Art. 15 + Art. 17) -->
-              
-<div class="settings-section" id="settingsDsgvoSection">
-                <div class="settings-section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Datenschutz (DSGVO)</div>
-                <div class="settings-section-body">
-                  <p style="font-size:13px;color:var(--text-muted);margin:0 0 14px;line-height:1.5;">
-                    Sie haben jederzeit das Recht auf Auskunft über und Löschung Ihrer Daten.
-                  </p>
-                  <div style="display:flex;flex-direction:column;gap:10px;">
-                    <button class="btn-ghost" id="dsgvoExportBtn" data-dsgvo-export type="button">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Meine Daten exportieren (JSON)
-                    </button>
-                    <button class="btn-ghost" id="dsgvoDeleteBtn" type="button" style="border-color:var(--px-fehler-rand,#fca5a5);color:var(--px-fehler,#dc2626);">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Konto &amp; Daten löschen
-                    </button>
-                  </div>
-                  <p style="font-size:11px;color:var(--text-muted);margin:12px 0 0;line-height:1.5;">
-                    Hinweis Löschung: Abrechnungsdaten (Rechnungen, §302-Abrechnungen) bleiben aus gesetzlicher Aufbewahrungspflicht (§ 147 AO, § 304 SGB V) <strong>anonymisiert</strong> 10 Jahre gespeichert.
-                  </p>
-                </div>
-              </div>
-
-              <!-- Quellenangabe § 63 UrhG (O-78) — Kaynak: onprem/NOTICE-QUELLEN.txt, ändert sich eines, ändern sich beide -->
-              
-<div class="settings-section" id="settingsQuellenSection">
-                <div class="settings-section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Datenquellen</div>
-                <div class="settings-section-body">
-                  <p style="font-size:12px;color:var(--text-muted);margin:0;line-height:1.6;">
-                    Diese Software enthält Referenzdaten aus amtlichen und vertraglichen Quellen:
-                    ICD-10-GM (Bundesinstitut für Arzneimittel und Medizinprodukte, BfArM) ·
-                    Kostenträgerdatei (GKV-Spitzenverband) · Vergütungssätze Physiotherapie
-                    (Anlage 2 zum Vertrag nach § 125 Abs. 1 SGB V) · Heilmittel-Richtlinie und
-                    Diagnosegruppen (Gemeinsamer Bundesausschuss, G-BA) · Heilmittel-Katalog
-                    Podologie (Anlage 2 zum Vertrag nach § 125 Abs. 1 SGB V Podologie).
-                    Maßgeblich ist stets die jeweils aktuelle, vom Herausgeber veröffentlichte
-                    Fassung, nicht der in dieser Software gespeicherte Datenbestand.
-                  </p>
-                </div>
-              </div>
+            <div class="settings-group" data-einst="kommunikation" data-einst-ober="KOMMUNIKATION">
+              <div class="settings-group-label">E-Mail &amp; Fax</div>
+              <p class="settings-group-hint">Postfach für E-Mails an Patienten, Fax an Ärzte.</p>
             </div>
 
-            <div class="settings-group" data-einst="team">
-              <div class="settings-group-label">Mitarbeiter &amp; Rechte</div>
-            </div>
-
-            <div class="settings-group" data-einst="standorte">
-              <div class="settings-group-label">Standorte</div>
-
-              <!-- Geschäfte (Multi-Business, nur Enterprise/Paket 3) -->
-              
-<div class="settings-section" id="settingsBusinessesSection" hidden>
-                <div class="settings-section-title">Geschäfte</div>
-                <div class="settings-section-body">
-                  <p class="form-hint" style="margin-bottom:12px;">
-                    Verwalten Sie Ihre Standorte. Jedes Geschäft hat eigene Leistungen, Arbeitszeiten und Personal.
-                  </p>
-                  <div id="businessesList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
-                  <button class="btn-primary" id="addBusinessBtn" type="button">＋ Neues Geschäft hinzufügen</button>
-                </div>
-              </div>
-
-              <!-- Datenfreigabe zwischen Standorten (Multi-Business) -->
-              
-<div class="settings-section" id="settingsDataSharingSection" hidden>
-                <div class="settings-section-title">Datenfreigabe zwischen Standorten</div>
-                <div class="settings-section-body">
-                  <p class="form-hint" style="margin-bottom:14px;">
-                    Legen Sie fest, welche Daten über alle Ihre Standorte hinweg <strong>gemeinsam</strong> genutzt werden.
-                    Eingeschaltet = alle Standorte sehen dieselben Daten. Ausgeschaltet = die Anzeige bleibt je Standort
-                    getrennt. Das ist ein Anzeigefilter, kein Zugriffsschutz: Alle Standorte gehören zu derselben Praxis. <em>Termine/Kalender sind aus Sicherheitsgründen immer
-                    standortübergreifend sichtbar (zur Vermeidung von Mitarbeiter-Doppelbuchungen).</em>
-                  </p>
-                  <div id="dataSharingList" style="display:flex;flex-direction:column;gap:0;"></div>
-                  <button class="btn-primary" id="dataSharingSaveBtn" type="button" style="margin-top:14px;">Speichern</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="settings-group" data-einst="dokumente">
-              <div class="settings-group-label">Dokumente &amp; Kommunikation</div>
+            <div class="settings-group" data-einst="aerzte" data-einst-ober="KOMMUNIKATION">
+              <div class="settings-group-label">Ärzte</div>
+              <p class="settings-group-hint">Verordnende Ärzte für Rezepte, Fax und Berichte.</p>
 
 <div class="settings-section" id="aerzteSection">
                 <div class="settings-section-title">Ärzte</div>
@@ -2932,144 +3068,9 @@
               </div>
             </div>
 
-            <div class="settings-group" data-einst="datev">
-              <div class="settings-group-label">DATEV-Export</div>
-
-              <!-- DATEV-Export (22.10.2026) — Inhalt rendert module/datev-einstellungen.js -->
-              
-<div class="settings-section" id="settingsDatevSection" hidden>
-                <div class="settings-section-title">DATEV-Export</div>
-                <div class="settings-section-body"></div>
-              </div>
-
-              <!-- Buchungskonten (Gegenkonten) — Owner-Einstellung (profiles.buchungskonten) -->
-              
-<div class="settings-section" id="settingsKontenSection" hidden>
-                <div class="settings-section-title">Buchungskonten</div>
-                <div class="settings-section-body">
-                  <p class="form-hint" style="margin-bottom:12px;">
-                    Beim Verbuchen eines Zahlungseingangs wählen Sie aus, wohin das Geld
-                    geflossen ist — Kasse, Bank, oder bei einem abgeschriebenen Restbetrag
-                    die Erlösschmälerung. Das sind die Angaben, die Ihr Steuerberater braucht.
-                    Solange Sie nichts ändern, gilt der Standardrahmen (SKR03).
-                    Ein Konto, auf das schon gebucht wurde, sollten Sie deaktivieren statt
-                    entfernen: bereits gebuchte Zahlungen behalten ohnehin ihre ursprüngliche
-                    Kontobezeichnung.
-                  </p>
-                  <div id="setKontenList" style="margin-bottom:12px;"></div>
-                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <button class="btn" id="setKontenAddBtn" type="button">＋ Konto</button>
-                    <button class="btn-primary" id="setKontenSaveBtn" type="button">Speichern</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="settings-group" data-einst="abrechnung">
-              <div class="settings-group-label">Abrechnung</div>
-
-<div class="settings-section" id="settingsAbrechnungSection" style="display:none;">
-                <div class="settings-section-title">Abrechnung (Krankenkasse)</div>
-                <div class="settings-section-body">
-                  <div class="form-group">
-                    <label class="form-label">Institutionskennzeichen (IK)</label>
-                    <input class="form-input" id="setIkNumber" type="text" inputmode="numeric" maxlength="9" placeholder="9-stellig, z. B. 460123456" />
-                    <div class="form-hint">Wird von der ARGE-IK vergeben. Pflicht für §302 SGB V Sammelabrechnung.</div>
-                  </div>
-                  <button class="btn-primary" id="ikSaveBtn">IK speichern</button>
-                  <div id="certStatus" style="margin-top:12px;font-size:13px;color:var(--text-muted);">Noch kein ITSG-Zertifikat hinterlegt.</div>
-                  <div class="form-hint" style="margin-top:8px;">Das ITSG/Dakota-Zertifikat (.p12) wird beim Erstellen einer Abrechnung im Browser eingelesen und signiert die DTA-Datei lokal — der private Schlüssel verlässt Ihren Rechner nicht.</div>
-                  <div id="betriebsartMount"></div>
-                </div>
-              </div>
-
-<div class="settings-section" id="settingsTiSection" style="display:none;">
-                <div class="settings-section-title">Telematikinfrastruktur (TI)</div>
-                <div class="settings-section-body">
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label class="form-label">KIM-Adresse</label>
-                      <input class="form-input" id="set-kim-adresse" type="text" placeholder="praxis@kim.example.de" />
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Telematik-ID</label>
-                      <input class="form-input" id="set-telematik-id" type="text" placeholder="1-2arv..." />
-                    </div>
-                  </div>
-                  <button class="btn-primary" id="tiSaveBtn">TI-Daten speichern</button>
-                </div>
-              </div>
-
-              <!-- Selbstzahler-Preisstufen — Owner-Einstellung (profiles.selbstzahler_stufen) -->
-              
-<div class="settings-section" id="settingsPreisstufenSection" hidden>
-                <div class="settings-section-title">Selbstzahler-Preisstufen</div>
-                <div class="settings-section-body">
-                  <p class="form-hint" style="margin-bottom:12px;">
-                    Sie benennen Ihre Preisstufen selbst — etwa einen Bestandspatienten-Preis
-                    und einen Hausbesuch-Preis. Beim Anlegen einer Rechnung setzt ein Klick
-                    den Betrag, daneben steht, was dieser Patient zuletzt bezahlt hat.
-                    Eine spätere Änderung wirkt nur auf neue Rechnungen: gestellte Rechnungen
-                    behalten ihren Betrag.
-                  </p>
-                  <div id="setStufenList" style="margin-bottom:12px;"></div>
-                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <button class="btn" id="setStufenAddBtn" type="button">＋ Preisstufe</button>
-                    <button class="btn-primary" id="setStufenSaveBtn" type="button">Speichern</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="settings-group" data-einst="rechnung">
-              <div class="settings-group-label">Rechnung</div>
-
-<div class="settings-section" id="settingsBillingSection">
-                <div class="settings-section-title">Rechnungsdaten</div>
-                <div class="settings-section-body">
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label class="form-label">Bank</label>
-                      <input class="form-input" id="setBankName" type="text" placeholder="z. B. Sparkasse Köln-Bonn" />
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">IBAN</label>
-                      <input class="form-input" id="setIban" type="text" placeholder="DE…" />
-                    </div>
-                    <div class="form-group" style="max-width:160px;">
-                      <label class="form-label">BIC</label>
-                      <input class="form-input" id="setBic" type="text" placeholder="COLSDE…" />
-                    </div>
-                  </div>
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label class="form-label">Steuernummer</label>
-                      <input class="form-input" id="setSteuernummer" type="text" placeholder="z. B. 220/5070/0815" />
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">USt-IdNr (optional)</label>
-                      <input class="form-input" id="setUstId" type="text" placeholder="DE…" />
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Steuerhinweis (erscheint auf Rechnung)</label>
-                    <select class="form-input" id="setTaxExemptSelect" style="margin-bottom:6px;">
-                      <option value="§4nr14a">§ 4 Nr. 14a UStG — Umsatzsteuerfreie Heilbehandlung</option>
-                      <option value="§4nr14b">§ 4 Nr. 14b UStG — Krankenhausbehandlung</option>
-                      <option value="§19">§ 19 Abs. 1 UStG — Kleinunternehmerregelung</option>
-                      <option value="19pct">19 % Umsatzsteuer (keine Befreiung)</option>
-                      <option value="custom">Eigene Eingabe…</option>
-                    </select>
-                    <input class="form-input" id="setTaxExempt" type="text" placeholder="z. B. Gemäß § 4 Nr. 14a UStG umsatzsteuerfrei" style="display:none;" />
-                    <div class="form-hint" id="setTaxExemptHint"></div>
-                  </div>
-                  <button class="btn-primary" id="billingSaveBtn">Rechnungsdaten speichern</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="settings-group" data-einst="ki">
+            <div class="settings-group" data-einst="ki" data-einst-ober="SYSTEM &amp; DATENSCHUTZ">
               <div class="settings-group-label">KI-Unterstützung</div>
+              <p class="settings-group-hint">Was die KI darf und warum sie an oder aus ist.</p>
 
               <!-- KI-Unterstützung (M4) -->
               
@@ -3079,19 +3080,59 @@
               </div>
             </div>
 
-            <div class="settings-group" data-einst="system">
-              <div class="settings-group-label">System</div>
+            <div class="settings-group" data-einst="datenschutz" data-einst-ober="SYSTEM &amp; DATENSCHUTZ">
+              <div class="settings-group-label">Datenschutz</div>
+              <p class="settings-group-hint">Auskunft, Löschung und Quellenangaben.</p>
 
-              <!-- Systemstatus (Box-Test 22.11.2026): nur Box + Inhaber, module/systemstatus.js blendet ein -->
+              <!-- DSGVO Self-Service (Art. 15 + Art. 17) -->
               
-<div class="settings-section" id="settingsSystemSection" hidden>
-                <div class="settings-section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg> System</div>
-                <div class="settings-section-body" data-systemstatus></div>
+<div class="settings-section" id="settingsDsgvoSection">
+                <div class="settings-section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Ihre Daten (DSGVO)</div>
+                <div class="settings-section-body">
+                  <p style="font-size:13px;color:var(--text-muted);margin:0 0 14px;line-height:1.5;">
+                    Sie haben jederzeit das Recht auf Auskunft über und Löschung Ihrer Daten.
+                  </p>
+                  <div style="display:flex;flex-direction:column;gap:10px;">
+                    <button class="btn-ghost" id="dsgvoExportBtn" data-dsgvo-export type="button">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Meine Daten exportieren (JSON)
+                    </button>
+                  </div>
+                
+                  <div class="einst-gefahrenzone" role="group" aria-label="Gefahrenzone">
+                    <div class="einst-gefahrenzone-titel">Gefahrenzone</div>
+                    <p class="form-hint" style="margin:0 0 10px;">Löscht Ihr Konto und alle Praxisdaten. Das lässt sich nicht rückgängig machen.</p>
+                      <button class="btn-ghost" id="dsgvoDeleteBtn" type="button" style="border-color:var(--px-fehler-rand,#fca5a5);color:var(--px-fehler,#dc2626);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Konto &amp; Daten löschen
+                      </button>
+                    <p style="font-size:11px;color:var(--text-muted);margin:12px 0 0;line-height:1.5;">
+                      Hinweis Löschung: Abrechnungsdaten (Rechnungen, §302-Abrechnungen) bleiben aus gesetzlicher Aufbewahrungspflicht (§ 147 AO, § 304 SGB V) <strong>anonymisiert</strong> 10 Jahre gespeichert.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quellenangabe § 63 UrhG (O-78) — Kaynak: onprem/NOTICE-QUELLEN.txt, ändert sich eines, ändern sich beide -->
+              
+<div class="settings-section" id="settingsQuellenSection">
+                <div class="settings-section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Datenquellen</div>
+                <div class="settings-section-body">
+                  <p style="font-size:12px;color:var(--text-muted);margin:0;line-height:1.6;">
+                    Diese Software enthält Referenzdaten aus amtlichen und vertraglichen Quellen:
+                    ICD-10-GM (Bundesinstitut für Arzneimittel und Medizinprodukte, BfArM) ·
+                    Kostenträgerdatei (GKV-Spitzenverband) · Vergütungssätze Physiotherapie
+                    (Anlage 2 zum Vertrag nach § 125 Abs. 1 SGB V) · Heilmittel-Richtlinie und
+                    Diagnosegruppen (Gemeinsamer Bundesausschuss, G-BA) · Heilmittel-Katalog
+                    Podologie (Anlage 2 zum Vertrag nach § 125 Abs. 1 SGB V Podologie).
+                    Maßgeblich ist stets die jeweils aktuelle, vom Herausgeber veröffentlichte
+                    Fassung, nicht der in dieser Software gespeicherte Datenbestand.
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div class="settings-group" data-einst="konto">
-              <div class="settings-group-label">Konto</div>
+            <div class="settings-group" data-einst="abo" data-einst-ober="SYSTEM &amp; DATENSCHUTZ">
+              <div class="settings-group-label">Paket &amp; Abo</div>
+              <p class="settings-group-hint">Ihr Paket und Ihr Abo.</p>
 
 <div class="settings-section" id="settingsAccountSection">
                 <div class="settings-section-title" data-i18n="set_account">Konto</div>
@@ -3114,22 +3155,23 @@
                 </div>
               </div>
 
-<div class="settings-section">
+<div class="settings-section" id="settingsPaketSection">
                 <div class="settings-section-title" data-i18n="features_title">Paketinhalt</div>
                 <div class="settings-section-body">
                   <ul id="settingsFeatureList" class="feature-list"></ul>
                 </div>
               </div>
+            </div>
 
-<div class="settings-section">
-                <div class="settings-section-title" data-i18n="set_password">Passwort</div>
-                <div class="settings-section-body">
-                  <div class="form-group">
-                    <label class="form-label" data-i18n="set_new_pw">Neues Passwort</label>
-                    <input class="form-input" id="setPw" type="password" minlength="8" />
-                  </div>
-                  <button class="btn-primary" id="pwChangeBtn" data-i18n="set_change">Passwort ändern</button>
-                </div>
+            <div class="settings-group" data-einst="system" data-einst-ober="SYSTEM &amp; DATENSCHUTZ">
+              <div class="settings-group-label">System</div>
+              <p class="settings-group-hint">Zustand dieser Praxisbox.</p>
+
+              <!-- Systemstatus (Box-Test 22.11.2026): nur Box + Inhaber, module/systemstatus.js blendet ein -->
+              
+<div class="settings-section" id="settingsSystemSection" hidden>
+                <div class="settings-section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg> System</div>
+                <div class="settings-section-body" data-systemstatus></div>
               </div>
             </div>
 
@@ -6018,7 +6060,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261123kb1"></script>
+  <script type="module" src="dashboard.js?v=20261123st1"></script>
 </body>
 
 </html>

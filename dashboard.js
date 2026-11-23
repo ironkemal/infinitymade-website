@@ -1,4 +1,4 @@
-import { emojisAus } from './module/ohne-emoji.js?v=20261123hw1'; import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261103mail1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261103mail1'; import { standorteFuerNutzer } from './module/standort-zuordnung.js?v=20261123sz1'; import { einstellungenKategorienAufbauen, einstellungenZeigeAbschnitt } from './module/einstellungen-nav.js?v=20261123ma1';
+import { emojisAus } from './module/ohne-emoji.js?v=20261123hw1'; import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261103mail1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261103mail1'; import { standorteFuerNutzer } from './module/standort-zuordnung.js?v=20261123sz1'; import { einstellungenKategorienAufbauen, einstellungenZeigeAbschnitt } from './module/einstellungen-nav.js?v=20261123b1';
 import { oeffneLeistungsRaum, leistungsRaumPayload } from './module/leistungs-raum.js?v=20261103raum';
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
 import { planungVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261121f11';
@@ -203,9 +203,9 @@ const T = {
     b2b_company: 'Unternehmen', b2b_contact: 'Ansprechpartner', b2b_status: 'Status',
     b2b_empty: 'Noch keine B2B-Kontakte.', b2b_ai_title: 'KI-Assistent',
     b2b_ai_welcome: 'Hallo! Ich helfe Ihnen bei B2B-Anfragen.',
-    set_profile: 'Profil', set_biz: 'Unternehmensname', set_lang: 'Sprache', set_save: 'Speichern',
-    set_account: 'Konto', set_password: 'Passwort', set_new_pw: 'Neues Passwort',
-    set_change: 'Passwort ändern', set_integrations: 'Integrationen',
+    set_profile: 'Praxisname & Anschrift', set_biz: 'Praxisname', set_lang: 'Sprache', set_save: 'Speichern',
+    set_account: 'Paket & Status', set_password: 'Anmeldung & Passwort', set_new_pw: 'Neues Passwort',
+    set_change: 'Passwort ändern', set_integrations: 'Mein Google-Kalender',
     sub_portal: 'Abonnement verwalten', sub_upgrade: 'Upgrade',
     status_disconnected: 'Nicht verbunden', status_connected: 'Verbunden',
     btn_connect: 'Verbinden', btn_disconnect: 'Trennen',

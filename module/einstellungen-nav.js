@@ -100,12 +100,31 @@ export function einstellungenNavAufbauen() {
 
 /** Per JS erzeugte Abschnitte → Bereich (die erzeugenden Module hängen sie an alte Anker). */
 export const NACHGELADEN = {
-  settingsRechtslinksSection: 'recht',
+  settingsRechtslinksSection: 'termine',
   settingsMitarbeiterAppSection: 'team',
-  settingsTeamLinkSection: 'team',
-  settingsFaxSection: 'dokumente',
-  settingsFormulareSection: 'dokumente',
-  settingsMailversandSection: 'dokumente',
+  settingsFaxSection: 'kommunikation',
+  settingsFormulareSection: 'dokumentation',
+  settingsMailversandSection: 'kommunikation',
+};
+
+/** Alte Bereichsnamen (75c28550, bis Phase 7b) → neue; gespeicherte Links und Lesezeichen landen richtig. */
+export const ALT_BEREICH = { allgemein: 'praxis', recht: 'datenschutz', standorte: 'praxis', dokumente: 'kommunikation', datev: 'buchhaltung', abrechnung: 'kasse' };
+
+/** Reine Hilfe: alten Bereichsnamen auf den neuen abbilden. */
+export function bereichNormal(slug) {
+  return slug && Object.prototype.hasOwnProperty.call(ALT_BEREICH, slug) ? ALT_BEREICH[slug] : (slug || null);
+}
+
+/**
+ * „Auch hier einstellen“: Einstellungen, die in ihrem Arbeitsbereich bleiben (Melih 23.11.2026: verlinken, nicht
+ * umhängen). Ein Knopf springt per wechslePanel dorthin; switchPanel prüft die Rechte selbst.
+ */
+export const VERWEISE = {
+  termine: [{ panel: 'hours', label: 'Öffnungszeiten, Pausen & Räume' }, { panel: 'anfragen', label: 'Termin-Anfragen automatisch annehmen' }],
+  leistungen: [{ panel: 'services', label: 'Leistungen verwalten' }],
+  briefkopf: [{ panel: 'vorlagen', label: 'Dokument-Vorlagen' }],
+  team: [{ panel: 'team', label: 'Mitarbeiter, Rechte & Zertifikate' }],
+  kommunikation: [{ panel: 'b2c', label: 'Absender für Patientenpost' }],
 };
 /**
  * Mitarbeiter sehen nur persönliche Abschnitte (Melih 23.11.2026: „Mitarbeiter in die Einstellungen
@@ -113,7 +132,7 @@ export const NACHGELADEN = {
  * deren Formulare keine eigene Rollenprüfung haben — hier zentral ausgeblendet. Schlüssel = Abschnitts-ID
  * oder 'i18n:<data-i18n des Titels>' für Abschnitte ohne ID.
  */
-export const MITARBEITER_ABSCHNITTE = new Set(['i18n:set_password', 'i18n:set_integrations', 'settingsQuellenSection']);
+export const MITARBEITER_ABSCHNITTE = new Set(['settingsPasswortSection', 'settingsGoogleSection', 'settingsQuellenSection']);
 
 /** Reine Hilfe: darf diese Rolle den Abschnitt sehen? */
 export function abschnittFuerRolle(schluessel, istOwner) {
@@ -127,7 +146,18 @@ const SPEICHER = 'praxura.einstellungen.bereich';
 
 /** Reine Hilfe: sichtbare Bereiche aus { slug, titel, sichtbareAbschnitte }-Zeilen. */
 export function bereicheAus(zeilen) {
-  return (zeilen || []).filter((z) => z?.slug && z.sichtbareAbschnitte > 0).map((z) => ({ slug: z.slug, titel: String(z.titel || z.slug).trim() }));
+  return (zeilen || []).filter((z) => z?.slug && z.sichtbareAbschnitte > 0).map((z) => ({ slug: z.slug, titel: String(z.titel || z.slug).trim(), ...(z.ober ? { ober: String(z.ober).trim() } : {}) }));
+}
+
+/** Reine Hilfe: Bereiche nach Obergruppe zusammenfassen, Reihenfolge bleibt. @returns {Array<[string, any[]]>} */
+export function nachOber(bereiche) {
+  const out = [];
+  for (const b of bereiche || []) {
+    const o = b.ober || '';
+    if (!out.length || out[out.length - 1][0] !== o) out.push([o, []]);
+    out[out.length - 1][1].push(b);
+  }
+  return out;
 }
 
 /** Reine Hilfe: gewünschten Bereich nur, wenn sichtbar; sonst der erste. */
@@ -144,7 +174,7 @@ export function trifftSuche(titel, suche) {
 
 /** @param {string} h */
 export function bereichAusHash(h) {
-  return typeof h === 'string' && h.startsWith(HASH) ? decodeURIComponent(h.slice(HASH.length)).replace(/[^a-z0-9-]/g, '') || null : null;
+  return typeof h === 'string' && h.startsWith(HASH) ? bereichNormal(decodeURIComponent(h.slice(HASH.length)).replace(/[^a-z0-9-]/g, '') || null) : null;
 }
 
 let kat = null; // Zustand des Kategorie-Modus
@@ -163,20 +193,33 @@ export function einstellungenKategorienAufbauen(o = {}) {
   const gruppe = (slug) => inhalt.querySelector(`.settings-group[data-einst="${slug}"]`);
 
   if (!kat) {
-    // „Mitarbeiter & Rechte“: Rechte stehen im Team-Bereich — hier der Weg dorthin, kein zweites Formular.
-    if (o.wechslePanel && !doc.getElementById('settingsTeamLinkSection')) {
-      const sec = doc.createElement('div');
-      sec.className = 'settings-section'; sec.id = 'settingsTeamLinkSection';
-      sec.innerHTML = '<div class="settings-section-title">Mitarbeiter &amp; Berechtigungen</div><div class="settings-section-body">'
-        + '<p class="form-hint" style="margin:0 0 10px;">Mitarbeiter anlegen, Standorte zuordnen und Rechte vergeben Sie im Bereich „Team“.</p>'
-        + '<button type="button" class="btn btn-secondary">Team &amp; Berechtigungen öffnen</button></div>';
-      sec.querySelector('button').addEventListener('click', () => { void o.wechslePanel?.('team'); });
-      gruppe('team')?.append(sec);
+    // „Auch hier einstellen“: Verweise in Arbeitsbereiche (kein zweites Formular, Melih 23.11.2026).
+    if (o.wechslePanel) {
+      for (const [slug, ziele] of Object.entries(VERWEISE)) {
+        const g = gruppe(slug);
+        const da = ziele.filter((z) => doc.getElementById('panel-' + z.panel));
+        if (!g || !da.length || doc.getElementById('settingsVerweis-' + slug)) continue;
+        const sec = doc.createElement('div');
+        sec.className = 'settings-section einst-verweis'; sec.id = 'settingsVerweis-' + slug;
+        const titel = doc.createElement('div'); titel.className = 'settings-section-title'; titel.textContent = 'Auch hier einstellen';
+        const body = doc.createElement('div'); body.className = 'settings-section-body einst-verweis-liste';
+        for (const z of da) {
+          const b = doc.createElement('button');
+          b.type = 'button'; b.className = 'einst-verweis-knopf'; b.dataset.panel = z.panel;
+          b.textContent = z.label; b.setAttribute('aria-label', `${z.label} öffnen`);
+          const pfeil = doc.createElement('span'); pfeil.setAttribute('aria-hidden', 'true'); pfeil.textContent = '↗';
+          b.append(pfeil);
+          b.addEventListener('click', () => { void o.wechslePanel?.(z.panel); });
+          body.append(b);
+        }
+        sec.append(titel, body);
+        g.append(sec);
+      }
     }
     const layout = doc.createElement('div'); layout.className = 'einst-layout';
     const nav = doc.createElement('nav'); nav.className = 'einst-nav'; nav.setAttribute('aria-label', 'Bereiche der Einstellungen');
     const suche = doc.createElement('input');
-    suche.type = 'search'; suche.className = 'form-input einst-suche'; suche.placeholder = 'Einstellungen durchsuchen';
+    suche.type = 'search'; suche.className = 'form-input einst-suche'; suche.placeholder = 'Einstellungen suchen'; // kurz: 210 px Spalte schnitt „…durchsuchen“ ab
     suche.setAttribute('aria-label', 'Einstellungen durchsuchen');
     const liste = doc.createElement('div'); liste.className = 'einst-nav-liste';
     const auswahl = doc.createElement('select'); auswahl.className = 'form-input einst-nav-auswahl';
@@ -187,7 +230,7 @@ export function einstellungenKategorienAufbauen(o = {}) {
     inhalt.before(layout); layout.append(nav, inhalt); inhalt.before(leer);
     inhalt.classList.add('einst-filter-aktiv');
     let gemerkt = null; try { gemerkt = globalThis.localStorage?.getItem(SPEICHER) || null; } catch { /* privater Modus */ }
-    kat = { istOwner: o.istOwner || (() => true), doc, inhalt, liste, auswahl, suche, leer, aktiv: bereichAusHash(globalThis.location?.hash) || gemerkt, signatur: '', geplant: false };
+    kat = { istOwner: o.istOwner || (() => true), doc, inhalt, liste, auswahl, suche, leer, aktiv: bereichAusHash(globalThis.location?.hash) || bereichNormal(gemerkt), signatur: '', geplant: false };
     liste.addEventListener('click', (e) => { const b = e.target.closest('[data-bereich]'); if (b) zeigeBereich(b.dataset.bereich, { fokus: true }); });
     auswahl.addEventListener('change', () => zeigeBereich(auswahl.value));
     suche.addEventListener('input', () => { kat.signatur = ''; anwenden(); });
@@ -208,6 +251,10 @@ function nachgeladeneEinordnen() {
     const ziel = kat.inhalt.querySelector(`.settings-group[data-einst="${slug}"]`);
     if (sec && ziel && sec.parentElement !== ziel) ziel.append(sec);
   }
+  // „Auch hier einstellen“ immer als letzter Kasten des Bereichs (nachgeladene Abschnitte kommen später an).
+  for (const v of kat.inhalt.querySelectorAll('.einst-verweis')) {
+    if (v.parentElement && v.parentElement.lastElementChild !== v) v.parentElement.append(v);
+  }
 }
 
 function anwenden() {
@@ -219,7 +266,7 @@ function anwenden() {
   const gruppen = [...kat.inhalt.querySelectorAll('.settings-group[data-einst]')];
   const zeilen = gruppen.map((g) => {
     const secs = [...g.querySelectorAll(':scope > .settings-section')];
-    return { g, slug: g.dataset.einst, titel: g.querySelector('.settings-group-label')?.textContent, secs, sichtbareAbschnitte: secs.filter(modulSichtbar).length };
+    return { g, slug: g.dataset.einst, ober: g.dataset.einstOber || '', titel: g.querySelector('.settings-group-label')?.textContent, secs, sichtbareAbschnitte: secs.filter(modulSichtbar).length };
   });
   const bereiche = bereicheAus(zeilen);
   kat.aktiv = bereichWaehlen(kat.aktiv, bereiche);
@@ -227,7 +274,8 @@ function anwenden() {
   for (const z of zeilen) {
     let zeigt = 0;
     for (const s of z.secs) {
-      const titel = s.querySelector('.settings-section-title')?.textContent || '';
+      // Verweis-Kästen über ihre Knopftexte finden („Öffnungszeiten“ findet „Auch hier einstellen“).
+      const titel = s.classList.contains('einst-verweis') ? s.textContent || '' : s.querySelector('.settings-section-title')?.textContent || '';
       const an = q.trim() ? trifftSuche(titel, q) : z.slug === kat.aktiv;
       s.toggleAttribute('data-einst-aus', !an);
       if (an && modulSichtbar(s)) zeigt++;
@@ -238,17 +286,30 @@ function anwenden() {
     treffer += zeigt;
   }
   kat.leer.hidden = !q.trim() || treffer > 0;
+  // Gefahrenzone ohne Knopf (Box entfernt „Konto löschen“, dsgvo-client.js) nicht als leeren roten Kasten zeigen.
+  for (const zone of kat.inhalt.querySelectorAll('.einst-gefahrenzone')) {
+    zone.hidden = ![...zone.querySelectorAll('button')].some((b) => !b.hidden && b.style.display !== 'none');
+  }
   const sig = bereiche.map((b) => b.slug).join(',') + '|' + kat.aktiv + '|' + (q.trim() ? 's' : '');
   if (sig === kat.signatur) return;
   kat.signatur = sig;
-  kat.liste.replaceChildren(...bereiche.map((b) => {
-    const el = kat.doc.createElement('a');
-    el.className = 'einst-nav-eintrag'; el.href = HASH + b.slug; el.dataset.bereich = b.slug; el.textContent = b.titel;
-    if (!q.trim() && b.slug === kat.aktiv) el.setAttribute('aria-current', 'page');
-    el.addEventListener('click', (e) => e.preventDefault());
-    return el;
-  }));
-  kat.auswahl.replaceChildren(...bereiche.map((b) => new Option(b.titel, b.slug, false, b.slug === kat.aktiv)));
+  const knoten = [];
+  for (const [ober, liste] of nachOber(bereiche)) {
+    if (ober) { const h = kat.doc.createElement('div'); h.className = 'einst-nav-ober'; h.textContent = ober; knoten.push(h); }
+    for (const b of liste) {
+      const el = kat.doc.createElement('a');
+      el.className = 'einst-nav-eintrag'; el.href = HASH + b.slug; el.dataset.bereich = b.slug; el.textContent = b.titel;
+      if (!q.trim() && b.slug === kat.aktiv) el.setAttribute('aria-current', 'page');
+      el.addEventListener('click', (e) => e.preventDefault());
+      knoten.push(el);
+    }
+  }
+  kat.liste.replaceChildren(...knoten);
+  kat.auswahl.replaceChildren(...nachOber(bereiche).map(([ober, liste]) => {
+    const opts = liste.map((b) => new Option(b.titel, b.slug, false, b.slug === kat.aktiv));
+    if (!ober) return opts;
+    const og = kat.doc.createElement('optgroup'); og.label = ober; og.append(...opts); return og;
+  }).flat());
 }
 
 /** @param {string} slug @param {{ fokus?: boolean }} [o] */
