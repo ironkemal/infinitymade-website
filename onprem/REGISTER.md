@@ -7064,3 +7064,14 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Befund** | Beide Verweise sind geschaltet (Telemetrie aus / nur hostname app.praxura.de), Box-CSP blockt zusätzlich. Server-Ziele Apify/Stripe/Google stehen nicht in `lib/verbindungen.js`, werden auf der Box aber nie aktiv (istKutu bzw. env fehlt in `.env.template`/`docker-compose.yml`) — Klasse `nur-saas`, mechanisch geprüft |
 | **Lösung** | `tools/fremde-hosts.mjs` (Allowlist mit Klasse verweis/laden/box/nur-saas + Grund) über alle COPY-Quellen von `onprem/frontend.Dockerfile` und `api-backend/Dockerfile`; Ladekontexte nur für Klasse `laden`; Box-CSP-Header ohne feste Hosts; `box`-Ziele müssen in `lib/verbindungen.js` stehen. Test `tools/fremde-hosts.test.js` (npm test) inkl. Gegenproben; Kapı in `tools/check-onprem.sh` (bei staged js/html/css/json/Dockerfile/Caddyfile). Prüfer-Datei ist aus dem `n8n_host`-Zähler ausgenommen (nennt nur bestehende Hosts) |
 | **Offen** | onprem-Vorschlag: Sentry-Loader-URL aus `/api/config` holen, dann steht in der Box-Datei kein Host mehr. n8n-Eintrag fällt mit K1 (app.praxura.de schließt) |
+
+### O-253 — IndexNow (praxura.de pazarlama sitesi) kutuya girmez ⚪ **unkritisch (ön kontrol 23.11.2026)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Arama motorlarına sitemap adreslerini bildiren IndexNow: kökte anahtar dosyası + geliştirici makinesinden elle çalışan bir betik |
+| **Nerede** | kök `b8426494bebc2de1b9e628332df17b01.txt` · `tools/indexnow.mjs` · `tools/indexnow.test.js` (commit `0adc5f06`) |
+| **Tip** | G (merkez/pazarlama tarafı); betiğin dış çağrısı (`api.indexnow.org`) runtime'da değil, elle |
+| **Kutuda ne olur** | Hiçbir şey. `tools/` yayına çıkmıyor (`.vercelignore:59`). İki image da açık COPY listesiyle kuruluyor (`onprem/frontend.Dockerfile:18`, `api-backend/Dockerfile:31`), ikisinde de `COPY . .` yok. `onprem-manifest` yalnız `BUNDLE_DATEILER`'i paketliyor (`tools/onprem-manifest.mjs:37`). Anahtar sır değil, protokol gereği public (G2 değil). Yeni env var, zamanlanmış iş, Vercel fonksiyonu ya da n8n bağı yok (G3/G8 değil). Hasta verisi yok (G1 değil) |
+| **Çözüm** | `unkritisch`. İki koşul var, bozulursa bu madde yeniden açılır: (1) anahtar dosyası `.vercelignore`'a **girmez**, çünkü `praxura.de/<anahtar>.txt` altında erişilebilir olmalı. (2) Dockerfile'lara geniş `*.txt` ya da kök COPY'si **eklenmez**, yoksa dosya kutu image'ına sızar (zararsız ama paket sınırı bozulur) |
+| **Durum** | `unkritisch` |
