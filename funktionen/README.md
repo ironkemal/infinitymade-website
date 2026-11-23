@@ -1421,3 +1421,13 @@ aber nicht als generierte App-Funktionen ausgewiesen. Keine manuelle Indexergän
 - `module/panel-verlauf.js`: `panelAusHash` (:23) nimmt den Teil vor „/“, `merkePanel` (:66) behält `#<panel>/<unterpfad>`. Kopplung: jeder Hash mit Unterpfad landet jetzt im richtigen Panel.
 - Merge-Hinweis Redesign: `dashboard.js` importiert `einstellungen-nav.js?v=20261123en2`, `shell-neu.js` im Branch `?v=20261027s222` → beim Merge auf eine URL angleichen (Modulgraph-Test).
 - Status: committet und auf der Karte (erzeugt 23.11.2026), nicht gepusht.
+
+### 23.11.2026 · Einstellungen Phase 7b — Obergruppen, Verweise, ein Speicherweg (commits 47009e59, d0c05bb9, a66097ec, 57edbb68)
+- `module/einstellungen-nav.js`: `ALT_BEREICH` (:111) + `bereichNormal` (:114) — alte Bereichsnamen → neue, damit gespeicherte `#settings/<alt>`-Links weiter landen. `VERWEISE` (:122) — Kästen „Auch hier einstellen“ in hours/anfragen/services/vorlagen/team/b2c; ersetzt den TeamLink-Einzelkasten (ein Helfer statt Kopien, Empfehlung umgesetzt). `nachOber` (:153) — Obergruppen-Überschriften in Navigation + optgroups; `bereicheAus` (:148) liefert jetzt `ober`.
+  - Niye: neue Ordnung (16 Bereiche / 5 Obergruppen), Konzept `wissensbank/sitzungen/2026-11-23_einstellungen-informationsarchitektur.md`, Melih frei.
+  - Nerede: `loadSettings` → `einstellungenKategorienAufbauen`.
+- `api-backend/ai/router.js` `anbieterAnzeige(cfg)` (:38): `GET /api/ai/_config` gibt Anbieter + Region nur lesend aus, ohne Host/Deployment. Nerede: `module/ki-client.js` → `module/ki-einstellungen.js` Zeile „Anbieter & Region“.
+- `module/abrechnung-einstellungen.js` `wireAbrechnungSettings` (:271): optionales dep `cacheLeeren` (= `abrechnungsprofilCacheLeeren`, `beleg-druck.js:81`) nach „IK speichern“.
+- `module/systemstatus.js` `mountSystemstatus` (:68): dep `istKutu`. `module/fax-einstellungen.js` `renderFaxSettings` (:97): im SaaS ausgeblendet.
+- `dashboard.js` profileSaveBtn/billingSaveBtn schreiben kein `ik_number`/KIM/Telematik mehr — ein Wert = ein Speicherweg (vorher zwei Schreibwege auf dieselben `profiles`-Felder; Kopie-Risiko erledigt).
+- Status: committet und auf der Karte (erzeugt 23.11.2026), nicht gepusht.
