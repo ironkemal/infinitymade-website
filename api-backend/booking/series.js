@@ -144,3 +144,19 @@ export function serienDaten({
   }
   return raus;
 }
+
+/**
+ * Ruhiger Hinweis im Serienbericht, wenn die KI nicht mitgerechnet hat (Box-Test 22.11.2026,
+ * Pflichtpunkt 5). Der Vorschlag kommt dann aus den festen Regeln (Slot-Suche) — das ist kein
+ * Fehler, soll aber sichtbar sein. Kutu: AI_MODE=aus ist der Normalfall (K4/K-20).
+ * @param {'ok'|'error'|string} status  seriesStatus aus der Route
+ * @param {string|null} [code]          safeAiError(err).code
+ * @returns {string} leer, wenn die KI lief
+ */
+export function kiHinweisFuerSerie(status, code = null) {
+  if (status !== 'error') return '';
+  if (code === 'AI_MODE_AUS' || code === 'AI_OWNER_DISABLED') {
+    return 'ℹ KI-Unterstützung ist ausgeschaltet — Vorschlag nach festen Regeln berechnet.';
+  }
+  return 'ℹ KI-Unterstützung gerade nicht erreichbar — Vorschlag nach festen Regeln berechnet.';
+}

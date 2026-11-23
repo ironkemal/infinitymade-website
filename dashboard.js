@@ -5345,7 +5345,7 @@ document.getElementById('aiPrefSubmit').addEventListener('click', async () => {
     }
     if (!json.selected || json.selected.length === 0) {
       hideAiLoading();
-      showToast('Keine passenden Termine im Suchzeitraum.', 'error');
+      showToast(json.report || 'Keine passenden Termine im Suchzeitraum.', 'warning', 8000); // Box-Test: Grund zeigen statt pauschal
       return;
     }
     window._aiCtx.lastResult = json;

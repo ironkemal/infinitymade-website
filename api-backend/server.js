@@ -21,7 +21,7 @@ import { escHtml, mailBetreff } from './booking/html-escape.js';
 import { pruefeWidgetAnfrage, pruefeOeffentlichePatientAngaben, baueWidgetNotiz } from './booking/widget-guards.js';
 import { checkHoneypot, validateService, validateOwnerProfile, validateTherapist, validateLead, validatePatient } from './booking/public-guards.js';
 import { validateAuthenticatedService, validateExistingBookingTherapist } from './booking/auth-guards.js';
-import { serienDaten, isValidCalendarDate, isStrictInteger } from './booking/series.js';
+import { serienDaten, isValidCalendarDate, isStrictInteger, kiHinweisFuerSerie } from './booking/series.js';
 import { slotParameter } from './booking/slot-parameter.js';
 import { patientenNameMuster } from './booking/patienten-namensabgleich.js';
 import billingAusfallRouter from './billing/api/ausfall.routes.js';
@@ -1715,7 +1715,8 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
     } else if (employeeId && !allowedIds.includes(employeeId)) {
       allowedIds.push(employeeId);
     }
-    if (allowedIds.length === 0) return res.json({ candidates: [], selected: [], report: 'Keine Mitarbeiter verfügbar.' });
+    // success:true auch im Leerfall — sonst zeigt das Frontend „Fehler: Vorschlag fehlgeschlagen“ statt des Grundes (Box-Test 22.11.).
+    if (allowedIds.length === 0) return res.json({ success: true, candidates: [], selected: [], report: 'Keine Mitarbeiter für diese Leistung verfügbar. Bitte im Team-Panel Leistungen zuordnen.' });
 
     const { data: employees } = await supabase.from('profiles')
       .select('id,business_name,email,anrede').in('id', allowedIds);
@@ -2021,7 +2022,7 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
     const shortList = candidates.slice(0, candidateCap);
 
     if (shortList.length === 0) {
-      return res.json({ candidates: [], selected: [], report: 'Im Suchzeitraum von 14 Wochen wurden keine freien Slots gefunden.' });
+      return res.json({ success: true, candidates: [], selected: [], report: 'Im Suchzeitraum von 14 Wochen wurden keine freien Slots gefunden. Bitte Arbeitszeiten, Öffnungstage und Standortplan prüfen.' });
     }
 
     // 6) Send to n8n for AI ranking + report
@@ -2148,6 +2149,8 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
       reportLines.push(`ℹ ${count} Termine angefragt, ${selected.length} planbar (Suchzeitraum ${Math.round(horizonDays / 7)} Wochen).`);
     }
     let report = aiResult.report || reportLines.join(' ');
+    const kiHinweis = kiHinweisFuerSerie(seriesStatus, seriesError);
+    if (kiHinweis) report = `${kiHinweis} ${report}`;
     if (fb.applied.length) report = `Änderungen übernommen: ${fb.applied.join(' · ')}. ` + report;
     if (genderFilterApplied) {
       report += ` (Gefiltert auf ${genderFilterApplied === 'female' ? 'weibliche' : 'männliche'} Behandler.)`;
