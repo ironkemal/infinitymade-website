@@ -46,6 +46,10 @@ try {
       await ruhe(page, 200);
       if (!(await sichtbar(page, '#settingsDatevSection'))) befunde.push(`${breite}px: Suche „datev“ findet DATEV-Export nicht`);
       if (await sichtbar(page, '#settingsKiSection')) befunde.push(`${breite}px: Suche „datev“ zeigt weiter KI`);
+      // Suche über Feldbeschriftungen (Live-Test 23.11.: „iban“ fand nichts)
+      await page.locator('.einst-suche').fill('iban');
+      await ruhe(page, 200);
+      if (!(await sichtbar(page, '#settingsBillingSection'))) befunde.push(`${breite}px: Suche „iban“ findet „Bank & Steuer“ nicht`);
       await page.locator('.einst-suche').fill('');
       // Deep-Link
       await page.evaluate(() => { location.hash = '#settings/abo'; });
@@ -152,6 +156,9 @@ try {
       await page.locator('.einst-suche').fill('a');
       await ruhe(page, 200);
       for (const id of ['settingsProfileSection', 'settingsBillingSection', 'settingsBrandingSection', 'settingsDsgvoSection']) if (await sichtbar(page, '#' + id)) befunde.push(`Mitarbeiter sieht ${id}`);
+      await page.locator('.einst-suche').fill('iban');
+      await ruhe(page, 200);
+      if (await sichtbar(page, '#settingsBillingSection')) befunde.push('Mitarbeiter findet über die Suche „iban“ die Bankdaten');
       await page.locator('.einst-suche').fill('passwort');
       await ruhe(page, 200);
       const pw = await page.evaluate(() => [...document.querySelectorAll('.settings-section-title[data-i18n="set_password"]')].some((t) => t.closest('.settings-section').getClientRects().length > 0));

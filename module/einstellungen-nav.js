@@ -179,6 +179,13 @@ export function bereichAusHash(h) {
 
 let kat = null; // Zustand des Kategorie-Modus
 
+/** Suchtext eines Abschnitts: Titel + Feldbeschriftungen (label/.form-label), ohne Werte der Felder. @param {Element} sec */
+function suchText(sec) {
+  const teile = [sec.querySelector('.settings-section-title')?.textContent || ''];
+  for (const l of sec.querySelectorAll('label, .form-label')) teile.push(l.textContent || '');
+  return teile.join(' ');
+}
+
 const modulSichtbar = (el) => !!el && !el.hidden && el.style.display !== 'none' && !el.hasAttribute('data-einst-rolle-aus');
 
 /**
@@ -277,7 +284,8 @@ function anwenden() {
     let zeigt = 0;
     for (const s of z.secs) {
       // Verweis-Kästen über ihre Knopftexte finden („Öffnungszeiten“ findet „Auch hier einstellen“).
-      const titel = s.classList.contains('einst-verweis') ? s.textContent || '' : s.querySelector('.settings-section-title')?.textContent || '';
+      // Suche über Titel UND Feldbeschriftungen (Live-Test 23.11.: „iban“ fand „Bank & Steuer“ nicht).
+      const titel = s.classList.contains('einst-verweis') ? s.textContent || '' : suchText(s);
       const an = q.trim() ? trifftSuche(titel, q) : z.slug === kat.aktiv;
       s.toggleAttribute('data-einst-aus', !an);
       if (an && modulSichtbar(s)) zeigt++;
