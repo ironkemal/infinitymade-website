@@ -35,10 +35,12 @@ function messe() {
   };
 }
 
-const erg = {}; let fehler = 0;
+import { konsoleBeobachten, konsoleAuswerten } from './konsole.mjs';
+const erg = {}; let fehler = 0; let konsoleSauber = true;
 for (const breite of [390, 1280]) {
   for (const motion of ['reduce', 'no-preference']) {
     const { kontext, page } = await oeffneDashboard(browser, { basis: server.basis, theme: 'hell', szenario: 'voll', breite, hoehe: breite === 390 ? 844 : 900, rolle: 'owner' });
+    const konsole = konsoleBeobachten(page); // Befund 2 (Box-Test): Konsolenfehler machen die Probe rot
     await page.emulateMedia({ reducedMotion: motion });
     try {
       if (!(await wechsle(page, 'calendar'))) throw new Error('calendar nicht aktiv');
@@ -50,9 +52,10 @@ for (const breite of [390, 1280]) {
         if (breite === 390 && ohne) fehler++;
         if (shotDir && motion === 'reduce') await page.screenshot({ path: `${shotDir}/kalender-${v}-${breite}.png`, animations: 'disabled' });
       }
+      konsoleSauber = konsoleAuswerten(konsole, `kalender-name ${breite}/${motion}`) && konsoleSauber;
     } finally { await kontext.close(); }
   }
 }
 await browser.close(); await server.stop?.();
 console.log(JSON.stringify(erg));
-process.exit(fehler ? 1 : 0);
+process.exit(fehler || !konsoleSauber ? 1 : 0);

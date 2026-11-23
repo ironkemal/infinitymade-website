@@ -31,6 +31,10 @@ async function scenario(available, verify, width = 375, height = 667) {
   const pendingCheckIn = new Promise(resolve => { finishCheckIn = resolve; });
   const trace = { bodies, checkInStarted, finishCheckIn };
   page.on('pageerror', err => errors.push(err.message));
+  // Befund 2 (Box-Test 22.11.2026): Konsolenfehler machen die Probe rot. Einzige Ausnahme mit Grund:
+  // available === null simuliert absichtlich „Standorte nicht ladbar“ — attendance.js loggt das bewusst.
+  const erwartet = available === null ? /^\[attendance init\] .*Standorte nicht erreichbar/ : null;
+  page.on('console', m => { if (m.type() === 'error' && !(erwartet && erwartet.test(m.text()))) errors.push(`console: ${m.text()}`); });
 
   const history = [{ date: '2026-10-01', check_in_at: '2026-10-01T07:00:00.000Z',
     check_out_at: '2026-10-01T08:00:00.000Z', status: 'present', check_in_valid: false }];

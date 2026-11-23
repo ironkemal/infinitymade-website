@@ -9,6 +9,7 @@ const fontWarnings=[];
 const fonts=[];
 page.on('console',message=>{if(/standardFontDataUrl|fetchStandardFontData|Helvetica_path/.test(message.text())) fontWarnings.push(message.text());});
 page.on('pageerror',error=>errors.push(error.message));
+const konsolenfehler=[];page.on('console',message=>{if(message.type()==='error') konsolenfehler.push(message.text());}); // Befund 2 (Box-Test)
 page.on('request',request=>{if(request.method()!=='GET') writes.push(request.method());
   if(request.url().includes('/vendor/pdfjs/standard_fonts/')) fonts.push(request.url());});
 await page.route('**/*',route=>{
@@ -24,7 +25,7 @@ try {
 } finally {await browser.close();}
 for(const row of result) console.log(`${row.pass?'PASS':'FAIL'} ${row.name || row.file || row.error}`);
 const pass=result.length===42 && new Set(result.map(row=>row.name || row.file)).size===42
-  && result.every(row=>row.pass) && !errors.length && !foreign.length && !writes.length && !fontWarnings.length && fonts.length>0;
-console.log(JSON.stringify({passed:result.filter(row=>row.pass).length,total:result.length,pageErrors:errors,
+  && result.every(row=>row.pass) && !errors.length && !konsolenfehler.length && !foreign.length && !writes.length && !fontWarnings.length && fonts.length>0;
+console.log(JSON.stringify({passed:result.filter(row=>row.pass).length,total:result.length,pageErrors:errors,consoleErrors:konsolenfehler,
   blockedForeignOrigins:foreign,networkWrites:writes,fontWarnings,localFontRequests:fonts.length}));
 process.exitCode=pass?0:1;
