@@ -578,7 +578,13 @@ export async function zeigeVerordnungenFuerTermin(sb, { leadId, bookingId, bekan
     vordId = data?.verordnung_id ?? null;
   }
 
-  const rxs = await ladeTerminVerordnungen(sb, { leadId, vordId });
+  // Box-Test 22.11.2026 (Problem 3): Entwürfe (status 'parsed') mitladen. Ohne sie zeigte der
+  // Neu-Termin-Dialog „keine aktive Verordnung“, obwohl ein Entwurf existierte — der
+  // Entwurfs-Hinweis in rendereVeroKarten gab es bisher nur im Aktionspanel.
+  const [rxs, entwuerfe] = await Promise.all([
+    ladeTerminVerordnungen(sb, { leadId, vordId }),
+    (deps.ladeEntwuerfe || ladePatientenEntwuerfe)(sb, { leadId }).catch(() => []),
+  ]);
 
   const renderFn = deps.rendereVeroKarten || rendereVeroKarten;
   renderFn({
@@ -588,6 +594,8 @@ export async function zeigeVerordnungenFuerTermin(sb, { leadId, bookingId, bekan
     onSelect: deps.onSelect,
     onAnlegen: deps.onAnlegen,
     sb, ownerId: deps.ownerId, leadId,
+    entwuerfe: entwuerfe || [],
+    onEntwurfOeffnen: deps.onEntwurfOeffnen || null,
   });
 
   if (veroSection) veroSection.hidden = false;

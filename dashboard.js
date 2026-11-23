@@ -96,7 +96,7 @@ import { ladePodoPositionen } from './module/podologie-positionen.js?v=20261101u
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261121pag1';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261118s1';
 import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261117c5'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
-import { rendereVeroKarten, ladeTerminVerordnungen, ladePatientenEntwuerfe, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261121f11';
+import { rendereVeroKarten, ladeTerminVerordnungen, ladePatientenEntwuerfe, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261123p3';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl, bindeAnTerminNachAnlage } from './module/verordnung-anlegen.js?v=20261121pag1';
 import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261117p33';
@@ -3947,7 +3947,7 @@ async function openBookingModal(b, verschiebung = null) {
     rendereVeroKarten,
     onSelect: selectVerordnung,
     onAnlegen: () => { closeModal('bookingModal'); oeffneAnlegenWahl(_omLeadId); },
-    resetFelder: resetVerordnungFelder, ownerId,
+    resetFelder: resetVerordnungFelder, ownerId, onEntwurfOeffnen: (e) => { closeModal('bookingModal'); switchPanel('verordnungen'); if (!oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle: e?.therapie_bereich === 'podo' ? 'podologie' : 'physio', id: e?.id, rolle: currentProfile?.role, apiBase: API })) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); }, // Box-Test P3: Entwurf öffnen
   });
   verdrahteAbwahl();
   document.getElementById('bkDocAssignHint').hidden = true;
@@ -4083,7 +4083,7 @@ async function initBkCustomerAutocomplete(veroSteht = false) {
         closeModal('bookingModal');
         oeffneAnlegenWahl(leadId);
       },
-      resetFelder: resetVerordnungFelder, ownerId: getOwnerId(),
+      resetFelder: resetVerordnungFelder, ownerId: getOwnerId(), onEntwurfOeffnen: (e) => { closeModal('bookingModal'); switchPanel('verordnungen'); if (!oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle: e?.therapie_bereich === 'podo' ? 'podologie' : 'physio', id: e?.id, rolle: currentProfile?.role, apiBase: API })) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); }, // Box-Test P3: Entwurf öffnen
     });
   }
 

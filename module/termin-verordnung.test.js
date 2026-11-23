@@ -742,3 +742,33 @@ test('F-11 rendereVeroKarten: nennt vorhandenen Entwurf statt zur Doppelanlage a
     delete globalThis.document;
   }
 });
+
+// Box-Test 22.11.2026 (Problem 3): „keine aktive Verordnung“ trotz Entwurf im Neu-Termin-Dialog.
+test('zeigeVerordnungenFuerTermin: nur Entwurf → Entwurf und Öffnen-Handler gehen an die Karten', async () => {
+  const sb = erstelleSbMock({ rxs: [] });
+  const entwurf = { id: 'rx-entwurf', status: 'parsed', ausstellungsdatum: '2026-11-22', anzahl_einheiten: 6 };
+  const geoeffnet = () => {};
+  let empfangen = null;
+  await zeigeVerordnungenFuerTermin(sb, { leadId: 'lead-1', bookingId: null, bekannteVerordnungId: null }, {
+    veroSection: { hidden: true },
+    ladeEntwuerfe: async (_sb, { leadId }) => (leadId === 'lead-1' ? [entwurf] : []),
+    onEntwurfOeffnen: geoeffnet,
+    rendereVeroKarten: (args) => { empfangen = args; },
+  });
+  assert.deepEqual(empfangen.rxs, []);
+  assert.deepEqual(empfangen.entwuerfe, [entwurf]);
+  assert.equal(empfangen.onEntwurfOeffnen, geoeffnet);
+});
+
+test('rendereVeroKarten: Entwurf zeigt „Entwurf vorhanden“ statt „keine aktive Verordnung“, aktive Verordnung hat Vorrang', () => {
+  const kinder = [];
+  const container = { innerHTML: 'alt', appendChild: (k) => kinder.push(k) };
+  const doc = globalThis.document;
+  globalThis.document = { createElement: () => ({ style: {}, addEventListener() {}, appendChild() {}, set innerHTML(v) { this._h = v; }, get innerHTML() { return this._h || ''; } }) };
+  try {
+    rendereVeroKarten({ container, rxs: [], entwuerfe: [{ id: 'e', ausstellungsdatum: '2026-11-22', anzahl_einheiten: 6 }], escapeHtml: String, onEntwurfOeffnen: () => {} });
+    const html = kinder.map(k => k.innerHTML || k.textContent || '').join(' ');
+    assert.match(html, /Entwurf vorhanden/);
+    assert.doesNotMatch(html, /keine aktive Verordnung/);
+  } finally { globalThis.document = doc; }
+});
