@@ -3,7 +3,7 @@
 > ÜRETİLEN DOSYA — elle düzenleme. `node tools/tabellenkarte.mjs`
 > NİYE açıldıkları: `db/REGISTER.md` · YAPILARI: `db/SCHEMA.sql`
 
-**Erzeugt:** 2026-11-21 · 110 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-11-21), funktionen/INDEX.json (erzeugt 2026-11-21)
+**Erzeugt:** 2026-11-23 · 110 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-11-23), funktionen/INDEX.json (erzeugt 2026-11-23)
 
 ## Kayıt durumu
 
@@ -59,8 +59,8 @@ Referenztabellen ohne Personendaten. Die Entscheidung gehört ins Register.
 | `leads` | 12 | 56 | 42 | abrechnung, anamnese, anfragen, b2b, b2c, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fahrtenbuch, fbFahrtenExportCsv, fbFahrtenExportProt, fbFahrtenExportVerz, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, patientDetailModal, podologie-billing, rechnungen, rezeptModal, services, settings, statistik, team, ueberblick, vehEditSaveBtn, verordnungen, vorlagen |
 | `prescription_sessions` | 10 | 13 | 19 | abrechnung, anamnese, anfragen, b2b, b2c, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fahrtenbuch, fbFahrtenExportCsv, fbFahrtenExportProt, fbFahrtenExportVerz, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, patientDetailModal, podologie-billing, rechnungen, rezeptModal, services, settings, statistik, team, ueberblick, vehEditSaveBtn, verordnungen, vorlagen |
 | `document_vorlagen` | 9 | 2 | 4 | abrechnung, anamnese, anfragen, b2b, b2c, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fahrtenbuch, fbFahrtenExportCsv, fbFahrtenExportProt, fbFahrtenExportVerz, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, patientDetailModal, podologie-billing, rechnungen, rezeptModal, services, settings, statistik, team, ueberblick, vehEditSaveBtn, verordnungen, vorlagen |
+| `businesses` | 8 | 11 | 18 | abrechnung, anamnese, anfragen, b2b, b2c, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fahrtenbuch, fbFahrtenExportCsv, fbFahrtenExportProt, fbFahrtenExportVerz, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, patientDetailModal, podologie-billing, rechnungen, rezeptModal, services, settings, statistik, team, ueberblick, vehEditSaveBtn, verordnungen, vorlagen |
 | `services` | 8 | 15 | 15 | abrechnung, anamnese, anfragen, b2b, b2c, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fahrtenbuch, fbFahrtenExportCsv, fbFahrtenExportProt, fbFahrtenExportVerz, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, patientDetailModal, podologie-billing, rechnungen, rezeptModal, services, settings, statistik, team, ueberblick, vehEditSaveBtn, verordnungen, vorlagen |
-| `businesses` | 7 | 11 | 17 | abrechnung, anamnese, anfragen, b2b, b2c, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fahrtenbuch, fbFahrtenExportCsv, fbFahrtenExportProt, fbFahrtenExportVerz, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, patientDetailModal, podologie-billing, rechnungen, rezeptModal, services, settings, statistik, team, ueberblick, vehEditSaveBtn, verordnungen, vorlagen |
 | `praxis_aufgaben` | 6 | 3 | 2 | abrechnung, anamnese, anfragen, b2b, b2c, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fahrtenbuch, fbFahrtenExportCsv, fbFahrtenExportProt, fbFahrtenExportVerz, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, patientDetailModal, podologie-billing, rechnungen, rezeptModal, services, settings, statistik, team, ueberblick, vehEditSaveBtn, verordnungen, vorlagen |
 | `messreihen` | 5 | 4 | 3 | abrechnung, anamnese, anfragen, b2b, b2c, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fahrtenbuch, fbFahrtenExportCsv, fbFahrtenExportProt, fbFahrtenExportVerz, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, patientDetailModal, podologie-billing, rechnungen, rezeptModal, services, settings, statistik, team, ueberblick, vehEditSaveBtn, verordnungen, vorlagen |
 | `abrechnung` | 4 | 8 | 9 | abrechnung, anamnese, anfragen, b2b, b2c, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fahrtenbuch, fbFahrtenExportCsv, fbFahrtenExportProt, fbFahrtenExportVerz, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, patientDetailModal, podologie-billing, rechnungen, rezeptModal, services, settings, statistik, team, ueberblick, vehEditSaveBtn, verordnungen, vorlagen |
@@ -206,11 +206,11 @@ Warum: Fremdprojekt (Bewerbungen). Nie Teil von Praxura.
 12 Spalten · Status: aktiv
 Warum: Kommen/Gehen der Mitarbeiter (Arbeitszeiterfassung), getrennt von der Sollarbeitszeit in `working_hours`.
 
-**Schreibt (1):** `schliesse()` [update] — api-backend/server.js:3838
+**Schreibt (1):** `schliesse()` [update] — api-backend/server.js:3841
 
-**Liest (1):** `fetchHistory()`
+**Liest (2):** `fetchHistory()`, `nochNieEingestempelt()`
 
-**Dateien:** `api-backend/server.js`, `attendance.js`
+**Dateien:** `api-backend/server.js`, `attendance.js`, `module/erst-checkin.js`
 
 **Module:** abrechnung, anamnese, anfragen, b2b, b2c, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fahrtenbuch, fbFahrtenExportCsv, fbFahrtenExportProt, fbFahrtenExportVerz, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, patientDetailModal, podologie-billing, rechnungen, rezeptModal, services, settings, statistik, team, ueberblick, vehEditSaveBtn, verordnungen, vorlagen
 
@@ -335,11 +335,11 @@ Warum: Pausen sind keine Arbeitszeit und keine Abwesenheit — sie wiederholen s
 26 Spalten · Status: aktiv
 Warum: Zweiter Standort und aufwärts. Ohne Standortbegriff ließen sich Öffnungszeiten, Team und Leistungen nicht trennen, sobald eine Praxis mehr als eine Adresse hat.
 
-**Schreibt (7):** `bindBusiness()` [insert/update] — onboarding.js:401 · `deleteBusiness()` [delete] — dashboard.js:13777 · `kontoLoeschenIntern()` [update] — api-backend/dsgvo/loeschen.js:112 · `mountPraxisStandort()` [update] — module/praxis-standort.js:99 · `setzen()` [update] — module/praxis-standort.js:151 · `toggleStandortDay()` [update] — dashboard.js:8458 · `wireBusinessModal()` [insert/update] — dashboard.js:13694
+**Schreibt (8):** `bindBusiness()` [insert/update] — onboarding.js:401 · `deleteBusiness()` [delete] — dashboard.js:13777 · `kontoLoeschenIntern()` [update] — api-backend/dsgvo/loeschen.js:112 · `legeStandardStandortAn()` [insert] — api-backend/setup/standard-standort.js:20 · `mountPraxisStandort()` [update] — module/praxis-standort.js:99 · `setzen()` [update] — module/praxis-standort.js:151 · `toggleStandortDay()` [update] — dashboard.js:8458 · `wireBusinessModal()` [insert/update] — dashboard.js:13694
 
 **Liest (11):** `bootBusinessSwitcher()`, `fetchBusinesses()`, `getAvailableSlots()`, `ladeKennung()`, `ladePraxisAngabenMitStandort()`, `mandantLauf()`, `planungLaden()`, `praxenFuerPruefung()`, `rechnungFuer()`, `renderBookingCalendar()`, `scope()`
 
-**Dateien:** `api-backend/billing/api/ausfall.routes.js`, `api-backend/billing/api/rechnung-zahlung-security.test.js`, `api-backend/billing/api/rechnung-zahlung.routes.js`, `api-backend/billing/api/verordnung-status.routes.js`, `api-backend/booking/termin-planung.js`, `api-backend/dsgvo/loeschen.js`, `api-backend/lib/terminerinnerung-job.js`, `api-backend/routes/mitarbeiter-zugang.js`, `api-backend/server.js`, `api/stripe/webhook.js`, `attendance.js`, `booking.js`, `dashboard.js`, `module/praxis-standort.js`, `module/public-owner.js`, `module/termin-rechtstexte.js`, `onboarding.js`
+**Dateien:** `api-backend/billing/api/ausfall.routes.js`, `api-backend/billing/api/rechnung-zahlung-security.test.js`, `api-backend/billing/api/rechnung-zahlung.routes.js`, `api-backend/billing/api/verordnung-status.routes.js`, `api-backend/booking/termin-planung.js`, `api-backend/dsgvo/loeschen.js`, `api-backend/lib/terminerinnerung-job.js`, `api-backend/routes/mitarbeiter-zugang.js`, `api-backend/server.js`, `api-backend/setup/standard-standort.js`, `api/stripe/webhook.js`, `attendance.js`, `booking.js`, `dashboard.js`, `module/praxis-standort.js`, `module/public-owner.js`, `module/termin-rechtstexte.js`, `onboarding.js`
 
 **Module:** abrechnung, anamnese, anfragen, b2b, b2c, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fahrtenbuch, fbFahrtenExportCsv, fbFahrtenExportProt, fbFahrtenExportVerz, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, patientDetailModal, podologie-billing, rechnungen, rezeptModal, services, settings, statistik, team, ueberblick, vehEditSaveBtn, verordnungen, vorlagen
 
@@ -530,7 +530,7 @@ Warum: Nicht jeder Therapeut macht jede Leistung. Ohne diese Zuordnung bietet di
 11 Spalten · Status: aktiv · Regel/Filter (S4/S6) lesen, Pflege-UI (S5) folgt
 Warum: An welchem Standort ein Mitarbeiter an welchem Tag arbeitet (Physio-Pilot M4, zweiter Standort). Wochenmuster („montags A") und Einzeltag („am 09.11. in B") in **einer** Tabelle. Seit 0109 (04.11.2026) optional mit **Zeitfenster** je Wochenmuster-Zeile („Mo 8–12 A, 14–18 B“, Melih). Bewusst **nicht** `working_hours.business_id`: `working_hours` ist anonym lesbar (guvenlik-Veto, Physio/PLANUNG-UMSETZUNG.md Entscheidung 5). Abgrenzung zu `employee_business_assignments`: dort steht, an welchen Standorten jemand **überhaupt** arbeiten darf (statisch, Rechte/Gruppe); hier, **an welchem Tag** wo (Einsatzplan). Kein zweiter Begriff desselben Dings.
 
-**Schreibt (3):** `mountStandortPlan()` [delete/insert/update] — module/standort-plan.js:511 · `speichern()` [delete/insert/update] — module/standort-plan.js:606 · `standortplanAufraeumen()` [delete] — api-backend/routes/mitarbeiter-zugang.js:328
+**Schreibt (3):** `mountStandortPlan()` [delete/insert/update] — module/standort-plan.js:511 · `speichern()` [delete/insert/update] — module/standort-plan.js:606 · `standortplanAufraeumen()` [delete] — api-backend/routes/mitarbeiter-zugang.js:336
 
 **Liest (3):** `ladeStandortPlan()`, `ladeStandortPlan()`, `name()`
 
@@ -724,7 +724,7 @@ Warum: Messwerte im Verlauf (Blankoverordnung: der Therapeut muss den Behandlung
 8 Spalten · Status: aktiv
 Warum: Vertragsrahmen je Mitarbeiter (Vollzeit/Teilzeit, Wochenstunden, Urlaubsanspruch in Tagen) für Teamplanung und Resturlaub. Bewusst **nicht** in `profiles`: `profiles` ist im Team lesbar, Vertragsdaten sollen Kollegen nicht sehen (Physio/PLANUNG-UMSETZUNG.md Entscheidung 7: legal-de, guvenlik, db-ustasi).
 
-**Schreibt (3):** `austrittVermerken()` [upsert] — api-backend/routes/mitarbeiter-zugang.js:352 · `mountEhemalige()` [delete] — module/ehemalige-mitarbeiter.js:87 · `speichereAnstellung()` [upsert] — module/anstellung.js:258
+**Schreibt (3):** `austrittVermerken()` [upsert] — api-backend/routes/mitarbeiter-zugang.js:360 · `mountEhemalige()` [delete] — module/ehemalige-mitarbeiter.js:87 · `speichereAnstellung()` [upsert] — module/anstellung.js:258
 
 **Liest (1):** `ladeAnstellung()`
 
@@ -901,7 +901,7 @@ Warum: Das Buch der Schemakette — eine Zeile je angewandter Migrationsdatei. B
 7 Spalten · Status: aktiv in der Box — **im SaaS bewusst inert** (siehe Achtung)
 Warum: Der Einrichtungsassistent der Kundenbox (On-Premise Faz 2.2) braucht eine
 
-**Schreibt (1):** `billigePruefungenLaufen()` [update] — api-backend/setup/router.js:153
+**Schreibt (1):** `billigePruefungenLaufen()` [update] — api-backend/setup/router.js:154
 
 **Liest (5):** `istAbgeschlossen()`, `kutuInEinrichtung()`, `ladePostfach()`, `ownerAngelegt()`, `versuch()`
 

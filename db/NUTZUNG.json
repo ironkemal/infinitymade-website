@@ -1,8 +1,8 @@
 {
- "erzeugt": "2026-11-21",
+ "erzeugt": "2026-11-23",
  "quellen": {
-  "schema": "db/SCHEMA.sql (Stand 2026-11-21)",
-  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-11-21)",
+  "schema": "db/SCHEMA.sql (Stand 2026-11-23)",
+  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-11-23)",
   "register": "db/REGISTER.md"
  },
  "anzahl": 110,
@@ -1828,13 +1828,20 @@
      "start": 94,
      "module": [],
      "uiPfad": []
+    },
+    {
+     "name": "nochNieEingestempelt",
+     "file": "module/erst-checkin.js",
+     "start": 51,
+     "module": [],
+     "uiPfad": []
     }
    ],
    "schreiber": [
     {
      "name": "schliesse",
      "file": "api-backend/server.js",
-     "start": 3838,
+     "start": 3841,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1884,7 +1891,8 @@
    ],
    "dateien": [
     "api-backend/server.js",
-    "attendance.js"
+    "attendance.js",
+    "module/erst-checkin.js"
    ],
    "module": [
     "abrechnung",
@@ -2853,7 +2861,7 @@
     {
      "name": "unbekannt",
      "file": "api-backend/server.js",
-     "start": 4014,
+     "start": 4017,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3490,7 +3498,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1763,
+     "start": 1764,
      "module": [],
      "uiPfad": []
     },
@@ -5287,7 +5295,7 @@
     {
      "name": "unbekannt",
      "file": "api-backend/server.js",
-     "start": 4014,
+     "start": 4017,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6252,7 +6260,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1763,
+     "start": 1764,
      "module": [],
      "uiPfad": []
     },
@@ -6475,6 +6483,7 @@
     "api-backend/attendance-report.test.js",
     "api-backend/billing/api/ausfall-atomar.test.js",
     "api-backend/dsgvo/klassifikation.js",
+    "api-backend/setup/standard-standort.test.js",
     "module/termin-rechtstexte.test.js",
     "tools/box-standort-abnahme.test.js",
     "tools/browser-probe/anwesenheit-probe.mjs",
@@ -6663,8 +6672,48 @@
      "name": "deleteBusiness",
      "file": "dashboard.js",
      "start": 13777,
-     "module": [],
-     "uiPfad": [],
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 37 modülden çağrılıyor"
+     ],
      "ops": [
       "delete"
      ]
@@ -6677,6 +6726,16 @@
      "uiPfad": [],
      "ops": [
       "update"
+     ]
+    },
+    {
+     "name": "legeStandardStandortAn",
+     "file": "api-backend/setup/standard-standort.js",
+     "start": 20,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
      ]
     },
     {
@@ -6793,8 +6852,48 @@
      "name": "wireBusinessModal",
      "file": "dashboard.js",
      "start": 13694,
-     "module": [],
-     "uiPfad": [],
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 37 modülden çağrılıyor"
+     ],
      "ops": [
       "insert",
       "update"
@@ -6811,6 +6910,7 @@
     "api-backend/lib/terminerinnerung-job.js",
     "api-backend/routes/mitarbeiter-zugang.js",
     "api-backend/server.js",
+    "api-backend/setup/standard-standort.js",
     "api/stripe/webhook.js",
     "attendance.js",
     "booking.js",
@@ -7117,7 +7217,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1763,
+     "start": 1764,
      "module": [],
      "uiPfad": []
     },
@@ -8938,7 +9038,7 @@
     "verordnungen",
     "vorlagen"
    ],
-   "sqlTreffer": 56,
+   "sqlTreffer": 58,
    "codeStumm": false
   },
   {
@@ -9818,7 +9918,7 @@
     {
      "name": "standortplanAufraeumen",
      "file": "api-backend/routes/mitarbeiter-zugang.js",
-     "start": 328,
+     "start": 336,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -14668,7 +14768,7 @@
     {
      "name": "austrittVermerken",
      "file": "api-backend/routes/mitarbeiter-zugang.js",
-     "start": 352,
+     "start": 360,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -14780,7 +14880,7 @@
     "verordnungen",
     "vorlagen"
    ],
-   "sqlTreffer": 38,
+   "sqlTreffer": 39,
    "codeStumm": false
   },
   {
@@ -18040,7 +18140,7 @@
     {
      "name": "istAbgeschlossen",
      "file": "api-backend/setup/router.js",
-     "start": 91,
+     "start": 92,
      "module": [],
      "uiPfad": []
     },
@@ -18061,7 +18161,7 @@
     {
      "name": "ownerAngelegt",
      "file": "api-backend/setup/router.js",
-     "start": 82,
+     "start": 83,
      "module": [],
      "uiPfad": []
     },
@@ -18077,7 +18177,7 @@
     {
      "name": "billigePruefungenLaufen",
      "file": "api-backend/setup/router.js",
-     "start": 153,
+     "start": 154,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -21507,7 +21607,7 @@
     {
      "name": "gehoertZurPraxis",
      "file": "api-backend/server.js",
-     "start": 3989,
+     "start": 3992,
      "module": [],
      "uiPfad": []
     },
@@ -22454,7 +22554,7 @@
     {
      "name": "standardPruefungen",
      "file": "api-backend/lib/status.js",
-     "start": 331,
+     "start": 364,
      "module": [],
      "uiPfad": []
     },
@@ -23244,7 +23344,7 @@
     "verordnungen",
     "vorlagen"
    ],
-   "sqlTreffer": 378,
+   "sqlTreffer": 379,
    "codeStumm": false
   },
   {
@@ -23747,7 +23847,7 @@
     {
      "name": "anfrageKorrekturenPruefen",
      "file": "api-backend/server.js",
-     "start": 4303,
+     "start": 4306,
      "module": [],
      "uiPfad": []
     },
@@ -24410,8 +24510,48 @@
      "name": "wireBusinessModal",
      "file": "dashboard.js",
      "start": 13694,
-     "module": [],
-     "uiPfad": [],
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 37 modülden çağrılıyor"
+     ],
      "ops": [
       "insert"
      ]
@@ -25334,7 +25474,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1763,
+     "start": 1764,
      "module": [],
      "uiPfad": []
     },
@@ -26767,7 +26907,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1763,
+     "start": 1764,
      "module": [],
      "uiPfad": []
     },
