@@ -1,4 +1,4 @@
-import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261103mail1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261103mail1';
+import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261103mail1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261103mail1'; import { standorteFuerNutzer } from './module/standort-zuordnung.js?v=20261123sz1';
 import { oeffneLeistungsRaum, leistungsRaumPayload } from './module/leistungs-raum.js?v=20261103raum';
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
 import { planungVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261121f11';
@@ -47,12 +47,12 @@ import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, ope
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261118v914'; import { pruefePatientPflicht, patientKontaktFehler } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { ladeUeberblickAnsicht, fokussiereUeberblickBereich } from './module/ueberblick-ansicht.js?v=20261123p3'; import { aktivitaetZeileHtml } from './module/aktivitaet-zeile.js?v=20261119start1'; import { rezKpiAuswerten } from './module/ueberblick-listen.js?v=20261123p3'; import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_KPI } from './module/verordnung-fristen-laden.js?v=20261121f01'; import { erstelleLaufWaechter, tagVerschiebenDatum } from './module/tageszentrale-logik.js?v=20261121f06'; import { berechneRasterScrollTop, scrollRasterSichtbar, verdrahteRasterSlot } from './module/tageszentrale-raster.js?v=20261121f04'; import { erstellePanelVerlauf } from './module/panel-verlauf.js?v=20261121f08';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
 import { ladeStatusJePatient, oeffneStatusDialogFuer, verordnungStatusInfo } from './module/abrechnungsstatus.js?v=20261117f2';
-import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261117v906';
+import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261123fb1';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001e';
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261031b'; import { renderMitarbeiterAppSettings } from './module/mitarbeiter-app-einstellungen.js?v=20261022';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261117c1';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung } from './module/podologie-abrechnung.js?v=20261117v906'; import { renderZaaUploadResult, renderZaaFehlerTabelle, ladeZaaZeilen, verdrahteZaaBeheben } from './module/zaa-fehler.js?v=20261106'; import { verdrahtePhysioBefund } from './module/physio-befund.js?v=20261101b';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung } from './module/podologie-abrechnung.js?v=20261123fb1'; import { renderZaaUploadResult, renderZaaFehlerTabelle, ladeZaaZeilen, verdrahteZaaBeheben } from './module/zaa-fehler.js?v=20261106'; import { verdrahtePhysioBefund } from './module/physio-befund.js?v=20261101b';
 import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261031b'; import { montiereVorgeschichte } from './module/podo-vorgeschichte-form.js?v=20261021y'; import { verdrahteDokumente } from './module/patient-dokumente.js?v=20261031b'; import { montiereAkteAktionen } from './module/akte-aktionen.js?v=20261114v702';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20261021n';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtZeilenReferenz } from './module/fahrtenbuch-regeln.js?v=20261014five1';
@@ -13446,21 +13446,7 @@ async function bootBusinessSwitcher() {
 
     // Employees only see businesses they're explicitly assigned to.
     // On error or no assignments → fall back to the default business only (never show all).
-    if (currentProfile.role !== 'owner' && allBiz.length > 0) {
-      const { data: assigned, error: asnErr } = await supabase
-        .from('employee_business_assignments')
-        .select('business_id')
-        .eq('employee_id', currentSession.user.id);
-      if (asnErr) {
-        console.warn('[bizSwitcher] employee_business_assignments query failed — restricting to default', asnErr);
-        allBiz = allBiz.filter(b => b.is_default).slice(0, 1);
-      } else {
-        const assignedIds = new Set((assigned || []).map(a => a.business_id));
-        const filtered = allBiz.filter(b => assignedIds.has(b.id));
-        // If no assignment found, show default business only (safe fallback, never all)
-        allBiz = filtered.length > 0 ? filtered : allBiz.filter(b => b.is_default).slice(0, 1);
-      }
-    }
+    allBiz = await standorteFuerNutzer(supabase, currentSession.user.id, currentProfile.role, allBiz); // module/standort-zuordnung.js, gleiche Regel wie attendance.js
 
     myBusinesses = allBiz;
   } catch (e) {
@@ -13953,7 +13939,7 @@ async function init() {
       const ansichtKontext = { uid: () => currentSession?.user?.id, rolle: () => currentProfile?.role, scope: () => [currentSession?.user?.id, currentProfile?.role, getOwnerId(), currentBusiness?.id].join(':') };
       startansicht = (await import('./module/startseite-ansicht.js?v=20261123p3')).montiereStartansicht({ ...ansichtKontext, sektor: getSector, api: () => API, springe: switchPanel, akte: id => window.openPatientDetail?.(id), neuLaden: loadTodayBookings, anfragenLaden: () => loadAnfragen('pending'), behandler: () => teamMembers.map(m => ({ id: m.id, name: m.business_name || m.full_name || (m.email || '').split('@')[0] })), hb: { supabase, ownerId: () => getOwnerId(), businessId: () => currentBusiness?.id ?? null, patientsGemeinsam: () => dataSharing.patients === true } });
       (await import('./module/anamnese-abschnitte.js?v=20261114v402')).montiereAnamneseAbschnitte(ansichtKontext); try { (await import('./module/shell-ansicht.js?v=20261123p3')).montiereShellansicht({ ...ansichtKontext, name: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', suche: { ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, oeffnePatient: id => window.openPatientDetail?.(id), dokumente: { kontext: () => ({ supabase, rolle: currentProfile?.role, uid: currentSession?.user?.id, ownerId: getOwnerId(), businessId: currentBusiness?.id ?? null, patientsGemeinsam: dataSharing.patients === true, financeGemeinsam: dataSharing.finance === true }), ladeRechnungen: loadRechnungen, oeffneRechnung: id => { switchPanel('rechnungen'); return openInvView(id); }, oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); const ok = oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API }); if (!ok) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); return ok; } } } }); } catch (e) { console.error('[init] shell', e); }
-    } else { startansicht = (await import('./module/tageszentrale-ansicht.js?v=20261123p3')).montiereTageszentrale({ supabase, api: () => API, getOwnerId, getUserId: () => currentSession?.user?.id || null, istOwner: () => currentProfile?.role === 'owner', getName: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', getTeam: () => teamMembers.map(m => ({ id: m.id, name: m.business_name || m.full_name || (m.email || '').split('@')[0] })), bizScope, showToast, oeffneTerminNeu: (s) => prefillBookingModal(s || null), oeffneTerminAktion: (b) => openBookingActionModal(b), oeffnePatient: (id) => window.openPatientDetail?.(id), oeffnePatientNeu: () => openLeadModal(null), oeffneRezeptNeu: () => openRezeptModal(null, null), oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); if (!oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API })) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); }, oeffneAnfrage: async (id) => { await switchPanel('anfragen'); if (id) setTimeout(() => showAnfrageDetail(id), 220); }, oeffneWarteliste: async (id) => { await switchPanel('warteliste'); if (id) setTimeout(() => window.openWlEntry?.(id), 180); }, oeffneUeberblickFristen: () => { fokussiereUeberblickBereich('deadlines', { fristTab: 'alle' }); switchPanel('ueberblick'); }, wechslePanel: switchPanel, oeffneKalenderTag: (tagIso) => { dayViewDate = new Date(`${tagIso}T12:00:00`); switchPanel('calendar'); setCalendarView('day'); } }); }
+    } else { startansicht = (await import('./module/tageszentrale-ansicht.js?v=20261123p3')).montiereTageszentrale({ supabase, api: () => API, getOwnerId, getUserId: () => currentSession?.user?.id || null, istOwner: () => currentProfile?.role === 'owner', getName: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', getTeam: () => teamMembers.map(m => ({ id: m.id, name: m.business_name || m.full_name || (m.email || '').split('@')[0] })), bizScope, showToast, oeffneTerminNeu: (s) => prefillBookingModal(s || null), oeffneTerminAktion: (b) => openBookingActionModal(b), oeffnePatient: (id) => window.openPatientDetail?.(id), oeffnePatientNeu: () => openLeadModal(null), oeffneRezeptNeu: () => openRezeptModal(null, null), oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); if (!oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API })) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); }, oeffneAnfrage: async (id) => { await switchPanel('anfragen'); if (id) setTimeout(() => showAnfrageDetail(id), 220); }, oeffneWarteliste: async (id) => { await switchPanel('warteliste'); if (id) setTimeout(() => window.openWlEntry?.(id), 180); }, oeffneUeberblickFristen: () => { fokussiereUeberblickBereich('deadlines', { fristTab: 'alle' }); switchPanel('ueberblick'); }, wechslePanel: switchPanel, oeffneKalenderTag: async (tagIso) => { dayViewDate = new Date(`${tagIso}T12:00:00`); await switchPanel('calendar'); setCalendarView('day'); /* await: switchPanel setzt sonst danach 'week' (Live-Test 23.11.) */ } }); }
     await renderOverview();
     try { await renderGapsForDate(scheduleDate); dbg('[init] gapsForDate ok'); } catch (e) { console.error('[init] renderGapsForDate error', e); }
     setupScheduleNav();
@@ -16791,7 +16777,7 @@ async function loadUeberblick() {
     oeffnePatient: (leadId) => window.openPatientDetail?.(leadId),
     oeffneVerordnung: (quelle, rxId) => { switchPanel('verordnungen'); if (!oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id: rxId, rolle: currentProfile?.role, apiBase: API })) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); },
     oeffneRechnung: (invId) => { switchPanel('rechnungen'); return openInvView(invId); },
-    oeffneKalenderTag: (tagIso) => { dayViewDate = new Date(`${tagIso}T12:00:00`); switchPanel('calendar'); setCalendarView('day'); },
+    oeffneKalenderTag: async (tagIso) => { dayViewDate = new Date(`${tagIso}T12:00:00`); await switchPanel('calendar'); setCalendarView('day'); /* await: switchPanel setzt sonst danach 'week' (Live-Test 23.11.) */ },
     wechslePanel: (panelId) => switchPanel(panelId),
   });
 }

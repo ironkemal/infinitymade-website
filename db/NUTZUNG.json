@@ -830,7 +830,7 @@
     {
      "name": "init",
      "file": "dashboard.js",
-     "start": 13919,
+     "start": 13905,
      "module": [],
      "uiPfad": []
     },
@@ -938,7 +938,7 @@
     {
      "name": "neuerBkKanal",
      "file": "dashboard.js",
-     "start": 13968,
+     "start": 13954,
      "module": [],
      "uiPfad": []
     }
@@ -1825,7 +1825,7 @@
     {
      "name": "fetchHistory",
      "file": "attendance.js",
-     "start": 94,
+     "start": 95,
      "module": [],
      "uiPfad": []
     },
@@ -1841,7 +1841,7 @@
     {
      "name": "schliesse",
      "file": "api-backend/server.js",
-     "start": 3841,
+     "start": 3833,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2861,7 +2861,7 @@
     {
      "name": "unbekannt",
      "file": "api-backend/server.js",
-     "start": 4017,
+     "start": 4009,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5295,7 +5295,7 @@
     {
      "name": "unbekannt",
      "file": "api-backend/server.js",
-     "start": 4017,
+     "start": 4009,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6508,7 +6508,7 @@
     {
      "name": "fetchBusinesses",
      "file": "attendance.js",
-     "start": 114,
+     "start": 115,
      "module": [],
      "uiPfad": []
     },
@@ -6671,7 +6671,7 @@
     {
      "name": "deleteBusiness",
      "file": "dashboard.js",
-     "start": 13777,
+     "start": 13763,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6851,7 +6851,7 @@
     {
      "name": "wireBusinessModal",
      "file": "dashboard.js",
-     "start": 13694,
+     "start": 13680,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7573,7 +7573,7 @@
     {
      "name": "loadDataSharing",
      "file": "dashboard.js",
-     "start": 13898,
+     "start": 13884,
      "module": [],
      "uiPfad": []
     }
@@ -7582,7 +7582,7 @@
     {
      "name": "saveDataSharing",
      "file": "dashboard.js",
-     "start": 13540,
+     "start": 13526,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -8624,8 +8624,10 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
+    "api-backend/attendance-report.test.js",
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/lib/modulrecht.test.js",
+    "tools/browser-probe/anwesenheit-probe.mjs",
     "tools/browser-probe/redesign-fixture.js"
    ],
    "register": true,
@@ -8634,13 +8636,6 @@
    "seit": "spätestens 22.05.2026 · `v25_rbac_employee_groups`",
    "ungeklaert": false,
    "leser": [
-    {
-     "name": "bootBusinessSwitcher",
-     "file": "dashboard.js",
-     "start": 13430,
-     "module": [],
-     "uiPfad": []
-    },
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
@@ -8757,6 +8752,13 @@
      ]
     },
     {
+     "name": "mitarbeiterDarfStandort",
+     "file": "api-backend/lib/standort-zuordnung.js",
+     "start": 14,
+     "module": [],
+     "uiPfad": []
+    },
+    {
      "name": "mountStandortplanReiter",
      "file": "module/planung-bruecke.js",
      "start": 197,
@@ -8823,6 +8825,13 @@
      "uiPfad": [
       "ortak yardımcı — 37 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "standorteFuerNutzer",
+     "file": "module/standort-zuordnung.js",
+     "start": 34,
+     "module": [],
+     "uiPfad": []
     }
    ],
    "schreiber": [
@@ -8992,11 +9001,13 @@
     "api-backend/billing/api/verordnung-status.routes.js",
     "api-backend/booking/termin-planung.js",
     "api-backend/dsgvo/loeschen.js",
+    "api-backend/lib/standort-zuordnung.js",
     "api-backend/routes/mitarbeiter-zugang.js",
     "api-backend/server.js",
     "booking.js",
     "dashboard.js",
     "module/planung-bruecke.js",
+    "module/standort-zuordnung.js",
     "module/termin-rechtstexte.js"
    ],
    "module": [
@@ -9506,7 +9517,7 @@
     {
      "name": "openBookingFromRxPreset",
      "file": "dashboard.js",
-     "start": 14208,
+     "start": 14194,
      "module": [],
      "uiPfad": []
     }
@@ -10054,7 +10065,7 @@
     {
      "name": "loadFbFahrten",
      "file": "dashboard.js",
-     "start": 14881,
+     "start": 14867,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11459,7 +11470,7 @@
     {
      "name": "ladeKostentraegerNamen",
      "file": "dashboard.js",
-     "start": 14459,
+     "start": 14445,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11799,7 +11810,7 @@
     {
      "name": "loadKkList",
      "file": "dashboard.js",
-     "start": 14344,
+     "start": 14330,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12275,7 +12286,7 @@
     {
      "name": "initWlPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 16111,
+     "start": 16097,
      "module": [],
      "uiPfad": []
     },
@@ -13891,7 +13902,7 @@
     {
      "name": "initSchnellerfassung",
      "file": "dashboard.js",
-     "start": 15822,
+     "start": 15808,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -20128,7 +20139,7 @@
     {
      "name": "loadPatRxTable",
      "file": "dashboard.js",
-     "start": 16706,
+     "start": 16692,
      "module": [
       "abrechnung",
       "anamnese",
@@ -20363,7 +20374,7 @@
     {
      "name": "oeffneZaaVerordnung",
      "file": "dashboard.js",
-     "start": 14580,
+     "start": 14566,
      "module": [],
      "uiPfad": []
     },
@@ -21298,7 +21309,7 @@
     {
      "name": "triggerStorno",
      "file": "dashboard.js",
-     "start": 15273,
+     "start": 15259,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -21600,14 +21611,14 @@
     {
      "name": "fetchBusinesses",
      "file": "attendance.js",
-     "start": 114,
+     "start": 115,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "gehoertZurPraxis",
      "file": "api-backend/server.js",
-     "start": 3992,
+     "start": 3984,
      "module": [],
      "uiPfad": []
     },
@@ -21923,7 +21934,7 @@
     {
      "name": "loadFahrtenbuchPanel",
      "file": "dashboard.js",
-     "start": 14829,
+     "start": 14815,
      "module": [
       "abrechnung",
       "anamnese",
@@ -21970,7 +21981,7 @@
     {
      "name": "loadFbFahrten",
      "file": "dashboard.js",
-     "start": 14881,
+     "start": 14867,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22017,7 +22028,7 @@
     {
      "name": "loadFbReports",
      "file": "dashboard.js",
-     "start": 15183,
+     "start": 15169,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22731,7 +22742,7 @@
     {
      "name": "initAnfragenPanel",
      "file": "dashboard.js",
-     "start": 17424,
+     "start": 17410,
      "module": [
       "abrechnung",
       "anamnese",
@@ -23847,7 +23858,7 @@
     {
      "name": "anfrageKorrekturenPruefen",
      "file": "api-backend/server.js",
-     "start": 4306,
+     "start": 4298,
      "module": [],
      "uiPfad": []
     },
@@ -24509,7 +24520,7 @@
     {
      "name": "wireBusinessModal",
      "file": "dashboard.js",
-     "start": 13694,
+     "start": 13680,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26379,7 +26390,7 @@
     {
      "name": "switchBusiness",
      "file": "dashboard.js",
-     "start": 13856,
+     "start": 13842,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -26481,7 +26492,7 @@
     {
      "name": "loadFbVehicles",
      "file": "dashboard.js",
-     "start": 15025,
+     "start": 15011,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26531,7 +26542,7 @@
     {
      "name": "saveVehicleEditCore",
      "file": "dashboard.js",
-     "start": 15137,
+     "start": 15123,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -26670,7 +26681,7 @@
     {
      "name": "loadWarteliste",
      "file": "dashboard.js",
-     "start": 15987,
+     "start": 15973,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26774,7 +26785,7 @@
     {
      "name": "initWlModal",
      "file": "dashboard.js",
-     "start": 16145,
+     "start": 16131,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -26845,6 +26856,7 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
+    "api-backend/attendance-report.test.js",
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/dsgvo/loeschen.js",
     "module/mein-urlaub.test.js",

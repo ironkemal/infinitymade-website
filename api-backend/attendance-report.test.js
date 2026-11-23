@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+import { anwesenheitStatus } from './lib/anwesenheit-status.js';
+import { mitarbeiterDarfStandort } from './lib/standort-zuordnung.js';
 const source = readFileSync(new URL('./server.js', import.meta.url), 'utf8');
 const route = source.slice(source.indexOf("app.get('/api/attendance/report'"), source.indexOf('// PATCH /api/attendance/:id/note'));
 const site = '00000000-0000-4000-8000-000000000001';
@@ -28,15 +30,17 @@ test('Anwesenheit: manipulierte Standortfilter vor DB abweisen',async()=>{
   const r=await run('x),owner_id.neq.x');assert.equal(r.status,400);assert.equal(r.calls,0);
 });
 
-async function runCheckIn(body, siteOwner = 'owner') {
+async function runCheckIn(body, siteOwner = 'owner', zuordnungen = [{ employee_id: 'employee', business_id: site }]) {
   const checkIn = source.slice(source.indexOf("app.post('/api/attendance/check-in'"), source.indexOf('// POST /api/attendance/check-out'));
   let handler, inserted, result;
   let status = 200;
   const queries = [];
   const data = {
     profiles: [{ id: 'employee', role: 'employee', owner_id: 'owner' }],
-    businesses: [{ id: site, owner_id: siteOwner }],
+    businesses: [{ id: site, owner_id: siteOwner, is_default: false }],
     attendance: [],
+    employee_business_assignments: zuordnungen,
+    working_hours: [],
   };
   const supabase = {
     from(table) {
@@ -45,6 +49,11 @@ async function runCheckIn(body, siteOwner = 'owner') {
       return {
         select(fields) { query.fields.push(fields); return this; },
         eq(field, value) { query.filters[field] = value; return this; },
+        in(field, values) { query.filters[field] = values; return this; },
+        then(resolve) {
+          const rows = data[table].filter(row => Object.entries(query.filters).every(([field, value]) => (Array.isArray(value) ? value.includes(row[field]) : row[field] === value)));
+          return Promise.resolve({ data: rows, error: null }).then(resolve);
+        },
         insert(record) { inserted = { ...record }; data.attendance.push(record); return this; },
         maybeSingle() {
           const match = data[table].find(row => Object.entries(query.filters).every(([field, value]) => row[field] === value));
@@ -61,6 +70,8 @@ async function runCheckIn(body, siteOwner = 'owner') {
     BUSINESS_TZ: 'Europe/Berlin',
     supabase,
     console,
+    anwesenheitStatus,
+    mitarbeiterDarfStandort,
   });
   const res = {
     status(code) { status = code; return this; },
@@ -81,10 +92,20 @@ test('Anwesenheit: Check-in ignoriert alte GPS-Eingaben und speichert die Stando
   assert.equal(inserted.owner_id, 'owner');
   assert.equal(inserted.check_in_valid, null);
   assert.deepEqual(Object.keys(inserted).sort(), ['business_id', 'check_in_at', 'check_in_valid', 'date', 'employee_id', 'owner_id', 'status']);
-  assert.deepEqual(queries.filter(query => query.table !== 'attendance'), [
+  // JSON-Runde: Arrays aus dem vm-Kontext haben einen anderen Prototyp.
+  assert.deepEqual(JSON.parse(JSON.stringify(queries.filter(query => query.table !== 'attendance'))), [
     { table: 'profiles', fields: ['owner_id, role'], filters: { id: 'employee' } },
-    { table: 'businesses', fields: ['id'], filters: { id: site, owner_id: 'owner' } },
+    { table: 'businesses', fields: ['id, is_default'], filters: { id: site, owner_id: 'owner' } },
+    { table: 'employee_business_assignments', fields: ['business_id'], filters: { employee_id: 'employee' } },
+    { table: 'working_hours', fields: ['user_id, day_of_week, start_time, end_time, is_active'], filters: { user_id: ['employee', 'owner'] } },
   ]);
+});
+
+test('Anwesenheit: Check-in an einem nicht zugeordneten Standort wird vor dem Schreiben abgewiesen', async () => {
+  const { status, result, inserted } = await runCheckIn({ business_id: site }, 'owner', [{ employee_id: 'employee', business_id: 'anderer-standort' }]);
+  assert.equal(status, 403);
+  assert.equal(result.error, 'Diesem Standort sind Sie nicht zugeordnet');
+  assert.equal(inserted, undefined);
 });
 
 test('Anwesenheit: Check-in weist den Standort eines fremden Mandanten vor dem Schreiben ab', async () => {

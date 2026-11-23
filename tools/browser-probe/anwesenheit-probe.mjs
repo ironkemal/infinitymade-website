@@ -14,7 +14,8 @@ const locations = [
   { id: 'location-b', business_name: 'Teststandort B' },
 ];
 
-async function scenario(available, verify, width = 375, height = 667) {
+// zuordnung: employee_business_assignments des Mitarbeiters (Standard: allen angebotenen Standorten zugeordnet).
+async function scenario(available, verify, width = 375, height = 667, zuordnung = (available || []).map(b => ({ business_id: b.id }))) {
   const context = await browser.newContext({ viewport: { width, height }, serviceWorkers: 'block' });
   const errors = [];
   await context.routeWebSocket('**/*', socket => {
@@ -56,6 +57,7 @@ async function scenario(available, verify, width = 375, height = 667) {
     if (path === '/attendance.html') return route.fulfill({ contentType: 'text/html', body: html });
     if (path === '/attendance.js') return route.fulfill({ contentType: 'text/javascript', body: source });
     if (path === '/dashboard.css') return route.fulfill({ contentType: 'text/css', body: css });
+    if (path === '/module/standort-zuordnung.js') return route.fulfill({ contentType: 'text/javascript', path: new URL('../..' + path, import.meta.url).pathname });
     if (path === '/fonts/system-fonts.css' || /^\/fonts\/self_hosted_[A-Za-z0-9_-]+\.woff2$/.test(path)) {
       return route.fulfill({ path: new URL('../..' + path, import.meta.url).pathname });
     }
@@ -74,9 +76,10 @@ async function scenario(available, verify, width = 375, height = 667) {
               return { data: { session: { access_token: 'synthetic', user: { id: 'employee-a' } } } };
             } },
             from(table) {
-              if (!['profiles', 'businesses', 'attendance'].includes(table)) throw new Error('Unerwartete Tabelle: ' + table);
+              if (!['profiles', 'businesses', 'attendance', 'employee_business_assignments'].includes(table)) throw new Error('Unerwartete Tabelle: ' + table);
               const data = table === 'profiles' ? { owner_id: 'owner-a', role: 'employee' }
                 : table === 'businesses' ? ${JSON.stringify(available)}
+                : table === 'employee_business_assignments' ? ${JSON.stringify(zuordnung)}
                 : ${JSON.stringify(history)};
               const error = data === null ? { message: 'Standorte nicht erreichbar' } : null;
               return { select() { return this; }, eq() { return this; }, gte() { return this; },
@@ -163,6 +166,16 @@ try {
     });
   }
   console.log('PASS: Einzelpraxis mit und ohne Standortzuordnung.');
+  // Box-Test 22.11.2026: Mitarbeiter sieht nur zugeordnete Standorte (vorher alle der Praxis).
+  await scenario(locations, async (page, trace) => {
+    assert.equal(await page.locator('#bizSelect').isVisible(), false);
+    trace.finishCheckIn();
+    await page.locator('#btnCheckIn').click();
+    await trace.checkInStarted;
+    await page.locator('#btnCheckOut').waitFor({ state: 'visible' });
+    assert.deepEqual(trace.bodies, [{ business_id: 'location-b' }]);
+  }, 375, 667, [{ business_id: 'location-b' }]);
+  console.log('PASS: Mitarbeiter mit einer Zuordnung sieht nur diesen Standort.');
   await scenario(null, async (page, trace) => {
     await page.getByText('Fehler beim Laden. Bitte Seite neu laden.').waitFor();
     assert.equal(await page.locator('#btnCheckIn').isDisabled(), true);

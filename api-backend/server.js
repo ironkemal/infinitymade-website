@@ -77,7 +77,7 @@ import { raumLeistungenFelder, raumBuchungsFehler, raumNameFuerBuchung } from '.
 import { ladeStandortPlan, planErlaubt } from './lib/standort-plan-laden.js';
 import { starteIpAbgleich } from './merkez-istemci/ip-abgleich.js';
 import { starteFristen } from './dsgvo/fristen.js';
-import { starteTerminerinnerung } from './lib/terminerinnerung-job.js';
+import { starteTerminerinnerung } from './lib/terminerinnerung-job.js'; import { anwesenheitStatus } from './lib/anwesenheit-status.js'; import { mitarbeiterDarfStandort } from './lib/standort-zuordnung.js';
 
 dotenv.config();
 
@@ -3635,11 +3635,15 @@ app.post('/api/attendance/check-in', attendanceLimiter, requireAuthAI, async (re
     if (business_id) {
       const { data: biz, error: bizErr } = await supabase
         .from('businesses')
-        .select('id')
+        .select('id, is_default')
         .eq('id', business_id)
         .eq('owner_id', ownerId)
         .maybeSingle();
       if (bizErr || !biz) return res.status(404).json({ error: 'Standort nicht gefunden' });
+      // Mitarbeiter nur an zugeordneten Standorten (lib/standort-zuordnung.js, Box-Test 22.11.2026).
+      if (profile.role !== 'owner' && !(await mitarbeiterDarfStandort(supabase, { employeeId: userId, business: biz }))) {
+        return res.status(403).json({ error: 'Diesem Standort sind Sie nicht zugeordnet' });
+      }
     }
 
     // Berlin'de bugünün tarihi
@@ -3658,25 +3662,13 @@ app.post('/api/attendance/check-in', attendanceLimiter, requireAuthAI, async (re
       return res.status(409).json({ error: 'Heute bereits eingecheckt', check_in_at: existing.check_in_at });
     }
 
-    // Check-in zamanına göre durum: 09:00 Berlin saatinden sonraysa "late"
-    const hour = new Date(
-      new Intl.DateTimeFormat('en-US', {
-        timeZone: BUSINESS_TZ,
-        hour: 'numeric',
-        hour12: false,
-      }).formatToParts(new Date()).reduce((acc, p) => ({ ...acc, [p.type]: p.value }), {})
-    );
-    // Basit saat kontrolü
-    const berlinHour = parseInt(
-      new Intl.DateTimeFormat('en-US', { timeZone: BUSINESS_TZ, hour: 'numeric', hour12: false }).format(new Date()),
-      10
-    );
-    const berlinMin = parseInt(
-      new Intl.DateTimeFormat('en-US', { timeZone: BUSINESS_TZ, minute: 'numeric' }).format(new Date()),
-      10
-    );
-    const isLate = berlinHour > 9 || (berlinHour === 9 && berlinMin > 0);
-    const status = isLate ? 'late' : 'present';
+    // Status nach eigener Regelarbeitszeit statt fest ab 09:00 (legal-de, lib/anwesenheit-status.js).
+    // Fehler beim Lesen der Zeiten → 'present': lieber kein Verspätungsvermerk als ein falscher.
+    const { data: zeiten } = await supabase
+      .from('working_hours')
+      .select('user_id, day_of_week, start_time, end_time, is_active')
+      .in('user_id', [...new Set([userId, ownerId])]);
+    const status = anwesenheitStatus({ zeiten: zeiten || [], empId: userId, ownerId });
 
     const { data: record, error: insertErr } = await supabase
       .from('attendance')

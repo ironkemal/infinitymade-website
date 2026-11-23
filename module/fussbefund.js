@@ -1805,7 +1805,8 @@ export async function renderLegendeSettings(deps) {
   const section = document.getElementById('settingsLegendeSection');
   if (!section) return;
 
-  const zeigen = deps.profile?.role === 'owner';
+  // Pflichtpunkt 2 (Box-Test 22.11.2026): nur Podologie-Praxen — Physio-Inhaber sahen eine Fußgrafik-Legende.
+  const zeigen = deps.profile?.role === 'owner' && resolveSector(deps.sector?.() || '') === 'podologie';
   section.hidden = !zeigen;
   if (!zeigen) return;
 

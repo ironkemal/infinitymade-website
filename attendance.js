@@ -1,5 +1,6 @@
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE } from '/supabase-config.js'; // O-01, 11.09.2026
+import { standorteFuerNutzer } from './module/standort-zuordnung.js?v=20261123sz1';
 
 const BERLIN_TZ = 'Europe/Berlin';
 
@@ -116,9 +117,10 @@ async function fetchBusinesses() {
   if (profilFehler) throw profilFehler;
   const ownerId = profile?.role === 'owner' ? currentUser.id : profile?.owner_id;
   if (!ownerId) return [];
-  const { data, error } = await supabase.from('businesses').select('id, business_name').eq('owner_id', ownerId);
+  const { data, error } = await supabase.from('businesses').select('id, business_name, is_default').eq('owner_id', ownerId);
   if (error) throw error;
-  return data || [];
+  // Mitarbeiter nur zugeordnete Standorte (gleiche Regel wie der Standort-Umschalter im Dashboard).
+  return standorteFuerNutzer(supabase, currentUser.id, profile?.role, data || []);
 }
 
 // ---- UI güncelle ----
