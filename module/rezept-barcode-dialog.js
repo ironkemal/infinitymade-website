@@ -1,4 +1,4 @@
-import { scanneRezeptLokal, pruefeScanDatei, zaehleBarcode } from './rezept-barcode-scan.js?v=20261007m3';
+import { scanneRezeptLokal, pruefeScanDatei, zaehleBarcode } from './rezept-barcode-scan.js?v=20261123pdf1';
 import { uebernehmeRezeptInMaske } from './rezept-in-maske.js?v=20261117p33';
 import { entferneBarcodeBestaetigung } from './rezept-barcode-bestaetigung.js?v=20261007m3';
 

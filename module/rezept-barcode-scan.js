@@ -54,6 +54,31 @@ function neueLeinwand(width, height) {
   return canvas;
 }
 
+/**
+ * Box-Test 22.11.2026 (Pflichtpunkt 4, „PDF-Scan scheitert“): Renderstufen für PDF-Seiten.
+ * Vorher fest höchstens Faktor 3 (≈ 216 dpi bei A4) — ein Scanner-PDF mit 300 dpi verlor dabei
+ * Auflösung, kleinere Barcodes (≈ 40 mm) wurden als Bild erkannt, als PDF nicht (belegt mit
+ * synthetischem Scan). Jetzt erst die schnelle Stufe 3, dann die größte, die MAX_PIXELS erlaubt.
+ * @param {number} breite @param {number} hoehe  Seitengröße bei Faktor 1 (pt)
+ * @returns {number[]}
+ */
+export function pdfStufen(breite, hoehe) {
+  const max = Math.sqrt(MAX_PIXELS / (breite * hoehe));
+  const schnell = Math.min(3, max);
+  return max > schnell * 1.15 ? [schnell, max] : [schnell];
+}
+
+/**
+ * Große Fotos (z. B. 48 MP) werden auf MAX_PIXELS verkleinert statt abgelehnt. Vorher warf
+ * neueLeinwand „Bild zu groß“, und der Bildzweig schrieb daraus „Kein unterstützter
+ * Muster-13-Barcode erkannt“ — die eigentliche Ursache war für den Nutzer unsichtbar.
+ * @param {number} breite @param {number} hoehe @returns {{ breite: number, hoehe: number }}
+ */
+export function bildMass(breite, hoehe) {
+  const f = Math.min(1, Math.sqrt(MAX_PIXELS / (breite * hoehe)));
+  return { breite: Math.floor(breite * f), hoehe: Math.floor(hoehe * f) };
+}
+
 function abbrechen(signal) {
   if (signal?.aborted) throw new DOMException('Abgebrochen', 'AbortError');
 }
@@ -109,10 +134,17 @@ export async function scanneRezeptLokal(dataUri, { signal } = {}) {
         abbrechen(signal);
         const page=await doc.getPage(i);
         const base=page.getViewport({scale:1});
-        const viewport=page.getViewport({scale:Math.min(3,Math.sqrt(MAX_PIXELS/(base.width*base.height)))});
-        const canvas=neueLeinwand(viewport.width,viewport.height);
-        try { await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise; await lesen(canvas); }
-        finally { page.cleanup(); canvas.width=canvas.height=0; }
+        try {
+          for(const scale of pdfStufen(base.width,base.height)) {
+            abbrechen(signal);
+            const viewport=page.getViewport({scale});
+            const canvas=neueLeinwand(viewport.width,viewport.height);
+            const vorher=gefunden.size;
+            try { await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise; await lesen(canvas); }
+            finally { canvas.width=canvas.height=0; }
+            if(gefunden.size>vorher) break; // auf dieser Seite gefunden → keine teurere Stufe
+          }
+        } finally { page.cleanup(); }
       }
     } finally { signal?.removeEventListener('abort',stop); await task.destroy(); }
   } else {
@@ -121,11 +153,15 @@ export async function scanneRezeptLokal(dataUri, { signal } = {}) {
       image.src=dataUri;
       await image.decode();
       abbrechen(signal);
-      const canvas=neueLeinwand(image.naturalWidth,image.naturalHeight);
-      try { canvas.getContext('2d').drawImage(image,0,0); await lesen(canvas); }
+      const mass=bildMass(image.naturalWidth,image.naturalHeight);
+      const canvas=neueLeinwand(mass.breite,mass.hoehe);
+      try { canvas.getContext('2d').drawImage(image,0,0,mass.breite,mass.hoehe); await lesen(canvas); }
       finally {canvas.width=canvas.height=0;}
     } catch(error) {
       if(error.name==='AbortError') throw error;
+      // Eigene, verständliche Meldungen (mehrere Barcodes, Leser nicht verfügbar) durchreichen;
+      // nur unlesbare Bilddaten werden zu „kein Barcode“.
+      if(error instanceof Error && /Mehrere unterschiedliche|nicht verfügbar|zu groß/.test(error.message)) throw error;
       throw new Error(KEIN_BARCODE);
     } finally {image.removeAttribute('src');}
   }

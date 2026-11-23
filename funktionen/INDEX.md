@@ -3,7 +3,7 @@
 > Üretim: 2026-11-23 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4902 fonksiyon** (4780 JS · 95 bash · 27 ps1) · 601 dosya · 42 sidebar modülü
+**4904 fonksiyon** (4782 JS · 95 bash · 27 ps1) · 601 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -622,7 +622,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `fehler` — api-backend/billing/api/artefakt-historie.js:37 · api-backend/billing/api/artefakt-registry.js:21 · api-backend/billing/api/physio-publikation-ablauf.js:23 · api-backend/billing/codes/physio-leistungszeilen.js:32 · api-backend/lib/gmail-senden.js:66 · module/therapiebericht.js:205
 - `feld` — module/abrechnung-auswahl.js:985 · module/datev-einstellungen.js:71 · module/fussbefund.js:307 · module/mailversand.js:287 · module/rezeptinfo-geld.js:385 · module/termin-konflikte.js:3
 - `laden` — module/kopf-dokumente.js:55 · module/mailversand.js:193 · module/mein-urlaub.js:6 · module/plz.js:40 · module/start-aufgaben.js:351 · module/startseite-handlungsbedarf-karte.js:44
-- `lesen` — cookie-consent.js:101 · module/mail-signatur-editor.js:24 · module/raum-tagesansicht.js:138 · module/rezept-barcode-scan.js:90 · module/startseite-handlungsbedarf-karte.js:40 · module/startseite-handlungsbedarf-laden.js:123
+- `lesen` — cookie-consent.js:101 · module/mail-signatur-editor.js:24 · module/raum-tagesansicht.js:138 · module/rezept-barcode-scan.js:115 · module/startseite-handlungsbedarf-karte.js:40 · module/startseite-handlungsbedarf-laden.js:123
 - `load` — module/patient-notizen.js:36 · module/rezept-patientenkopf.js:28 · ops/board.js:111 · ops/decisions.js:7 · ops/meetings.js:7 · ops/wissen.js:49
 - `log` — installieren/install.sh:19 · onprem/backup.sh:47 · onprem/deinstallieren.sh:37 · onprem/install.sh:68 · onprem/restore.sh:44 · onprem/update.sh:59
 - `ok` — installieren/install.sh:20 · onprem/backup.sh:48 · onprem/deinstallieren.sh:38 · onprem/install.sh:69 · onprem/restore.sh:45 · onprem/update.sh:60

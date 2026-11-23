@@ -27,11 +27,14 @@
       ['muster13.pdf',true], ['muster13-page2.pdf',true],
       ['unsupported.png',false], ['two-prescriptions.pdf',false],
       ['large-page.pdf',true], ['duplicate-barcode.pdf',true], ['six-pages.pdf',false],
+      // Box-Test 22.11.2026: Scanner-PDF 300 dpi mit 40-mm-Barcode (scheiterte am festen Faktor 3) und
+      // 15-MP-Foto (wurde als „kein Barcode“ abgelehnt statt verkleinert). Synthetisch, aus muster13.png.
+      ['muster13-scan300-klein.pdf',true], ['muster13-foto-gross.jpg',true],
     ]) {
       try {
         const response = await fetch(`./fixtures/m3/${file}`);
         if(!response.ok) throw new Error('Fixture fehlt');
-        const blob = new Blob([await response.arrayBuffer()], {type:file.endsWith('.pdf')?'application/pdf':'image/png'});
+        const blob = new Blob([await response.arrayBuffer()], {type:file.endsWith('.pdf')?'application/pdf':file.endsWith('.jpg')?'image/jpeg':'image/png'});
         const dataUri = await new Promise((resolve,reject) => {
           const reader = new FileReader(); reader.onload=()=>resolve(reader.result);
           reader.onerror=reject; reader.readAsDataURL(blob);
