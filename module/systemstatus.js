@@ -62,10 +62,10 @@ export function statusZeilen(s) {
 
 /**
  * @param {HTMLElement|null} abschnitt  #settingsSystemSection
- * @param {{ apiBase: string, getToken: () => Promise<string|null|undefined>, fetchImpl?: typeof fetch }} deps
+ * @param {{ apiBase: string, getToken: () => Promise<string|null|undefined>, fetchImpl?: typeof fetch, istKutu?: boolean }} deps
  * @returns {Promise<'versteckt'|'angezeigt'|'fehler'>}
  */
-export async function mountSystemstatus(abschnitt, { apiBase, getToken, fetchImpl = fetch }) {
+export async function mountSystemstatus(abschnitt, { apiBase, getToken, fetchImpl = fetch, istKutu }) {
   if (!abschnitt) return 'versteckt';
   const ziel = abschnitt.querySelector('[data-systemstatus]') || abschnitt;
   try {
@@ -92,6 +92,8 @@ export async function mountSystemstatus(abschnitt, { apiBase, getToken, fetchImp
       <p class="form-hint" style="margin:8px 0 0;">Nur für den Praxisinhaber sichtbar. Es werden keine Schlüssel oder Zugangsdaten angezeigt.</p>`;
     return 'angezeigt';
   } catch {
+    // Netzwerkfehler: nur auf der Box melden; im SaaS gibt es keinen Systemstatus (Phase 7b F5).
+    if (istKutu === false) { abschnitt.hidden = true; return 'versteckt'; }
     abschnitt.hidden = false;
     ziel.textContent = 'Systemstatus derzeit nicht abrufbar.';
     return 'fehler';

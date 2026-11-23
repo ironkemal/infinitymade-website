@@ -38,7 +38,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 
 **Yol 9 — `wireAbrechnungSettings()`** · Ekran: _UI yolu çözülemedi_
 - `wireAbrechnungSettings()` — [module/abrechnung-einstellungen.js:271](module/abrechnung-einstellungen.js#L271-L431) · 161 satır · profiles:update
-- `speichern()` — [module/fax-einstellungen.js:112](module/fax-einstellungen.js#L112-L134) · 23 satır · profiles:update
+- `speichern()` — [module/fax-einstellungen.js:114](module/fax-einstellungen.js#L114-L136) · 23 satır · profiles:update
 - `verbindeMailSignaturen()` — [module/mail-signatur-anbindung.js:3](module/mail-signatur-anbindung.js#L3-L12) · 10 satır · profiles:update
 - `speichern()` — [module/praxis-rechtslinks-einstellungen.js:102](module/praxis-rechtslinks-einstellungen.js#L102-L125) · 24 satır · profiles:update
 
@@ -608,7 +608,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `t` — api-backend/lib/rechnung-pdf.js:120 · api-backend/lib/rechnung-snapshot.js:15 · api-backend/lib/therapiebericht.js:123 · api-backend/server.js:4046 · dashboard.js:525 · module/anamnese.js:394 · module/bg-angaben.js:36 · module/branding.js:28 · module/kiosk.js:58 · module/termin-rechtstexte.js:20
 - `cleanup` — dashboard.js:5703 · dashboard.js:5791 · dashboard.js:17074 · merkez/test/dev-server.js:84 · module/absagegrund-modal.js:87 · module/bestaetigungs-dialog.js:49 · module/formular-editor.js:565 · module/formular-unterschreiben.js:201 · module/formular-unterschreiben.js:371
 - `run` — api-backend/ai/tasks/appointment-confirm-draft.js:17 · api-backend/ai/tasks/b2b-draft.js:69 · api-backend/ai/tasks/b2c-draft.js:69 · api-backend/ai/tasks/rezept-normalize.js:136 · api-backend/ai/tasks/rezept-ocr.js:20 · api-backend/ai/tasks/rezept-validate.js:12 · api-backend/ai/tasks/series-scheduler.js:7 · api-backend/ai/tasks/transkribieren.js:15 · merkez/db.js:125
-- `speichern` — cookie-consent.js:120 · module/arzt-register.js:294 · module/fax-einstellungen.js:112 · module/fussbefund.js:792 · module/mailversand.js:326 · module/physio-befund.js:906 · module/praxis-rechtslinks-einstellungen.js:102 · module/standort-plan.js:606 · module/verordnung-detail.js:959
+- `speichern` — cookie-consent.js:120 · module/arzt-register.js:294 · module/fax-einstellungen.js:114 · module/fussbefund.js:792 · module/mailversand.js:326 · module/physio-befund.js:906 · module/praxis-rechtslinks-einstellungen.js:102 · module/standort-plan.js:606 · module/verordnung-detail.js:959
 - `resolveAuth` — api-backend/billing/api/ausfall.routes.js:33 · api-backend/billing/api/mahnwesen.routes.js:29 · api-backend/billing/api/podo-empfangsnachweis.routes.js:14 · api-backend/billing/api/rechnung-zahlung.routes.js:92 · api-backend/billing/api/statistik.routes.js:111 · api-backend/billing/api/verordnung-status.routes.js:53 · api-backend/billing/api/warteliste.routes.js:29 · api-backend/billing/api/zuzahlung.routes.js:53
 - `zeichne` — module/abrechnung-auswahl.js:769 · module/abrechnungsstatus.js:616 · module/einrichtung-ring.js:44 · module/patienten-einwilligung.js:540 · module/patienten-import.js:394 · module/praxis-standort.js:122 · module/raum-auswahl.js:181 · module/rezeptinfo-geld.js:458
 - `zeile` — api-backend/lib/therapiebericht.js:420 · module/branding-ui.js:39 · module/fax-deckblatt.js:54 · module/rechnung-druck.js:34 · module/verordnung-detail.js:293 · module/verordnung-detail.js:428 · module/verordnung-detail.js:496 · module/verordnung-pruefen-knopf.js:122

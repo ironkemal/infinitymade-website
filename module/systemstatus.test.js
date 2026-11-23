@@ -44,3 +44,14 @@ test('mountSystemstatus: 404/403 verbergen den Abschnitt, Antwort wird maskiert 
   assert.ok(!abschnitt.innerHTML.includes('<img'), 'maskiert');
   assert.match(abschnitt.innerHTML, /Gesamtzustand: Hinweise/);
 });
+
+test('Phase 7b F5: Netzwerkfehler im SaaS blendet aus, auf der Box wird er gemeldet', async () => {
+  const mk = () => { const ziel = { textContent: '', innerHTML: '' }; return { hidden: true, querySelector: () => ziel, ziel }; };
+  const kaputt = async () => { throw new Error('offline'); };
+  const saas = mk();
+  assert.equal(await mountSystemstatus(saas, { apiBase: '/api', getToken: async () => 't', fetchImpl: kaputt, istKutu: false }), 'versteckt');
+  assert.equal(saas.hidden, true);
+  const box = mk();
+  assert.equal(await mountSystemstatus(box, { apiBase: '/api', getToken: async () => 't', fetchImpl: kaputt, istKutu: true }), 'fehler');
+  assert.equal(box.hidden, false);
+});

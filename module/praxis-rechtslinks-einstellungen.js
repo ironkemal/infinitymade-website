@@ -20,7 +20,7 @@
  * @param {Function} deps.showToast
  */
 import { httpsUrl } from './branding.js?v=20261123sp1';
-import { renderFaxSettings } from './fax-einstellungen.js?v=20261031b';
+import { renderFaxSettings } from './fax-einstellungen.js?v=20261123f2';
 
 export const OWNER_HINWEIS = 'Ihre Online-Terminseite betreiben Sie als Praxis selbst: Tragen Sie die Adressen Ihres '
   + 'Impressums und Ihrer Datenschutzerklärung ein – ohne Eintrag erscheint ein automatisch aus Ihren Praxisdaten '

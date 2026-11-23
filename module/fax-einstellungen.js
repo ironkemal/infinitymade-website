@@ -104,6 +104,8 @@ export function renderFaxSettings(deps, doc = document) {
     anker.after(sec);
     doc.getElementById('setFaxSaveBtn')?.addEventListener('click', () => speichern(deps, doc));
   }
+  // Fax-to-Mail braucht den Mailserver der Box (siehe Hinweistext) — im SaaS ausblenden (Phase 7b F6).
+  sec.hidden = deps?.istKutu === false;
   const input = doc.getElementById('setFaxMailMuster');
   if (input) input.value = deps.profile?.fax_mail_muster || '';
   renderFormulareSettings(deps, doc);

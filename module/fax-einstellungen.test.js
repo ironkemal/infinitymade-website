@@ -68,3 +68,13 @@ test('FAX_HINWEIS_TEXT und FAX_MUSTER_RE sind definiert', () => {
   assert.ok(FAX_HINWEIS_TEXT.includes('{nummer}@fax.ihr-anbieter.de'));
   assert.ok(FAX_MUSTER_RE instanceof RegExp);
 });
+
+// Phase 7b F6 (23.11.2026): Fax-to-Mail braucht den Box-Mailserver → im SaaS ausgeblendet, Formulare bleiben.
+import { readFileSync as _lies } from 'node:fs';
+test('Fax-Abschnitt nur auf der Box, istKutu kommt aus dashboard.js über die Rechtslinks-Deps', () => {
+  const fax = _lies(new URL('./fax-einstellungen.js', import.meta.url), 'utf8');
+  assert.match(fax, /sec\.hidden = deps\?\.istKutu === false;/);
+  assert.ok(fax.indexOf('sec.hidden = deps?.istKutu') < fax.indexOf('renderFormulareSettings(deps, doc);'), 'Formulare werden trotzdem gerendert');
+  assert.match(_lies(new URL('./praxis-rechtslinks-einstellungen.js', import.meta.url), 'utf8'), /renderFaxSettings\(deps, doc\)/);
+  assert.match(_lies(new URL('../dashboard.js', import.meta.url), 'utf8'), /renderRechtslinksSettings\(\{ istKutu: IST_KUTU,/);
+});

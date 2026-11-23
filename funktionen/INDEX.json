@@ -139951,8 +139951,8 @@
    "lang": "js",
    "file": "module/fax-einstellungen.js",
    "start": 97,
-   "end": 110,
-   "lines": 14,
+   "end": 112,
+   "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -139985,8 +139985,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/fax-einstellungen.js",
-   "start": 112,
-   "end": 134,
+   "start": 114,
+   "end": 136,
    "lines": 23,
    "spiegelHinweis": null,
    "tables": [
@@ -235561,8 +235561,8 @@
    "lang": "js",
    "file": "module/systemstatus.js",
    "start": 68,
-   "end": 99,
-   "lines": 32,
+   "end": 101,
+   "lines": 34,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -297177,8 +297177,8 @@
       {
        "name": "speichern",
        "file": "module/fax-einstellungen.js",
-       "start": 112,
-       "end": 134,
+       "start": 114,
+       "end": 136,
        "lines": 23,
        "writes": [
         "profiles:update"
@@ -303759,7 +303759,7 @@
    "orte": [
     "cookie-consent.js:120",
     "module/arzt-register.js:294",
-    "module/fax-einstellungen.js:112",
+    "module/fax-einstellungen.js:114",
     "module/fussbefund.js:792",
     "module/mailversand.js:326",
     "module/physio-befund.js:906",

@@ -4,7 +4,7 @@ import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
 import { planungVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261121f11';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
-import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261123kia1'; import { mountSystemstatus } from './module/systemstatus.js?v=20261123sys1'; import { kanalStatusBehandler } from './module/realtime-status.js?v=20261123rt1';
+import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261123kia1'; import { mountSystemstatus } from './module/systemstatus.js?v=20261123f2'; import { kanalStatusBehandler } from './module/realtime-status.js?v=20261123rt1';
 import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261103mail1';
 import { zeigeKiRueckfrageDialog } from './module/ki-rueckfrage.js?v=20261115v703';
 import { dsgvoVerdrahten } from './module/dsgvo-client.js?v=20261002';
@@ -49,7 +49,7 @@ import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrah
 import { ladeStatusJePatient, oeffneStatusDialogFuer, verordnungStatusInfo } from './module/abrechnungsstatus.js?v=20261117f2';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261123fb1';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001e';
-import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261123sp1'; import { renderMitarbeiterAppSettings } from './module/mitarbeiter-app-einstellungen.js?v=20261022';
+import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261123f2'; import { renderMitarbeiterAppSettings } from './module/mitarbeiter-app-einstellungen.js?v=20261022';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261117c1';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung } from './module/podologie-abrechnung.js?v=20261123fb1'; import { renderZaaUploadResult, renderZaaFehlerTabelle, ladeZaaZeilen, verdrahteZaaBeheben } from './module/zaa-fehler.js?v=20261106'; import { verdrahtePhysioBefund } from './module/physio-befund.js?v=20261101b';
@@ -10368,7 +10368,7 @@ async function loadSettings() {
       showToast,
       showConfirmModal
     }).catch(() => { kiMount.textContent = 'KI-Einstellungen derzeit nicht verfügbar.'; });
-  } void mountSystemstatus(document.getElementById('settingsSystemSection'), { apiBase: API, getToken: async () => (await supabase.auth.getSession())?.data?.session?.access_token || null }); einstellungenKategorienAufbauen({ istOwner: () => currentProfile?.role === 'owner', wechslePanel: switchPanel }); // Box-Test P1: Systemstatus (Server entscheidet Sichtbarkeit)
+  } void mountSystemstatus(document.getElementById('settingsSystemSection'), { istKutu: IST_KUTU, apiBase: API, getToken: async () => (await supabase.auth.getSession())?.data?.session?.access_token || null }); einstellungenKategorienAufbauen({ istOwner: () => currentProfile?.role === 'owner', wechslePanel: switchPanel }); // Box-Test P1: Systemstatus (Server entscheidet Sichtbarkeit)
 
   document.getElementById('setBiz').value = currentProfile.business_name || '';
   const sectorEl = document.getElementById('setSectorLabel');
@@ -11392,9 +11392,7 @@ document.getElementById('profileSaveBtn').addEventListener('click', async () => 
     street: v('setStreet') || null,
     plz: v('setPlz') || null, zip: v('setPlz') || null,   // beide Spalten gleich halten (RPC/Art.-13-Text lesen zip)
     city: v('setCity') || null,
-    phone: v('setPhone') || null,
-    kim_adresse: v('set-kim-adresse') || null,
-    telematik_id: v('set-telematik-id') || null
+    phone: v('setPhone') || null   // KIM/Telematik-ID speichert nur „TI“ (tiSaveBtn), IK nur „Kassenabrechnung“ (ikSaveBtn) — Phase 7b F3
   };
   const { error } = await supabase.from('profiles').update(patch).eq('id', currentSession.user.id);
   if (error) { showToast(t('err_generic'), 'error'); return; }
@@ -11413,10 +11411,7 @@ document.getElementById('billingSaveBtn')?.addEventListener('click', async () =>
     bic: v('setBic') || null,
     steuernummer: v('setSteuernummer') || null,
     ust_id: v('setUstId') || null,
-    tax_exempt_note: getTaxExemptValue() || null,
-    ik_number: v('setIkNumber') || null,
-    kim_adresse: v('set-kim-adresse') || null,
-    telematik_id: v('set-telematik-id') || null
+    tax_exempt_note: getTaxExemptValue() || null   // F2/F3: IK nur über ikSaveBtn (schreibt auch terapeut_zertifikat), KIM/Telematik nur über tiSaveBtn
   };
   const { error } = await supabase.from('profiles').update(patch).eq('id', currentSession.user.id);
   if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
@@ -13927,7 +13922,7 @@ async function init() {
     // Ausfallgebühr-Config (Owner-Level) laden + Einstellungsbereich rendern.
     // Unabhängig vom bizSwitcher, da Einzelpraxen keine businesses-Zeile haben.
     await loadAusfallConfig();
-    renderAusfallSettings({ supabase, profile: currentProfile, config: ausfallConfig, userId: () => currentSession.user.id, showToast }); renderRechtslinksSettings({ supabase, profile: currentProfile, userId: () => currentSession.user.id, showToast }); renderMitarbeiterAppSettings({ profile: currentProfile, showToast });
+    renderAusfallSettings({ supabase, profile: currentProfile, config: ausfallConfig, userId: () => currentSession.user.id, showToast }); renderRechtslinksSettings({ istKutu: IST_KUTU, supabase, profile: currentProfile, userId: () => currentSession.user.id, showToast }); renderMitarbeiterAppSettings({ profile: currentProfile, showToast });
     renderPreisstufenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast });
     renderKontenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast, showConfirmModal }); renderDatevSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast }); verdrahteDatevExport({ supabase, showToast }); renderTerminerinnerungSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast }); renderMailversandSettings({ profile: currentProfile, apiBase: API, getToken: async () => (await supabase.auth.getSession())?.data?.session?.access_token || null, showToast, showConfirmModal });
     // Legende der Fußgrafik (Podologie) — ebenfalls Owner-Level in profiles.
