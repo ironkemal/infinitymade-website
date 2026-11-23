@@ -84,7 +84,7 @@ test('ki-einstellungen: employee sees disabled checkbox with owner-only notice',
 
   // Assert disabled attribute and explanatory hint
   assert.ok(content.includes('disabled'));
-  assert.ok(content.includes('Nur der Praxisinhaber darf die KI-Einwilligung aktivieren oder widerrufen'));
+  assert.ok(content.includes('Nur der Praxisinhaber darf die KI freischalten oder die Freischaltung zurücknehmen'));
 });
 
 test('ki-einstellungen: KI aus zeigt Grund, was ohne KI weiter geht, und Betreiber-Hinweis (Box-Test 22.11.)', async () => {
@@ -99,4 +99,21 @@ test('ki-einstellungen: KI aus zeigt Grund, was ohne KI weiter geht, und Betreib
   assert.match(html, /Rezept-Barcode-Scan \(lokal im Browser\)/);
   assert.match(html, /vom Betreiber ausgeschaltet/);
   assert.doesNotMatch(html, /<script|undefined|null<\/strong>/);
+});
+
+// Phase 7b KI-Stufe 1 (23.11.2026): Anbieter + Region nur lesend; „Freischaltung“ statt „Einwilligung“ (legal-de).
+test('ki-einstellungen: zeigt Anbieter & Region escaped, ohne Anbieter keine Zeile', async () => {
+  const { container } = createContainerFixture();
+  await mountKiEinstellungen(container, {
+    isOwner: () => true, getSessionToken: async () => 't', apiBase: '/api/ai',
+    fetchImpl: async () => ({ ok: true, json: async () => ({ success: true, active: false, mode: 'direkt', anbieter: { name: 'Microsoft Azure OpenAI<script>', region: 'swedencentral', euRegion: true } }) }),
+  });
+  assert.ok(container.innerHTML.includes('id="kiAnbieterZeile"'));
+  assert.ok(container.innerHTML.includes('Microsoft Azure OpenAI&lt;script&gt; · swedencentral (EU)'));
+  assert.ok(!container.innerHTML.includes('<script>'));
+  assert.ok(container.innerHTML.includes('Freischaltung durch den Praxisinhaber'));
+  assert.ok(!/Einwilligung/.test(container.innerHTML), 'kein „Einwilligung“ mehr in der Oberfläche');
+  const leer = createContainerFixture();
+  await mountKiEinstellungen(leer.container, { isOwner: () => true, getSessionToken: async () => 't', apiBase: '/api/ai', fetchImpl: async () => ({ ok: true, json: async () => ({ success: true, active: false, mode: 'aus' }) }) });
+  assert.ok(!leer.container.innerHTML.includes('kiAnbieterZeile'));
 });

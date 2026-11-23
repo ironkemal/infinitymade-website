@@ -16,9 +16,10 @@ import rateLimit from 'express-rate-limit';
 import { requireAuth } from './auth.js';
 import { logCall, hashRequest, getAiSupabaseClient } from './audit.js';
 import { safeAiError } from './ki-privacy.js';
-import { createAiConfig, healthSummary } from './ki-config.js';
+import { createAiConfig, healthSummary, EU_DATA_BOUNDARY_REGIONS } from './ki-config.js';
 import { CURRENT_EINWILLIGUNG_VERSION } from './ki-einwilligung.js';
 import { getOwnerDecisionStore, invalidateTenantJeton } from './ki-gateway.js';
+
 
 import { run as b2cDraft } from './tasks/b2c-draft.js';
 import { run as b2bDraft } from './tasks/b2b-draft.js';
@@ -28,6 +29,19 @@ import { run as rezeptNormalize } from './tasks/rezept-normalize.js';
 import { run as rezeptOcr } from './tasks/rezept-ocr.js';
 import { run as rezeptValidate } from './tasks/rezept-validate.js';
 import { run as transkribieren } from './tasks/transkribieren.js';
+
+/**
+ * Anbieter/Region für die Einstellungen (nur lesend). Bewusst ohne Endpunkt-Host oder Deployment-Namen.
+ * @param {any} cfg
+ * @returns {{ name: string, region: string|null, euRegion: boolean } | null}
+ */
+export function anbieterAnzeige(cfg) {
+  if (!cfg || !['direkt', 'jeton'].includes(cfg.mode)) return null;
+  /** @type {Record<string, string>} */
+  const NAMEN = { azure: 'Microsoft Azure OpenAI' };
+  const region = typeof cfg.region === 'string' && /^[a-z0-9-]{2,40}$/.test(cfg.region) ? cfg.region : null;
+  return { name: NAMEN[String(cfg.provider || 'azure')] || 'Unbekannter Anbieter', region, euRegion: !!region && EU_DATA_BOUNDARY_REGIONS.includes(region) };
+}
 
 export const TASKS = Object.freeze({
   'b2c-draft': b2cDraft,
@@ -167,7 +181,7 @@ export function createAiRouter({
       } else if (!operatorReady) {
         disabledReason = 'Betreiberfreigabe fehlt';
       } else if (!ownerActive) {
-        disabledReason = 'Einwilligung des Praxisinhabers fehlt';
+        disabledReason = 'Freischaltung durch den Praxisinhaber fehlt';
       }
 
       const capabilities = {
@@ -186,6 +200,8 @@ export function createAiRouter({
         diktat_verfuegbar: diktatVerfuegbar,
         capabilities,
         disabledReason,
+        // Phase 7b KI-Stufe 1: nur lesende Anzeige von Anbieter + Region (kein Host, kein Schlüssel; guvenlik/legal-de 23.11.2026)
+        anbieter: anbieterAnzeige(cfg),
         optIn: {
           enabled: Boolean(decision.enabled),
           informationVersion: decision.informationVersion || null,

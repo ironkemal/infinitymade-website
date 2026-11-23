@@ -277,7 +277,7 @@ export async function executeKiTask({
   }
 
   if (!ownerDecision || ownerDecision.enabled !== true) {
-    throw createGatewayError('Einwilligung des Praxisinhabers erforderlich', 503, 'AI_OWNER_OPTIN_REQUIRED');
+    throw createGatewayError('Freischaltung durch den Praxisinhaber erforderlich', 503, 'AI_OWNER_OPTIN_REQUIRED');
   }
 
   // Operator readiness check

@@ -14,7 +14,7 @@ const offline = () => ({ effective:false, mode:'aus', operatorReady:false, owner
 function mailDisabledReason({mode, effective, operatorReady, ownerActive, mailReady, capabilities}, employee) {
   if (mode === 'aus') return ['KI_DEAKTIVIERT', 'KI-Dienst ist ausgeschaltet oder nicht eingerichtet. Bitte technische Freigabe prüfen lassen.'];
   if (!employee && !operatorReady) return ['KI_BETREIBER_FREIGABE_FEHLT', 'Technische KI-Freigabe fehlt. Bitte Praxisadministrator kontaktieren.'];
-  if (!employee && !ownerActive) return ['KI_EINWILLIGUNG_FEHLT', 'KI-Einwilligung fehlt. Praxisinhaber kann sie unter Einstellungen prüfen.'];
+  if (!employee && !ownerActive) return ['KI_EINWILLIGUNG_FEHLT', 'KI-Freischaltung fehlt. Der Praxisinhaber kann sie unter Einstellungen → KI-Unterstützung erteilen.'];
   if (!effective) return ['KI_NICHT_BEREIT', 'KI-Dienst ist derzeit nicht bereit. Manuelles Schreiben bleibt verfügbar.'];
   if (!mailReady) return ['KI_MAIL_NICHT_FREIGEGEBEN', 'KI-Mail-Assistent ist technisch noch nicht freigegeben. Eine Gmail-Verbindung allein genügt nicht.'];
   if (!capabilities.freeText) return ['KI_FREITEXT_NICHT_FREIGEGEBEN', 'KI-Textentwürfe sind technisch noch nicht freigegeben. Bitte Praxisadministrator kontaktieren.'];
@@ -45,6 +45,7 @@ export async function getKiConfig(deps = {}) {
     const config = { ...offline(), mode,effective,operatorReady:data.operatorReady === true,ownerActive:data.ownerActive === true,
       mailReady:data.mailReady === true || (employee && capabilities.appointmentDraft),freeText:capabilities.freeText,capabilities,
       diktat_verfuegbar,
+      anbieter: data.anbieter && typeof data.anbieter.name === 'string' ? { name: data.anbieter.name.slice(0, 60), region: typeof data.anbieter.region === 'string' ? data.anbieter.region.slice(0, 40) : null, euRegion: data.anbieter.euRegion === true } : null,
       informationVersion:typeof data.optIn?.informationVersion === 'string' ? data.optIn.informationVersion : null,
       decidedAt:typeof data.optIn?.decidedAt === 'string' && Number.isFinite(Date.parse(data.optIn.decidedAt)) ? data.optIn.decidedAt : null };
     [config.disabledReason, config.disabledReasonText] = mailDisabledReason(config, employee);
@@ -57,7 +58,7 @@ export async function isKiMailEnabled(deps = {}) { return (await getKiConfig(dep
 export async function updateOwnerOptIn(options, deps = {}) {
   if (!options || Object.keys(options).some(k => !['enabled','informationVersion'].includes(k)) || typeof options.enabled !== 'boolean')
     throw fail('KI_CONFIG_INVALID','Ungültige KI-Einstellung.');
-  if (deps.isOwner?.() === false) throw fail('KI_OWNER_REQUIRED','Nur der Praxisinhaber darf die KI-Einwilligung verwalten.',403);
+  if (deps.isOwner?.() === false) throw fail('KI_OWNER_REQUIRED','Nur der Praxisinhaber darf die KI-Freischaltung verwalten.',403);
   const informationVersion = options.informationVersion ?? CURRENT_EINWILLIGUNG_VERSION;
   if (informationVersion !== CURRENT_EINWILLIGUNG_VERSION) throw fail('KI_CONFIG_INVALID','Bitte aktuelle Information zur KI-Nutzung lesen.');
   const token = await deps.getToken?.();

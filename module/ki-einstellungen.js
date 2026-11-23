@@ -1,4 +1,4 @@
-import { getKiConfig, updateOwnerOptIn, CURRENT_EINWILLIGUNG_VERSION, refreshKiControls } from './ki-client.js?v=20261103mail1';
+import { getKiConfig, updateOwnerOptIn, CURRENT_EINWILLIGUNG_VERSION, refreshKiControls } from './ki-client.js?v=20261123ki1';
 
 /** @param {unknown} t */
 const escapeText = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] || c));
@@ -50,8 +50,8 @@ export async function mountKiEinstellungen(container, deps = {}) {
     container.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:14px;">
         <p class="form-hint" style="margin:0 0 4px 0;line-height:1.5;">
-          Optionale KI-Unterstützung. Standardmäßig deaktiviert. Die Nutzung ist freiwillig und erfordert die ausdrückliche
-          Einwilligung des Praxisinhabers.
+          Optionale KI-Unterstützung. Standardmäßig deaktiviert. Die Nutzung ist freiwillig; der Praxisinhaber schaltet sie
+          für die Praxis frei.
         </p>
 
         <!-- Status-Übersicht -->
@@ -67,6 +67,12 @@ export async function mountKiEinstellungen(container, deps = {}) {
             <span>Betriebsmodus:</span>
             <strong style="color:var(--text-main);font-size:12px;">${modeLabel}</strong>
           </div>
+
+          ${cfg.anbieter ? `
+          <div id="kiAnbieterZeile" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--text-muted);border-top:1px solid var(--border);padding-top:8px;">
+            <span>Anbieter &amp; Region:</span>
+            <strong style="color:var(--text-main);font-size:12px;">${escapeText(cfg.anbieter.name)}${cfg.anbieter.region ? ` · ${escapeText(cfg.anbieter.region)}${cfg.anbieter.euRegion ? ' (EU)' : ' (nicht EU)'}` : ''}</strong>
+          </div>` : ''}
 
           <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text-muted);border-top:1px solid var(--border);padding-top:8px;">
             <span>Betreiber-Bereitschaft (Technik):</span>
@@ -89,13 +95,13 @@ export async function mountKiEinstellungen(container, deps = {}) {
           <strong>${escapeText(cfg.disabledReasonText || 'KI-Unterstützung ist ausgeschaltet.')}</strong><br>
           Ohne KI arbeiten weiter: Serientermine (Vorschlag nach festen Regeln), Rezept-Barcode-Scan (lokal im Browser),
           Verordnungsprüfung (regelbasiert) und alle übrigen Praxisfunktionen. Nur Mail-Assistent und Sprachdiktat brauchen die KI.
-          ${cfg.mode === 'aus' ? 'Auf diesem Server ist die KI vom Betreiber ausgeschaltet — Ihre Einwilligung allein schaltet sie nicht ein.' : ''}
+          ${cfg.mode === 'aus' ? 'Auf diesem Server ist die KI vom Betreiber ausgeschaltet — Ihre Freischaltung allein schaltet sie nicht ein.' : ''}
         </div>` : ''}
 
         <!-- Inhaber-Schalter -->
         <div style="background:var(--bg-card-solid);border:1px solid var(--border);border-radius:10px;padding:14px;">
           <div style="font-size:14px;font-weight:600;color:var(--text-main);margin-bottom:8px;">
-            Praxisinhaber-Einwilligung
+            Freischaltung durch den Praxisinhaber
           </div>
 
           <label style="display:flex;align-items:flex-start;gap:10px;cursor:${isOwner ? 'pointer' : 'not-allowed'};margin-bottom:8px;">
@@ -114,7 +120,7 @@ export async function mountKiEinstellungen(container, deps = {}) {
 
           ${!isOwner ? `
             <div style="margin-top:8px;padding:8px 10px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--warning);">
-              Hinweis: Nur der Praxisinhaber darf die KI-Einwilligung aktivieren oder widerrufen.
+              Hinweis: Nur der Praxisinhaber darf die KI freischalten oder die Freischaltung zurücknehmen.
             </div>
           ` : ''}
         </div>
@@ -124,7 +130,7 @@ export async function mountKiEinstellungen(container, deps = {}) {
           <strong style="color:var(--text-main);">Datenschutz &amp; Vertraulichkeit:</strong>
           Die Datenübermittlung erfolgt pseudonymisiert direkt an den jeweiligen Schnittstellen-Anbieter.
           Es existiert <strong>keine Garantie vollständiger Anonymität</strong> und <strong>kein zentrales Relay</strong>.
-          Manuelle Praxisfunktionen bleiben unabhängig nutzbar. Ihre Erlaubnis ersetzt keine technische Freigabe. Die regelbasierte Rezeptprüfung nutzt keine KI. Bildübertragung zur KI ist gesperrt.
+          KI-Vorschläge sind Entwürfe — bitte vor Verwendung prüfen. Manuelle Praxisfunktionen bleiben unabhängig nutzbar. Ihre Freischaltung ersetzt keine technische Freigabe. Die regelbasierte Rezeptprüfung nutzt keine KI. Bildübertragung zur KI ist gesperrt.
         </div>
       </div>
     `;
@@ -144,7 +150,7 @@ export async function mountKiEinstellungen(container, deps = {}) {
             isOwner: () => isOwner,
             fetchImpl: deps.fetchImpl
           });
-          showToast(nextState ? 'KI-Einwilligung aktiviert.' : 'KI-Einwilligung deaktiviert.', 'success');
+          showToast(nextState ? 'KI-Unterstützung freigeschaltet.' : 'Freischaltung zurückgenommen.', 'success');
         } catch (err) {
           toggle.checked = !nextState; // Rollback
           showToast('KI-Einstellung konnte nicht gespeichert werden.', 'error');

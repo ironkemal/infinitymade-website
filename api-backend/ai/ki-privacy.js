@@ -28,7 +28,7 @@ export const KNOWN_AI_CODES = Object.freeze({
   },
   AI_OWNER_OPTIN_REQUIRED: {
     status: 503,
-    message: 'Einwilligung des Praxisinhabers erforderlich'
+    message: 'Freischaltung durch den Praxisinhaber erforderlich'
   },
   AI_MAIL_DISABLED: {
     status: 503,

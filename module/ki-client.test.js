@@ -79,7 +79,7 @@ test('controls show accessible gate reason, settings action and clear stale stat
     assert.equal(input.disabled,true);
     assert.equal(status.attrs.role,'status');
     assert.equal(input.attrs['aria-describedby'],status.id);
-    assert.match(status.textContent,/Einwilligung/);
+    assert.match(status.textContent,/Freischaltung/);
     status.children[0].click();
   }
   assert.equal(opened(),2);
@@ -100,5 +100,5 @@ test('late refresh cannot re-enable controls after newer disabled result',async(
   await refreshKiControls({...deps,fetchImpl:async()=>response({...wire,ownerActive:false,active:false})});
   finish(response(wire));await old;
   assert.equal(doc.getElementById('aiInput').disabled,true);
-  assert.match(doc.getElementById('aiInputStatus').textContent,/Einwilligung/);
+  assert.match(doc.getElementById('aiInputStatus').textContent,/Freischaltung/);
 });

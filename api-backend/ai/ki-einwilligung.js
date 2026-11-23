@@ -216,7 +216,7 @@ export function createOwnerDecisionStore({
     }
 
     if (auth.role !== 'owner' || auth.userId !== auth.tenantId) {
-      throw createEinwilligungError('Nur der Praxisinhaber darf die KI-Einwilligung verwalten', 'KI_OWNER_REQUIRED', 403);
+      throw createEinwilligungError('Nur der Praxisinhaber darf die KI-Freischaltung verwalten', 'KI_OWNER_REQUIRED', 403);
     }
 
     if (typeof enabled !== 'boolean') {
@@ -330,7 +330,7 @@ export function createFakeOwnerDecisionStore({
      */
     async set(auth, { enabled, informationVersion } = {}) {
       if (!auth || auth.role !== 'owner' || auth.userId !== auth.tenantId) {
-        throw createEinwilligungError('Nur der Praxisinhaber darf die KI-Einwilligung verwalten', 'KI_OWNER_REQUIRED', 403);
+        throw createEinwilligungError('Nur der Praxisinhaber darf die KI-Freischaltung verwalten', 'KI_OWNER_REQUIRED', 403);
       }
       if (typeof enabled !== 'boolean') {
         throw createEinwilligungError('enabled muss boolesch sein', 'KI_EINWILLIGUNG_INVALID', 400);
