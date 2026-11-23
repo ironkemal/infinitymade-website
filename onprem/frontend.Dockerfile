@@ -72,7 +72,7 @@ COPY login.html login.js ./
 # dashboard-feinschliff.css (Kemal, 20.10.2026) wird von dashboard.html geladen und fehlte
 # hier bis 24.10.2026 — die Box zeigte die Oberfläche ohne Feinschliff (O-219).
 # praxura-design.css: neues Erscheinungsbild hinter dem Schalter ?design=neu (Redesign 2026-10).
-COPY dashboard.html dashboard.css dashboard-feinschliff.css dashboard-ueberblick.css dashboard-start.css praxura-design.css dashboard.js ./
+COPY dashboard.html dashboard.css dashboard-feinschliff.css dashboard-ueberblick.css dashboard-start.css praxura-design.css praxura-handwerk.css dashboard.js ./
 COPY design ./design
 # kalender.html/.js am 31.10.2026 archiviert (archive/kod/) — alter Inhaber-Kalender ohne Link aus dem
 # Dashboard, umging Abrechnungssperre und Sitzungsabgleich (CLAUDE_SYNC_AUDIT_REPORT §1.5).

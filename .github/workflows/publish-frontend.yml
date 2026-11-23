@@ -15,6 +15,7 @@ on:
       - 'dashboard-feinschliff.css'
       - 'dashboard-ueberblick.css'
       - 'dashboard-start.css'
+      - 'praxura-handwerk.css'
       - 'praxura-design.css'
       - 'design/**'
       - 'dashboard.js'

@@ -1,4 +1,4 @@
-/** V3.03: Emoji-Entfernung im neuen Design mit Wiederherstellung (module/ohne-emoji.js).
+/** V3.03: Emoji-Entfernung (seit 23.11.2026 in beiden Designs) (module/ohne-emoji.js).
  *  Synthetische App ohne Login (redesign-harness). Hart: Exit 1 bei Abweichung. Eine JSON-Zeile. */
 import assert from 'node:assert/strict';
 import { oeffneDashboard, starteBrowser, starteServer, ruhe } from '../redesign-harness.mjs';
@@ -34,18 +34,11 @@ try {
   assert.equal(neu.b, 'Anna 🌴 Beispiel', '(i) Emoji mitten im Text bleibt');
   assert.equal(neu.c, '⚠️ Notiz', '(i) Eingabewert bleibt');
   assert.equal(neu.d, '⚠️ roh', '(i) data-px-emoji-roh bleibt');
+  // Seit 23.11.2026 (Kemal, redesign/HANDWERK-LOGIK.md Regel 4): auch im alten Design ohne Emojis.
   await wechsel(page, 'alt');
   const alt = await lesen(page);
-  assert.equal(alt.a, '⚠️ Zertifikat läuft ab', '(ii) Original exakt zurück');
-  assert.equal(alt.alleText, neu.alleText.replace(' Zertifikat', '⚠️ Zertifikat'), '(ii) Gesamttext wie original');
-  assert.equal(alt.wrapA, 0, '(ii) kein Wrap im Testcontainer');
-  assert.equal(alt.wrap, 0, '(ii) keine .px-sym-wrap mehr');
-  await wechsel(page, 'neu');
-  assert.equal((await lesen(page)).wrapA, 1, '(iii) neu: wieder ersetzt');
-  await wechsel(page, 'alt');
-  const alt2 = await lesen(page);
-  assert.equal(alt2.a, '⚠️ Zertifikat läuft ab', '(iii) alt: Original');
-  assert.equal(alt2.wrap, 0, '(iii) keine .px-sym-wrap');
+  assert.equal(alt.wrapA, 1, '(ii) alt: bleibt ersetzt');
+  assert.equal(alt.a, ' Zertifikat läuft ab', '(ii) alt: Text bleibt');
   assert.deepEqual(n.protokoll.seitenfehler, [], 'keine Seitenfehler');
   await n.kontext.close();
   erg.neuAlt = true;
@@ -53,8 +46,9 @@ try {
   const a = await oeffne('alt'); await ruhe(a.page, 800);
   await setze(a.page); await ruhe(a.page, 300);
   const nur = await lesen(a.page);
-  assert.equal(nur.wrap, 0, '(iv) alt von Anfang an: 0 .px-sym-wrap');
-  assert.equal(nur.a, '⚠️ Zertifikat läuft ab', '(iv) Original');
+  assert.equal(nur.wrapA, 1, '(iv) alt von Anfang an: führendes ⚠️ ersetzt');
+  assert.equal(nur.b, 'Anna 🌴 Beispiel', '(iv) alt: Emoji mitten im Text bleibt');
+  assert.equal(nur.c, '⚠️ Notiz', '(iv) alt: Eingabewert bleibt');
   assert.deepEqual(a.protokoll.seitenfehler, [], 'keine Seitenfehler');
   await a.kontext.close();
   console.log(JSON.stringify({ ok: true, ...erg }));

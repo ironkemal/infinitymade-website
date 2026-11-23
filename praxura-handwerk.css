@@ -1,0 +1,341 @@
+/* ============================================================================
+   praxura-handwerk.css — eine Regel statt 50 Einzelflicken
+   ============================================================================
+
+   Warum es das gibt
+   ─────────────────
+   Kemal, 23.11.2026: „Urlaub sieht aus wie Text, ist aber ein Knopf; Emojis
+   wirken billig; es fehlt das ruhige, teure Gefühl.“ Frühere Runden haben
+   einzelne Seiten geflickt; die Ursache liegt im System (~50 Knopf-Klassen,
+   `btn-secondary` ohne eigene Regel, `.btn-sm` mit !important auf 11 px).
+   Die sieben Regeln und die Messung: redesign/HANDWERK-LOGIK.md.
+
+   Gilt NUR im alten Design (das alle Kunden sehen). Melihs neues Design
+   (`data-design="neu"`, Pilot) bleibt unberührt. Wird als LETZTE Datei
+   geladen; zurücknehmen = eine <link>-Zeile in dashboard.html entfernen.
+
+   Spezifität: `:root:not([data-design="neu"]) .x` = (0,3,0) — gewinnt gegen
+   dashboard.css und Feinschliff ohne !important. `!important` steht nur dort,
+   wo ein Inline-Stil oder eine !important-Regel aus dashboard.css sonst
+   gewinnt; jede Stelle sagt, wogegen.
+   ========================================================================== */
+
+:root:not([data-design="neu"]) {
+  --hw-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --hw-linie: color-mix(in srgb, var(--text-main) 13%, transparent);
+  --hw-linie-hover: color-mix(in srgb, var(--text-main) 22%, transparent);
+  --hw-schatten: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --hw-schatten-haupt: inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 1px 2px rgba(16, 24, 40, 0.18);
+  --hw-radius: 8px;
+  --hw-radius-sm: 7px;
+}
+:root[data-theme="dark"]:not([data-design="neu"]) {
+  --hw-schatten: none;
+  --hw-schatten-haupt: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* ── Regel 1+2: drei Knopf-Arten, drei Höhen ───────────────────────────── */
+/* Grundform aller Knöpfe (ohne Symbolknöpfe, die bleiben quadratisch). */
+:root:not([data-design="neu"]) :is(.btn-primary, .btn-ghost, .btn-secondary, .btn-outline,
+  .btn-outline-sm, .btn-ghost-sm, .btn-danger, button.btn, a.btn) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: var(--hw-radius);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.005em;
+  word-spacing: 0.06em;   /* „+ Mitarbeiter“: das Leerzeichen der Schrift ist sehr schmal */
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 140ms var(--hw-ease), background-color 140ms ease,
+    border-color 140ms ease, box-shadow 140ms ease, color 140ms ease;
+}
+:root:not([data-design="neu"]) :is(.btn-primary, .btn-ghost, .btn-secondary, .btn-outline,
+  .btn-outline-sm, .btn-ghost-sm, .btn-danger, .btn) svg { flex-shrink: 0; }
+
+/* Haupt: dunkel, ein feiner Lichtrand oben — das „teure“ Detail. */
+:root:not([data-design="neu"]) .btn-primary {
+  background: var(--primary);
+  color: var(--bg-card-solid);
+  border: 1px solid transparent;
+  box-shadow: var(--hw-schatten-haupt);
+}
+
+/* Neben: weiß, feine Linie, leiser Schatten. Alle bisherigen Varianten
+   (ghost/secondary/outline) sind optisch EINE Art. */
+:root:not([data-design="neu"]) :is(.btn-ghost, .btn-secondary, .btn-outline, .btn-outline-sm,
+  .btn-ghost-sm, button.btn:not(.btn-primary):not(.btn-danger), a.btn:not(.btn-primary)) {
+  background: var(--bg-card-solid);
+  color: var(--text-main);
+  border: 1px solid var(--hw-linie);
+  box-shadow: var(--hw-schatten);
+}
+
+:root:not([data-design="neu"]) .btn-danger {
+  background: var(--bg-card-solid);
+  color: var(--danger, #b42318);
+  border: 1px solid color-mix(in srgb, var(--danger, #b42318) 30%, transparent);
+  box-shadow: var(--hw-schatten);
+}
+
+/* Klein: Tabellenzeilen, Karten-Aktionen. Gegen dashboard.css `.btn-sm`
+   (11 px / 4 px Radius mit !important) und Inline-Stile wie
+   `font-size:12px;padding:6px` → hier ebenfalls !important. */
+:root:not([data-design="neu"]) :is(.btn-sm, .btn-ghost-sm, .btn-outline-sm):not(.btn-icon) {
+  min-height: 28px !important;
+  padding: 0 10px !important;
+  font-size: 12.5px !important;
+  border-radius: var(--hw-radius-sm) !important;
+  gap: 5px;
+}
+
+/* Seitenaktion oben rechts: etwas höher, damit sie als Hauptweg liest. */
+:root:not([data-design="neu"]) .panel-header :is(.btn-primary, .btn-ghost, .btn-secondary) {
+  min-height: 36px;
+  padding-inline: 16px;
+}
+
+/* Hover nur mit echter Maus (Touch löst Hover beim Tippen aus). */
+@media (hover: hover) and (pointer: fine) {
+  :root:not([data-design="neu"]) .btn-primary:hover:not(:disabled) {
+    background: var(--primary-hover, var(--primary));
+    color: var(--bg-card-solid);
+  }
+  :root:not([data-design="neu"]) :is(.btn-ghost, .btn-secondary, .btn-outline, .btn-outline-sm,
+    .btn-ghost-sm, button.btn:not(.btn-primary):not(.btn-danger), a.btn:not(.btn-primary)):hover:not(:disabled) {
+    background: var(--bg-hover);
+    border-color: var(--hw-linie-hover);
+    color: var(--text-main);
+  }
+  :root:not([data-design="neu"]) .btn-danger:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--danger, #b42318) 7%, var(--bg-card-solid));
+    border-color: color-mix(in srgb, var(--danger, #b42318) 45%, transparent);
+  }
+}
+
+/* Regel 3: Drücken fühlt sich an. Gegen dashboard.css/Feinschliff, die
+   Knöpfe beim Hover anheben (translateY) — das wirkt verspielt. */
+:root:not([data-design="neu"]) :is(.btn-primary, .btn-ghost, .btn-secondary, .btn-outline,
+  .btn-outline-sm, .btn-ghost-sm, .btn-danger, .btn, .btn-icon):hover { transform: none; }
+:root:not([data-design="neu"]) :is(.btn-primary, .btn-ghost, .btn-secondary, .btn-outline,
+  .btn-outline-sm, .btn-ghost-sm, .btn-danger, .btn, .btn-icon):active:not(:disabled) {
+  transform: scale(0.97);
+}
+:root:not([data-design="neu"]) :is(.btn-primary, .btn-ghost, .btn-secondary, .btn-outline,
+  .btn-outline-sm, .btn-ghost-sm, .btn-danger, .btn):disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Mehrere Knöpfe in einer Tabellenzelle kleben sonst aneinander
+   („Ansehen“ + „Zahlung“ in Rechnungen). */
+:root:not([data-design="neu"]) td > :is(button, a.btn, a.btn-ghost) + :is(button, a.btn, a.btn-ghost) {
+  margin-left: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-design="neu"]) :is(.btn-primary, .btn-ghost, .btn-secondary, .btn-outline,
+    .btn-outline-sm, .btn-ghost-sm, .btn-danger, .btn, .btn-icon) { transition: none; }
+  :root:not([data-design="neu"]) :is(.btn-primary, .btn-ghost, .btn-secondary, .btn-outline,
+    .btn-outline-sm, .btn-ghost-sm, .btn-danger, .btn, .btn-icon):active { transform: none; }
+}
+
+/* ── Menü-Einklappgriff ────────────────────────────────────────────────── */
+/* Bisher ein 22×48-Reiter, der an der Seitenüberschrift klebte. Jetzt ein
+   runder Griff, mittig auf der Kante der Leiste (left setzt dashboard.js).
+   !important gegen Inline-Stil (dashboard.html) und Feinschliff. */
+:root:not([data-design="neu"]) #sidebarCollapseBtn {
+  width: 24px !important;
+  height: 24px !important;
+  top: 76px !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--hw-linie) !important;
+  background: var(--bg-card-solid) !important;
+  color: var(--text-muted) !important;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.10) !important;
+  transform: translateX(-50%);
+  font-size: 13px !important;
+  transition: left 0.22s var(--hw-ease), background-color 140ms ease, color 140ms ease !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  :root:not([data-design="neu"]) #sidebarCollapseBtn:hover {
+    color: var(--text-main) !important;
+    background: var(--bg-hover) !important;
+  }
+}
+/* Eingeklappt sitzt der Griff bei left:0 — dann nicht halb aus dem Bild. */
+:root:not([data-design="neu"]) #sidebarCollapseBtn[style*="left: 0px"] { transform: translateX(6px); }
+
+/* ── Team: Zeilenliste statt verstreuter Kacheln ───────────────────────── */
+/* Kleine Praxis = 1–8 Personen. Eine Liste über die ganze Breite liest
+   ruhiger als zwei 170-px-Kacheln am linken Rand. */
+:root:not([data-design="neu"]) #employeeList.employee-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--hw-schatten);
+  overflow: hidden;
+}
+:root:not([data-design="neu"]) #employeeList .emp-card {
+  display: grid;
+  /* Feste Aktionsspalte: sonst verschiebt sich die Linkspalte je nach Anzahl Knöpfe. */
+  grid-template-columns: 40px minmax(150px, 1fr) minmax(0, 1.6fr) 340px;
+  align-items: center;
+  gap: 6px 18px;
+  padding: 14px 18px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+  box-shadow: none;
+  transition: background-color 140ms ease;
+}
+:root:not([data-design="neu"]) #employeeList .emp-card:last-child { border-bottom: 0; }
+:root:not([data-design="neu"]) #employeeList .emp-card:hover {
+  transform: none;
+  box-shadow: none;
+  background: var(--bg-hover);
+  border-color: var(--border);
+}
+:root:not([data-design="neu"]) #employeeList .emp-card:has(.emp-urlaub-body:not([hidden])) { background: transparent; }
+:root:not([data-design="neu"]) #employeeList .emp-avatar {
+  width: 40px;
+  height: 40px;
+  font-size: 15px;
+  font-weight: 600;
+  background: var(--bg-sunken, var(--bg-hover));
+  color: var(--text-main);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+:root:not([data-design="neu"]) #employeeList .emp-ident { min-width: 0; }
+:root:not([data-design="neu"]) #employeeList .emp-name {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+:root:not([data-design="neu"]) #employeeList .emp-role { font-size: 12.5px; margin-top: 2px; }
+:root:not([data-design="neu"]) #employeeList .emp-badge { display: none; }
+:root:not([data-design="neu"]) #employeeList .emp-link-row { margin: 0; min-width: 0; gap: 4px; justify-content: flex-start; }
+:root:not([data-design="neu"]) #employeeList .emp-link-text { flex: 0 1 auto; min-width: 0; }
+:root:not([data-design="neu"]) #employeeList .emp-link-text {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  padding: 4px 0;
+  font-variant-numeric: tabular-nums;
+}
+@media (hover: hover) and (pointer: fine) {
+  :root:not([data-design="neu"]) #employeeList .emp-link-text:hover { color: var(--text-main); text-decoration: underline; }
+}
+:root:not([data-design="neu"]) #employeeList .emp-aktionen {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+/* Gegen dashboard.css `.emp-card .emp-neuer-code` (Umbruch, volle Breite). */
+:root:not([data-design="neu"]) #employeeList .emp-neuer-code { white-space: nowrap; width: auto; max-width: none; }
+:root:not([data-design="neu"]) #employeeList .emp-urlaub-chevron {
+  display: inline-block;
+  margin-left: 2px;
+  color: var(--text-faint, var(--text-muted));
+  transition: transform 180ms var(--hw-ease);
+}
+:root:not([data-design="neu"]) #employeeList .emp-urlaub-toggle[aria-expanded="true"] {
+  background: var(--bg-hover);
+  border-color: var(--hw-linie-hover);
+}
+:root:not([data-design="neu"]) #employeeList .emp-urlaub-body {
+  grid-column: 1 / -1;
+  max-width: none;
+  margin-top: 8px;
+  padding: 14px 0 2px !important;   /* gegen Inline-Padding im Template */
+}
+@media (max-width: 1100px) {
+  :root:not([data-design="neu"]) #employeeList .emp-card { grid-template-columns: 40px minmax(150px, 1fr) minmax(0, 1fr); }
+  :root:not([data-design="neu"]) #employeeList .emp-aktionen { grid-column: 2 / -1; justify-content: flex-start; }
+}
+@media (max-width: 760px) {
+  :root:not([data-design="neu"]) #employeeList .emp-card { grid-template-columns: 40px minmax(0, 1fr); }
+  :root:not([data-design="neu"]) #employeeList :is(.emp-link-row, .emp-aktionen) { grid-column: 1 / -1; }
+  :root:not([data-design="neu"]) #employeeList .emp-aktionen { justify-content: flex-start; }
+}
+
+/* Hinweis aus einem Satz ist keine Karte (Regel 6). */
+:root:not([data-design="neu"]) #panel-team .invite-card {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0 0 14px !important;   /* gegen Inline-Padding (dashboard.html) */
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* Anwesenheit: Kopfzeile mit den Datumsfeldern ruhig ausrichten
+   (Inline-Stile im Markup → !important). */
+:root:not([data-design="neu"]) #anwOwnerView :is(#anwDateFrom, #anwDateTo) {
+  min-height: 34px;
+  padding: 0 10px !important;
+  border: 1px solid var(--hw-linie) !important;
+  border-radius: var(--hw-radius) !important;
+  box-shadow: var(--hw-schatten);
+  font-variant-numeric: tabular-nums;
+}
+:root:not([data-design="neu"]) #anwLoadBtn { padding: 0 14px !important; font-size: 13px !important; }
+
+/* ── Tabellen: Aktionen klein und einheitlich (Regel 2) ────────────────── */
+/* Knöpfe in Tabellenzeilen sind immer „klein“ (28 px), egal welche Klasse
+   der Bereich vergeben hat (btn-outline in Ärzte, btn-ghost-sm in Rechnungen). */
+:root:not([data-design="neu"]) td :is(.btn-ghost, .btn-secondary, .btn-outline, .btn-danger,
+  .btn-primary):not(.btn-icon) {
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 12.5px;
+  border-radius: var(--hw-radius-sm);
+}
+/* Leistungen: „+ Einrichten“ brach in zwei Zeilen um und stand als blaue
+   Fläche; jetzt ein normaler Neben-Knopf. Gegen dashboard.css .btn-gkv-*. */
+:root:not([data-design="neu"]) :is(.btn-gkv-setup, .btn-gkv-edit) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: auto;
+  min-height: 28px;
+  padding: 0 10px;
+  white-space: nowrap;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-main);
+  background: var(--bg-card-solid);
+  border: 1px solid var(--hw-linie);
+  border-radius: var(--hw-radius-sm);
+  box-shadow: var(--hw-schatten);
+  transition: transform 140ms var(--hw-ease), background-color 140ms ease, border-color 140ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  :root:not([data-design="neu"]) :is(.btn-gkv-setup, .btn-gkv-edit):hover {
+    background: var(--bg-hover);
+    border-color: var(--hw-linie-hover);
+  }
+}
+:root:not([data-design="neu"]) :is(.btn-gkv-setup, .btn-gkv-edit):active { transform: scale(0.97); }
+/* Kennungen (P-1008, RE-2026-101) brechen nie mitten im Wort um. */
+:root:not([data-design="neu"]) #panel-kunden td:first-child,
+:root:not([data-design="neu"]) .mono { white-space: nowrap; font-variant-numeric: tabular-nums; }
+/* Ärzte: Aktionen rechtsbündig, ohne Lücke zur Zeilenkante. */
+:root:not([data-design="neu"]) .arzt-zeile-aktionen { white-space: nowrap; text-align: right; }

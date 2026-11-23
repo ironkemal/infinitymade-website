@@ -1,4 +1,4 @@
-import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261103mail1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261103mail1'; import { standorteFuerNutzer } from './module/standort-zuordnung.js?v=20261123sz1'; import { einstellungenKategorienAufbauen, einstellungenZeigeAbschnitt } from './module/einstellungen-nav.js?v=20261123ma1';
+import { emojisAus } from './module/ohne-emoji.js?v=20261123hw1'; import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261103mail1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261103mail1'; import { standorteFuerNutzer } from './module/standort-zuordnung.js?v=20261123sz1'; import { einstellungenKategorienAufbauen, einstellungenZeigeAbschnitt } from './module/einstellungen-nav.js?v=20261123ma1';
 import { oeffneLeistungsRaum, leistungsRaumPayload } from './module/leistungs-raum.js?v=20261103raum';
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
 import { planungVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261121f11';
@@ -8,7 +8,7 @@ import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261123kia
 import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261103mail1';
 import { zeigeKiRueckfrageDialog } from './module/ki-rueckfrage.js?v=20261115v703';
 import { dsgvoVerdrahten } from './module/dsgvo-client.js?v=20261002';
-import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, verdrahteEinrichtungscodeKnoepfe, mitarbeiterEntfernen } from './module/mitarbeiter-zugang.js?v=20261123xss1'; import { rechteReiterVorbereiten, standortAnlegenOeffnen } from './module/rechte-ohne-standort.js?v=20261122o251'; import { erstCheckinAnbieten } from './module/erst-checkin.js?v=20261123ec2';
+import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, verdrahteEinrichtungscodeKnoepfe, mitarbeiterEntfernen } from './module/mitarbeiter-zugang.js?v=20261123hw1'; import { rechteReiterVorbereiten, standortAnlegenOeffnen } from './module/rechte-ohne-standort.js?v=20261122o251'; import { erstCheckinAnbieten } from './module/erst-checkin.js?v=20261123ec2';
 import { DEFAULT_VORLAGE_SEEDS, fehlendeSeedZeilen, seedeVorlagen } from './module/vorlagen-seed.js?v=20260929';
 import { aktiveSitzungszeilen } from './module/sitzung-aktiv.js?v=20260914';
 import { storniereTermin } from './module/termin-storno.js?v=20260908';
@@ -8862,17 +8862,15 @@ async function loadTeam() {
     const shortLink = bookingLink.replace(/^https?:\/\/(www\.)?/i, '');
     return `<div class="emp-card" data-emp-id="${m.id}">
       <div class="emp-avatar">${avatar}</div>
-      <div class="emp-name">${name} ${m.id === currentSession.user.id ? t('me') : ''}</div>
-      <div class="emp-role">${m.role === 'owner' ? 'Geschäftsführung' : 'Mitarbeiter'}</div>
+      <div class="emp-ident"><div class="emp-name">${name} ${m.id === currentSession.user.id ? t('me') : ''}</div><div class="emp-role">${m.role === 'owner' ? 'Geschäftsführung' : 'Mitarbeiter'}</div></div>
       ${m.id === currentSession.user.id ? '<div class="emp-badge" title="Sie"></div>' : ''}
       <div class="emp-link-row">
         <a class="emp-link-text" href="${bookingLink}" target="_blank" rel="noopener" title="${bookingLink}">${shortLink}</a>
         <button class="btn-icon emp-copy-link" type="button" data-link="${bookingLink}" title="${t('anfragen_copy_link')}" aria-label="${t('anfragen_copy_link')}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
       </div>
-      ${einrichtungscodeKnopfHtml(m, isOwner)}
-      <div class="emp-urlaub-toggle" data-emp-id="${m.id}" style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;cursor:pointer;border-top:1px solid var(--border);color:var(--text-muted);font-size:12px;">
-        <span>🌴 Urlaub / Abwesenheit</span>
-        <span class="emp-urlaub-chevron" style="transition:transform 0.2s;">›</span>
+      <div class="emp-aktionen">
+        ${einrichtungscodeKnopfHtml(m, isOwner)}
+        <button type="button" class="btn-ghost btn-sm emp-urlaub-toggle" data-emp-id="${m.id}" aria-expanded="false"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>Abwesenheit</span><span class="emp-urlaub-chevron" aria-hidden="true">›</span></button>
       </div>
       <div class="emp-urlaub-body" data-emp-id="${m.id}" hidden style="padding:0 14px 14px;border-top:1px solid var(--border);">
         <div class="emp-urlaub-kpi" style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap;"></div>
@@ -8921,7 +8919,7 @@ async function loadTeam() {
       const body = list.querySelector(`.emp-urlaub-body[data-emp-id="${empId}"]`);
       const chevron = toggle.querySelector('.emp-urlaub-chevron');
       const isOpen = !body.hidden;
-      body.hidden = isOpen;
+      body.hidden = isOpen; toggle.setAttribute('aria-expanded', String(!isOpen));
       chevron.style.transform = isOpen ? '' : 'rotate(90deg)';
       if (!isOpen) loadEmpUrlaubSection(empId, body);
     });
@@ -13934,11 +13932,11 @@ async function init() {
     renderKontenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast, showConfirmModal }); renderDatevSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast }); verdrahteDatevExport({ supabase, showToast }); renderTerminerinnerungSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast }); renderMailversandSettings({ profile: currentProfile, apiBase: API, getToken: async () => (await supabase.auth.getSession())?.data?.session?.access_token || null, showToast, showConfirmModal });
     // Legende der Fußgrafik (Podologie) — ebenfalls Owner-Level in profiles.
     renderLegendeSettings(fussbefundCtx());
-    await renderSidebar(); await loadTeam();
+    await renderSidebar(); await loadTeam(); emojisAus(); // Kemal 23.11.: keine Emojis, beide Designs (redesign/HANDWERK-LOGIK.md)
     if (await import('./module/design-entscheidung.js?v=20261111p2b').then(m => m.setzeDesign({ wunsch: window.__pxDesignWunsch, vorschau: DESIGN_VORSCHAU, apiBase: API, token: async () => (await supabase.auth.getSession()).data.session?.access_token, aktuell: async () => (await supabase.auth.getSession()).data.session?.user?.id })).catch(() => 'alt') === 'neu') {
       const ansichtKontext = { uid: () => currentSession?.user?.id, rolle: () => currentProfile?.role, scope: () => [currentSession?.user?.id, currentProfile?.role, getOwnerId(), currentBusiness?.id].join(':') };
       startansicht = (await import('./module/startseite-ansicht.js?v=20261123p3')).montiereStartansicht({ ...ansichtKontext, sektor: getSector, api: () => API, springe: switchPanel, akte: id => window.openPatientDetail?.(id), neuLaden: loadTodayBookings, anfragenLaden: () => loadAnfragen('pending'), behandler: () => teamMembers.map(m => ({ id: m.id, name: m.business_name || m.full_name || (m.email || '').split('@')[0] })), hb: { supabase, ownerId: () => getOwnerId(), businessId: () => currentBusiness?.id ?? null, patientsGemeinsam: () => dataSharing.patients === true } });
-      (await import('./module/anamnese-abschnitte.js?v=20261114v402')).montiereAnamneseAbschnitte(ansichtKontext); try { (await import('./module/shell-ansicht.js?v=20261123p3')).montiereShellansicht({ ...ansichtKontext, name: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', suche: { ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, oeffnePatient: id => window.openPatientDetail?.(id), dokumente: { kontext: () => ({ supabase, rolle: currentProfile?.role, uid: currentSession?.user?.id, ownerId: getOwnerId(), businessId: currentBusiness?.id ?? null, patientsGemeinsam: dataSharing.patients === true, financeGemeinsam: dataSharing.finance === true }), ladeRechnungen: loadRechnungen, oeffneRechnung: id => { switchPanel('rechnungen'); return openInvView(id); }, oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); const ok = oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API }); if (!ok) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); return ok; } } } }); } catch (e) { console.error('[init] shell', e); }
+      (await import('./module/anamnese-abschnitte.js?v=20261114v402')).montiereAnamneseAbschnitte(ansichtKontext); try { (await import('./module/shell-ansicht.js?v=20261123hw1')).montiereShellansicht({ ...ansichtKontext, name: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', suche: { ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, oeffnePatient: id => window.openPatientDetail?.(id), dokumente: { kontext: () => ({ supabase, rolle: currentProfile?.role, uid: currentSession?.user?.id, ownerId: getOwnerId(), businessId: currentBusiness?.id ?? null, patientsGemeinsam: dataSharing.patients === true, financeGemeinsam: dataSharing.finance === true }), ladeRechnungen: loadRechnungen, oeffneRechnung: id => { switchPanel('rechnungen'); return openInvView(id); }, oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); const ok = oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API }); if (!ok) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); return ok; } } } }); } catch (e) { console.error('[init] shell', e); }
     } else { startansicht = (await import('./module/tageszentrale-ansicht.js?v=20261123p3')).montiereTageszentrale({ supabase, api: () => API, getOwnerId, getUserId: () => currentSession?.user?.id || null, istOwner: () => currentProfile?.role === 'owner', getName: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', getTeam: () => teamMembers.map(m => ({ id: m.id, name: m.business_name || m.full_name || (m.email || '').split('@')[0] })), bizScope, showToast, oeffneTerminNeu: (s) => prefillBookingModal(s || null), oeffneTerminAktion: (b) => openBookingActionModal(b), oeffnePatient: (id) => window.openPatientDetail?.(id), oeffnePatientNeu: () => openLeadModal(null), oeffneRezeptNeu: () => openRezeptModal(null, null), oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); if (!oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API })) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); }, oeffneAnfrage: async (id) => { await switchPanel('anfragen'); if (id) setTimeout(() => showAnfrageDetail(id), 220); }, oeffneWarteliste: async (id) => { await switchPanel('warteliste'); if (id) setTimeout(() => window.openWlEntry?.(id), 180); }, oeffneUeberblickFristen: () => { fokussiereUeberblickBereich('deadlines', { fristTab: 'alle' }); switchPanel('ueberblick'); }, wechslePanel: switchPanel, oeffneKalenderTag: async (tagIso) => { dayViewDate = new Date(`${tagIso}T12:00:00`); await switchPanel('calendar'); setCalendarView('day'); /* await: switchPanel setzt sonst danach 'week' (Live-Test 23.11.) */ } }); }
     await renderOverview();
     try { await renderGapsForDate(scheduleDate); dbg('[init] gapsForDate ok'); } catch (e) { console.error('[init] renderGapsForDate error', e); }
@@ -16916,7 +16914,7 @@ async function loadAnwesenheitSidePanel() {
     return;
   }
 
-  if (empView) empView.style.display = 'block';
+  if (empView) empView.style.display = 'none';
   if (ownerView) ownerView.style.display = 'block';
 
   // Varsayılan tarih aralığı: bu haftanın başı → bugün

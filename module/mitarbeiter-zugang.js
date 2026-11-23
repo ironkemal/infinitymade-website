@@ -267,7 +267,7 @@ export function zeigeEinrichtungscode(code, gueltigBis, name = '', hinweise = {}
  */
 export function einrichtungscodeKnopfHtml(m, istOwner) {
   if (!istOwner || !m || m.role !== 'employee') return '';
-  return `<button class="btn-ghost emp-neuer-code" type="button" data-emp-id="${m.id}" data-emp-name="${String(m.business_name || '').replace(/"/g, '&quot;')}" style="width:100%;font-size:12px;padding:6px;border-top:1px solid var(--border);">Passwort zurücksetzen (neuer Code)</button>`;
+  return `<button class="btn-ghost btn-sm emp-neuer-code" type="button" data-emp-id="${m.id}" data-emp-name="${String(m.business_name || '').replace(/"/g, '&quot;')}" title="Erzeugt einen neuen Einrichtungscode für die Mitarbeiterin">Passwort zurücksetzen</button>`;
 }
 
 /**

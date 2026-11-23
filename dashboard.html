@@ -34,6 +34,7 @@
   <link rel="stylesheet" href="design/verwaltung.css?v=20261111p3">
   <link rel="stylesheet" href="dashboard-ueberblick.css?v=20261121blk3">
   <link rel="stylesheet" href="dashboard-start.css?v=20261121f13">
+  <link rel="stylesheet" href="praxura-handwerk.css?v=20261123hw1">
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <!-- Cropper.js lokal statt cdnjs (27.08.2026) — gleiche Datei, gleiche Version,
        Pruefsumme gegen unpkg verglichen. Grund: dies ist die eingeloggte App, in der
@@ -1049,8 +1050,9 @@
             <!-- Owner rapor -->
             <div id="anwOwnerView" style="display:none;">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
-                <h3 style="margin:0;font-size:15px;font-weight:700;">📋 Anwesenheit</h3>
+                <h3 style="margin:0;font-size:15px;font-weight:700;">Anwesenheit</h3>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                  <a href="/attendance.html" class="btn-ghost anw-checkin-link">Ein- und auschecken</a>
                   <input type="date" id="anwDateFrom" style="padding:7px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-card-solid);color:var(--text-main);font-size:13px;" />
                   <input type="date" id="anwDateTo" style="padding:7px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-card-solid);color:var(--text-main);font-size:13px;" />
                   <button class="btn-primary" id="anwLoadBtn" style="padding:7px 14px;font-size:13px;">Laden</button>
@@ -6016,7 +6018,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261123ma1"></script>
+  <script type="module" src="dashboard.js?v=20261123hw2"></script>
 </body>
 
 </html>

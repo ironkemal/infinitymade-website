@@ -8,7 +8,7 @@ import { verdrahteProfil, profilAuffrischen } from './kopf-profil.js?v=20261110p
 import { verdrahteNeu } from './kopf-neu.js?v=20261110p01shell3';
 import { verdrahteSchublade } from './schublade-neu.js?v=20261113v212b';
 import { montierePatientensuche } from './kopf-suche-ansicht.js?v=20261123p3';
-import { emojisAus, emojisZurueck } from './ohne-emoji.js?v=20261114v303';
+import { emojisAus } from './ohne-emoji.js?v=20261123hw1';
 import { planeUmzug } from './leiste-zuordnung.js?v=20261112v205';
 import { montiereFormularAbschnitte } from './formular-abschnitte.js?v=20261114v402';
 
@@ -86,7 +86,8 @@ export function montiereShellansicht(k) {
   function aktualisieren() {
     if (String(k.uid?.()) !== uid || k.rolle?.() !== rolle || String(k.scope?.()) !== scope) gesperrt = true;
     const an = aktiv();
-    if (an) emojisAus(); else emojisZurueck();
+    // Kemal 23.11.2026 (redesign/HANDWERK-LOGIK.md, Regel 4): keine Emojis in BEIDEN Designs.
+    emojisAus();
     if (an) html.dataset.pxShell = 'v2'; else delete html.dataset.pxShell;
     html.classList.toggle('px-profil-bereit', an && !!profil);
     html.classList.toggle('px-neu-bereit', an && !!neu);

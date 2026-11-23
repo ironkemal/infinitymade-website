@@ -2,7 +2,7 @@
  * ohne-emoji.js — keine Emojis in der Oberfläche des neuen Designs (Melih 26.10.2026, hohe Priorität:
  * „keine Emojis … soll nicht nach KI aussehen“; STATUS V3.W).
  *
- * Nur im neuen Design (geladen über module/shell-neu.js); das alte Design bleibt unverändert.
+ * Seit 23.11.2026 (Kemal, redesign/HANDWERK-LOGIK.md) in BEIDEN Designs: dashboard.js startet emojisAus() nach dem Laden.
  * Rund 120 Bild-Emojis stehen verteilt in dashboard.js, dashboard.html und ~30 Modulen. Statt sie
  * jetzt in allen Quelltexten zu ersetzen (beide Designs, Altvergleich), werden sie hier beim Rendern
  * zentral behandelt:
