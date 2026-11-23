@@ -4363,8 +4363,9 @@ textarea {
    ============================ */
 /* Seitennavigation (module/einstellungen-nav.js, Pflichtpunkt 8 + Phase 7b, 23.11.2026) */
 .einst-layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 20px; align-items: start; max-width: 800px; }
-.einst-nav { position: sticky; top: 12px; }
-.einst-nav-liste { display: flex; flex-direction: column; gap: 2px; padding: 6px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); }
+.einst-nav { position: sticky; top: 12px; display: flex; flex-direction: column; max-height: calc(100vh - var(--topbar-h, 60px) - 92px); max-height: calc(100dvh - var(--topbar-h, 60px) - 92px); } /* 92 px = Seitenkopf „Einstellungen“ (77) + Rand: passt schon ungescrollt ganz ins Bild */
+/* 16 Einträge + 5 Überschriften = 918 px, sichtbar 708/740 px (1024/1280, 23.11.2026): eigene Scrollfläche, Suche bleibt oben */
+.einst-nav-liste { overflow-y: auto; overscroll-behavior: contain; min-height: 0; display: flex; flex-direction: column; gap: 2px; padding: 6px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); }
 .einst-nav-eintrag { display: flex; align-items: center; text-decoration: none; text-align: left; padding: 9px 12px; min-height: 40px; border: 0; border-radius: 8px; background: none; color: var(--text-muted); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
 .einst-nav-eintrag:hover { background: var(--bg-hover); color: var(--text-main); }
 /* aktiver Bereich: nur Variablen (dunkel/hell); Balken links wie .sidebar-item.active, sonst gleich der Hover-Fläche */
@@ -4392,9 +4393,14 @@ textarea {
 /* Gefahrenzone (Konto & Daten löschen) */
 .einst-gefahrenzone { margin-top: 18px; padding: 14px; border: 1px solid var(--danger); border-radius: 10px; background: var(--danger-dim); }
 .einst-gefahrenzone-titel { font-size: 12px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--danger); margin-bottom: 6px; }
+/* Tablet quer / Touch: Einträge + Suche ≥ 44 px (gemessen 40 px bei 1024) */
+@media (max-width: 1024px), (pointer: coarse) {
+  .einst-nav-eintrag, .einst-suche { min-height: 44px; }
+  #panel-settings .einst-gefahrenzone button { min-height: 44px; } /* „Konto & Daten löschen“ 34 px gemessen; ID nötig gegen :root:not([data-design="neu"]) :is(.btn-ghost…) { min-height: 34px } */
+}
 @media (max-width: 768px) {
   .einst-layout { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-  .einst-nav { position: static; }
+  .einst-nav { position: static; max-height: none; }
   .einst-nav-liste { display: none; }
   .einst-nav-auswahl { display: block; min-height: 44px; }
   .einst-suche { min-height: 44px; font-size: 16px; } /* Touch-Ziel ≥ 44 px (vorher 41 px gemessen); 16 px gegen iOS-Zoom */

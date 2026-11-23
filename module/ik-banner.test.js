@@ -44,3 +44,10 @@ test('IK, KIM und Telematik-ID haben je genau einen Speicherweg', () => {
   const abr = readFileSync(new URL('./abrechnung-einstellungen.js', import.meta.url), 'utf8');
   assert.match(abr, /\.update\(\{ ik_number: ik \}\)/);
 });
+
+test('„IK speichern“ leert den Pflichtangaben-Zwischenspeicher des Belegdrucks (Review 23.11.2026)', () => {
+  const abr = readFileSync(new URL('./abrechnung-einstellungen.js', import.meta.url), 'utf8');
+  const i = abr.indexOf("getElementById('ikSaveBtn')");
+  assert.ok(abr.slice(i, abr.indexOf("deps.showToast(ik ? 'IK gespeichert", i)).includes('deps.cacheLeeren?.()'));
+  assert.match(source, /wireAbrechnungSettings\(\{ cacheLeeren: abrechnungsprofilCacheLeeren,/);
+});

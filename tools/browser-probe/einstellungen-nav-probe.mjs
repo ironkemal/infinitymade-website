@@ -51,6 +51,10 @@ try {
       await page.evaluate(() => { location.hash = '#settings/abo'; });
       await ruhe(page, 300);
       if (!(await sichtbar(page, '#settingsAccountSection'))) befunde.push(`${breite}px: #settings/abo öffnet „Paket & Abo“ nicht`);
+      if (breite === 1280) {
+        const imListenfenster = await page.evaluate(() => { const l = document.querySelector('.einst-nav-liste'); const a = l?.querySelector('[aria-current="page"]'); if (!l || !a) return false; const lr = l.getBoundingClientRect(), ar = a.getBoundingClientRect(); return ar.top >= lr.top - 1 && ar.bottom <= lr.bottom + 1; });
+        if (!imListenfenster) befunde.push('1280px: aktiver Eintrag „Paket & Abo“ liegt außerhalb des sichtbaren Teils der Navigation');
+      }
       // alter Link (bis Phase 7b) wird weitergeleitet
       await page.evaluate(() => { location.hash = '#settings/allgemein'; });
       await ruhe(page, 300);
@@ -59,6 +63,16 @@ try {
       await page.evaluate(() => { location.hash = '#settings/datenschutz'; });
       await ruhe(page, 300);
       if (!(await sichtbar(page, '.einst-gefahrenzone #dsgvoDeleteBtn'))) befunde.push(`${breite}px: Gefahrenzone mit „Konto & Daten löschen“ nicht sichtbar`);
+      // Box-Fall: ohne Lösch-Knopf (dsgvo-client entfernt ihn) — Zone aus, Seite bleibt bedienbar (Review 23.11.: Endlosschleife)
+      if (breite === 1280) {
+        await page.evaluate(() => document.getElementById('dsgvoDeleteBtn')?.remove());
+        const antwort = await Promise.race([
+          page.evaluate(() => new Promise((r) => setTimeout(() => r(document.querySelector('.einst-gefahrenzone')?.hidden === true ? 'aus' : 'sichtbar'), 300))),
+          new Promise((r) => setTimeout(() => r('haengt'), 5000)),
+        ]);
+        if (antwort !== 'aus') befunde.push(`Box-Fall Gefahrenzone ohne Knopf: ${antwort === 'haengt' ? 'Seite hängt (Endlosschleife)' : 'Zone bleibt sichtbar'}`);
+        if (antwort === 'haengt') throw new Error('Seite hängt — Probe abgebrochen');
+      }
       // Verweis „Auch hier einstellen“ springt in den Arbeitsbereich
       await page.evaluate(() => { location.hash = '#settings/termine'; });
       await ruhe(page, 300);

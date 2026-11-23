@@ -241,6 +241,8 @@ export function einstellungenKategorienAufbauen(o = {}) {
     });
     beob.observe(inhalt, { subtree: true, childList: true, attributes: true, attributeFilter: ['hidden', 'style'] });
   }
+  // Rolle bei jedem Aufruf übernehmen (erster Aufruf ohne Argumente darf Mitarbeitern nicht dauerhaft alles zeigen).
+  if (typeof o.istOwner === 'function') kat.istOwner = o.istOwner;
   anwenden();
   return kat;
 }
@@ -288,7 +290,9 @@ function anwenden() {
   kat.leer.hidden = !q.trim() || treffer > 0;
   // Gefahrenzone ohne Knopf (Box entfernt „Konto löschen“, dsgvo-client.js) nicht als leeren roten Kasten zeigen.
   for (const zone of kat.inhalt.querySelectorAll('.einst-gefahrenzone')) {
-    zone.hidden = ![...zone.querySelectorAll('button')].some((b) => !b.hidden && b.style.display !== 'none');
+    // toggleAttribute ändert nur bei echtem Wechsel — `hidden = true` erzeugt sonst bei jedem Lauf eine Mutation,
+    // der Beobachter ruft anwenden() erneut → Endlosschleife, Seite friert ein (Review 23.11.2026, Box ohne Löschknopf).
+    zone.toggleAttribute('hidden', ![...zone.querySelectorAll('button')].some((b) => !b.hidden && b.style.display !== 'none'));
   }
   const sig = bereiche.map((b) => b.slug).join(',') + '|' + kat.aktiv + '|' + (q.trim() ? 's' : '');
   if (sig === kat.signatur) return;
@@ -305,6 +309,13 @@ function anwenden() {
     }
   }
   kat.liste.replaceChildren(...knoten);
+  // Aktiven Eintrag in der (selbst scrollenden) Liste sichtbar halten — ohne die Seite zu bewegen (mobil-ui 23.11.).
+  const aktivEl = /** @type {HTMLElement|null} */ (kat.liste.querySelector('[aria-current="page"]'));
+  if (aktivEl && kat.liste.scrollHeight > kat.liste.clientHeight) {
+    const oben = aktivEl.offsetTop - kat.liste.offsetTop;
+    if (oben < kat.liste.scrollTop) kat.liste.scrollTop = Math.max(0, oben - 8);
+    else if (oben + aktivEl.offsetHeight > kat.liste.scrollTop + kat.liste.clientHeight) kat.liste.scrollTop = oben + aktivEl.offsetHeight - kat.liste.clientHeight + 8;
+  }
   kat.auswahl.replaceChildren(...nachOber(bereiche).map(([ober, liste]) => {
     const opts = liste.map((b) => new Option(b.titel, b.slug, false, b.slug === kat.aktiv));
     if (!ober) return opts;
