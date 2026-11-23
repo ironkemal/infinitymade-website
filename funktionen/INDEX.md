@@ -3,7 +3,7 @@
 > Üretim: 2026-11-23 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4922 fonksiyon** (4799 JS · 96 bash · 27 ps1) · 606 dosya · 42 sidebar modülü
+**4936 fonksiyon** (4813 JS · 96 bash · 27 ps1) · 607 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -619,6 +619,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `onEsc` — dashboard.js:5798 · module/rechnung-leistung-picker.js:48 · module/verordnung-einheiten.js:304 · module/verordnung-einheiten.js:402 · module/verordnung-einheiten.js:596 · module/zuzahlung-befreiung.js:156 · module/zuzahlung-korrektur.js:214
 - `wert` — module/anfrage-bearbeiten.js:186 · module/fahrtenbuch-regeln.js:307 · module/hausbesuch-route.js:33 · module/mail-entwurf.js:55 · module/mailversand.js:324 · module/verordnung-pruefen-knopf.js:44 · setup.js:290
 - `zahl` — api-backend/lib/datev.js:358 · api-backend/lib/gps-checkin.js:12 · module/frequenz-pruefung.js:150 · module/rechnung-summen.js:14 · module/rezept-in-maske.js:223 · module/startseite-darstellung.js:168 · module/startseite-geld.js:18
+- `anwenden` — module/einstellungen-navigation.js:176 · module/kalender-auswahl.js:69 · module/rechnung-steuer.js:295 · module/schublade-neu.js:42 · module/tageszentrale-raster.js:85 · module/termin-konflikte.js:28
 - `fehler` — api-backend/billing/api/artefakt-historie.js:37 · api-backend/billing/api/artefakt-registry.js:21 · api-backend/billing/api/physio-publikation-ablauf.js:23 · api-backend/billing/codes/physio-leistungszeilen.js:32 · api-backend/lib/gmail-senden.js:66 · module/therapiebericht.js:205
 - `feld` — module/abrechnung-auswahl.js:985 · module/datev-einstellungen.js:71 · module/fussbefund.js:307 · module/mailversand.js:287 · module/rezeptinfo-geld.js:385 · module/termin-konflikte.js:3
 - `laden` — module/kopf-dokumente.js:55 · module/mailversand.js:193 · module/mein-urlaub.js:6 · module/plz.js:40 · module/start-aufgaben.js:351 · module/startseite-handlungsbedarf-karte.js:44
@@ -629,7 +630,6 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `sha256Hex` — api-backend/billing/api/abrechnung.routes.js:100 · api-backend/billing/api/artefakt-registry.js:28 · api-backend/billing/api/zuzahlungsforderung.routes.js:39 · api-backend/billing/dta/zuzahlungsforderung-ursprung.js:145 · api-backend/merkez-istemci/signatur.js:26 · module/einwilligung-texte.js:440
 - `zeigeFehler` — module/abrechnung-detail.js:576 · module/abrechnung-detail.js:618 · module/verordnung-einheiten.js:552 · module/zuzahlung-befreiung.js:150 · module/zuzahlung-korrektur.js:208 · widget/booking-widget.js:362
 - `add` — api-backend/ai/pii-mask.js:295 · api-backend/billing/dta/output-validator.js:164 · api-backend/lib/verbindungen.js:38 · module/feiertage.js:57 · module/podo-vorgeschichte.js:37
-- `anwenden` — module/kalender-auswahl.js:69 · module/rechnung-steuer.js:295 · module/schublade-neu.js:42 · module/tageszentrale-raster.js:85 · module/termin-konflikte.js:28
 - `datumDe` — api-backend/lib/mail-entwurf.js:29 · module/datum.js:78 · module/ehemalige-mitarbeiter.js:27 · module/kopf-dokumente.js:36 · module/standort-plan.js:394
 - `main` — api-backend/check_diagnosegruppen_icd.js:101 · api-backend/merkez-istemci/kayit.js:230 · api-backend/preise_autoupdate.mjs:211 · api-backend/preise_pruefen.mjs:261 · api-backend/sync_heilmittel_katalog.js:159
 - `markiere` — module/kalender-auswahl.js:46 · module/leistung-farbwahl.js:51 · module/planung-bruecke.js:138 · module/verordnung-liste.js:301 · widget/booking-widget.js:107

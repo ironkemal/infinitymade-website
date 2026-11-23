@@ -1,4 +1,4 @@
-import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261103mail1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261103mail1'; import { standorteFuerNutzer } from './module/standort-zuordnung.js?v=20261123sz1';
+import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261103mail1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261103mail1'; import { standorteFuerNutzer } from './module/standort-zuordnung.js?v=20261123sz1'; import { mountEinstellungenNavigation, einstellungenZeigeAbschnitt } from './module/einstellungen-navigation.js?v=20261123en1';
 import { oeffneLeistungsRaum, leistungsRaumPayload } from './module/leistungs-raum.js?v=20261103raum';
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
 import { planungVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261121f11';
@@ -756,7 +756,7 @@ function showMyBookingLink() {
 // ein Knopf, der dorthin springt, ist der Weg. Fokus statt nur Scroll, damit der
 // Cursor im richtigen Feld steht.
 async function gehZuEinstellung(sectionId, focusId) {
-  await switchPanel('settings'); const ziel = () => document.getElementById(sectionId); // sofort + zweiter Lauf: Abschnitte darueber rendern nach
+  await switchPanel('settings'); einstellungenZeigeAbschnitt(sectionId); const ziel = () => document.getElementById(sectionId); // sofort + zweiter Lauf: Abschnitte darueber rendern nach
   ziel()?.scrollIntoView({ block: 'start' }); setTimeout(() => ziel()?.scrollIntoView({ block: 'start' }), 350); // (Live 10.11.2026: smooth blieb auf halbem Weg stehen)
   if (focusId) setTimeout(() => document.getElementById(focusId)?.focus(), 400);
 }
@@ -9369,7 +9369,7 @@ function openEmpDetail(empId) {
   }
 
   document.getElementById('empDetailName').textContent = m.business_name || m.email?.split('@')[0] || '—';
-  document.getElementById('empDetailRole').textContent = m.role || 'employee';
+  document.getElementById('empDetailRole').textContent = m.role === 'owner' ? 'Geschäftsführung' : 'Mitarbeiter'; // vorher roh „employee“ (Box-Test 22.11.)
   document.getElementById('empDetailEmail').textContent = m.email || '—';
   const anredeSel = document.getElementById('empDetailAnrede');
   if (anredeSel) {
@@ -10370,7 +10370,7 @@ async function loadSettings() {
       showToast,
       showConfirmModal
     }).catch(() => { kiMount.textContent = 'KI-Einstellungen derzeit nicht verfügbar.'; });
-  } void mountSystemstatus(document.getElementById('settingsSystemSection'), { apiBase: API, getToken: async () => (await supabase.auth.getSession())?.data?.session?.access_token || null }); // Box-Test P1: Systemstatus (Server entscheidet Sichtbarkeit)
+  } void mountSystemstatus(document.getElementById('settingsSystemSection'), { apiBase: API, getToken: async () => (await supabase.auth.getSession())?.data?.session?.access_token || null }); mountEinstellungenNavigation({ istOwner: () => currentProfile?.role === 'owner', wechslePanel: switchPanel }); // Box-Test P1: Systemstatus (Server entscheidet Sichtbarkeit)
 
   document.getElementById('setBiz').value = currentProfile.business_name || '';
   const sectorEl = document.getElementById('setSectorLabel');
