@@ -67,3 +67,27 @@ test('Chrome1911 geschlossener Berliner Kalendertag: Bestand bleibt änderbar, n
   assert.equal(terminPruefen(d,{...termin,id:b.id}).find(k => k.grund.includes('geschlossen')).sperre, false);
   assert.equal(terminPruefen(d,{...termin,id:b.id,start:start+60000}).find(k => k.grund.includes('geschlossen')).sperre, true);
 });
+
+// Pflichtpunkt „Praxis geschlossen" (23.11.2026): Konsistenz aller Quellen, bevor ein Fix geraten wird.
+// Quellen: businesses.closed_days (daten.geschlossen, nur mit Standort), custom_days closed/holiday,
+// custom_days mit Uhrzeit (Teilschließung). Montag 23.11.2026 = Wochentag 1.
+const geschlossenGrund = (/** @type {any} */ d, /** @type {any} */ t = termin) => terminPruefen(d, t).find(k => k.grund === 'Praxis geschlossen.');
+test('geschlossen: Wochentag aus closed_days sperrt neue Termine, andere Wochentage nicht', () => {
+  const d = stand(); d.geschlossen = [1];
+  assert.equal(geschlossenGrund(d)?.sperre, true);
+  d.geschlossen = [0, 6];
+  assert.equal(geschlossenGrund(d), undefined);
+});
+test('geschlossen: Feiertag (holiday) wirkt wie closed', () => {
+  const d = stand(); d.tage.push({ date: '2026-11-23', type: 'holiday' });
+  assert.equal(geschlossenGrund(d)?.sperre, true);
+});
+test('geschlossen: Teilschließung mit Uhrzeit trifft nur überlappende Termine', () => {
+  const d = stand(); d.tage.push({ date: '2026-11-23', type: 'closed', start_time: '09:30:00', end_time: '11:00:00' });
+  assert.equal(geschlossenGrund(d)?.sperre, true, '10:00–10:25 liegt in 09:30–11:00');
+  assert.equal(geschlossenGrund(d, { ...termin, start: Date.parse('2026-11-23T10:30Z') }), undefined, '11:30 liegt danach');
+});
+test('geschlossen: ohne Standort (Einzelpraxis) liefert die Planung keine Schließtage — closed_days greift dann nicht', () => {
+  const d = stand(); d.geschlossen = [];
+  assert.equal(geschlossenGrund(d), undefined);
+});
