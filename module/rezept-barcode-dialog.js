@@ -1,4 +1,4 @@
-import { scanneRezeptLokal, pruefeScanDatei, zaehleBarcode } from './rezept-barcode-scan.js?v=20261123pdf1';
+import { scanneRezeptLokal, pruefeScanDatei, zaehleBarcode } from './rezept-barcode-scan.js?v=20261123kb1';
 import { uebernehmeRezeptInMaske } from './rezept-in-maske.js?v=20261117p33';
 import { entferneBarcodeBestaetigung } from './rezept-barcode-bestaetigung.js?v=20261007m3';
 
@@ -18,13 +18,17 @@ export function initBarcodeDialog(deps) {
     const scanController=controller;
     if(token!==epoch || !scanController) return;
     g('rxScanChooser').style.display='none';g('rxScanCamera').style.display='none';g('rxScanProcessing').style.display='';g('rxScanError').style.display='none';
+    let leseFehler=true;
     try {
       const result=await scanneRezeptLokal(dataUri,{signal:scanController.signal});
+      leseFehler=false;
       if(token!==epoch || scanController.signal.aborted) return;
       await uebernehmen(result,token,scanController);
     } catch(e) {
       if(token!==epoch || e.name==='AbortError') return;
-      failed=true;chooser();error('Barcode konnte nicht übernommen werden. Bitte das Bild erneut versuchen oder von Hand erfassen.');
+      // Testbox 23.11.2026: die verständliche Meldung des Lesers („kein Barcode“, „zu groß“, „mehrere“)
+      // wurde hier durch einen Sammeltext ersetzt — Nutzer hielt ein Bild ohne Barcode für einen Lesefehler.
+      failed=true;chooser();error(leseFehler && e?.message ? e.message : 'Barcode konnte nicht übernommen werden. Bitte das Bild erneut versuchen oder von Hand erfassen.');
     } finally {if(handoff===token) handoff=null;if(token===epoch) reading=false;}
   }
   async function uebernehmen(result, token, scanController) {

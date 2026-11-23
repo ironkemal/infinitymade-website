@@ -5,7 +5,9 @@ import { parseMuster13Barcode } from './rezept-barcode.js?v=20261007m3';
 
 const MAX_BYTES = 20 * 1024 * 1024;
 const MAX_PIXELS = 12_000_000;
-const KEIN_BARCODE = 'Kein unterstützter Muster-13-Barcode erkannt. Bitte Verordnung von Hand erfassen.';
+// Testbox 23.11.2026: Musterbilder aus dem Internet und handschriftliche Verordnungen haben KEINEN Barcode —
+// nur vom Arztprogramm gedruckte Muster 13 tragen den 2D-Barcode (PDF417). Das muss die Meldung sagen.
+const KEIN_BARCODE = 'Auf dem Bild wurde kein Muster-13-Barcode gefunden. Nur vom Arztprogramm gedruckte Verordnungen tragen diesen Barcode — handschriftliche Verordnungen und Musterbilder nicht. Ist er vorhanden, bitte schärfer und näher fotografieren; sonst von Hand erfassen.';
 let libs;
 let pdfLib;
 

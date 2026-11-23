@@ -199,6 +199,21 @@
       } finally {clearInterval(keep);liveStream.getTracks().forEach(t=>t.stop());navigator.mediaDevices.getUserMedia=oldCapture;}
       g('rezeptModal').hidden=true;await tick();
     }
+    // Testbox 23.11.2026: Bild ohne Barcode (Musterbild aus dem Internet) → die Meldung des Lesers
+    // muss sichtbar bleiben, nicht der Sammeltext „Barcode konnte nicht übernommen werden“.
+    {
+      const leer=document.createElement('canvas');leer.width=800;leer.height=1100;
+      const lc=leer.getContext('2d');lc.fillStyle='#fff';lc.fillRect(0,0,800,1100);lc.fillStyle='#c00';lc.font='40px sans-serif';lc.fillText('Heilmittelverordnung 13',60,80);
+      const leerBlob=await new Promise(r=>leer.toBlob(r,'image/png'));
+      g('rezeptScanBtn').click();
+      const tl=new DataTransfer();tl.items.add(new File([leerBlob],'ohne-barcode.png',{type:'image/png'}));
+      g('rxScanFileInput').files=tl.files;g('rxScanFileInput').dispatchEvent(new Event('change',{bubbles:true}));
+      const leerUntil=Date.now()+20000;
+      while(g('rxScanError').style.display==='none' && Date.now()<leerUntil) await new Promise(r=>setTimeout(r,100));
+      check('Bild ohne Barcode zeigt „kein Muster-13-Barcode“ statt Sammeltext',/kein Muster-13-Barcode gefunden/.test(g('rxScanError').textContent)
+        && !/nicht übernommen/.test(g('rxScanError').textContent));
+      scanModal.hidden=true;await tick();
+    }
     g('rezeptScanBtn').click();
     const png=await(await realFetch('./fixtures/m3/muster13.png')).blob();
     const transfer=new DataTransfer();transfer.items.add(new File([png],'synthetic.png',{type:'image/png'}));

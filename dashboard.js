@@ -100,7 +100,7 @@ import { rendereVeroKarten, ladeTerminVerordnungen, ladePatientenEntwuerfe, waeh
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl, bindeAnTerminNachAnlage } from './module/verordnung-anlegen.js?v=20261123p3';
 import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261117p33';
-import { initBarcodeDialog } from './module/rezept-barcode-dialog.js?v=20261123pdf1';
+import { initBarcodeDialog } from './module/rezept-barcode-dialog.js?v=20261123kb1';
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
 import { mountTerminLeistungen, wechsleLeistungsoptionen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen, schlageBefundungVor } from './module/termin-leistungen.js?v=20261119physio';
 import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261123p3';
