@@ -3,7 +3,7 @@
  * Current picker has refresh/close, not the older design checkout's invalidate API.
  */
 import { attachPatientSearch } from '../patient-suche.js?v=20260906';
-import { createDokumentSuche, dokumenteErlaubt, dokumentHinweis, dokumentScopeKey, mitFehlerMelder } from './kopf-dokumente.js?v=20261121pag1';
+import { createDokumentSuche, dokumenteErlaubt, dokumentHinweis, dokumentScopeKey, mitFehlerMelder } from './kopf-dokumente.js?v=20261123p3';
 import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20261121pag1';
 
 const ART_TEXT = { patient: 'Patient', verordnung: 'Verordnung', rechnung: 'Rechnung' };

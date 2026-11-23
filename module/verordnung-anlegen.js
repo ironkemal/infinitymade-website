@@ -22,7 +22,7 @@
  * kommt.
  */
 
-import { bindePodoSerieVonRezept } from './podo-einheiten.js?v=20261121pag1';
+import { bindePodoSerieVonRezept } from './podo-einheiten.js?v=20261123p3';
 
 /** Patient, fuer den die Wahl geoeffnet wurde — `null` heisst „noch offen". */
 let _leadId = null;

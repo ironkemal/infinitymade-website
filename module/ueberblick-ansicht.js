@@ -34,7 +34,7 @@ import {
   abwesenheitKachelAuswerten,
   nichtErscheinerAufbereiten,
   suchePasst,
-} from './ueberblick-listen.js?v=20261121ubl2';
+} from './ueberblick-listen.js?v=20261123p3';
 import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_VOLL } from './verordnung-fristen-laden.js?v=20261121f01';
 import { alsBerlinDatum, berlinTagesgrenzen } from './berlin-datum.js';
 import { fmtEur } from './geld.js?v=20260909';

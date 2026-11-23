@@ -5,7 +5,7 @@
 import { begruessung, heutigeTermine, alsNaechstes, abstandText, dauerMin, tageszeile, zuErledigen, nutzbareLuecken } from './startseite-darstellung.js?v=20261113f603';
 import { uhrzeitBerlin } from './termin-heute.js?v=20261004m113';
 import { alsBerlinDatum } from './berlin-datum.js';
-import { createHandlungsbedarfKarte, handlungsbedarfHtml } from './startseite-handlungsbedarf-karte.js?v=20261117v906';
+import { createHandlungsbedarfKarte, handlungsbedarfHtml } from './startseite-handlungsbedarf-karte.js?v=20261123p3';
 import { ladeGeld, geldHtml } from './startseite-geld.js?v=20261121f02';
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const SVG = (p, w = 18) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
