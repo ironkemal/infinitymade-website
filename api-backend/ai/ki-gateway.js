@@ -29,6 +29,7 @@ import { chat, transcribe } from './azureClient.js';
 import { createAiConfig } from './ki-config.js';
 import { validateTaskPayload } from './ki-schema.js';
 import { createOwnerDecisionStore } from './ki-einwilligung.js';
+import { getAufgabenSperreStore, aufgabeErlaubt } from './ki-aufgaben-sperre.js';
 import { loadTenantDictionary } from './ki-woerterbuch.js';
 import { createConfirmationService } from './ki-rueckfrage.js';
 import { createJetonClient } from './ki-jeton.js';
@@ -196,6 +197,16 @@ async function getConfirmationService() {
   return _defaultConfirmationService;
 }
 
+/**
+ * Aufgaben-Sperre des Praxisinhabers (ki-aufgaben-sperre.js): nur zusätzliche Sperre, fail closed.
+ * Wird an JEDER Stelle geprüft, an der auch die Freischaltung erneut geprüft wird (guvenlik 23.11.2026).
+ * @param {string} task @param {{ tenantId: string }} auth @param {any} dependencies
+ */
+async function pruefeAufgabeFrei(task, auth, dependencies) {
+  const sperre = dependencies.aufgabenSperre || await (dependencies.aufgabenSperreStore || getAufgabenSperreStore()).read(auth.tenantId);
+  if (!aufgabeErlaubt(task, sperre)) throw createGatewayError('Diese KI-Aufgabe hat der Praxisinhaber ausgeschaltet', 503, 'AI_TASK_GESPERRT');
+}
+
 export function getOwnerDecisionStore() {
   if (!_defaultOwnerDecisionStore) {
     _defaultOwnerDecisionStore = createOwnerDecisionStore();
@@ -279,6 +290,7 @@ export async function executeKiTask({
   if (!ownerDecision || ownerDecision.enabled !== true) {
     throw createGatewayError('Freischaltung durch den Praxisinhaber erforderlich', 503, 'AI_OWNER_OPTIN_REQUIRED');
   }
+  await pruefeAufgabeFrei(task, auth, dependencies);
 
   // Operator readiness check
   if (cfg.activationReady !== true) {
@@ -319,6 +331,7 @@ export async function executeKiTask({
     if (!freshDecision || freshDecision.enabled !== true) {
       throw createGatewayError('Einwilligung widerrufen oder geändert während der Ausführung', 503, 'AI_OWNER_OPTIN_REQUIRED');
     }
+    await pruefeAufgabeFrei(task, auth, dependencies);
 
     const freshCfg = /** @type {GatewayConfig} */ (await (dependencies.configProvider?.() || dependencies.config || createAiConfig()));
     if (freshCfg.mode !== cfg.mode || freshCfg.valid !== true || typeof freshCfg.mode !== 'string' || !['direkt', 'jeton'].includes(freshCfg.mode) || freshCfg.activationReady !== true || freshCfg.mailReady !== true) {
@@ -341,6 +354,7 @@ export async function executeKiTask({
         const currentConfig = /** @type {GatewayConfig | undefined} */ (await (dependencies.configProvider?.() || dependencies.config || createAiConfig()));
         const currentOwner = dependencies.ownerDecision || await (dependencies.ownerDecisionStore || getOwnerDecisionStore()).read(auth.tenantId);
         if (currentOwner?.enabled !== true) throw createGatewayError('Einwilligung widerrufen', 503, 'AI_OWNER_OPTIN_REQUIRED');
+        await pruefeAufgabeFrei(task, auth, dependencies);
         if (currentConfig?.valid !== true || currentConfig.mode !== cfg.mode || currentConfig.activationReady !== true || currentConfig.mailReady !== true) throw createGatewayError('KI-Dienst wurde deaktiviert', 503, 'AI_MODE_AUS');
         return true;
       }
@@ -591,6 +605,7 @@ export async function executeKiTask({
     if (!freshDecision || freshDecision.enabled !== true) {
       throw createGatewayError('Einwilligung widerrufen oder geändert während der Ausführung', 503, 'AI_OWNER_OPTIN_REQUIRED');
     }
+    await pruefeAufgabeFrei(task, auth, dependencies);
 
     const freshCfg = /** @type {GatewayConfig} */ (await (dependencies.configProvider?.() || dependencies.config || createAiConfig()));
     if (freshCfg.mode !== cfg.mode || freshCfg.valid !== true || typeof freshCfg.mode !== 'string' || !['direkt', 'jeton'].includes(freshCfg.mode) || freshCfg.activationReady !== true || (MAIL_TASKS.has(task) && freshCfg.mailReady !== true) || (allowFreeText && freshCfg.allowFreeText !== true)) {
@@ -598,6 +613,7 @@ export async function executeKiTask({
     }
 
     if (!dependencies.ownerDecision) { const lastOwner = await (dependencies.ownerDecisionStore || getOwnerDecisionStore()).read(auth.tenantId); if (lastOwner?.enabled !== true) throw createGatewayError('Einwilligung widerrufen', 503, 'AI_OWNER_OPTIN_REQUIRED'); }
+    await pruefeAufgabeFrei(task, auth, dependencies);
     const transport = dependencies.transport || /** @type {(opts: Record<string, unknown>) => Promise<GatewayTransportResult>} */ (/** @type {unknown} */ (chat));
     const injectedJetonClient = freshCfg.mode === 'jeton' ? (dependencies.jetonClient || getTenantJetonClient(auth.tenantId, dependencies.supabase, dependencies.configProvider || (() => dependencies.config || createAiConfig()))) : undefined;
     const transportOptions = {
@@ -609,6 +625,7 @@ export async function executeKiTask({
         const currentConfig = /** @type {GatewayConfig | undefined} */ (await (dependencies.configProvider?.() || dependencies.config || createAiConfig()));
         const currentOwner = dependencies.ownerDecision || await (dependencies.ownerDecisionStore || getOwnerDecisionStore()).read(auth.tenantId);
         if (currentOwner?.enabled !== true) throw createGatewayError('Einwilligung widerrufen', 503, 'AI_OWNER_OPTIN_REQUIRED');
+        await pruefeAufgabeFrei(task, auth, dependencies);
         if (currentConfig?.valid !== true || currentConfig.mode !== cfg.mode || currentConfig.activationReady !== true || (MAIL_TASKS.has(task) && currentConfig.mailReady !== true) || (allowFreeText && currentConfig.allowFreeText !== true)) throw createGatewayError('KI-Dienst wurde deaktiviert', 503, 'AI_MODE_AUS');
         return true;
       }

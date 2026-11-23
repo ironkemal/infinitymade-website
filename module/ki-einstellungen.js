@@ -1,4 +1,4 @@
-import { getKiConfig, updateOwnerOptIn, CURRENT_EINWILLIGUNG_VERSION, refreshKiControls } from './ki-client.js?v=20261123ki1';
+import { getKiConfig, updateOwnerOptIn, setzeKiAufgaben, CURRENT_EINWILLIGUNG_VERSION, refreshKiControls } from './ki-client.js?v=20261123ka1';
 
 /** @param {unknown} t */
 const escapeText = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] || c));
@@ -125,6 +125,18 @@ export async function mountKiEinstellungen(container, deps = {}) {
           ` : ''}
         </div>
 
+        ${Array.isArray(cfg.aufgaben) && cfg.aufgaben.length ? `
+        <!-- Phase 7b: Aufgaben einzeln an/aus — direkt unter der Freischaltung, damit nach erneuter Freischaltung sichtbar ist, was offen ist (onprem). -->
+        <div id="kiAufgaben" style="background:var(--bg-card-solid);border:1px solid var(--border);border-radius:10px;padding:14px;">
+          <div style="font-size:14px;font-weight:600;color:var(--text-main);margin-bottom:4px;">Welche Aufgaben die KI übernehmen darf</div>
+          <p class="form-hint" style="margin:0 0 10px;">Ausgeschaltete Aufgaben laufen ohne KI weiter, soweit es dafür einen Weg ohne KI gibt (z. B. Serientermine nach festen Regeln).</p>
+          ${cfg.aufgaben.map((a) => `
+          <label style="display:flex;align-items:center;gap:10px;min-height:44px;cursor:${isOwner ? 'pointer' : 'not-allowed'};">
+            <input type="checkbox" data-ki-aufgabe="${escapeText(a.id)}" ${a.gesperrt ? '' : 'checked'} ${isOwner ? '' : 'disabled'} style="width:20px;height:20px;accent-color:var(--primary);flex:0 0 auto;">
+            <span style="font-size:14px;color:var(--text-main);">${escapeText(a.label)}</span>
+          </label>`).join('')}
+        </div>` : ''}
+
         <!-- Datenschutzhinweis -->
         <div style="padding:10px 12px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text-muted);line-height:1.5;">
           <strong style="color:var(--text-main);">Datenschutz &amp; Vertraulichkeit:</strong>
@@ -134,6 +146,22 @@ export async function mountKiEinstellungen(container, deps = {}) {
         </div>
       </div>
     `;
+
+    // Aufgaben-Schalter: Häkchen = KI darf; gespeichert wird die Liste der ausgeschalteten Gruppen.
+    const aufgabenBoxen = typeof container.querySelectorAll === 'function' ? [...container.querySelectorAll('[data-ki-aufgabe]')] : [];
+    if (isOwner) for (const box of aufgabenBoxen) {
+      box.addEventListener('change', async () => {
+        const gesperrt = aufgabenBoxen.filter((b) => !b.checked).map((b) => b.dataset.kiAufgabe);
+        aufgabenBoxen.forEach((b) => { b.disabled = true; });
+        try {
+          await setzeKiAufgaben(gesperrt, { apiBase: deps.apiBase, getToken: deps.getSessionToken, fetchImpl: deps.fetchImpl, isOwner: () => isOwner });
+          showToast(box.checked ? 'KI-Aufgabe eingeschaltet.' : 'KI-Aufgabe ausgeschaltet.', 'success');
+        } catch (e) {
+          showToast(/** @type {any} */ (e)?.message || 'KI-Aufgaben konnten nicht gespeichert werden.', 'error');
+        }
+        await render();
+      });
+    }
 
     const toggle = container.querySelector('#kiOwnerOptInToggle');
     if (toggle && isOwner) {

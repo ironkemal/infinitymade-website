@@ -117,3 +117,18 @@ test('ki-einstellungen: zeigt Anbieter & Region escaped, ohne Anbieter keine Zei
   await mountKiEinstellungen(leer.container, { isOwner: () => true, getSessionToken: async () => 't', apiBase: '/api/ai', fetchImpl: async () => ({ ok: true, json: async () => ({ success: true, active: false, mode: 'aus' }) }) });
   assert.ok(!leer.container.innerHTML.includes('kiAnbieterZeile'));
 });
+
+test('ki-einstellungen: Aufgaben-Schalter (Häkchen = erlaubt), escaped, nur für den Inhaber sichtbar', async () => {
+  const antwort = { success: true, active: true, mode: 'direkt', aufgaben: [{ id: 'mail', label: 'E-Mail<b>', gesperrt: false }, { id: 'serie', label: 'Serientermine vorschlagen', gesperrt: true }] };
+  const inhaber = createContainerFixture();
+  await mountKiEinstellungen(inhaber.container, { isOwner: () => true, getSessionToken: async () => 't', apiBase: '/api/ai', fetchImpl: async () => ({ ok: true, json: async () => antwort }) });
+  const html = inhaber.container.innerHTML;
+  assert.ok(html.includes('id="kiAufgaben"'));
+  assert.ok(html.includes('data-ki-aufgabe="mail" checked'));
+  assert.ok(html.includes('data-ki-aufgabe="serie"  '), 'gesperrte Aufgabe ohne Häkchen');
+  assert.ok(html.includes('E-Mail&lt;b&gt;') && !html.includes('E-Mail<b>'));
+  const ma = createContainerFixture();
+  await mountKiEinstellungen(ma.container, { isOwner: () => false, getSessionToken: async () => 't', apiBase: '/api/ai', fetchImpl: async () => ({ ok: true, json: async () => antwort }) });
+  // Mitarbeiter laden die KI-Konfiguration nicht (owner-only) → kein Aufgaben-Kasten
+  assert.ok(!ma.container.innerHTML.includes('id="kiAufgaben"'));
+});

@@ -19,6 +19,7 @@ import { safeAiError } from './ki-privacy.js';
 import { createAiConfig, healthSummary, EU_DATA_BOUNDARY_REGIONS } from './ki-config.js';
 import { CURRENT_EINWILLIGUNG_VERSION } from './ki-einwilligung.js';
 import { getOwnerDecisionStore, invalidateTenantJeton } from './ki-gateway.js';
+import { getAufgabenSperreStore, aufgabenListe } from './ki-aufgaben-sperre.js';
 
 
 import { run as b2cDraft } from './tasks/b2c-draft.js';
@@ -93,6 +94,8 @@ function validChallenge(err) {
  * @param {import('@supabase/supabase-js').SupabaseClient | null} [options.supabase] supabase client
  * @param {(tenantId: string) => void} [options.invalidateJeton] jeton invalidator
  * @param {import('express').RequestHandler | null} [options.rateLimiter] optional rate limiter
+ * @param {ReturnType<typeof import('./ki-aufgaben-sperre.js').createAufgabenSperreStore>} [options.aufgabenStore] KI-Aufgaben-Sperre (Phase 7b)
+ * @param {import('express').RequestHandler | null} [options.einstellungLimiter] Limit für PATCH /_config und /_aufgaben
  * @returns {ReturnType<typeof express.Router>}
  */
 export function createAiRouter({
@@ -103,9 +106,16 @@ export function createAiRouter({
   authMiddleware = /** @type {import('express').RequestHandler} */ (/** @type {unknown} */ (requireAuth)),
   supabase = null,
   invalidateJeton = invalidateTenantJeton,
-  rateLimiter = null
+  rateLimiter = null,
+  aufgabenStore = getAufgabenSperreStore(),
+  einstellungLimiter = null
 } = {}) {
   const router = express.Router();
+  // Gemeinsames Limit für die Einstellungs-Routen PATCH /_config und /_aufgaben (guvenlik 23.11.2026: /_config hatte keins)
+  const einstLimiter = einstellungLimiter || rateLimit({
+    windowMs: 60 * 1000, limit: 30, standardHeaders: 'draft-7', legacyHeaders: false,
+    message: { success: false, code: 'AI_RATE_LIMIT_EXCEEDED', error: 'Zu viele Änderungen. Bitte warten Sie eine Minute.' }
+  });
   const rawAudioParser = express.raw({
     type: ['audio/webm', 'audio/ogg', 'audio/mp4'],
     limit: '10mb'
@@ -202,6 +212,8 @@ export function createAiRouter({
         disabledReason,
         // Phase 7b KI-Stufe 1: nur lesende Anzeige von Anbieter + Region (kein Host, kein Schlüssel; guvenlik/legal-de 23.11.2026)
         anbieter: anbieterAnzeige(cfg),
+        // Aufgaben einzeln an/aus (ki-aufgaben-sperre.js): Sperre frisch gelesen, kaputt = alles gesperrt
+        aufgaben: aufgabenListe(await aufgabenStore.read(/** @type {string} */ (req.auth.tenantId))),
         optIn: {
           enabled: Boolean(decision.enabled),
           informationVersion: decision.informationVersion || null,
@@ -218,11 +230,11 @@ export function createAiRouter({
   });
 
   // PATCH /_config: private owner-only, exact local opt-in fields only
-  router.patch('/_config', authMiddleware, async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
+  router.patch('/_config', authMiddleware, einstLimiter, async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
     if (req.auth?.role !== 'owner' || req.auth?.userId !== req.auth?.tenantId) {
       return res.status(403).json({
         success: false,
-        error: 'Nur der Praxisinhaber darf die KI-Einwilligung ändern'
+        error: 'Nur der Praxisinhaber darf die KI-Freischaltung ändern'
       });
     }
 
@@ -269,6 +281,27 @@ export function createAiRouter({
     } catch (err) {
       const safe = safeAiError(err);
       res.status(safe.status || 500).json({ success: false, error: safe.message });
+    }
+  });
+
+  // PATCH /_aufgaben: Inhaber schaltet KI-Aufgaben ein/aus — Body exakt { gesperrt: string[] } (feste Gruppen).
+  // Kein logCall (verfälscht Nutzungszahlen, guvenlik); Datei hält actorId + geaendertAm.
+  router.patch('/_aufgaben', authMiddleware, einstLimiter, async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
+    if (req.auth?.role !== 'owner' || req.auth?.userId !== req.auth?.tenantId) {
+      return res.status(403).json({ success: false, error: 'Nur der Praxisinhaber darf KI-Aufgaben ein- oder ausschalten' });
+    }
+    const body = req.body || {};
+    if (Object.keys(body).some((k) => k !== 'gesperrt') || !Array.isArray(body.gesperrt)) {
+      return res.status(400).json({ success: false, error: 'Erwartet wird genau { gesperrt: [...] }' });
+    }
+    try {
+      const ergebnis = await aufgabenStore.set(/** @type {any} */ (req.auth), { gesperrt: body.gesperrt });
+      return res.json({ success: true, gesperrt: ergebnis.gesperrt, geaendertAm: ergebnis.geaendertAm, aufgaben: aufgabenListe({ alleGesperrt: false, gesperrt: ergebnis.gesperrt }) });
+    } catch (err) {
+      const e = /** @type {any} */ (err);
+      if (e?.status === 400 || e?.status === 403) return res.status(e.status).json({ success: false, error: e.message });
+      console.error('[ki-aufgaben] Speichern fehlgeschlagen', e?.code || 'unbekannt');
+      return res.status(500).json({ success: false, error: 'KI-Aufgaben konnten nicht gespeichert werden' });
     }
   });
 

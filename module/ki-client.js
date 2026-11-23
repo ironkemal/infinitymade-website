@@ -45,6 +45,7 @@ export async function getKiConfig(deps = {}) {
     const config = { ...offline(), mode,effective,operatorReady:data.operatorReady === true,ownerActive:data.ownerActive === true,
       mailReady:data.mailReady === true || (employee && capabilities.appointmentDraft),freeText:capabilities.freeText,capabilities,
       diktat_verfuegbar,
+      aufgaben: Array.isArray(data.aufgaben) ? data.aufgaben.filter(a => a && /^[a-z]{2,20}$/.test(a.id) && typeof a.label === 'string').slice(0, 10).map(a => ({ id: a.id, label: a.label.slice(0, 80), gesperrt: a.gesperrt === true })) : [],
       anbieter: data.anbieter && typeof data.anbieter.name === 'string' ? { name: data.anbieter.name.slice(0, 60), region: typeof data.anbieter.region === 'string' ? data.anbieter.region.slice(0, 40) : null, euRegion: data.anbieter.euRegion === true } : null,
       informationVersion:typeof data.optIn?.informationVersion === 'string' ? data.optIn.informationVersion : null,
       decidedAt:typeof data.optIn?.decidedAt === 'string' && Number.isFinite(Date.parse(data.optIn.decidedAt)) ? data.optIn.decidedAt : null };
@@ -70,6 +71,24 @@ export async function updateOwnerOptIn(options, deps = {}) {
     data = await res.json();
   } catch { throw fail('KI_CONFIG_SAVE_FAILED','KI-Einstellung konnte nicht gespeichert werden.',503); }
   if (!res.ok || data.success !== true) throw fail('KI_CONFIG_SAVE_FAILED','KI-Einstellung konnte nicht gespeichert werden.',res.status || 503);
+  return data;
+}
+
+/**
+ * KI-Aufgaben ein-/ausschalten (nur Inhaber, Phase 7b). Server prüft Rolle und feste Gruppen.
+ * @param {string[]} gesperrt @param {{ apiBase?: string, getToken?: () => Promise<string|null|undefined>, fetchImpl?: typeof fetch, isOwner?: () => boolean }} [deps]
+ */
+export async function setzeKiAufgaben(gesperrt, deps = {}) {
+  if (!Array.isArray(gesperrt) || gesperrt.some(g => typeof g !== 'string')) throw fail('KI_CONFIG_INVALID','Ungültige Aufgabenliste.');
+  if (deps.isOwner?.() === false) throw fail('KI_OWNER_REQUIRED','Nur der Praxisinhaber darf KI-Aufgaben ein- oder ausschalten.',403);
+  const token = await deps.getToken?.();
+  if (typeof token !== 'string' || !token) throw fail('KI_AUTH_REQUIRED','Keine gültige Sitzung vorhanden.',401);
+  let res,data;
+  try {
+    res = await (deps.fetchImpl || globalThis.fetch)(`${deps.apiBase || DEFAULT_AI_BASE}/_aufgaben`, {method:'PATCH',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({gesperrt})});
+    data = await res.json();
+  } catch { throw fail('KI_CONFIG_SAVE_FAILED','KI-Aufgaben konnten nicht gespeichert werden.',503); }
+  if (!res.ok || data.success !== true) throw fail('KI_CONFIG_SAVE_FAILED', typeof data?.error === 'string' ? data.error.slice(0, 160) : 'KI-Aufgaben konnten nicht gespeichert werden.', res.status || 503);
   return data;
 }
 

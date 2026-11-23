@@ -83,3 +83,19 @@ test('Only bounded fresh complete challenge receives 409 candidate response',asy
   const rejected=await request(router({tasks:{question:async()=>{throw bad;}}}),{method:'POST',path:'/question',body:{}});assert.equal(rejected.body.candidates,undefined);assert.ok(!JSON.stringify(rejected.body).includes('PATIENT_SENTINEL'));
  }
 });
+
+// KI-Aufgaben einzeln an/aus (Phase 7b, 23.11.2026)
+test('PATCH /_aufgaben: nur Inhaber, Body exakt, GET /_config zeigt Sperren', async () => {
+ const {createAufgabenSperreStore} = await import('./ki-aufgaben-sperre.js');
+ const fs = await import('node:fs'); const os = await import('node:os'); const path = await import('node:path');
+ const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ki-aufg-r-')); fs.chmodSync(dir, 0o700);
+ const aufgabenStore = createAufgabenSperreStore({ directory: dir });
+ const r = router({ aufgabenStore });
+ assert.equal((await request(r, { method: 'PATCH', path: '/_aufgaben', body: { gesperrt: ['serie'] }, auth: employee })).status, 403);
+ assert.equal((await request(r, { method: 'PATCH', path: '/_aufgaben', body: { gesperrt: ['serie'], extra: 1 } })).status, 400);
+ assert.equal((await request(r, { method: 'PATCH', path: '/_aufgaben', body: { gesperrt: ['unbekannt'] } })).status, 400);
+ const ok = await request(r, { method: 'PATCH', path: '/_aufgaben', body: { gesperrt: ['serie'] } });
+ assert.equal(ok.status, 200); assert.deepEqual(ok.body.gesperrt, ['serie']);
+ const cfg = await request(r);
+ assert.deepEqual(cfg.body.aufgaben.filter((/** @type {any} */ a) => a.gesperrt).map((/** @type {any} */ a) => a.id), ['serie']);
+});
