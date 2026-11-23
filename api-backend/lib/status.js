@@ -102,7 +102,7 @@ export function gesamtStatus(felder) {
  *   disk?: (() => unknown) | null,
  *   dataKey?: (() => unknown) | null,
  *   realtime?: (() => unknown) | null,
- *   dateien?: (() => Promise<{ verzeichnis: boolean, sicherung?: unknown, stand?: unknown, zeit?: unknown }>) | null,
+ *   dateien?: (() => Promise<{ verzeichnis: boolean, sicherung?: unknown, stand?: unknown, zeit?: unknown, zertifikat?: unknown }>) | null,
  *   schema?: { imageMax?: string | null, wartung?: { art?: string | null } | null, zaehler?: { status?: string | null } | null },
  *   version?: { version?: string | null },
  *   eigenerFingerprint?: (() => string | null) | null,
@@ -130,7 +130,7 @@ export async function statusSammeln(p, { log = console.warn, jetzt = () => new D
 
   // postgres liefert nebenbei die Ledger-Höchstnummer und die Größen für die
   // Disk-Regel „frei > 2× (db + storage)" — nicht an den Client weiterreichen.
-  const { buchMax = null, belegtBytes = null, ...pgSicht } = postgres;
+  const { buchMax = null, belegtBytes = null, restoreReste = [], ...pgSicht } = postgres;
   if (pgSicht.status === 'ok' && pgSicht.ms > DB_GRUEN_MS) pgSicht.status = 'warnung';
 
   const db = { status: schlechter(pgSicht.status, rest.status), postgres: pgSicht, rest };
@@ -143,7 +143,8 @@ export async function statusSammeln(p, { log = console.warn, jetzt = () => new D
     schema,
     auth,
     storage,
-    disk: diskFeld,
+    disk: restoreResteAnhaengen(diskFeld, restoreReste),
+    zertifikat: zertifikatBewerten(d.zertifikat, { verzeichnis: !!d.verzeichnis, jetztMs }),
     backup: backupBewerten(d.sicherung, { verzeichnis: !!d.verzeichnis, jetztMs }),
     data_key: dataKeyVergleichen(dataKey, d.sicherung, p.eigenerFingerprint),
     license: { status: 'nicht_implementiert' },
@@ -282,6 +283,38 @@ export function digestAus(stand) {
   return istV1(stand) && typeof stand.api_digest === 'string' && RE_DIGEST.test(stand.api_digest) ? stand.api_digest : null;
 }
 
+const ZERT_FRISCH_MS = 48 * 3600 * 1000;
+/**
+ * Zertifikat (O-172 ii, Box-Test 22.11.2026): update.sh misst nachts per s_client gegen 127.0.0.1
+ * und schreibt zertifikat.json {v:1, art:'le'|'lokale_ca', not_after_epoch, gemessen_epoch}.
+ * le: > 21 Tage ok, darunter warnung, abgelaufen fehler. lokale_ca (Zwischen-CA, erneuert sich
+ * nicht selbst): Warnung ab 90 Tagen. Älter als 48 h oder fehlend → unbekannt / info.
+ * @param {unknown} roh @param {{ verzeichnis?: boolean, jetztMs?: number }} [o]
+ */
+export function zertifikatBewerten(roh, { verzeichnis = false, jetztMs = Date.now() } = {}) {
+  if (!verzeichnis) return { status: 'unbekannt' };
+  if (roh === undefined) return { status: 'info', code: 'nicht_ueberwacht' };
+  const z = /** @type {any} */ (roh);
+  if (!istV1(z) || !istEpoch(z.gemessen_epoch) || !['le', 'lokale_ca'].includes(String(z.art))) return { status: 'unbekannt' };
+  if (jetztMs - z.gemessen_epoch * 1000 > ZERT_FRISCH_MS) return { status: 'unbekannt', code: 'alt', art: z.art };
+  if (!istEpoch(z.not_after_epoch)) return { status: 'unbekannt', art: z.art };
+  const ms = z.not_after_epoch * 1000;
+  const tage = Math.floor((ms - jetztMs) / 86400000);
+  const out = { art: z.art, gueltig_bis: new Date(ms).toISOString(), tage_rest: tage, code: z.art === 'lokale_ca' ? 'intern' : undefined };
+  if (tage < 0) return { status: 'fehler', ...out };
+  if (tage < (z.art === 'lokale_ca' ? 90 : 21)) return { status: 'warnung', ...out };
+  return { status: 'ok', ...out };
+}
+
+/**
+ * Restore-Reste an das Disk-Feld hängen: info; warnung nur, wenn der Platz selbst knapp ist.
+ * @param {any} disk @param {Array<{name:string, bytes:number}>} reste
+ */
+export function restoreResteAnhaengen(disk, reste) {
+  if (!Array.isArray(reste) || !reste.length) return disk;
+  return { ...disk, restore_reste: reste.slice(0, 10) };
+}
+
 /**
  * Liest die drei Host-Zustandsdateien. Feste Namen, kein Verzeichnis-Listing.
  * O_NOFOLLOW + fstat auf dem Deskriptor (guvenlik B1): ein Symlink auf
@@ -311,8 +344,8 @@ export async function statusDateienLesen(verzeichnis) {
       await fh?.close().catch(() => {});
     }
   };
-  const [sicherung, stand, zeit] = await Promise.all([eine('sicherung.json'), eine('stand.json'), eine('zeit.json')]);
-  return { verzeichnis: true, sicherung, stand, zeit };
+  const [sicherung, stand, zeit, zertifikat] = await Promise.all([eine('sicherung.json'), eine('stand.json'), eine('zeit.json'), eine('zertifikat.json')]);
+  return { verzeichnis: true, sicherung, stand, zeit, zertifikat };
 }
 
 /**
@@ -350,7 +383,17 @@ export function standardPruefungen({ supabase, env = process.env, diskPfad = '/v
                     + coalesce((SELECT sum((metadata->>'size')::bigint) FROM storage.objects), 0) AS b`);
           belegtBytes = Number(g.rows[0].b);
         } catch { /* Größe ist Zusatz, kein Fehler */ }
-        return { buchMax: rows[0]?.v ?? null, belegtBytes };
+        // Box-Test 22.11.2026: restore.sh lässt die alte DB als <db>_onceki_<zeit> liegen (restore.sh, ${DB_NAME}).
+        // Nur Name + Größe anzeigen, Löschen nur per Anleitung (onprem 23.11.2026). Eigenes try: Zusatz.
+        /** @type {Array<{name: string, bytes: number}>} */
+        let restoreReste = [];
+        try {
+          const r = await client.query(
+            `SELECT datname AS name, pg_database_size(datname) AS bytes FROM pg_database
+              WHERE datname LIKE current_database() || '\\_onceki\\_%' ORDER BY datname LIMIT 10`);
+          restoreReste = r.rows.map((/** @type {any} */ z) => ({ name: String(z.name), bytes: Number(z.bytes) }));
+        } catch { /* CONNECT-Recht fehlt o. ä. — kein Fehler */ }
+        return { buchMax: rows[0]?.v ?? null, belegtBytes, restoreReste };
       } finally {
         client.end().catch(() => {});
       }

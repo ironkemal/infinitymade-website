@@ -4,7 +4,7 @@ import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
 import { planungVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261121f11';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
-import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261123kia1';
+import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261123kia1'; import { mountSystemstatus } from './module/systemstatus.js?v=20261123sys1';
 import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261103mail1';
 import { zeigeKiRueckfrageDialog } from './module/ki-rueckfrage.js?v=20261115v703';
 import { dsgvoVerdrahten } from './module/dsgvo-client.js?v=20261002';
@@ -10370,7 +10370,7 @@ async function loadSettings() {
       showToast,
       showConfirmModal
     }).catch(() => { kiMount.textContent = 'KI-Einstellungen derzeit nicht verfügbar.'; });
-  }
+  } void mountSystemstatus(document.getElementById('settingsSystemSection'), { apiBase: API, getToken: async () => (await supabase.auth.getSession())?.data?.session?.access_token || null }); // Box-Test P1: Systemstatus (Server entscheidet Sichtbarkeit)
 
   document.getElementById('setBiz').value = currentProfile.business_name || '';
   const sectorEl = document.getElementById('setSectorLabel');

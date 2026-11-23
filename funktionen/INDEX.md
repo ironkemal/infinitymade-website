@@ -3,7 +3,7 @@
 > Üretim: 2026-11-23 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4906 fonksiyon** (4784 JS · 95 bash · 27 ps1) · 601 dosya · 42 sidebar modülü
+**4914 fonksiyon** (4791 JS · 96 bash · 27 ps1) · 602 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -595,7 +595,7 @@ Bunları birleştirme — birleştirilecek olsaydı zaten tek dosya olurdu.
 Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farklı iş yapıyor olabilir.
 `aynalar` doluysa o konum bilinçli ayna; boşsa isim çakışması başka bir şeydir, incele.
 
-- `esc` — api-backend/billing/pdf/mahnung.template.js:7 · api-backend/lib/mail-signatur.js:21 · arzt-suche.js:34 · katalog-suche.js:86 · katalog-suche.js:98 · module/abrechnung-artefakte.js:22 · module/abrechnung-auswahl.js:765 · module/abrechnung-detail.js:175 · module/abrechnung-freigabe.js:137 · module/anamnese.js:45 · module/arzt-register.js:127 · module/branding-ui.js:16 · module/datev-einstellungen.js:31 · module/einrichtung-ring.js:13 · module/erst-checkin.js:23 · module/krankenkasse-suche.js:642 · module/leistungs-raum.js:4 · module/mail-signatur-editor.js:3 · module/mail-signatur.js:21 · module/mitarbeiter-app-einstellungen.js:35 · module/patienten-einwilligung.js:61 · module/patienten-import.js:361 · module/patientenkarte.js:45 · module/podo-einheiten.js:380 · module/podo-vorgeschichte-form.js:17 · module/raum-tagesansicht.js:98 · module/rechnung-mail.js:19 · module/rechnung-zahlungseingang.js:225 · module/start-aufgaben.js:6 · module/startseite-ansicht.js:10 · module/startseite-geld.js:17 · module/tageszentrale-ansicht.js:40 · module/termin-hinweise.js:44 · module/therapiebericht.js:30 · module/ueber.js:26 · module/verordnung-einheiten.js:56 · module/verordnung-feldmarker.js:80 · module/verordnung-uebersicht.js:116 · module/zuzahlung-befreiung.js:305 · module/zuzahlung-korrektur.js:60 · ops/app.js:51
+- `esc` — api-backend/billing/pdf/mahnung.template.js:7 · api-backend/lib/mail-signatur.js:21 · arzt-suche.js:34 · katalog-suche.js:86 · katalog-suche.js:98 · module/abrechnung-artefakte.js:22 · module/abrechnung-auswahl.js:765 · module/abrechnung-detail.js:175 · module/abrechnung-freigabe.js:137 · module/anamnese.js:45 · module/arzt-register.js:127 · module/branding-ui.js:16 · module/datev-einstellungen.js:31 · module/einrichtung-ring.js:13 · module/erst-checkin.js:23 · module/krankenkasse-suche.js:642 · module/leistungs-raum.js:4 · module/mail-signatur-editor.js:3 · module/mail-signatur.js:21 · module/mitarbeiter-app-einstellungen.js:35 · module/patienten-einwilligung.js:61 · module/patienten-import.js:361 · module/patientenkarte.js:45 · module/podo-einheiten.js:380 · module/podo-vorgeschichte-form.js:17 · module/raum-tagesansicht.js:98 · module/rechnung-mail.js:19 · module/rechnung-zahlungseingang.js:225 · module/start-aufgaben.js:6 · module/startseite-ansicht.js:10 · module/startseite-geld.js:17 · module/systemstatus.js:17 · module/tageszentrale-ansicht.js:40 · module/termin-hinweise.js:44 · module/therapiebericht.js:30 · module/ueber.js:26 · module/verordnung-einheiten.js:56 · module/verordnung-feldmarker.js:80 · module/verordnung-uebersicht.js:116 · module/zuzahlung-befreiung.js:305 · module/zuzahlung-korrektur.js:60 · ops/app.js:51
 - `escapeHtml` — admin.js:61 · api-backend/billing/pdf/ausfallrechnung.template.js:16 · api-backend/billing/pdf/begleitzettel.template.js:29 · api-backend/billing/pdf/rechnung.template.js:11 · api-backend/billing/pdf/rezeptvorderseite.template.js:12 · api-backend/billing/pdf/rzg-quittung.template.js:9 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:14 · dashboard.js:526 · module/abrechnung-status.js:195 · module/abrechnungsstatus.js:742 · module/anstellung.js:15 · module/ausfallrechnung.js:19 · module/behandlungsbestaetigung.js:37 · module/diagnosegruppen-regeln.js:32 · module/ehemalige-mitarbeiter.js:13 · module/fax-deckblatt.js:30 · module/formular-editor.js:172 · module/formular-unterschreiben.js:102 · module/fussbefund.js:204 · module/kalender-raster.js:29 · module/kalender-woche.js:43 · module/leistung-farbwahl.js:30 · module/leistungen-liste.js:28 · module/patient-dokumente.js:40 · module/patient-termine.js:2 · module/physio-befund.js:46 · module/raum-streifen.js:105 · module/raum-verwaltung.js:20 · module/rezeptinfo-geld.js:73 · module/sondertag-mitteilung.js:11 · module/sondertag.js:29 · module/standort-plan.js:93 · module/termin-aktionen.js:43 · module/termin-druck.js:27 · module/termin-panel.js:34 · module/warteliste-ansicht.js:31 · module/warteliste-nachruecker.js:83
 - `$` — attendance.js:9 · module/anamnese.js:44 · module/branding-ui.js:31 · module/heilmittel-zeilen-ui.js:29 · module/kiosk.js:74 · module/podo-vorgeschichte-form.js:88 · module/rechnung-zahlungseingang.js:455 · module/ueber.js:52 · module/verordnung-einheiten.js:543 · module/verordnung-podo.js:85 · module/verordnung-pruefen-knopf.js:43 · module/zuzahlung-korrektur.js:206 · ops/app.js:48 · widget/booking-widget.js:24
 - `schliessen` — cookie-consent.js:137 · module/abrechnung-freigabe.js:190 · module/abrechnungsstatus.js:603 · module/arzt-register.js:278 · module/formular-editor.js:427 · module/patienten-import.js:479 · module/rechnung-zahlungseingang.js:555 · module/verordnung-einheiten.js:300 · module/verordnung-einheiten.js:398 · module/verordnung-einheiten.js:591 · module/verordnung-feldmarker.js:241 · module/verordnung-import.js:725 · module/zuzahlung-befreiung.js:151 · module/zuzahlung-korrektur.js:209
@@ -738,7 +738,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `ist_rfc1918()` — Zeile 34 · calledBy: ip_modus_yaz, onprem/install.sh, onprem/ip-melden.sh
 - `ip_modus_yaz()` — Zeile 50 · calledBy: onprem/install.sh, onprem/update.sh
 - `ip_timer_kur()` — Zeile 97 · calledBy: onprem/install.sh, onprem/update.sh
-- `status_datei_yaz()` — Zeile 145 · calledBy: status_stand_yaz, zeit_melden
+- `status_datei_yaz()` — Zeile 145 · calledBy: onprem/update.sh, status_stand_yaz, zeit_melden
 - `status_container_digest()` — Zeile 160 · calledBy: status_stand_yaz
 - `status_stand_yaz()` — Zeile 171 · calledBy: onprem/install.sh, onprem/update.sh
 
@@ -776,15 +776,16 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `fail()` — Zeile 79
 - `env_wert()` — Zeile 125 · calledBy: onprem/update.sh, owner_bilgisini_guncelle, zertifikat_pruefen
 - `mail_gonder_container()` — Zeile 141 · calledBy: bildirim_degerlendir, zertifikat_pruefen
-- `zertifikat_pruefen()` — Zeile 173 · calledBy: onprem/update.sh
-- `manifest_feld()` — Zeile 259 · calledBy: onprem/update.sh
-- `dateien_sha_icerik()` — Zeile 306 · calledBy: durumu_yaz
-- `onceki_sha()` — Zeile 309 · calledBy: onprem/update.sh
-- `durumu_yaz()` — Zeile 315 · calledBy: onprem/update.sh
-- `owner_bilgisini_guncelle()` — Zeile 343 · calledBy: onprem/update.sh
-- `bildirim_alani_oku()` — Zeile 359 · calledBy: bildirim_degerlendir, onprem/update.sh
-- `bildirim_kaydet()` — Zeile 371 · calledBy: bildirim_degerlendir
-- `bildirim_degerlendir()` — Zeile 388 · calledBy: durumu_yaz
-- `geri_yukle()` — Zeile 547 · calledBy: onprem/update.sh
-- `anahtarlari_oku()` — Zeile 566 · calledBy: onprem/update.sh
-- `deger_oku()` — Zeile 570 · calledBy: onprem/update.sh
+- `zert_json_merken()` — Zeile 177 · calledBy: zertifikat_pruefen
+- `zertifikat_pruefen()` — Zeile 186 · calledBy: onprem/update.sh
+- `manifest_feld()` — Zeile 274 · calledBy: onprem/update.sh
+- `dateien_sha_icerik()` — Zeile 321 · calledBy: durumu_yaz
+- `onceki_sha()` — Zeile 324 · calledBy: onprem/update.sh
+- `durumu_yaz()` — Zeile 330 · calledBy: onprem/update.sh
+- `owner_bilgisini_guncelle()` — Zeile 358 · calledBy: onprem/update.sh
+- `bildirim_alani_oku()` — Zeile 374 · calledBy: bildirim_degerlendir, onprem/update.sh
+- `bildirim_kaydet()` — Zeile 386 · calledBy: bildirim_degerlendir
+- `bildirim_degerlendir()` — Zeile 403 · calledBy: durumu_yaz
+- `geri_yukle()` — Zeile 562 · calledBy: onprem/update.sh
+- `anahtarlari_oku()` — Zeile 581 · calledBy: onprem/update.sh
+- `deger_oku()` — Zeile 585 · calledBy: onprem/update.sh

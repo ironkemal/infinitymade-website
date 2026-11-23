@@ -170,6 +170,19 @@ mail_gonder_container() {
 # 21-Tage-Schwelle würde jede Nacht auslösen. Eigener Zustand — NICHT
 # son-bildirim.json, sonst überschriebe das "ok" des Updates den Alarm (Entwarnung).
 ZERT_STAND="$STAND_DIR/son-zertifikat-bildirim.json"
+# Box-Test 22.11.2026 / O-172 (ii): Ergebnis für Einstellungen → System. Wird hier nur gemerkt und
+# in Schritt 7c (nach `source lib-ip.sh`) als volumes/status/zertifikat.json geschrieben.
+# Inhalt geheimnisfrei: Art + Ablauf-Epoch + Messzeit (onprem 23.11.2026).
+ZERT_JSON=""
+zert_json_merken() { # $1 = le|lokale_ca  $2 = PEM-Text oder Dateipfad
+  local art="$1" quelle="$2" ende epoch=null
+  if [ -f "$quelle" ]; then ende="$(openssl x509 -in "$quelle" -noout -enddate 2>/dev/null || true)"
+  else ende="$(printf '%s\n' "$quelle" | openssl x509 -noout -enddate 2>/dev/null || true)"; fi
+  ende="${ende#notAfter=}"
+  if [ -n "$ende" ]; then epoch="$(date -u -d "$ende" +%s 2>/dev/null || echo null)"; fi
+  printf '%s' "$epoch" | grep -qE '^([0-9]{9,11}|null)$' || epoch=null
+  ZERT_JSON="{\"v\":1,\"art\":\"$art\",\"not_after_epoch\":$epoch,\"gemessen_epoch\":$(date -u +%s)}"
+}
 zertifikat_pruefen() {
   local modus tls_arg host pem simdi letzte
   modus="$(env_wert CADDY_TLS_MODUS)"; tls_arg="$(env_wert CADDY_TLS_ARG)"
@@ -178,6 +191,7 @@ zertifikat_pruefen() {
     # Schlüssel gelöscht) — 90 Tage vorher warnen, Erneuerung: install.sh --neu + Geräte.
     local zw="$SCRIPT_DIR/volumes/caddy-ca/intermediate.crt"
     [ -f "$zw" ] || return 0
+    zert_json_merken lokale_ca "$zw"
     if openssl x509 -in "$zw" -noout -checkend 7776000 >/dev/null 2>&1; then rm -f "$ZERT_STAND"; return 0; fi
     warn "  Lokale Zertifizierungsstelle läuft in < 90 Tagen ab ($(openssl x509 -in "$zw" -noout -enddate 2>/dev/null))"
     simdi="$(date -u +%s)"
@@ -196,6 +210,7 @@ zertifikat_pruefen() {
     log "  Zertifikat: nicht lesbar (Caddy aus?) — keine Bewertung"
     return 0
   fi
+  zert_json_merken le "$pem"
   if printf '%s\n' "$pem" | openssl x509 -noout -checkend 1814400 >/dev/null 2>&1; then
     rm -f "$ZERT_STAND"
     log "  Zertifikat: länger als 21 Tage gültig"
@@ -681,6 +696,8 @@ source "$SCRIPT_DIR/lib-ip.sh"
 # O-191: Statusverzeichnis VOR pull+up anlegen — sonst legt Docker die
 # Bind-Mount-Quelle selbst an (root, aber mit seinen Rechten, nicht unseren).
 mkdir -p "$SCRIPT_DIR/volumes/status" 2>/dev/null && chmod 0755 "$SCRIPT_DIR/volumes/status" 2>/dev/null || true
+# Zertifikat für Einstellungen → System (gemerkt in zertifikat_pruefen, O-172 ii).
+[ -z "$ZERT_JSON" ] || status_datei_yaz "$SCRIPT_DIR/volumes/status" zertifikat.json "$ZERT_JSON" || true
 
 # Zweistufiges Tor (onprem-Bedingung 5 — Reihenfolge so beibehalten):
 # 1. MERKEZ_URL in .env gesetzt?
