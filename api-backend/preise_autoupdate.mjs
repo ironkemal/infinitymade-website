@@ -118,12 +118,17 @@ function formatEntry(altesEntry, overrides) {
  * @param {Array<{ code: string, xmlPreis: number, xmlGueltigAb: string }>} neuePreisrundeEintraege
  * @param {{ gueltig_ab: string, gueltig_bis: string, positionen: ReadonlyArray<Record<string, any>> }} aktuellesFenster
  * @param {boolean} dryRun
- * @returns {Promise<{ ok: true, gueltig_ab: string, anzahl: number, datei: string, geschrieben: boolean } | { ok: false, grund: string }>}
+ * @param {Set<string> | string[]} [erlaubeSprung=new Set()]
+ * @returns {Promise<{ ok: true, gueltig_ab: string, anzahl: number, datei: string, geschrieben: boolean, erlaubteSpruenge: string[] } | { ok: false, art: string, grund: string, sprungCodes?: Array<{ code: string, altPreis: number, neuPreis: number, prozent: number }>, details?: any }>}
  */
-export async function versucheBereich(codeFeld, datei, neuePreisrundeEintraege, aktuellesFenster, dryRun) {
+export async function versucheBereich(codeFeld, datei, neuePreisrundeEintraege, aktuellesFenster, dryRun, erlaubeSprung = new Set()) {
   const startdaten = [...new Set(neuePreisrundeEintraege.map(e => e.xmlGueltigAb))];
   if (startdaten.length !== 1) {
-    return { ok: false, grund: `uneinheitliche neue Startdaten in der XML: ${startdaten.join(', ')}` };
+    return {
+      ok: false,
+      art: 'startdaten',
+      grund: `uneinheitliche neue Startdaten in der XML: ${startdaten.join(', ')}`,
+    };
   }
   const neuesGueltigAb = startdaten[0];
   // Direkt aus der XML (extern) — wird unten UNGESCHÜTZT (kein formatWert(),
@@ -132,7 +137,11 @@ export async function versucheBereich(codeFeld, datei, neuePreisrundeEintraege, 
   // manipuliertes oder kaputtes XML, das über ein Anführungszeichen aus dem
   // String-Literal ausbricht (guvenlik-Review, O-99, 13.09.2026).
   if (!/^\d{4}-\d{2}-\d{2}$/.test(neuesGueltigAb)) {
-    return { ok: false, grund: `xmlGueltigAb hat kein gültiges Datumsformat (erwartet JJJJ-MM-TT): "${neuesGueltigAb}"` };
+    return {
+      ok: false,
+      art: 'datum',
+      grund: `xmlGueltigAb hat kein gültiges Datumsformat (erwartet JJJJ-MM-TT): "${neuesGueltigAb}"`,
+    };
   }
 
   const unsereCodes = new Set(aktuellesFenster.positionen.map(p => p[codeFeld]));
@@ -140,14 +149,18 @@ export async function versucheBereich(codeFeld, datei, neuePreisrundeEintraege, 
   const fehlend = [...unsereCodes].filter(c => !xmlCodes.has(c));
   const zusaetzlich = [...xmlCodes].filter(c => !unsereCodes.has(c));
   if (fehlend.length || zusaetzlich.length) {
+    const art = zusaetzlich.length > 0 ? 'neue_codes' : 'fehlende_codes';
     return {
       ok: false,
+      art,
       grund: `Code-Menge weicht ab (nicht nur ein Preis-Update) — `
         + `fehlt in XML: ${fehlend.join(',') || '–'} · nur in XML: ${zusaetzlich.join(',') || '–'}`,
+      details: { fehlend, zusaetzlich },
     };
   }
 
   const preisByCode = new Map(neuePreisrundeEintraege.map(e => [e.code, e.xmlPreis]));
+  const erlaubeSprungSet = erlaubeSprung instanceof Set ? erlaubeSprung : new Set(erlaubeSprung || []);
 
   // Sicherheitsventil (gkv-302-Review, O-99, 13.09.2026): ein normaler GKV-
   // Preisschritt liegt im niedrigen einstelligen Prozentbereich. Ein Sprung
@@ -155,17 +168,45 @@ export async function versucheBereich(codeFeld, datei, neuePreisrundeEintraege, 
   // ein XML-Fehler, ein Parserproblem oder ein Fall, der Vertragsprosa
   // braucht, als ein normales Preisupdate — automatisches Schreiben stoppt,
   // geht stattdessen in `needsReview`.
+  //
+  // Bekçi-Ajan (24.11.2026): Wurde der Sprung anhand des Vertragstexts verifiziert,
+  // kann er gezielt über erlaubeSprung / --erlaube-sprung übersprungen werden.
+  const unallowedSpruenge = [];
+  const tatsaechlichErlaubteSpruenge = [];
+
   for (const p of aktuellesFenster.positionen) {
-    const neuerPreis = preisByCode.get(p[codeFeld]);
+    const code = p[codeFeld];
+    const neuerPreis = preisByCode.get(code);
     if (neuerPreis == null || !p.preis) continue;
     const aenderung = Math.abs(neuerPreis - p.preis) / p.preis;
     if (aenderung > 0.15) {
-      return {
-        ok: false,
-        grund: `${p[codeFeld]}: Preissprung ${(aenderung * 100).toFixed(1)}% `
-          + `(${p.preis} → ${neuerPreis}) — zu groß für Automatik, bitte manuell gegen die Anlage prüfen`,
+      const sprungInfo = {
+        code,
+        altPreis: p.preis,
+        neuPreis: neuerPreis,
+        prozent: Number((aenderung * 100).toFixed(1)),
+        // preise-bewerten.mjs vergleicht Preis UND Gültig-ab mit dem Vertragstext — ohne
+        // dieses Feld wäre die doppelte Naht nie erfüllbar (24.11.2026, Integrationsfund).
+        xmlGueltigAb: neuePreisrundeEintraege.find(e => e.code === code)?.xmlGueltigAb ?? null,
       };
+      if (erlaubeSprungSet.has(code)) {
+        tatsaechlichErlaubteSpruenge.push(code);
+      } else {
+        unallowedSpruenge.push(sprungInfo);
+      }
     }
+  }
+
+  if (unallowedSpruenge.length > 0) {
+    const erster = unallowedSpruenge[0];
+    return {
+      ok: false,
+      art: 'sprung',
+      grund: `${erster.code}: Preissprung ${erster.prozent.toFixed(1)}% `
+        + `(${erster.altPreis} → ${erster.neuPreis}) — zu groß für Automatik, bitte manuell gegen die Anlage prüfen`,
+      sprungCodes: unallowedSpruenge,
+      details: { sprungCodes: unallowedSpruenge },
+    };
   }
 
   const neuePositionenZeilen = aktuellesFenster.positionen.map(p => {
@@ -189,12 +230,12 @@ export async function versucheBereich(codeFeld, datei, neuePreisrundeEintraege, 
   const altSubstr = `gueltig_ab: '${aktuellesFenster.gueltig_ab}', gueltig_bis: '9999-12-31'`;
   const neuSubstr = `gueltig_ab: '${aktuellesFenster.gueltig_ab}', gueltig_bis: '${schliessDatum}'`;
   if (!content.includes(altSubstr)) {
-    return { ok: false, grund: `Anker zum Schließen des alten Fensters nicht gefunden: "${altSubstr}"` };
+    return { ok: false, art: 'fehler', grund: `Anker zum Schließen des alten Fensters nicht gefunden: "${altSubstr}"` };
   }
   content = content.split(altSubstr).join(neuSubstr);
 
   if (!content.includes(ANKER_ERSTE_ZEILE)) {
-    return { ok: false, grund: 'AUTOUPDATE-ANKER nicht gefunden — Datei wurde umstrukturiert?' };
+    return { ok: false, art: 'fehler', grund: 'AUTOUPDATE-ANKER nicht gefunden — Datei wurde umstrukturiert?' };
   }
   const neuerBlock =
 `  Object.freeze({ gueltig_ab: '${neuesGueltigAb}', gueltig_bis: '9999-12-31', positionen: Object.freeze([
@@ -205,31 +246,70 @@ ${ANKER_ERSTE_ZEILE}`;
 
   if (!dryRun) writeFileSync(datei, content, 'utf8');
 
-  return { ok: true, gueltig_ab: neuesGueltigAb, anzahl: neuePositionenZeilen.length, datei, geschrieben: !dryRun };
+  return {
+    ok: true,
+    gueltig_ab: neuesGueltigAb,
+    anzahl: neuePositionenZeilen.length,
+    datei,
+    geschrieben: !dryRun,
+    erlaubteSpruenge: tatsaechlichErlaubteSpruenge,
+  };
 }
 
-async function main() {
-  const args = process.argv.slice(2);
-  const fileArg = args.includes('--file') ? args[args.indexOf('--file') + 1] : null;
-  const dryRun = args.includes('--dry-run');
+/**
+ * Reiner Kern des Auto-Updates: führt Vergleich und Bereichs-Updates aus.
+ * Keine CLI-Argumente, keine Konsolenausgaben, kein exit.
+ *
+ * @param {{
+ *   xml: string,
+ *   stand?: string | null,
+ *   dryRun?: boolean,
+ *   erlaubeSprung?: Set<string> | string[],
+ *   bereiche?: typeof BEREICHE,
+ * }} opts
+ * @returns {Promise<{
+ *   stand: string | null,
+ *   changed: Array<{ bereich: string, ok: true, gueltig_ab: string, anzahl: number, datei: string, geschrieben: boolean, erlaubteSpruenge?: string[] }>,
+ *   needsReview: Array<{ art: string, grund: string, details?: any, sprungCodes?: Array<{ code: string, altPreis: number, neuPreis: number, prozent: number }> }>,
+ *   erlaubteSpruenge: string[],
+ *   fehltInfo?: number,
+ * }>}
+ */
+export async function fuehreAus({ xml, stand = null, dryRun = false, erlaubeSprung = new Set(), bereiche = BEREICHE }) {
+  const erlaubeSprungSet = erlaubeSprung instanceof Set
+    ? erlaubeSprung
+    : new Set(Array.isArray(erlaubeSprung) ? erlaubeSprung : []);
 
-  let xml, stand;
-  if (fileArg) {
-    xml = readFileSync(fileArg, 'utf8');
-  } else {
-    const neu = await neuesterStand();
-    stand = neu.stand;
-    xml = await ladeXmlAusZip(neu.url);
+  for (const c of erlaubeSprungSet) {
+    if (!/^[A-Z0-9]{4,6}$/.test(c)) {
+      return {
+        stand: stand || null,
+        changed: [],
+        needsReview: [{
+          art: 'fehler',
+          grund: `Ungültiger Code in erlaubeSprung: "${c}" (erwartet /^[A-Z0-9]{4,6}$/)`,
+          details: [c],
+        }],
+        erlaubteSpruenge: [],
+      };
+    }
   }
 
   const zeilen = parseXml(xml);
   const ergebnis = vergleiche(zeilen);
 
-  /** @type {{ stand: string | null, changed: Array<{ bereich: string, ok: true, gueltig_ab: string, anzahl: number, datei: string, geschrieben: boolean }>, needsReview: Array<{ grund: string, details: any[] }>, fehltInfo?: number }} */
-  const bericht = { stand: stand || null, changed: [], needsReview: [] };
+  /** @type {{
+   *   stand: string | null,
+   *   changed: Array<{ bereich: string, ok: true, gueltig_ab: string, anzahl: number, datei: string, geschrieben: boolean, erlaubteSpruenge?: string[] }>,
+   *   needsReview: Array<{ art: string, grund: string, details?: any, sprungCodes?: Array<{ code: string, altPreis: number, neuPreis: number, prozent: number }> }>,
+   *   erlaubteSpruenge: string[],
+   *   fehltInfo?: number
+   * }} */
+  const bericht = { stand: stand || null, changed: [], needsReview: [], erlaubteSpruenge: [] };
 
   if (ergebnis.abweichend.length > 0) {
     bericht.needsReview.push({
+      art: 'abweichend',
       grund: 'Preisabweichung bei bereits bekanntem Fenster — Codedatei stimmt nicht mit GKV überein',
       details: ergebnis.abweichend,
     });
@@ -244,10 +324,18 @@ async function main() {
       const bereich = bereichSchluessel === 'Podologie' ? 'podologie'
         : bereichSchluessel === 'Physiotherapie' ? 'physiotherapie'
         : bereichSchluessel;
-      const cfg = BEREICHE[bereich];
-      if (!cfg) { bericht.needsReview.push({ grund: `unbekannter Bereich: ${bereichSchluessel}`, details: eintraege }); continue; }
+      const cfg = bereiche[bereich];
+      if (!cfg) {
+        bericht.needsReview.push({
+          art: 'bereich',
+          grund: `unbekannter Bereich: ${bereichSchluessel}`,
+          details: eintraege,
+        });
+        continue;
+      }
       if (!cfg.autoWrite) {
         bericht.needsReview.push({
+          art: 'bereich',
           grund: `${bereich}: neue Preisrunde erkannt, aber Auto-Write für diesen Bereich deaktiviert (siehe BEREICHE-Kommentar in preise_autoupdate.mjs)`,
           details: eintraege,
         });
@@ -258,13 +346,33 @@ async function main() {
       const fenster = mod[cfg.importName];
       const offene = fenster.filter((/** @type {any} */ f) => f.gueltig_bis === '9999-12-31');
       if (offene.length !== 1) {
-        bericht.needsReview.push({ grund: `${bereich}: ${offene.length} offene Fenster statt genau 1`, details: eintraege });
+        bericht.needsReview.push({
+          art: 'fenster',
+          grund: `${bereich}: ${offene.length} offene Fenster statt genau 1`,
+          details: eintraege,
+        });
         continue;
       }
 
-      const res = await versucheBereich(cfg.codeFeld, cfg.datei, eintraege, offene[0], dryRun);
-      if (res.ok) bericht.changed.push({ bereich, ...res });
-      else bericht.needsReview.push({ grund: `${bereich}: ${res.grund}`, details: eintraege });
+      const res = await versucheBereich(cfg.codeFeld, cfg.datei, eintraege, offene[0], dryRun, erlaubeSprungSet);
+      if (res.ok) {
+        bericht.changed.push({ bereich, ...res });
+        if (res.erlaubteSpruenge && res.erlaubteSpruenge.length > 0) {
+          for (const c of res.erlaubteSpruenge) {
+            if (!bericht.erlaubteSpruenge.includes(c)) {
+              bericht.erlaubteSpruenge.push(c);
+            }
+          }
+        }
+      } else {
+        const item = {
+          art: res.art || 'fehler',
+          grund: `${bereich}: ${res.grund}`,
+          details: res.art === 'sprung' ? { eintraege, sprungCodes: res.sprungCodes } : eintraege,
+        };
+        if (res.sprungCodes) item.sprungCodes = res.sprungCodes;
+        bericht.needsReview.push(item);
+      }
     }
   }
 
@@ -274,18 +382,89 @@ async function main() {
     bericht.fehltInfo = ergebnis.fehlt.length;
   }
 
+  return bericht;
+}
+
+async function main() {
+  const args = process.argv.slice(2);
+  const fileArg = args.includes('--file') ? args[args.indexOf('--file') + 1] : null;
+  const dryRun = args.includes('--dry-run');
+
+  let rawSprung = null;
+  const sprungEq = args.find(a => a.startsWith('--erlaube-sprung='));
+  if (sprungEq) {
+    rawSprung = sprungEq.slice('--erlaube-sprung='.length);
+  } else {
+    const idx = args.indexOf('--erlaube-sprung');
+    if (idx !== -1 && idx + 1 < args.length) {
+      rawSprung = args[idx + 1];
+    }
+  }
+
+  const erlaubeSprung = new Set();
+  if (rawSprung !== null && rawSprung.trim() !== '') {
+    for (const c of rawSprung.split(',').map(s => s.trim())) {
+      erlaubeSprung.add(c);
+    }
+  }
+
+  // CLI-Korkengrenze: Ungültige Codes sofort abfangen (exit 0 + JSON art:'fehler')
+  for (const c of erlaubeSprung) {
+    if (!/^[A-Z0-9]{4,6}$/.test(c)) {
+      const fehlerBericht = {
+        stand: null,
+        changed: [],
+        needsReview: [{
+          art: 'fehler',
+          grund: `Ungültiger Code in --erlaube-sprung: "${c}" (erwartet /^[A-Z0-9]{4,6}$/)`,
+          details: [c],
+        }],
+        erlaubteSpruenge: [],
+      };
+      console.error(`✗ ${fehlerBericht.needsReview[0].grund}`);
+      console.log('---JSON---');
+      console.log(JSON.stringify(fehlerBericht));
+      process.exit(0);
+    }
+  }
+
+  let xml, stand;
+  if (fileArg) {
+    xml = readFileSync(fileArg, 'utf8');
+  } else {
+    const neu = await neuesterStand();
+    stand = neu.stand;
+    xml = await ladeXmlAusZip(neu.url);
+  }
+
+  const bericht = await fuehreAus({ xml, stand, dryRun, erlaubeSprung });
+
   console.log(`Stand: ${bericht.stand ?? '(lokale Datei)'}`);
   console.log(`Geändert: ${bericht.changed.length}  ·  Braucht Review: ${bericht.needsReview.length}`);
-  for (const c of bericht.changed) console.log(`  ✓ ${c.bereich}: neues Fenster ab ${c.gueltig_ab}, ${c.anzahl} Positionen${dryRun ? ' (DRY RUN, nicht geschrieben)' : ' → ' + c.datei}`);
-  for (const r of bericht.needsReview) console.log(`  ⚠ ${r.grund}`);
+  for (const c of bericht.changed) {
+    console.log(`  ✓ ${c.bereich}: neues Fenster ab ${c.gueltig_ab}, ${c.anzahl} Positionen${dryRun ? ' (DRY RUN, nicht geschrieben)' : ' → ' + c.datei}`);
+  }
+  if (bericht.erlaubteSpruenge && bericht.erlaubteSpruenge.length > 0) {
+    console.log(`  ⚡ Erlaubte Preissprünge: ${bericht.erlaubteSpruenge.join(', ')}`);
+  }
+  for (const r of bericht.needsReview) {
+    console.log(`  ⚠ ${r.grund}`);
+  }
 
   console.log('---JSON---');
   console.log(JSON.stringify(bericht));
 }
 
-main().catch((err) => {
-  console.error('✗', err.message, err.stack);
-  console.log('---JSON---');
-  console.log(JSON.stringify({ error: err.message, changed: [], needsReview: [{ grund: 'Skript-Fehler: ' + err.message }] }));
-  process.exit(0); // Aufrufer soll den JSON-Bericht lesen, nicht an einem Crash scheitern
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((err) => {
+    console.error('✗', err.message, err.stack);
+    console.log('---JSON---');
+    console.log(JSON.stringify({
+      error: err.message,
+      changed: [],
+      needsReview: [{ art: 'fehler', grund: 'Skript-Fehler: ' + err.message }],
+      erlaubteSpruenge: [],
+    }));
+    process.exit(0); // Aufrufer soll den JSON-Bericht lesen, nicht an einem Crash scheitern
+  });
+}
