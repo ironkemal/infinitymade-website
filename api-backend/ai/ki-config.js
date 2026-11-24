@@ -41,6 +41,18 @@ export const EU_DATA_BOUNDARY_REGIONS = Object.freeze([
 ]);
 
 const VALID_MODES = new Set(['aus', 'direkt', 'jeton']);
+
+/**
+ * Eigener Azure-Zugang der Praxis (Konsey 24.11.2026, KI-Stufe 2 Option D): nur Box, nur `.env`.
+ * Greift ausschließlich bei AI_MODE=direkt UND AI_BYOK_ALLOWED=1 — nie auf dem Jeton-Weg.
+ * Genau ein DNS-Label vor `.openai.azure.com` oder `.cognitiveservices.azure.com` (keine Unterdomänen,
+ * kein Freitext-Host: guvenlik ⛔ SSRF). Die Region verrät der Hostname nicht → AI_REGION ist Pflicht.
+ */
+const RE_BYOK_HOST = /^[a-z0-9](?:[a-z0-9-]{0,62})\.(?:openai|cognitiveservices)\.azure\.com$/;
+/** @param {string} hostname */
+export function byokHostErlaubt(hostname) {
+  return typeof hostname === 'string' && RE_BYOK_HOST.test(hostname.toLowerCase()) && !hostname.toLowerCase().includes('--');
+}
 // Azure deployment names may contain dots (gpt-4.1-mini); a leading dot and ".." stay out of the URL path.
 export const RE_SAFE_SEGMENT = /^(?!.*\.\.)[a-zA-Z0-9_-][a-zA-Z0-9._-]{0,63}$/;
 const RE_API_VERSION = /^\d{4}-\d{2}-\d{2}(-preview)?$/;
@@ -195,6 +207,7 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
   const transcribeDeployment = getEnvOverride(safeEnv, 'AI_MODEL_TRANSCRIBE', null, '');
   const apiVersion = getEnvOverride(safeEnv, 'AI_API_VERSION', 'AZURE_OPENAI_API_VERSION', '2024-10-21');
   let region = getEnvOverride(safeEnv, 'AI_REGION', 'AZURE_OPENAI_REGION', '').trim().toLowerCase();
+  const regionAusEnv = region;
 
   // Mode resolution
   /** @type {AiMode} */
@@ -423,7 +436,15 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
     };
   }
 
-  const endpointVal = validateEndpointUrl(endpoint, normalizedHosts);
+  // BYOK (Option D): eigener Host nur unter Betreiber-Schalter und nur im Modus direkt.
+  let byokHost = null;
+  if (mode === 'direkt' && safeEnv.AI_BYOK_ALLOWED === '1') {
+    try {
+      const h = new URL(String(endpoint)).hostname.toLowerCase();
+      if (!normalizedHosts.some((x) => String(x).toLowerCase() === h) && byokHostErlaubt(h)) byokHost = h;
+    } catch { /* ungültige URL prüft validateEndpointUrl */ }
+  }
+  const endpointVal = validateEndpointUrl(endpoint, byokHost ? [...normalizedHosts, byokHost] : normalizedHosts);
   if (!endpointVal.ok) {
     return {
       valid: false,
@@ -444,8 +465,9 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
     };
   }
 
-  // Determine & validate EU region
-  if (!region) {
+  // Determine & validate EU region (eigener Host: nur ausdrückliche AI_REGION, nie aus dem Namen raten)
+  if (byokHost) region = regionAusEnv;
+  if (!region && !byokHost) {
     const lowerEndpoint = endpoint.toLowerCase();
     for (const r of EU_DATA_BOUNDARY_REGIONS) {
       if (lowerEndpoint.includes(r)) {

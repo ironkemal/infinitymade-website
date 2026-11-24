@@ -6,11 +6,14 @@ process.env.SUPABASE_URL ||= 'http://127.0.0.1:54321';
 process.env.SUPABASE_SERVICE_ROLE_KEY ||= 'synthetic-unused-key';
 const { anbieterAnzeige } = await import('./router.js');
 
-test('anbieterAnzeige: aus → nichts; direkt/jeton → Name + Region, EU erkannt', () => {
+test('anbieterAnzeige: aus → nichts; direkt/jeton → Name + Region, EU erkannt', async () => {
   assert.equal(anbieterAnzeige({ mode: 'aus', provider: 'azure', region: 'swedencentral' }), null);
   assert.equal(anbieterAnzeige(null), null);
-  const a = anbieterAnzeige({ mode: 'direkt', provider: 'azure', region: 'swedencentral', endpoint: 'https://geheim.openai.azure.com', deployment: 'gpt-x', apiKey: 'k' });
+  const { VERIFIED_AZURE_HOSTS } = await import('./ki-config.js');
+  const a = anbieterAnzeige({ mode: 'direkt', provider: 'azure', region: 'swedencentral', endpoint: `https://${VERIFIED_AZURE_HOSTS[0]}`, deployment: 'gpt-x', apiKey: 'k' });
   assert.deepEqual(a, { name: 'Microsoft Azure OpenAI', region: 'swedencentral', euRegion: true });
+  const g = anbieterAnzeige({ mode: 'direkt', provider: 'azure', region: 'swedencentral', endpoint: 'https://geheim.openai.azure.com', deployment: 'gpt-x', apiKey: 'k' });
+  assert.equal(JSON.stringify(g).includes('geheim'), false);
   assert.equal(JSON.stringify(a).includes('geheim'), false);
   assert.equal(anbieterAnzeige({ mode: 'jeton', provider: 'azure', region: 'eastus' }).euRegion, false);
 });

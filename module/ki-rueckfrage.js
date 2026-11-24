@@ -1,4 +1,4 @@
-import { validateKiChallenge } from './ki-client.js?v=20261123ka1';
+import { validateKiChallenge } from './ki-client.js?v=20261124by1';
 import { zeigeBestaetigungsDialog } from './bestaetigungs-dialog.js?v=20261115v703';
 
 export async function zeigeKiRueckfrageDialog(challenge, deps = {}) {

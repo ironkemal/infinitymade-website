@@ -83,7 +83,7 @@ export function verbindungenListe(env = process.env, postfach = null) {
   const ki = (env.AI_MODE || 'aus').toLowerCase();
   if (ki === 'direkt') {
     add(host(env.AI_ENDPOINT || '') || '(KI-Adresse nicht gesetzt)', 'KI-Funktionen mit dem eigenen KI-Zugang der Praxis',
-      'nur wenn eine KI-Funktion benutzt wird', 'pseudonymisierter Text der jeweiligen Anfrage');
+      'nur wenn eine KI-Funktion benutzt wird oder der Inhaber „Verbindung testen“ drückt', 'pseudonymisierter Text der jeweiligen Anfrage; beim Test nur eine feste Prüfnachricht');
   } else if (ki === 'jeton') {
     if (merkez) {
       add(merkez, 'KI-Zugang anfordern (kurzlebiger Schlüssel)', 'höchstens einmal pro Stunde, nur bei KI-Nutzung',

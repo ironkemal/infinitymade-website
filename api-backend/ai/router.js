@@ -16,7 +16,8 @@ import rateLimit from 'express-rate-limit';
 import { requireAuth } from './auth.js';
 import { logCall, hashRequest, getAiSupabaseClient } from './audit.js';
 import { safeAiError } from './ki-privacy.js';
-import { createAiConfig, healthSummary, EU_DATA_BOUNDARY_REGIONS } from './ki-config.js';
+import { createAiConfig, healthSummary, EU_DATA_BOUNDARY_REGIONS, VERIFIED_AZURE_HOSTS } from './ki-config.js';
+import { chat as azureChat } from './azureClient.js';
 import { CURRENT_EINWILLIGUNG_VERSION } from './ki-einwilligung.js';
 import { getOwnerDecisionStore, invalidateTenantJeton } from './ki-gateway.js';
 import { getAufgabenSperreStore, aufgabenListe } from './ki-aufgaben-sperre.js';
@@ -41,7 +42,11 @@ export function anbieterAnzeige(cfg) {
   /** @type {Record<string, string>} */
   const NAMEN = { azure: 'Microsoft Azure OpenAI' };
   const region = typeof cfg.region === 'string' && /^[a-z0-9-]{2,40}$/.test(cfg.region) ? cfg.region : null;
-  return { name: NAMEN[String(cfg.provider || 'azure')] || 'Unbekannter Anbieter', region, euRegion: !!region && EU_DATA_BOUNDARY_REGIONS.includes(region) };
+  // Eigener Azure-Zugang der Praxis (Konsey 24.11.2026, Option D): Host nicht in der festen Praxura-Liste.
+  let eigener = false;
+  try { eigener = cfg.mode === 'direkt' && !!cfg.endpoint && !VERIFIED_AZURE_HOSTS.includes(new URL(String(cfg.endpoint)).hostname.toLowerCase()); } catch { eigener = false; }
+  const name = eigener ? 'Eigener Azure-Zugang (Admin-Konfiguration)' : (NAMEN[String(cfg.provider || 'azure')] || 'Unbekannter Anbieter');
+  return { name, region, euRegion: !!region && EU_DATA_BOUNDARY_REGIONS.includes(region), ...(eigener ? { eigener: true } : {}) };
 }
 
 export const TASKS = Object.freeze({
@@ -96,6 +101,7 @@ function validChallenge(err) {
  * @param {import('express').RequestHandler | null} [options.rateLimiter] optional rate limiter
  * @param {ReturnType<typeof import('./ki-aufgaben-sperre.js').createAufgabenSperreStore>} [options.aufgabenStore] KI-Aufgaben-Sperre (Phase 7b)
  * @param {import('express').RequestHandler | null} [options.einstellungLimiter] Limit für PATCH /_config und /_aufgaben
+ * @param {(opts: Record<string, unknown>) => Promise<unknown>} [options.pingTransport] Transport für POST /_verbindungstest (Tests)
  * @returns {ReturnType<typeof express.Router>}
  */
 export function createAiRouter({
@@ -108,7 +114,8 @@ export function createAiRouter({
   invalidateJeton = invalidateTenantJeton,
   rateLimiter = null,
   aufgabenStore = getAufgabenSperreStore(),
-  einstellungLimiter = null
+  einstellungLimiter = null,
+  pingTransport = azureChat
 } = {}) {
   const router = express.Router();
   // Gemeinsames Limit für die Einstellungs-Routen PATCH /_config und /_aufgaben (guvenlik 23.11.2026: /_config hatte keins)
@@ -302,6 +309,28 @@ export function createAiRouter({
       if (e?.status === 400 || e?.status === 403) return res.status(e.status).json({ success: false, error: e.message });
       console.error('[ki-aufgaben] Speichern fehlgeschlagen', e?.code || 'unbekannt');
       return res.status(500).json({ success: false, error: 'KI-Aufgaben konnten nicht gespeichert werden' });
+    }
+  });
+
+  // POST /_verbindungstest (Konsey 24.11.2026, Option D): prüft den eingestellten Zugang im Modus direkt mit einer
+  // festen synthetischen Mini-Nachricht — nie Praxisdaten, nie Antworttext/Fehlertext des Anbieters zurück (kein
+  // SSRF-Orakel), eigenes enges Limit, kein logCall (keine Nutzung). Neuer Außenruf-Auslöser: onprem/REGISTER.md.
+  const testLimiter = rateLimit({ windowMs: 60 * 1000, limit: 5, standardHeaders: 'draft-7', legacyHeaders: false,
+    message: { success: false, code: 'AI_RATE_LIMIT_EXCEEDED', error: 'Zu viele Verbindungstests. Bitte warten Sie eine Minute.' } });
+  router.post('/_verbindungstest', authMiddleware, testLimiter, async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
+    if (req.auth?.role !== 'owner' || req.auth?.userId !== req.auth?.tenantId) {
+      return res.status(403).json({ success: false, error: 'Nur der Praxisinhaber darf die Verbindung testen' });
+    }
+    let cfg;
+    try { cfg = configProvider(); } catch { return res.json({ success: true, ok: false, code: 'AI_CONFIG_FEHLER' }); }
+    if (!cfg || cfg.mode !== 'direkt') return res.json({ success: true, ok: false, code: cfg?.mode === 'aus' ? 'AI_MODE_AUS' : 'NUR_DIREKT' });
+    if (cfg.valid !== true) return res.json({ success: true, ok: false, code: typeof cfg.code === 'string' && /^[A-Z][A-Z0-9_]{2,60}$/.test(cfg.code) ? cfg.code : 'AI_CONFIG_UNGUELTIG' });
+    try {
+      await pingTransport({ messages: [{ role: 'system', content: 'Antworte nur mit OK.' }, { role: 'user', content: 'OK?' }], maxTokens: 5, temperature: 0, config: cfg, timeoutMs: 15000 });
+      return res.json({ success: true, ok: true });
+    } catch (err) {
+      const code = /** @type {any} */ (err)?.code;
+      return res.json({ success: true, ok: false, code: typeof code === 'string' && /^[A-Z][A-Z0-9_]{2,60}$/.test(code) ? code : 'AI_VERBINDUNG_FEHLGESCHLAGEN' });
     }
   });
 

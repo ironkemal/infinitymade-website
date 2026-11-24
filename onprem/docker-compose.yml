@@ -554,6 +554,9 @@ services:
       AI_ACTIVATION_READY: ${AI_ACTIVATION_READY:-0}
       AI_MAIL_READY: ${AI_MAIL_READY:-0}
       AI_ALLOW_FREETEXT: ${AI_ALLOW_FREETEXT:-0}
+      # KI-Stufe 2 Option D (Konsey 24.11.2026): eigener Azure-Zugang der Praxis nur mit AI_MODE=direkt +
+      # AI_BYOK_ALLOWED=1 (Host <name>.(openai|cognitiveservices).azure.com, AI_REGION Pflicht/EU). Standard aus.
+      AI_BYOK_ALLOWED: ${AI_BYOK_ALLOWED:-0}
       KI_EINWILLIGUNG_DIR: /var/lib/praxura/ki-freigaben
 
       # Einmal-Jeton fuer den Einrichtungsassistenten (Faz 2.2, O-62). Von

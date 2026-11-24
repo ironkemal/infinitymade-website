@@ -4,9 +4,9 @@ import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
 import { planungVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261121f11';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
-import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261123ka1'; import { mountSystemstatus } from './module/systemstatus.js?v=20261124st1'; import { kanalStatusBehandler } from './module/realtime-status.js?v=20261123rt1';
-import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261123ka1';
-import { zeigeKiRueckfrageDialog } from './module/ki-rueckfrage.js?v=20261123ka1';
+import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261124by1'; import { mountSystemstatus } from './module/systemstatus.js?v=20261124st1'; import { kanalStatusBehandler } from './module/realtime-status.js?v=20261123rt1';
+import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261124by1';
+import { zeigeKiRueckfrageDialog } from './module/ki-rueckfrage.js?v=20261124by1';
 import { dsgvoVerdrahten } from './module/dsgvo-client.js?v=20261002';
 import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, verdrahteEinrichtungscodeKnoepfe, mitarbeiterEntfernen } from './module/mitarbeiter-zugang.js?v=20261123hw1'; import { rechteReiterVorbereiten, standortAnlegenOeffnen } from './module/rechte-ohne-standort.js?v=20261123sp1'; import { erstCheckinAnbieten } from './module/erst-checkin.js?v=20261123ec2';
 import { DEFAULT_VORLAGE_SEEDS, fehlendeSeedZeilen, seedeVorlagen } from './module/vorlagen-seed.js?v=20260929';
@@ -53,7 +53,7 @@ import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261123qa1';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung } from './module/podologie-abrechnung.js?v=20261123fb1'; import { renderZaaUploadResult, renderZaaFehlerTabelle, ladeZaaZeilen, verdrahteZaaBeheben } from './module/zaa-fehler.js?v=20261106'; import { verdrahtePhysioBefund } from './module/physio-befund.js?v=20261101b';
-import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261031b'; import { montiereVorgeschichte } from './module/podo-vorgeschichte-form.js?v=20261021y'; import { verdrahteDokumente } from './module/patient-dokumente.js?v=20261123ka1'; import { montiereAkteAktionen } from './module/akte-aktionen.js?v=20261114v702';
+import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261031b'; import { montiereVorgeschichte } from './module/podo-vorgeschichte-form.js?v=20261021y'; import { verdrahteDokumente } from './module/patient-dokumente.js?v=20261124by1'; import { montiereAkteAktionen } from './module/akte-aktionen.js?v=20261114v702';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20261021n';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtZeilenReferenz } from './module/fahrtenbuch-regeln.js?v=20261014five1';
 import { exportFahrtenbuchCsv, exportAenderungsprotokollCsv, exportPatientenverzeichnisCsv } from './module/fahrtenbuch-export.js?v=20261014five1';
@@ -94,7 +94,7 @@ import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzu
 import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261115v703';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20261101u';
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261121pag1';
-import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261123ka1';
+import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261124by1';
 import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261117c5'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
 import { rendereVeroKarten, ladeTerminVerordnungen, ladePatientenEntwuerfe, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261123p3';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
@@ -148,7 +148,7 @@ import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-
 // von gleicheSitzungenAb() muss diese Bremse respektieren, sonst legt er
 // podologischen Verordnungen ein Sitzungsbuch an, das niemand pflegt.
 import { fuehrtSitzungsbuch } from './module/verordnung-topf.js?v=20260930c'; import { sitzungsWaechterInstallieren, apiFehlertext, MELDUNG_SITZUNG_BEENDET } from './module/api-sitzung.js?v=20261118s1';
-import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261123ka1'; import { planSpalten, termineDesStandorts } from './module/standort-plan-laden.js?v=20261103planung';
+import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261124by1'; import { planSpalten, termineDesStandorts } from './module/standort-plan-laden.js?v=20261103planung';
 import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20261031a';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY); sitzungsWaechterInstallieren({ auth: supabase.auth, apiBase: API_BASE, beiBeendet: () => { showToast(MELDUNG_SITZUNG_BEENDET, 'error'); supabase.auth.signOut({ scope: 'local' }).catch(() => {}).finally(() => setTimeout(() => { location.href = 'login.html'; }, 3000)); } }); // serverseitig beendete Sitzung → neu anmelden statt roher 401 (18.11.)

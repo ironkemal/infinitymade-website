@@ -1,4 +1,4 @@
-import { getKiConfig, updateOwnerOptIn, setzeKiAufgaben, CURRENT_EINWILLIGUNG_VERSION, refreshKiControls } from './ki-client.js?v=20261123ka1';
+import { getKiConfig, updateOwnerOptIn, setzeKiAufgaben, testeKiVerbindung, verbindungstestText, CURRENT_EINWILLIGUNG_VERSION, refreshKiControls } from './ki-client.js?v=20261124by1';
 
 /** @param {unknown} t */
 const escapeText = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] || c));
@@ -73,6 +73,11 @@ export async function mountKiEinstellungen(container, deps = {}) {
             <span>Anbieter &amp; Region:</span>
             <strong style="color:var(--text-main);font-size:12px;">${escapeText(cfg.anbieter.name)}${cfg.anbieter.region ? ` · ${escapeText(cfg.anbieter.region)}${cfg.anbieter.euRegion ? ' (EU)' : ' (nicht EU)'}` : ''}</strong>
           </div>` : ''}
+          ${isOwner && cfg.mode === 'direkt' ? `
+          <div id="kiVerbindungstest" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--text-muted);border-top:1px solid var(--border);padding-top:8px;">
+            <span id="kiVerbindungstestErgebnis" role="status">${cfg.anbieter?.eigener ? 'Eigener Zugang, eingerichtet vom Administrator.' : 'Direkt eingerichteter Zugang.'}</span>
+            <button type="button" class="btn btn-secondary" id="kiVerbindungstestBtn" style="min-height:40px;">Verbindung testen</button>
+          </div>` : ''}
 
           <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text-muted);border-top:1px solid var(--border);padding-top:8px;">
             <span>Betreiber-Bereitschaft (Technik):</span>
@@ -146,6 +151,17 @@ export async function mountKiEinstellungen(container, deps = {}) {
         </div>
       </div>
     `;
+
+    // Verbindungstest (Konsey 24.11.2026, Option D): nur Inhaber, Ergebnis als Klartext, nie Anbietertext.
+    const testBtn = container.querySelector('#kiVerbindungstestBtn');
+    if (testBtn && isOwner) testBtn.addEventListener('click', async () => {
+      const ziel = container.querySelector('#kiVerbindungstestErgebnis');
+      testBtn.setAttribute('disabled', '');
+      if (ziel) ziel.textContent = 'Wird geprüft …';
+      const r = await testeKiVerbindung({ apiBase: deps.apiBase, getToken: deps.getSessionToken, fetchImpl: deps.fetchImpl });
+      if (ziel) ziel.textContent = r.ok ? '✓ Verbindung in Ordnung.' : `✗ ${verbindungstestText(r.code)}`;
+      testBtn.removeAttribute('disabled');
+    });
 
     // Aufgaben-Schalter: Häkchen = KI darf; gespeichert wird die Liste der ausgeschalteten Gruppen.
     const aufgabenBoxen = typeof container.querySelectorAll === 'function' ? [...container.querySelectorAll('[data-ki-aufgabe]')] : [];

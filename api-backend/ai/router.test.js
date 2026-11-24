@@ -99,3 +99,31 @@ test('PATCH /_aufgaben: nur Inhaber, Body exakt, GET /_config zeigt Sperren', as
  const cfg = await request(r);
  assert.deepEqual(cfg.body.aufgaben.filter((/** @type {any} */ a) => a.gesperrt).map((/** @type {any} */ a) => a.id), ['serie']);
 });
+
+// KI-Stufe 2 Option D (Konsey 24.11.2026): Verbindungstest + Anzeige eigener Zugang
+test('POST /_verbindungstest: nur Inhaber, nur direkt, synthetischer Ping, nur ok/Code zurück', async () => {
+ /** @type {any[]} */ const pings = [];
+ const ok = async (/** @type {any} */ o) => { pings.push(o); return { content: 'OK' }; };
+ const r = router({ pingTransport: ok });
+ assert.equal((await request(r, { method: 'POST', path: '/_verbindungstest', body: {}, auth: employee })).status, 403);
+ const res = await request(r, { method: 'POST', path: '/_verbindungstest', body: { endpoint: 'https://evil.example' } });
+ assert.equal(res.status, 200); assert.deepEqual(res.body, { success: true, ok: true });
+ assert.equal(pings.length, 1);
+ assert.deepEqual(pings[0].messages, [{ role: 'system', content: 'Antworte nur mit OK.' }, { role: 'user', content: 'OK?' }]);
+ assert.equal(JSON.stringify(pings[0]).includes('evil'), false, 'Body des Clients fließt nicht in den Ping');
+ const fehler = router({ pingTransport: async () => { const e = /** @type {any} */ (new Error('Antwort mit Geheimnis https://intern')); e.code = 'AI_HTTP_401'; throw e; } });
+ const f = await request(fehler, { method: 'POST', path: '/_verbindungstest', body: {} });
+ assert.deepEqual(f.body, { success: true, ok: false, code: 'AI_HTTP_401' });
+ const jeton = router({ configProvider: () => ({ ...active, mode: 'jeton' }), pingTransport: ok });
+ assert.deepEqual((await request(jeton, { method: 'POST', path: '/_verbindungstest', body: {} })).body, { success: true, ok: false, code: 'NUR_DIREKT' });
+});
+
+test('anbieterAnzeige: eigener Host = „Eigener Azure-Zugang (Admin-Konfiguration)“, Praxura-Host = Microsoft-Name', async () => {
+ const { anbieterAnzeige } = await import('./router.js');
+ const { VERIFIED_AZURE_HOSTS } = await import('./ki-config.js');
+ const eigen = anbieterAnzeige({ mode: 'direkt', provider: 'azure', region: 'germanywestcentral', endpoint: 'https://praxis-muster.openai.azure.com' });
+ assert.equal(eigen?.name, 'Eigener Azure-Zugang (Admin-Konfiguration)'); assert.equal(eigen?.eigener, true);
+ assert.equal(JSON.stringify(eigen).includes('praxis-muster'), false, 'Host wird nicht angezeigt');
+ const pr = anbieterAnzeige({ mode: 'direkt', provider: 'azure', region: 'swedencentral', endpoint: `https://${VERIFIED_AZURE_HOSTS[0]}` });
+ assert.equal(pr?.name, 'Microsoft Azure OpenAI'); assert.equal(pr?.eigener, undefined);
+});

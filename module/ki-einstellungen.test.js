@@ -132,3 +132,22 @@ test('ki-einstellungen: Aufgaben-Schalter (Häkchen = erlaubt), escaped, nur fü
   // Mitarbeiter laden die KI-Konfiguration nicht (owner-only) → kein Aufgaben-Kasten
   assert.ok(!ma.container.innerHTML.includes('id="kiAufgaben"'));
 });
+
+test('ki-einstellungen: Verbindungstest nur für Inhaber im Modus direkt; eigener Zugang benannt', async () => {
+  const a = createContainerFixture();
+  await mountKiEinstellungen(a.container, { isOwner: () => true, getSessionToken: async () => 't', apiBase: '/api/ai', fetchImpl: async () => ({ ok: true, json: async () => ({ success: true, active: true, mode: 'direkt', anbieter: { name: 'Eigener Azure-Zugang (Admin-Konfiguration)', region: 'germanywestcentral', euRegion: true, eigener: true } }) }) });
+  assert.ok(a.container.innerHTML.includes('id="kiVerbindungstestBtn"'));
+  assert.ok(a.container.innerHTML.includes('Eigener Zugang, eingerichtet vom Administrator.'));
+  const b = createContainerFixture();
+  await mountKiEinstellungen(b.container, { isOwner: () => true, getSessionToken: async () => 't', apiBase: '/api/ai', fetchImpl: async () => ({ ok: true, json: async () => ({ success: true, active: false, mode: 'jeton' }) }) });
+  assert.ok(!b.container.innerHTML.includes('kiVerbindungstestBtn'));
+});
+
+test('ki-client: Verbindungstest liefert nur ok/Code, Texte verständlich', async () => {
+  const { testeKiVerbindung, verbindungstestText } = await import('./ki-client.js');
+  assert.deepEqual(await testeKiVerbindung({ getToken: async () => 't', fetchImpl: async () => ({ json: async () => ({ success: true, ok: true }) }) }), { ok: true });
+  assert.deepEqual(await testeKiVerbindung({ getToken: async () => 't', fetchImpl: async () => ({ json: async () => ({ success: true, ok: false, code: 'AI_HTTP_401', error: 'geheim' }) }) }), { ok: false, code: 'AI_HTTP_401' });
+  assert.deepEqual(await testeKiVerbindung({ getToken: async () => 't', fetchImpl: async () => { throw new Error('x'); } }), { ok: false, code: 'AI_VERBINDUNG_FEHLGESCHLAGEN' });
+  assert.equal(verbindungstestText('AI_HTTP_401'), 'Der Schlüssel wurde abgelehnt.');
+  assert.match(verbindungstestText('IRGENDWAS'), /nicht hergestellt/);
+});

@@ -49,7 +49,7 @@
  *   vertagt). Diese Datei soll das NICHT heimlich zu reparieren versuchen.
  */
 
-import { oeffneFormularAuswahl } from './formular-unterschreiben.js?v=20261123ka1';
+import { oeffneFormularAuswahl } from './formular-unterschreiben.js?v=20261124by1';
 
 // Vom Aufrufer (dashboard.js) injizierte Abhängigkeiten.
 let supabase = null;

@@ -7,7 +7,7 @@
  * `patient-documents` und die Tabelle `patient_dokumente` (§ 630f BGB).
  */
 
-import { oeffneFormularAuswahl } from './formular-unterschreiben.js?v=20261123ka1';
+import { oeffneFormularAuswahl } from './formular-unterschreiben.js?v=20261124by1';
 
 'use strict';
 

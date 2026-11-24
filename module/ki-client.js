@@ -46,7 +46,7 @@ export async function getKiConfig(deps = {}) {
       mailReady:data.mailReady === true || (employee && capabilities.appointmentDraft),freeText:capabilities.freeText,capabilities,
       diktat_verfuegbar,
       aufgaben: Array.isArray(data.aufgaben) ? data.aufgaben.filter(a => a && /^[a-z]{2,20}$/.test(a.id) && typeof a.label === 'string').slice(0, 10).map(a => ({ id: a.id, label: a.label.slice(0, 80), gesperrt: a.gesperrt === true })) : [],
-      anbieter: data.anbieter && typeof data.anbieter.name === 'string' ? { name: data.anbieter.name.slice(0, 60), region: typeof data.anbieter.region === 'string' ? data.anbieter.region.slice(0, 40) : null, euRegion: data.anbieter.euRegion === true } : null,
+      anbieter: data.anbieter && typeof data.anbieter.name === 'string' ? { name: data.anbieter.name.slice(0, 60), region: typeof data.anbieter.region === 'string' ? data.anbieter.region.slice(0, 40) : null, euRegion: data.anbieter.euRegion === true, eigener: data.anbieter.eigener === true } : null,
       informationVersion:typeof data.optIn?.informationVersion === 'string' ? data.optIn.informationVersion : null,
       decidedAt:typeof data.optIn?.decidedAt === 'string' && Number.isFinite(Date.parse(data.optIn.decidedAt)) ? data.optIn.decidedAt : null };
     [config.disabledReason, config.disabledReasonText] = mailDisabledReason(config, employee);
@@ -90,6 +90,33 @@ export async function setzeKiAufgaben(gesperrt, deps = {}) {
   } catch { throw fail('KI_CONFIG_SAVE_FAILED','KI-Aufgaben konnten nicht gespeichert werden.',503); }
   if (!res.ok || data.success !== true) throw fail('KI_CONFIG_SAVE_FAILED', typeof data?.error === 'string' ? data.error.slice(0, 160) : 'KI-Aufgaben konnten nicht gespeichert werden.', res.status || 503);
   return data;
+}
+
+/** Verständliche Meldung zum Verbindungstest (Konsey 24.11.2026, Option D). @param {string} code */
+export function verbindungstestText(code) {
+  /** @type {Record<string, string>} */
+  const T = {
+    AI_MODE_AUS: 'Die KI ist auf diesem Server ausgeschaltet.',
+    NUR_DIREKT: 'Der Test ist nur für einen eigenen bzw. direkt eingerichteten Zugang vorgesehen.',
+    AI_HOST_NOT_ALLOWED: 'Die eingetragene Adresse ist nicht erlaubt — Admin-Konfiguration prüfen.',
+    AI_INVALID_REGION: 'Region fehlt oder liegt nicht in der EU — Admin-Konfiguration prüfen.',
+    AI_NOT_ACTIVATED: 'Der Betreiber hat die KI noch nicht freigegeben.',
+    AI_HTTP_401: 'Der Schlüssel wurde abgelehnt.', AI_HTTP_403: 'Der Schlüssel wurde abgelehnt.',
+    AI_HTTP_404: 'Das Modell bzw. Deployment wurde nicht gefunden.',
+  };
+  return T[code] || 'Die Verbindung konnte nicht hergestellt werden.';
+}
+
+/** POST /_verbindungstest — nur ok/Code, nie Text des Anbieters. @param {{ apiBase?: string, getToken?: () => Promise<string|null|undefined>, fetchImpl?: typeof fetch }} [deps] */
+export async function testeKiVerbindung(deps = {}) {
+  const token = await deps.getToken?.();
+  if (typeof token !== 'string' || !token) return { ok: false, code: 'KI_AUTH_REQUIRED' };
+  try {
+    const res = await (deps.fetchImpl || globalThis.fetch)(`${deps.apiBase || DEFAULT_AI_BASE}/_verbindungstest`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: '{}' });
+    const data = await res.json();
+    if (data?.success === true && data.ok === true) return { ok: true };
+    return { ok: false, code: typeof data?.code === 'string' ? data.code.slice(0, 60) : 'AI_VERBINDUNG_FEHLGESCHLAGEN' };
+  } catch { return { ok: false, code: 'AI_VERBINDUNG_FEHLGESCHLAGEN' }; }
 }
 
 export function validateKiChallenge(value, now = Date.now()) {

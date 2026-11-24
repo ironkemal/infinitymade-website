@@ -784,6 +784,29 @@ der Datenverarbeitung Ihrer Patientendaten einnimmt.
   Das optionale KI-Modul ist standardmäßig deaktiviert (`AI_MODE=aus`). Ist es aktiv,
   gehen maskierte Inhalte direkt von der Box zu Microsoft Azure (Schweden). Die Maskierung
   kann nicht garantieren, dass alle personenbezogenen Angaben entfernt werden.
+- **Eigener Azure-Zugang der Praxis (nur für Administratoren, optional):**
+  Statt des Praxura-Zugangs kann die Praxis einen *eigenen* Azure-OpenAI-Zugang nutzen
+  (Konsey-Entscheidung 24.11.2026). Eingerichtet wird das nur in der Datei `.env` der Box,
+  nicht in der Oberfläche:
+  `AI_MODE=direkt`, `AI_BYOK_ALLOWED=1`, `AI_ENDPOINT=https://<name>.openai.azure.com`
+  (oder `…cognitiveservices.azure.com`), `AI_API_KEY`, `AI_MODEL_TEXT`, **`AI_REGION`**
+  (Pflicht, eine EU-Region, z. B. `germanywestcentral` oder `swedencentral`).
+  Andere Adressen lehnt die Box ab. Danach in den Einstellungen unter
+  „KI-Unterstützung“ auf **„Verbindung testen“** klicken (sendet nur eine feste
+  Prüfnachricht, keine Praxisdaten).
+  **Pflichten der Praxis** (Praxura ist in diesem Fall nicht Vertragspartner):
+  - Vertrag und Auftragsverarbeitungsvertrag (DPA) schließt die Praxis selbst mit Microsoft;
+    die Azure-Ressource liegt in einer EU-Region — das bestätigt die Praxis selbst, der
+    Hostname verrät es nicht.
+  - Der Schlüssel steht nur in der `.env` der Box. Er wird nie an Praxura gegeben, auch nicht
+    in einem Diagnosepaket oder bei der Fernwartung.
+  - Anfragen gehen direkt von der Box zu Azure, ohne Umweg über Praxura.
+  - Es werden nur strukturierte Angaben ohne Freitext verarbeitet (Datenklasse A);
+    Freitext, Bilder und Texterkennung bleiben gesperrt.
+  - Die Praxis prüft das C5-Testat des Anbieters (§ 393 SGB V), verpflichtet ihn nach
+    § 203 Abs. 3 StGB und trägt den Dienst in ihr Verarbeitungsverzeichnis und ihre
+    Datenschutz-Folgenabschätzung ein.
+  - KI-Ergebnisse bleiben als KI-Vorschlag gekennzeichnet und werden vor Verwendung geprüft.
 
 > ### Stand der Prüfung (08.10.2026)
 > *Keine Rechtsberatung. Angaben nach öffentlichen Hetzner-Quellen; maßgeblich ist
