@@ -777,7 +777,7 @@ export function umsatzRetterAufbereiten(rezepte, termine, sitzungen, heuteIso) {
   /** @type {Map<string, Array<Record<string, any>>>} */
   const sitzungenJeRx = new Map();
   for (const s of sitzungen || []) {
-    if (!s?.prescription_id || s.status !== 'done') continue;
+    if (!s?.prescription_id || (s.status !== 'done' && s.status !== 'completed')) continue;
     const arr = sitzungenJeRx.get(s.prescription_id) || [];
     arr.push(s);
     sitzungenJeRx.set(s.prescription_id, arr);
@@ -815,7 +815,12 @@ export function umsatzRetterAufbereiten(rezepte, termine, sitzungen, heuteIso) {
     const istGestartet = !!gestartetDatum || absolviert > 0;
     if (!istGestartet) continue;
 
-    const sollEinheiten = Number(rx.anzahl_einheiten) || Number(rx.vorrangig_einheiten) || 0;
+    const itemEinheiten = Array.isArray(rx.heilmittel_items) && rx.heilmittel_items[0]?.einheiten != null
+      ? Number(rx.heilmittel_items[0].einheiten) || 0
+      : 0;
+    const sollEinheiten = rx.is_blanko
+      ? 0
+      : (Number(rx.anzahl_einheiten) || Number(rx.vorrangig_einheiten) || itemEinheiten || 0);
     const offeneEinheiten = sollEinheiten > 0 ? Math.max(0, sollEinheiten - absolviert) : null;
     const istPodo = rx.therapie_bereich === 'podo';
 

@@ -146,7 +146,7 @@ export async function abwesenheitFreigeben({ supabase, ownerId, empId, von, bis,
       // Kurz nach dem Rückgabewert öffnen, damit der Aufrufer den time_offs-Eintrag
       // zuerst speichert und sein Eingabe-Modal sauber schließt (kein dashboard.js-Wachstum).
       setTimeout(() => {
-        import('./abwesenheit-termine.js?v=20261124c1')
+        import('./abwesenheit-termine.js?v=20261124c2')
           .then(({ oeffneAbwesenheitAssistent }) => oeffneAbwesenheitAssistent({
             supabase, ownerId, empId, von, bis, showToast, showConfirmModal,
           }))

@@ -378,4 +378,29 @@ test('umsatzRetterAufbereiten: erkennt 14-Tage-Unterbrechung (nicht Podologie), 
   const ansicht = fs.readFileSync(new URL('./ueberblick-ansicht.js', import.meta.url), 'utf8');
   assert.match(ansicht, /select\('prescription_id, booking_id, done_at, status'\)/, 'Physio-Sitzungen müssen booking_id mitladen');
   assert.match(ansicht, /verordnung_id: rxId/, 'Geladene Physio-Termine werden auf ihre prescription_id abgebildet');
+
+  // Regressionstest: status='completed', heilmittel_items[0].einheiten und Blanko (keine feste Einheitengrenze)
+  const sonder = umsatzRetterAufbereiten(
+    [
+      {
+        id: 'rx-items', patient_id: 'p7', behandlungsbeginn: '2026-11-18', status: 'in_therapy',
+        therapie_bereich: 'physio', anzahl_einheiten: null, heilmittel_items: [{ einheiten: 6 }],
+        leads: { id: 'p7', first_name: 'Erika', last_name: 'Items' },
+      },
+      {
+        id: 'rx-blanko', patient_id: 'p8', behandlungsbeginn: '2026-11-18', status: 'in_therapy',
+        therapie_bereich: 'physio', is_blanko: true, anzahl_einheiten: null,
+        leads: { id: 'p8', first_name: 'Fritz', last_name: 'Blanko' },
+      },
+    ],
+    [{ verordnung_id: 'rx-blanko', start_time: '2026-11-26T09:00:00+01:00', status: 'confirmed' }],
+    [
+      { prescription_id: 'rx-items', status: 'completed', done_at: '2026-11-18T10:00:00+01:00' },
+      { prescription_id: 'rx-items', status: 'completed', done_at: '2026-11-20T10:00:00+01:00' },
+    ],
+    heute
+  );
+  assert.equal(sonder.length, 1, 'Blanko mit Folgetermin löst keinen Falschalarm aus');
+  assert.equal(sonder[0].rxId, 'rx-items');
+  assert.match(sonder[0].hinweis, /Noch 4 von 6 Einheiten offen/);
 });

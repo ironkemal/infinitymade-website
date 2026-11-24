@@ -37,7 +37,7 @@ import {
   suchePasst,
 } from './ueberblick-listen.js?v=20261123oa';
 import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_VOLL } from './verordnung-fristen-laden.js?v=20261123oa1';
-import { oeffneTagesplanDruckDialog } from './tagesplan-druck.js?v=20261123a';
+import { oeffneTagesplanDruckDialog } from './tagesplan-druck.js?v=20261124b';
 import { alsBerlinDatum, berlinTagesgrenzen } from './berlin-datum.js';
 import { fmtEur } from './geld.js?v=20260909';
 import { on } from './signal.js?v=20260813';
@@ -1301,7 +1301,7 @@ async function ladeVerknuepfteVerordnungsdaten(supabase, ownerId, rxIds) {
     }
     if (sRes.status === 'fulfilled' && Array.isArray(sRes.value?.data)) {
       for (const s of sRes.value.data) {
-        if (s?.status === 'done') sitzungen.push(s);
+        if (s?.status === 'done' || s?.status === 'completed') sitzungen.push(s);
         if (s?.booking_id && s?.prescription_id && !gesehenDirekt.has(`${s.booking_id}|${s.prescription_id}`)) {
           const liste = rxJeBookingId.get(s.booking_id) || [];
           if (!liste.includes(s.prescription_id)) liste.push(s.prescription_id);
