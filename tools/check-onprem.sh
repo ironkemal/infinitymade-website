@@ -155,7 +155,7 @@ merkez_istemci_host=$(git grep --cached -c "praxura\.de" -- 'api-backend/merkez-
 #
 # Kapı bunu yasaklamıyor, BİLİNÇLİ olmasını istiyor: dosyada gerekçe satırı ister.
 ddl_ihlal=""
-for f in $(git diff --cached --name-only --diff-filter=AM -- 'api-backend/db/migrations/*.sql' 2>/dev/null); do
+for f in $(git diff --cached --no-renames --name-only --diff-filter=AM -- 'api-backend/db/migrations/*.sql' 2>/dev/null); do
   icerik=$(git show ":$f" 2>/dev/null) || continue
   echo "$icerik" | grep -qiE "DROP[[:space:]]+(COLUMN|TABLE)|RENAME[[:space:]]+(COLUMN|TO)" || continue
   # Gerekçe işareti var mı?
@@ -179,8 +179,8 @@ done
 #
 # Kural: döküm (db/SCHEMA.sql / SCHEMA-RLS.sql) değiştiyse aynı commit'te
 # çalıştırılabilir zincire de bir dosya girmelidir.
-sema_dokum=$(git diff --cached --name-only --diff-filter=AM -- 'db/SCHEMA.sql' 'db/SCHEMA-RLS.sql' 2>/dev/null)
-yeni_migration=$(git diff --cached --name-only --diff-filter=A -- 'api-backend/db/migrations/*.sql' 2>/dev/null)
+sema_dokum=$(git diff --cached --no-renames --name-only --diff-filter=AM -- 'db/SCHEMA.sql' 'db/SCHEMA-RLS.sql' 2>/dev/null)
+yeni_migration=$(git diff --cached --no-renames --name-only --diff-filter=A -- 'api-backend/db/migrations/*.sql' 2>/dev/null)
 
 drift_ihlal=""
 if [ -n "$sema_dokum" ] && [ -z "$yeni_migration" ] && [ "$SKIP_MIGRATION_GATE" != "1" ]; then
@@ -200,7 +200,7 @@ fi
 # bis_version'ı o dosyanın sürüm numarasına EŞİT olmalı (migration'lar
 # ardışık ve numaraları asla küçülmez — en yüksek STAGED migration = bis_version).
 zaehler_ihlal=""
-yeni_migration_dosyalari=$(git diff --cached --name-only --diff-filter=A -- 'api-backend/db/migrations/*.sql' 2>/dev/null)
+yeni_migration_dosyalari=$(git diff --cached --no-renames --name-only --diff-filter=A -- 'api-backend/db/migrations/*.sql' 2>/dev/null)
 if [ -n "$yeni_migration_dosyalari" ] && [ "$SKIP_ZAEHLER_GATE" != "1" ]; then
   en_yuksek_migration=$(git ls-files --cached -- 'api-backend/db/migrations/*.sql' \
     | sed -n 's#.*/\([0-9][0-9][0-9][0-9]\)_.*#\1#p' | sort | tail -1)
@@ -227,7 +227,7 @@ fi
 # api-backend/db/migrations/ altına YENİ bir seed dosyası da girmelidir.
 # `$yeni_migration` yukarıdaki şema-drift kapısında zaten hesaplandı, aynen kullanılır.
 seed_ihlal=""
-positions_degisti=$(git diff --cached --name-only --diff-filter=AM -- 'api-backend/billing/codes/*_positions.js' 2>/dev/null)
+positions_degisti=$(git diff --cached --no-renames --name-only --diff-filter=AM -- 'api-backend/billing/codes/*_positions.js' 2>/dev/null)
 if [ -n "$positions_degisti" ] && [ -z "$yeni_migration" ] && [ "$SKIP_SEED_GATE" != "1" ]; then
   seed_ihlal=$(echo "$positions_degisti" | sed 's/^/      /')
 fi
@@ -283,7 +283,8 @@ fi
 # Bu yüzden "ausstehend" KABUL EDİLMEZ — önce canlıya uygula, sonra commit'le.
 saas_ihlal=""
 if [ "$SKIP_SAAS_ZEILE_GATE" != "1" ]; then
-  for yeni_mig in $(git diff --cached --name-only --diff-filter=A -- 'api-backend/db/migrations/*.sql'); do
+  # --no-renames (24.11.2026): git mv aus db/entwuerfe/ war sonst Status R statt A und schluepfte durch (0124-0128).
+  for yeni_mig in $(git diff --cached --no-renames --name-only --diff-filter=A -- 'api-backend/db/migrations/*.sql'); do
     if ! git show ":$yeni_mig" 2>/dev/null | head -40 \
       | grep -qE '^-- SaaS: (angewandt|angewendet) [0-9]{2}\.[0-9]{2}\.[0-9]{4}|^-- SaaS: nicht angewandt \(box-only\): .+'; then
       saas_ihlal="${saas_ihlal:+$saas_ihlal }$(basename "$yeni_mig")"
@@ -300,7 +301,7 @@ fi
 # api-backend/Dockerfile COPY · publish-calendar-api.yml paths) — kontrol üçünü
 # birbirine bağlar. Yalnız ilgili dosya staged ise koşar (node gerekir).
 o149_ihlal=""
-if git diff --cached --name-only | grep -qE '^(onprem/|VERSION$|api-backend/Dockerfile$|\.github/workflows/publish-calendar-api\.yml$|tools/onprem-manifest\.mjs$)'; then
+if git diff --cached --no-renames --name-only | grep -qE '^(onprem/|VERSION$|api-backend/Dockerfile$|\.github/workflows/publish-calendar-api\.yml$|tools/onprem-manifest\.mjs$)'; then
   if command -v node >/dev/null 2>&1; then
     if ! o149_cikti="$(node tools/onprem-manifest.mjs --check 2>&1)"; then
       o149_ihlal="$o149_cikti"
@@ -515,7 +516,7 @@ fi
 # Fremdhost in den Box-Images (Frontend + Backend), keine festen Hosts in der Box-CSP.
 # Prüfer + Allowlist mit Begründungen: tools/fremde-hosts.mjs (Test: tools/fremde-hosts.test.js).
 fremdhost_ihlal=""
-if git diff --cached --name-only 2>/dev/null | grep -qE '\.(js|mjs|html|css|json)$|Dockerfile$|onprem/Caddyfile$'; then
+if git diff --cached --no-renames --name-only 2>/dev/null | grep -qE '\.(js|mjs|html|css|json)$|Dockerfile$|onprem/Caddyfile$'; then
   if ! fremdhost_aus=$(node tools/fremde-hosts.mjs 2>&1); then
     fremdhost_ihlal="$fremdhost_aus"
   fi

@@ -6,9 +6,11 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { migrationenLesen, pruefeVersionen, planErstellen, runMigrations, runMigrationsMitGeduld, istStartrennen } from './migrate.js';
 
@@ -242,6 +244,84 @@ test('runMigrations: DB verschluckt Pakete → nach ~5 s verbindung/ETIMEDOUT, k
     assert.equal((/** @type {any} */ (r.fehler)).art, 'verbindung');
     assert.ok(Date.now() - start < 9000, `dauerte ${Date.now() - start} ms`);
     assert.equal(istStartrennen(r), true, `code ${(/** @type {any} */ (r.fehler)).code}`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// ── O-129: SaaS-Statuszeile in allen neuen Migrationen + git-mv-Gate ────────
+
+const HIER = dirname(fileURLToPath(import.meta.url));
+const ECHTES_MIG_VERZ = join(HIER, 'migrations');
+const REPO_WURZEL = resolve(HIER, '..', '..');
+const SAAS_ZEILE_RE = /^-- SaaS: (angewandt|angewendet) \d{2}\.\d{2}\.\d{4}|^-- SaaS: nicht angewandt \(box-only\): .+/m;
+
+// Unveränderbare Altdateien ab 0054 (Runner hält SHA-256 inkl. Kommentare),
+// deren Live-Stand am 24.11.2026 zentral in onprem/REGISTER.md unter O-129 belegt wurde.
+const O129_ALT_AUSNAHMEN = new Set([
+  '0103_raum_details.sql',
+  '0104_raum_automatik.sql',
+  '0105_mail_signaturen.sql',
+  '0124_physio_sitzungen.sql',
+  '0125_abwesenheit_zeitraum.sql',
+  '0126_messreihen_eingabe.sql',
+  '0127_raumbelegung_gruppenraum.sql',
+  '0128_sitzungsabschluss_atomar.sql',
+  '0129_raum_einzelbelegung.sql',
+]);
+
+test('O-129 (CI-Schutz): jede Migration ab 0054 trägt eine gültige -- SaaS:-Zeile im Kopf', () => {
+  const alle = migrationenLesen(ECHTES_MIG_VERZ);
+  const verletzungen = [];
+  for (const m of alle) {
+    if (Number(m.version) < 54 || O129_ALT_AUSNAHMEN.has(m.name)) continue;
+    const kopf = readFileSync(join(ECHTES_MIG_VERZ, m.name), 'utf8').split('\n').slice(0, 40).join('\n');
+    if (!SAAS_ZEILE_RE.test(kopf)) verletzungen.push(m.name);
+  }
+  assert.deepEqual(
+    verletzungen,
+    [],
+    `Fehlende/ungültige SaaS-Kopfzeile (kein „ausstehend“ erlaubt): ${verletzungen.join(', ')}`
+  );
+});
+
+test('O-129 (Kapı): check-onprem.sh erkennt per git mv verschobene Entwürfe (--no-renames)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'praxura-o129-gate-'));
+  try {
+    execFileSync('git', ['init', '-q'], { cwd: dir });
+    execFileSync('git', ['config', 'user.email', 'test@example.invalid'], { cwd: dir });
+    execFileSync('git', ['config', 'user.name', 'Test'], { cwd: dir });
+    const entwurf = '-- SaaS: ausstehend (Freigabe erforderlich).\nSELECT 1;\n';
+    execFileSync('mkdir', ['-p', 'db/entwuerfe', 'api-backend/db/migrations', 'tools', 'onprem/volumes/db'], { cwd: dir });
+    writeFileSync(join(dir, 'db/entwuerfe/0999_probe.sql'), entwurf, 'utf8');
+    writeFileSync(join(dir, 'api-backend/db/erwartete-zaehler.json'), '{"bis_version":"0999"}\n', 'utf8');
+    writeFileSync(join(dir, 'tools/.onprem-baseline'), 'vercel_fn=0\n', 'utf8');
+    writeFileSync(join(dir, 'onprem/docker-compose.yml'), '# no-pg-net\n', 'utf8');
+    writeFileSync(join(dir, 'onprem/volumes/db/no-pg-net.sql'), '-- ok\n', 'utf8');
+    execFileSync('git', ['add', '.'], { cwd: dir });
+    execFileSync('git', ['commit', '-q', '-m', 'init'], { cwd: dir });
+
+    // Negativprobe: git mv aus db/entwuerfe/ mit „ausstehend“ MUSS abgelehnt werden
+    execFileSync('git', ['mv', 'db/entwuerfe/0999_probe.sql', 'api-backend/db/migrations/0999_probe.sql'], { cwd: dir });
+    let fehlgeschlagen = false;
+    let stderrText = '';
+    try {
+      execFileSync('sh', [join(REPO_WURZEL, 'tools/check-onprem.sh')], { cwd: dir, stdio: ['ignore', 'pipe', 'pipe'] });
+    } catch (err) {
+      fehlgeschlagen = true;
+      stderrText = String((/** @type {any} */ (err)).stderr || '');
+    }
+    assert.equal(fehlgeschlagen, true, 'check-onprem.sh muss git-mv mit ausstehend-Zeile ablehnen');
+    assert.match(stderrText, /0999_probe\.sql/);
+
+    // Positivprobe: mit gültiger SaaS-Zeile wird dieselbe verschobene Datei akzeptiert
+    writeFileSync(
+      join(dir, 'api-backend/db/migrations/0999_probe.sql'),
+      '-- SaaS: angewandt 24.11.2026\nSELECT 1;\n',
+      'utf8'
+    );
+    execFileSync('git', ['add', 'api-backend/db/migrations/0999_probe.sql'], { cwd: dir });
+    execFileSync('sh', [join(REPO_WURZEL, 'tools/check-onprem.sh')], { cwd: dir, stdio: ['ignore', 'pipe', 'pipe'] });
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
