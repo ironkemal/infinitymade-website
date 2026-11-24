@@ -21,7 +21,7 @@
  */
 
 import { berlinTagesgrenzen, alsBerlinDatum } from './berlin-datum.js';
-import { istAbwesend, ladeAbwesenheiten } from './abwesenheit.js?v=20261031';
+import { istAbwesend, ladeAbwesenheiten } from './abwesenheit.js?v=20261124';
 import { emit } from './signal.js?v=20260813';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({

@@ -30,8 +30,8 @@ import {
   therapieberichteAufbereiten,
   anfragenAufbereiten,
   wartelisteAufbereiten,
-} from './ueberblick-listen.js?v=20261123oa';
-import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_VOLL } from './verordnung-fristen-laden.js?v=20261123oa1';
+} from './ueberblick-listen.js?v=20261124oa';
+import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_VOLL } from './verordnung-fristen-laden.js?v=20261124oa1';
 import { ladeGeld, monatText } from './startseite-geld.js?v=20261121f02';
 import { wendeRasterScrollAn } from './tageszentrale-raster.js?v=20261121f04';
 import { fmtEur } from './geld.js?v=20260909';
