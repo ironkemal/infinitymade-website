@@ -38,3 +38,30 @@ Serien-Vorgaben, Fahrtpuffer, Nummernkreise) bis Partnerfragen #24/#25 — aktiv
 - Gemeinsamer Arbeitsordner mehrerer Sitzungen: nur eigene Pfade stagen; Funktionskarte und Gates im **sauberen
   Worktree** mit nur eigenen Dateien erzeugen/fahren, sonst landen fremde Funktionen in der Karte.
 - Testszenario (redesign-fixture) ist nur lesend → Erfolgsweg im echten DOM mit Attrappe prüfen.
+
+## Nachtrag 24.11.2026 (später) — KI-Stufe 2, Foto-Löschung, Übergabe an Codex
+
+**KI-Stufe 2 entschieden** (`/konsey`, [[2026-11-24-ki-stufe2-byok]] in konsey/tutanak): **Option D** — eigener
+Azure-Zugang nur auf der Box, nur über `.env` (`AI_BYOK_ALLOWED=1` + `AI_MODE=direkt`), Host
+`<label>.(openai|cognitiveservices).azure.com`, `AI_REGION` Pflicht + EU, nie Jeton; keine UI/DB-Schlüssel, kein
+lokales Modell (Fakten 12.09.: Box ohne GPU — legal-de nahm „lokal zuerst“ zurück). Jeton-Weg (O-169) hat Vorrang.
+**Gebaut, lokal committet, NICHT gepusht** (Push nur mit Melihs GO durch die Hauptsession): 11c1bcc3 (Konsey-Doku),
+5381fc2a (Host-Regel, `POST /api/ai/_verbindungstest`, UI „Verbindung testen“, compose, KURULUM, O-255),
+07ffb750 (Review Hauptsession: Datenklasse A erzwungen — `allowFreeText=false` bei eigenem Host; nur Box über
+Box-Marker `SUPABASE_PUBLIC_URL`). Offen: `.env.template`-Zeile (für Agenten gesperrt), CLAUDE.md-Warnsatz → Melih.
+
+**Live-Check „Mein Profil“ bestanden** (Inhaber + Mitarbeiter, 1280/390, Originalwerte wiederhergestellt).
+Befund P2 Datenschutz: „Foto entfernen“ leerte nur `avatar_url`, die Datei blieb im öffentlich lesbaren Bucket unter
+festem Pfad abrufbar → 55971d34 (lokal, Push durch Hauptsession): Datei per `storage.remove` löschen, dann Verweis
+leeren; Knöpfe 44 px. Zwei synthetische Testfotos der QA-Konten gelöscht (öffentlich ohne Cache 400; direkt danach
+lieferte das CDN noch 200 aus dem Cache).
+
+**Uncommittet beim Abbruch** (Limit): Team-Detail „Profilbild entfernen“ löscht die Datei ebenfalls
+(`avatarPfadAusUrl` in module/praxis-logo-upload.js, dashboard.js empAvatarRemoveBtn, mein-profil nimmt alte
+Team-Detail-Fotos mit, Versionskette `?v=20261124pf2`, Tests). Unit-Tests + Einstellungen-Probe grün, volle Gates
+im sauberen Worktree stehen aus → Übergabe an Codex (Prompt im Chat 24.11., Inhalt: Regeln, Stand, Hashes, offene
+Punkte). Backup-Branch `backup/main-vor-reset-20261124` nicht löschen.
+
+**Lehren:** (1) Konsey-Beschlüsse („nur Datenklasse A“, „nur Box“) im Code erzwingen, nicht nur dokumentieren.
+(2) „Entfernen“ in öffentlichen Buckets heißt Datei löschen, nicht nur Verweis leeren. (3) Ankündigung „nur
+Entscheidung“ einhalten oder Abweichung sofort melden — sonst Push-Sperre bis Melihs GO.
