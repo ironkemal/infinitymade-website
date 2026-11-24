@@ -1,0 +1,98 @@
+name: Bekçi — Telegram-Antworten verarbeiten
+
+# tools/bekci-ajan/SPEC.md §2.2 · guvenlik S-64 · onprem O-257.
+#
+# Liest alle 10 Minuten Kemals Knopfdrücke (✅ Uygula / ❌ Bırak / 💬 Açıkla) aus dem
+# Bekçi-Bot, schaltet den Fall (vaka) im Zweig `bekci-vakalar` weiter und stößt bei
+# Bedarf bekci-ajan.yml an. Einmal täglich (07:35 Berlin) erinnert er an offene Fälle.
+#
+# Sicherheit (S-64):
+#   - Trigger NUR schedule + workflow_dispatch.
+#   - Telegram-Secrets TELEGRAM_BEKCI_* als Repo-Secrets (Fork-PRs bekommen keine Secrets; dieser
+#     Workflow hat keinen PR-Trigger). Der wertvollere Claude-Token liegt in der Environment
+#     `bekci-ajan` (nur Branch main) und kommt hier nie vor.
+#   - Kein `npm ci`: tools/bekci-ajan/* importiert nur node:* und sosyal/yayinci/telegram.mjs.
+#   - Keine Telegram-Antworttexte, keine getUpdates-Rohdaten im Log.
+#   - `bekci-vakalar` wird NIE nach main gemergt; der Zweig enthält nur Fall-JSON + Offset.
+#   - Schalter: nur aktiv, wenn Repo-Variable BEKCI_AJAN=an (Standard: aus = nichts passiert).
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'   # Antworten abholen
+    - cron: '35 6 * * *'     # tägliche Erinnerung an offene Fälle (≈07:35 Winterzeit / 08:35 Sommerzeit)
+  workflow_dispatch: {}
+
+concurrency:
+  group: bekci-cevap
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  cevap:
+    if: vars.BEKCI_AJAN == 'an'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write   # nur für den Zweig bekci-vakalar
+      actions: write    # gh workflow run bekci-ajan.yml
+    steps:
+      - name: main auschecken (Code, schreibgeschützt benutzt)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main
+          persist-credentials: false
+
+      - name: Fall-Zweig auschecken (oder neu anlegen)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" bekci-vakalar >/dev/null 2>&1; then
+            git clone --quiet --depth 1 --branch bekci-vakalar "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" vakalar
+          else
+            mkdir vakalar && cd vakalar && git init --quiet -b bekci-vakalar \
+              && git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" \
+              && mkdir -p vakalar && printf '{"offset":0}\n' > offset.json
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Antworten verarbeiten
+        env:
+          TELEGRAM_BEKCI_BOT_TOKEN: ${{ secrets.TELEGRAM_BEKCI_BOT_TOKEN }}
+          TELEGRAM_BEKCI_CHAT_ID: ${{ secrets.TELEGRAM_BEKCI_CHAT_ID }}
+          TELEGRAM_BEKCI_USER_ID: ${{ secrets.TELEGRAM_BEKCI_USER_ID }}
+          ERINNERUNG: ${{ github.event.schedule == '35 6 * * *' && '1' || '0' }}
+        run: |
+          set -euo pipefail
+          node main/tools/bekci-ajan/cevap-isle.mjs \
+            --vakalar=vakalar/vakalar --offset=vakalar/offset.json \
+            --dispatch=dispatch.txt $( [ "$ERINNERUNG" = 1 ] && echo --hatirlat )
+
+      - name: Fall-Zweig speichern
+        working-directory: vakalar
+        run: |
+          set -euo pipefail
+          git add -A
+          if git diff --cached --quiet; then echo "keine Änderung"; exit 0; fi
+          git -c user.name="praxura-bekci" -c user.email="bekci@users.noreply.github.com" \
+            commit --quiet -m "bekci: Fälle aktualisiert"
+          git push --quiet origin HEAD:bekci-vakalar
+
+      - name: Agent anstoßen (falls nötig)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [ -s dispatch.txt ] || exit 0
+          while read -r vaka eylem; do
+            [[ "$vaka" =~ ^[0-9]{8}-[a-z][a-z-]{1,24}-[0-9]{1,3}$ ]] || continue
+            [[ "$eylem" =~ ^(uygula|acikla)$ ]] || continue
+            gh workflow run bekci-ajan.yml --repo "${{ github.repository }}" -f vaka_id="$vaka" -f eylem="$eylem"
+          done < dispatch.txt

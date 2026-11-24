@@ -27,21 +27,23 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const cliPath = path.resolve(__dirname, 'cli.mjs');
 
+// Gerçek biçimli veri satırları (24.11.2026: kapı yalnız veri satırlarına izin veriyor)
+const VERI_A = "  { hpnr: '78010', label: 'Podologische Behandlung (klein)',   kat: 'Podologische Komplexbehandlung', diagnosegruppen: ['DF','NF','QF'], preis: 36.10, zuzahlung: 3.61,  dauer: '35', gueltig_ab: '2026-07-01', gueltig_bis: '9999-12-31' },";
+const VERI_B = "  { hpnr: '78030', label: 'Podologische Befundung',           diagnosegruppen: ['DF','NF','QF'], preis:  3.57, zuzahlung: 0.36,  dauer: null, gueltig_ab: '2026-07-01', gueltig_bis: '9999-12-31' },";
+const VERI_ORJINAL = ['export const X = Object.freeze([', VERI_A, VERI_B, ']);', ''].join('\n');
+function veriYama(yol, neuPreis = '3.70', neuZu = '0.37') {
+  return [
+    `diff --git a/${yol} b/${yol}`, 'index 1111111..2222222 100644', `--- a/${yol}`, `+++ b/${yol}`,
+    '@@ -2,2 +2,2 @@', ' ' + VERI_A, '-' + VERI_B,
+    '+' + VERI_B.replace('preis:  3.57, zuzahlung: 0.36', `preis:  ${neuPreis}, zuzahlung: ${neuZu}`),
+  ].join('\n');
+}
+
 // 1. yamaKontrol — geçerli yama
 test('1. yamaKontrol — geçerli yama başarıyla onaylanır', () => {
   const dosyaYolu = 'api-backend/billing/codes/podologie_positions.js';
-  const orjinal = "const x = 1;\nconst preis = '30.00';\nconst y = 2;\n";
-  const patch = [
-    `diff --git a/${dosyaYolu} b/${dosyaYolu}`,
-    'index 1111111..2222222 100644',
-    `--- a/${dosyaYolu}`,
-    `+++ b/${dosyaYolu}`,
-    '@@ -1,3 +1,3 @@',
-    ' const x = 1;',
-    "-const preis = '30.00';",
-    "+const preis = '32.00';",
-    ' const y = 2;',
-  ].join('\n');
+  const orjinal = VERI_ORJINAL;
+  const patch = veriYama(dosyaYolu);
 
   const sonuc = yamaKontrol({
     patch,
@@ -94,17 +96,8 @@ test('3. yamaKontrol — boş yama dosyası reddedilir', () => {
 // 4. yamaKontrol — beklenenSha eşleşmesi
 test('4. yamaKontrol — beklenenSha eşleşirse onaylanır', () => {
   const dosyaYolu = 'api-backend/billing/codes/podologie_positions.js';
-  const orjinal = "const a = 10;\nconst b = 20;\n";
-  const patch = [
-    `diff --git a/${dosyaYolu} b/${dosyaYolu}`,
-    'index 1111111..2222222 100644',
-    `--- a/${dosyaYolu}`,
-    `+++ b/${dosyaYolu}`,
-    '@@ -1,2 +1,2 @@',
-    ' const a = 10;',
-    '-const b = 20;',
-    '+const b = 25;',
-  ].join('\n');
+  const orjinal = VERI_ORJINAL;
+  const patch = veriYama(dosyaYolu, '3.80', '0.38');
 
   const patchSha = sha256(patch);
   const sonuc = yamaKontrol({

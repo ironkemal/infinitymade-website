@@ -155,159 +155,23 @@ jobs:
             --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
             --data-urlencode "text=$MSG"
 
+      - name: Bekçi-Ajan anstoßen (nur Review nötig, nur wenn eingeschaltet)
+        # tools/bekci-ajan/SPEC.md — der Agent prüft den Fall gegen die Vertragstexte
+        # und entscheidet mit doppelter Naht (XML + Vertragstext) oder fragt Kemal.
+        if: steps.check.outputs.needs_review == 'true' && vars.BEKCI_AJAN == 'an'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run bekci-ajan.yml --repo "${{ github.repository }}" -f bekci=preise -f eylem=yeni
+
   commit-und-push:
     needs: preise-check
     if: needs.preise-check.outputs.changed == 'true'
-    runs-on: ubuntu-latest
+    # Schreibweg ausgelagert (24.11.2026) nach preise-uebernehmen.yml, damit
+    # bekci-ajan.yml denselben benutzt (tools/bekci-ajan/SPEC.md).
     permissions:
       contents: write
-      actions: write   # download-artifact braucht mindestens `read`; `write` zusätzlich
-                        # für den `gh workflow run`-Dispatch unten (O-98-Nachtrag) — sobald
-                        # `permissions` gesetzt ist, gilt für jeden nicht genannten Scope
-                        # "none", nicht der sonst übliche Default
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0   # volle Historie — `git pull --rebase` unten braucht sie
-
-      - name: Node einrichten
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Geänderte Codedateien herunterladen
-        uses: actions/download-artifact@v4
-        with:
-          name: preise-aenderung
-          path: api-backend/_preise-artefakt
-
-      - name: Telegram-Nachrichtentext an seinen Platz kopieren
-        run: cp api-backend/_preise-artefakt/preise-telegram-message.txt api-backend/preise-telegram-message.txt
-        # _preise-artefakt bleibt bewusst als UNGETRACKTES Verzeichnis liegen
-        # (kein `git add`, kein Eintrag im Repo) — der nächste Schritt kopiert
-        # die Codedateien aus ihm in jeder Retry-Runde neu, und `git reset
-        # --hard` (bei einem gescheiterten Push) fasst untracked Dateien nicht
-        # an, räumt also nur den Commit-Versuch weg, nicht dieses Verzeichnis.
-
-      - name: main-Stand ziehen, Migrationsnummer NEU berechnen, committen, pushen (mit Retry)
-        working-directory: ./api-backend
-        run: |
-          git config user.name "praxura-preise-bot"
-          git config user.email "actions@users.noreply.github.com"
-
-          # O-98 (onprem/REGISTER.md): die Migrationsnummer wird ERST HIER, NACH
-          # dem Rebase auf den aktuellsten main-Stand berechnet — nicht schon in
-          # `preise-check` (dort ist der Checkout möglicherweise Stunden alt).
-          # Schlägt der Push trotzdem fehl (jemand war zwischen Rebase und Push
-          # schneller), wird ALLES neu berechnet und erneut versucht statt eine
-          # zweite Datei mit derselben Nummer zu erzeugen. `git reset --hard`
-          # nach einem gescheiterten Versuch räumt Commit UND Arbeitsverzeichnis
-          # vollständig weg (die Codedateien werden im nächsten Durchlauf aus
-          # dem untrackten _preise-artefakt/ frisch wiederhergestellt) — kein
-          # manuelles Zurückrechnen einzelner Dateien, das im ersten Entwurf
-          # dieses Schritts einen inkonsistenten Zwischenzustand erzeugt hätte.
-          for versuch in 1 2 3 4 5; do
-            git pull --rebase origin main
-
-            cp _preise-artefakt/podologie_positions.js billing/codes/podologie_positions.js
-            cp _preise-artefakt/physio_positions.js billing/codes/physio_positions.js
-
-            NEXT=$(ls db/migrations/*.sql | sed -E 's#.*/([0-9]{4})_.*#\1#' | sort -n | tail -1)
-            NEXT=$(printf '%04d' $((10#$NEXT + 1)))
-            FILE="db/migrations/${NEXT}_seed_heilmittel_katalog_preisrunde_$(date -u +%Y%m%d).sql"
-
-            # O-79's Seed-Kapı (tools/check-onprem.sh, lokaler Git-Hook) verlangt bei
-            # jeder *_positions.js-Änderung eine neue Seed-Migration im selben Commit
-            # — aber dieser Workflow läuft in einem nackten CI-Checkout ohne Hooks
-            # (O-95). Die SQL-Zeilen selbst wurden bereits im `preise-check`-Job
-            # erzeugt (S-28 — kein `node`-Import einer Codedatei hier, nur Text).
-            {
-              echo "-- O-95 (onprem/REGISTER.md) — automatisch von preise-check.yml erzeugt,"
-              echo "-- selber Commit wie die Preisrunde in den Codedateien (Ops-Karte #213)."
-              echo "-- Erzeugt von: node sync_heilmittel_katalog.js --sql (im preise-check-Job,"
-              echo "-- S-28). Kein zweiter Erzeugungsweg — nur ein zweiter Ausgang derselben"
-              echo "-- Zeilen-Bauer, die auch db/migrations/0012_seed_heilmittel_katalog.sql"
-              echo "-- geschrieben hat."
-              echo "-- ZAEHLER: unveraendert (reine Daten-UPSERT, public — migrations/README.md Kural 6)"
-              # O-129/O-156: SaaS-Statuszeile — dieser Weg laeuft ohne Git-Hook,
-              # deshalb hier fest. Box-only wie 0036/0037: im SaaS liest resolvePreis()
-              # den Katalog direkt aus dem Code.
-              echo "-- SaaS: nicht angewandt (box-only): Seed fuer heilmittel_katalog der Box, SaaS liest Preise aus dem Code (O-95)"
-              echo ""
-              cat _preise-artefakt/preise-seed.sql
-              echo "DO \$\$ DECLARE n int; BEGIN"
-              echo "  SELECT count(*) INTO n FROM public.heilmittel_katalog;"
-              echo "  IF n < 94 THEN RAISE EXCEPTION 'seed heilmittel_katalog: % Zeilen, erwartet >= 94', n; END IF;"
-              echo "END \$\$;"
-            } > "$FILE"
-
-            # bis_version mitziehen: reine Daten-UPSERT in eine bestehende Tabelle,
-            # nie ein neues Tabelle/Policy/Funktion/Trigger/Index — daher ohne neue
-            # physische Zählung sicher hochziehbar (migrations/README.md Kural 6).
-            # `_kommentar`/`gemessen_am` bleiben unangetastet (db-ustasi-Fund,
-            # 14.09.2026): ein Bot, der bei jedem Lauf behauptet "frisch gemessen",
-            # macht das Feld nach dem zweiten Lauf zur Lüge.
-            node -e "
-              const fs = require('fs');
-              const p = 'db/erwartete-zaehler.json';
-              const j = JSON.parse(fs.readFileSync(p, 'utf8'));
-              j.bis_version = '$NEXT';
-              fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
-            "
-
-            git add billing/codes/podologie_positions.js billing/codes/physio_positions.js
-            git add "$FILE" db/erwartete-zaehler.json
-            git commit \
-              -m "chore(preise): automatische Preisrunde übernommen (GKV-Heilmittelpreisstammdatei)" \
-              -m "Ausgelöst von preise_autoupdate.mjs (Ops-Karte #213). Nur Preis + Zuzahlung geändert; gleiche Codes, gleiche Regeln (Dauer/Diagnosegruppen/Notiz 1:1 vom Vorgänger-Fenster übernommen). npm test lief grün im preise-check-Job. Seed-Migration für die Box im selben Commit mitgeschrieben (O-95). Hinweis für die nächste MANUELLE Veröffentlichung: falls diese Preisrunde die einzige Änderung seit dem letzten Tag ist, ist VERSION mindestens MINOR (enthält eine neue Migration, R6 in publish-calendar-api.yml verbietet das für PATCH)." \
-              -m "Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
-
-            if git push; then
-              echo "Push erfolgreich (Versuch $versuch)."
-
-              # O-98-Nachtrag (onprem+muhalif, 14.09.2026): ein Push mit dem
-              # Standard-GITHUB_TOKEN löst KEINEN neuen Workflow-Lauf aus (GitHub
-              # verhindert damit Endlosschleifen) — publish-calendar-api.yml
-              # (on: push) hätte diesen Commit also nie gesehen. Ein expliziter
-              # workflow_dispatch-Aufruf umgeht diese Sperre.
-              gh workflow run "Build and Publish calendar-api image" --ref main
-              exit 0
-            fi
-
-            echo "Push fehlgeschlagen (Versuch $versuch) — vermutlich ein Wettlauf mit einem parallelen Commit. Setze Arbeitsverzeichnis vollständig zurück und versuche erneut."
-            git reset --hard HEAD~1
-          done
-
-          echo "::error::Push nach 5 Versuchen weiterhin fehlgeschlagen — manuell prüfen."
-          exit 1
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Telegram — automatische Aktualisierung abgeschlossen
-        if: success()
-        working-directory: ./api-backend
-        run: |
-          # "live ausgerollt" wäre falsch — der Dispatch startet gerade erst
-          # Test → Image-Build → Smoke-Test → Push; Watchtower zieht danach.
-          MSG=$(printf '✅ GKV-Preise automatisch übernommen, main aktualisiert, Build+Deploy ausgelöst.\n\n%s' "$(cat preise-telegram-message.txt)")
-          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
-            --data-urlencode "text=$MSG"
-
-      - name: Telegram — Commit/Push fehlgeschlagen
-        if: failure()
-        working-directory: ./api-backend
-        run: |
-          MSG="⚠️ GKV-Preise: preise-check hat eine sichere Änderung gefunden, aber der Commit/Push-Job ist gescheitert (5 Versuche). Bitte Actions-Log prüfen — kein automatischer Commit gelandet."
-          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
-            --data-urlencode "text=$MSG"
-
-      - name: SaaS-Katalog braucht manuellen Sync-Schritt — Erinnerung
-        if: success()
-        run: |
-          MSG="ℹ️ Erinnerung: die neue Preisrunde ist jetzt in db/migrations/ (für neue Kutu-Installationen) UND in den Codedateien (für die SaaS-Abrechnung selbst, resolvePreis() liest nur die). Die SaaS-Tabelle heilmittel_katalog (nur Anzeige/Auswahl in der UI, KEINE Abrechnungsquelle) bekommt diese Migration NICHT automatisch — DATABASE_URL ist im SaaS-Backend bewusst nicht gesetzt (migrations/README.md). Falls die Anzeige aktualisiert werden soll: node sync_heilmittel_katalog.js (Schreibmodus, mit DB-Zugriff) einmalig von Hand laufen lassen."
-          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
-            --data-urlencode "text=$MSG"
+      actions: write
+    uses: ./.github/workflows/preise-uebernehmen.yml
+    secrets:
+      tg_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      tg_chat: ${{ secrets.TELEGRAM_CHAT_ID }}
