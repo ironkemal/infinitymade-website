@@ -404,3 +404,8 @@ test('umsatzRetterAufbereiten: erkennt 14-Tage-Unterbrechung (nicht Podologie), 
   assert.equal(sonder[0].rxId, 'rx-items');
   assert.match(sonder[0].hinweis, /Noch 4 von 6 Einheiten offen/);
 });
+
+test("ueberblick-ansicht: ladeAbwesenheitenUndTeam erhält state.istOwner statt undefiniertem istOwner (Live-P1 24.11.)", () => {
+  const ansicht = fs.readFileSync(new URL("./ueberblick-ansicht.js", import.meta.url), "utf8");
+  assert.match(ansicht, /ladeAbwesenheitenUndTeam\(supabase,\s*ownerId,\s*heuteIso,\s*state\.istOwner\)/);
+});

@@ -1468,7 +1468,7 @@ export async function ladeUeberblickAnsicht(ctx) {
     'patients'
   );
 
-  const abwPromise = ladeAbwesenheitenUndTeam(supabase, ownerId, heuteIso, istOwner);
+  const abwPromise = ladeAbwesenheitenUndTeam(supabase, ownerId, heuteIso, state.istOwner);
 
   const anfragenPromise = (state.istOwner && inLeiste('anfragen'))
     ? supabase
