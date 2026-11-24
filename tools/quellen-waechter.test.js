@@ -2,7 +2,11 @@
 //   node --test tools/quellen-waechter.test.js
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { links, normalisiere, vergleiche, hostErlaubt, lauf, ladeKonfig, holeSeite, rssSpur, textSpur, dekodiere, spur } from './quellen-waechter.mjs';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { links, normalisiere, vergleiche, hostErlaubt, lauf, ladeKonfig, holeSeite, rssSpur, textSpur, dekodiere, spur, uebernehme } from './quellen-waechter.mjs';
 
 const URL_A = 'https://www.gkv-spitzenverband.de/heilmittel/seite.html';
 const html = (...hrefs) => hrefs.map(h => `<a href="${h}">x</a>`).join('\n');
@@ -134,4 +138,355 @@ test('rein: Steuer-/Bidi-Zeichen weg, § und Umlaute bleiben, Länge begrenzt', 
   const { rein } = await import('./quellen-waechter.mjs');
   assert.equal(rein('§302 — Grüße‮\u0007x'), '§302 — Grüße  x');
   assert.equal(rein('a'.repeat(400), 300).length, 300);
+});
+
+test('lauf: befunde und blindListe Struktur und Inhalte', async () => {
+  const qMod = quelle({
+    id: 'q-mod',
+    ref: 'R-01',
+    wichtig: 'kritisch',
+    ne: 'Testquelle',
+    url: 'https://www.gkv-spitzenverband.de/seite-mod.html',
+    folge: 'Folge-Info',
+    bekannt: ['www.gkv-spitzenverband.de/x/alt.pdf'],
+  });
+  const quellen = [
+    qMod,
+    quelle({ id: 'q-cfg', url: 'https://evil.example/x' }),
+    quelle({ id: 'q-err', url: 'https://www.gkv-spitzenverband.de/timeout.html' }),
+    quelle({ id: 'q-zero', url: 'https://www.g-ba.de/richtlinien/12/' }),
+    quelle({
+      id: 'q-umbau',
+      url: 'https://www.bfarm.de/DE/Kodiersysteme/Services/Downloads/_node.html',
+      bekannt: ['a', 'b', 'c', 'd'].map(x => `www.bfarm.de/${x}.pdf`),
+      muster: '\\.pdf$',
+    }),
+  ];
+  const r = await lauf({
+    quellen,
+    holer: async url => {
+      if (url.includes('seite-mod.html')) return html('/x/alt.pdf', '/x/neu.pdf');
+      if (url.includes('timeout.html')) throw new Error('Timeout');
+      if (url.includes('g-ba.de')) return html('/kein-treffer.html');
+      if (url.includes('bfarm.de')) return html('/a.pdf', '/neu.pdf');
+      return '';
+    },
+  });
+
+  assert.equal(r.geaendert, 1);
+  assert.equal(r.blind, 4);
+
+  // befunde nur für geaendert
+  assert.equal(r.befunde.length, 1);
+  assert.deepEqual(r.befunde[0], {
+    id: 'q-mod',
+    ref: 'R-01',
+    wichtig: 'kritisch',
+    ne: 'Testquelle',
+    url: 'https://www.gkv-spitzenverband.de/seite-mod.html',
+    folge: 'Folge-Info',
+    neu: ['www.gkv-spitzenverband.de/x/neu.pdf'],
+    weg: [],
+  });
+
+  // blindListe mit allen 4 Ursachen
+  assert.deepEqual(r.blindListe, [
+    { id: 'q-cfg', wichtig: 'kritisch', sebep: 'konfig', url: 'https://evil.example/x' },
+    { id: 'q-err', wichtig: 'kritisch', sebep: 'abruf', url: 'https://www.gkv-spitzenverband.de/timeout.html' },
+    { id: 'q-zero', wichtig: 'kritisch', sebep: 'null-treffer', url: 'https://www.g-ba.de/richtlinien/12/' },
+    { id: 'q-umbau', wichtig: 'kritisch', sebep: 'umbau', url: 'https://www.bfarm.de/DE/Kodiersysteme/Services/Downloads/_node.html' },
+  ]);
+});
+
+test('CLI: --json schreibt strukturierte Datei und kann mit --out kombiniert werden', () => {
+  const tmpDir = mkdtempSync(join(tmpdir(), 'qw-json-'));
+  const jsonDatei = join(tmpDir, 'bericht.json');
+  const outDir = join(tmpDir, 'meldungen');
+  const tempKonfig = join(tmpDir, 'test-konfig.json');
+
+  const testQuelle = {
+    id: 't1',
+    ref: 'Z-00',
+    wichtig: 'kritisch',
+    ne: 'Test Quelle',
+    url: URL_A,
+    muster: '\\.pdf$',
+    folge: 'Folge',
+    bekannt: ['www.gkv-spitzenverband.de/heilmittel/a.pdf'],
+  };
+  writeFileSync(tempKonfig, JSON.stringify({ quellen: [testQuelle] }, null, 2));
+
+  execFileSync(process.execPath, [
+    'tools/quellen-waechter.mjs',
+    `--konfig=${tempKonfig}`,
+    `--json=${jsonDatei}`,
+    `--out=${outDir}`,
+  ], {
+    env: {
+      ...process.env,
+      QW_MOCK_BODY: html('/heilmittel/a.pdf', '/heilmittel/b.pdf'),
+    },
+  });
+
+  assert.ok(existsSync(jsonDatei));
+  const inhalt = JSON.parse(readFileSync(jsonDatei, 'utf8'));
+  assert.ok(inhalt.stand && !isNaN(Date.parse(inhalt.stand)));
+  assert.equal(inhalt.geaendert, 1);
+  assert.equal(inhalt.blind, 0);
+  assert.equal(inhalt.befunde.length, 1);
+  assert.equal(inhalt.befunde[0].id, 't1');
+  assert.deepEqual(inhalt.befunde[0].neu, ['www.gkv-spitzenverband.de/heilmittel/b.pdf']);
+  assert.deepEqual(inhalt.blindListe, []);
+
+  // verify --out was also written
+  assert.ok(existsSync(join(outDir, 'msg-01.txt')));
+
+  rmSync(tmpDir, { recursive: true, force: true });
+});
+
+test('uebernehme: erfolgreiche Übernahme aktualisiert q.bekannt in Live-Reihenfolge', async () => {
+  const q = quelle({
+    bekannt: ['www.gkv-spitzenverband.de/x/a.pdf', 'www.gkv-spitzenverband.de/x/b.pdf'],
+  });
+  const konfig = { quellen: [q] };
+  const neu = ['www.gkv-spitzenverband.de/x/c.pdf'];
+  const weg = ['www.gkv-spitzenverband.de/x/b.pdf'];
+
+  const r = await uebernehme({
+    konfig,
+    id: 'q1',
+    neu,
+    weg,
+    holer: async () => html('/x/a.pdf', '/x/c.pdf'),
+  });
+  assert.deepEqual(r, { ok: true, id: 'q1', eklendi: 1, cikarildi: 1 });
+  assert.deepEqual(q.bekannt, [
+    'www.gkv-spitzenverband.de/x/a.pdf',
+    'www.gkv-spitzenverband.de/x/c.pdf',
+  ]);
+});
+
+test('uebernehme: Seite seit Befund geändert -> Fehler "kaynak vakadan sonra yine değişti" und nichts geändert', async () => {
+  const startBekannt = ['www.gkv-spitzenverband.de/x/a.pdf', 'www.gkv-spitzenverband.de/x/b.pdf'];
+  const q = quelle({ bekannt: [...startBekannt] });
+  const konfig = { quellen: [q] };
+  const neu = ['www.gkv-spitzenverband.de/x/c.pdf'];
+  const weg = ['www.gkv-spitzenverband.de/x/b.pdf'];
+
+  await assert.rejects(
+    uebernehme({
+      konfig,
+      id: 'q1',
+      neu,
+      weg,
+      holer: async () => html('/x/a.pdf', '/x/c.pdf', '/x/d.pdf'),
+    }),
+    /kaynak vakadan sonra yine değişti/
+  );
+  // konfig unverändert
+  assert.deepEqual(q.bekannt, startBekannt);
+});
+
+test('uebernehme: Validierungsfehler (unbekannt, muster, host, weg, neu)', async () => {
+  const q = quelle({
+    bekannt: ['www.gkv-spitzenverband.de/x/a.pdf'],
+    muster: '\\.pdf$',
+  });
+  const konfig = { quellen: [q] };
+
+  // 1. unbekannte id
+  await assert.rejects(
+    uebernehme({ konfig, id: 'unbekannt', neu: [], weg: [] }),
+    /unbekannte Quelle/
+  );
+
+  // 2. muster uymayan neu
+  await assert.rejects(
+    uebernehme({
+      konfig,
+      id: 'q1',
+      neu: ['www.gkv-spitzenverband.de/x/datei.zip'],
+      weg: [],
+    }),
+    /muster/i
+  );
+
+  // 3. izinsiz host
+  await assert.rejects(
+    uebernehme({
+      konfig,
+      id: 'q1',
+      neu: ['evil.example.com/x/b.pdf'],
+      weg: [],
+    }),
+    /host/i
+  );
+
+  // 4. normalisiere formatında olmayan (z.B. https:// oder Query)
+  await assert.rejects(
+    uebernehme({
+      konfig,
+      id: 'q1',
+      neu: ['https://www.gkv-spitzenverband.de/x/b.pdf'],
+      weg: [],
+    }),
+    /normalisiere/
+  );
+
+  // 5. weg'de bekannt'ta olmayan
+  await assert.rejects(
+    uebernehme({
+      konfig,
+      id: 'q1',
+      neu: [],
+      weg: ['www.gkv-spitzenverband.de/x/nicht-vorhanden.pdf'],
+    }),
+    /bekannt/
+  );
+
+  // 6. neu'da zaten bekannt olan
+  await assert.rejects(
+    uebernehme({
+      konfig,
+      id: 'q1',
+      neu: ['www.gkv-spitzenverband.de/x/a.pdf'],
+      weg: [],
+    }),
+    /bekannt/
+  );
+});
+
+test('uebernehme: rss und groesse Format (link | iz)', async () => {
+  // 1. rss Quelle
+  const qRss = quelle({
+    id: 'rss1',
+    art: 'rss',
+    url: 'https://www.gkv-datenaustausch.de/feed.xml',
+    muster: 'GGT\\.pdf$',
+    bekannt: ['www.gkv-datenaustausch.de/media/GGT.pdf | Mon, 14 Sep 2020'],
+  });
+  const konfigRss = { quellen: [qRss] };
+  const neuRss = ['www.gkv-datenaustausch.de/media/GGT.pdf | Tue, 15 Sep 2020'];
+  const wegRss = ['www.gkv-datenaustausch.de/media/GGT.pdf | Mon, 14 Sep 2020'];
+
+  const rssXml = `<rss><channel><item>
+    <link>https://www.gkv-datenaustausch.de/media/GGT.pdf</link>
+    <pubDate>Tue, 15 Sep 2020</pubDate>
+  </item></channel></rss>`;
+
+  const resRss = await uebernehme({
+    konfig: konfigRss,
+    id: 'rss1',
+    neu: neuRss,
+    weg: wegRss,
+    holer: async () => rssXml,
+  });
+  assert.deepEqual(resRss, { ok: true, id: 'rss1', eklendi: 1, cikarildi: 1 });
+  assert.deepEqual(qRss.bekannt, ['www.gkv-datenaustausch.de/media/GGT.pdf | Tue, 15 Sep 2020']);
+
+  // Fehler: rss Element ohne ' | '
+  await assert.rejects(
+    uebernehme({
+      konfig: konfigRss,
+      id: 'rss1',
+      neu: ['www.gkv-datenaustausch.de/media/GGT.pdf'],
+      weg: [],
+    }),
+    /link \| iz/
+  );
+
+  // 2. groesse Quelle
+  const qGr = quelle({
+    id: 'gr1',
+    art: 'groesse',
+    url: 'https://www.kbv.de/x/liste.pdf',
+    muster: '.',
+    bekannt: ['www.kbv.de/x/liste.pdf | 100 Bytes'],
+  });
+  const konfigGr = { quellen: [qGr] };
+  const neuGr = ['www.kbv.de/x/liste.pdf | 200 Bytes'];
+  const wegGr = ['www.kbv.de/x/liste.pdf | 100 Bytes'];
+
+  const resGr = await uebernehme({
+    konfig: konfigGr,
+    id: 'gr1',
+    neu: neuGr,
+    weg: wegGr,
+    holer: async () => '200',
+  });
+  assert.deepEqual(resGr, { ok: true, id: 'gr1', eklendi: 1, cikarildi: 1 });
+  assert.deepEqual(qGr.bekannt, ['www.kbv.de/x/liste.pdf | 200 Bytes']);
+
+  // Fehler: fremder Host in groesse
+  await assert.rejects(
+    uebernehme({
+      konfig: konfigGr,
+      id: 'gr1',
+      neu: ['evil.example.com/x/liste.pdf | 200 Bytes'],
+      weg: [],
+    }),
+    /host/i
+  );
+});
+
+test('CLI: --uebernehme übernimmt Änderungen und beendet bei Fehler mit exit 1', () => {
+  const tmpDir = mkdtempSync(join(tmpdir(), 'qw-ueber-'));
+  const tempKonfig = join(tmpDir, 'test-konfig.json');
+  const neuFile = join(tmpDir, 'neu.txt');
+  const wegFile = join(tmpDir, 'weg.txt');
+
+  const testQuelle = {
+    id: 't1',
+    ref: 'Z-00',
+    wichtig: 'kritisch',
+    ne: 'Test Quelle',
+    url: URL_A,
+    muster: '\\.pdf$',
+    folge: 'Folge',
+    bekannt: ['www.gkv-spitzenverband.de/heilmittel/a.pdf'],
+  };
+  writeFileSync(tempKonfig, JSON.stringify({ quellen: [testQuelle] }, null, 2));
+  writeFileSync(neuFile, 'www.gkv-spitzenverband.de/heilmittel/b.pdf\n');
+  writeFileSync(wegFile, '');
+
+  // Erfolg
+  const stdout = execFileSync(process.execPath, [
+    'tools/quellen-waechter.mjs',
+    `--konfig=${tempKonfig}`,
+    '--uebernehme=t1',
+    `--neu-datei=${neuFile}`,
+    `--weg-datei=${wegFile}`,
+  ], {
+    env: {
+      ...process.env,
+      QW_MOCK_BODY: html('/heilmittel/a.pdf', '/heilmittel/b.pdf'),
+    },
+    encoding: 'utf8',
+  });
+  assert.match(stdout, /t1: 1 eklendi, 0 çıkarıldı/);
+
+  const nachher = JSON.parse(readFileSync(tempKonfig, 'utf8'));
+  assert.deepEqual(nachher.quellen[0].bekannt, [
+    'www.gkv-spitzenverband.de/heilmittel/a.pdf',
+    'www.gkv-spitzenverband.de/heilmittel/b.pdf',
+  ]);
+
+  // Fehler: wenn Live-Zustand abweicht -> Exit 1
+  assert.throws(() => {
+    execFileSync(process.execPath, [
+      'tools/quellen-waechter.mjs',
+      `--konfig=${tempKonfig}`,
+      '--uebernehme=t1',
+      `--neu-datei=${neuFile}`,
+      `--weg-datei=${wegFile}`,
+    ], {
+      env: {
+        ...process.env,
+        QW_MOCK_BODY: html('/heilmittel/a.pdf', '/heilmittel/c.pdf'),
+      },
+      stdio: 'pipe',
+    });
+  });
+
+  rmSync(tmpDir, { recursive: true, force: true });
 });
