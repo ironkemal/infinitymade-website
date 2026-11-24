@@ -38,7 +38,7 @@
   <link rel="stylesheet" href="fonts/system-fonts.css" />
 
   <!-- ===== Shared design system ===== -->
-  <link rel="stylesheet" href="assets/system.css?v=20261001" />
+  <link rel="stylesheet" href="assets/system.css?v=20261124" />
 
   <!-- ===== Structured Data: Organization ===== -->
   <script type="application/ld+json">
@@ -70,17 +70,6 @@
   </script>
 
   <!-- ===== Structured Data: SoftwareApplication ===== -->
-  <!--
-    PREISE VORÜBERGEHEND AUSGEBLENDET (2026-08-17).
-    Zum Wiederherstellen diesen Block wieder in das JSON unten (nach "publisher") einfügen:
-      "offers": {
-      "@type": "Offer",
-      "priceCurrency": "EUR",
-      "price": "29.00",
-      "description": "Monatliche Lizenzgebühr ab 29 Euro"
-      },
-    Hinweis: In JSON-LD sind HTML-Kommentare nicht erlaubt.
-  -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -92,6 +81,14 @@
     "operatingSystem": "Windows 11, Linux",
     "url": "https://praxura.de/heilmittelabrechnung-software.html",
     "description": "All-in-One Praxissoftware für Physiotherapie, Ergotherapie, Logopädie und Podologie. Bereitet DTA-Abrechnungsdateien nach § 302 SGB V zur Abrechnung ohne Abrechnungszentrum vor.",
+    "offers": {
+      "@type": "AggregateOffer",
+      "priceCurrency": "EUR",
+      "lowPrice": "39",
+      "highPrice": "149",
+      "offerCount": "4",
+      "description": "Monatliche Lizenz nach Praxisgröße (Solo 39 €, Praxis 69 €, Team 99 €, Groß 149 €), Endpreise, keine USt gemäß § 19 UStG, zzgl. einmaligem Einrichtungspaket. Einführungspreise für Verträge bis 31.03.2027."
+    },
     "publisher": { "@id": "https://praxura.de/#organization" },
     "featureList": [
       "Vorbereitung DTA-Abrechnungsdatei nach §302 SGB V",
@@ -563,9 +560,9 @@
   <a href="/praxis.html" class="nav-link">Praxura</a>
   <a href="/blog/" class="nav-link">Insights</a>
   <a href="/login.html" class="nav-login">Login</a>
-  <a href="#kontakt" class="nav-cta">
-    Analysegespräch
-    <span class="nav-cta-circle" aria-hidden="true">↗</span>
+  <a href="/demo-booking.html" class="nav-cta nav-cta--book" data-cta="nav-book">
+    Gespräch buchen
+    <span class="nav-cta-circle" aria-hidden="true">→</span>
   </a>
 </nav>
 
@@ -583,9 +580,9 @@
       Verzichten Sie nicht länger auf 2 bis 5 Prozent Ihres Umsatzes. Praxura ist die moderne Alternative zum Abrechnungszentrum: Erstellen Sie gesetzeskonforme DTA-Datenpakete direkt im Browser — transparent, provisionsfrei und sicher.
     </p>
     <div class="px-hero-actions">
-      <a href="#kontakt" class="btn btn-primary-arrow">
-        Analysegespräch buchen
-        <span class="arrow-pill" aria-hidden="true">↗</span>
+      <a href="/demo-booking.html" class="btn-book" data-cta="hero-book">
+        <span><span class="hide-sm">Kostenloses </span>Analysegespräch buchen</span>
+        <span class="btn-book-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></svg></span>
       </a>
       <a href="#vorteile" class="btn btn-secondary">Mehr erfahren</a>
     </div>
@@ -791,8 +788,8 @@
   <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; font-size: 0.9rem;">
     <a href="/praxis.html" style="color: var(--bronze); text-decoration: none; border-bottom: 1px solid var(--line);">Alle Funktionen</a>
     <span style="color: var(--line);">·</span>
-    <!-- PREISE VORÜBERGEHEND AUSGEBLENDET (2026-08-17) — <a href="/#preise" style="color: var(--bronze); text-decoration: none; border-bottom: 1px solid var(--line);">Preise &amp; Pakete</a> -->
-    <!-- PREISE VORÜBERGEHEND AUSGEBLENDET (2026-08-17) — <span style="color: var(--line);">·</span> -->
+    <a href="/#preise" style="color: var(--bronze); text-decoration: none; border-bottom: 1px solid var(--line);">Preise &amp; Pakete</a>
+    <span style="color: var(--line);">·</span>
     <a href="/ti-anbindung-heilmittel.html" style="color: var(--bronze); text-decoration: none; border-bottom: 1px solid var(--line);">TI-Anbindung</a>
     <span style="color: var(--line);">·</span>
     <a href="/praxissoftware-physiotherapie.html" style="color: var(--bronze); text-decoration: none; border-bottom: 1px solid var(--line);">Physiotherapie</a>
@@ -818,15 +815,16 @@
         Sehen, ob Praxura zu Ihrer <em>Praxis passt.</em>
       </h2>
       <p class="px-closing-text">
-        45 Minuten. Wir hören zu, schauen uns Ihre aktuelle Abrechnungslösung an, zeigen die Module zur Selbstabrechnung — und senden Ihnen danach ein transparentes Angebot. Unverbindlich.
+        30 Minuten per Video. Wir hören zu, schauen uns Ihre aktuelle Abrechnungslösung an, zeigen die Module zur Selbstabrechnung — und senden Ihnen danach ein transparentes Angebot. Unverbindlich.
       </p>
     </div>
     <div class="px-closing-side">
-      <a href="mailto:kontakt@praxura.de?subject=Analysegespr%C3%A4ch%20Praxura" class="px-closing-btn">
-        Termin vorschlagen
-        <span class="px-closing-btn-circle" aria-hidden="true">↗</span>
+      <a href="/demo-booking.html" class="btn-book btn-book--light" data-cta="closing-book">
+        Termin auswählen
+        <span class="btn-book-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></svg></span>
       </a>
-      <div class="px-closing-side-quiet">Oder direkt per E-Mail</div>
+      <ul class="book-assure book-assure--dark"><li>30 Minuten per Video</li><li>kostenlos &amp; unverbindlich</li></ul>
+      <div class="px-closing-side-quiet">Lieber schriftlich?</div>
       <a href="mailto:kontakt@praxura.de" class="px-closing-side-mail">kontakt@praxura.de</a>
     </div>
   </div>
@@ -858,7 +856,7 @@
         <li><a href="/heilmittelabrechnung-software.html">§ 302-Abrechnung</a></li>
         <li><a href="/ti-anbindung-heilmittel.html">TI-Anbindung</a></li>
         <li><a href="/blog/">Insights</a></li>
-        <li><a href="/#kontakt">Analysegespräch</a></li>
+        <li><a href="/demo-booking.html">Analysegespräch</a></li>
         <li><a href="/login.html">Login</a></li>
       </ul>
     </div>

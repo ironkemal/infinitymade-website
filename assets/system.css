@@ -733,3 +733,8 @@ textarea.input-error {
 /* 2026-11-24: Nav-CTA nie umbrechen; kurze Variante des Buchungs-CTA auf kleinen Screens */
 .nav-cta { white-space: nowrap; }
 @media (max-width: 480px) { .hide-sm { display: none; } }
+/* Mikrotext auf dunklem Abschluss-Block */
+.book-assure--dark { color: rgba(248, 243, 232, 0.62); margin-top: 0; }
+.book-assure--dark li::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23C9A876' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+}

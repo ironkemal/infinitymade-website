@@ -7,6 +7,16 @@
   <link rel="alternate icon" type="image/png" href="/favicon.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <title>Analysegespräch buchen · Praxura</title>
+  <meta name="description" content="Buchen Sie online ein kostenloses 30-Minuten-Analysegespräch zu Praxura, der Praxissoftware für Physio, Ergo, Logo und Podologie. Freie Termine sofort sichtbar." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://praxura.de/demo-booking.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Praxura" />
+  <meta property="og:title" content="Kostenloses Analysegespräch buchen · Praxura" />
+  <meta property="og:description" content="30 Minuten per Video, kostenlos und unverbindlich. Wählen Sie direkt einen freien Termin." />
+  <meta property="og:url" content="https://praxura.de/demo-booking.html" />
+  <meta property="og:image" content="https://praxura.de/og-image.png" />
+  <meta property="og:locale" content="de_DE" />
   <!-- Schriften selbst gehostet (DSGVO): keine Verbindung des Besucher-Browsers
        zu Google. Fraunces, Plus Jakarta Sans und JetBrains Mono liegen in /fonts. -->
   <link rel="stylesheet" href="fonts/system-fonts.css">
@@ -251,6 +261,8 @@
         0 6px 20px -6px rgba(26,22,17,0.22);
     }
 
+    .agenda { margin: 0.4rem 0 0.8rem; padding-left: 1.1rem; display: grid; gap: 0.45rem; }
+    .agenda li { line-height: 1.45; }
     .host-name {
       font-family: var(--sans);
       font-size: 0.85rem;
@@ -823,7 +835,7 @@
 <div class="page-wrap" id="bookingApp">
   <div class="page-title">
     <h1>Kostenloses Analysegespräch buchen</h1>
-    <p>Lernen Sie Praxura kennen und erfahren Sie, wie wir Ihre Praxis digitalisieren können.</p>
+    <p>Wählen Sie einen freien Termin. 30 Minuten per Video, kostenlos und unverbindlich – Sie sprechen direkt mit dem Gründer.</p>
   </div>
 
   <div class="booking-card">
@@ -836,7 +848,7 @@
           <img src="images/kemal-demir-v4.png" alt="Kemal Demir" class="host-avatar">
           <div>
             <div class="host-name">Kemal Demir</div>
-            <div class="host-title">Praxura</div>
+            <div class="host-title">Gründer von Praxura</div>
           </div>
         </div>
 
@@ -880,10 +892,13 @@
 
         <hr class="divider">
 
-        <p class="desc">
-          Erfahren Sie, wie Praxura Ihre Abrechnung nach <strong>§ 302 SGB V</strong> vereinfacht,
-          Termine automatisiert und Ihrem Team Zeit spart.
-        </p>
+        <p class="desc"><strong>So läuft das Gespräch ab</strong></p>
+        <ol class="desc agenda">
+          <li>Ihr Praxisalltag: Wo verlieren Sie heute Zeit oder Geld?</li>
+          <li>Live-Rundgang an Fällen aus Ihrem Fachbereich, inkl. Vorbereitung der Abrechnung nach <strong>§&nbsp;302 SGB&nbsp;V</strong></li>
+          <li>Ehrliche Einschätzung und ein festes Angebot, falls Praxura passt</li>
+        </ol>
+        <p class="desc" style="font-size:.82rem;opacity:.8">Keine Vorbereitung nötig. Bestätigung und Meet-Link kommen per E-Mail.</p>
       </div>
 
       <!-- Middle Panel: Calendar -->
@@ -988,6 +1003,21 @@
 
     renderCalendar();
     renderRight();
+
+    // Ersten freien Tag vorauswählen: Besucher sehen sofort buchbare Zeiten
+    // statt eines leeren Panels (ein Klick weniger bis zur Buchung).
+    if (!rescheduleToken) {
+      const d = new Date(); d.setHours(0,0,0,0);
+      for (let i = 0; i <= CONFIG.lookAheadDays; i++) {
+        if (isAvailableDate(d.getFullYear(), d.getMonth(), d.getDate())) {
+          state.calYear = d.getFullYear();
+          state.calMonth = d.getMonth();
+          selectDate(toDateStr(d.getFullYear(), d.getMonth(), d.getDate()));
+          break;
+        }
+        d.setDate(d.getDate() + 1);
+      }
+    }
   })();
 
   /* ─────────────────────────────────────────

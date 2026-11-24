@@ -38,7 +38,7 @@
   <link rel="stylesheet" href="fonts/system-fonts.css" />
 
   <!-- ===== Shared design system ===== -->
-  <link rel="stylesheet" href="assets/system.css?v=20261001" />
+  <link rel="stylesheet" href="assets/system.css?v=20261124" />
 
   <!-- ===== Structured Data: Organization ===== -->
   <script type="application/ld+json">
@@ -83,10 +83,12 @@
     "description": "Ergotherapie-Praxissoftware mit digitaler Dokumentation für COPM, Hilfsmittel- und Schienenabrechnung, Verordnungsprüfung und integrierter §302 SGB V Abrechnungsvorbereitung. Läuft als eigene Praxis-Cloud im Hetzner-Konto der Praxis (von Praxura eingerichtet) oder auf einem Windows-PC bzw. Linux-Server in der Praxis.",
     "publisher": { "@id": "https://praxura.de/#organization" },
     "offers": {
-      "@type": "Offer",
+      "@type": "AggregateOffer",
       "priceCurrency": "EUR",
-      "price": "0",
-      "description": "Individuelles Angebot nach Analysegespräch"
+      "lowPrice": "39",
+      "highPrice": "149",
+      "offerCount": "4",
+      "description": "Monatliche Lizenz nach Praxisgröße (Solo 39 €, Praxis 69 €, Team 99 €, Groß 149 €), Endpreise, keine USt gemäß § 19 UStG, zzgl. einmaligem Einrichtungspaket. Einführungspreise für Verträge bis 31.03.2027."
     },
     "featureList": [
       "Terminplanung für Praxis und Hausbesuche",
@@ -772,9 +774,9 @@
   <a href="/praxis.html" class="nav-link" style="color: var(--ink); background: rgba(26,22,17,0.04);">Praxura</a>
   <a href="/blog/" class="nav-link">Insights</a>
   <a href="/login.html" class="nav-login">Login</a>
-  <a href="#kontakt" class="nav-cta">
-    Analysegespräch
-    <span class="nav-cta-circle" aria-hidden="true">↗</span>
+  <a href="/demo-booking.html" class="nav-cta nav-cta--book" data-cta="nav-book">
+    Gespräch buchen
+    <span class="nav-cta-circle" aria-hidden="true">→</span>
   </a>
 </nav>
 
@@ -792,9 +794,9 @@
       Die Praxissoftware (PVS) für Ergotherapeuten in Ihrer eigenen Praxis-Cloud – von uns eingerichtet, Patientendaten auf Ihrem Server statt beim Softwareanbieter. Aktuell in der Pilotphase: Ergotherapie-Praxen können sich für ein Analysegespräch vormerken. Dokumentieren Sie COPM-Verläufe, verwalten Sie Elternberatungen, rechnen Sie Hilfsmittel oder Schienen ab und sparen Sie die Kommission durch provisionsfreie Abrechnungsvorbereitung nach §302 SGB V.
     </p>
     <div class="px-hero-actions">
-      <a href="#kontakt" class="btn btn-primary-arrow">
-        Analysegespräch buchen
-        <span class="arrow-pill" aria-hidden="true">↗</span>
+      <a href="/demo-booking.html" class="btn-book" data-cta="hero-book">
+        <span><span class="hide-sm">Kostenloses </span>Analysegespräch buchen</span>
+        <span class="btn-book-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></svg></span>
       </a>
       <a href="/praxis.html" class="btn btn-secondary">Alle Funktionen</a>
     </div>
@@ -1183,15 +1185,16 @@
         Sehen, ob Praxura zu Ihrer <em>Ergo-Praxis passt.</em>
       </h2>
       <p class="px-closing-text">
-        In 45 Minuten klären wir Ihre Fragen zur §302-Abrechnung ohne Abrechnungszentrum, zeigen Ihnen das COPM-Modul und besprechen die Datenmigration. Unverbindlich und transparent.
+        In 30 Minuten klären wir Ihre Fragen zur §302-Abrechnung ohne Abrechnungszentrum, zeigen Ihnen das COPM-Modul und besprechen die Datenmigration. Unverbindlich und transparent.
       </p>
     </div>
     <div class="px-closing-side">
-      <a href="mailto:kontakt@praxura.de?subject=Analysegespraech%20Praxura%20Ergotherapie" class="px-closing-btn">
-        Termin vereinbaren
-        <span class="px-closing-btn-circle" aria-hidden="true">↗</span>
+      <a href="/demo-booking.html" class="btn-book btn-book--light" data-cta="closing-book">
+        Termin auswählen
+        <span class="btn-book-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></svg></span>
       </a>
-      <div class="px-closing-side-quiet">Oder direkt per E-Mail</div>
+      <ul class="book-assure book-assure--dark"><li>30 Minuten per Video</li><li>kostenlos &amp; unverbindlich</li></ul>
+      <div class="px-closing-side-quiet">Lieber schriftlich?</div>
       <a href="mailto:kontakt@praxura.de" class="px-closing-side-mail">kontakt@praxura.de</a>
     </div>
   </div>
@@ -1223,7 +1226,7 @@
         <li><a href="/heilmittelabrechnung-software.html">§ 302-Abrechnung</a></li>
         <li><a href="/ti-anbindung-heilmittel.html">TI-Anbindung</a></li>
         <li><a href="/blog/">Insights</a></li>
-        <li><a href="/#kontakt">Analysegespräch</a></li>
+        <li><a href="/demo-booking.html">Analysegespräch</a></li>
         <li><a href="/login.html">Login</a></li>
       </ul>
     </div>

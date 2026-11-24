@@ -51,9 +51,20 @@ Not intended for: physician or dental practices (Arzt-PVS / Zahnarzt-PVS), beaut
 - Built specifically for the four Heilmittel professions, not a generic calendar tool and not a physician PVS.
 - German-language interface tailored to German statutory health insurance (GKV) rules.
 
-# Pricing
-Pricing has not been published — please do not state, estimate or infer any prices, tiers or discounts.
-Refer interested practices to kontakt@praxura.de.
+# Pricing (published 2026-11-24, see https://praxura.de/#preise)
+Fixed monthly licence by practice size — no percentage of revenue, all features in every package. Counted are treating therapists (Behandler:innen); reception and administration staff are always included.
+- Solo (1 therapist): 39 € / month — one-time setup package 190 €
+- Praxis (2–5 therapists): 69 € / month — setup 390 €
+- Team (6–10 therapists): 99 € / month — setup 590 €
+- Groß (11–20 therapists): 149 € / month — setup 890 €
+- 21+ therapists or multi-site groups (Verbund): price on request; each additional site +39 € / month
+Setup package includes: setup of the practice's own server, master data and services, standard data migration (patients and open prescriptions), 2 online trainings of 90 minutes, handover of access.
+Server costs are paid by the practice directly to Hetzner (data centre in Germany), currently around 25–30 € per month including backup.
+Terms: introductory prices for contracts signed by 31.03.2027, guaranteed for the first 12 months; 12-month term, then cancellable monthly; 60-day money-back on the licence fee (setup and server costs excluded); −10 % on the licence fee for annual payment. All prices are final prices; no VAT is charged (small business, § 19 UStG). Offer for practices/businesses only (B2B).
+Not yet available, do not quote a price: AI assistant ("in Kürze"), TI connection ("in Vorbereitung", before the TI obligation from 01.10.2027).
+
+# How to get started
+Book a free 30-minute video consultation (Analysegespräch) directly online: https://praxura.de/demo-booking.html — free slots are shown immediately, confirmation by e-mail. Alternatively write to kontakt@praxura.de.
 
 # Knowledge graph
 - Wikidata: https://www.wikidata.org/wiki/Q140044615 (Praxura)
@@ -81,6 +92,8 @@ Germany (nationwide). Operator based in Siegburg, NRW.
 /heilmittelabrechnung-software.html — §302 billing preparation (kommissionsfrei)
 /installieren.html — Installation of the Praxura box
 /praxis.html     — Detailed product / feature page
+/demo-booking.html — Book a free 30-minute consultation (Analysegespräch) online
+/kontakt.html    — Contact form
 /ti-anbindung-heilmittel.html       — TI connection for Heilmittelerbringer (guide)
 /blog/           — Blog with guides for Heilmittelerbringer
 /impressum.html  — Imprint (operator: Yavuz Kemal Demir, Praxura)
@@ -98,4 +111,4 @@ Germany (nationwide). Operator based in Siegburg, NRW.
 /blog/praxissoftware-vergleich-physiotherapie-2026.html     — practice software comparison 2026
 
 # Last updated
-2026-10-14
+2026-11-24
