@@ -1334,7 +1334,7 @@ async function ladeVerknuepfteVerordnungsdaten(supabase, ownerId, rxIds) {
   return { termine, sitzungen };
 }
 
-async function ladeAbwesenheitenUndTeam(supabase, ownerId, heuteIso) {
+async function ladeAbwesenheitenUndTeam(supabase, ownerId, heuteIso, istOwner = true) {
   const { data: emps, error: empErr } = await supabase
     .from('profiles')
     .select('id, business_name, email')
@@ -1343,6 +1343,24 @@ async function ladeAbwesenheitenUndTeam(supabase, ownerId, heuteIso) {
   const empList = emps || [];
   const empIds = empList.map(e => e.id);
   if (!empIds.length) return { teamGroesse: 0, zeilen: [] };
+  const empMap = Object.fromEntries(empList.map(e => [e.id, e]));
+
+  if (!istOwner && typeof supabase?.rpc === 'function') {
+    const { data: rpcRows, error: rpcErr } = await supabase.rpc('team_abwesenheiten', {
+      p_von: `${heuteIso}T00:00:00Z`,
+      p_bis: `${addiereTageIso(heuteIso, 365)}T23:59:59Z`,
+    });
+    if (!rpcErr && Array.isArray(rpcRows)) {
+      const zielSet = new Set(empIds);
+      return {
+        teamGroesse: empList.length,
+        zeilen: rpcRows
+          .filter(v => zielSet.has(v.employee_id))
+          .slice(0, 40)
+          .map(v => ({ ...v, profiles: empMap[v.employee_id] || null })),
+      };
+    }
+  }
 
   const { data, error } = await supabase
     .from('time_offs')
@@ -1362,7 +1380,6 @@ async function ladeAbwesenheitenUndTeam(supabase, ownerId, heuteIso) {
     .order('start_date', { ascending: true })
     .limit(40);
   if (rawError) throw rawError;
-  const empMap = Object.fromEntries(empList.map(e => [e.id, e]));
   return {
     teamGroesse: empList.length,
     zeilen: (rawData || []).map(v => ({ ...v, profiles: empMap[v.employee_id] || null })),
@@ -1451,7 +1468,7 @@ export async function ladeUeberblickAnsicht(ctx) {
     'patients'
   );
 
-  const abwPromise = ladeAbwesenheitenUndTeam(supabase, ownerId, heuteIso);
+  const abwPromise = ladeAbwesenheitenUndTeam(supabase, ownerId, heuteIso, istOwner);
 
   const anfragenPromise = (state.istOwner && inLeiste('anfragen'))
     ? supabase

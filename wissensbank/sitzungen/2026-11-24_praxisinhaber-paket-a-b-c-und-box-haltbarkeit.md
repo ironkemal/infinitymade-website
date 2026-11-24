@@ -91,3 +91,20 @@ Bei zwei Code-/Schema-Tiefenprüfungen (`49aa6130`, `2bae0574`) und einer dritte
 - **Live-Sichtprüfung nach Vercel-/Watchtower-Deploy:** Nach dem Push am 24.11. prüfen, dass „Nachfassen“-Tab, Tagesplan-Druck und Krankheits-Assistent im Live-Browser mit echten Konten sauber laufen.
 - **Testbox Schritt 6 (Update & Rollback):** Realer Durchlauf der neuen `update.sh`-Haltbarkeitslogik auf der Hetzner-Testbox steht noch aus.
 - **Migrationen `0131` & `0132` (Live-DB):** Erst nach ausdrücklichem Live-Apply-GO und Vorab-Prüfung `SELECT count(*) FROM public.abrechnung WHERE business_id IS NULL;` in `api-backend/db/migrations/` übernehmen, live anwenden, Dumps (`db/SCHEMA.sql`, `db/SCHEMA-RLS.sql`), `erwartete-zaehler.json` & `compliance/TOM.md` nachziehen und Frontend vor Stufe 2 (`0132`) auf `team_abwesenheiten()` umstellen.
+
+
+---
+
+## Nachtrag — Live-Abnahme (Punkt 1, 2 & 3, 24.11. abends, Melih GO)
+
+1. **Punkt 1 — Live-Sichtprüfung auf `app.praxura.de`:**
+   - Alle 6 neuen/aktualisierten Module (`abwesenheit.js`, `abwesenheit-termine.js`, `tagesplan-druck.js`, `ueberblick-ansicht.js`, `ueberblick-listen.js`, `zuzahlung-befreiung.js`) liefern `HTTP 200` und laden im echten Playwright-Chromium-Kontext gegen `https://app.praxura.de` fehlerfrei (`0 console.error`, `0 pageerror`, alle erwarteten Exporte vorhanden).
+2. **Punkt 2 — Testbox Schritt 6 (`praxura-testbox` Update, Konflikt-Gate & Backup-Prüfung):**
+   - **6A Fremdänderungs-STOP (J3):** Testweise Änderung an `deinstallieren.sh` führte exakt zum Abbruch (`Sapma: deinstallieren.sh`), `sonuc: "konflikt"` in `praxura-stand.json`, Zustellung der Konflikt-Warnmail (`Bildirim maili gönderildi (sonuc=konflikt)`), alle 8 Container blieben durchgängig `healthy`; Teständerung anschließend sauber entfernt.
+   - **6B Sauberer Recovery-Lauf (`bash update.sh --jetzt`):** Exit `0`, `[11/11] Bitti — sonuç: ok`, Entwarnungs-Mail zugestellt (`sonuc=ok`), Snapshot `20261124T212152Z` mit `chmod 700` / `.env chmod 600` (`O-100`), Rotation exakt 3 Snapshots, `volumes/status/zertifikat.json` (`art: "le"`, >21 Tage gültig) aktualisiert, alle 8 Container `healthy`.
+   - **6C Backup-Prüfung:** Aktuelles Nacht-Backup (`backups/nightly-20261124T000431Z`, `chmod 700`) liegt `age`-verschlüsselt vor (`db.dump.age` 2,32 MB, `storage.tar.gz.age`, `backup.meta.json`).
+3. **Punkt 3 — Live-DB-Migration `0131_datenschutz_rechte_und_audit.sql` (Stufe 1) & Frontend-Umstellung:**
+   - Vorab-Prüfung auf SaaS-Supabase (`njvuclullotbksskpwgk`): `abrechnung.business_id IS NULL = 0` (32 Zeilen), `abrechnung_uebermittlung.business_id IS NULL = 0`.
+   - `0131` live angewandt und im Migrations-Ledger (`20261124212000`) verbucht; Live-Gegenprüfung: `+2` Funktionen (`team_abwesenheiten`, `audit_rechte_log`), `+3` Audit-Trigger, `7` R6-Policies auf `authenticated` (`110` Tabellen, `161` Funktionen, `188` Trigger, `197` Policies, `380` Indizes).
+   - Datei nach `api-backend/db/migrations/0131_datenschutz_rechte_und_audit.sql` überführt; `db/SCHEMA.sql`, `db/SCHEMA-RLS.sql`, `db/README.md`, `api-backend/db/erwartete-zaehler.json` (`bis_version: "0131"`, `fonksiyon: 153`, `trigger: 184`), `tools/check-security-definer-grants.mjs` und `compliance/TOM.md` (v1.4) im selben Commit aktualisiert.
+   - Frontend-Stufe 1 (`module/abwesenheit.js`, `module/ueberblick-ansicht.js`) nutzt für Mitarbeiter-Kalenderansichten jetzt `supabase.rpc('team_abwesenheiten', ...)` mit Fallback; `db/entwuerfe/0132_time_offs_rls_schliessen.sql` bleibt bewusst bis nach dem `:stable`-Rollout dieser Frontend-Version offen.

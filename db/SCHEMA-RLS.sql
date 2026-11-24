@@ -3,9 +3,9 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261123151007 0130_mitarbeiter_standort_zuordnung
--- EXPORTED AT:        2026-11-23T15:11:02.074279Z
--- ERZEUGT AM:         2026-11-23
+-- LAST MIGRATION:     20261124212000 0131_datenschutz_rechte_und_audit
+-- EXPORTED AT:        2026-11-24T21:19:52.912Z
+-- ERZEUGT AM:         2026-11-24
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
@@ -14,8 +14,8 @@
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        197
---   functions:           159
---   triggers:            185
+--   functions:           161
+--   triggers:            188
 --   indexes:             380
 --   auth_triggers:       1
 --   publication_tables:  8
@@ -32,7 +32,7 @@
 -- ----------------------------------------------------------------------------
 -- PUBLICATIONS:
 --   Publication: "supabase_realtime" (all_tables: false, tables: [public.bookings])
---   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_11_19, realtime.messages_2026_11_20, realtime.messages_2026_11_21, realtime.messages_2026_11_22, realtime.messages_2026_11_23, realtime.messages_2026_11_24, realtime.messages_2026_11_25])
+--   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_11_21, realtime.messages_2026_11_22, realtime.messages_2026_11_23, realtime.messages_2026_11_24, realtime.messages_2026_11_25, realtime.messages_2026_11_26, realtime.messages_2026_11_27])
 
 -- AUTH NON-INTERNAL TRIGGERS (OUTSIDE PUBLIC INVENTORY — REFERENCE ONLY):
 --   Trigger: "on_auth_user_created" ON auth."users" (enabled: O)
@@ -328,10 +328,13 @@ ALTER TABLE public.zuzahlung_korrekturen ENABLE ROW LEVEL SECURITY;
 CREATE POLICY abrechnung_owner_all ON public.abrechnung
   AS PERMISSIVE
   FOR ALL
-  TO PUBLIC
-  USING (((auth.uid() = owner_id) OR (auth.uid() IN ( SELECT profiles.id
-   FROM profiles
-  WHERE (profiles.owner_id = abrechnung.owner_id)))));
+  TO authenticated
+  USING (((auth.uid() = owner_id) OR ((business_id IS NOT NULL) AND (EXISTS ( SELECT 1
+   FROM profiles p
+  WHERE ((p.id = auth.uid()) AND (p.owner_id = abrechnung.owner_id)))) AND abrechnungszugriff_erlaubt(auth.uid(), business_id))))
+  WITH CHECK (((auth.uid() = owner_id) OR ((business_id IS NOT NULL) AND (EXISTS ( SELECT 1
+   FROM profiles p
+  WHERE ((p.id = auth.uid()) AND (p.owner_id = abrechnung.owner_id)))) AND abrechnungszugriff_erlaubt(auth.uid(), business_id))));
 
 CREATE POLICY artefakt_version_owner_select ON public.abrechnung_artefakt_version
   AS PERMISSIVE
@@ -343,41 +346,43 @@ CREATE POLICY "Abrechnung uebermittlung select scoping" ON public.abrechnung_ueb
   AS PERMISSIVE
   FOR SELECT
   TO authenticated
-  USING (((auth.uid() = owner_id) OR (auth.uid() IN ( SELECT profiles.id
-   FROM profiles
-  WHERE (profiles.owner_id = abrechnung_uebermittlung.owner_id)))));
+  USING (((auth.uid() = owner_id) OR ((business_id IS NOT NULL) AND (EXISTS ( SELECT 1
+   FROM profiles p
+  WHERE ((p.id = auth.uid()) AND (p.owner_id = abrechnung_uebermittlung.owner_id)))) AND abrechnungszugriff_erlaubt(auth.uid(), business_id)) OR (EXISTS ( SELECT 1
+   FROM abrechnung a
+  WHERE ((a.id = abrechnung_uebermittlung.abrechnung_id) AND (a.owner_id = abrechnung_uebermittlung.owner_id) AND (a.business_id IS NOT NULL) AND abrechnungszugriff_erlaubt(auth.uid(), a.business_id))))));
 
 CREATE POLICY "Abrechnungszahlung insert scoping" ON public.abrechnung_zahlung
   AS PERMISSIVE
   FOR INSERT
   TO authenticated
-  WITH CHECK (((auth.uid() = owner_id) OR (auth.uid() IN ( SELECT profiles.id
-   FROM profiles
-  WHERE (profiles.owner_id = abrechnung_zahlung.owner_id)))));
+  WITH CHECK (((auth.uid() = owner_id) OR (EXISTS ( SELECT 1
+   FROM abrechnung a
+  WHERE ((a.id = abrechnung_zahlung.abrechnung_id) AND (a.owner_id = abrechnung_zahlung.owner_id) AND (a.business_id IS NOT NULL) AND abrechnungszugriff_erlaubt(auth.uid(), a.business_id))))));
 
 CREATE POLICY "Abrechnungszahlung select scoping" ON public.abrechnung_zahlung
   AS PERMISSIVE
   FOR SELECT
   TO authenticated
-  USING (((auth.uid() = owner_id) OR (auth.uid() IN ( SELECT profiles.id
-   FROM profiles
-  WHERE (profiles.owner_id = abrechnung_zahlung.owner_id)))));
+  USING (((auth.uid() = owner_id) OR (EXISTS ( SELECT 1
+   FROM abrechnung a
+  WHERE ((a.id = abrechnung_zahlung.abrechnung_id) AND (a.owner_id = abrechnung_zahlung.owner_id) AND (a.business_id IS NOT NULL) AND abrechnungszugriff_erlaubt(auth.uid(), a.business_id))))));
 
 CREATE POLICY "Abrechnungszeile insert scoping" ON public.abrechnung_zeile
   AS PERMISSIVE
   FOR INSERT
   TO authenticated
-  WITH CHECK (((auth.uid() = owner_id) OR (auth.uid() IN ( SELECT profiles.id
-   FROM profiles
-  WHERE (profiles.owner_id = abrechnung_zeile.owner_id)))));
+  WITH CHECK (((auth.uid() = owner_id) OR (EXISTS ( SELECT 1
+   FROM abrechnung a
+  WHERE ((a.id = abrechnung_zeile.abrechnung_id) AND (a.owner_id = abrechnung_zeile.owner_id) AND (a.business_id IS NOT NULL) AND abrechnungszugriff_erlaubt(auth.uid(), a.business_id))))));
 
 CREATE POLICY "Abrechnungszeile select scoping" ON public.abrechnung_zeile
   AS PERMISSIVE
   FOR SELECT
   TO authenticated
-  USING (((auth.uid() = owner_id) OR (auth.uid() IN ( SELECT profiles.id
-   FROM profiles
-  WHERE (profiles.owner_id = abrechnung_zeile.owner_id)))));
+  USING (((auth.uid() = owner_id) OR (EXISTS ( SELECT 1
+   FROM abrechnung a
+  WHERE ((a.id = abrechnung_zeile.abrechnung_id) AND (a.owner_id = abrechnung_zeile.owner_id) AND (a.business_id IS NOT NULL) AND abrechnungszugriff_erlaubt(auth.uid(), a.business_id))))));
 
 CREATE POLICY "Users manage own accommodations" ON public.accommodations
   AS PERMISSIVE
@@ -1795,12 +1800,13 @@ CREATE POLICY working_hours_team_modify ON public.working_hours
 CREATE POLICY zaa_fehler_via_abrechnung ON public.zaa_fehler
   AS PERMISSIVE
   FOR ALL
-  TO PUBLIC
-  USING ((abrechnung_id IN ( SELECT abrechnung.id
-   FROM abrechnung
-  WHERE ((abrechnung.owner_id = auth.uid()) OR (auth.uid() IN ( SELECT profiles.id
-           FROM profiles
-          WHERE (profiles.owner_id = abrechnung.owner_id)))))));
+  TO authenticated
+  USING ((EXISTS ( SELECT 1
+   FROM abrechnung a
+  WHERE ((a.id = zaa_fehler.abrechnung_id) AND ((a.owner_id = auth.uid()) OR ((a.business_id IS NOT NULL) AND abrechnungszugriff_erlaubt(auth.uid(), a.business_id)))))))
+  WITH CHECK ((EXISTS ( SELECT 1
+   FROM abrechnung a
+  WHERE ((a.id = zaa_fehler.abrechnung_id) AND ((a.owner_id = auth.uid()) OR ((a.business_id IS NOT NULL) AND abrechnungszugriff_erlaubt(auth.uid(), a.business_id)))))));
 
 CREATE POLICY befreiung_owner_all ON public.zuzahlung_befreiung
   AS PERMISSIVE
@@ -2673,6 +2679,68 @@ BEGIN
 END $function$
 ;
 ALTER FUNCTION public.artefakt_version_no_delete() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.audit_rechte_log()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE
+  v_zeile       jsonb;
+  v_owner_id    uuid;
+  v_business_id uuid;
+  v_meta        jsonb;
+BEGIN
+  v_zeile := CASE WHEN TG_OP = 'DELETE' THEN to_jsonb(OLD) ELSE to_jsonb(NEW) END;
+
+  IF TG_TABLE_NAME = 'group_scopes' THEN
+    SELECT b.owner_id, g.business_id
+      INTO v_owner_id, v_business_id
+      FROM public.employee_groups g
+      JOIN public.businesses b ON b.id = g.business_id
+     WHERE g.id = NULLIF(v_zeile ->> 'group_id', '')::uuid;
+    v_meta := jsonb_build_object(
+      'group_id', v_zeile ->> 'group_id',
+      'module', v_zeile ->> 'module',
+      'has_access', (v_zeile -> 'has_access')
+    );
+  ELSE
+    v_business_id := NULLIF(v_zeile ->> 'business_id', '')::uuid;
+    SELECT b.owner_id INTO v_owner_id
+      FROM public.businesses b
+     WHERE b.id = v_business_id;
+    IF TG_TABLE_NAME = 'employee_scope_overrides' THEN
+      v_meta := jsonb_build_object(
+        'employee_id', v_zeile ->> 'employee_id',
+        'module', v_zeile ->> 'module',
+        'has_access', (v_zeile -> 'has_access')
+      );
+    ELSE
+      v_meta := jsonb_build_object(
+        'employee_id', v_zeile ->> 'employee_id',
+        'group_id', v_zeile ->> 'group_id'
+      );
+    END IF;
+  END IF;
+
+  IF v_owner_id IS NOT NULL THEN
+    INSERT INTO public.data_access_log
+      (user_id, owner_id, business_id, method, path, resource, resource_id, action, metadata)
+    VALUES
+      (auth.uid(), v_owner_id, v_business_id, 'DB', 'db://' || TG_TABLE_NAME,
+       TG_TABLE_NAME, v_zeile ->> 'id', TG_OP, v_meta);
+  END IF;
+
+  RETURN COALESCE(NEW, OLD);
+EXCEPTION WHEN OTHERS THEN
+  -- Protokollierung darf eine Rechteänderung niemals blockieren (Muster 0021).
+  RETURN COALESCE(NEW, OLD);
+END;
+$function$
+;
+ALTER FUNCTION public.audit_rechte_log() OWNER TO postgres;
+COMMENT ON FUNCTION public.audit_rechte_log() IS '0131 (Art. 32 DSGVO): Protokolliert Änderungen an Gruppenrechten, Einzelfreigaben und Standortzuordnungen in data_access_log.';
 
 CREATE OR REPLACE FUNCTION public.audit_write_log()
  RETURNS trigger
@@ -7349,6 +7417,25 @@ $function$
 ;
 ALTER FUNCTION public.sync_profiles_clinic_location() OWNER TO postgres;
 
+CREATE OR REPLACE FUNCTION public.team_abwesenheiten(p_von timestamp with time zone, p_bis timestamp with time zone)
+ RETURNS TABLE(id uuid, employee_id uuid, start_date timestamp with time zone, end_date timestamp with time zone)
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  SELECT t.id, t.employee_id, t.start_date, t.end_date
+    FROM public.time_offs t
+    JOIN public.profiles e ON e.id = t.employee_id
+   WHERE (SELECT auth.uid()) IS NOT NULL
+     AND COALESCE(e.owner_id, e.id) = public.auth_tenant_id()
+     AND t.start_date <= p_bis
+     AND t.end_date >= p_von
+   ORDER BY t.start_date ASC;
+$function$
+;
+ALTER FUNCTION public.team_abwesenheiten(p_von timestamp with time zone, p_bis timestamp with time zone) OWNER TO postgres;
+COMMENT ON FUNCTION public.team_abwesenheiten(p_von timestamp with time zone, p_bis timestamp with time zone) IS '0131 (Art. 9 DSGVO): Liefert Team-Abwesenheiten im eigenen Mandanten ohne type/reason/note.';
+
 CREATE OR REPLACE FUNCTION public.termin_mitteilungen_tagesdeckel()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -7797,6 +7884,10 @@ CREATE TRIGGER trg_set_business_id BEFORE INSERT ON email_logs FOR EACH ROW EXEC
 
 CREATE TRIGGER physio_v1_catalog BEFORE INSERT OR DELETE OR UPDATE OR TRUNCATE ON empfaenger_zertifikate FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_catalog_guard();
 
+CREATE TRIGGER trg_audit_employee_business_assignments AFTER INSERT OR DELETE OR UPDATE ON employee_business_assignments FOR EACH ROW EXECUTE FUNCTION audit_rechte_log();
+
+CREATE TRIGGER trg_audit_employee_scope_overrides AFTER INSERT OR DELETE OR UPDATE ON employee_scope_overrides FOR EACH ROW EXECUTE FUNCTION audit_rechte_log();
+
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON employee_services FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
 CREATE TRIGGER employee_standort_plan_updated_at BEFORE UPDATE ON employee_standort_plan FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
@@ -7808,6 +7899,8 @@ CREATE TRIGGER trg_set_business_id BEFORE INSERT ON fahrten FOR EACH ROW EXECUTE
 CREATE TRIGGER trg_feedback_telegram AFTER INSERT ON feedbacks FOR EACH ROW EXECUTE FUNCTION notify_feedback_telegram();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON feedbacks FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
+
+CREATE TRIGGER trg_audit_group_scopes AFTER INSERT OR DELETE OR UPDATE ON group_scopes FOR EACH ROW EXECUTE FUNCTION audit_rechte_log();
 
 CREATE TRIGGER physio_v1_catalog BEFORE INSERT OR DELETE OR UPDATE OR TRUNCATE ON heilmittel_katalog FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_catalog_guard();
 
@@ -9311,6 +9404,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=artefakt_version_no_delete() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=artefakt_version_no_delete() column=- grantee=PUBLIC privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=artefakt_version_no_delete() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=audit_rechte_log() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=audit_rechte_log() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=audit_write_log() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=audit_write_log() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=ausfall_status_buchen(p_owner_id uuid, p_actor_id uuid, p_ausfa column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
@@ -14998,6 +15093,9 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=sync_leads_location() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=sync_profiles_clinic_location() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=sync_profiles_clinic_location() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=team_abwesenheiten(p_von timestamp with time zone, p_bis timest column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=team_abwesenheiten(p_von timestamp with time zone, p_bis timest column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=team_abwesenheiten(p_von timestamp with time zone, p_bis timest column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=termin_mitteilungen_tagesdeckel() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=termin_mitteilungen_tagesdeckel() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=text(geometry) column=- grantee=anon privilege=EXECUTE grantor=supabase_admin grantable=NO

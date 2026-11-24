@@ -77,6 +77,9 @@ export const PROTECTED = [
   'abrechnung_physio_finalize',
   'abrechnung_physio_abort',
   'physio_storage_readable',
+  // 0131 (24.11.2026, Konsey): Rechte-Aenderungsprotokoll-Trigger auf employee_scope_overrides,
+  // group_scopes, employee_business_assignments; schreibt in data_access_log. Drei REVOKEs.
+  'audit_rechte_log',
 ];
 
 // Bewusst fuer anon/authenticated geoeffnete RPC-Funktionen.
@@ -106,6 +109,10 @@ export const AUSNAHMEN = [
   {
     name: 'find_owner_id_by_code',
     grund: 'Oeffentliche Buchungsseite booking.js:75 loest Slug zu owner_id auf; anon-Zugriff zwingend notwendig.',
+  },
+  {
+    name: 'team_abwesenheiten',
+    grund: 'Kalender-/Ueberblick-RPC (authenticated, 0131, Konsey 24.11.2026): liefert Team-Abwesenheiten im eigenen Mandanten ohne type/reason/note (Art. 9 DSGVO); REVOKE PUBLIC/anon, Mandantenbindung ueber auth.uid() + auth_tenant_id().',
   },
   // get_my_permissions entfernt 02.10.2026: live prosecdef=false (INVOKER) —
   // keine DEFINER-Ausnahme mehr noetig (guvenlik, db/SECURITY-DEFINER-EXECUTE.json).

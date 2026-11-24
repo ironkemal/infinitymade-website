@@ -113,3 +113,65 @@ test('Chrome1911 Enddatum, Überlappung und Abbruch', async () => {
   assert.equal(fragen,1);
   count = 0; assert.equal(await abwesenheitFreigeben(deps),true);
 });
+
+test('ladeAbwesenheiten nutzt team_abwesenheiten()-RPC fuer Kollegen (Art. 9 DSGVO) und time_offs nur fuer eigene Eintraege', async () => {
+  /** @type {any[]} */
+  const rpcAufrufe = [];
+  /** @type {any[]} */
+  const tabellenAufrufe = [];
+  const fake = {
+    /** @param {string} name @param {any} args */
+    rpc(name, args) {
+      rpcAufrufe.push([name, args]);
+      return Promise.resolve({
+        data: [
+          { id: '1', employee_id: 'ich', start_date: '2026-09-10', end_date: '2026-09-10' },
+          { id: '2', employee_id: 'kollege', start_date: '2026-09-11', end_date: '2026-09-11' },
+          { id: '3', employee_id: 'anderer', start_date: '2026-09-12', end_date: '2026-09-12' },
+        ],
+        error: null,
+      });
+    },
+    /** @param {string} t */
+    from(t) { tabellenAufrufe.push(['from', t]); return this; },
+    select() { return this; },
+    /** @param {string} col @param {any} vals */
+    in(col, vals) { tabellenAufrufe.push(['in', col, vals]); return this; },
+    lte() { return this; },
+    gte() {
+      return Promise.resolve({
+        data: [{ id: '1', employee_id: 'ich', start_date: '2026-09-10', end_date: '2026-09-10', type: 'urlaub', reason: 'Urlaub' }],
+      });
+    },
+  };
+  setzeGrundSichtbar(id => id === 'ich');
+  try {
+    const res = await ladeAbwesenheiten(fake, { empIds: ['ich', 'kollege'], vonISO: '2026-09-08T00:00:00Z', bisISO: '2026-09-14T23:59:59Z' });
+    assert.equal(rpcAufrufe.length, 1);
+    assert.equal(rpcAufrufe[0][0], 'team_abwesenheiten');
+    assert.deepEqual(tabellenAufrufe[1], ['in', 'employee_id', ['ich']]);
+    assert.equal(res.length, 2);
+    assert.equal(res.find(r => r.employee_id === 'ich')?.reason, 'Urlaub');
+    assert.equal(res.find(r => r.employee_id === 'kollege')?.reason, undefined);
+  } finally {
+    setzeGrundSichtbar(() => true);
+  }
+});
+
+test('ladeAbwesenheiten faellt sauber auf time_offs zurueck wenn team_abwesenheiten()-RPC noch fehlt', async () => {
+  const fake = {
+    rpc() { return Promise.resolve({ data: null, error: { message: 'function not found' } }); },
+    from() { return this; },
+    select() { return this; },
+    in() { return this; },
+    lte() { return this; },
+    gte() { return Promise.resolve({ data: EIN_TAG }); },
+  };
+  setzeGrundSichtbar(() => false);
+  try {
+    const res = await ladeAbwesenheiten(fake, { empIds: ['a'], vonISO: '2026-09-08T00:00:00Z', bisISO: '2026-09-14T23:59:59Z' });
+    assert.deepEqual(res, EIN_TAG);
+  } finally {
+    setzeGrundSichtbar(() => true);
+  }
+});

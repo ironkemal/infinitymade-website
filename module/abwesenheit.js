@@ -42,6 +42,33 @@ import { berlinTagesgrenzen } from './berlin-datum.js';
  */
 export async function ladeAbwesenheiten(supabase, { empIds, vonISO, bisISO }) {
   if (!empIds?.length) return [];
+  const brauchtTeamRpc = empIds.some(id => !grundSichtbar(id));
+  if (brauchtTeamRpc && typeof supabase?.rpc === 'function') {
+    const { data: teamRows, error: rpcErr } = await supabase.rpc('team_abwesenheiten', {
+      p_von: vonISO,
+      p_bis: bisISO,
+    });
+    if (!rpcErr && Array.isArray(teamRows)) {
+      const zielSet = new Set(empIds);
+      const eigeneIds = empIds.filter(id => grundSichtbar(id));
+      /** @type {AbwesenheitEintrag[]} */
+      let eigeneZeilen = [];
+      if (eigeneIds.length) {
+        const { data: ownData } = await supabase.from('time_offs')
+          .select('id,employee_id,start_date,end_date,reason,note,type')
+          .in('employee_id', eigeneIds)
+          .lte('start_date', bisISO)
+          .gte('end_date', vonISO);
+        eigeneZeilen = ownData || [];
+      }
+      const eigeneSet = new Set(eigeneIds);
+      const kollegenZeilen = teamRows.filter(
+        /** @param {AbwesenheitEintrag} r */
+        r => zielSet.has(r.employee_id) && !eigeneSet.has(r.employee_id)
+      );
+      return [...eigeneZeilen, ...kollegenZeilen];
+    }
+  }
   const { data } = await supabase.from('time_offs')
     .select('employee_id,start_date,end_date,reason,note,type')
     .in('employee_id', empIds)

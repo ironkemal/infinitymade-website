@@ -199,9 +199,9 @@ test('8. pruefeDateien ueberspringt 0000_baseline.sql', () => {
   assert.deepEqual(bulgular, []);
 });
 
-test('9. Listenstruktur: AUSNAHMEN (6), PROTECTED (45) und BEKANNTE_ALTLASTEN (6) mit Begruendung', () => {
+test('9. Listenstruktur: AUSNAHMEN (7), PROTECTED (46) und BEKANNTE_ALTLASTEN (6) mit Begruendung', () => {
   // AUSNAHMEN: genau 6 oeffentliche RPCs (get_my_permissions ist seit langem INVOKER)
-  assert.equal(AUSNAHMEN.length, 6);
+  assert.equal(AUSNAHMEN.length, 7);
   const erwarteteAusnahmen = [
     'search_diagnosen',
     'search_heilmittel',
@@ -209,6 +209,7 @@ test('9. Listenstruktur: AUSNAHMEN (6), PROTECTED (45) und BEKANNTE_ALTLASTEN (6
     'public_praxis_angaben',
     'public_sondertage',
     'find_owner_id_by_code',
+    'team_abwesenheiten',
   ];
   for (const name of erwarteteAusnahmen) {
     const eintrag = AUSNAHMEN.find((a) => a.name === name);
@@ -217,11 +218,12 @@ test('9. Listenstruktur: AUSNAHMEN (6), PROTECTED (45) und BEKANNTE_ALTLASTEN (6
   }
 
   // 29 bestehende Funktionen + drei interne Raumtrigger aus 0104.
-  assert.equal(PROTECTED.length, 45); // +13 Physio-Publikation 0113 (07.11.2026)
+  assert.equal(PROTECTED.length, 46); // +13 Physio-Publikation 0113 (07.11.2026)
   const erwarteteProtected = [
     'booking_raum_automatisch',
     'booking_leistung_raum_nachpruefen',
     'booking_gruppe_raum_nachziehen',
+    'audit_rechte_log',
     'get_gmail_token',
     'set_gmail_token',
     'clear_gmail_token',

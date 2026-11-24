@@ -7,7 +7,7 @@ Anhang 2 zum Auftragsverarbeitungsvertrag (AVV) zwischen InfinityMade und den Au
 | | |
 |---|---|
 | Anbieter | InfinityMade |
-| Stand | 2026-10-05, Version 1.3 |
+| Stand | 2026-11-24, Version 1.4 |
 | Geltungsbereich | Alle Verarbeitungen gemäß VVT.md |
 
 ---
@@ -41,8 +41,7 @@ Anhang 2 zum Auftragsverarbeitungsvertrag (AVV) zwischen InfinityMade und den Au
     Auftraggebers — auch die Rollentrennung läuft innerhalb der RLS-Policy, nicht in der
     Oberfläche
   - Die Modul-Berechtigungen (z. B. `anamnese`, `abrechnung`) steuern die **Anzeige** in der Oberfläche, nicht den Datenzugriff; der Zugriff läuft über die RLS
-    nach Mandant. Sie sind deshalb keine Zugriffskontrolle im Sinne von Art. 32 DSGVO (legal-de 11.11.2026). Die Rechnungen sind seit Migration 0121 die Ausnahme: dort
-    erzwingt die RLS das Modulrecht `abrechnung` zusätzlich.
+    nach Mandant. Sie sind deshalb keine Zugriffskontrolle im Sinne von Art. 32 DSGVO (legal-de 11.11.2026). Die Rechnungen (Migration 0121) und seit Migration 0131 auch alle fünf §302-Abrechnungstabellen (`abrechnung`, `abrechnung_zeile`, `abrechnung_uebermittlung`, `abrechnung_zahlung`, `zaa_fehler`) sind die Ausnahmen: dort erzwingt die RLS das Modulrecht `abrechnung` zusätzlich.
   - Rechte der Angestellten desselben Mandanten an Behandlungsdaten (RLS, live geprüft
     11.11.2026, siehe LEGAL_DECISIONS.md):
     - Nur lesend: podologische Behandlungseinträge (`podologie_behandlungen`).
@@ -55,7 +54,8 @@ Anhang 2 zum Auftragsverarbeitungsvertrag (AVV) zwischen InfinityMade und den Au
       Storno-, BG- und Mandantenfelder sowie der Status „abgerechnet" sind für jeden
       Browser-Zugriff gesperrt und nur über das Backend änderbar. Abgerechnete
       Verordnungen sind nicht löschbar (GoBD).
-    - Rechnungen: zusätzlich an das Modulrecht `abrechnung` gebunden (Migration 0121).
+    - Rechnungen und §302-Abrechnungstabellen (`invoices`, `abrechnung`, `abrechnung_zeile`, `abrechnung_uebermittlung`, `abrechnung_zahlung`, `zaa_fehler`): zusätzlich an das Modulrecht `abrechnung` gebunden (Migrationen 0121 und 0131).
+    - Team-Abwesenheiten (`time_offs`, Art. 9 DSGVO): seit Migration 0131 steht die datensparsame RPC `team_abwesenheiten()` ohne Grund-/Krankheitsfelder bereit; das Dashboard nutzt sie für Mitarbeiter-Kalenderansichten (Stufe 1), die vollständige RLS-Schließung der Basistabelle folgt nach `:stable`-Rollout (Entwurf `0132`).
   - Patientennotizen (`patient_notes`) sind für Angestellte **lesend** freigegeben, die
     Warteliste (`warteliste`) **lesend und schreibend, aber ohne Löschrecht**
     (17.09.2026, siehe LEGAL_DECISIONS.md). Die Schranken sind Teil der Zusicherung, nicht
@@ -68,8 +68,7 @@ Anhang 2 zum Auftragsverarbeitungsvertrag (AVV) zwischen InfinityMade und den Au
 - Zugriffsprotokoll `data_access_log` (≥ 12 Monate)
   - ⚠️ **Umfang, damit die Zusicherung stimmt (geprüft 03.09.2026):** protokolliert werden
     die Zugriffe über die Backend-API (`api-backend`, Middleware `accessLogger` auf allen
-    `/api`-Routen — Rezept-Upload und OCR, § 302-Abrechnung, Terminanfragen, Export) sowie
-    die DSGVO-Vorgänge aus `api/dsgvo.js`.
+    `/api`-Routen — Rezept-Upload und OCR, § 302-Abrechnung, Terminanfragen, Export) die DSGVO-Vorgänge aus `api/dsgvo.js` sowie seit Migration 0131 automatisch alle Änderungen an Rollen-/Modul-/Standortrechten (`employee_scope_overrides`, `group_scopes`, `employee_business_assignments`) über DB-Trigger (`audit_rechte_log()`, Minimaldaten ohne Patientendaten).
   - **Nicht** protokolliert sind die Lesezugriffe, die das Dashboard direkt gegen die
     Datenbank fährt (Supabase/PostgREST aus dem Browser) — das ist der überwiegende Teil
     der Anzeige im Alltag. Ein Satz wie „Audit-Log jedes Patient-Datenzugriffs" stand hier

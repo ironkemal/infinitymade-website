@@ -1,4 +1,5 @@
--- ENTWURF 0131_datenschutz_rechte_und_audit.sql — NOCH NICHT LIVE ANGEWANDT!
+-- 0131_datenschutz_rechte_und_audit.sql
+-- SaaS: angewandt 24.11.2026 (Ledger 20261124212000, njvuclullotbksskpwgk, Melih GO)
 --
 -- Konsey-Entscheid 24.11.2026 (`konsey/KARARLAR.md`: legal-de + guvenlik + db-ustasi):
 -- Zweistufiger Rollout (0131 abwärtskompatibel für :beta/:stable → Frontend-Umstellung → 0132).

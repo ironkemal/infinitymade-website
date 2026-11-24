@@ -9566,6 +9566,8 @@
     "kostentraegerFrischAbleiten",
     "kurzOf",
     "ladeAbrechnungAuswahl",
+    "ladeAbwesenheiten",
+    "ladeAbwesenheitenUndTeam",
     "ladeAktiveVerordnungen",
     "ladeBetriebsart",
     "ladeDateieinheiten",
@@ -10345,6 +10347,8 @@
     "kostentraegerFrischAbleiten",
     "kurzOf",
     "ladeAbrechnungAuswahl",
+    "ladeAbwesenheiten",
+    "ladeAbwesenheitenUndTeam",
     "ladeAktiveVerordnungen",
     "ladeBetriebsart",
     "ladeDateieinheiten",
@@ -16675,6 +16679,8 @@
     "kontoLoeschen",
     "kontoLoeschenIntern",
     "korrigierePhysioEinheiten",
+    "ladeAbwesenheiten",
+    "ladeAbwesenheitenUndTeam",
     "ladeKennung",
     "ladePraxisAngaben",
     "loadBookingSlots",
@@ -115474,20 +115480,26 @@
    "lang": "js",
    "file": "module/abwesenheit.js",
    "start": 43,
-   "end": 51,
-   "lines": 9,
+   "end": 78,
+   "lines": 36,
    "spiegelHinweis": null,
    "tables": [
     "time_offs"
    ],
-   "rpcs": [],
+   "rpcs": [
+    "team_abwesenheiten"
+   ],
    "writes": [],
    "endpoints": [],
    "storage": [],
    "domIds": [],
    "domRenderIds": [],
    "domRender": false,
-   "calls": [],
+   "calls": [
+    "grundSichtbar",
+    "has",
+    "rpc"
+   ],
    "calledBy": [
     "oeffneAbwesenheitAssistent",
     "renderDayView",
@@ -115543,8 +115555,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/abwesenheit.js",
-   "start": 68,
-   "end": 74,
+   "start": 95,
+   "end": 101,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -115610,8 +115622,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/abwesenheit.js",
-   "start": 83,
-   "end": 85,
+   "start": 110,
+   "end": 112,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -115679,8 +115691,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/abwesenheit.js",
-   "start": 93,
-   "end": 95,
+   "start": 120,
+   "end": 122,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -115747,8 +115759,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/abwesenheit.js",
-   "start": 99,
-   "end": 100,
+   "start": 126,
+   "end": 127,
    "lines": 2,
    "spiegelHinweis": null,
    "tables": [],
@@ -115761,7 +115773,8 @@
    "domRender": false,
    "calls": [],
    "calledBy": [
-    "abwesenheitsGrund"
+    "abwesenheitsGrund",
+    "ladeAbwesenheiten"
    ],
    "modules": [
     "abrechnung",
@@ -115812,8 +115825,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/abwesenheit.js",
-   "start": 101,
-   "end": 103,
+   "start": 128,
+   "end": 130,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -115837,8 +115850,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/abwesenheit.js",
-   "start": 115,
-   "end": 120,
+   "start": 142,
+   "end": 147,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -115906,8 +115919,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/abwesenheit.js",
-   "start": 125,
-   "end": 161,
+   "start": 152,
+   "end": 188,
    "lines": 37,
    "spiegelHinweis": null,
    "tables": [
@@ -257399,21 +257412,27 @@
    "lang": "js",
    "file": "module/ueberblick-ansicht.js",
    "start": 1337,
-   "end": 1370,
-   "lines": 34,
+   "end": 1387,
+   "lines": 51,
    "spiegelHinweis": null,
    "tables": [
     "profiles",
     "time_offs"
    ],
-   "rpcs": [],
+   "rpcs": [
+    "team_abwesenheiten"
+   ],
    "writes": [],
    "endpoints": [],
    "storage": [],
    "domIds": [],
    "domRenderIds": [],
    "domRender": false,
-   "calls": [],
+   "calls": [
+    "addiereTageIso",
+    "has",
+    "rpc"
+   ],
    "calledBy": [
     "ladeUeberblickAnsicht",
     "scope"
@@ -257467,8 +257486,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/ueberblick-ansicht.js",
-   "start": 1389,
-   "end": 1617,
+   "start": 1406,
+   "end": 1634,
    "lines": 229,
    "spiegelHinweis": null,
    "tables": [
@@ -257569,8 +257588,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/ueberblick-ansicht.js",
-   "start": 1414,
-   "end": 1519,
+   "start": 1431,
+   "end": 1536,
    "lines": 106,
    "spiegelHinweis": null,
    "tables": [
@@ -257897,6 +257916,7 @@
    "calledBy": [
     "aktuelleAbwesenheiten",
     "fristenAuswerten",
+    "ladeAbwesenheitenUndTeam",
     "ladeUeberblickAnsicht",
     "montiereTageszentrale",
     "pruefeMorgenFallsAbend",
@@ -311260,7 +311280,7 @@
    "name": "scope",
    "orte": [
     "api-backend/booking/termin-planung.js:11",
-    "module/ueberblick-ansicht.js:1414"
+    "module/ueberblick-ansicht.js:1431"
    ],
    "aynalar": []
   },
