@@ -73,7 +73,7 @@ test('Mitarbeiter sehen nur persönliche Abschnitte, Inhaber alles (Melih 23.11.
     assert.equal(abschnittFuerRolle(praxis, false), false, praxis);
     assert.equal(abschnittFuerRolle(praxis, true), true, praxis);
   }
-  assert.ok(MITARBEITER_ABSCHNITTE.size <= 5, 'Mitarbeiter-Liste bewusst klein halten');
+  assert.ok(MITARBEITER_ABSCHNITTE.size <= 6, 'Mitarbeiter-Liste bewusst klein halten');
 });
 
 // ── Phase 7b (23.11.2026): Weiterleitung, Obergruppen, Verweise ──

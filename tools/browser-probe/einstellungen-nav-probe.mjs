@@ -52,6 +52,30 @@ try {
       if (!(await sichtbar(page, '#settingsBillingSection'))) befunde.push(`${breite}px: Suche „iban“ findet „Bank & Steuer“ nicht`);
       await page.locator('.einst-suche').fill('');
       // Deep-Link
+      // „Mein Profil“ (Inhaber): Vor-/Nachname-Felder, oben in „Mein Konto“
+      await page.evaluate(() => { location.hash = '#settings/konto'; });
+      await ruhe(page, 300);
+      if (!(await sichtbar(page, '#settingsMeinProfilSection #meinProfil_vorname'))) befunde.push(`${breite}px: „Mein Profil“ (Inhaber) ohne Vorname-Feld`);
+      if (await page.evaluate(() => !!document.getElementById('meinProfil_anzeigename'))) befunde.push(`${breite}px: Inhaber bekommt das Mitarbeiter-Namensfeld (würde Praxisnamen überschreiben)`);
+      if (breite === 1280) {
+        // Erfolgsweg im echten DOM mit Attrappe (Fixture ist nur lesend): Inhaber-Patch nur Vor-/Nachname, Profil lokal nachgezogen
+        const erg = await page.evaluate(async () => {
+          const m = await import('/module/mein-profil.js?v=20261123mp1');
+          const patches = []; const toasts = []; const profil = { role: 'owner', owner_first_name: 'Ines', owner_last_name: 'Inhaberin', business_name: 'Praxis X' };
+          const sb = { from: (t) => ({ update: (p) => ({ eq: async (k, v) => { patches.push({ t, p, k, v }); return { error: null }; } }) }) };
+          let nach = 0;
+          m.renderMeinProfil({ supabase: sb, profile: () => profil, userId: () => '11111111-1111-4111-8111-111111111111', showToast: (x, y) => toasts.push([x, y]), nachSpeichern: () => { nach++; } });
+          document.getElementById('meinProfil_vorname').value = ' Ina ';
+          document.getElementById('meinProfilSpeichern').click();
+          await new Promise((r) => setTimeout(r, 50));
+          return { patches, toasts, profil, nach };
+        });
+        const p0 = erg.patches[0];
+        if (!p0 || p0.t !== 'profiles' || JSON.stringify(Object.keys(p0.p).sort()) !== JSON.stringify(['owner_first_name', 'owner_last_name']) || p0.p.owner_first_name !== 'Ina') befunde.push(`Mein Profil Erfolgsweg: falscher Patch ${JSON.stringify(erg.patches)}`);
+        if (erg.profil.business_name !== 'Praxis X' || erg.profil.owner_first_name !== 'Ina' || erg.nach !== 1) befunde.push(`Mein Profil Erfolgsweg: Profil/Neuzeichnen falsch ${JSON.stringify(erg.profil)} nach=${erg.nach}`);
+        if (!erg.toasts.some(([x, y]) => /Profil gespeichert/.test(x) && y === 'success')) befunde.push(`Mein Profil Erfolgsweg: keine Bestätigung ${JSON.stringify(erg.toasts)}`);
+        await wechsle(page, 'settings'); await ruhe(page, 300);
+      }
       await page.evaluate(() => { location.hash = '#settings/abo'; });
       await ruhe(page, 300);
       if (!(await sichtbar(page, '#settingsAccountSection'))) befunde.push(`${breite}px: #settings/abo öffnet „Paket & Abo“ nicht`);
@@ -153,6 +177,22 @@ try {
       const bereiche = await page.locator('.einst-nav-eintrag').allTextContents();
       for (const verboten of ['Praxisdaten', 'Rechnung', 'Krankenkasse', 'Buchhaltung', 'System', 'Termine & Online-Buchung', 'Ärzte', 'Team', 'Paket & Abo']) if (bereiche.includes(verboten)) befunde.push(`Mitarbeiter sieht Bereich „${verboten}“`);
       if (!bereiche.includes('Mein Konto')) befunde.push(`Mitarbeiter sieht „Mein Konto“ nicht (${bereiche.join(', ')})`);
+      await page.evaluate(() => { location.hash = '#settings/konto'; }); await ruhe(page, 300);
+      const name = await page.evaluate(() => document.getElementById('meinProfil_anzeigename')?.value ?? null);
+      if (name === null || !(await sichtbar(page, '#settingsMeinProfilSection'))) befunde.push('Mitarbeiter: „Mein Profil“ mit Namensfeld fehlt');
+      else if (!name.trim()) befunde.push('Mitarbeiter: Namensfeld in „Mein Profil“ nicht vorbefüllt');
+      if (await page.evaluate(() => !!document.getElementById('meinProfil_vorname'))) befunde.push('Mitarbeiter bekommt Inhaber-Felder');
+      // Speichern: genau ein update auf profiles + Bestätigung
+      const vorher = await page.evaluate(() => (window.__rsFixture?.writes || []).length);
+      await page.fill('#meinProfil_anzeigename', 'Mia M. (Probe)');
+      await page.click('#meinProfilSpeichern'); await ruhe(page, 500);
+      const neu = await page.evaluate((v) => (window.__rsFixture?.writes || []).slice(v), vorher);
+      if (!neu.some((w) => w.tabelle === 'profiles' && w.art === 'update')) befunde.push(`Mitarbeiter: „Mein Profil“ speichert nicht (${JSON.stringify(neu)})`);
+      if (neu.some((w) => w.tabelle !== 'profiles')) befunde.push(`Mitarbeiter: „Mein Profil“ schreibt in fremde Tabellen (${JSON.stringify(neu)})`);
+      // Fixture ist absichtlich nur lesend (RS_READONLY) → der Fehlerweg muss sauber melden, Knopf wieder frei
+      const meldung = await page.evaluate(() => [...document.querySelectorAll('.toast')].map((t) => t.textContent || '').join(' | '));
+      if (!/Profil konnte nicht gespeichert werden/.test(meldung)) befunde.push(`Mitarbeiter: Fehlerweg ohne verständliche Meldung (${meldung})`);
+      if (await page.evaluate(() => document.getElementById('meinProfilSpeichern')?.hasAttribute('disabled'))) befunde.push('Mitarbeiter: Speichern-Knopf bleibt nach Fehler gesperrt');
       await page.locator('.einst-suche').fill('a');
       await ruhe(page, 200);
       for (const id of ['settingsProfileSection', 'settingsBillingSection', 'settingsBrandingSection', 'settingsDsgvoSection']) if (await sichtbar(page, '#' + id)) befunde.push(`Mitarbeiter sieht ${id}`);

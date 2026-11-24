@@ -105,6 +105,7 @@ export const NACHGELADEN = {
   settingsFaxSection: 'kommunikation',
   settingsFormulareSection: 'dokumentation',
   settingsMailversandSection: 'kommunikation',
+  settingsMeinProfilSection: 'konto',
 };
 
 /** Alte Bereichsnamen (75c28550, bis Phase 7b) → neue; gespeicherte Links und Lesezeichen landen richtig. */
@@ -132,7 +133,7 @@ export const VERWEISE = {
  * deren Formulare keine eigene Rollenprüfung haben — hier zentral ausgeblendet. Schlüssel = Abschnitts-ID
  * oder 'i18n:<data-i18n des Titels>' für Abschnitte ohne ID.
  */
-export const MITARBEITER_ABSCHNITTE = new Set(['settingsPasswortSection', 'settingsGoogleSection', 'settingsQuellenSection']);
+export const MITARBEITER_ABSCHNITTE = new Set(['settingsMeinProfilSection', 'settingsPasswortSection', 'settingsGoogleSection', 'settingsQuellenSection']);
 
 /** Reine Hilfe: darf diese Rolle den Abschnitt sehen? */
 export function abschnittFuerRolle(schluessel, istOwner) {

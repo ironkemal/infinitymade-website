@@ -1,4 +1,4 @@
-import { emojisAus } from './module/ohne-emoji.js?v=20261123hw1'; import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261103mail1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261103mail1'; import { standorteFuerNutzer } from './module/standort-zuordnung.js?v=20261123sz1'; import { einstellungenKategorienAufbauen, einstellungenZeigeAbschnitt } from './module/einstellungen-nav.js?v=20261123su1';
+import { emojisAus } from './module/ohne-emoji.js?v=20261123hw1'; import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261123mp1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261123mp1'; import { standorteFuerNutzer } from './module/standort-zuordnung.js?v=20261123sz1'; import { einstellungenKategorienAufbauen, einstellungenZeigeAbschnitt } from './module/einstellungen-nav.js?v=20261123mp1'; import { renderMeinProfil } from './module/mein-profil.js?v=20261123mp1';
 import { oeffneLeistungsRaum, leistungsRaumPayload } from './module/leistungs-raum.js?v=20261103raum';
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
 import { planungVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261121f11';
@@ -10368,7 +10368,7 @@ async function loadSettings() {
       showToast,
       showConfirmModal
     }).catch(() => { kiMount.textContent = 'KI-Einstellungen derzeit nicht verfügbar.'; });
-  } void mountSystemstatus(document.getElementById('settingsSystemSection'), { istKutu: IST_KUTU, apiBase: API, getToken: async () => (await supabase.auth.getSession())?.data?.session?.access_token || null }); einstellungenKategorienAufbauen({ istOwner: () => currentProfile?.role === 'owner', wechslePanel: switchPanel }); // Box-Test P1: Systemstatus (Server entscheidet Sichtbarkeit)
+  } void mountSystemstatus(document.getElementById('settingsSystemSection'), { istKutu: IST_KUTU, apiBase: API, getToken: async () => (await supabase.auth.getSession())?.data?.session?.access_token || null }); renderMeinProfil({ supabase, profile: () => currentProfile, userId: () => currentSession?.user?.id, vorschlagName: () => currentSession?.user?.user_metadata?.full_name, showToast, nachSpeichern: () => { void renderOverview(); void loadTeam(); } }); einstellungenKategorienAufbauen({ istOwner: () => currentProfile?.role === 'owner', wechslePanel: switchPanel }); // Box-Test P1: Systemstatus (Server entscheidet Sichtbarkeit)
 
   document.getElementById('setBiz').value = currentProfile.business_name || '';
   const sectorEl = document.getElementById('setSectorLabel');
