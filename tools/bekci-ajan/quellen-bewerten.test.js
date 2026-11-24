@@ -5,6 +5,7 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdtemp, rm, writeFile, readFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import os from 'node:os';
@@ -16,6 +17,7 @@ import {
   urlEslesiyorMu,
   urlSonParca,
   gecerliTarihMi,
+  quellenBefundIz,
 } from './quellen-bewerten.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -339,4 +341,167 @@ test('10. CLI --befunde, --karar, --indeks ve --out ile doğru çalışır (exit
   } finally {
     await rm(tempDir, { recursive: true, force: true });
   }
+});
+
+test('11. her vakada ek.iz sha256(JSON.stringify([quelleId, sıralı neu, sıralı weg])) ilk 16 hanesidir', () => {
+  const befunde = [
+    {
+      id: 'gkv-anlage2',
+      ref: 'GKV Anlage 2',
+      wichtig: 'normal',
+      ne: 'Yeni fiyatlar',
+      neu: ['www.gkv.de/b.pdf', 'www.gkv.de/a.pdf'],
+      weg: ['www.gkv.de/eski.pdf'],
+    },
+  ];
+
+  const sonuc = bewerte({ befunde, karar: null });
+  assert.equal(sonuc.vakalar.length, 1);
+  const v = sonuc.vakalar[0];
+
+  assert.ok(v.ek?.iz);
+  assert.equal(v.ek.iz.length, 16);
+  assert.match(v.ek.iz, /^[0-9a-f]{16}$/);
+
+  // Doğrudan sha256 hesabı ile karşılaştır
+  const beklenen = createHash('sha256')
+    .update(JSON.stringify(['gkv-anlage2', ['www.gkv.de/a.pdf', 'www.gkv.de/b.pdf'], ['www.gkv.de/eski.pdf']]))
+    .digest('hex')
+    .slice(0, 16);
+  assert.equal(v.ek.iz, beklenen);
+});
+
+test('12. neu ve weg sırası karışık verilse bile sıralandığı için aynı ek.iz üretilir', () => {
+  const b1 = [
+    {
+      id: 'gkv-anlage2',
+      wichtig: 'normal',
+      neu: ['www.gkv.de/2.pdf', 'www.gkv.de/1.pdf'],
+      weg: ['www.gkv.de/y.pdf', 'www.gkv.de/x.pdf'],
+    },
+  ];
+
+  const b2 = [
+    {
+      id: 'gkv-anlage2',
+      wichtig: 'normal',
+      neu: ['www.gkv.de/1.pdf', 'www.gkv.de/2.pdf'],
+      weg: ['www.gkv.de/x.pdf', 'www.gkv.de/y.pdf'],
+    },
+  ];
+
+  const res1 = bewerte({ befunde: b1, karar: null });
+  const res2 = bewerte({ befunde: b2, karar: null });
+
+  assert.equal(res1.vakalar[0].ek.iz, res2.vakalar[0].ek.iz);
+});
+
+test('13. neu veya weg listesi değiştiğinde ek.iz değişir', () => {
+  const b1 = [{ id: 'gkv-anlage2', wichtig: 'normal', neu: ['a.pdf'], weg: [] }];
+  const b2 = [{ id: 'gkv-anlage2', wichtig: 'normal', neu: ['b.pdf'], weg: [] }];
+  const b3 = [{ id: 'gkv-anlage2', wichtig: 'normal', neu: ['a.pdf'], weg: ['c.pdf'] }];
+
+  const res1 = bewerte({ befunde: b1, karar: null });
+  const res2 = bewerte({ befunde: b2, karar: null });
+  const res3 = bewerte({ befunde: b3, karar: null });
+
+  assert.notEqual(res1.vakalar[0].ek.iz, res2.vakalar[0].ek.iz);
+  assert.notEqual(res1.vakalar[0].ek.iz, res3.vakalar[0].ek.iz);
+});
+
+test('14. ajan önerisi veya özeti değişse bile ek.iz değişmez', () => {
+  const befunde = [{ id: 'gkv-anlage2', wichtig: 'normal', neu: ['a.pdf'], weg: [] }];
+  const k1 = {
+    belgeler: [
+      {
+        quelle_id: 'gkv-anlage2',
+        url: 'a.pdf',
+        ne_degisti: 'İlk açıklama',
+        etki: 'orta',
+        gecerlilik: null,
+        etkilenen_dosyalar: [],
+        oneri: 'incele',
+        guven: 'mittel',
+      },
+    ],
+    ozet: 'İlk ajan özeti',
+    warnungen: [],
+  };
+
+  const k2 = {
+    belgeler: [
+      {
+        quelle_id: 'gkv-anlage2',
+        url: 'a.pdf',
+        ne_degisti: 'İkinci farklı açıklama',
+        etki: 'orta',
+        gecerlilik: null,
+        etkilenen_dosyalar: [],
+        oneri: 'incele',
+        guven: 'mittel',
+      },
+    ],
+    ozet: 'İkinci tamamen farklı ajan özeti',
+    warnungen: [],
+  };
+
+  const res1 = bewerte({ befunde, karar: k1 });
+  const res2 = bewerte({ befunde, karar: k2 });
+  const resNull = bewerte({ befunde, karar: null });
+
+  assert.equal(res1.vakalar[0].ek.iz, res2.vakalar[0].ek.iz);
+  assert.equal(res1.vakalar[0].ek.iz, resNull.vakalar[0].ek.iz);
+});
+
+test('15. M4: quellen-bewerten her vakada ek.uygulanabilir true belirler', () => {
+  const befunde = [
+    {
+      id: 'gkv-anlage2',
+      wichtig: 'normal',
+      ne: 'Anlage 2',
+      neu: ['www.gkv.de/a.pdf'],
+      weg: [],
+    },
+  ];
+
+  const res = bewerte({ befunde, karar: null });
+  assert.equal(res.vakalar.length, 1);
+  assert.equal(res.vakalar[0].ek.uygulanabilir, true);
+  assert.equal(res.vakalar[0].ek.iz, quellenBefundIz(befunde[0]));
+});
+
+test('16. L12(4): yalnız weg bulgusu olan kritik olmayan kaynakta otomatik biliniyor yerine vaka açılır', () => {
+  const befund = {
+    id: 'gkv-eski-dokuman',
+    wichtig: 'normal',
+    ne: 'Kaldırılan belge testi',
+    url: 'https://www.gkv-spitzenverband.de/index.html',
+    neu: [],
+    weg: ['https://www.gkv-spitzenverband.de/eski.pdf'],
+  };
+
+  const karar = {
+    belgeler: [
+      {
+        quelle_id: 'gkv-eski-dokuman',
+        url: 'https://www.gkv-spitzenverband.de/eski.pdf',
+        ne_degisti: 'Eski belge yayından kaldırıldı',
+        etki: 'yok',
+        gecerlilik: null,
+        etkilenen_dosyalar: [],
+        oneri: 'biliniyor',
+        guven: 'hoch',
+      },
+    ],
+    ozet: 'Belge kaldırılmış, bizi etkilemiyor',
+    warnungen: [],
+  };
+
+  // Karar geçerli olmasına ve her belge etki: yok, oneri: biliniyor, guven: hoch olmasına rağmen
+  // weg.length > 0 olduğu için otomatik olamaz, insana (vaka) gitmelidir.
+  const res = bewerte({ befunde: [befund], karar, indeks: [] });
+  assert.equal(res.otomatik.length, 0, 'Kaldırılan belgede otomatik biliniyor işaretlenemez');
+  assert.equal(res.vakalar.length, 1, 'Yalnız weg bulgusunda vaka açılmalıdır');
+  assert.equal(res.vakalar[0].ek.uygulanabilir, true);
+  assert.ok(res.gruende.some(g => g.includes('kaldırılan belge var')));
 });

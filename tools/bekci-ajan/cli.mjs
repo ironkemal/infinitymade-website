@@ -4,7 +4,7 @@
 // vaka açma, vaka durumu güncelleme, Telegram bildirimi gönderme ve karar okuma adımlarını
 // tek merkezden, katı güvenlik kuralları ve deterministik çıktılarla yürütmek.
 
-import { readFileSync, writeFileSync, appendFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, appendFileSync, existsSync, unlinkSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -24,6 +24,69 @@ import {
   diffOzet,
   sha256,
 } from './dogrula.mjs';
+import { kararGecerliMi as preiseKararGecerliMi, preiseIz } from './preise-bewerten.mjs';
+import { kararGecerliMi as quellenKararGecerliMi, quellenBefundIz } from './quellen-bewerten.mjs';
+
+/**
+ * Sır / güvenlik jetonu tespiti için regex kalıpları.
+ */
+export const SIR_KALIPLARI = [
+  /sk-ant-/,
+  /ghp_/,
+  /ghs_/,
+  /gho_/,
+  /github_pat_/,
+  /xox[abp]-/,
+  /-----BEGIN/,
+  /eyJ[A-Za-z0-9_-]{20,}/,
+  /[A-Za-z0-9+/]{40,}={0,2}/,
+  /[a-f0-9]{40,}/i,
+  /\d{8,10}:[A-Za-z0-9_-]{30,}/,
+  /CLAUDE_CODE_OAUTH_TOKEN/,
+  /GITHUB_TOKEN/,
+  /ACTIONS_RUNTIME/,
+];
+
+/**
+ * Metnin herhangi bir sır kalıbı içerip içermediğini denetler (saf).
+ * URL yollarındaki '/' karakterlerinin uzun base64 kalıbında ([A-Za-z0-9+/]{40,}={0,2})
+ * yanlış pozitif vermesini önler.
+ * @param {any} metin
+ * @returns {boolean}
+ */
+export function sirIceriyor(metin) {
+  if (typeof metin !== 'string') return false;
+
+  for (const re of SIR_KALIPLARI) {
+    const isBase64 = re.toString().includes('40,}={0,2}');
+    if (isBase64) {
+      // URL yollarındaki '/' ayırıcılarını temizle (tek bir segment 40+ karakter değilse)
+      const base64Metin = metin.replace(/(?:https?|ftp|file):\/\/[^\s?#]+/gi, (url) => {
+        const segments = url.split('/');
+        if (segments.some(s => /[A-Za-z0-9+/]{40,}/.test(s))) return url;
+        return segments.join(' ');
+      });
+      if (re.test(base64Metin)) return true;
+    } else {
+      if (re.test(metin)) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Nesnenin herhangi bir string alanında sır kalıbı olup olmadığını özyinelemeli denetler.
+ * @param {any} obj
+ * @returns {boolean}
+ */
+export function nesneSirIceriyor(obj) {
+  if (typeof obj === 'string') return sirIceriyor(obj);
+  if (obj === null || typeof obj !== 'object') return false;
+  if (Array.isArray(obj)) {
+    return obj.some(item => nesneSirIceriyor(item));
+  }
+  return Object.values(obj).some(val => nesneSirIceriyor(val));
+}
 
 /**
  * Bekçi izinli dosya listesi şablonları (presets).
@@ -283,15 +346,21 @@ export function bildirimMetni({ tur, satirlar, vaka, link, bekci } = {}) {
   throw new Error(`gecersiz_tur: ${tur}`);
 }
 
+const GECERLI_KARARLAR = new Set(['sessiz', 'auto', 'vaka', 'elle']);
+
 /**
  * 5. Karar okuma saf fonksiyonu.
  *
- * @param {object} obj - preise-bewerten JSON çıktısı
- * @returns {{ karar: string, erlaube_sprung: string }}
+ * @param {object} obj - preise-bewerten veya karar JSON çıktısı
+ * @returns {{ karar: string, erlaube_sprung: string, uygulanabilir: boolean }}
  */
 export function kararOku(obj) {
   if (!obj || typeof obj !== 'object' || typeof obj.karar !== 'string') {
     throw new Error('gecersiz_karar');
+  }
+
+  if (!GECERLI_KARARLAR.has(obj.karar)) {
+    throw new Error(`gecersiz_karar_degeri: ${obj.karar}`);
   }
 
   const rawSprung = obj.erlaubeSprung || obj.erlaube_sprung || [];
@@ -305,9 +374,86 @@ export function kararOku(obj) {
     }
   }
 
+  let uygulanabilir = false;
+  if (obj.uygulanabilir !== undefined) {
+    uygulanabilir = Boolean(obj.uygulanabilir);
+  } else if (obj.vaka?.ek?.uygulanabilir !== undefined) {
+    uygulanabilir = Boolean(obj.vaka.ek.uygulanabilir);
+  } else if (obj.karar === 'auto') {
+    uygulanabilir = true;
+  } else if (obj.karar === 'vaka') {
+    uygulanabilir = rawSprung.length > 0;
+  } else {
+    uygulanabilir = false;
+  }
+
   return {
     karar: obj.karar,
     erlaube_sprung: rawSprung.join(','),
+    uygulanabilir,
+  };
+}
+
+/**
+ * Konu eşleşmesi:
+ * preise için bekci'nin kendisi (fiyat bekçisinde aynı anda tek konu);
+ * quellen için aynı ek.quelleId.
+ */
+function ayniKonuMu(v1, v2) {
+  if (v1.bekci !== v2.bekci) return false;
+  if (v1.bekci === 'preise') return true;
+  if (v1.bekci === 'quellen') {
+    return Boolean(v1.ek?.quelleId && v1.ek?.quelleId === v2.ek?.quelleId);
+  }
+  return true;
+}
+
+/**
+ * Aynı bekci ve konu için açık/uygulanıyor vaka varsa tekilleştirir,
+ * farklı izli açık vakaları eskitir (bırakıldı durumuna aday yapar).
+ *
+ * @param {object} params
+ * @param {object} params.yeni - Yeni oluşturulacak vaka nesnesi
+ * @param {Array<object>} [params.mevcut=[]] - Dizin içindeki mevcut vakalar listesi
+ * @returns {{ ac: boolean, tekrarId: string|null, eskiyenler: string[] }}
+ */
+export function tekillestir({ yeni, mevcut = [] }) {
+  if (!yeni || !yeni.ek?.iz) {
+    return { ac: true, tekrarId: null, eskiyenler: [] };
+  }
+
+  const yeniBekci = yeni.bekci;
+  const yeniIz = yeni.ek.iz;
+
+  // 1. Aynı bekci + aynı ek.iz + durum acik veya uygulaniyor var mı?
+  for (const v of mevcut) {
+    if (!v || !v.ek?.iz) continue;
+    if (v.bekci === yeniBekci && v.ek.iz === yeniIz) {
+      if (v.durum === 'acik' || v.durum === 'uygulaniyor') {
+        return {
+          ac: false,
+          tekrarId: v.id,
+          eskiyenler: [],
+        };
+      }
+    }
+  }
+
+  // 2. Aynı bekci ve aynı "konu" ama farklı ek.iz olan acik vakalar -> eskiyenler
+  const eskiyenler = [];
+  for (const v of mevcut) {
+    if (!v || !v.ek?.iz) continue;
+    if (v.bekci === yeniBekci && ayniKonuMu(v, yeni)) {
+      if (v.ek.iz !== yeniIz && v.durum === 'acik') {
+        eskiyenler.push(v.id);
+      }
+    }
+  }
+
+  return {
+    ac: true,
+    tekrarId: null,
+    eskiyenler,
   };
 }
 
@@ -470,6 +616,33 @@ export async function cli(rawArgs = process.argv.slice(2)) {
     } catch (err) {
       console.error(`Vaka hazırlanamadı: ${err.message}`);
       process.exit(1);
+    }
+
+    const { ac, tekrarId, eskiyenler } = tekillestir({ yeni: vaka, mevcut: mevcutVakalar });
+
+    if (!ac) {
+      console.log(`tekrar: ${tekrarId}`);
+      if (outIdFile) {
+        try {
+          writeFileSync(outIdFile, '', 'utf-8');
+        } catch {
+          console.error(`Vaka ID çıktısı yazılamadı: ${outIdFile}`);
+          process.exit(1);
+        }
+      }
+      process.exit(0);
+    }
+
+    for (const eskiId of eskiyenler) {
+      const eskiVaka = mevcutVakalar.find(v => v.id === eskiId);
+      if (eskiVaka) {
+        try {
+          const guncel = gecis(eskiVaka, 'birak');
+          await kaydet(dizin, guncel);
+        } catch (err) {
+          console.error(`Eski vaka bırakılamadı (${eskiId}): ${err.message}`);
+        }
+      }
     }
 
     try {
@@ -644,16 +817,7 @@ export async function cli(rawArgs = process.argv.slice(2)) {
 
     console.log(`karar=${sonuc.karar}`);
     console.log(`erlaube_sprung=${sonuc.erlaube_sprung}`);
-
-    if (process.env.GITHUB_OUTPUT) {
-      try {
-        appendFileSync(
-          process.env.GITHUB_OUTPUT,
-          `karar=${sonuc.karar}\nerlaube_sprung=${sonuc.erlaube_sprung}\n`,
-          'utf-8'
-        );
-      } catch {}
-    }
+    console.log(`uygulanabilir=${sonuc.uygulanabilir}`);
 
     process.exit(0);
   }
@@ -705,6 +869,26 @@ export async function cli(rawArgs = process.argv.slice(2)) {
         process.exit(1);
       }
 
+      const { ac, tekrarId, eskiyenler } = tekillestir({ yeni: yeniVakaObj, mevcut: mevcutVakalar });
+
+      if (!ac) {
+        console.log(`tekrar: ${tekrarId}`);
+        continue;
+      }
+
+      for (const eskiId of eskiyenler) {
+        const eskiIdx = mevcutVakalar.findIndex(x => x.id === eskiId);
+        if (eskiIdx !== -1) {
+          try {
+            const guncel = gecis(mevcutVakalar[eskiIdx], 'birak');
+            await kaydet(dizin, guncel);
+            mevcutVakalar[eskiIdx] = guncel;
+          } catch (err) {
+            console.error(`Eski vaka bırakılamadı (${eskiId}): ${err.message}`);
+          }
+        }
+      }
+
       try {
         await kaydet(dizin, yeniVakaObj);
       } catch (err) {
@@ -713,6 +897,7 @@ export async function cli(rawArgs = process.argv.slice(2)) {
       }
 
       mevcutIdler.push(yeniVakaObj.id);
+      mevcutVakalar.push(yeniVakaObj);
       uretilenIdler.push(yeniVakaObj.id);
       console.log(yeniVakaObj.id);
     }
@@ -781,6 +966,203 @@ export async function cli(rawArgs = process.argv.slice(2)) {
 
     console.log(quelleId);
     process.exit(0);
+  }
+
+  // 8. karar-temizle
+  if (komut === 'karar-temizle') {
+    const bekci = flags.bekci;
+    const dosya = flags.dosya;
+    const aciklama = flags.aciklama;
+    const befundeFile = flags.befunde;
+
+    if (!bekci || !dosya) {
+      console.error('Eksik parametre: --bekci ve --dosya zorunludur');
+      process.exit(2);
+    }
+
+    if (bekci !== 'preise' && bekci !== 'quellen') {
+      console.error(`Geçersiz bekci: ${bekci} (preise|quellen bekleniyor)`);
+      process.exit(2);
+    }
+
+    let karar = null;
+    try {
+      const ham = readFileSync(dosya, 'utf-8');
+      karar = JSON.parse(ham);
+    } catch {
+      try {
+        writeFileSync(
+          dosya,
+          JSON.stringify({ gecersiz: true, hatalar: ['geçersiz JSON'] }, null, 2),
+          'utf-8'
+        );
+      } catch {}
+      console.log('gecersiz');
+      process.exit(0);
+    }
+
+    let aciklamaMetin = '';
+    if (aciklama && existsSync(aciklama)) {
+      try {
+        aciklamaMetin = readFileSync(aciklama, 'utf-8');
+      } catch {
+        aciklamaMetin = '';
+      }
+    }
+
+    // Sır kontrolü (herhangi bir string alanda veya aciklama.md'de)
+    const kararSirli = nesneSirIceriyor(karar);
+    const aciklamaSirli = sirIceriyor(aciklamaMetin);
+
+    if (kararSirli || aciklamaSirli) {
+      if (aciklama && existsSync(aciklama)) {
+        try {
+          unlinkSync(aciklama);
+        } catch {}
+      }
+      try {
+        writeFileSync(
+          dosya,
+          JSON.stringify({ gecersiz: true, hatalar: ['sır benzeri içerik'] }, null, 2),
+          'utf-8'
+        );
+      } catch {}
+      console.log('gecersiz');
+      process.exit(0);
+    }
+
+    // Bekçiye göre şema ve mantık kontrolü
+    let gecerli = false;
+    let hatalar = [];
+
+    if (bekci === 'preise') {
+      const sonuc = preiseKararGecerliMi(karar);
+      gecerli = sonuc.ok;
+      hatalar = sonuc.hatalar;
+    } else {
+      let befunde = [];
+      if (befundeFile && existsSync(befundeFile)) {
+        try {
+          const raw = readFileSync(befundeFile, 'utf-8');
+          const p = JSON.parse(raw);
+          befunde = Array.isArray(p) ? p : (p.befunde || []);
+        } catch {
+          befunde = [];
+        }
+      }
+      const sonuc = quellenKararGecerliMi(karar, befunde);
+      gecerli = sonuc.ok;
+      hatalar = sonuc.hatalar;
+    }
+
+    if (!gecerli) {
+      try {
+        writeFileSync(
+          dosya,
+          JSON.stringify({ gecersiz: true, hatalar: (hatalar || []).slice(0, 5) }, null, 2),
+          'utf-8'
+        );
+      } catch {}
+      console.log('gecersiz');
+      process.exit(0);
+    }
+
+    console.log('temiz');
+    process.exit(0);
+  }
+
+  // 9. acik-iz
+  if (komut === 'acik-iz') {
+    const dizin = flags.dizin;
+    const bekci = flags.bekci;
+    const berichtFile = flags.bericht;
+    const befundeIn = flags['befunde-in'];
+    const befundeOut = flags['befunde-out'];
+
+    if (!dizin || !bekci) {
+      console.error('Eksik parametre: --dizin ve --bekci zorunludur');
+      process.exit(2);
+    }
+
+    if (bekci !== 'preise' && bekci !== 'quellen') {
+      console.error(`Geçersiz bekci: ${bekci} (preise|quellen bekleniyor)`);
+      process.exit(2);
+    }
+
+    // Dizin yoksa veya erişilemiyorsa hiçbir vaka açık değildir
+    let mevcutVakalar = [];
+    try {
+      mevcutVakalar = await listele(dizin);
+    } catch {
+      mevcutVakalar = [];
+    }
+
+    const aktifVakalar = (Array.isArray(mevcutVakalar) ? mevcutVakalar : []).filter(
+      v => v && v.bekci === bekci && (v.durum === 'acik' || v.durum === 'uygulaniyor')
+    );
+
+    if (bekci === 'preise') {
+      let bericht = null;
+      if (berichtFile && existsSync(berichtFile)) {
+        try {
+          const raw = readFileSync(berichtFile, 'utf-8');
+          bericht = JSON.parse(raw);
+        } catch {
+          bericht = null;
+        }
+      }
+
+      const hedefIz = preiseIz(bericht);
+      const zatenAcik = aktifVakalar.some(v => v.ek?.iz === hedefIz);
+
+      console.log(`zaten_acik=${zatenAcik}`);
+      process.exit(0);
+    }
+
+    if (bekci === 'quellen') {
+      let hamBefundeIn = null;
+      let rawBefunde = [];
+
+      if (befundeIn && existsSync(befundeIn)) {
+        try {
+          const raw = readFileSync(befundeIn, 'utf-8');
+          hamBefundeIn = JSON.parse(raw);
+          rawBefunde = Array.isArray(hamBefundeIn) ? hamBefundeIn : (hamBefundeIn.befunde || []);
+        } catch {
+          hamBefundeIn = [];
+          rawBefunde = [];
+        }
+      }
+
+      const aktifIzler = new Set(aktifVakalar.map(v => v.ek?.iz).filter(Boolean));
+      const kalanBefunde = rawBefunde.filter(b => {
+        const bIz = quellenBefundIz(b);
+        return !aktifIzler.has(bIz);
+      });
+
+      if (befundeOut) {
+        let cikisVerisi;
+        if (
+          hamBefundeIn &&
+          typeof hamBefundeIn === 'object' &&
+          !Array.isArray(hamBefundeIn) &&
+          hamBefundeIn.befunde
+        ) {
+          cikisVerisi = { ...hamBefundeIn, befunde: kalanBefunde };
+        } else {
+          cikisVerisi = kalanBefunde;
+        }
+        try {
+          writeFileSync(befundeOut, JSON.stringify(cikisVerisi, null, 2), 'utf-8');
+        } catch (err) {
+          console.error(`befunde-out yazılamadı: ${err.message}`);
+          process.exit(1);
+        }
+      }
+
+      console.log(`kalan=${kalanBefunde.length}`);
+      process.exit(0);
+    }
   }
 
   console.error(`Bilinmeyen komut: ${komut}`);

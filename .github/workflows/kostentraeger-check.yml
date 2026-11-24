@@ -74,7 +74,7 @@ jobs:
           shopt -s nullglob
           fehler=0
           for f in "$RUNNER_TEMP"/kt/msg-*.txt; do
-            if ! curl -sS --fail -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            if ! curl -sS --fail -o /dev/null -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
               --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
               --data-urlencode "text@${f}"; then
               printf 'Telegram-Versand fehlgeschlagen: %s\n' "${f##*/}" >&2

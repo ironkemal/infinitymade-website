@@ -4,7 +4,8 @@
 // indirip PDF/HTML'den metin ayıklar, boyut sınırlarını ve dosya adlandırma güvenliğini sağlar.
 
 import { writeFile, mkdir } from 'node:fs/promises';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -17,12 +18,17 @@ import { hostErlaubt } from '../quellen-waechter.mjs';
  * @returns {string}
  */
 export function defaultPdfToText(buffer) {
-  return execFileSync('pdftotext', ['-enc', 'UTF-8', '-layout', '-', '-'], {
-    input: buffer,
-    encoding: 'utf-8',
-    timeout: 60_000,
-    stdio: ['pipe', 'pipe', 'pipe'],
-  });
+  // Geçici dosya üzerinden: stdin ile ('-') mingw-pdftotext "EOF" verip takıldı (24.11.2026 canlı deneme).
+  const dir = mkdtempSync(join(tmpdir(), 'bekci-pdf-'));
+  try {
+    const giris = join(dir, 'in.pdf');
+    const cikis = join(dir, 'out.txt');
+    writeFileSync(giris, buffer);
+    execFileSync('pdftotext', ['-enc', 'UTF-8', '-layout', giris, cikis], { timeout: 60_000, stdio: ['ignore', 'ignore', 'pipe'] });
+    return readFileSync(cikis, 'utf-8');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 }
 
 /**
@@ -130,9 +136,15 @@ export async function indir({
 
   for (const befund of befunde) {
     const quelleId = befund?.id || 'bilinmeyen';
+    const art = befund?.art || 'links';
     const neuList = Array.isArray(befund?.neu) ? befund.neu : [];
 
-    for (const item of neuList) {
+    // art === 'text' için öğe başına değil, befund.url sayfasını bir kez indir
+    const hedefListesi = art === 'text'
+      ? (befund?.url && neuList.length > 0 ? [befund.url] : [])
+      : neuList;
+
+    for (const item of hedefListesi) {
       const url = normalizeLink(item);
 
       // 1. İzinli host kontrolü
@@ -167,7 +179,7 @@ export async function indir({
         continue;
       }
 
-      // 3. İndirme (manual redirect ile en fazla 3 yönlendirme)
+      // 3. İndirme (manual redirect ile en fazla 3 yönlendirme, 30 sn timeout)
       let currentUrl = url;
       let res = null;
       let redirectSayisi = 0;
@@ -176,7 +188,8 @@ export async function indir({
 
       while (redirectSayisi <= 3) {
         try {
-          res = await fetch(currentUrl, { redirect: 'manual' });
+          const signal = AbortSignal.timeout(30_000);
+          res = await fetch(currentUrl, { redirect: 'manual', signal });
         } catch (err) {
           indirmeHatasi = `fetch hatası: ${err?.message || err}`;
           break;
@@ -283,12 +296,109 @@ export async function indir({
         continue;
       }
 
-      // 5. Gövdeyi tampona oku
-      let buffer;
-      try {
-        const ab = await res.arrayBuffer();
-        buffer = Buffer.from(ab);
-      } catch (err) {
+      // 5. Gövdeyi akıştan oku (M9: res.body akış sınırı aşılınca anında iptal)
+      let buffer = null;
+      let baytAsildi = false;
+      let toplamBayt = 0;
+
+      if (!res.body) {
+        if (typeof res.arrayBuffer === 'function') {
+          try {
+            const ab = await res.arrayBuffer();
+            buffer = Buffer.from(ab);
+            toplamBayt = buffer.byteLength;
+            if (toplamBayt > aktifSinir.bayt) {
+              baytAsildi = true;
+            }
+          } catch (err) {
+            indirmeHatasi = `gövde okunamadı: ${err?.message || err}`;
+          }
+        } else {
+          buffer = Buffer.alloc(0);
+        }
+      } else {
+        const reader = res.body.getReader ? res.body.getReader() : null;
+        if (reader) {
+          const chunks = [];
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              if (value) {
+                const chunkBuf = Buffer.isBuffer(value) ? value : Buffer.from(value);
+                toplamBayt += chunkBuf.byteLength;
+                if (toplamBayt > aktifSinir.bayt) {
+                  baytAsildi = true;
+                  try {
+                    await reader.cancel('bayt_siniri');
+                  } catch {}
+                  break;
+                }
+                chunks.push(chunkBuf);
+              }
+            }
+          } catch (err) {
+            if (!baytAsildi) {
+              indirmeHatasi = `gövde okunamadı: ${err?.message || err}`;
+            }
+          }
+          if (!baytAsildi && !indirmeHatasi) {
+            buffer = Buffer.concat(chunks);
+          }
+        } else if (typeof res.body[Symbol.asyncIterator] === 'function') {
+          const chunks = [];
+          try {
+            for await (const chunk of res.body) {
+              const chunkBuf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+              toplamBayt += chunkBuf.byteLength;
+              if (toplamBayt > aktifSinir.bayt) {
+                baytAsildi = true;
+                if (typeof res.body.destroy === 'function') {
+                  res.body.destroy();
+                }
+                break;
+              }
+              chunks.push(chunkBuf);
+            }
+          } catch (err) {
+            if (!baytAsildi) {
+              indirmeHatasi = `gövde okunamadı: ${err?.message || err}`;
+            }
+          }
+          if (!baytAsildi && !indirmeHatasi) {
+            buffer = Buffer.concat(chunks);
+          }
+        } else if (typeof res.arrayBuffer === 'function') {
+          try {
+            const ab = await res.arrayBuffer();
+            buffer = Buffer.from(ab);
+            toplamBayt = buffer.byteLength;
+            if (toplamBayt > aktifSinir.bayt) {
+              baytAsildi = true;
+            }
+          } catch (err) {
+            indirmeHatasi = `gövde okunamadı: ${err?.message || err}`;
+          }
+        }
+      }
+
+      if (baytAsildi) {
+        index.push({
+          quelleId,
+          url,
+          dosya: null,
+          bayt: toplamBayt,
+          sha256: null,
+          tur: tespitTur,
+          kisaltildi: true,
+          not: 'bayt sınırı aşıldı',
+          atlandi: null,
+        });
+        indirilenSayisi++;
+        continue;
+      }
+
+      if (indirmeHatasi || !buffer) {
         index.push({
           quelleId,
           url,
@@ -297,26 +407,9 @@ export async function indir({
           sha256: null,
           tur: tespitTur,
           kisaltildi: false,
-          not: `gövde okunamadı: ${err?.message || err}`,
+          not: indirmeHatasi || 'gövde okunamadı',
           atlandi: null,
         });
-        continue;
-      }
-
-      // Gövde bayt kontrolü
-      if (buffer.byteLength > aktifSinir.bayt) {
-        index.push({
-          quelleId,
-          url,
-          dosya: null,
-          bayt: buffer.byteLength,
-          sha256: null,
-          tur: tespitTur,
-          kisaltildi: true,
-          not: 'bayt sınırı aşıldı',
-          atlandi: null,
-        });
-        indirilenSayisi++;
         continue;
       }
 

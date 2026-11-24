@@ -1,0 +1,431 @@
+name: Bekçi-Ajan — Quellen (neue Fassungen lesen und einordnen)
+
+# tools/bekci-ajan/SPEC.md Faz 3 · guvenlik S-64 · onprem O-257.
+#
+# Der Quellen-Wächter meldet "neue Datei auf der Herausgeberseite". Hier liest der Agent sie:
+#   hazirla  (lesen)   Wächter --json; neue Dokumente herunterladen + pdftotext (NICHT der Agent)
+#   ajan     (lesen)   Claude ordnet ein: was hat sich geändert, betrifft es uns, welche Datei → karar.json
+#   bewerten (lesen)   quellen-bewerten.mjs: nicht-kritische Quelle + "betrifft uns nicht" + sicher → automatisch
+#                      "bekannt"; alles andere (immer: kritische Quellen) → Fall mit Knöpfen
+#   uebernehmen (schreiben) quellen-waechter.mjs --uebernehme: nur die Links aus dem Fall, nur wenn die Seite
+#                      noch genau so aussieht (sonst Fehler, nichts geschrieben). Keine Zahl wird übernommen.
+#   bildir             kurzer Bericht / Fall an Kemal
+#
+# Zahlen aus neuen Fassungen übernimmt dieser Workflow NIE — das bleibt wissensbank-Protokoll.
+# Schalter: nur wenn Repo-Variable BEKCI_AJAN=an.
+
+on:
+  workflow_dispatch:
+    inputs:
+      eylem:
+        type: choice
+        options: [yeni, uygula, acikla]
+        default: yeni
+      vaka_id:
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bekci-quellen
+  cancel-in-progress: false
+
+jobs:
+  hazirla:
+    if: vars.BEKCI_AJAN == 'an'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: write   # upload-artifact
+    outputs:
+      hat_befund: ${{ steps.waechter.outputs.hat_befund }}
+    steps:
+      - name: Eingaben prüfen
+        env:
+          EYLEM: ${{ inputs.eylem }}
+          VAKA: ${{ inputs.vaka_id }}
+        run: |
+          set -euo pipefail
+          if [ "$EYLEM" != yeni ]; then
+            [[ "$VAKA" =~ ^[0-9]{8}-quellen-[0-9]{1,3}$ ]] || { echo "::error::vaka_id ungültig"; exit 1; }
+          else
+            [ -z "$VAKA" ] || { echo "::error::bei eylem=yeni keine vaka_id"; exit 1; }
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Fall laden (uygula/acikla)
+        if: inputs.eylem != 'yeni'
+        env:
+          EYLEM: ${{ inputs.eylem }}
+          VAKA: ${{ inputs.vaka_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p bekci-in
+          git fetch --quiet --depth 1 "https://github.com/${{ github.repository }}.git" bekci-vakalar
+          git show "FETCH_HEAD:vakalar/${VAKA}.json" > bekci-in/vaka.json
+          node -e '
+            const v = JSON.parse(require("fs").readFileSync("bekci-in/vaka.json","utf8"));
+            const soll = process.env.EYLEM === "uygula" ? "uygulaniyor" : "acik";
+            if (v.id !== process.env.VAKA || v.durum !== soll || !v.ek?.quelleId) { console.error("Fall-Zustand passt nicht:", v.durum); process.exit(1); }'
+
+      - name: Quellen-Wächter (strukturiert)
+        id: waechter
+        env:
+          EYLEM: ${{ inputs.eylem }}
+        run: |
+          set -euo pipefail
+          mkdir -p bekci-in
+          node tools/quellen-waechter.mjs --out="$RUNNER_TEMP/qw" --json=bekci-in/quellen.json || true
+          [ -s bekci-in/quellen.json ] || { echo "::error::Wächter lieferte kein JSON"; exit 1; }
+          node -e '
+            const fs = require("fs");
+            const j = JSON.parse(fs.readFileSync("bekci-in/quellen.json","utf8"));
+            if (process.env.EYLEM !== "yeni") {
+              const id = JSON.parse(fs.readFileSync("bekci-in/vaka.json","utf8")).ek.quelleId;
+              // Seite gerade nicht erreichbar → NICHT "schon erledigt" annehmen (Denetim 3, K2)
+              if ((j.blindListe || []).some(b => b.id === id)) { console.error("Quelle gerade blind:", id); process.exit(1); }
+              j.befunde = (j.befunde || []).filter(b => b.id === id);
+              fs.writeFileSync("bekci-in/quellen.json", JSON.stringify(j, null, 2));
+            }'
+          if [ "$EYLEM" = yeni ]; then
+            # Befunde, zu denen schon ein offener Fall existiert, nicht erneut dem Agenten geben (Erinnerung macht bekci-cevap.yml)
+            mkdir -p bekci-in/_vakalar
+            if git fetch --quiet --depth 1 "https://github.com/${{ github.repository }}.git" bekci-vakalar 2>/dev/null; then
+              git --work-tree=bekci-in/_vakalar checkout FETCH_HEAD -- vakalar 2>/dev/null || true
+              git reset --quiet
+            fi
+            node tools/bekci-ajan/cli.mjs acik-iz --dizin=bekci-in/_vakalar/vakalar --bekci=quellen \
+              --befunde-in=bekci-in/quellen.json --befunde-out=bekci-in/quellen.json
+          fi
+          node -e '
+            const j = JSON.parse(require("fs").readFileSync("bekci-in/quellen.json","utf8"));
+            require("fs").appendFileSync(process.env.GITHUB_OUTPUT, "hat_befund=" + ((j.befunde||[]).length > 0) + "\n");'
+
+      - name: Neue Dokumente laden (nur für den Agenten, nicht bei uygula)
+        if: steps.waechter.outputs.hat_befund == 'true' && inputs.eylem != 'uygula'
+        run: |
+          set -euo pipefail
+          sudo apt-get install -y -qq poppler-utils >/dev/null
+          node tools/bekci-ajan/belge-indir.mjs --json=bekci-in/quellen.json --out=bekci-in/belgeler
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bekci-in
+          path: bekci-in/
+          retention-days: 7
+
+  ajan:
+    needs: hazirla
+    if: needs.hazirla.outputs.hat_befund == 'true' && inputs.eylem != 'uygula'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: bekci-ajan
+    permissions:
+      contents: read
+      actions: write   # upload-artifact
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: bekci-in
+          path: bekci-in
+
+      - run: mkdir -p bekci-out
+
+      - name: Claude ordnet die neuen Fassungen ein
+        uses: anthropics/claude-code-action@eb56b6666facdbd501035f4a0269d8caee2e7a8b # v1.0.289
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          prompt: |
+            Lies tools/bekci-ajan/prompts/quellen.md vollständig und führe genau die dort beschriebene Aufgabe aus.
+            ${{ inputs.eylem == 'acikla' && 'Zusatz (Kemal hat auf "Açıkla" gedrückt, Fall in bekci-in/vaka.json): schreibe ZUSÄTZLICH bekci-out/aciklama.md — auf Türkisch, Alltagssprache, höchstens 15 kurze Zeilen: was ist neu, was bedeutet es für Praxura konkret (welche Datei/welcher Ablauf), bis wann muss etwas passieren, was würdest du tun. Belege mit Datei:Zeile.' || '' }}
+          claude_args: >-
+            --model claude-opus-5-5
+            --max-turns 60
+            --allowedTools "Read,Glob,Grep,Write"
+            --disallowedTools "Bash,WebFetch,WebSearch,Edit,MultiEdit,NotebookEdit,Task,Read(//proc/**),Read(//home/runner/work/_temp/**),Read(//home/runner/.*/**),Read(//etc/**),Read(//tmp/**),Read(//run/**)"
+
+      - name: Nur bekci-out/ geschrieben?
+        run: |
+          set -euo pipefail
+          fremd=$(git status --porcelain --untracked-files=all --ignored | awk '{print $2}' | grep -vE '^(bekci-in|bekci-out)/' || true)
+          if [ -n "$fremd" ]; then echo "::error::Agent hat ausserhalb von bekci-out/ geschrieben:"; echo "$fremd"; exit 1; fi
+
+      - name: Agent-Ausgabe prüfen (Schema + Geheimnis-Filter, S-64) — vor dem öffentlichen Artefakt
+        run: |
+          set -euo pipefail
+          [ -f bekci-out/karar.json ] || exit 0
+          node tools/bekci-ajan/cli.mjs karar-temizle --bekci=quellen --dosya=bekci-out/karar.json             --aciklama=bekci-out/aciklama.md --befunde=bekci-in/quellen.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bekci-out
+          path: bekci-out/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  bewerten:
+    needs: [hazirla, ajan]
+    if: always() && needs.hazirla.result == 'success' && needs.hazirla.outputs.hat_befund == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: write   # upload-artifact
+    outputs:
+      karar: ${{ steps.karar.outputs.karar }}
+      otomatik: ${{ steps.karar.outputs.otomatik }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: bekci-in
+          path: bekci-in
+
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: bekci-out
+          path: bekci-out
+
+      - name: Entscheiden
+        id: karar
+        env:
+          EYLEM: ${{ inputs.eylem }}
+        run: |
+          set -euo pipefail
+          case "$EYLEM" in
+            acikla) echo "karar=aciklama" >> "$GITHUB_OUTPUT" ;;
+            uygula) echo "karar=onay" >> "$GITHUB_OUTPUT" ;;
+            yeni)
+              node tools/bekci-ajan/quellen-bewerten.mjs --befunde=bekci-in/quellen.json --karar=bekci-out/karar.json \
+                --indeks=bekci-in/belgeler/index.json --out=bekci-in/entscheidung.json
+              node -e '
+                const e = JSON.parse(require("fs").readFileSync("bekci-in/entscheidung.json","utf8"));
+                const ok = id => /^[a-z0-9][a-z0-9-]{1,40}$/.test(id);
+                const oto = (e.otomatik||[]).filter(ok);
+                require("fs").appendFileSync(process.env.GITHUB_OUTPUT,
+                  "karar=yeni\notomatik=" + oto.join(",") + "\n");' ;;
+          esac
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bekci-karar
+          path: bekci-in/
+          retention-days: 7
+
+  uebernehmen:
+    needs: bewerten
+    if: needs.bewerten.outputs.karar == 'onay' || needs.bewerten.outputs.otomatik != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read    # download-artifact
+    env:
+      EYLEM: ${{ inputs.eylem }}
+      VAKA: ${{ inputs.vaka_id }}
+      OTOMATIK: ${{ needs.bewerten.outputs.otomatik }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: bekci-karar
+          path: _bekci
+
+      - name: Nur die Links aus dem Fall als "bekannt" übernehmen
+        run: |
+          set -euo pipefail
+          git config user.name "praxura-bekci"
+          git config user.email "bekci@users.noreply.github.com"
+          liste() {   # $1 = Quelle-ID → _neu.txt/_weg.txt aus dem Wächter-Befund dieser Quelle
+            node -e '
+              const b = (JSON.parse(require("fs").readFileSync("_bekci/quellen.json","utf8")).befunde||[]).find(x => x.id === process.argv[1]);
+              if (!b) process.exit(1);
+              require("fs").writeFileSync("_neu.txt", b.neu.join("\n"));
+              require("fs").writeFileSync("_weg.txt", b.weg.join("\n"));' "$1"
+          }
+          for versuch in 1 2 3; do
+            git pull --quiet --rebase origin main
+            ids=""
+            if [ "$EYLEM" = uygula ]; then
+              id=$(node -p 'JSON.parse(require("fs").readFileSync("_bekci/vaka.json","utf8")).ek.quelleId')
+              node -e '
+                const v = JSON.parse(require("fs").readFileSync("_bekci/vaka.json","utf8"));
+                require("fs").writeFileSync("_neu.txt", (v.ek.neu||[]).join("\n"));
+                require("fs").writeFileSync("_weg.txt", (v.ek.weg||[]).join("\n"));'
+              node tools/quellen-waechter.mjs --uebernehme="$id" --neu-datei=_neu.txt --weg-datei=_weg.txt
+              ids="$id"
+            else
+              IFS=, read -ra arr <<< "$OTOMATIK"
+              for id in "${arr[@]}"; do
+                [[ "$id" =~ ^[a-z0-9][a-z0-9-]{1,40}$ ]] || continue
+                liste "$id"
+                node tools/quellen-waechter.mjs --uebernehme="$id" --neu-datei=_neu.txt --weg-datei=_weg.txt
+                ids="$ids $id"
+              done
+            fi
+            git add tools/quellen-waechter.json
+            git diff --cached --quiet && exit 0
+            git commit --quiet -m "chore(quellen): bekannt aktualisiert —${ids} (Bekci-Ajan${VAKA:+, Fall $VAKA})" \
+              -m "Nur die im Fall/Befund genannten Links; Seite vorher live gegengeprüft (quellen-waechter.mjs --uebernehme)." \
+              -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+            git push --quiet && exit 0
+            git reset --quiet --hard HEAD~1
+          done
+          exit 1
+
+  bildir:
+    needs: [hazirla, ajan, bewerten, uebernehmen]
+    if: always() && needs.hazirla.result != 'skipped'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write   # nur Zweig bekci-vakalar
+      actions: read
+    env:
+      TELEGRAM_BEKCI_BOT_TOKEN: ${{ secrets.TELEGRAM_BEKCI_BOT_TOKEN }}
+      TELEGRAM_BEKCI_CHAT_ID: ${{ secrets.TELEGRAM_BEKCI_CHAT_ID }}
+      TELEGRAM_BEKCI_USER_ID: ${{ secrets.TELEGRAM_BEKCI_USER_ID }}
+      LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      EYLEM: ${{ inputs.eylem }}
+      VAKA: ${{ inputs.vaka_id }}
+      KARAR: ${{ needs.bewerten.outputs.karar }}
+      OTOMATIK: ${{ needs.bewerten.outputs.otomatik }}
+      R_HAZIRLA: ${{ needs.hazirla.result }}
+      R_BEWERTEN: ${{ needs.bewerten.result }}
+      R_UEBERNEHMEN: ${{ needs.uebernehmen.result }}
+      HAT_BEFUND: ${{ needs.hazirla.outputs.hat_befund }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: bekci-karar
+          path: bekci-in
+
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: bekci-out
+          path: bekci-out
+
+      - name: Fall-Zweig auschecken (oder neu anlegen)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          URL="https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
+          if git ls-remote --exit-code --heads "$URL" bekci-vakalar >/dev/null 2>&1; then
+            git clone --quiet --depth 1 --branch bekci-vakalar "$URL" vakalar
+          else
+            mkdir vakalar && cd vakalar && git init --quiet -b bekci-vakalar && git remote add origin "$URL" \
+              && mkdir -p vakalar && printf '{"offset":0}\n' > offset.json
+          fi
+
+      - name: Melden
+        run: |
+          set -euo pipefail
+          CLI="node main/tools/bekci-ajan/cli.mjs"
+          : > gonder.sh
+          # Nachrichten erst NACH dem Speichern des Fall-Zweigs senden (Knopfdruck vor dem Push fände den Fall nicht)
+          gonder() { printf "%q " "$@" >> gonder.sh; echo >> gonder.sh; }
+          D=vakalar/vakalar
+          mkdir -p "$D"
+          fehler=0
+          [ "$R_HAZIRLA" = success ] || fehler=1
+          [ "$R_BEWERTEN" = success ] || [ "$R_BEWERTEN" = skipped ] || fehler=1
+          [ "$R_UEBERNEHMEN" = success ] || [ "$R_UEBERNEHMEN" = skipped ] || fehler=1
+          if [ "$fehler" = 1 ]; then
+            if [ "$EYLEM" = uygula ] && [ -n "$VAKA" ]; then $CLI vaka-durum --dizin="$D" --id="$VAKA" --eylem=hata || true; fi
+            gonder $CLI bildir --bekci=quellen --tur=hata ${VAKA:+--dizin="$D" --id="$VAKA"} --link="$LINK"
+            exit 0
+          fi
+          if [ "$HAT_BEFUND" != true ]; then
+            # Beim Nachfassen ist die Quelle wieder unverändert (jemand hat sie schon übernommen).
+            if [ -n "$VAKA" ] && [ "$EYLEM" = uygula ]; then
+              $CLI vaka-durum --dizin="$D" --id="$VAKA" --eylem=tamam
+              gonder $CLI bildir --bekci=quellen --tur=uygulandi --dizin="$D" --id="$VAKA"
+            fi
+            exit 0
+          fi
+          case "$KARAR" in
+            onay)
+              if [ "$R_UEBERNEHMEN" = success ]; then
+                $CLI vaka-durum --dizin="$D" --id="$VAKA" --eylem=tamam
+                gonder $CLI bildir --bekci=quellen --tur=uygulandi --dizin="$D" --id="$VAKA"
+              else
+                $CLI vaka-durum --dizin="$D" --id="$VAKA" --eylem=hata
+                gonder $CLI bildir --bekci=quellen --tur=hata --dizin="$D" --id="$VAKA" --link="$LINK"
+              fi ;;
+            aciklama)
+              if [ -s bekci-out/aciklama.md ]; then gonder $CLI bildir --bekci=quellen --tur=aciklama --dizin="$D" --id="$VAKA" --dosya=bekci-out/aciklama.md
+              else gonder $CLI bildir --bekci=quellen --tur=hata --dizin="$D" --id="$VAKA" --link="$LINK"; fi ;;
+            yeni)
+              if [ -n "$OTOMATIK" ]; then
+                node -e 'const e=JSON.parse(require("fs").readFileSync("bekci-in/entscheidung.json","utf8"));require("fs").writeFileSync("rapor.txt",(e.rapor||[]).join("\n"))'
+                gonder $CLI bildir --bekci=quellen --tur=auto --dosya=rapor.txt --link="$LINK"
+              fi
+              $CLI vaka-ac-coklu --entscheidung=bekci-in/entscheidung.json --dizin="$D" --out-ids=ids.txt
+              while read -r id; do [ -n "$id" ] && gonder $CLI bildir --bekci=quellen --tur=vaka --dizin="$D" --id="$id"; done < ids.txt ;;
+            *)
+              gonder $CLI bildir --bekci=quellen --tur=hata --link="$LINK" ;;
+          esac
+
+      - name: Fall-Zweig speichern
+        if: always()
+        working-directory: vakalar
+        run: |
+          set -euo pipefail
+          git add -A
+          if git diff --cached --quiet; then exit 0; fi
+          git -c user.name="praxura-bekci" -c user.email="bekci@users.noreply.github.com" commit --quiet -m "bekci: Fälle aktualisiert"
+          for i in 1 2 3; do git push --quiet origin HEAD:bekci-vakalar && exit 0; git pull --quiet --rebase origin bekci-vakalar || true; done
+          exit 1
+
+      - name: Nachrichten senden (nach dem Speichern)
+        if: always()
+        run: |
+          set -uo pipefail
+          [ -s gonder.sh ] || exit 0
+          bash gonder.sh

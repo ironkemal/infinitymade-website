@@ -47,7 +47,7 @@ jobs:
       contents: read
       actions: write   # upload-artifact
     outputs:
-      needs_review: ${{ steps.bericht.outputs.needs_review }}
+      needs_review: ${{ steps.dedupe.outputs.needs_review }}
     steps:
       - name: Eingaben prüfen
         env:
@@ -57,6 +57,8 @@ jobs:
           set -euo pipefail
           if [ "$EYLEM" != yeni ]; then
             [[ "$VAKA" =~ ^[0-9]{8}-preise-[0-9]{1,3}$ ]] || { echo "::error::vaka_id ungültig"; exit 1; }
+          else
+            [ -z "$VAKA" ] || { echo "::error::bei eylem=yeni keine vaka_id"; exit 1; }
           fi
 
       - uses: actions/checkout@v4
@@ -98,7 +100,27 @@ jobs:
             const t = fs.readFileSync("../bekci-in/autoupdate-out.txt","utf8").split("---JSON---").pop().trim().split("\n").pop();
             const b = JSON.parse(t);
             fs.writeFileSync("../bekci-in/bericht.json", JSON.stringify(b, null, 2));
-            fs.appendFileSync(process.env.GITHUB_OUTPUT, "needs_review=" + ((b.needsReview||[]).length > 0) + "\n");'
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, "needs_review_roh=" + ((b.needsReview||[]).length > 0) + "\n");'
+
+      - name: Schon ein offener Fall zu genau diesem Befund? (dann kein Agent — Erinnerung macht bekci-cevap.yml)
+        id: dedupe
+        env:
+          EYLEM: ${{ inputs.eylem }}
+          ROH: ${{ steps.bericht.outputs.needs_review_roh }}
+        run: |
+          set -euo pipefail
+          nr="$ROH"
+          if [ "$EYLEM" = yeni ] && [ "$ROH" = true ]; then
+            mkdir -p bekci-in/_vakalar
+            if git fetch --quiet --depth 1 "https://github.com/${{ github.repository }}.git" bekci-vakalar 2>/dev/null; then
+              git --work-tree=bekci-in/_vakalar checkout FETCH_HEAD -- vakalar 2>/dev/null || true
+              git reset --quiet
+            fi
+            out=$(node tools/bekci-ajan/cli.mjs acik-iz --dizin=bekci-in/_vakalar/vakalar --bekci=preise --bericht=bekci-in/bericht.json)
+            echo "$out"
+            if echo "$out" | grep -qx 'zaten_acik=true'; then nr=false; fi
+          fi
+          echo "needs_review=$nr" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -139,13 +161,19 @@ jobs:
             --model claude-opus-5-5
             --max-turns 40
             --allowedTools "Read,Glob,Grep,Write"
-            --disallowedTools "Bash,WebFetch,WebSearch,Edit,MultiEdit,NotebookEdit,Task"
+            --disallowedTools "Bash,WebFetch,WebSearch,Edit,MultiEdit,NotebookEdit,Task,Read(//proc/**),Read(//home/runner/work/_temp/**),Read(//home/runner/.*/**),Read(//etc/**),Read(//tmp/**),Read(//run/**)"
 
       - name: Nur bekci-out/ geschrieben?
         run: |
           set -euo pipefail
-          fremd=$(git status --porcelain --untracked-files=all | awk '{print $2}' | grep -vE '^(bekci-in|bekci-out)/' || true)
+          fremd=$(git status --porcelain --untracked-files=all --ignored | awk '{print $2}' | grep -vE '^(bekci-in|bekci-out)/' || true)
           if [ -n "$fremd" ]; then echo "::error::Agent hat ausserhalb von bekci-out/ geschrieben:"; echo "$fremd"; exit 1; fi
+
+      - name: Agent-Ausgabe prüfen (Schema + Geheimnis-Filter, S-64) — vor dem öffentlichen Artefakt
+        run: |
+          set -euo pipefail
+          [ -f bekci-out/karar.json ] || exit 0
+          node tools/bekci-ajan/cli.mjs karar-temizle --bekci=preise --dosya=bekci-out/karar.json --aciklama=bekci-out/aciklama.md
 
       - uses: actions/upload-artifact@v4
         with:
@@ -164,6 +192,7 @@ jobs:
       actions: write   # upload-artifact
     outputs:
       karar: ${{ steps.karar.outputs.karar }}
+      hat_yama: ${{ steps.yama.outputs.hat_yama }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -228,7 +257,11 @@ jobs:
         run: |
           set -euo pipefail
           SHA=""
-          if [ "$EYLEM" = uygula ]; then SHA=$(node -p 'JSON.parse(require("fs").readFileSync("bekci-in/vaka.json","utf8")).yamaSha256 || ""'); fi
+          if [ "$EYLEM" = uygula ]; then
+            SHA=$(node -p 'JSON.parse(require("fs").readFileSync("bekci-in/vaka.json","utf8")).yamaSha256 || ""')
+            # Ohne gebundene Yama wird nichts übernommen — sonst würde der HEUTIGE statt des gezeigten Stands geschrieben
+            [[ "$SHA" =~ ^[a-f0-9]{64}$ ]] || { echo "::error::Fall hat keine gebundene Yama-SHA"; exit 1; }
+          fi
           node tools/bekci-ajan/cli.mjs yama-kontrol --patch=bekci-in/yama.patch --preset=preise ${SHA:+--beklenen-sha=$SHA} --out=bekci-in/yama-kontrol.json
 
       - name: Vaka-Fall — Änderung wieder verwerfen (nur SHA + Übersicht bleiben)
@@ -267,7 +300,7 @@ jobs:
 
   uebernehmen:
     needs: bewerten
-    if: needs.bewerten.outputs.karar == 'auto' || needs.bewerten.outputs.karar == 'onay'
+    if: (needs.bewerten.outputs.karar == 'auto' || needs.bewerten.outputs.karar == 'onay') && needs.bewerten.outputs.hat_yama == 'true'
     permissions:
       contents: write
       actions: write
@@ -339,6 +372,9 @@ jobs:
         run: |
           set -euo pipefail
           CLI="node main/tools/bekci-ajan/cli.mjs"
+          : > gonder.sh
+          # Nachrichten erst NACH dem Speichern des Fall-Zweigs senden (Knopfdruck vor dem Push fände den Fall nicht)
+          gonder() { printf "%q " "$@" >> gonder.sh; echo >> gonder.sh; }
           D=vakalar/vakalar
           mkdir -p "$D"
           fehler=0
@@ -348,7 +384,7 @@ jobs:
 
           if [ "$fehler" = 1 ]; then
             if [ "$EYLEM" = uygula ] && [ -n "$VAKA" ]; then $CLI vaka-durum --dizin="$D" --id="$VAKA" --eylem=hata || true; fi
-            $CLI bildir --tur=hata ${VAKA:+--dizin="$D" --id="$VAKA"} --link="$LINK"
+            gonder $CLI bildir --tur=hata ${VAKA:+--dizin="$D" --id="$VAKA"} --link="$LINK"
             exit 0
           fi
           if [ "$NEEDS_REVIEW" != true ]; then
@@ -359,22 +395,29 @@ jobs:
           case "$KARAR" in
             auto)
               node -e 'const k=JSON.parse(require("fs").readFileSync("bekci-in/yama-kontrol.json","utf8"));require("fs").writeFileSync("ozet.txt",(k.ozet||[]).join("\n"))'
-              $CLI bildir --tur=auto --dosya=ozet.txt --link="$LINK" ;;
+              gonder $CLI bildir --tur=auto --dosya=ozet.txt --link="$LINK" ;;
             onay)
-              $CLI vaka-durum --dizin="$D" --id="$VAKA" --eylem=tamam
-              $CLI bildir --tur=uygulandi --dizin="$D" --id="$VAKA" --link="$LINK" ;;
+              if [ "$R_UEBERNEHMEN" = success ]; then
+                $CLI vaka-durum --dizin="$D" --id="$VAKA" --eylem=tamam
+                gonder $CLI bildir --tur=uygulandi --dizin="$D" --id="$VAKA" --link="$LINK"
+              else
+                # keine Yama mehr (z. B. schon von Hand übernommen) → nichts geschrieben, Fall wieder offen
+                $CLI vaka-durum --dizin="$D" --id="$VAKA" --eylem=hata
+                gonder $CLI bildir --tur=elle --dizin="$D" --id="$VAKA"
+              fi ;;
             elle)
               $CLI vaka-durum --dizin="$D" --id="$VAKA" --eylem=hata
-              $CLI bildir --tur=elle --dizin="$D" --id="$VAKA" ;;
+              gonder $CLI bildir --tur=elle --dizin="$D" --id="$VAKA" ;;
             aciklama)
-              if [ -s bekci-out/aciklama.md ]; then $CLI bildir --tur=aciklama --dizin="$D" --id="$VAKA" --dosya=bekci-out/aciklama.md
-              else $CLI bildir --tur=hata --dizin="$D" --id="$VAKA" --link="$LINK"; fi ;;
+              if [ -s bekci-out/aciklama.md ]; then gonder $CLI bildir --tur=aciklama --dizin="$D" --id="$VAKA" --dosya=bekci-out/aciklama.md
+              else gonder $CLI bildir --tur=hata --dizin="$D" --id="$VAKA" --link="$LINK"; fi ;;
             vaka)
               PATCH_ARG=""; [ -s bekci-in/yama.patch ] && PATCH_ARG="--patch=bekci-in/yama.patch"
               $CLI vaka-ac --entscheidung=bekci-in/entscheidung.json --dizin="$D" $PATCH_ARG --out-id=neu-id.txt
-              $CLI bildir --tur=vaka --dizin="$D" --id="$(cat neu-id.txt)" ;;
+              # Leere ID = derselbe Fall ist schon offen → keine zweite Nachricht (Erinnerung macht bekci-cevap.yml)
+              if [ -s neu-id.txt ]; then gonder $CLI bildir --tur=vaka --dizin="$D" --id="$(cat neu-id.txt)"; fi ;;
             *)
-              $CLI bildir --tur=hata --link="$LINK" ;;
+              gonder $CLI bildir --tur=hata --link="$LINK" ;;
           esac
 
       - name: Fall-Zweig speichern
@@ -387,3 +430,10 @@ jobs:
           git -c user.name="praxura-bekci" -c user.email="bekci@users.noreply.github.com" commit --quiet -m "bekci: Fälle aktualisiert"
           for i in 1 2 3; do git push --quiet origin HEAD:bekci-vakalar && exit 0; git pull --quiet --rebase origin bekci-vakalar || true; done
           exit 1
+
+      - name: Nachrichten senden (nach dem Speichern)
+        if: always()
+        run: |
+          set -uo pipefail
+          [ -s gonder.sh ] || exit 0
+          bash gonder.sh

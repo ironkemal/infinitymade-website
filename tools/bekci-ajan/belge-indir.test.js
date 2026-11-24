@@ -402,3 +402,100 @@ test('10. CLI alt süreci --json ve --out ile başarıyla çalışır (exit 0)',
     await rm(tempDir, { recursive: true, force: true });
   }
 });
+
+// 11. M6: art=text kaynaklarında tek sayfa befund.url indirilir
+test('11. M6: art=text kaynaklarında tek sayfa befund.url indirilir (öğe başına değil)', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'indir-text-art-'));
+  try {
+    let indirilenUrl = null;
+    const sahteFetch = async (url, opts) => {
+      indirilenUrl = url;
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': 'text/html; charset=utf-8' }),
+        body: new ReadableStream({
+          start(controller) {
+            controller.enqueue(Buffer.from('<html><body><p>Ausgabedatum: 2026.01</p></body></html>'));
+            controller.close();
+          },
+        }),
+      };
+    };
+
+    const befunde = [
+      {
+        id: 'dguv-regel',
+        art: 'text',
+        url: 'https://publikationen.dguv.de/regelwerk/handlungsanleitung/',
+        neu: ['2026.01', '2026.02'],
+      },
+    ];
+
+    const index = await indir({
+      befunde,
+      hedefDizin: tempDir,
+      fetch: sahteFetch,
+    });
+
+    assert.equal(index.length, 1, 'Yalnız bir kez indirilmelidir');
+    assert.equal(indirilenUrl, 'https://publikationen.dguv.de/regelwerk/handlungsanleitung/');
+    assert.equal(index[0].url, 'https://publikationen.dguv.de/regelwerk/handlungsanleitung/');
+    assert.equal(index[0].dosya, '01.txt');
+    assert.equal(index[0].kisaltildi, false);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+// 12. M9: fetch AbortSignal.timeout ve res.body akış sınırı aşılınca iptal
+test('12. M9: fetch AbortSignal.timeout ve res.body akış sınırı aşılınca iptal', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'indir-stream-limit-'));
+  try {
+    let signalAlindi = null;
+    let streamIptalEdildi = false;
+
+    const sahteFetch = async (url, opts) => {
+      signalAlindi = opts?.signal;
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({
+          'content-type': 'text/html',
+        }),
+        body: new ReadableStream({
+          start(controller) {
+            controller.enqueue(Buffer.alloc(50));
+            controller.enqueue(Buffer.alloc(60));
+          },
+          cancel(reason) {
+            streamIptalEdildi = true;
+          },
+        }),
+      };
+    };
+
+    const befunde = [
+      {
+        id: 'stream-test',
+        neu: ['www.gkv-spitzenverband.de/stream.html'],
+      },
+    ];
+
+    const index = await indir({
+      befunde,
+      hedefDizin: tempDir,
+      fetch: sahteFetch,
+      sinir: { bayt: 100 },
+    });
+
+    assert.ok(signalAlindi, 'AbortSignal fetch çağrısına iletilmelidir');
+    assert.ok(streamIptalEdildi, 'Bayt sınırı aşılınca stream reader.cancel çağrılmalıdır');
+    assert.equal(index.length, 1);
+    assert.equal(index[0].kisaltildi, true);
+    assert.equal(index[0].dosya, null);
+    assert.equal(index[0].not, 'bayt sınırı aşıldı');
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});

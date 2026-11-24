@@ -10,7 +10,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { mkdtemp, rm, writeFile, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { bewerte, kararGecerliMi } from './preise-bewerten.mjs';
+import { bewerte, kararGecerliMi, preiseIz } from './preise-bewerten.mjs';
 
 function ornekGecerliKarar(overrides = {}) {
   return {
@@ -453,4 +453,191 @@ test('14. CLI doğrudan çalışınca doğru davranıyor, import edilince çalı
   } finally {
     await rm(tmpDir, { recursive: true, force: true });
   }
+});
+
+test('15. iz kararlılığı: kod sırası farklı needsReview aynı vaka.ek.iz üretir', () => {
+  const b1 = {
+    stand: '2026-11-24',
+    needsReview: [
+      {
+        art: 'sprung',
+        grund: 'Sıçrama',
+        bereich: 'podologie',
+        details: [
+          {
+            xmlGueltigAb: '2027-01-01',
+            sprungCodes: [
+              { code: '78010', altPreis: 30, neuPreis: 37.2, prozent: 24 },
+              { code: '78020', altPreis: 35, neuPreis: 42.5, prozent: 21 },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+
+  const b2 = {
+    stand: '2026-11-24',
+    needsReview: [
+      {
+        art: 'sprung',
+        grund: 'Sıçrama',
+        bereich: 'podologie',
+        details: [
+          {
+            xmlGueltigAb: '2027-01-01',
+            sprungCodes: [
+              { code: '78020', altPreis: 35, neuPreis: 42.5, prozent: 21 },
+              { code: '78010', altPreis: 30, neuPreis: 37.2, prozent: 24 },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+
+  const res1 = bewerte({ bericht: b1, karar: null });
+  const res2 = bewerte({ bericht: b2, karar: null });
+
+  assert.ok(res1.vaka);
+  assert.ok(res2.vaka);
+  assert.equal(res1.vaka.ek.iz.length, 16);
+  assert.equal(res1.vaka.ek.iz, res2.vaka.ek.iz);
+});
+
+test('16. ajan metni değişince iz değişmiyor (aynı bericht, farklı karar.ozet / null)', () => {
+  const bericht = ornekBericht();
+  const k1 = ornekGecerliKarar({ ozet: 'Ajan ilk özeti yazdı' });
+  const k2 = ornekGecerliKarar({ ozet: 'Ajan tamamen farklı ikinci özeti yazdı' });
+
+  // İkisi de vaka durumuna düşsün diye güveni mittel yapalım
+  k1.guven = 'mittel';
+  k2.guven = 'mittel';
+
+  const res1 = bewerte({ bericht, karar: k1 });
+  const res2 = bewerte({ bericht, karar: k2 });
+  const resNull = bewerte({ bericht, karar: null });
+
+  assert.ok(res1.vaka);
+  assert.ok(res2.vaka);
+  assert.ok(resNull.vaka);
+  assert.equal(res1.vaka.ek.iz, res2.vaka.ek.iz);
+  assert.equal(res1.vaka.ek.iz, resNull.vaka.ek.iz);
+});
+
+test('17. bericht.stand değişince iz değişmiyor', () => {
+  const b1 = ornekBericht({ stand: '2026-11-24' });
+  const b2 = ornekBericht({ stand: '2026-11-25' });
+
+  const res1 = bewerte({ bericht: b1, karar: null });
+  const res2 = bewerte({ bericht: b2, karar: null });
+
+  assert.equal(res1.vaka.ek.iz, res2.vaka.ek.iz);
+});
+
+test('18. XML fiyatı değişince iz değişiyor', () => {
+  const b1 = ornekBericht();
+  const b2 = {
+    stand: '2026-11-24',
+    needsReview: [
+      {
+        art: 'sprung',
+        grund: 'Sıçrama',
+        bereich: 'podologie',
+        details: [
+          {
+            xmlGueltigAb: '2027-01-01',
+            sprungCodes: [
+              { code: '78010', altPreis: 32.0, neuPreis: 38.0, prozent: 18.75 }, // 37.2 yerine 38.0
+              { code: '78020', altPreis: 35.0, neuPreis: 42.5, prozent: 21.43 },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+
+  const res1 = bewerte({ bericht: b1, karar: null });
+  const res2 = bewerte({ bericht: b2, karar: null });
+
+  assert.notEqual(res1.vaka.ek.iz, res2.vaka.ek.iz);
+});
+
+test('20. K1: vaka kararında erlaubeSprung dolu ise üst düzey erlaubeSprung ve ek.uygulanabilir true döner', () => {
+  const bericht = ornekBericht();
+  // guven: 'mittel' vaka açtırır ama c ve d sağlandığı için erlaubeSprung doludur
+  const res = bewerte({
+    bericht,
+    karar: ornekGecerliKarar({ guven: 'mittel' }),
+  });
+
+  assert.equal(res.karar, 'vaka');
+  assert.deepEqual(res.erlaubeSprung, ['78010', '78020'], 'Üst düzey erlaubeSprung boş olmamalı');
+  assert.deepEqual(res.vaka.ek.erlaubeSprung, ['78010', '78020']);
+  assert.equal(res.vaka.ek.uygulanabilir, true);
+
+  // Sayı uyuşmazlığında ise boş olmalı ve uygulanabilir false
+  const resUyuşmaz = bewerte({
+    bericht,
+    karar: ornekGecerliKarar({
+      okunan_rakamlar: [
+        {
+          code: '78010',
+          preis: 999.0, // Yanlış fiyat
+          zuzahlung: null,
+          gueltig_ab: '2027-01-01',
+          quelle: 'wissensbank/podologie/a.txt',
+          zeile: 1,
+        },
+      ],
+    }),
+  });
+
+  assert.equal(resUyuşmaz.karar, 'vaka');
+  assert.deepEqual(resUyuşmaz.erlaubeSprung, []);
+  assert.deepEqual(resUyuşmaz.vaka.ek.erlaubeSprung, []);
+  assert.equal(resUyuşmaz.vaka.ek.uygulanabilir, false);
+});
+
+test('21. M7: preiseIz ajan metninden bağımsızdır ve neue_codes kodlarını toplar', () => {
+  const bNeue1 = {
+    stand: '2026-11-24',
+    needsReview: [
+      {
+        art: 'neue_codes',
+        grund: 'podologie: yeni kodlar bulundu',
+        details: {
+          zusaetzlich: ['78099'],
+        },
+      },
+    ],
+  };
+
+  const bNeue2 = {
+    stand: '2026-11-25', // Farklı stand
+    needsReview: [
+      {
+        art: 'neue_codes',
+        grund: 'podologie: yeni kodlar bulundu',
+        details: {
+          zusaetzlich: ['78099', '78098'], // Ekstra kod eklendi
+        },
+      },
+    ],
+  };
+
+  const iz1 = preiseIz(bNeue1);
+  const iz2 = preiseIz(bNeue2);
+  assert.equal(iz1.length, 16);
+  assert.equal(iz2.length, 16);
+  assert.notEqual(iz1, iz2, 'Yeni kod eklenince iz değişmelidir');
+
+  // Farklı ajan çıktısı veya karar null olsa da aynı bericht için iz aynıdır
+  const resA = bewerte({ bericht: bNeue1, karar: null });
+  const resB = bewerte({
+    bericht: bNeue1,
+    karar: ornekGecerliKarar({ ozet: 'Tamamen farklı ajan özeti' }),
+  });
+  assert.equal(resA.vaka.ek.iz, iz1);
+  assert.equal(resB.vaka.ek.iz, iz1);
 });

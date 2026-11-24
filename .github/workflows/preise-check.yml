@@ -142,7 +142,7 @@ jobs:
         working-directory: ./api-backend
         run: |
           MSG=$(printf '✅ GKV-Preise geprüft, Commit folgt gleich (zweiter Job).\n\n%s' "$(cat preise-telegram-message.txt)")
-          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+          curl -sS -o /dev/null -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
             --data-urlencode "text=$MSG"
 
@@ -151,7 +151,7 @@ jobs:
         working-directory: ./api-backend
         run: |
           MSG=$(printf '⚠️ GKV-Preise: manuelle Prüfung nötig (kein automatischer Commit).\n\n%s' "$(cat preise-telegram-message.txt)")
-          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+          curl -sS -o /dev/null -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
             --data-urlencode "text=$MSG"
 

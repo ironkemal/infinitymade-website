@@ -566,3 +566,92 @@ test('16. import edildiğinde CLI çalışmıyor & parseCliArgs argümanları do
   assert.equal(args2.dispatchDosya, 'disp2.txt');
   assert.equal(args2.hatirlat, false);
 });
+
+test('17. M10: takılı uygulaniyor vaka 2 saatten eskiyse yeniden açılır ve Telegram bildirilir', async () => {
+  const env = await geciciOrtamOlustur();
+  try {
+    const simdi = new Date('2026-11-24T12:00:00Z');
+    const eskiZaman = new Date('2026-11-24T09:00:00Z'); // 3 saat önce
+    const yeniZaman = new Date('2026-11-24T11:30:00Z'); // 30 dakika önce
+
+    // 1. 3 saat önce uygulaniyor durumuna geçmiş takılı vaka
+    let vTakili = yeniVaka({
+      bekci: 'preise',
+      baslik: 'Takılı fiyat vakası',
+      simdi: eskiZaman,
+      mevcutIdler: [],
+    });
+    vTakili = gecis(vTakili, 'uygula', { simdi: eskiZaman });
+    await kaydet(env.vakalarDizini, vTakili);
+
+    // 2. 30 dakika önce uygulaniyor durumuna geçmiş güncel vaka (takılı değil)
+    let vGuncel = yeniVaka({
+      bekci: 'preise',
+      baslik: 'Yeni uygulanan vaka',
+      simdi: yeniZaman,
+      mevcutIdler: [vTakili.id],
+    });
+    vGuncel = gecis(vGuncel, 'uygula', { simdi: yeniZaman });
+    await kaydet(env.vakalarDizini, vGuncel);
+
+    const tg1 = sahteTg({ cevaplarListesi: [] });
+
+    // hatirlat = false turu
+    await isle({
+      tg: tg1,
+      dizin: env.vakalarDizini,
+      offsetDosya: env.offsetDosya,
+      dispatchDosya: env.dispatchDosya,
+      hatirlat: false,
+      simdi,
+    });
+
+    // Takılı vaka 'acik' durumuna dönmeli
+    const yuklenenTakili = await yukle(env.vakalarDizini, vTakili.id);
+    assert.equal(yuklenenTakili.durum, 'acik');
+    assert.ok(
+      tg1.gonderilenKisa.some(m =>
+        m.includes(`⏳ #${vTakili.id} uygulanırken yanıt gelmedi, vaka yeniden açıldı.`)
+      )
+    );
+
+    // Güncel vaka hâlâ 'uygulaniyor' kalmalı
+    const yuklenenGuncel = await yukle(env.vakalarDizini, vGuncel.id);
+    assert.equal(yuklenenGuncel.durum, 'uygulaniyor');
+
+    // hatirlat = true turu testi
+    let vTakiliHatirlat = yeniVaka({
+      bekci: 'quellen',
+      baslik: 'Takılı kaynak vakası',
+      simdi: eskiZaman,
+      mevcutIdler: [vTakili.id, vGuncel.id],
+    });
+    vTakiliHatirlat = gecis(vTakiliHatirlat, 'uygula', { simdi: eskiZaman });
+    await kaydet(env.vakalarDizini, vTakiliHatirlat);
+
+    const tg2 = sahteTg({ cevaplarListesi: [] });
+    const res2 = await isle({
+      tg: tg2,
+      dizin: env.vakalarDizini,
+      offsetDosya: env.offsetDosya,
+      dispatchDosya: env.dispatchDosya,
+      hatirlat: true,
+      simdi,
+    });
+
+    const yuklenenHatirlat = await yukle(env.vakalarDizini, vTakiliHatirlat.id);
+    assert.equal(yuklenenHatirlat.durum, 'acik');
+    assert.ok(
+      tg2.gonderilenKisa.some(m =>
+        m.includes(`⏳ #${vTakiliHatirlat.id} uygulanırken yanıt gelmedi, vaka yeniden açıldı.`)
+      )
+    );
+    assert.ok(
+      tg2.gonderilenSende.some(m => m.text.includes(`#${vTakiliHatirlat.id}`)),
+      'Normal hatırlatma mesajı da gönderilmelidir'
+    );
+    assert.ok(res2.hatirlatilan >= 1);
+  } finally {
+    await env.temizle();
+  }
+});

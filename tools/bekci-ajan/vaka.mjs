@@ -195,20 +195,36 @@ export function mesaj(vaka) {
     satirlar.push(vaka.oneri);
   }
 
+  if (vaka.ek?.uygulanabilir === false) {
+    satirlar.push('');
+    satirlar.push('(Bu vaka otomatik uygulanamaz — yerel oturumda yapılır.)');
+  }
+
   satirlar.push('');
   satirlar.push(`#${vaka.id}`);
 
   let knoepfe;
   if (vaka.durum === 'acik') {
-    knoepfe = [
-      [
-        { text: '✅ Uygula', befehl: `v:${vaka.id}:uygula` },
-        { text: '❌ Bırak', befehl: `v:${vaka.id}:birak` },
-      ],
-      [
-        { text: '💬 Açıkla', befehl: `v:${vaka.id}:acikla` },
-      ],
-    ];
+    if (vaka.ek?.uygulanabilir === false) {
+      knoepfe = [
+        [
+          { text: '❌ Bırak', befehl: `v:${vaka.id}:birak` },
+        ],
+        [
+          { text: '💬 Açıkla', befehl: `v:${vaka.id}:acikla` },
+        ],
+      ];
+    } else {
+      knoepfe = [
+        [
+          { text: '✅ Uygula', befehl: `v:${vaka.id}:uygula` },
+          { text: '❌ Bırak', befehl: `v:${vaka.id}:birak` },
+        ],
+        [
+          { text: '💬 Açıkla', befehl: `v:${vaka.id}:acikla` },
+        ],
+      ];
+    }
   }
 
   return { text: satirlar.join('\n'), knoepfe };

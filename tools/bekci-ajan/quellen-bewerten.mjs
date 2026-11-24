@@ -7,6 +7,8 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { iz } from './iz.mjs';
+import { nesneSirIceriyor } from './cli.mjs';
 
 const IZINLI_KOK_ANAHTARLAR = new Set(['belgeler', 'ozet', 'warnungen']);
 
@@ -66,6 +68,20 @@ export function urlSonParca(raw) {
     const parts = link.split('/').filter(Boolean);
     return parts.length > 0 ? parts[parts.length - 1] : link;
   }
+}
+
+/**
+ * Kaynak bulgusunun deterministik izini hesaplar.
+ * @param {object} befund
+ * @returns {string} 16 haneli sha256 izi
+ */
+export function quellenBefundIz(befund) {
+  const quelleId = befund?.id || 'bilinmeyen';
+  const neuList = Array.isArray(befund?.neu) ? befund.neu : [];
+  const wegList = Array.isArray(befund?.weg) ? befund.weg : [];
+  const siraliNeu = [...neuList].sort();
+  const siraliWeg = [...wegList].sort();
+  return iz([quelleId, siraliNeu, siraliWeg]);
 }
 
 /**
@@ -158,10 +174,11 @@ export function kararGecerliMi(karar, befunde = []) {
       if (!ilgiliBefund) {
         hatalar.push(`belgeler[${i}].quelle_id befunde içinde bulunamadı: ${b.quelle_id}`);
       } else {
-        // url o befund'un neu/weg öğelerinden birinin link kısmı mı?
+        // url o befund'un neu/weg öğelerinden birinin link kısmı mı? (art === 'text' ise befund.url de geçerlidir)
         const befundLinkler = [
           ...(ilgiliBefund.neu || []),
           ...(ilgiliBefund.weg || []),
+          ...(ilgiliBefund.art === 'text' && ilgiliBefund.url ? [ilgiliBefund.url] : []),
         ].map(item => (item.includes('|') ? item.split('|')[0].trim() : item.trim()));
 
         const urlUlusuyor = befundLinkler.some(link => urlEslesiyorMu(b.url, link));
@@ -225,6 +242,11 @@ export function kararGecerliMi(karar, befunde = []) {
         }
       }
     }
+  }
+
+  // Sır kontrolü (iki kat emniyet)
+  if (nesneSirIceriyor(karar)) {
+    hatalar.push('sır benzeri içerik');
   }
 
   return { ok: hatalar.length === 0, hatalar };
@@ -314,7 +336,9 @@ export function bewerte({ befunde = [], karar = null, indeks = [] }) {
     let eksikBelgeKaydi = false;
     for (const oge of tumOgeler) {
       const link = oge.includes('|') ? oge.split('|')[0].trim() : oge.trim();
-      const kayitVar = ilgiliKararBelgeleri.some(b => urlEslesiyorMu(b.url, link));
+      const kayitVar = ilgiliKararBelgeleri.some(
+        b => urlEslesiyorMu(b.url, link) || (befund.art === 'text' && urlEslesiyorMu(b.url, befund.url))
+      );
       if (!kayitVar) {
         eksikBelgeKaydi = true;
         break;
@@ -342,7 +366,9 @@ export function bewerte({ befunde = [], karar = null, indeks = [] }) {
     for (const item of neuList) {
       const link = item.includes('|') ? item.split('|')[0].trim() : item.trim();
       const idxEntry = safeIndeks.find(
-        entry => entry.quelleId === quelleId && urlEslesiyorMu(entry.url, link)
+        entry =>
+          entry.quelleId === quelleId &&
+          (urlEslesiyorMu(entry.url, link) || (befund.art === 'text' && urlEslesiyorMu(entry.url, befund.url)))
       );
 
       if (!idxEntry) {
@@ -368,14 +394,21 @@ export function bewerte({ befunde = [], karar = null, indeks = [] }) {
       }
     }
 
+    // Kaldırılan belge kontrolü (M6/L12: kaldırılan belge her zaman insana/vaka)
+    if (wegList.length > 0) {
+      kaynakGruende.push(`kaldırılan belge var (weg=${wegList.length})`);
+    }
+
     // Otomatik "biliniyor" şartı:
     // kaynak wichtig !== 'kritisch' VE karar geçerli VE her neu/weg için belge kaydı var
     // VE hepsi etki==='yok', oneri==='biliniyor', guven==='hoch' VE warnungen boş
+    // VE kaldırılan belge yok (weg.length === 0)
     // VE ilgili belgelerin hiçbiri kisaltildi/ikili/indirilemedi değil
     const isOtomatik =
       wichtig !== 'kritisch' &&
       kararGecerli &&
       tumOgeler.length > 0 &&
+      wegList.length === 0 &&
       !eksikBelgeKaydi &&
       alanlarUygun &&
       Array.isArray(karar.warnungen) &&
@@ -452,6 +485,8 @@ export function bewerte({ befunde = [], karar = null, indeks = [] }) {
       }
       const dosyalar = Array.from(dosyaSet);
 
+      const vakaIz = quellenBefundIz(befund);
+
       vakalar.push({
         bekci: 'quellen',
         baslik,
@@ -462,6 +497,8 @@ export function bewerte({ befunde = [], karar = null, indeks = [] }) {
           quelleId,
           neu: neuList,
           weg: wegList,
+          iz: vakaIz,
+          uygulanabilir: true,
         },
       });
     }

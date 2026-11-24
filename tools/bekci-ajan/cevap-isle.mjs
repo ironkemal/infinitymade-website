@@ -69,7 +69,57 @@ export async function isle({
   let islenen = 0;
   const dispatch = [];
 
-  // 2. Her cevap:
+  // 2. Takılı 'uygulaniyor' kontrolü (her turda yapılır):
+  // Durum 'uygulaniyor' ve son geçmiş kaydı 2 saatten eski ise vaka yeniden açılır.
+  let hatirlatilan = 0;
+  const takiliAcilanlar = new Set();
+
+  try {
+    const baslangicVakalari = await listele(dizin);
+    for (const v of baslangicVakalari) {
+      if (v.durum === 'uygulaniyor') {
+        const sonGecmis =
+          Array.isArray(v.gecmis) && v.gecmis.length > 0 ? v.gecmis[v.gecmis.length - 1] : null;
+        const sonZaman = sonGecmis?.zaman
+          ? new Date(sonGecmis.zaman).getTime()
+          : new Date(v.olusturma).getTime();
+        const ikiSaatGecti = simdiDate.getTime() - sonZaman > 2 * 60 * 60 * 1000;
+
+        if (ikiSaatGecti) {
+          let guncel = gecis(v, 'hata', { simdi: simdiDate });
+          await kaydet(dizin, guncel);
+          takiliAcilanlar.add(v.id);
+          await guvenliGonder(() =>
+            tg.sendeKisa(`⏳ #${v.id} uygulanırken yanıt gelmedi, vaka yeniden açıldı.`)
+          );
+
+          if (hatirlat) {
+            const { text, knoepfe } = mesaj(guncel);
+            const n = (guncel.hatirlatma || 0) + 1;
+            let onek = `🔁 Hatırlatma ${n} · `;
+            if (eskidi(guncel, simdiDate)) {
+              onek = `⏳ 14+ gündür açık · ${onek}`;
+            }
+            const gonderilecekText = `${onek}${text}`;
+
+            await guvenliGonder(async () => {
+              if (typeof tg.sende === 'function') {
+                await tg.sende(gonderilecekText, knoepfe);
+              } else if (typeof tg.sendeVaka === 'function') {
+                await tg.sendeVaka(guncel);
+              }
+            });
+
+            guncel = gecis(guncel, 'hatirlat', { simdi: simdiDate });
+            await kaydet(dizin, guncel);
+            hatirlatilan++;
+          }
+        }
+      }
+    }
+  } catch {}
+
+  // 3. Her cevap:
   for (const cevap of cevaplar) {
     islenen++;
     const { vakaId, eylem } = cevap;
@@ -134,11 +184,13 @@ export async function isle({
     }
   }
 
-  // 4. hatirlat true ise:
-  let hatirlatilan = 0;
+  // 4. hatirlat true ise (diğer açık vakalar):
   if (hatirlat) {
     const tumVakalar = await listele(dizin);
     for (const v of tumVakalar) {
+      if (takiliAcilanlar.has(v.id)) {
+        continue;
+      }
       if (hatirlatmaGerekli(v, simdiDate)) {
         const { text, knoepfe } = mesaj(v);
         const n = (v.hatirlatma || 0) + 1;

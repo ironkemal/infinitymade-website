@@ -185,6 +185,7 @@ test('lauf: befunde und blindListe Struktur und Inhalte', async () => {
     ne: 'Testquelle',
     url: 'https://www.gkv-spitzenverband.de/seite-mod.html',
     folge: 'Folge-Info',
+    art: 'links',
     neu: ['www.gkv-spitzenverband.de/x/neu.pdf'],
     weg: [],
   });
@@ -489,4 +490,33 @@ test('CLI: --uebernehme übernimmt Änderungen und beendet bei Fehler mit exit 1
   });
 
   rmSync(tmpDir, { recursive: true, force: true });
+});
+
+test('uebernehme: art text Quellen akzeptieren Capture-Group-Werte ohne Regex-Fehler', async () => {
+  const q = {
+    id: 'dguv-test',
+    ref: 'D-01',
+    wichtig: 'normal',
+    ne: 'DGUV Handlungsanleitung',
+    url: 'https://publikationen.dguv.de/regelwerk/handlungsanleitung/',
+    art: 'text',
+    muster: 'Ausgabedatum:\\s*(\\d{4}\\.\\d{2})',
+    folge: 'Preise',
+    bekannt: ['2025.01'],
+  };
+  const konfig = { quellen: [q] };
+  const holer = async () => 'Ausgabedatum: 2026.01';
+
+  const res = await uebernehme({
+    konfig,
+    id: 'dguv-test',
+    neu: ['2026.01'],
+    weg: ['2025.01'],
+    holer,
+  });
+
+  assert.equal(res.ok, true);
+  assert.equal(res.eklendi, 1);
+  assert.equal(res.cikarildi, 1);
+  assert.deepEqual(q.bekannt, ['2026.01']);
 });

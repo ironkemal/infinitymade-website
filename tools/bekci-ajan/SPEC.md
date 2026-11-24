@@ -98,6 +98,18 @@ ayrı olmalı: GitHub'daki `TELEGRAM_BOT_TOKEN` yayıncı botuyla aynıysa bekç
 - Açma düğmesi: repo değişkeni `BEKCI_AJAN=an`. Yoksa hiçbir bekçi-ajan iş akışı çalışmaz, mevcut bekçiler bugünkü gibi.
 - Serbest metin cevap Faz 1'de yok (Kemal'in metni public loga/dala düşmesin diye): yalnız düğmeler + `/vakalar`.
 
+### 3.0c Faz 3 — kaynak bekçisi (`bekci-quellen.yml`)
+- Belgeyi ajan değil `belge-indir.mjs` indirir (yalnız izinli hostlar, yönlendirme de izinli hosta, 20 MB / 12 belge sınırı,
+  dosya adı `NN.txt`); PDF → `pdftotext` (geçici dosya), HTML → etiketsiz metin, ZIP/XLSX okunmaz.
+- **Otomatik "biliniyor"** yalnız: kaynak kritik değil + ajan her belge için `etki: yok`, `oneri: biliniyor`, `guven: hoch`
+  + hiçbir belge kesik/ikili değil. Kritik kaynak her zaman vaka. Rakam hiçbir zaman bu yoldan girmez (wissensbank protokolü).
+- ✅ = `quellen-waechter.mjs --uebernehme`: yalnız vakadaki linkler, yalnız sayfa hâlâ birebir öyleyse (değiştiyse hiçbir şey yazılmaz).
+
+### 3.0d Aynı konu iki kez açılmaz
+Bekçiler her gün tetikler. Her vakanın deterministik parmak izi var (`ek.iz`: fiyatta art+kodlar+XML fiyat/tarih,
+kaynakta quelleId+linkler; ajan metni girmez). Aynı izli açık vaka varsa yenisi açılmaz (hatırlatmayı `bekci-cevap.yml`
+sabahları yapar); aynı konu ama farklı iz (ör. fiyat yine değişti) → eski açık vaka "bırakıldı", yenisi açılır.
+
 ### 3.1 onprem incelemesi (O-257, 24.11.2026) — bağlayıcı
 - **İzinli dosyalar (fiyat):** `billing/codes/*_positions.js` + heilmittel_katalog seed migration'ı + `db/erwartete-zaehler.json`.
   Seed'i ajan YAZMAZ: `sync_heilmittel_katalog.js --sql` üretir (O-95 tekrarlanmasın).

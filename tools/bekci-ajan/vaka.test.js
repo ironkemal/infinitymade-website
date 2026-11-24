@@ -332,3 +332,41 @@ test('12. vaka.mjs ek: boyut sınırı + kopya + mesajda görünmüyor', () => {
   assert.ok(!msg.text.includes('2026-11-24'));
   assert.ok(!msg.text.includes('erlaubeSprung'));
 });
+
+test('13. M4: uygulanabilir false ise yalnız Bırak ve Açıkla düğmeleri ve uyarı satırı üretilir', () => {
+  const simdi = new Date('2026-11-24T12:00:00Z');
+
+  // 1. uygulanabilir === false
+  const vUygulanamaz = yeniVaka({
+    bekci: 'preise',
+    baslik: 'Yeni kod bulundu',
+    ek: { uygulanabilir: false },
+    simdi,
+  });
+
+  const m1 = mesaj(vUygulanamaz);
+  assert.ok(m1.text.includes('(Bu vaka otomatik uygulanamaz — yerel oturumda yapılır.)'));
+  assert.deepEqual(m1.knoepfe, [
+    [{ text: '❌ Bırak', befehl: `v:${vUygulanamaz.id}:birak` }],
+    [{ text: '💬 Açıkla', befehl: `v:${vUygulanamaz.id}:acikla` }],
+  ]);
+
+  // 2. ek.uygulanabilir yoksa veya true ise eski format (Uygula düğmesi var, uyarı metni yok)
+  const vNormal = yeniVaka({
+    bekci: 'preise',
+    baslik: 'Normal vaka',
+    simdi,
+  });
+
+  const m2 = mesaj(vNormal);
+  assert.ok(!m2.text.includes('(Bu vaka otomatik uygulanamaz'));
+  assert.deepEqual(m2.knoepfe, [
+    [
+      { text: '✅ Uygula', befehl: `v:${vNormal.id}:uygula` },
+      { text: '❌ Bırak', befehl: `v:${vNormal.id}:birak` },
+    ],
+    [
+      { text: '💬 Açıkla', befehl: `v:${vNormal.id}:acikla` },
+    ],
+  ]);
+});

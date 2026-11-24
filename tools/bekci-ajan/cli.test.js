@@ -19,6 +19,9 @@ import {
   kararOku,
   parseArgs,
   guvenliYolMu,
+  tekillestir,
+  sirIceriyor,
+  nesneSirIceriyor,
 } from './cli.mjs';
 import { sha256 } from './dogrula.mjs';
 import { yeniVaka, ID_RE } from './vaka.mjs';
@@ -817,6 +820,673 @@ test('30. CLI alt süreç — ek-yaz ek bilgisi bulunamazsa exit 1 döner', asyn
       },
       err => err.status === 1
     );
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+// 31. tekillestir — tekrar (acik): aynı bekci + aynı ek.iz + durum acik ise açılmaz
+test('31. tekillestir — tekrar (acik): aynı bekci + aynı ek.iz + durum acik ise açılmaz', () => {
+  const yeni = { bekci: 'preise', ek: { iz: '1234567890abcdef' } };
+  const mevcut = [
+    { id: '20261124-preise-1', bekci: 'preise', durum: 'acik', ek: { iz: '1234567890abcdef' } },
+  ];
+
+  const sonuc = tekillestir({ yeni, mevcut });
+  assert.deepEqual(sonuc, {
+    ac: false,
+    tekrarId: '20261124-preise-1',
+    eskiyenler: [],
+  });
+});
+
+// 32. tekillestir — tekrar (uygulaniyor): aynı bekci + aynı ek.iz + durum uygulaniyor ise açılmaz
+test('32. tekillestir — tekrar (uygulaniyor): aynı bekci + aynı ek.iz + durum uygulaniyor ise açılmaz', () => {
+  const yeni = { bekci: 'preise', ek: { iz: '1234567890abcdef' } };
+  const mevcut = [
+    { id: '20261124-preise-1', bekci: 'preise', durum: 'uygulaniyor', ek: { iz: '1234567890abcdef' } },
+  ];
+
+  const sonuc = tekillestir({ yeni, mevcut });
+  assert.deepEqual(sonuc, {
+    ac: false,
+    tekrarId: '20261124-preise-1',
+    eskiyenler: [],
+  });
+});
+
+// 33. tekillestir — kapalı vaka tekrar sayılmaz (birakildi / uygulandi)
+test('33. tekillestir — kapalı vaka tekrar sayılmaz (birakildi / uygulandi)', () => {
+  const yeni = { bekci: 'preise', ek: { iz: '1234567890abcdef' } };
+  const mevcut1 = [
+    { id: '20261124-preise-1', bekci: 'preise', durum: 'birakildi', ek: { iz: '1234567890abcdef' } },
+  ];
+  assert.deepEqual(tekillestir({ yeni, mevcut: mevcut1 }), {
+    ac: true,
+    tekrarId: null,
+    eskiyenler: [],
+  });
+
+  const mevcut2 = [
+    { id: '20261124-preise-2', bekci: 'preise', durum: 'uygulandi', ek: { iz: '1234567890abcdef' } },
+  ];
+  assert.deepEqual(tekillestir({ yeni, mevcut: mevcut2 }), {
+    ac: true,
+    tekrarId: null,
+    eskiyenler: [],
+  });
+});
+
+// 34. tekillestir — farklı iz: eski acik vaka eskiyenler listesine alınır, uygulaniyor korunur
+test('34. tekillestir — farklı iz: eski acik vaka eskiyenler listesine alınır, uygulaniyor korunur', () => {
+  const yeni = { bekci: 'preise', ek: { iz: 'yeni_iz_22222222' } };
+  const mevcut = [
+    { id: '20261124-preise-1', bekci: 'preise', durum: 'acik', ek: { iz: 'eski_iz_11111111' } },
+    { id: '20261124-preise-2', bekci: 'preise', durum: 'uygulaniyor', ek: { iz: 'baska_iz_33333333' } },
+  ];
+
+  const sonuc = tekillestir({ yeni, mevcut });
+  assert.deepEqual(sonuc, {
+    ac: true,
+    tekrarId: null,
+    eskiyenler: ['20261124-preise-1'],
+  });
+});
+
+// 35. tekillestir — quellen farklı quelleId birbirini etkilemez
+test('35. tekillestir — quellen farklı quelleId birbirini etkilemez', () => {
+  const yeni = { bekci: 'quellen', ek: { quelleId: 'gkv-anlage2', iz: 'iz_yeni_anlage' } };
+  const mevcut = [
+    {
+      id: '20261124-quellen-1',
+      bekci: 'quellen',
+      durum: 'acik',
+      ek: { quelleId: 'kbv-praxis', iz: 'iz_kbv' },
+    },
+    {
+      id: '20261124-quellen-2',
+      bekci: 'quellen',
+      durum: 'acik',
+      ek: { quelleId: 'gkv-anlage2', iz: 'iz_eski_anlage' },
+    },
+  ];
+
+  const sonuc = tekillestir({ yeni, mevcut });
+  assert.deepEqual(sonuc, {
+    ac: true,
+    tekrarId: null,
+    eskiyenler: ['20261124-quellen-2'],
+  });
+});
+
+// 36. tekillestir — ek.iz'siz eski vaka yok sayılır
+test('36. tekillestir — ek.iz\'siz eski vaka yok sayılır', () => {
+  const yeni = { bekci: 'preise', ek: { iz: 'yeni_iz_22222222' } };
+  const mevcut = [
+    { id: '20261124-preise-1', bekci: 'preise', durum: 'acik', ek: null },
+    { id: '20261124-preise-2', bekci: 'preise', durum: 'acik', ek: {} },
+  ];
+
+  const sonuc = tekillestir({ yeni, mevcut });
+  assert.deepEqual(sonuc, {
+    ac: true,
+    tekrarId: null,
+    eskiyenler: [],
+  });
+});
+
+// 37. tekillestir — yeni vakanın ek.iz'i yoksa tekilleştirme yapılmaz
+test('37. tekillestir — yeni vakanın ek.iz\'i yoksa tekilleştirme yapılmaz', () => {
+  const yeni = { bekci: 'preise', ek: null };
+  const mevcut = [
+    { id: '20261124-preise-1', bekci: 'preise', durum: 'acik', ek: { iz: 'iz1' } },
+  ];
+
+  const sonuc = tekillestir({ yeni, mevcut });
+  assert.deepEqual(sonuc, {
+    ac: true,
+    tekrarId: null,
+    eskiyenler: [],
+  });
+});
+
+// 38. CLI alt süreç — vaka-ac tekrar durumunda --out-id boş yazar ve stdout tekrar basar (exit 0)
+test('38. CLI alt süreç — vaka-ac tekrar durumunda --out-id boş yazar ve stdout tekrar basar (exit 0)', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'vaka-ac-tekrar-test-'));
+  const entscheidungDosya = path.join(tempDir, 'entscheidung.json');
+  const vakalarDizin = path.join(tempDir, 'vakalar');
+  const outIdDosya = path.join(tempDir, 'vaka-id.txt');
+
+  try {
+    const { kaydet } = await import('./vaka.mjs');
+    const mevcutVaka = yeniVaka({
+      bekci: 'preise',
+      baslik: 'Mevcut açık vaka',
+      ek: { iz: 'ayni_iz_12345678' },
+    });
+    await kaydet(vakalarDizin, mevcutVaka);
+
+    await writeFile(
+      entscheidungDosya,
+      JSON.stringify({
+        karar: 'vaka',
+        vaka: {
+          bekci: 'preise',
+          baslik: 'Yeni vaka adayı',
+          satirlar: ['Satır 1'],
+          dosyalar: [],
+          oneri: null,
+          ek: { iz: 'ayni_iz_12345678' },
+        },
+      }),
+      'utf-8'
+    );
+
+    const out = execFileSync(
+      process.execPath,
+      [
+        cliPath,
+        'vaka-ac',
+        `--entscheidung=${entscheidungDosya}`,
+        `--dizin=${vakalarDizin}`,
+        `--out-id=${outIdDosya}`,
+      ],
+      { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+
+    assert.equal(out.trim(), `tekrar: ${mevcutVaka.id}`);
+
+    // out-id dosyası boş olmalı
+    const idDosyaIcerik = await readFile(outIdDosya, 'utf-8');
+    assert.equal(idDosyaIcerik, '');
+
+    // Dizinde yalnızca ilk vaka bulunmalı, yeni vaka dosyası açılmamalı
+    const { listele } = await import('./vaka.mjs');
+    const tumVakalar = await listele(vakalarDizin);
+    assert.equal(tumVakalar.length, 1);
+    assert.equal(tumVakalar[0].id, mevcutVaka.id);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+// 39. CLI alt süreç — vaka-ac farklı iz durumunda eskiyi birakildi yapar ve yeni vaka açar (exit 0)
+test('39. CLI alt süreç — vaka-ac farklı iz durumunda eskiyi birakildi yapar ve yeni vaka açar (exit 0)', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'vaka-ac-farkli-iz-test-'));
+  const entscheidungDosya = path.join(tempDir, 'entscheidung.json');
+  const vakalarDizin = path.join(tempDir, 'vakalar');
+  const outIdDosya = path.join(tempDir, 'vaka-id.txt');
+
+  try {
+    const { kaydet, yukle } = await import('./vaka.mjs');
+    const eskiVaka = yeniVaka({
+      bekci: 'preise',
+      baslik: 'Eski açık vaka',
+      ek: { iz: 'eski_iz_11111111' },
+    });
+    await kaydet(vakalarDizin, eskiVaka);
+
+    await writeFile(
+      entscheidungDosya,
+      JSON.stringify({
+        karar: 'vaka',
+        vaka: {
+          bekci: 'preise',
+          baslik: 'Yeni güncel vaka',
+          satirlar: ['Satır 1'],
+          dosyalar: [],
+          oneri: null,
+          ek: { iz: 'yeni_iz_22222222' },
+        },
+      }),
+      'utf-8'
+    );
+
+    const out = execFileSync(
+      process.execPath,
+      [
+        cliPath,
+        'vaka-ac',
+        `--entscheidung=${entscheidungDosya}`,
+        `--dizin=${vakalarDizin}`,
+        `--out-id=${outIdDosya}`,
+      ],
+      { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+
+    const yeniId = out.trim();
+    assert.ok(ID_RE.test(yeniId));
+    assert.notEqual(yeniId, eskiVaka.id);
+
+    const idDosyaIcerik = (await readFile(outIdDosya, 'utf-8')).trim();
+    assert.equal(idDosyaIcerik, yeniId);
+
+    // Eski vakanın durumu birakildi olmalı
+    const guncelEski = await yukle(vakalarDizin, eskiVaka.id);
+    assert.equal(guncelEski.durum, 'birakildi');
+
+    // Yeni vaka açılmış ve durumu acik olmalı
+    const guncelYeni = await yukle(vakalarDizin, yeniId);
+    assert.equal(guncelYeni.durum, 'acik');
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+// 40. CLI alt süreç — vaka-ac-coklu yalnız yenileri yazar, tekrarları out-ids'e yazmaz (exit 0)
+test('40. CLI alt süreç — vaka-ac-coklu yalnız yenileri yazar, tekrarları out-ids\'e yazmaz (exit 0)', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'vaka-ac-coklu-tekrar-test-'));
+  const entscheidungDosya = path.join(tempDir, 'entscheidung.json');
+  const vakalarDizin = path.join(tempDir, 'vakalar');
+  const outIdsDosya = path.join(tempDir, 'out-ids.txt');
+
+  try {
+    const { kaydet } = await import('./vaka.mjs');
+    const mevcutQ1 = yeniVaka({
+      bekci: 'quellen',
+      baslik: 'Mevcut Q1',
+      ek: { quelleId: 'q1', iz: 'iz_q1_tekrar' },
+    });
+    await kaydet(vakalarDizin, mevcutQ1);
+
+    const entscheidung = {
+      vakalar: [
+        {
+          bekci: 'quellen',
+          baslik: 'Kaynak 1 (Tekrar)',
+          satirlar: ['Satır 1'],
+          dosyalar: [],
+          oneri: null,
+          ek: { quelleId: 'q1', iz: 'iz_q1_tekrar' },
+        },
+        {
+          bekci: 'quellen',
+          baslik: 'Kaynak 2 (Yeni)',
+          satirlar: ['Satır 2'],
+          dosyalar: [],
+          oneri: null,
+          ek: { quelleId: 'q2', iz: 'iz_q2_yeni' },
+        },
+      ],
+    };
+    await writeFile(entscheidungDosya, JSON.stringify(entscheidung), 'utf-8');
+
+    const out = execFileSync(
+      process.execPath,
+      [
+        cliPath,
+        'vaka-ac-coklu',
+        `--entscheidung=${entscheidungDosya}`,
+        `--dizin=${vakalarDizin}`,
+        `--out-ids=${outIdsDosya}`,
+      ],
+      { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+
+    const satirlar = out.trim().split(/\r?\n/).filter(Boolean);
+    assert.equal(satirlar.length, 2);
+    assert.equal(satirlar[0], `tekrar: ${mevcutQ1.id}`);
+    assert.ok(satirlar[1].includes('quellen-2'));
+
+    // out-ids dosyası yalnızca yeni vakanın ID'sini içermeli (tekrar olan yazılmaz)
+    const outIdsIcerik = (await readFile(outIdsDosya, 'utf-8')).trim().split(/\r?\n/).filter(Boolean);
+    assert.deepEqual(outIdsIcerik, [satirlar[1]]);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+// 31. sirIceriyor — her kalıp + temiz metin yanlış pozitif vermiyor
+test('31. sirIceriyor: her kalıp için pozitif, temiz metinlerde yanlış pozitif vermez', () => {
+  // Pozitif kalıplar (sır içerenler)
+  assert.equal(sirIceriyor('sk-ant-api03-abcdef123456'), true); // secret-scan: ignore (sahte test değeri)
+  assert.equal(sirIceriyor('ghp_abcdefghijklmnopqrstuvwxyz0123456789'), true); // secret-scan: ignore (sahte test değeri)
+  assert.equal(sirIceriyor('ghs_abcdefghijklmnopqrstuvwxyz0123456789'), true); // secret-scan: ignore (sahte test değeri)
+  assert.equal(sirIceriyor('gho_abcdefghijklmnopqrstuvwxyz0123456789'), true); // secret-scan: ignore (sahte test değeri)
+  assert.equal(sirIceriyor('github_pat_11AAAAAAA0123456789_abcdef'), true); // secret-scan: ignore (sahte test değeri)
+  assert.equal(sirIceriyor('xoxb-12345-67890-abcdef'), true); // secret-scan: ignore (sahte test değeri)
+  assert.equal(sirIceriyor('xoxa-12345-67890-abcdef'), true); // secret-scan: ignore (sahte test değeri)
+  assert.equal(sirIceriyor('xoxp-12345-67890-abcdef'), true); // secret-scan: ignore (sahte test değeri)
+  assert.equal(sirIceriyor('-----BEGIN PRIVATE KEY-----'), true); // secret-scan: ignore (sahte test değeri)
+  assert.equal(sirIceriyor('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0'), true); // secret-scan: ignore (sahte test değeri)
+  assert.equal(sirIceriyor('YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY3ODkwYWJjZGVmZ2g='), true); // secret-scan: ignore (sahte test değeri)
+  assert.equal(sirIceriyor('e3b0c44298fc1c149afbf4c8996fb92427ae41e4'), true); // secret-scan: ignore (sahte test değeri)
+  assert.equal(sirIceriyor('123456789:ABCdefGHIjklMNOpqrSTUvwxYZ123456'), true); // secret-scan: ignore (sahte test değeri)
+  assert.equal(sirIceriyor('export CLAUDE_CODE_OAUTH_TOKEN=secret'), true); // secret-scan: ignore (sahte test değeri)
+  assert.equal(sirIceriyor('prefix GITHUB_TOKEN suffix'), true); // secret-scan: ignore (sahte test değeri)
+  assert.equal(sirIceriyor('ACTIONS_RUNTIME_TOKEN=xyz'), true); // secret-scan: ignore (sahte test değeri)
+
+  // Yanlış pozitif vermeyen temiz metinler
+  assert.equal(sirIceriyor('Podoloji fiyat sıçraması resmî sözleşme ile doğrulandı.'), false);
+  assert.equal(sirIceriyor('2027-01-01'), false);
+  assert.equal(sirIceriyor('78010'), false);
+  assert.equal(
+    sirIceriyor('https://www.gkv-spitzenverband.de/media/dokumente/heilmittel/podologie/anlage2.pdf'),
+    false
+  );
+  assert.equal(sirIceriyor('wissensbank/podologie/anlage2.txt'), false);
+  assert.equal(sirIceriyor('Podologische Komplexbehandlung (klein)'), false);
+  assert.equal(sirIceriyor(null), false);
+  assert.equal(sirIceriyor(undefined), false);
+
+  // nesneSirIceriyor nesne ve dizi taraması
+  assert.equal(
+    nesneSirIceriyor({ ozet: 'temiz metin', ic: { token: 'ghp_gizli1234567890' } }),
+    true
+  );
+  assert.equal(
+    nesneSirIceriyor({ dizi: ['temiz', 'dizi', 'sk-ant-gizli'] }),
+    true
+  );
+  assert.equal(
+    nesneSirIceriyor({ ozet: 'tamamen temiz', rakam: 123, dizi: ['2027-01-01', '78010'] }),
+    false
+  );
+});
+
+// 32. karar-temizle iki bekçi
+test('32. karar-temizle: preise ve quellen için sır temizleme ve şema denetimi', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'cli-temizle-'));
+  try {
+    // A) preise: geçerli ve temiz karar -> stdout 'temiz'
+    const dosyaA = path.join(tempDir, 'kararA.json');
+    const gecerliPreiseKarar = {
+      tur: 'sprung_belegt',
+      guven: 'hoch',
+      ozet: 'Fiyatlar doğrulandı.',
+      okunan_rakamlar: [
+        {
+          code: '78010',
+          preis: 37.2,
+          zuzahlung: null,
+          gueltig_ab: '2027-01-01',
+          quelle: 'wissensbank/podologie/a.txt',
+          zeile: 10,
+        },
+      ],
+      neue_positionen: [],
+      erlaube_sprung: ['78010'],
+      warnungen: [],
+    };
+    await writeFile(dosyaA, JSON.stringify(gecerliPreiseKarar), 'utf-8');
+
+    const outA = execFileSync(
+      process.execPath,
+      [cliPath, 'karar-temizle', '--bekci=preise', `--dosya=${dosyaA}`],
+      { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+    assert.equal(outA.trim(), 'temiz');
+    const icerikA = JSON.parse(await readFile(dosyaA, 'utf-8'));
+    assert.equal(icerikA.tur, 'sprung_belegt');
+
+    // B) preise: sır içeren karar -> stdout 'gecersiz', dosya değiştirilir, aciklama silinir
+    const dosyaB = path.join(tempDir, 'kararB.json');
+    const aciklamaB = path.join(tempDir, 'aciklamaB.md');
+    const sirliKarar = {
+      ...gecerliPreiseKarar,
+      ozet: 'Burada bir sır var: sk-ant-gizli-token',
+    };
+    await writeFile(dosyaB, JSON.stringify(sirliKarar), 'utf-8');
+    await writeFile(aciklamaB, 'Normal açıklama', 'utf-8');
+
+    const outB = execFileSync(
+      process.execPath,
+      [
+        cliPath,
+        'karar-temizle',
+        '--bekci=preise',
+        `--dosya=${dosyaB}`,
+        `--aciklama=${aciklamaB}`,
+      ],
+      { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+    assert.equal(outB.trim(), 'gecersiz');
+    const icerikB = JSON.parse(await readFile(dosyaB, 'utf-8'));
+    assert.equal(icerikB.gecersiz, true);
+    assert.deepEqual(icerikB.hatalar, ['sır benzeri içerik']);
+    // aciklama dosyası silinmiş olmalıdır
+    const aciklamaVarMi = await (import('node:fs')).then(fs => fs.existsSync(aciklamaB));
+    assert.equal(aciklamaVarMi, false, 'Sır tespit edildiğinde aciklama.md silinmelidir');
+
+    // C) quellen: aciklama.md içinde sır varsa yine silinmeli ve gecersiz olmalı
+    const dosyaC = path.join(tempDir, 'kararC.json');
+    const aciklamaC = path.join(tempDir, 'aciklamaC.md');
+    const befundeC = path.join(tempDir, 'befundeC.json');
+    const quellenBefund = [
+      {
+        id: 'q1',
+        url: 'https://www.gkv-spitzenverband.de/a.html',
+        neu: ['www.gkv-spitzenverband.de/b.pdf'],
+        weg: [],
+      },
+    ];
+    const quellenKarar = {
+      belgeler: [
+        {
+          quelle_id: 'q1',
+          url: 'www.gkv-spitzenverband.de/b.pdf',
+          ne_degisti: 'Yeni dosya',
+          etki: 'yok',
+          gecerlilik: null,
+          etkilenen_dosyalar: [],
+          oneri: 'biliniyor',
+          guven: 'hoch',
+        },
+      ],
+      ozet: 'Temiz özet',
+      warnungen: [],
+    };
+    await writeFile(dosyaC, JSON.stringify(quellenKarar), 'utf-8');
+    await writeFile(befundeC, JSON.stringify(quellenBefund), 'utf-8');
+    await writeFile(aciklamaC, 'Sır sızıntısı: GITHUB_TOKEN=ghp_secret1234567890', 'utf-8');
+
+    const outC = execFileSync(
+      process.execPath,
+      [
+        cliPath,
+        'karar-temizle',
+        '--bekci=quellen',
+        `--dosya=${dosyaC}`,
+        `--aciklama=${aciklamaC}`,
+        `--befunde=${befundeC}`,
+      ],
+      { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+    assert.equal(outC.trim(), 'gecersiz');
+    const icerikC = JSON.parse(await readFile(dosyaC, 'utf-8'));
+    assert.equal(icerikC.gecersiz, true);
+    assert.deepEqual(icerikC.hatalar, ['sır benzeri içerik']);
+
+    // D) quellen: geçersiz şema -> ilk 5 hata ile gecersiz
+    const dosyaD = path.join(tempDir, 'kararD.json');
+    const gecersizQuellenKarar = {
+      belgeler: 'dizi degil', // Şema hatası
+      ozet: 123,
+      warnungen: 'dizi degil',
+    };
+    await writeFile(dosyaD, JSON.stringify(gecersizQuellenKarar), 'utf-8');
+
+    const outD = execFileSync(
+      process.execPath,
+      [
+        cliPath,
+        'karar-temizle',
+        '--bekci=quellen',
+        `--dosya=${dosyaD}`,
+        `--befunde=${befundeC}`,
+      ],
+      { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+    assert.equal(outD.trim(), 'gecersiz');
+    const icerikD = JSON.parse(await readFile(dosyaD, 'utf-8'));
+    assert.equal(icerikD.gecersiz, true);
+    assert.ok(Array.isArray(icerikD.hatalar));
+    assert.ok(icerikD.hatalar.length <= 5);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+// 33. kararOku allowlist ve uygulanabilir satırı
+test('33. kararOku: allowlist denetimi ve uygulanabilir satırı', async () => {
+  // Allowlist: {sessiz, auto, vaka, elle} izinli
+  assert.equal(kararOku({ karar: 'sessiz' }).karar, 'sessiz');
+  assert.equal(kararOku({ karar: 'sessiz' }).uygulanabilir, false);
+
+  assert.equal(kararOku({ karar: 'auto', erlaubeSprung: ['78010'] }).karar, 'auto');
+  assert.equal(kararOku({ karar: 'auto', erlaubeSprung: ['78010'] }).uygulanabilir, true);
+
+  assert.equal(kararOku({ karar: 'vaka', erlaubeSprung: ['78010'] }).uygulanabilir, true);
+  assert.equal(kararOku({ karar: 'vaka', erlaubeSprung: [] }).uygulanabilir, false);
+  assert.equal(kararOku({ karar: 'vaka', vaka: { ek: { uygulanabilir: false } } }).uygulanabilir, false);
+
+  assert.equal(kararOku({ karar: 'elle' }).karar, 'elle');
+  assert.equal(kararOku({ karar: 'elle' }).uygulanabilir, false);
+
+  // İzinli olmayan kararlar hata fırlatır
+  assert.throws(() => kararOku({ karar: 'onay' }), /gecersiz_karar/);
+  assert.throws(() => kararOku({ karar: 'iptal' }), /gecersiz_karar/);
+  assert.throws(() => kararOku({ karar: '' }), /gecersiz_karar/);
+  assert.throws(() => kararOku({ karar: 123 }), /gecersiz_karar/);
+
+  // CLI süreci yalnız stdout'a yazar (GITHUB_OUTPUT'a yazmaz)
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'cli-karar-oku-'));
+  try {
+    const kararDosya = path.join(tempDir, 'karar.json');
+    await writeFile(
+      kararDosya,
+      JSON.stringify({ karar: 'auto', erlaubeSprung: ['78010', '78020'] }),
+      'utf-8'
+    );
+
+    const out = execFileSync(
+      process.execPath,
+      [cliPath, 'karar-oku', `--file=${kararDosya}`],
+      { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+
+    const satirlar = out.trim().split(/\r?\n/).filter(Boolean);
+    assert.deepEqual(satirlar, [
+      'karar=auto',
+      'erlaube_sprung=78010,78020',
+      'uygulanabilir=true',
+    ]);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+// 34. acik-iz iki bekçi + dizin yok
+test('34. acik-iz: preise ve quellen için açık vaka ve dizin yok denetimi', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'cli-acik-iz-'));
+  try {
+    const olmayanDizin = path.join(tempDir, 'olmayan-dal-vakalar');
+    const varOlanDizin = path.join(tempDir, 'mevcut-vakalar');
+
+    const berichtDosya = path.join(tempDir, 'bericht.json');
+    const befundeInDosya = path.join(tempDir, 'befunde-in.json');
+    const befundeOutDosya = path.join(tempDir, 'befunde-out.json');
+
+    const ornekBericht = {
+      stand: '2026-11-24',
+      needsReview: [
+        {
+          art: 'sprung',
+          grund: 'podologie: sıçrama',
+          bereich: 'podologie',
+          details: [
+            {
+              sprungCodes: [{ code: '78010', altPreis: 30, neuPreis: 37.2, prozent: 24, xmlGueltigAb: '2027-01-01' }],
+            },
+          ],
+        },
+      ],
+    };
+    await writeFile(berichtDosya, JSON.stringify(ornekBericht), 'utf-8');
+
+    const ornekBefunde = [
+      {
+        id: 'q1',
+        neu: ['www.gkv-spitzenverband.de/a.pdf'],
+        weg: [],
+      },
+      {
+        id: 'q2',
+        neu: ['www.gkv-spitzenverband.de/b.pdf'],
+        weg: [],
+      },
+    ];
+    await writeFile(befundeInDosya, JSON.stringify(ornekBefunde), 'utf-8');
+
+    // 1. Dizin yokken preise -> zaten_acik=false
+    const outP1 = execFileSync(
+      process.execPath,
+      [cliPath, 'acik-iz', `--dizin=${olmayanDizin}`, '--bekci=preise', `--bericht=${berichtDosya}`],
+      { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+    assert.equal(outP1.trim(), 'zaten_acik=false');
+
+    // 2. Dizin yokken quellen -> kalan=2 ve befunde-out yazılır
+    const outQ1 = execFileSync(
+      process.execPath,
+      [
+        cliPath,
+        'acik-iz',
+        `--dizin=${olmayanDizin}`,
+        '--bekci=quellen',
+        `--befunde-in=${befundeInDosya}`,
+        `--befunde-out=${befundeOutDosya}`,
+      ],
+      { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+    assert.equal(outQ1.trim(), 'kalan=2');
+    const outQ1Icerik = JSON.parse(await readFile(befundeOutDosya, 'utf-8'));
+    assert.equal(outQ1Icerik.length, 2);
+
+    // 3. Dizin varken ve açık vaka varken preise
+    const preiseIzHesap = (await import('./preise-bewerten.mjs')).preiseIz(ornekBericht);
+    const vPreiseAcik = yeniVaka({
+      bekci: 'preise',
+      baslik: 'Fiyat sıçraması',
+      ek: { iz: preiseIzHesap },
+      simdi: new Date('2026-11-24T10:00:00Z'),
+    });
+    await (await import('./vaka.mjs')).kaydet(varOlanDizin, vPreiseAcik);
+
+    const outP2 = execFileSync(
+      process.execPath,
+      [cliPath, 'acik-iz', `--dizin=${varOlanDizin}`, '--bekci=preise', `--bericht=${berichtDosya}`],
+      { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+    assert.equal(outP2.trim(), 'zaten_acik=true');
+
+    // 4. Dizin varken quellen: q1 için açık vaka var, q2 için yok -> kalan=1
+    const quellenIzQ1 = (await import('./quellen-bewerten.mjs')).quellenBefundIz(ornekBefunde[0]);
+    const vQuellenAcik = yeniVaka({
+      bekci: 'quellen',
+      baslik: 'Kaynak q1',
+      ek: { quelleId: 'q1', iz: quellenIzQ1 },
+      simdi: new Date('2026-11-24T10:00:00Z'),
+      mevcutIdler: [vPreiseAcik.id],
+    });
+    await (await import('./vaka.mjs')).kaydet(varOlanDizin, vQuellenAcik);
+
+    const outQ2 = execFileSync(
+      process.execPath,
+      [
+        cliPath,
+        'acik-iz',
+        `--dizin=${varOlanDizin}`,
+        '--bekci=quellen',
+        `--befunde-in=${befundeInDosya}`,
+        `--befunde-out=${befundeOutDosya}`,
+      ],
+      { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+    assert.equal(outQ2.trim(), 'kalan=1');
+    const outQ2Icerik = JSON.parse(await readFile(befundeOutDosya, 'utf-8'));
+    assert.equal(outQ2Icerik.length, 1);
+    assert.equal(outQ2Icerik[0].id, 'q2');
   } finally {
     await rm(tempDir, { recursive: true, force: true });
   }

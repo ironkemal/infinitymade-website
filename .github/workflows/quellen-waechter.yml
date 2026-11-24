@@ -31,6 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      actions: write   # nur für den Bekçi-Ajan-Anstoß (gh workflow run), sonst nichts
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -56,7 +57,8 @@ jobs:
           shopt -s nullglob
           fehler=0
           for f in "$RUNNER_TEMP"/qw/msg-*.txt; do
-            if ! curl -sS --fail -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            # -o /dev/null: die API-Antwort enthält den Chat-Namen — nicht ins öffentliche Log (S-64)
+            if ! curl -sS --fail -o /dev/null -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
               --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
               --data-urlencode "text@${f}"; then
               printf 'Telegram-Versand fehlgeschlagen: %s\n' "${f##*/}" >&2
@@ -64,3 +66,14 @@ jobs:
             fi
           done
           exit "$fehler"
+
+      - name: Bekçi-Ajan anstoßen (liest die neuen Fassungen; nur wenn eingeschaltet)
+        # tools/bekci-ajan/SPEC.md Faz 3. Ohne neue Befunde beendet sich bekci-quellen.yml selbst still.
+        if: always() && vars.BEKCI_AJAN == 'an'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          f=("$RUNNER_TEMP"/qw/msg-*.txt)
+          [ ${#f[@]} -gt 0 ] || exit 0
+          gh workflow run bekci-quellen.yml --repo "${{ github.repository }}" -f eylem=yeni

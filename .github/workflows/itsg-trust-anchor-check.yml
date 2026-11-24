@@ -71,7 +71,7 @@ jobs:
         working-directory: ./api-backend
         run: |
           MSG=$(printf '✅ ITSG Trust-Anchor geprüft, Commit folgt gleich (zweiter Job).\n\n%s' "$(cat trust-anchors-telegram-message.txt)")
-          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+          curl -sS -o /dev/null -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
             --data-urlencode "text=$MSG"
 
@@ -80,7 +80,7 @@ jobs:
         working-directory: ./api-backend
         run: |
           MSG=$(printf '⚠️ ITSG Trust-Anchor: Manuelle Prüfung nötig (kein automatischer Commit).\n\n%s' "$(cat trust-anchors-telegram-message.txt)")
-          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+          curl -sS -o /dev/null -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
             --data-urlencode "text=$MSG"
 
@@ -145,7 +145,7 @@ jobs:
         if: success()
         run: |
           MSG="✅ ITSG-Trust-Anchor-Liste erfolgreich aktualisiert, main committet, Image-Build angestoßen."
-          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+          curl -sS -o /dev/null -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
             --data-urlencode "text=$MSG"
 
@@ -153,6 +153,6 @@ jobs:
         if: failure()
         run: |
           MSG="⚠️ ITSG-Trust-Anchor: anker-committen Job ist gescheitert (5 Versuche). Bitte Actions-Log prüfen — kein automatischer Commit gelandet."
-          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+          curl -sS -o /dev/null -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
             --data-urlencode "text=$MSG"

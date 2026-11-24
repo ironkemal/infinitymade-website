@@ -8,6 +8,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { rakamlariKarsilastir } from './dogrula.mjs';
+import { iz } from './iz.mjs';
+import { nesneSirIceriyor } from './cli.mjs';
 
 const IZINLI_ANAHTARLAR = new Set([
   'tur',
@@ -226,7 +228,115 @@ export function kararGecerliMi(karar) {
     }
   }
 
+  // Sır kontrolü (iki kat emniyet)
+  if (nesneSirIceriyor(karar)) {
+    hatalar.push('sır benzeri içerik');
+  }
+
   return { ok: hatalar.length === 0, hatalar };
+}
+
+/**
+ * SPEC.md M7 uyarınca tüm needsReview bulgularından deterministik fiyat izi hesaplar.
+ * Girdi: her needsReview öğesi için [art, bereich (grund'un : öncesi), sıralı {code, xmlPreis, xmlGueltigAb} listesi].
+ * Kodlar details (dizi ya da {eintraege, sprungCodes} nesnesi) ve sprungCodes'tan toplanır.
+ * Ajan metni ve stand girmez.
+ * @param {any} bericht
+ * @returns {string}
+ */
+export function preiseIz(bericht) {
+  const needsReview = Array.isArray(bericht?.needsReview) ? bericht.needsReview : [];
+  if (needsReview.length === 0) {
+    return iz([]);
+  }
+
+  const maddeler = [];
+  for (const nr of needsReview) {
+    if (!nr) continue;
+    const art = nr.art || 'belirsiz';
+    let bereich = '';
+    if (typeof nr.grund === 'string' && nr.grund.includes(':')) {
+      bereich = nr.grund.split(':')[0].trim();
+    } else if (nr.bereich) {
+      bereich = String(nr.bereich).trim();
+    }
+
+    const kodMap = new Map();
+
+    function ekle(c, p, d) {
+      if (!c) return;
+      const codeStr = String(c).trim();
+      if (!codeStr) return;
+      const mevcut = kodMap.get(codeStr);
+      const preis = (p !== undefined && p !== null) ? (typeof p === 'number' ? p : Number(p)) : (mevcut?.xmlPreis ?? null);
+      const datum = (d !== undefined && d !== null) ? String(d) : (mevcut?.xmlGueltigAb ?? null);
+      kodMap.set(codeStr, {
+        code: codeStr,
+        xmlPreis: Number.isFinite(preis) ? preis : null,
+        xmlGueltigAb: datum,
+      });
+    }
+
+    function inceleNesne(obj, defaultDatum = null) {
+      if (!obj) return;
+      if (typeof obj === 'string') {
+        ekle(obj, null, defaultDatum);
+        return;
+      }
+      if (typeof obj !== 'object') return;
+      const c = obj.code || obj.hpnr;
+      const p = obj.xmlPreis ?? obj.neuPreis ?? obj.preis;
+      const d = obj.xmlGueltigAb ?? obj.gueltig_ab ?? defaultDatum;
+      if (c) {
+        ekle(c, p, d);
+      }
+    }
+
+    if (Array.isArray(nr.sprungCodes)) {
+      for (const sc of nr.sprungCodes) {
+        inceleNesne(sc, nr.xmlGueltigAb);
+      }
+    }
+
+    if (Array.isArray(nr.details)) {
+      for (const d of nr.details) {
+        if (!d) continue;
+        if (Array.isArray(d.sprungCodes)) {
+          for (const sc of d.sprungCodes) {
+            inceleNesne(sc, d.xmlGueltigAb || nr.xmlGueltigAb);
+          }
+        } else {
+          inceleNesne(d, nr.xmlGueltigAb);
+        }
+      }
+    } else if (nr.details && typeof nr.details === 'object') {
+      if (Array.isArray(nr.details.eintraege)) {
+        for (const e of nr.details.eintraege) {
+          inceleNesne(e, nr.xmlGueltigAb);
+        }
+      }
+      if (Array.isArray(nr.details.sprungCodes)) {
+        for (const sc of nr.details.sprungCodes) {
+          inceleNesne(sc, nr.xmlGueltigAb);
+        }
+      }
+      if (Array.isArray(nr.details.zusaetzlich)) {
+        for (const z of nr.details.zusaetzlich) {
+          inceleNesne(z, nr.xmlGueltigAb);
+        }
+      }
+      if (Array.isArray(nr.details.fehlend)) {
+        for (const f of nr.details.fehlend) {
+          inceleNesne(f, nr.xmlGueltigAb);
+        }
+      }
+    }
+
+    const siraliKodlar = Array.from(kodMap.values()).sort((a, b) => a.code.localeCompare(b.code));
+    maddeler.push([art, bereich, siraliKodlar]);
+  }
+
+  return iz(maddeler);
 }
 
 /**
@@ -442,6 +552,16 @@ export function bewerte({ bericht, karar, simdi = new Date() }) {
       const tr = ART_TR[art] || art;
       const grund = String(nr?.grund || '').slice(0, 120);
       hamSatirlar.push(`• ${tr}: ${grund}`);
+      // Sprung dışı bulgularda da kodu ve XML fiyatını göster (deterministik, bericht'ten) — 25.11.2026
+      if (art !== 'sprung') {
+        const liste = Array.isArray(nr?.details) ? nr.details : (Array.isArray(nr?.details?.eintraege) ? nr.details.eintraege : []);
+        for (const d of liste.slice(0, 6)) {
+          if (!d || typeof d.code !== 'string' || !/^[A-Z0-9]{4,6}$/.test(d.code)) continue;
+          const p = typeof d.xmlPreis === 'number' && isFinite(d.xmlPreis) ? `${d.xmlPreis.toFixed(2)} €` : '—';
+          const ab = typeof d.xmlGueltigAb === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d.xmlGueltigAb) ? ` · XML ab ${d.xmlGueltigAb}` : '';
+          hamSatirlar.push(`  ${d.code}: ${p}${ab}`);
+        }
+      }
     }
 
     // 2. her sıçrayan kod: <code>: <alt> → <neu> € (<+%x.y>) · XML ab <tarih>
@@ -508,10 +628,16 @@ export function bewerte({ bericht, karar, simdi = new Date() }) {
     }
 
     // ek
+    const vakaIz = preiseIz(bericht);
+    const erlaubeSprungVaka = cSaglandi && dSaglandi ? xmlKodlarList : [];
+    const uygulanabilir = erlaubeSprungVaka.length > 0;
+
     const ek = {
       stand: bericht.stand ?? null,
-      erlaubeSprung: cSaglandi && dSaglandi ? xmlKodlarList : [],
+      erlaubeSprung: erlaubeSprungVaka,
       artlar,
+      iz: vakaIz,
+      uygulanabilir,
     };
 
     if (isAuto) {
@@ -526,7 +652,7 @@ export function bewerte({ bericht, karar, simdi = new Date() }) {
 
     return {
       karar: 'vaka',
-      erlaubeSprung: [],
+      erlaubeSprung: erlaubeSprungVaka.length > 0 ? erlaubeSprungVaka : [],
       vaka: {
         bekci: 'preise',
         baslik,
@@ -554,6 +680,8 @@ export function bewerte({ bericht, karar, simdi = new Date() }) {
           stand: bericht?.stand ?? null,
           erlaubeSprung: [],
           artlar: ['fehler'],
+          iz: iz([ilkArt, []]),
+          uygulanabilir: false,
         },
       },
       gruende: [`Beklenmeyen hata: ${hataMesaj}`],
