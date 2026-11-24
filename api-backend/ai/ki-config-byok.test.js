@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createAiConfig, byokHostErlaubt, VERIFIED_AZURE_HOSTS } from './ki-config.js';
 
-const basis = { AI_MODE: 'direkt', AI_API_KEY: 'synthetisch-nicht-echt', AI_MODEL_TEXT: 'gpt-4o-mini', AI_API_VERSION: '2024-10-21' };
+const basis = { AI_MODE: 'direkt', AI_API_KEY: 'synthetisch-nicht-echt', AI_MODEL_TEXT: 'gpt-4o-mini', AI_API_VERSION: '2024-10-21', SUPABASE_PUBLIC_URL: 'https://box.example.invalid' };
 const eigen = 'https://praxis-muster.openai.azure.com';
 
 test('ohne Betreiber-Schalter: eigener Host abgelehnt, Praxura-Host weiter gültig', () => {
@@ -47,4 +47,16 @@ test('Umgehungsversuche bleiben gesperrt', () => {
   assert.equal(byokHostErlaubt('PRAXIS.cognitiveservices.azure.com'), true);
   assert.equal(byokHostErlaubt('a.b.openai.azure.com'), false);
   assert.equal(byokHostErlaubt(''), false);
+});
+
+test('nur Box: ohne Box-Marker (SaaS) bleibt der eigene Host gesperrt, auch mit Schalter', () => {
+  const saas = { ...basis }; delete saas.SUPABASE_PUBLIC_URL;
+  assert.equal(createAiConfig({ ...saas, AI_BYOK_ALLOWED: '1', AI_ENDPOINT: eigen, AI_REGION: 'swedencentral' }).code, 'AI_HOST_NOT_ALLOWED');
+});
+
+test('nur Datenklasse A: mit eigenem Host nie Freitext, Praxura-Host behält die Betreiber-Einstellung', () => {
+  const c = createAiConfig({ ...basis, AI_BYOK_ALLOWED: '1', AI_ALLOW_FREETEXT: '1', AI_ENDPOINT: eigen, AI_REGION: 'swedencentral' });
+  assert.equal(c.valid, true, c.code); assert.equal(c.allowFreeText, false);
+  const pr = createAiConfig({ ...basis, AI_ALLOW_FREETEXT: '1', AI_ENDPOINT: `https://${VERIFIED_AZURE_HOSTS[0]}` });
+  assert.equal(pr.allowFreeText, true);
 });

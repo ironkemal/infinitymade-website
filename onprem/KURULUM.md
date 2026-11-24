@@ -791,7 +791,9 @@ der Datenverarbeitung Ihrer Patientendaten einnimmt.
   `AI_MODE=direkt`, `AI_BYOK_ALLOWED=1`, `AI_ENDPOINT=https://<name>.openai.azure.com`
   (oder `…cognitiveservices.azure.com`), `AI_API_KEY`, `AI_MODEL_TEXT`, **`AI_REGION`**
   (Pflicht, eine EU-Region, z. B. `germanywestcentral` oder `swedencentral`).
-  Andere Adressen lehnt die Box ab. Danach in den Einstellungen unter
+  Andere Adressen lehnt die Box ab; Freitext bleibt mit eigenem Zugang immer gesperrt, auch wenn
+  `AI_ALLOW_FREETEXT` gesetzt ist. (Diese Einstellung wirkt nur auf der Box, nicht im Praxura-Rechenzentrum.)
+  Danach in den Einstellungen unter
   „KI-Unterstützung“ auf **„Verbindung testen“** klicken (sendet nur eine feste
   Prüfnachricht, keine Praxisdaten).
   **Pflichten der Praxis** (Praxura ist in diesem Fall nicht Vertragspartner):

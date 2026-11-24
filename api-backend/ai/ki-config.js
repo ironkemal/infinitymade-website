@@ -190,7 +190,7 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
   // Operator gating
   const activationReady = safeEnv.AI_ACTIVATION_READY === '1';
   const mailReady = safeEnv.AI_MAIL_READY === '1';
-  const allowFreeText = safeEnv.AI_ALLOW_FREETEXT === '1';
+  let allowFreeText = safeEnv.AI_ALLOW_FREETEXT === '1';
 
   // Provider
   let provider = 'azure';
@@ -438,12 +438,17 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
 
   // BYOK (Option D): eigener Host nur unter Betreiber-Schalter und nur im Modus direkt.
   let byokHost = null;
-  if (mode === 'direkt' && safeEnv.AI_BYOK_ALLOWED === '1') {
+  // Nur Box: zusätzlich an den Box-Marker gekoppelt (SUPABASE_PUBLIC_URL nur in der Box, lib/dagitim.js istKutu) —
+  // ein versehentlich auf dem SaaS-VPS gesetztes AI_BYOK_ALLOWED bleibt wirkungslos (Review Hauptsession 24.11.2026).
+  const istBox = !!String(safeEnv.SUPABASE_PUBLIC_URL || '').trim();
+  if (mode === 'direkt' && safeEnv.AI_BYOK_ALLOWED === '1' && istBox) {
     try {
       const h = new URL(String(endpoint)).hostname.toLowerCase();
       if (!normalizedHosts.some((x) => String(x).toLowerCase() === h) && byokHostErlaubt(h)) byokHost = h;
     } catch { /* ungültige URL prüft validateEndpointUrl */ }
   }
+  // Nur Datenklasse A (Konsey 24.11.2026): mit eigenem Host nie Freitext, egal was AI_ALLOW_FREETEXT sagt.
+  if (byokHost) allowFreeText = false;
   const endpointVal = validateEndpointUrl(endpoint, byokHost ? [...normalizedHosts, byokHost] : normalizedHosts);
   if (!endpointVal.ok) {
     return {
