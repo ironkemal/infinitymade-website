@@ -4,7 +4,7 @@ import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
 import { planungVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261121f11';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
-import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261123ka1'; import { mountSystemstatus } from './module/systemstatus.js?v=20261123f2'; import { kanalStatusBehandler } from './module/realtime-status.js?v=20261123rt1';
+import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261123ka1'; import { mountSystemstatus } from './module/systemstatus.js?v=20261124st1'; import { kanalStatusBehandler } from './module/realtime-status.js?v=20261123rt1';
 import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261123ka1';
 import { zeigeKiRueckfrageDialog } from './module/ki-rueckfrage.js?v=20261123ka1';
 import { dsgvoVerdrahten } from './module/dsgvo-client.js?v=20261002';
