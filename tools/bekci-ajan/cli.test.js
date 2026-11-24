@@ -630,3 +630,196 @@ test('25. parseArgs — komut ve bayrakları hem --key=val hem --key val ile ayr
   assert.equal(res2.flags.link, 'https://link.com');
 });
 
+// 26. bildirimMetni — bekci=quellen ile auto metni (:beta yok, quellen başlığı)
+test('26. bildirimMetni — bekci=quellen ile auto bildirim metni üretimi', () => {
+  const satirlar = [
+    '✓ gkv-anlage2: 1 yeni belge — ajan: bizi etkilemiyor (podoloji değil)',
+  ];
+  const res = bildirimMetni({
+    tur: 'auto',
+    satirlar,
+    bekci: 'quellen',
+  });
+
+  assert.equal(res.vakaMi, false);
+  const beklenen = [
+    '🤖 Kaynak bekçisi — şunları "biliniyor" işaretledim (ajan: bizi etkilemiyor)',
+    '✓ gkv-anlage2: 1 yeni belge — ajan: bizi etkilemiyor (podoloji değil)',
+  ].join('\n');
+
+  assert.equal(res.text, beklenen);
+  assert.ok(!res.text.includes(':beta'));
+});
+
+// 27. bildirimMetni — bekci=quellen ile uygulandi metni (:beta cümlesi yok)
+test('27. bildirimMetni — bekci=quellen ile uygulandi bildirim metni üretimi', () => {
+  const res1 = bildirimMetni({
+    tur: 'uygulandi',
+    vaka: { id: '20261124-quellen-1' },
+    bekci: 'quellen',
+  });
+
+  assert.equal(
+    res1.text,
+    '✅ #20261124-quellen-1: kaynak "biliniyor" işaretlendi, bekçi artık bunu hatırlatmayacak.'
+  );
+  assert.ok(!res1.text.includes(':beta'));
+
+  // vaka nesnesi bekci: 'quellen' taşıdığında da geçerli
+  const res2 = bildirimMetni({
+    tur: 'uygulandi',
+    vaka: { id: '20261124-quellen-2', bekci: 'quellen' },
+    link: 'https://github.com/runs/789',
+  });
+
+  const beklenen2 = [
+    '✅ #20261124-quellen-2: kaynak "biliniyor" işaretlendi, bekçi artık bunu hatırlatmayacak.',
+    'Çalışma: https://github.com/runs/789',
+  ].join('\n');
+  assert.equal(res2.text, beklenen2);
+});
+
+// 28. CLI alt süreç — vaka-ac-coklu çoklu vaka kaydeder ve idleri satır satır basar
+test('28. CLI alt süreç — vaka-ac-coklu çıktıyı kaydeder ve out-ids dosyasına yazar (exit 0)', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'vaka-ac-coklu-test-'));
+  const entscheidungDosya = path.join(tempDir, 'entscheidung.json');
+  const vakalarDizin = path.join(tempDir, 'vakalar');
+  const outIdsDosya = path.join(tempDir, 'out-ids.txt');
+
+  try {
+    const entscheidung = {
+      vakalar: [
+        {
+          bekci: 'quellen',
+          baslik: 'Kaynak 1',
+          satirlar: ['Satır 1'],
+          dosyalar: ['module/billing.js'],
+          oneri: 'İncele',
+          ek: { quelleId: 'q1', neu: ['a.pdf'], weg: [] },
+        },
+        {
+          bekci: 'quellen',
+          baslik: 'Kaynak 2',
+          satirlar: ['Satır 2'],
+          dosyalar: [],
+          oneri: 'İncele 2',
+          ek: { quelleId: 'q2', neu: ['b.pdf'], weg: ['c.pdf'] },
+        },
+      ],
+    };
+    await writeFile(entscheidungDosya, JSON.stringify(entscheidung), 'utf-8');
+
+    const out = execFileSync(
+      process.execPath,
+      [
+        cliPath,
+        'vaka-ac-coklu',
+        `--entscheidung=${entscheidungDosya}`,
+        `--dizin=${vakalarDizin}`,
+        `--out-ids=${outIdsDosya}`,
+      ],
+      { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+
+    const idler = out.trim().split(/\r?\n/).filter(Boolean);
+    assert.equal(idler.length, 2);
+    assert.ok(idler[0].includes('quellen-1'));
+    assert.ok(idler[1].includes('quellen-2'));
+
+    const idDosyaIcerik = (await readFile(outIdsDosya, 'utf-8')).trim().split(/\r?\n/).filter(Boolean);
+    assert.deepEqual(idDosyaIcerik, idler);
+
+    const vaka1 = JSON.parse(await readFile(path.join(vakalarDizin, `${idler[0]}.json`), 'utf-8'));
+    assert.equal(vaka1.baslik, 'Kaynak 1');
+    assert.equal(vaka1.ek.quelleId, 'q1');
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+// 29. CLI alt süreç — ek-yaz dosyaları yazar ve stdout'a quelleId basar
+test('29. CLI alt süreç — ek-yaz ek.neu ve ek.weg yazar ve quelleId basar (exit 0)', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'ek-yaz-test-'));
+  const vakalarDizin = path.join(tempDir, 'vakalar');
+  const neuDosya = path.join(tempDir, 'neu.txt');
+  const wegDosya = path.join(tempDir, 'weg.txt');
+
+  try {
+    const v = yeniVaka({
+      bekci: 'quellen',
+      baslik: 'Ek testi',
+      ek: {
+        quelleId: 'gkv-anlage2',
+        neu: ['https://www.gkv.de/neu1.pdf', 'https://www.gkv.de/neu2.pdf'],
+        weg: ['https://www.gkv.de/eski.pdf'],
+      },
+    });
+
+    const { kaydet } = await import('./vaka.mjs');
+    await kaydet(vakalarDizin, v);
+
+    const out = execFileSync(
+      process.execPath,
+      [
+        cliPath,
+        'ek-yaz',
+        `--dizin=${vakalarDizin}`,
+        `--id=${v.id}`,
+        `--neu-datei=${neuDosya}`,
+        `--weg-datei=${wegDosya}`,
+      ],
+      { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+
+    assert.equal(out.trim(), 'gkv-anlage2');
+
+    const neuIcerik = (await readFile(neuDosya, 'utf-8')).trim().split(/\r?\n/);
+    assert.deepEqual(neuIcerik, ['https://www.gkv.de/neu1.pdf', 'https://www.gkv.de/neu2.pdf']);
+
+    const wegIcerik = (await readFile(wegDosya, 'utf-8')).trim().split(/\r?\n/);
+    assert.deepEqual(wegIcerik, ['https://www.gkv.de/eski.pdf']);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+// 30. CLI alt süreç — ek-yaz vakanın eki yoksa exit 1 verir
+test('30. CLI alt süreç — ek-yaz ek bilgisi bulunamazsa exit 1 döner', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'ek-yaz-hata-'));
+  const vakalarDizin = path.join(tempDir, 'vakalar');
+  const neuDosya = path.join(tempDir, 'neu.txt');
+  const wegDosya = path.join(tempDir, 'weg.txt');
+
+  try {
+    const v = yeniVaka({
+      bekci: 'quellen',
+      baslik: 'Eksiz vaka',
+      ek: null,
+    });
+
+    const { kaydet } = await import('./vaka.mjs');
+    await kaydet(vakalarDizin, v);
+
+    assert.throws(
+      () => {
+        execFileSync(
+          process.execPath,
+          [
+            cliPath,
+            'ek-yaz',
+            `--dizin=${vakalarDizin}`,
+            `--id=${v.id}`,
+            `--neu-datei=${neuDosya}`,
+            `--weg-datei=${wegDosya}`,
+          ],
+          { stdio: 'pipe' }
+        );
+      },
+      err => err.status === 1
+    );
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+

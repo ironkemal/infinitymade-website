@@ -201,8 +201,9 @@ export function vakaDurumGuncelle(vaka, eylem, { sha = null, simdi = new Date() 
  * @param {string} [params.link] - İlgili GitHub run/işlem URL'si
  * @returns {{ text: string, knoepfe?: Array<Array<{ text: string, befehl: string }>>, vakaMi: boolean }}
  */
-export function bildirimMetni({ tur, satirlar, vaka, link } = {}) {
+export function bildirimMetni({ tur, satirlar, vaka, link, bekci } = {}) {
   const vakaId = typeof vaka === 'string' ? vaka : (vaka?.id || '');
+  const aktifBekci = bekci || (vaka && typeof vaka === 'object' && vaka.bekci) || 'preise';
 
   function linkMetni(l) {
     if (!l) return null;
@@ -212,7 +213,11 @@ export function bildirimMetni({ tur, satirlar, vaka, link } = {}) {
   }
 
   if (tur === 'auto') {
-    const parcalar = ['🤖 Fiyat bekçisi — otomatik uygulandı (çift dikiş tuttu)'];
+    const baslik =
+      aktifBekci === 'quellen'
+        ? '🤖 Kaynak bekçisi — şunları "biliniyor" işaretledim (ajan: bizi etkilemiyor)'
+        : '🤖 Fiyat bekçisi — otomatik uygulandı (çift dikiş tuttu)';
+    const parcalar = [baslik];
     if (Array.isArray(satirlar)) {
       for (const s of satirlar.slice(0, 15)) {
         const t = temizleKontrol(s);
@@ -222,7 +227,9 @@ export function bildirimMetni({ tur, satirlar, vaka, link } = {}) {
       const lines = satirlar.split(/\r?\n/).map(temizleKontrol).filter(Boolean).slice(0, 15);
       parcalar.push(...lines);
     }
-    parcalar.push(":beta'ya çıktı; :stable için elle promote bekliyor.");
+    if (aktifBekci !== 'quellen') {
+      parcalar.push(":beta'ya çıktı; :stable için elle promote bekliyor.");
+    }
     const lm = linkMetni(link);
     if (lm) {
       parcalar.push(lm);
@@ -249,7 +256,10 @@ export function bildirimMetni({ tur, satirlar, vaka, link } = {}) {
   }
 
   if (tur === 'uygulandi') {
-    const baslik = `✅ #${vakaId} uygulandı. :beta'ya çıktı; :stable için elle promote bekliyor.`;
+    const baslik =
+      aktifBekci === 'quellen'
+        ? `✅ #${vakaId}: kaynak "biliniyor" işaretlendi, bekçi artık bunu hatırlatmayacak.`
+        : `✅ #${vakaId} uygulandı. :beta'ya çıktı; :stable için elle promote bekliyor.`;
     const lm = linkMetni(link);
     const text = lm ? `${baslik}\n${lm}` : baslik;
     return { text, vakaMi: false };
@@ -533,6 +543,7 @@ export async function cli(rawArgs = process.argv.slice(2)) {
     const dizin = flags.dizin;
     const id = flags.id;
     const link = flags.link;
+    const bekci = flags.bekci || 'preise';
 
     if (!tur || !['auto', 'vaka', 'aciklama', 'hata', 'uygulandi', 'elle'].includes(tur)) {
       console.error('Eksik veya geçersiz --tur (auto|vaka|aciklama|hata|uygulandi|elle)');
@@ -585,7 +596,7 @@ export async function cli(rawArgs = process.argv.slice(2)) {
 
     let bildirim;
     try {
-      bildirim = bildirimMetni({ tur, satirlar, vaka, link });
+      bildirim = bildirimMetni({ tur, satirlar, vaka, link, bekci });
     } catch (err) {
       console.error(`Bildirim oluşturulamadı: ${err.message}`);
       process.exit(1);
@@ -644,6 +655,131 @@ export async function cli(rawArgs = process.argv.slice(2)) {
       } catch {}
     }
 
+    process.exit(0);
+  }
+
+  // 6. vaka-ac-coklu
+  if (komut === 'vaka-ac-coklu') {
+    const entscheidungFile = flags.entscheidung;
+    const dizin = flags.dizin;
+    const outIdsFile = flags['out-ids'];
+
+    if (!entscheidungFile || !dizin) {
+      console.error('Eksik parametre: --entscheidung ve --dizin zorunludur');
+      process.exit(2);
+    }
+
+    let entscheidung = null;
+    try {
+      const raw = readFileSync(entscheidungFile, 'utf-8');
+      entscheidung = JSON.parse(raw);
+    } catch {
+      console.error(`Entscheidung dosyası okunamadı veya JSON geçersiz: ${entscheidungFile}`);
+      process.exit(1);
+    }
+
+    let mevcutVakalar = [];
+    try {
+      mevcutVakalar = await listele(dizin);
+    } catch {
+      mevcutVakalar = [];
+    }
+    const mevcutIdler = mevcutVakalar.map(v => v.id);
+    const uretilenIdler = [];
+
+    const vakalar = Array.isArray(entscheidung?.vakalar) ? entscheidung.vakalar : [];
+    for (const v of vakalar) {
+      let yeniVakaObj;
+      try {
+        yeniVakaObj = yeniVaka({
+          bekci: v.bekci || 'quellen',
+          baslik: v.baslik,
+          satirlar: v.satirlar,
+          dosyalar: v.dosyalar,
+          oneri: v.oneri,
+          ek: v.ek,
+          mevcutIdler,
+        });
+      } catch (err) {
+        console.error(`Vaka hazırlanamadı: ${err.message}`);
+        process.exit(1);
+      }
+
+      try {
+        await kaydet(dizin, yeniVakaObj);
+      } catch (err) {
+        console.error(`Vaka kaydedilemedi: ${err.message}`);
+        process.exit(1);
+      }
+
+      mevcutIdler.push(yeniVakaObj.id);
+      uretilenIdler.push(yeniVakaObj.id);
+      console.log(yeniVakaObj.id);
+    }
+
+    if (outIdsFile) {
+      try {
+        const icerik = uretilenIdler.length > 0 ? uretilenIdler.join('\n') + '\n' : '';
+        writeFileSync(outIdsFile, icerik, 'utf-8');
+      } catch {
+        console.error(`Vaka ID çıktısı yazılamadı: ${outIdsFile}`);
+        process.exit(1);
+      }
+    }
+
+    process.exit(0);
+  }
+
+  // 7. ek-yaz
+  if (komut === 'ek-yaz') {
+    const dizin = flags.dizin;
+    const id = flags.id;
+    const neuDatei = flags['neu-datei'];
+    const wegDatei = flags['weg-datei'];
+
+    if (!dizin || !id || !neuDatei || !wegDatei) {
+      console.error('Eksik parametre: --dizin, --id, --neu-datei ve --weg-datei zorunludur');
+      process.exit(2);
+    }
+
+    let vaka;
+    try {
+      vaka = await yukle(dizin, id);
+    } catch {
+      console.error(`Vaka bulunamadı: ${id}`);
+      process.exit(1);
+    }
+
+    if (!vaka || !vaka.ek || typeof vaka.ek !== 'object') {
+      console.error('Vaka eki bulunamadı');
+      process.exit(1);
+    }
+
+    const neuList = Array.isArray(vaka.ek.neu) ? vaka.ek.neu : [];
+    const neuMetin = neuList.length > 0 ? neuList.join('\n') + '\n' : '';
+    try {
+      writeFileSync(neuDatei, neuMetin, 'utf-8');
+    } catch {
+      console.error(`neu-datei yazılamadı: ${neuDatei}`);
+      process.exit(1);
+    }
+
+    const wegList = Array.isArray(vaka.ek.weg) ? vaka.ek.weg : [];
+    const wegMetin = wegList.length > 0 ? wegList.join('\n') + '\n' : '';
+    try {
+      writeFileSync(wegDatei, wegMetin, 'utf-8');
+    } catch {
+      console.error(`weg-datei yazılamadı: ${wegDatei}`);
+      process.exit(1);
+    }
+
+    const quelleId = vaka.ek.quelleId;
+    if (!quelleId) {
+      console.error('ek.quelleId bulunamadı');
+      process.exit(1);
+    }
+
+    console.log(quelleId);
     process.exit(0);
   }
 

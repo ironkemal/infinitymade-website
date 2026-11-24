@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-24",
- "dateien": 729,
- "funktionen": 5506,
+ "dateien": 731,
+ "funktionen": 5518,
  "module": [
   "abrechnung",
   "anamnese",
@@ -3161,6 +3161,7 @@
     "horizonDays",
     "hydrateTenantLinks",
     "indeksleriKur",
+    "kararGecerliMi",
     "kiJeton",
     "kopfNachziehen",
     "kostentraegerFrischAbleiten",
@@ -4304,6 +4305,7 @@
     "horizonDays",
     "hydrateTenantLinks",
     "indeksleriKur",
+    "kararGecerliMi",
     "kiJeton",
     "kopfNachziehen",
     "kostentraegerFrischAbleiten",
@@ -10170,10 +10172,12 @@
     "huelle",
     "hydrateTenantLinks",
     "indeksleriKur",
+    "indir",
     "init",
     "invalidateTenantJeton",
     "istAktuell",
     "istForderungsBeleg",
+    "kararGecerliMi",
     "kennungAusSuche",
     "kiJeton",
     "kostentraegerEndzieleAufloesen",
@@ -41525,6 +41529,7 @@
     "calistirCagirdiklari",
     "calistirFonksiyonBul",
     "chat",
+    "cli",
     "codesAusVerordnung",
     "computeRxDeadlineAlerts",
     "createBookingsFromRequestFactory",
@@ -41634,6 +41639,7 @@
     "importiere",
     "inLeiste",
     "indeksleriKur",
+    "indir",
     "initBkGroupPatientAutocomplete",
     "insertBooking",
     "instantTag",
@@ -42669,10 +42675,12 @@
     "huelle",
     "hydrateTenantLinks",
     "indeksleriKur",
+    "indir",
     "init",
     "invalidateTenantJeton",
     "istAktuell",
     "istForderungsBeleg",
+    "kararGecerliMi",
     "kennungAusSuche",
     "kiJeton",
     "kostentraegerEndzieleAufloesen",
@@ -90201,6 +90209,7 @@
     "horizonDays",
     "hydrateTenantLinks",
     "indeksleriKur",
+    "kararGecerliMi",
     "kiJeton",
     "kopfNachziehen",
     "kostentraegerFrischAbleiten",
@@ -108227,10 +108236,12 @@
     "huelle",
     "hydrateTenantLinks",
     "indeksleriKur",
+    "indir",
     "init",
     "invalidateTenantJeton",
     "istAktuell",
     "istForderungsBeleg",
+    "kararGecerliMi",
     "kennungAusSuche",
     "kiJeton",
     "kostentraegerEndzieleAufloesen",
@@ -141216,10 +141227,12 @@
     "huelle",
     "hydrateTenantLinks",
     "indeksleriKur",
+    "indir",
     "init",
     "invalidateTenantJeton",
     "istAktuell",
     "istForderungsBeleg",
+    "kararGecerliMi",
     "kennungAusSuche",
     "kiJeton",
     "kostentraegerEndzieleAufloesen",
@@ -152988,6 +153001,7 @@
     "handleTerminStarten",
     "hashCode",
     "hashRequest",
+    "indir",
     "initAnfragenPanel",
     "initWlModal",
     "jwt",
@@ -180026,6 +180040,7 @@
     "handleTerminStarten",
     "hashCode",
     "hashRequest",
+    "indir",
     "initAnfragenPanel",
     "initWlModal",
     "jwt",
@@ -228753,6 +228768,7 @@
     "horizonDays",
     "hydrateTenantLinks",
     "indeksleriKur",
+    "kararGecerliMi",
     "kiJeton",
     "kopfNachziehen",
     "kostentraegerFrischAbleiten",
@@ -307114,8 +307130,10 @@
     "(datei) sosyal/erzeuge.mjs",
     "(datei) sosyal/yayinci/log-aktualisieren.mjs",
     "(datei) sosyal/yayinci/yayinci.mjs",
+    "(datei) tools/bekci-ajan/belge-indir.mjs",
     "(datei) tools/bekci-ajan/cevap-isle.mjs",
     "(datei) tools/bekci-ajan/preise-bewerten.mjs",
+    "(datei) tools/bekci-ajan/quellen-bewerten.mjs",
     "(datei) tools/box-abnahme-mail/abnahme.mjs",
     "(datei) tools/box-abnahme-mail/smtp-sink.mjs",
     "(datei) tools/browser-probe/dashboard-ops-fixture.js",
@@ -312716,6 +312734,166 @@
    ]
   },
   {
+   "name": "defaultPdfToText",
+   "kind": "function",
+   "lang": "js",
+   "file": "tools/bekci-ajan/belge-indir.mjs",
+   "start": 19,
+   "end": 26,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "htmlToText",
+   "kind": "function",
+   "lang": "js",
+   "file": "tools/bekci-ajan/belge-indir.mjs",
+   "start": 33,
+   "end": 48,
+   "lines": 16,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [
+    "indir"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "tespitEtTur",
+   "kind": "function",
+   "lang": "js",
+   "file": "tools/bekci-ajan/belge-indir.mjs",
+   "start": 56,
+   "end": 81,
+   "lines": 26,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [
+    "indir"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "normalizeLink",
+   "kind": "function",
+   "lang": "js",
+   "file": "tools/bekci-ajan/belge-indir.mjs",
+   "start": 88,
+   "end": 95,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [
+    "indir"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "indir",
+   "kind": "function",
+   "lang": "js",
+   "file": "tools/bekci-ajan/belge-indir.mjs",
+   "start": 111,
+   "end": 398,
+   "lines": 288,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "get",
+    "hostErlaubt",
+    "htmlToText",
+    "normalizeLink",
+    "push",
+    "tespitEtTur",
+    "update"
+   ],
+   "calledBy": [
+    "cliCalistir"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "cliCalistir",
+   "kind": "function",
+   "lang": "js",
+   "file": "tools/bekci-ajan/belge-indir.mjs",
+   "start": 403,
+   "end": 441,
+   "lines": 39,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "indir"
+   ],
+   "calledBy": [
+    "(datei) tools/bekci-ajan/belge-indir.mjs",
+    "(datei) tools/bekci-ajan/preise-bewerten.mjs",
+    "(datei) tools/bekci-ajan/quellen-bewerten.mjs"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "isle",
    "kind": "function",
    "lang": "js",
@@ -312981,8 +313159,8 @@
    "lang": "js",
    "file": "tools/bekci-ajan/cli.mjs",
    "start": 204,
-   "end": 274,
-   "lines": 71,
+   "end": 284,
+   "lines": 81,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -313010,8 +313188,8 @@
    "kind": "function",
    "lang": "js",
    "file": "tools/bekci-ajan/cli.mjs",
-   "start": 207,
-   "end": 212,
+   "start": 208,
+   "end": 213,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -313037,8 +313215,8 @@
    "kind": "function",
    "lang": "js",
    "file": "tools/bekci-ajan/cli.mjs",
-   "start": 282,
-   "end": 302,
+   "start": 292,
+   "end": 312,
    "lines": 21,
    "spiegelHinweis": null,
    "tables": [],
@@ -313062,8 +313240,8 @@
    "kind": "function",
    "lang": "js",
    "file": "tools/bekci-ajan/cli.mjs",
-   "start": 307,
-   "end": 332,
+   "start": 317,
+   "end": 342,
    "lines": 26,
    "spiegelHinweis": null,
    "tables": [],
@@ -313129,9 +313307,9 @@
    "kind": "function",
    "lang": "js",
    "file": "tools/bekci-ajan/cli.mjs",
-   "start": 342,
-   "end": 652,
-   "lines": 311,
+   "start": 352,
+   "end": 788,
+   "lines": 437,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -313151,9 +313329,11 @@
     "log",
     "parseArgs",
     "parseDiff",
+    "push",
     "vakaDurumGuncelle",
     "vakaHazirla",
     "yamaKontrol",
+    "yeniVaka",
     "yukle"
    ],
    "calledBy": [
@@ -313169,8 +313349,8 @@
    "kind": "function",
    "lang": "js",
    "file": "tools/bekci-ajan/cli.mjs",
-   "start": 655,
-   "end": 664,
+   "start": 791,
+   "end": 800,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -313786,7 +313966,180 @@
     "log"
    ],
    "calledBy": [
-    "(datei) tools/bekci-ajan/preise-bewerten.mjs"
+    "(datei) tools/bekci-ajan/belge-indir.mjs",
+    "(datei) tools/bekci-ajan/preise-bewerten.mjs",
+    "(datei) tools/bekci-ajan/quellen-bewerten.mjs"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "gecerliTarihMi",
+   "kind": "function",
+   "lang": "js",
+   "file": "tools/bekci-ajan/quellen-bewerten.mjs",
+   "start": 33,
+   "end": 38,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [
+    "kararGecerliMi"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "urlEslesiyorMu",
+   "kind": "function",
+   "lang": "js",
+   "file": "tools/bekci-ajan/quellen-bewerten.mjs",
+   "start": 46,
+   "end": 51,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [
+    "bewerte",
+    "kararGecerliMi"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "urlSonParca",
+   "kind": "function",
+   "lang": "js",
+   "file": "tools/bekci-ajan/quellen-bewerten.mjs",
+   "start": 58,
+   "end": 69,
+   "lines": 12,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [
+    "bewerte"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "kararGecerliMi",
+   "kind": "function",
+   "lang": "js",
+   "file": "tools/bekci-ajan/quellen-bewerten.mjs",
+   "start": 78,
+   "end": 231,
+   "lines": 154,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "call",
+    "gecerliTarihMi",
+    "get",
+    "has",
+    "push",
+    "set",
+    "urlEslesiyorMu"
+   ],
+   "calledBy": [
+    "bewerte"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "bewerte",
+   "kind": "function",
+   "lang": "js",
+   "file": "tools/bekci-ajan/quellen-bewerten.mjs",
+   "start": 254,
+   "end": 476,
+   "lines": 223,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "add",
+    "find",
+    "kararGecerliMi",
+    "push",
+    "urlEslesiyorMu",
+    "urlSonParca"
+   ],
+   "calledBy": [
+    "cliCalistir"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "cliCalistir",
+   "kind": "function",
+   "lang": "js",
+   "file": "tools/bekci-ajan/quellen-bewerten.mjs",
+   "start": 481,
+   "end": 554,
+   "lines": 74,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "bewerte",
+    "log"
+   ],
+   "calledBy": [
+    "(datei) tools/bekci-ajan/belge-indir.mjs",
+    "(datei) tools/bekci-ajan/preise-bewerten.mjs",
+    "(datei) tools/bekci-ajan/quellen-bewerten.mjs"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -313840,6 +314193,7 @@
     "call"
    ],
    "calledBy": [
+    "cli",
     "vakaHazirla"
    ],
    "modules": [],
@@ -332729,6 +333083,7 @@
    ],
    "calledBy": [
     "holeSeite",
+    "indir",
     "lauf"
    ],
    "modules": [
@@ -334056,6 +334411,7 @@
     "(datei) ops/config.js",
     "(datei) ops/tools/ingest.mjs",
     "(datei) ops/vendor/supabase-js.js",
+    "(datei) tools/bekci-ajan/belge-indir.mjs",
     "(datei) tools/bekci-ajan/dogrula.mjs",
     "(datei) tools/browser-probe/raum-automatik-probe.mjs",
     "(datei) tools/browser-probe/v205-leiste.mjs",
@@ -351342,6 +351698,15 @@
    "aynalar": []
   },
   {
+   "name": "cliCalistir",
+   "orte": [
+    "tools/bekci-ajan/belge-indir.mjs:403",
+    "tools/bekci-ajan/preise-bewerten.mjs:565",
+    "tools/bekci-ajan/quellen-bewerten.mjs:481"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "datumDE",
    "orte": [
     "api-backend/lib/rechnung-pdf.js:124",
@@ -351524,7 +351889,7 @@
   {
    "name": "parseArgs",
    "orte": [
-    "tools/bekci-ajan/cli.mjs:307",
+    "tools/bekci-ajan/cli.mjs:317",
     "tools/empfaenger-zertifikat-laden.mjs:42",
     "tools/itsg-trust-anchor-laden.mjs:28"
    ],
@@ -351856,6 +352221,14 @@
    "aynalar": []
   },
   {
+   "name": "bewerte",
+   "orte": [
+    "tools/bekci-ajan/preise-bewerten.mjs:243",
+    "tools/bekci-ajan/quellen-bewerten.mjs:254"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "bgFehltFuerRechnung",
    "orte": [
     "api-backend/lib/rezept-felder.js:347",
@@ -351933,7 +352306,7 @@
    "name": "cli",
    "orte": [
     "tools/bekci-ajan/cevap-isle.mjs:221",
-    "tools/bekci-ajan/cli.mjs:342"
+    "tools/bekci-ajan/cli.mjs:352"
    ],
    "aynalar": []
   },
@@ -352271,6 +352644,14 @@
    "aynalar": []
   },
   {
+   "name": "gecerliTarihMi",
+   "orte": [
+    "tools/bekci-ajan/preise-bewerten.mjs:64",
+    "tools/bekci-ajan/quellen-bewerten.mjs:33"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "geldHtml",
    "orte": [
     "module/abrechnung-detail.js:293",
@@ -352475,6 +352856,14 @@
    "orte": [
     "onprem/backup.sh:447",
     "onprem/restore.sh:286"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "kararGecerliMi",
+   "orte": [
+    "tools/bekci-ajan/preise-bewerten.mjs:76",
+    "tools/bekci-ajan/quellen-bewerten.mjs:78"
    ],
    "aynalar": []
   },
