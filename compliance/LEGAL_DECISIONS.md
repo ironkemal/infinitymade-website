@@ -914,3 +914,6 @@ bestehende Mitarbeiter behalten den Zugriff durch die Freigabe aus Migration 012
 ## 2026-11-17 · Termin-Seiten: Standortanschrift als Ersatz (fa68d746)
 
 ok mit Auflage (legal-de): Name, Anschrift und Inhaber aus einem Datensatz (erfüllt: `ladePraxisAngabenMitStandort` übernimmt den ganzen Standort-Datensatz, module/termin-rechtstexte.js); nur Standorte derselben Rechtsperson — Standort mit anderem Träger (z. B. GmbH statt Einzelpraxis) braucht ein getrenntes Konto. Grundlage Art. 13 Abs. 1 lit. a DSGVO, § 5 Abs. 1 Nr. 1 DDG. Kosten 0 €.
+
+## 2026-11-24 — KI-Stufe 2: eigener Azure-Zugang nur als Box-Admin-Konfiguration (Konsey)
+Box → Anbieter direkt, Praxura ohne Rolle (wie „BYO-Key Box → Anbieter direkt“). Nur `.env` (`AI_BYOK_ALLOWED=1`, `AI_MODE=direkt`), nur Azure EU, Region durch die Praxis bestätigt, nur Datenklasse A, kein Schlüssel an Praxura/Diagnosepaket (K10), kein Relay (K6). Pflichten der Praxis: Vertrag + DPA mit Microsoft, C5 (§ 393 SGB V), Verpflichtung § 203 Abs. 3 StGB, VVT/DSFA; Kennzeichnung nach Art. 50 AI Act bleibt. SaaS-BYOK bleibt Veto. „Lokales Modell zuerst“ zurückgenommen (Hardware-Fakten Konsey 12.09.2026). Tutanak: konsey/tutanak/2026-11-24-ki-stufe2-byok.md
