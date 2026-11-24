@@ -743,7 +743,8 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
 - **Ne:** BfArM tarafından yayımlanan "ICD-10-GM Version 2026 Systematisches Verzeichnis Metadaten TXT (CSV)" paketinin LIESMICH (beni oku) açıklama dosyasıdır.
 - **Kapsam:** `icd10gm2026syst-meta.zip` paket içeriği, PDF referans sürümü uyarıları, ilişkisel veritabanı yapısı, yaş/cinsiyet denetimleri, § 295 ve § 301 kodlama kuralları ile TXT dosyalarının alan tanımları (Datensatzbeschreibung) ve SQL tablo oluşturma komutlarını içerir.
 - **Sürüm / Stand:** Stand der Klassifikation: 12.09.2025 (ICD-10-GM Version 2026)
-- **Geçerlilik (in Kraft):** belgede bulunamadı
+- **Geçerlilik (in Kraft):** belgede bulunamadı · BfArM: 01.01.2026'dan beri; **ICD-10-GM 2027 yayımlanmayacak** (üç yıllık döngü, 2026 sürümü *voraussichtlich bis Ende 2028*) — kaynak ve kontrol tarihleri REGISTER §1 / Z-08 (24.11.2026)
+- **Bilinen hata:** Corrigenda 28.01.2026 — `kodes.txt` Feld 22/23 `j017` aslında `j018` (U10.90, U10.91, E66.05/15/25/85/95); dosya düzeltilmedi, REGISTER Z-08
 - **Ne zaman lazım:** Tıbbi yazılım geliştiricileri ve veri analistleri ICD-10-GM 2026 tanı kütüklerini veritabanına aktarırken ve doğrulama mantıklarını kurarken kullanılır.
 - **Anahtar bölümler:**
   - INHALT DES ZIP-FILES icd10gm2026syst-meta.zip
