@@ -133,9 +133,27 @@ export async function abwesenheitFreigeben({ supabase, ownerId, empId, von, bis,
       .eq('owner_id', ownerId).eq('user_id', empId).in('status', ['confirmed','pending']).is('group_parent_id', null)
       .lt('start_time', ende.bisExklusiv).gt('end_time', start.von);
     if (error || count == null) throw new Error();
-    return !count || await showConfirmModal({ title: 'Geplante Termine im Zeitraum',
-      message: count + (count === 1 ? ' Termin überschneidet sich' : ' Termine überschneiden sich') + ' mit der Abwesenheit. Bitte die betroffenen Termine umplanen.',
-      confirmText: 'Abwesenheit eintragen', cancelText: 'Zeitraum ändern', variant: 'warning' });
+    if (!count) return true;
+    const bestaetigt = await showConfirmModal({
+      title: 'Geplante Termine im Zeitraum',
+      message: count + (count === 1 ? ' Termin überschneidet sich' : ' Termine überschneiden sich')
+        + ' mit der Abwesenheit. Nach dem Speichern öffnet sich der Umplanungs-Assistent für Vertretung & Anrufliste.',
+      confirmText: 'Abwesenheit eintragen & Termine planen',
+      cancelText: 'Zeitraum ändern',
+      variant: 'warning',
+    });
+    if (bestaetigt && typeof document !== 'undefined') {
+      // Kurz nach dem Rückgabewert öffnen, damit der Aufrufer den time_offs-Eintrag
+      // zuerst speichert und sein Eingabe-Modal sauber schließt (kein dashboard.js-Wachstum).
+      setTimeout(() => {
+        import('./abwesenheit-termine.js?v=20261124c1')
+          .then(({ oeffneAbwesenheitAssistent }) => oeffneAbwesenheitAssistent({
+            supabase, ownerId, empId, von, bis, showToast, showConfirmModal,
+          }))
+          .catch(() => {});
+      }, 220);
+    }
+    return !!bestaetigt;
   } catch {
     showToast('Termine konnten nicht geprüft werden. Bitte erneut versuchen.', 'error');
     return false;
