@@ -69,23 +69,54 @@ function zeitUeberschneidet(startA, endA, startB, endB) {
   return a0 < effB1 && effA1 > b0;
 }
 
+const WOCHENTAG_INDEX = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+
+function berlinWochentagUndMinuten(startIso, endIso) {
+  const s = new Date(startIso);
+  if (Number.isNaN(s.getTime())) return null;
+  const eRaw = endIso ? new Date(endIso) : null;
+  const e = eRaw && !Number.isNaN(eRaw.getTime()) && eRaw.getTime() > s.getTime()
+    ? eRaw
+    : new Date(s.getTime() + 30 * 60000);
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Berlin',
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  });
+  const teile = (d) => Object.fromEntries(fmt.formatToParts(d).map(p => [p.type, p.value]));
+  const pS = teile(s);
+  const pE = teile(e);
+  const tag = WOCHENTAG_INDEX[/** @type {keyof typeof WOCHENTAG_INDEX} */ (pS.weekday)];
+  if (tag === undefined) return null;
+  const vonMin = Number(pS.hour) * 60 + Number(pS.minute);
+  const bisMin = Number(pE.hour) * 60 + Number(pE.minute);
+  return { tag, vonMin, bisMin: bisMin > vonMin ? bisMin : vonMin + 30 };
+}
+
+function hhmmZuMinuten(wert) {
+  const m = /^(\d{1,2}):(\d{2})/.exec(String(wert || '').trim());
+  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+}
+
 /**
  * Ermittelt alle wirklich freien Kollegen für einen betroffenen Termin (rein, unit-testbar).
  *
  * Kriterien:
  *  - nicht der abwesende Mitarbeiter selbst
  *  - am Tag des Termins nicht selbst abwesend (`istAbwesend`)
+ *  - wenn `workingHours` für den Kollegen gepflegt sind: der Termin liegt innerhalb
+ *    seiner aktiven Dienstzeit am jeweiligen Berliner Wochentag (schützt vor
+ *    Vorschlägen an Teilzeit-Tagen oder nach Feierabend!)
  *  - keine Überschneidung mit einem anderen aktiven Termin (`status !== 'cancelled'`)
- *  - Leistungs-Abgleich über `employee_services`: wenn für das Team überhaupt
- *    Leistungszuordnungen gepflegt sind und der Termin eine `service_id` hat,
- *    stehen passende Kollegen zuerst (und unpassende werden ausgefiltert, sobald
- *    mindestens ein Kollege die Leistung gepflegt hat; kleine Praxen ohne
- *    `employee_services` erhalten alle freien Kollegen).
+ *  - Leistungs-Abgleich über `employee_services`
  *
  * @param {object} p
  * @param {{ start_time: string, end_time?: string|null, service_id?: string|null }} p.termin
  * @param {Array<{ id: string, name: string }>} p.team
  * @param {Array<{ employee_id: string, service_id: string }>} [p.employeeServices]
+ * @param {Array<{ user_id: string, day_of_week: number, start_time: string, end_time: string, is_active?: boolean|null }>} [p.workingHours]
  * @param {Array<{ id?: string, user_id: string, start_time: string, end_time?: string|null, status?: string|null }>} [p.alleTermine]
  * @param {Array<{ employee_id: string, start_date: string, end_date: string }>} [p.abwesenheiten]
  * @param {string} p.abwesenderId
@@ -95,12 +126,15 @@ export function findeFreieVertreter({
   termin,
   team = [],
   employeeServices = [],
+  workingHours = [],
   alleTermine = [],
   abwesenheiten = [],
   abwesenderId,
 }) {
   if (!termin?.start_time) return [];
   const tagIso = alsBerlinDatum(termin.start_time);
+  const terminSlot = berlinWochentagUndMinuten(termin.start_time, termin.end_time);
+
   const serviceMap = new Map();
   for (const es of employeeServices || []) {
     if (!es?.employee_id || !es?.service_id) continue;
@@ -110,10 +144,33 @@ export function findeFreieVertreter({
   }
   const hatServicePflege = serviceMap.size > 0 && !!termin.service_id;
 
+  /** @type {Map<string, Array<{ day_of_week: number, start_time: string, end_time: string, is_active?: boolean|null }>>} */
+  const whMap = new Map();
+  for (const w of workingHours || []) {
+    if (!w?.user_id) continue;
+    let arr = whMap.get(w.user_id);
+    if (!arr) { arr = []; whMap.set(w.user_id, arr); }
+    arr.push(w);
+  }
+
   const kandidaten = [];
   for (const m of team || []) {
     if (!m?.id || String(m.id) === String(abwesenderId)) continue;
     if (tagIso && istAbwesend(abwesenheiten, m.id, tagIso)) continue;
+
+    // Arbeitszeit prüfen, sofern für diesen Kollegen Dienstzeiten hinterlegt sind.
+    const eigeneWh = whMap.get(m.id);
+    if (eigeneWh?.length && terminSlot) {
+      const imDienst = eigeneWh.some((w) => {
+        if (w.is_active === false) return false;
+        if (Number(w.day_of_week) !== terminSlot.tag) return false;
+        const wVon = hhmmZuMinuten(w.start_time);
+        const wBis = hhmmZuMinuten(w.end_time);
+        return wVon !== null && wBis !== null && wVon <= terminSlot.vonMin && wBis >= terminSlot.bisMin;
+      });
+      if (!imDienst) continue;
+    }
+
     const belegt = (alleTermine || []).some((b) =>
       b
       && String(b.user_id) === String(m.id)
@@ -235,7 +292,7 @@ export async function oeffneAbwesenheitAssistent({
   const ende = berlinTagesgrenzen(bis);
   if (!start || !ende) return;
 
-  const [betrRes, alleRes, teamRes, svcRes, abwListe] = await Promise.all([
+  const [betrRes, alleRes, teamRes] = await Promise.all([
     supabase
       .from('bookings')
       .select('id, user_id, service_id, start_time, end_time, status, customer_name, customer_phone, leads!lead_id(first_name, last_name, phone, handy), services(title)')
@@ -259,10 +316,6 @@ export async function oeffneAbwesenheitAssistent({
       .from('profiles')
       .select('id, business_name, email, is_active')
       .or(`id.eq.${ownerId},owner_id.eq.${ownerId}`),
-    supabase
-      .from('employee_services')
-      .select('employee_id, service_id'),
-    ladeAbwesenheiten(supabase, { empIds: [], vonISO: start.von, bisISO: ende.bisExklusiv }).catch(() => []),
   ]);
 
   if (betrRes.error) {
@@ -275,13 +328,19 @@ export async function oeffneAbwesenheitAssistent({
   const team = (Array.isArray(teamRes.data) ? teamRes.data : [])
     .filter(p => p && p.is_active !== false)
     .map(p => ({ id: p.id, name: String(p.business_name || p.email || 'Kolleg:in').trim() }));
+  const teamIds = team.map(m => m.id);
 
-  const alleAbwesenheiten = team.length
-    ? await ladeAbwesenheiten(supabase, { empIds: team.map(m => m.id), vonISO: start.von, bisISO: ende.bisExklusiv }).catch(() => abwListe)
-    : [];
+  const [svcRes, whRes, alleAbwesenheiten] = teamIds.length
+    ? await Promise.all([
+        supabase.from('employee_services').select('employee_id, service_id').in('employee_id', teamIds),
+        supabase.from('working_hours').select('user_id, day_of_week, start_time, end_time, is_active').in('user_id', teamIds),
+        ladeAbwesenheiten(supabase, { empIds: teamIds, vonISO: start.von, bisISO: ende.bisExklusiv }).catch(() => []),
+      ])
+    : [{ data: [] }, { data: [] }, []];
 
   const alleTermine = Array.isArray(alleRes.data) ? [...alleRes.data] : [];
   const empServices = Array.isArray(svcRes.data) ? svcRes.data : [];
+  const workingHours = Array.isArray(whRes.data) ? whRes.data : [];
   const therapeutName = team.find(m => String(m.id) === String(empId))?.name || '';
 
   const eintraege = betroffene.map((b) => {
@@ -331,6 +390,7 @@ export async function oeffneAbwesenheitAssistent({
         termin: e,
         team,
         employeeServices: empServices,
+        workingHours,
         alleTermine,
         abwesenheiten: alleAbwesenheiten,
         abwesenderId: empId,

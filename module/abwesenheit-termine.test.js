@@ -81,6 +81,28 @@ test('erstelleAnruflisteHtml: datensparsam, maskiert XSS und nennt niemals Krank
   assert.match(html, /keine Gesundheitsdaten von Mitarbeitenden nennen/);
 });
 
+test('findeFreieVertreter: Teilzeit / freier Tag / außerhalb Arbeitszeit werden ausgeschlossen', () => {
+  // 2026-11-24 ist ein Dienstag (day_of_week = 2), 09:00–09:30 Berlin
+  const ergebnis = findeFreieVertreter({
+    termin: TERMIN,
+    team: [
+      { id: 'u-krank', name: 'Anna Ausfall' },
+      { id: 'u-dienst', name: 'Ben ImDienst' },
+      { id: 'u-spaet', name: 'Clara Nachmittags' },
+      { id: 'u-frei-tag', name: 'Dora DienstagsFrei' },
+      { id: 'u-ohne-wh', name: 'Emil OhneDienstplan' },
+    ],
+    workingHours: [
+      { user_id: 'u-dienst', day_of_week: 2, start_time: '08:00:00', end_time: '14:00:00', is_active: true },
+      { user_id: 'u-spaet', day_of_week: 2, start_time: '13:00:00', end_time: '18:00:00', is_active: true },
+      { user_id: 'u-frei-tag', day_of_week: 1, start_time: '08:00:00', end_time: '16:00:00', is_active: true },
+      { user_id: 'u-frei-tag', day_of_week: 2, start_time: '08:00:00', end_time: '16:00:00', is_active: false },
+    ],
+    abwesenderId: 'u-krank',
+  });
+  assert.deepEqual(ergebnis.map(x => x.id), ['u-dienst', 'u-ohne-wh']);
+});
+
 test('abwesenheit-termine.js: keine Emojis (Handwerk-Regel 4)', () => {
   const src = fs.readFileSync(new URL('./abwesenheit-termine.js', import.meta.url), 'utf8');
   assert.equal(/\p{Extended_Pictographic}/u.test(src), false);

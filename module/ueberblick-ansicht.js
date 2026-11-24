@@ -1269,28 +1269,68 @@ function verdrahteEinmal() {
 async function ladeVerknuepfteVerordnungsdaten(supabase, ownerId, rxIds) {
   const termine = [];
   const sitzungen = [];
-  const CHUNK = 100;
+  /** @type {Map<string, string[]>} */
+  const rxJeBookingId = new Map();
+  const gesehenDirekt = new Set();
+  const CHUNK = 50;
   for (let i = 0; i < rxIds.length; i += CHUNK) {
     const teil = rxIds.slice(i, i + CHUNK);
     const [bRes, sRes] = await Promise.allSettled([
+      // Podologie (+ direkt verknüpfte Termine): bookings.verordnung_id
       supabase
         .from('bookings')
-        .select('verordnung_id, start_time, status, group_parent_id')
+        .select('id, verordnung_id, start_time, status, group_parent_id')
         .eq('owner_id', ownerId)
         .in('verordnung_id', teil)
         .neq('status', 'cancelled')
         .is('group_parent_id', null)
         .limit(1000),
+      // Physio/Ergo/Logo: ALLE Sitzungen (done + planned mit booking_id), damit geplante
+      // Zukunftstermine korrekt erkannt werden und keine Falschalarme „Ohne Folgetermin“ entstehen.
       supabase
         .from('prescription_sessions')
-        .select('prescription_id, done_at, status')
+        .select('prescription_id, booking_id, done_at, status')
         .in('prescription_id', teil)
-        .eq('status', 'done')
         .limit(1000),
     ]);
-    if (bRes.status === 'fulfilled' && Array.isArray(bRes.value?.data)) termine.push(...bRes.value.data);
-    if (sRes.status === 'fulfilled' && Array.isArray(sRes.value?.data)) sitzungen.push(...sRes.value.data);
+    if (bRes.status === 'fulfilled' && Array.isArray(bRes.value?.data)) {
+      for (const b of bRes.value.data) {
+        termine.push(b);
+        if (b?.id) gesehenDirekt.add(`${b.id}|${b.verordnung_id}`);
+      }
+    }
+    if (sRes.status === 'fulfilled' && Array.isArray(sRes.value?.data)) {
+      for (const s of sRes.value.data) {
+        if (s?.status === 'done') sitzungen.push(s);
+        if (s?.booking_id && s?.prescription_id && !gesehenDirekt.has(`${s.booking_id}|${s.prescription_id}`)) {
+          const liste = rxJeBookingId.get(s.booking_id) || [];
+          if (!liste.includes(s.prescription_id)) liste.push(s.prescription_id);
+          rxJeBookingId.set(s.booking_id, liste);
+        }
+      }
+    }
   }
+
+  // Physio/Ergo/Logo-Termine über prescription_sessions.booking_id nachladen (100-UUID-Blöcke).
+  const physioBookingIds = [...rxJeBookingId.keys()];
+  for (let i = 0; i < physioBookingIds.length; i += 100) {
+    const teil = physioBookingIds.slice(i, i + 100);
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('id, start_time, status, group_parent_id')
+      .eq('owner_id', ownerId)
+      .in('id', teil)
+      .neq('status', 'cancelled')
+      .is('group_parent_id', null);
+    if (error || !Array.isArray(data)) continue;
+    for (const b of data) {
+      const verordnungen = rxJeBookingId.get(b.id) || [];
+      for (const rxId of verordnungen) {
+        termine.push({ ...b, verordnung_id: rxId });
+      }
+    }
+  }
+
   return { termine, sitzungen };
 }
 
@@ -1490,7 +1530,7 @@ export async function ladeUeberblickAnsicht(ctx) {
     // Umsatz-Retter: verknüpfte Termine & erledigte Sitzungen für laufende Verordnungen
     // in sicheren 100-UUID-Blöcken nachladen (kein 414, blockiert übrige Ansicht nicht).
     const gestarteteIds = rows
-      .filter(r => r?.id && r.status !== 'parsed' && r.behandlungsbeginn)
+      .filter(r => r?.id && r.status !== 'parsed' && (r.behandlungsbeginn || r.status === 'in_therapy'))
       .map(r => r.id);
     if (gestarteteIds.length) {
       const { termine: verknTermine, sitzungen: verknSitzungen } = await ladeVerknuepfteVerordnungsdaten(

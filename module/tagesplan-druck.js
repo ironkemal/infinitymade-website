@@ -243,11 +243,16 @@ export async function oeffneTagesplanDruckDialog({
 } = {}) {
   if (!supabase || !ownerId || typeof document === 'undefined') return;
 
-  // Team für die Behandler-Auswahl laden (leichtgewichtig).
+  // Team + Praxisname/Telefon für die Behandler-Auswahl und Druckkopf laden.
   const { data: teamRows } = await supabase
     .from('profiles')
-    .select('id, business_name, email')
+    .select('id, business_name, email, phone')
     .or(`id.eq.${ownerId},owner_id.eq.${ownerId}`);
+  const ownerRow = (Array.isArray(teamRows) ? teamRows : []).find(p => String(p.id) === String(ownerId));
+  const praxisInfo = {
+    name: praxis?.name || ownerRow?.business_name || '',
+    telefon: praxis?.telefon || ownerRow?.phone || '',
+  };
   const team = (Array.isArray(teamRows) ? teamRows : [])
     .map(p => ({ id: p.id, name: String(p.business_name || p.email || 'Behandler').trim() }))
     .sort((a, b) => a.name.localeCompare(b.name, 'de-DE'));
@@ -333,7 +338,7 @@ export async function oeffneTagesplanDruckDialog({
     try {
       const { data: rows, error } = await supabase
         .from('bookings')
-        .select('id, user_id, start_time, end_time, status, customer_name, customer_phone, hausbesuch, notes, group_parent_id, leads!lead_id(first_name, last_name, phone, handy, strasse, plz, ort), services(title), rooms(name)')
+        .select('id, user_id, start_time, end_time, status, customer_name, customer_phone, hausbesuch, notes, group_parent_id, leads!lead_id(first_name, last_name, phone, handy, street, plz, city), services(title), rooms(name)')
         .eq('owner_id', ownerId)
         .gte('start_time', grenzen.von)
         .lt('start_time', grenzen.bisExklusiv)
@@ -351,9 +356,9 @@ export async function oeffneTagesplanDruckDialog({
           ...b,
           patientName,
           telefon: l?.handy || l?.phone || b.customer_phone || '',
-          strasse: l?.strasse || '',
+          strasse: l?.street || '',
           plz: l?.plz || '',
-          ort: l?.ort || '',
+          ort: l?.city || '',
           leistung: b.services?.title || 'Behandlung',
           raum: b.rooms?.name || '',
           therapeutName: teamMap[b.user_id] || 'Behandler',
@@ -367,7 +372,7 @@ export async function oeffneTagesplanDruckDialog({
       }).format(new Date());
 
       const html = erstelleTagesplanHtml({
-        praxis,
+        praxis: praxisInfo,
         datumIso: gewaehltesDatum,
         modus,
         therapeutId,

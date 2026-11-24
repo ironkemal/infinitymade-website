@@ -109,7 +109,10 @@ test('erstelleTagesplanHtml: datensparsam blendet Notizen aus, Hausbesuch druckt
   assert.doesNotMatch(htmlHb, /Bernd Beispiel/);
 });
 
-test('tagesplan-druck.js: keine Emojis im Modul (Handwerk-Regel 4)', () => {
+test('tagesplan-druck.js: keine Emojis im Modul (Handwerk-Regel 4) und echte SCHEMA-Spalten für leads', () => {
   const src = fs.readFileSync(new URL('./tagesplan-druck.js', import.meta.url), 'utf8');
   assert.equal(/\p{Extended_Pictographic}/u.test(src), false);
+  // Regressionstest: leads hat street/plz/city, NICHT strasse/ort (sonst 400 Bad Request in PostgREST).
+  assert.match(src, /leads!lead_id\(first_name, last_name, phone, handy, street, plz, city\)/);
+  assert.doesNotMatch(src, /leads!lead_id\([^)]*\b(strasse|ort)\b/);
 });

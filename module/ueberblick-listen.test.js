@@ -373,4 +373,9 @@ test('umsatzRetterAufbereiten: erkennt 14-Tage-Unterbrechung (nicht Podologie), 
   assert.match(erg[1].hinweis, /Noch 3 Tage/);
   assert.match(erg[2].hinweis, /Noch 5 von 6 Einheiten offen/);
   assert.match(erg[3].hinweis, /5\/6 — Folgerezept beim Arzt anfordern/);
+
+  // Regressionstest: Physio-Zukunftstermine hängen über prescription_sessions.booking_id (nicht nur bookings.verordnung_id)
+  const ansicht = fs.readFileSync(new URL('./ueberblick-ansicht.js', import.meta.url), 'utf8');
+  assert.match(ansicht, /select\('prescription_id, booking_id, done_at, status'\)/, 'Physio-Sitzungen müssen booking_id mitladen');
+  assert.match(ansicht, /verordnung_id: rxId/, 'Geladene Physio-Termine werden auf ihre prescription_id abgebildet');
 });

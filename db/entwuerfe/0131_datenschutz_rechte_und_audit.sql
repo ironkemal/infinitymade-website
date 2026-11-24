@@ -126,6 +126,9 @@ CREATE POLICY "Abrechnung uebermittlung select scoping" ON public.abrechnung_ueb
   TO authenticated
   USING (
     auth.uid() = owner_id
+    OR (business_id IS NOT NULL
+        AND EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.owner_id = abrechnung_uebermittlung.owner_id)
+        AND public.abrechnungszugriff_erlaubt(auth.uid(), business_id))
     OR EXISTS (
       SELECT 1 FROM public.abrechnung a
        WHERE a.id = abrechnung_uebermittlung.abrechnung_id
