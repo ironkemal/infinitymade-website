@@ -32,6 +32,7 @@ import { assertNichtSoftwareHerstellerIkAlsAbsender } from './software-herstelle
 import {
   buildUNB, buildUNH, buildUNT, buildUNZ,
 } from './envelope.js';
+import { tp5VersionFuerDatum } from './tp5-version.js';
 import {
   buildSLGA_FKT, buildSLGA_REC, buildSLGA_UST, buildSLGA_SKO,
   buildSLGA_GES, buildSLGA_NAM,
@@ -508,6 +509,7 @@ export function calcAbrechnungsfallTotals(item, vkz = '01') {
  *   empfaenger: DtaKostentraeger,
  *   vkz: string,
  *   nachrichtenreferenz: number,
+ *   versionsnummer?: string,
  * }} opts
  * @returns {{ lines: string[], totals: DtaFallTotals }}
  */
@@ -518,6 +520,7 @@ function buildSLLAMessage({
   empfaenger,
   vkz,
   nachrichtenreferenz,
+  versionsnummer = '21',
 }) {
   const { patient, doctor, verordnung, tarif, sessions, urspruenglich } = prescription;
   const totals = calcAbrechnungsfallTotals(prescription, vkz);
@@ -769,7 +772,7 @@ function buildSLLAMessage({
     }));
   }
 
-  const unh = buildUNH({ nachrichtenreferenz, nachrichtenart: 'SLLA' });
+  const unh = buildUNH({ nachrichtenreferenz, nachrichtenart: 'SLLA', versionsnummer });
   const unt = buildUNT({ segmentCount: lines.length + 2, nachrichtenreferenz });
   return { lines: [unh, ...lines, unt], totals };
 }
@@ -789,6 +792,7 @@ function buildSLLAMessage({
  *   skonto?: SlgaSkoParams[],
  *   rechnungssteller?: DtaRechnungssteller,
  *   sammelrechnung?: string,
+ *   versionsnummer?: string,
  * }} opts
  * @returns {{ lines: string[] }}
  */
@@ -797,6 +801,7 @@ function buildSLGAMessage({
   vkz, perStatusTotals, gesamtTotals, nachrichtenreferenz,
   ust, skonto, rechnungssteller,
   sammelrechnung = '',            // 'J' = Sammelrechnungs-SLGA, '' = Gesamtrechnungs-SLGA
+  versionsnummer = '21',
 }) {
   const istSammel = sammelrechnung === 'J';
   const lines = [
@@ -845,7 +850,7 @@ function buildSLGAMessage({
     name4: rechnungssteller?.email || '',
   }));
 
-  const unh = buildUNH({ nachrichtenreferenz, nachrichtenart: 'SLGA' });
+  const unh = buildUNH({ nachrichtenreferenz, nachrichtenart: 'SLGA', versionsnummer });
   const unt = buildUNT({ segmentCount: lines.length + 2, nachrichtenreferenz });
   return { lines: [unh, ...lines, unt] };
 }
@@ -968,6 +973,7 @@ export function buildDtaFile({
 
   const testIndikator = kind === 'echt' ? '2' : kind === 'erprobung' ? '1' : '0';
   const erstellungsdatum = rechnung.datum || new Date();
+  const versionsnummer = tp5VersionFuerDatum(erstellungsdatum);
 
   // Zwei getrennte Namen (gkv-302 Audit 10.09.2026, Anhang 1 zur Anlage 1 TP5
   // Kap. 4) — vorher trug ein einziger 16-stelliger String beide Rollen und
@@ -1124,6 +1130,7 @@ export function buildDtaFile({
         nachrichtenreferenz: nachrRef,
         ust, skonto, rechnungssteller,
         sammelrechnung: 'J',
+        versionsnummer,
       }).lines);
     }
 
@@ -1148,6 +1155,7 @@ export function buildDtaFile({
         nachrichtenreferenz: nachrRef,
         ust, skonto, rechnungssteller,
         sammelrechnung: '',
+        versionsnummer,
       }).lines);
 
       for (const i of teil.indizes) {
@@ -1157,6 +1165,7 @@ export function buildDtaFile({
           rechnung: rechnungFuerGruppe,
           absender, empfaenger, vkz,
           nachrichtenreferenz: nachrRef,
+          versionsnummer,
         }).lines);
       }
 

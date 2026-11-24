@@ -3,6 +3,7 @@
 // Contract entitlement and payer acceptance are deliberately not inferred here.
 import { istStichtag } from '../../lib/berlin-tag.js';
 import { ZUZAHLUNGSKENNZEICHEN, VERORDNUNGSART_HEILMITTEL, VERORDNUNGSBESONDERHEITEN, UNFALLKENNZEICHEN } from '../codes/anlage3_v22.js';
+import { tp5VersionZulaessig } from './tp5-version.js';
 
 /** @typedef {{ type: string, rows: string[][] }} ParsedDtaMessage */
 /** @typedef {{ fkt: string[], rec: string[], rows: string[][], totals: Map<string, number[]>, count: number }} Rechnungsgruppe */
@@ -44,12 +45,28 @@ export function pruefeAusgabeStruktur(content, fields) {
   /** @type {ParsedDtaMessage[]} */
   const messages = [];
   let ordinal = 0;
+  /** @type {string | null} */
+  let dateiVersion = null;
+  const unbDatumRaw = (unb[4] || '').slice(0, 8);
+  const unbDatumIso = /^\d{8}$/.test(unbDatumRaw)
+    ? `${unbDatumRaw.slice(0, 4)}-${unbDatumRaw.slice(4, 6)}-${unbDatumRaw.slice(6, 8)}`
+    : null;
   for (let i = 1; i < fields.length - 1; i++) {
     const f = fields[i];
     if (f[0] === 'UNH') {
       ordinal++;
       if (message) fail('Verschachtelte Nachricht');
-      if (f.length !== 3 || f[1] !== String(ordinal).padStart(5, '0') || !/^(SLGA|SLLA):21:0:0$/.test(f[2] || '')) fail('UNH-Nachrichtenkennung, Version oder laufende Referenz ungültig');
+      const mUnh = /^(SLGA|SLLA):(21|22):0:0$/.exec(f[2] || '');
+      if (f.length !== 3 || f[1] !== String(ordinal).padStart(5, '0') || !mUnh) {
+        fail('UNH-Nachrichtenkennung, Version oder laufende Referenz ungültig');
+      } else {
+        const v = mUnh[2];
+        if (dateiVersion && dateiVersion !== v) fail('Gemischte TP5-Nachrichtenversionen innerhalb einer Datei unzulässig');
+        dateiVersion = v;
+        if (unbDatumIso && !tp5VersionZulaessig(v, unbDatumIso)) {
+          fail(`TP5-Version ${v} am Erstellungsdatum ${unbDatumIso} laut GKV-SV-Übergangsfrist unzulässig`);
+        }
+      }
       message = { type: (f[2] || '').split(':')[0], rows: [] };
     } else if (f[0] === 'UNT') {
       if (message) { pruefeNachricht(message, unb, fail); messages.push(message); }

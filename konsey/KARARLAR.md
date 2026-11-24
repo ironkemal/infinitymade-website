@@ -108,3 +108,26 @@ söyler — daraltılmış kapsam, manuel ikame, %20'lik sürüm, denk çözüm.
 fikirler tutanaktaki "Backlog" bölümüne düşer, karara karışmaz.
 
 Detay: `.claude/skills/konsey/SKILL.md`
+
+---
+
+## 2026-11-24 — Datenschutz & Rechtemodell in der Datenbank (`time_offs`, `abrechnung` R6, Rechte-Audit)
+
+**Soru:** Wie schließen wir (1) Art.-9-DSGVO-Schutz auf `time_offs` (Kollegen sehen bisher `type='krank'/reason/note` per REST und können dank `FOR ALL` sogar fremde Einträge ändern), (2) R6-Modulrecht `abrechnung` auf §302-Tabellen und (3) Rechte-Änderungsprotokoll in `data_access_log` rückwärtskompatibel für `:beta`/`:stable`?
+
+**Üyeler:** `legal-de` · `guvenlik` · `db-ustasi` (paralel Konsey-Tur, 24.11.2026).
+
+**Önemli kör noktalar (Konsey yakaladı):**
+1. `time_offs_mandant` ist `FOR ALL TO authenticated` — Kollegen konnten nicht nur lesen, sondern auch fremde Abwesenheiten ändern/löschen.
+2. Dieselbe R6-Lücke wie bei `abrechnung` besteht auf `abrechnung_zeile`, `abrechnung_uebermittlung`, `abrechnung_zahlung` und `zaa_fehler`.
+3. `audit_write_log()` (0021) liest `v_zeile ->> 'owner_id'` — aber `group_scopes`, `employee_scope_overrides` und `employee_business_assignments` haben **keine** `owner_id`-Spalte (`owner_id = NULL` → für den Inhaber unsichtbar!). Es braucht eine eigene Triggerfunktion `audit_rechte_log()`.
+4. `:beta` und `:stable` teilen dasselbe Schema → sofortiges Sperren von `time_offs` würde Kalender/Überblick für Mitarbeiter brechen, solange der Browser direkt `from('time_offs')` liest.
+
+**KARAR (bağlayıcı, zweistufig):**
+- **Stufe 1 (`db/entwuerfe/0131_datenschutz_rechte_und_audit.sql` — abwärtskompatibel):**
+  1. Neue `SECURITY DEFINER`-RPC `public.team_abwesenheiten(p_von, p_bis)` (`SET search_path = ''`, `REVOKE ALL FROM PUBLIC, anon`, `GRANT EXECUTE TO authenticated`) liefert über `auth_tenant_id()` ausschließlich `(id, employee_id, start_date, end_date)` ohne `type/reason/note`.
+  2. `abrechnung` + alle 4 Kindtabellen (`abrechnung_zeile`, `abrechnung_uebermittlung`, `abrechnung_zahlung`, `zaa_fehler`) auf `TO authenticated` + Inhaber ODER `abrechnungszugriff_erlaubt(auth.uid(), business_id)` (vorab `business_id IS NULL` prüfen / per `businesses.is_default` nachfüllen).
+  3. Neue Triggerfunktion `public.audit_rechte_log()` (`SECURITY DEFINER`, `SET search_path = ''`, `REVOKE ALL` von PUBLIC/anon/authenticated) auf den 3 Rechte-Tabellen, löst `owner_id`/`business_id` über `businesses`/`employee_groups` auf, protokolliert nur Minimaldaten (keine Patientendaten/Freitexte, keine Client-INSERT-Policy auf `data_access_log`).
+- **Stufe 2 (Frontend-Umstellung auf `team_abwesenheiten()` → `:stable`-Soak → `db/entwuerfe/0132_time_offs_rls_schliessen.sql`):**
+  Ersetzt `time_offs_mandant` durch `time_offs_owner_all` + `time_offs_self_select`.
+- **Nach Live-Apply (Melih GO):** Dateien in `api-backend/db/migrations/` überführen, `erwartete-zaehler.json` (`0131`: `fonksiyon +2, trigger +3, rls_policy +0`), `db/SCHEMA.sql`, `db/SCHEMA-RLS.sql`, `db/REGISTER.md` und `compliance/TOM.md` im selben Commit aktualisieren.

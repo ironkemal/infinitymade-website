@@ -78,7 +78,8 @@ Bilinmeyen bir alana **"belirtilmemiş" yaz, tahmin etme.**
 
 | Belge | Sürüm | Anzuwenden ab | Durum |
 |---|---|---|---|
-| **Anlage 1 TP5** — ana teknik spesifikasyon | **V21** | 01.10.2025 | ✅ **GEÇERLİ** (V20 31.12.2025'te düştü) |
+| **Anlage 1 TP5** — ana teknik spesifikasyon | **V21** | 01.10.2025 | ✅ **GEÇERLİ** (V20 31.12.2025'te düştü; V21 geçiş süresi **30.04.2027**'ye kadar) |
+| Anlage 1 TP5 — ana teknik spesifikasyon | V22 | **01.02.2027** | ⏳ Gelecek (Stand 21.05.2026, arşivde; Heilmittel `5.5.3.3` ve `SLGA` içerikçe aynı, yalnız `UNH` `SLGA:22:0:0`/`SLLA:22:0:0`; `tp5-version.js` tarih kapısı hazır) |
 | **Anlage 3 TP5** — Schlüsselverzeichnisse | **V21** | 01.10.2025 | ✅ **GEÇERLİ** |
 | Anlage 3 TP5 | V22 | **01.02.2027** | ⏳ Gelecek — henüz uygulama |
 | Anhang 03 Anlage 1 TP5 — Kostenträgerdatei | **V09** | 01.06.2026 | ✅ **GEÇERLİ** (V10 01.02.2027'de devralır) |
@@ -146,6 +147,13 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
   - 6 FEHLERVERFAHREN
   - 7 RECHNUNGEN IM KORREKTURVERFAHREN
   - 9 SCHLÜSSELVERZEICHNISSE
+
+### wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V22_20260521.txt
+- **Ne:** Anlage 1 TP5 Version 22 (Stand 21.05.2026, GKV-SV) — halef teknik spesifikasyon (`Anzuwenden ab: 01.02.2027`, `Version 21 verliert Gültigkeit: 30.04.2027`).
+- **Kapsam:** V21 ile aynı yapı. `0 Historie` (s. 2) ve `5.5.3.3` / `5.5.2` karşılaştırması (24.11.2026): V22'deki tüm içerik değişiklikleri yalnızca `5.5.3.7` (Hebammen, § 301a SGB V) bölümündedir. Heilmittel (`SLLA: B`, `5.5.3.3`) ve `SLGA` (`5.5.2`) alanları değişmemiştir; tek fark `5.4` `UNH S009` sürüm numarası (`SLGA:22:0:0` / `SLLA:22:0:0`, satır 975–987).
+- **Sürüm:** 22
+- **Anzuwenden ab:** 01.02.2027 (Übergangsfrist V21 bis 30.04.2027)
+- **Ne zaman lazım:** 01.02.2027 itibarıyla §302 DTA sürüm geçişi ve `api-backend/billing/dta/tp5-version.js` doğrulaması için.
 
 ### wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V22_20260218.txt
 - **Ne:** § 302 Abs. 2 SGB V uyarınca „Sonstigen Leistungserbringern“ ile Hebammen ve Entbindungspflegern (§ 301a SGB V) faturalandırma usulünün form ve içeriğine ilişkin rehberlerin anahtar dizinlerini (Schlüsselverzeichnisse) içeren Anlage 3 belgesidir.

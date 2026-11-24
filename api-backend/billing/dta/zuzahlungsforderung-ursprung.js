@@ -480,9 +480,9 @@ export function parseOriginalDtaMessage({
   const matched = [];
 
   for (const msg of sllaMessages) {
-    if (msg.version && msg.version !== '21') {
+    if (msg.version && msg.version !== '21' && msg.version !== '22') {
       const err = createUrsprungError(
-        `Nicht unterstützte SLLA-Version in Ursprungsdatei: "${msg.version}". Unterstützt wird Version 21.`
+        `Nicht unterstützte SLLA-Version in Ursprungsdatei: "${msg.version}". Unterstützt werden Version 21 und 22.`
       );
       err.status = 422;
       err.code = 'UNSUPPORTED_VERSION';
