@@ -41,7 +41,7 @@
   <link rel="stylesheet" href="fonts/system-fonts.css" />
 
   <!-- ===== Shared design system ===== -->
-  <link rel="stylesheet" href="assets/system.css?v=20261001" />
+  <link rel="stylesheet" href="assets/system.css?v=20261124" />
 
   <!-- ===== Cookie consent banner ===== -->
   <link rel="stylesheet" href="/cookie-consent.css?v=20260610" />
@@ -78,17 +78,6 @@
   </script>
 
   <!-- ===== Structured Data: SoftwareApplication ===== -->
-  <!--
-    PREISE VORÜBERGEHEND AUSGEBLENDET (2026-08-17).
-    Zum Wiederherstellen diesen Block wieder in das JSON unten (nach "publisher") einfügen:
-      "offers": {
-        "@type": "Offer",
-        "priceCurrency": "EUR",
-        "price": "29.00",
-        "description": "Monatliche Lizenzgebühr ab 29 Euro"
-      },
-    Hinweis: In JSON-LD sind HTML-Kommentare nicht erlaubt — deshalb steht die Sicherung hier außerhalb.
-  -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -101,6 +90,20 @@
     "url": "https://praxura.de/",
     "description": "Praxissoftware (Praxisverwaltungssystem, PVS) für Heilmittelerbringer (Physiotherapie, Ergotherapie, Logopädie, Podologie): Terminplanung, Patientenakte, Verordnungsprüfung, Vorbereitung der DTA-Abrechnung nach §302 SGB V, elektronisches Fahrtenbuch. Läuft als eigene Praxis-Cloud auf einem Server im Hetzner-Konto der Praxis (von Praxura eingerichtet) oder auf einem Windows-PC bzw. Linux-Server in der Praxis; Patientendaten werden ausschließlich dort gespeichert, nicht bei Praxura.",
     "publisher": { "@id": "https://praxura.de/#organization" },
+    "offers": {
+      "@type": "AggregateOffer",
+      "priceCurrency": "EUR",
+      "lowPrice": "39",
+      "highPrice": "149",
+      "offerCount": "4",
+      "description": "Monatliche Lizenz nach Praxisgröße (Solo 39 €, Praxis 69 €, Team 99 €, Groß 149 €), netto, zzgl. einmaligem Einrichtungspaket. Einführungspreise bis 31.03.2027.",
+      "offers": [
+        { "@type": "Offer", "name": "Solo (1 Behandler:in)", "priceSpecification": { "@type": "UnitPriceSpecification", "price": "39", "priceCurrency": "EUR", "unitCode": "MON" } },
+        { "@type": "Offer", "name": "Praxis (2–5 Behandler:innen)", "priceSpecification": { "@type": "UnitPriceSpecification", "price": "69", "priceCurrency": "EUR", "unitCode": "MON" } },
+        { "@type": "Offer", "name": "Team (6–10 Behandler:innen)", "priceSpecification": { "@type": "UnitPriceSpecification", "price": "99", "priceCurrency": "EUR", "unitCode": "MON" } },
+        { "@type": "Offer", "name": "Groß (11–20 Behandler:innen)", "priceSpecification": { "@type": "UnitPriceSpecification", "price": "149", "priceCurrency": "EUR", "unitCode": "MON" } }
+      ]
+    },
     "featureList": [
       "Terminplanung & Teamkalender",
       "Verordnungsprüfung (Muster 13, Barcode lokal)",
@@ -147,6 +150,11 @@
         "@type": "Question",
         "name": "Wo werden die Patientendaten bei Praxura gespeichert?",
         "acceptedAnswer": { "@type": "Answer", "text": "Auf Ihrem eigenen Server – nicht bei Praxura. Das ist entweder Ihre Praxis-Cloud im eigenen Hetzner-Konto oder, wenn Sie es lieber im Haus haben, ein Windows-PC bzw. Linux-Server in Ihrer Praxis (Zugriff von unterwegs dann über das VPN Ihrer Praxis, z. B. FRITZ!Box). Praxura hat keinen Zugang zu Ihren Patientendaten – auch nicht im Support. Ausgenommen ist nur, was Sie selbst freigeben: die Bildschirmfreigabe bei der Datenübernahme und Zusatzfunktionen wie die KI-Texterkennung (derzeit nicht aktiv), für die ein gesonderter Auftragsverarbeitungsvertrag gilt. Jede Nacht entsteht eine verschlüsselte Sicherung auf ein separates Ziel (z. B. Hetzner Storage Box, NAS oder externe Festplatte)." }
+      },
+      {
+        "@type": "Question",
+        "name": "Was kostet Praxura?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Praxura kostet einen festen Monatspreis nach Praxisgröße, ohne Prozent vom Umsatz: Solo (1 Behandler:in) 39 €, Praxis (2–5) 69 €, Team (6–10) 99 €, Groß (11–20) 149 € pro Monat, ab 21 Behandler:innen nach Angebot. Dazu kommt ein einmaliges Einrichtungspaket (190–890 €) inklusive Server-Einrichtung, Datenübernahme und zwei Online-Schulungen. Die Serverkosten (derzeit rund 25–30 € im Monat) zahlt Ihre Praxis direkt an Hetzner. Einführungspreise für Neukunden bis 31.03.2027, Preise netto, USt entfällt derzeit (§ 19 UStG)." }
       },
       {
         "@type": "Question",
@@ -212,7 +220,15 @@
       max-width: 32rem;
       margin-bottom: 2.4rem;
     }
-    .px-hero-actions { display: flex; gap: 0.8rem; flex-wrap: wrap; }
+    .px-lede strong { font-weight: 600; color: var(--ink); }
+    .px-hero-actions { display: flex; gap: 0.6rem 1.6rem; flex-wrap: wrap; align-items: center; }
+    .px-hero-link {
+      font-size: 0.95rem; font-weight: 500; color: var(--ink-soft);
+      text-decoration: underline; text-decoration-color: var(--line);
+      text-underline-offset: 5px; text-decoration-thickness: 1.5px;
+      transition: color 200ms var(--ease-out), text-decoration-color 200ms var(--ease-out);
+    }
+    .px-hero-link:hover { color: var(--ink); text-decoration-color: var(--bronze); }
 
     /* ── Hero right: USP stack ── */
     .px-hero-card {
@@ -902,6 +918,17 @@
     }
 
     /* ── Closing CTA ── */
+    .px-closing-agenda { list-style: none; padding: 0; margin: 1.6rem 0 0; display: grid; gap: 0.85rem; counter-reset: ag; max-width: 34rem; }
+    .px-closing-agenda li { counter-increment: ag; position: relative; padding-left: 2.4rem; color: rgba(248,243,232,0.72); font-size: 0.98rem; line-height: 1.5; }
+    .px-closing-agenda li::before { content: counter(ag); position: absolute; left: 0; top: 0.05rem; width: 1.55rem; height: 1.55rem; border-radius: 999px; border: 1px solid rgba(201,168,118,0.5); color: var(--highlight); font-family: var(--mono); font-size: 0.72rem; display: grid; place-items: center; }
+    .px-closing-agenda strong { color: var(--bg); font-weight: 600; }
+    .px-closing-host { display: flex; align-items: center; gap: 0.9rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(248,243,232,0.12); }
+    .px-closing-host img { width: 56px; height: 56px; border-radius: 999px; object-fit: cover; border: 2px solid rgba(201,168,118,0.55); flex-shrink: 0; }
+    .px-closing-host p { font-size: 0.9rem; line-height: 1.45; color: rgba(248,243,232,0.68); margin: 0; }
+    .px-closing-host strong { color: var(--bg); font-weight: 600; }
+    .book-assure--dark { color: rgba(248,243,232,0.62); margin-top: 0.2rem; }
+    .book-assure--dark li::before { filter: invert(1) sepia(1) saturate(2) hue-rotate(5deg) brightness(1.1); }
+    .px-closing-side .btn-book { align-self: flex-start; }
     .px-closing {
       max-width: 1320px;
       margin: 0 auto 6rem;
@@ -1039,6 +1066,13 @@
     }
 
     /* ── Micro CTA strips ── */
+    .px-loss-box { margin-top: 2rem; background: var(--bg-card); border: 1px solid var(--line); border-radius: 14px; padding: 1.4rem 1.5rem; max-width: 26rem; box-shadow: 0 14px 30px -20px rgba(26,22,17,0.25); }
+    .px-loss-label { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--bronze); margin-bottom: 0.9rem; }
+    .px-loss-row, .px-loss-total { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.92rem; color: var(--ink-soft); padding: 0.35rem 0; }
+    .px-loss-row span:last-child { font-variant-numeric: tabular-nums; color: var(--ink); }
+    .px-loss-total { border-top: 1px solid var(--line); margin-top: 0.4rem; padding-top: 0.75rem; font-weight: 600; color: var(--ink); }
+    .px-loss-total span:last-child { font-family: var(--serif); font-size: 1.6rem; font-weight: 400; color: var(--rose); letter-spacing: -0.02em; }
+    .px-loss-note { font-size: 0.82rem; line-height: 1.5; color: var(--ink-mute); margin-top: 0.8rem; }
     .px-mid-cta {
       max-width: 900px;
       margin: 0 auto;
@@ -1065,12 +1099,22 @@
       font-size: clamp(1.1rem, 2.5vw, 1.5rem);
       color: var(--ink);
       letter-spacing: -0.02em;
-      font-style: italic;
+      font-style: normal;
+      max-width: 30rem;
+      line-height: 1.25;
     }
+    .px-mid-cta-text em { font-style: italic; color: var(--bronze); }
+    .px-mid-cta-sub {
+      display: block; margin-top: 0.4rem;
+      font-family: var(--sans); font-style: normal; font-size: 0.92rem;
+      letter-spacing: 0; color: var(--ink-mute);
+    }
+    .px-mid-cta { justify-content: space-between; gap: 1.5rem 2.5rem; }
     .px-mid-cta-btn { white-space: nowrap; }
     @media (max-width: 600px) {
       .px-mid-cta { flex-direction: column; text-align: center; gap: 1rem; padding: 1.8rem 1.2rem; }
       .px-mid-cta--alt { margin: 0 1rem; }
+      .px-mid-cta .btn-book { width: 100%; justify-content: space-between; }
     }
   </style>
 </head>
@@ -1082,14 +1126,14 @@
   <a href="/" class="nav-brand">Prax<em>ura</em></a>
   <a href="#funktionen" class="nav-link">Funktionen</a>
   <a href="#zielgruppe" class="nav-link">Zielgruppe</a>
-  <!-- PREISE VORÜBERGEHEND AUSGEBLENDET (2026-08-17) — <a href="#preise" class="nav-link">Preise</a> -->
+  <a href="#preise" class="nav-link">Preise</a>
   <a href="/praxis.html" class="nav-link">Details</a>
   <a href="/blog/" class="nav-link">Insights</a>
   <a href="/kontakt.html" class="nav-link">Kontakt</a>
   <a href="https://app.praxura.de" class="nav-login">Login</a>
-  <a href="/vorregistrierung.html" class="nav-cta">
-    Kostenlos starten
-    <span class="nav-cta-circle" aria-hidden="true">↗</span>
+  <a href="/demo-booking.html" class="nav-cta nav-cta--book" data-cta="nav-book">
+    Gespräch buchen
+    <span class="nav-cta-circle" aria-hidden="true">→</span>
   </a>
   <button class="nav-hamburger" id="navHamburger" aria-label="Menü öffnen" aria-expanded="false">
     <span></span><span></span><span></span>
@@ -1100,12 +1144,13 @@
   <button class="nav-mobile-close" id="navMobileClose" aria-label="Menü schließen">✕</button>
   <a href="#funktionen">Funktionen</a>
   <a href="#zielgruppe">Zielgruppe</a>
-  <!-- PREISE VORÜBERGEHEND AUSGEBLENDET (2026-08-17) — <a href="#preise">Preise</a> -->
+  <a href="#preise">Preise</a>
   <a href="/praxis.html">Details</a>
   <a href="/blog/">Insights</a>
   <a href="/kontakt.html">Kontakt</a>
   <a href="https://app.praxura.de">Login</a>
-  <a href="/vorregistrierung.html" class="nav-mobile-cta-btn">Kostenlos starten ↗</a>
+  <a href="/vorregistrierung.html">Testzugang vormerken</a>
+  <a href="/demo-booking.html" class="nav-mobile-cta-btn nav-cta--book">Analysegespräch buchen →</a>
 </div>
 
 <!-- ────────────── Hero ────────────── -->
@@ -1119,16 +1164,23 @@
       Praxissoftware für <em>Heilmittel-Praxen.</em>
     </h1>
     <p class="px-lede">
-      Praxura bündelt Terminplanung, Patientenakte, Verordnungsprüfung, §302-Abrechnungsvorbereitung (DTA) und ein elektronisches Fahrtenbuch in einem System — als Ihre eigene Praxis-Cloud: so bequem wie Cloud-Software, aber Ihre Patientendaten bleiben auf Ihrem eigenen Server, nicht bei uns. Wir richten alles für Sie ein.
+      Termine, Patientenakte, Verordnungsprüfung, Vorbereitung der §302-Abrechnung und Fahrtenbuch in einem System.
+      Formfehler sehen Sie <strong>vor</strong> der Behandlung, nicht erst nach der Absetzung, und
+      Sie zahlen <strong>0&nbsp;% Provision</strong> auf Ihren Umsatz. Läuft als Ihre eigene Praxis-Cloud:
+      Ihre Patientendaten bleiben auf Ihrem Server. Wir richten alles für Sie ein.
     </p>
     <div class="px-hero-actions">
-      <a href="/vorregistrierung.html" class="btn btn-primary-arrow">
-        Kostenlos starten
-        <span class="arrow-pill" aria-hidden="true">↗</span>
+      <a href="/demo-booking.html" class="btn-book" data-cta="hero-book">
+        <span><span class="hide-sm">Kostenloses </span>Analysegespräch buchen</span>
+        <span class="btn-book-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></svg></span>
       </a>
-      <a href="/demo-booking.html" class="btn btn-secondary">Termin buchen</a>
-      <a href="/praxis.html" class="btn btn-secondary">Alle Funktionen</a>
+      <a href="#demo" class="px-hero-link">Erst die Live-Demo ansehen <span aria-hidden="true">↓</span></a>
     </div>
+    <ul class="book-assure" aria-label="Zum Analysegespräch">
+      <li>30 Minuten per Video</li>
+      <li>kostenlos &amp; unverbindlich</li>
+      <li>Termin in 1 Minute gewählt</li>
+    </ul>
   </div>
 
   <aside class="px-hero-visual is-visible" data-reveal>
@@ -1171,8 +1223,8 @@
     </div>
     <div class="px-demo-shot">
       <picture>
-        <source srcset="assets/img/demo-preview.webp?v=20260611" type="image/webp" />
-        <img src="assets/img/demo-preview.png?v=20260602"
+        <source srcset="assets/img/demo-preview.webp?v=20261124" type="image/webp" />
+        <img src="assets/img/demo-preview.png?v=20261124"
              alt="Praxura Dashboard — Vorschau der Live-Demo" loading="lazy" decoding="async" />
       </picture>
       <div class="px-demo-overlay">
@@ -1190,7 +1242,7 @@
     .px-videos-eyebrow { font-size: .78rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--bronze); margin-bottom: .7rem; }
     .px-videos-title { font-size: clamp(1.6rem,3vw,2.2rem); font-weight: 700; line-height: 1.2; color: var(--ink); }
     .px-videos-title em { font-style: italic; font-weight: 300; color: var(--bronze); }
-    .px-videos-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.6rem; }
+    .px-videos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 360px)); justify-content: center; gap: 1.6rem; }
     .px-video-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
     .px-video-embed { position: relative; padding-bottom: 56.25%; height: 0; }
     .px-video-embed iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
@@ -1290,10 +1342,10 @@
 </section>
 
 <div class="px-mid-cta" data-reveal>
-  <p class="px-mid-cta-text">Genug gesehen?</p>
-  <a href="/demo-booking.html" class="btn btn-primary-arrow px-mid-cta-btn">
-    Jetzt Termin buchen
-    <span class="btn-arrow" aria-hidden="true">→</span>
+  <p class="px-mid-cta-text">Wie sähe das mit <em>Ihren</em> Verordnungen aus?<span class="px-mid-cta-sub">Wir zeigen es Ihnen in 30 Minuten, an Ihrem Praxisalltag.</span></p>
+  <a href="/demo-booking.html" class="btn-book px-mid-cta-btn" data-cta="mid1-book">
+    Analysegespräch buchen
+    <span class="btn-book-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></svg></span>
   </a>
 </div>
 
@@ -1306,6 +1358,13 @@
       <p class="px-why-text">
         Therapeuten verbringen wöchentlich unzählige Stunden mit Bürokratie. Falsch ausgefüllte Rezepte führen zu teuren Absetzungen durch die Kassen, die oft erst Monate später auffallen. Gleichzeitig verlangen klassische Abrechnungszentren 2–5 % Ihres hart erarbeiteten Umsatzes als Provision. Und die manuelle Erfassung von Hausbesuchen raubt zusätzlich wertvolle Behandlungszeit.
       </p>
+      <div class="px-loss-box">
+        <div class="px-loss-label">Rechenbeispiel Provision</div>
+        <div class="px-loss-row"><span>GKV-Umsatz pro Monat</span><span>8.000&nbsp;€</span></div>
+        <div class="px-loss-row"><span>× 3&nbsp;% Provision beim Abrechnungszentrum</span><span>240&nbsp;€</span></div>
+        <div class="px-loss-total"><span>Pro Jahr</span><span>2.880&nbsp;€</span></div>
+        <p class="px-loss-note">Mit Praxura bereiten Sie die Abrechnung selbst vor: kein Prozent vom Umsatz. Beispielwerte, Ihre Zahlen rechnen wir im Gespräch.</p>
+      </div>
     </div>
     <div>
       <div class="px-why-eyebrow">Die Praxura-Lösung</div>
@@ -1316,7 +1375,7 @@
       <ul class="px-why-list">
         <li class="px-why-item">
           <span class="px-why-num">✓</span>
-          <div class="px-why-p" style="color: var(--ink-soft); font-weight: 500;">Mehr Liquidität durch DTA-Abrechnung ohne Provisionsabzug</div>
+          <div class="px-why-p" style="color: var(--ink-soft); font-weight: 500;">Mehr Liquidität: Abrechnung selbst vorbereiten, ohne Provisionsabzug</div>
         </li>
         <li class="px-why-item">
           <span class="px-why-num">✓</span>
@@ -1448,10 +1507,10 @@
 </section>
 
 <div class="px-mid-cta px-mid-cta--alt" data-reveal>
-  <p class="px-mid-cta-text">Alle Funktionen live erleben?</p>
-  <a href="/demo-booking.html" class="btn btn-primary-arrow px-mid-cta-btn">
-    Kostenloses Gespräch buchen
-    <span class="btn-arrow" aria-hidden="true">→</span>
+  <p class="px-mid-cta-text">Welche Funktion spart <em>Ihrer</em> Praxis am meisten Zeit?<span class="px-mid-cta-sub">Finden wir gemeinsam heraus. Kostenlos, unverbindlich.</span></p>
+  <a href="/demo-booking.html" class="btn-book px-mid-cta-btn" data-cta="mid2-book">
+    Analysegespräch buchen
+    <span class="btn-book-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></svg></span>
   </a>
 </div>
 
@@ -1734,208 +1793,204 @@
   </div>
 </section>
 
-<!-- ────────────── 03 · Zusatzmodul ────────────── -->
-<section class="block" id="zusatzmodul" data-reveal>
+<!-- ────────────── 03 · Preise (2026-11-24, Quelle: fiyatlandirma-final.md) ────────────── -->
+<section class="block" id="preise" data-reveal>
+  <style>
+    .pr-wrap { max-width: 1180px; margin: 0 auto; }
+    .pr-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem; margin: 2.6rem 0 1.4rem; }
+    .pr-pick-label { font-size: 0.92rem; color: var(--ink-soft); font-weight: 500; }
+    .pr-pick-opts { display: inline-flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.3rem; background: var(--bg-warm); border: 1px solid var(--line); border-radius: 999px; }
+    .pr-pick-opts button { font: inherit; font-size: 0.88rem; font-weight: 500; color: var(--ink-soft); background: transparent; border: 0; border-radius: 999px; padding: 0.5rem 0.95rem; cursor: pointer; min-height: 2.5rem; transition: background 200ms var(--ease-out), color 200ms var(--ease-out); }
+    .pr-pick-opts button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+    .pr-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+    .pr-card { position: relative; background: var(--bg-card); border: 1px solid var(--line); border-radius: 16px; padding: 1.6rem 1.4rem 1.5rem; display: flex; flex-direction: column; transition: border-color 240ms var(--ease-out), box-shadow 240ms var(--ease-out), transform 280ms var(--ease-spring); }
+    .pr-card.is-match { border: 2px solid var(--emerald-deep); box-shadow: 0 24px 46px -26px rgba(30,61,47,0.45); transform: translateY(-4px); }
+    .pr-badge { position: absolute; top: -0.75rem; left: 1.3rem; background: var(--emerald-deep); color: #FBF7EE; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em; padding: 0.28rem 0.7rem; border-radius: 999px; opacity: 0; transition: opacity 200ms var(--ease-out); }
+    .pr-card.is-match .pr-badge { opacity: 1; }
+    .pr-name { font-family: var(--serif); font-size: 1.4rem; color: var(--ink); letter-spacing: -0.02em; }
+    .pr-size { font-size: 0.86rem; color: var(--ink-mute); margin-top: 0.2rem; }
+    .pr-price { margin-top: 1.2rem; display: flex; align-items: baseline; gap: 0.35rem; }
+    .pr-price strong { font-family: var(--serif); font-weight: 400; font-size: 2.6rem; letter-spacing: -0.03em; color: var(--ink); font-variant-numeric: tabular-nums; }
+    .pr-price span { font-size: 0.86rem; color: var(--ink-mute); }
+    .pr-setup { font-size: 0.84rem; color: var(--ink-soft); margin-top: 0.5rem; padding-top: 0.7rem; border-top: 1px solid var(--line); }
+    .pr-big { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem 2rem; background: var(--bg-warm); border: 1px solid var(--line); border-radius: 16px; padding: 1.3rem 1.6rem; }
+    .pr-big.is-match { border: 2px solid var(--emerald-deep); }
+    .pr-big p { margin: 0; font-size: 0.95rem; color: var(--ink-soft); }
+    .pr-big strong { color: var(--ink); }
+    .pr-big a { font-weight: 600; color: var(--ink); text-underline-offset: 4px; }
+    .pr-incl { margin-top: 2.2rem; display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.2rem; }
+    .pr-box { background: var(--bg-card); border: 1px solid var(--line); border-radius: 16px; padding: 1.6rem 1.7rem; }
+    .pr-box h3 { font-family: var(--serif); font-weight: 400; font-size: 1.3rem; letter-spacing: -0.02em; color: var(--ink); margin-bottom: 0.4rem; }
+    .pr-box > p { font-size: 0.9rem; color: var(--ink-mute); line-height: 1.55; margin-bottom: 1rem; }
+    .pr-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem 1.2rem; }
+    .pr-list li { position: relative; padding-left: 1.5rem; font-size: 0.9rem; color: var(--ink-soft); line-height: 1.45; }
+    .pr-list li::before { content: ""; position: absolute; left: 0; top: 0.2rem; width: 0.95rem; height: 0.95rem; background: no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231E3D2F' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E"); }
+    .pr-list--one { grid-template-columns: 1fr; }
+    .pr-extras { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .pr-extras td { padding: 0.55rem 0; border-bottom: 1px solid var(--line); color: var(--ink-soft); vertical-align: top; }
+    .pr-extras td:last-child { text-align: right; white-space: nowrap; color: var(--ink); font-variant-numeric: tabular-nums; padding-left: 1rem; }
+    .pr-server { margin-top: 1.2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+    .pr-why { background: rgba(30,61,47,0.05); border: 1px solid rgba(30,61,47,0.16); border-radius: 16px; padding: 1.4rem 1.6rem; }
+    .pr-why strong { display: block; color: var(--emerald-deep); font-weight: 600; margin-bottom: 0.35rem; }
+    .pr-why p, .pr-server-text { font-size: 0.9rem; line-height: 1.6; color: var(--ink-soft); margin: 0; }
+    .pr-terms { list-style: none; padding: 0; margin: 1.6rem 0 0; display: flex; flex-wrap: wrap; gap: 0.5rem 1.6rem; font-size: 0.86rem; color: var(--ink-mute); }
+    .pr-terms li strong { color: var(--ink); font-weight: 600; }
+    .pr-cta { margin-top: 2.4rem; display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.6rem; padding: 1.6rem 1.8rem; border-radius: 16px; background: var(--bg-warm); border: 1px solid var(--line); }
+    .pr-cta p { margin: 0; flex: 1 1 18rem; font-size: 0.98rem; color: var(--ink-soft); line-height: 1.55; }
+    .pr-cta p strong { color: var(--ink); }
+    @media (max-width: 1000px) { .pr-grid { grid-template-columns: repeat(2, 1fr); } .pr-incl, .pr-server { grid-template-columns: 1fr; } }
+    @media (max-width: 560px) {
+      .pr-grid { grid-template-columns: 1fr; }
+      .pr-list { grid-template-columns: 1fr; }
+      .pr-card.is-match { transform: none; }
+      .pr-cta .btn-book { width: 100%; justify-content: space-between; }
+    }
+  </style>
 
-<!--
-  ============================================================================
-  PREISE VORÜBERGEHEND AUSGEBLENDET — 2026-08-17
-
-  Grund: Es wurde noch kein Verkauf getätigt; im Rahmen des Startup-Programms
-  soll die Seite vorerst nicht wie ein laufender Vertrieb wirken. Ausserdem
-  werden die Preise überarbeitet.
-
-  WIEDERHERSTELLEN:
-   1. Die Kommentarklammern um diesen Block entfernen (Anfang direkt über
-      dieser Zeile, Ende am Schluss des Blocks).
-   2. Den Opener oben zurücksetzen auf Banner '03 · Preise' und
-        <section class="block" id="preise" data-reveal>
-      (Ersatz für den aktuellen Opener 03 · Zusatzmodul / id="zusatzmodul")
-   3. Die eckigen Klammern-Label unten ([Transparenz-Streifen] usw.) waren
-      HTML-Kommentare — optional zurückwandeln.
-   4. Nav, Mobile-Menü, Footer und die Preis-FAQ wieder einkommentieren
-      (alle mit demselben Marker 'PREISE VORÜBERGEHEND AUSGEBLENDET' markiert).
-   5. Offer-Block im JSON-LD (SoftwareApplication, oben im <head>) zurücklegen.
-  ============================================================================
-
-  <div class="section-head">
-    <div>
-      <div class="section-eyebrow">03 · Tarife</div>
-    </div>
-    <div>
-      <h2 class="section-title">Transparente Preise für <em>jede Praxisgröße.</em></h2>
-      <p class="section-lede" style="margin-top: 1.4rem;">
-        Transparente Festpreise — keine Provision, keine versteckten Gebühren. Testen Sie alle Tarife 14 Tage kostenlos und unverbindlich: Zahlungsdaten werden hinterlegt, aber erst nach Ablauf der Testphase belastet. Monatlich kündbar. Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.
-      </p>
-    </div>
-  </div>
-
-  [Transparenz-Streifen]
-  <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:0.7rem; margin-top:2rem;">
-    <span style="font-family:var(--mono); font-size:0.72rem; letter-spacing:0.04em; color:var(--ink-soft); border:1px solid var(--line); border-radius:999px; padding:0.5rem 1rem;">✓ Keine Einrichtungsgebühr</span>
-    <span style="font-family:var(--mono); font-size:0.72rem; letter-spacing:0.04em; color:var(--ink-soft); border:1px solid var(--line); border-radius:999px; padding:0.5rem 1rem;">✓ Keine Provision auf Ihre Abrechnung</span>
-    <span style="font-family:var(--mono); font-size:0.72rem; letter-spacing:0.04em; color:var(--ink-soft); border:1px solid var(--line); border-radius:999px; padding:0.5rem 1rem;">✓ Monatlich kündbar</span>
-    <span style="font-family:var(--mono); font-size:0.72rem; letter-spacing:0.04em; color:var(--ink-soft); border:1px solid var(--line); border-radius:999px; padding:0.5rem 1rem;">✓ Keine versteckten Kosten</span>
-  </div>
-
-  [Billing interval toggle]
-  <div style="display:flex; justify-content:center; margin-top:2.5rem;">
-    <div class="px-billing-toggle">
-      <button type="button" class="px-billing-btn active" data-interval="month">Monatlich</button>
-      <button type="button" class="px-billing-btn" data-interval="year">Jährlich <span class="px-billing-save">−15%</span></button>
-    </div>
-  </div>
-
-  <div class="px-pricing-grid">
-    [Plan 1: Starter]
-    <article class="px-pricing-card">
-      <div class="px-pricing-tag">Für Einzelpraxen</div>
-      <h3 class="px-pricing-title">Starter</h3>
-      <div class="px-pricing-price">
-        <span class="currency">€</span>
-        <span class="amount px-price-amount" data-month="29" data-year="25">29</span>
-        <span class="period">/ Monat</span>
+  <div class="pr-wrap">
+    <div class="section-head">
+      <div><div class="section-eyebrow">03 · Preise</div></div>
+      <div>
+        <h2 class="section-title">Ein fester Monatspreis. <em>Kein Prozent vom Umsatz.</em></h2>
+        <p class="section-lede" style="margin-top: 1.4rem;">
+          Sie zahlen nach der Größe Ihrer Praxis, nicht nach Ihrem Umsatz. Jedes Paket enthält alle Funktionen.
+          Gezählt werden Behandler:innen, Empfang und Verwaltung sind immer inklusive.
+        </p>
       </div>
-      <div class="px-pricing-billing" data-billing>monatlich abgerechnet</div>
-      <p class="px-pricing-desc">Alles, was Sie für den Einstieg in die digitale Praxisverwaltung benötigen.</p>
-      <ul class="px-pricing-features">
-        <li>✓ 1 Therapeut / Login</li>
-        <li>✓ Online-Terminbuchung 24/7</li>
-        <li>✓ Digitale Patientenakte</li>
-        <li>✓ Online-Anfragen &amp; Warteliste</li>
-        <li>✓ Support via E-Mail</li>
-      </ul>
-      <div class="px-pricing-extras">
-        <ul class="px-pricing-features px-pricing-extras-list">
-          <li>✓ Kalenderansicht (Woche &amp; Monat)</li>
-          <li>✓ Manuelle Terminverwaltung</li>
-          <li>✓ Behandlungsdokumentation</li>
-          <li>✓ GKV / Privat / Selbstzahler</li>
-          <li>✓ Rezeptverwaltung &amp; Dokumente</li>
-          <li>✓ Öffentliches Buchungsformular</li>
-          <li>✓ PDF-Export Termine &amp; Patienten</li>
+    </div>
+
+    <div class="pr-pick" role="group" aria-label="Praxisgröße wählen">
+      <span class="pr-pick-label">Wie viele Behandler:innen arbeiten bei Ihnen?</span>
+      <div class="pr-pick-opts">
+        <button type="button" data-tier="solo" aria-pressed="false">1</button>
+        <button type="button" data-tier="praxis" aria-pressed="true">2–5</button>
+        <button type="button" data-tier="team" aria-pressed="false">6–10</button>
+        <button type="button" data-tier="gross" aria-pressed="false">11–20</button>
+        <button type="button" data-tier="verbund" aria-pressed="false">21+</button>
+      </div>
+    </div>
+
+    <div class="pr-grid">
+      <article class="pr-card" data-tier="solo">
+        <span class="pr-badge">Passt zu Ihrer Praxis</span>
+        <div class="pr-name">Solo</div>
+        <div class="pr-size">1 Behandler:in</div>
+        <div class="pr-price"><strong>39&nbsp;€</strong><span>/ Monat</span></div>
+        <div class="pr-setup">Einrichtung einmalig 190&nbsp;€</div>
+      </article>
+      <article class="pr-card is-match" data-tier="praxis">
+        <span class="pr-badge">Passt zu Ihrer Praxis</span>
+        <div class="pr-name">Praxis</div>
+        <div class="pr-size">2–5 Behandler:innen</div>
+        <div class="pr-price"><strong>69&nbsp;€</strong><span>/ Monat</span></div>
+        <div class="pr-setup">Einrichtung einmalig 390&nbsp;€</div>
+      </article>
+      <article class="pr-card" data-tier="team">
+        <span class="pr-badge">Passt zu Ihrer Praxis</span>
+        <div class="pr-name">Team</div>
+        <div class="pr-size">6–10 Behandler:innen</div>
+        <div class="pr-price"><strong>99&nbsp;€</strong><span>/ Monat</span></div>
+        <div class="pr-setup">Einrichtung einmalig 590&nbsp;€</div>
+      </article>
+      <article class="pr-card" data-tier="gross">
+        <span class="pr-badge">Passt zu Ihrer Praxis</span>
+        <div class="pr-name">Groß</div>
+        <div class="pr-size">11–20 Behandler:innen</div>
+        <div class="pr-price"><strong>149&nbsp;€</strong><span>/ Monat</span></div>
+        <div class="pr-setup">Einrichtung einmalig 890&nbsp;€</div>
+      </article>
+      <div class="pr-big" data-tier="verbund">
+        <p><strong>Ab 21 Behandler:innen oder mehrere Standorte (Verbund):</strong> Preis nach Angebot. Jeder zusätzliche Standort: +39&nbsp;€ / Monat.</p>
+        <a href="/kontakt.html">Angebot anfordern →</a>
+      </div>
+    </div>
+
+    <ul class="pr-terms">
+      <li><strong>Einführungspreise</strong> für Neukunden bis 31.03.2027</li>
+      <li><strong>60 Tage Geld-zurück</strong> auf die Lizenzgebühr</li>
+      <li>12 Monate Laufzeit, danach monatlich kündbar</li>
+      <li>Jährliche Zahlung: <strong>−10&nbsp;%</strong></li>
+      <li>Preise netto. USt entfällt derzeit (Kleinunternehmer, §&nbsp;19 UStG).</li>
+    </ul>
+
+    <div class="pr-incl">
+      <div class="pr-box">
+        <h3>In jedem Paket enthalten</h3>
+        <p>Keine Module, keine Aufpreise je Funktion. Was Sie sehen, ist der Preis.</p>
+        <ul class="pr-list">
+          <li>Termine &amp; Serienplanung</li>
+          <li>Patientenakte &amp; Befund</li>
+          <li>Verordnungen &amp; Verordnungsprüfung (Barcode)</li>
+          <li>Rechnungen &amp; Zuzahlung</li>
+          <li>Vorbereitung der GKV-Abrechnung nach §&nbsp;302</li>
+          <li>Elektronisches Fahrtenbuch</li>
+          <li>Online-Terminanfragen</li>
+          <li>Tägliche verschlüsselte Sicherung</li>
+          <li>Updates inklusive</li>
         </ul>
       </div>
-      <button class="px-pricing-more-btn" type="button">
-        <span class="px-more-text">Mehr anzeigen</span>
-        <em class="px-more-arrow">↓</em>
-      </button>
-      <a href="/vorregistrierung.html" class="btn btn-secondary px-pricing-btn">14 Tage kostenlos testen</a>
-    </article>
-
-    [Plan 2: Professional]
-    <article class="px-pricing-card">
-      <div class="px-pricing-tag">Für Praxen mit Team</div>
-      <h3 class="px-pricing-title">Professional</h3>
-      <div class="px-pricing-price">
-        <span class="currency">€</span>
-        <span class="amount px-price-amount" data-month="49" data-year="42">49</span>
-        <span class="period">/ Monat</span>
-      </div>
-      <div class="px-pricing-billing" data-billing>monatlich abgerechnet</div>
-      <p class="px-pricing-desc">Vollständige Lösung für wachsende Praxen mit Team und Hausbesuchen.</p>
-      <div class="px-plan-base">Alles aus Starter</div>
-      <div class="px-plan-und-noch">und noch</div>
-      <ul class="px-pricing-features px-pricing-features--sub">
-        <li>✓ Bis zu 5 Therapeut:innen</li>
-        <li>✓ Rezeptprüfung (Barcode + Regelprüfung)</li>
-        <li>✓ Elektronisches Fahrtenbuch</li>
-        <li>✓ Lead-Management</li>
-        <li>✓ Vorrangiger Support (Mail &amp; Tel)</li>
-      </ul>
-      <div class="px-pricing-extras">
-        <ul class="px-pricing-features px-pricing-extras-list">
-          <li>✓ Teamkalender &amp; geteilte Verfügbarkeit</li>
-          <li>✓ Hausbesuchs-Routing (Google Maps)</li>
-          <li>✓ Rezept-Laufzeitkontrolle &amp; Mahnwesen</li>
-          <li>✓ Umsatz- &amp; Auslastungsstatistiken</li>
-          <li>✓ Individuelle Zeiten pro Therapeut:in</li>
-          <li>✓ Rollen: Therapeut / Rezeptionist</li>
+      <div class="pr-box">
+        <h3>Einrichtungspaket</h3>
+        <p>Einmalig, je nach Paket (siehe oben). Danach arbeiten Sie sofort mit Ihren eigenen Daten.</p>
+        <ul class="pr-list pr-list--one">
+          <li>Einrichtung Ihres eigenen Servers</li>
+          <li>Stammdaten &amp; Leistungen angelegt</li>
+          <li>Standard-Datenübernahme: Patienten und laufende Verordnungen</li>
+          <li>2 Online-Schulungen à 90 Minuten</li>
+          <li>Übergabe des Zugangs an Sie</li>
         </ul>
       </div>
-      <button class="px-pricing-more-btn" type="button">
-        <span class="px-more-text">Mehr anzeigen</span>
-        <em class="px-more-arrow">↓</em>
-      </button>
-      <a href="/vorregistrierung.html" class="btn btn-secondary px-pricing-btn">14 Tage kostenlos testen</a>
-    </article>
+    </div>
 
-    [Plan 3: Klinik (Standout)]
-    <article class="px-pricing-card featured">
-      <div class="px-pricing-tag featured-tag">Beliebteste Wahl</div>
-      <h3 class="px-pricing-title">Klinik</h3>
-      <div class="px-pricing-price">
-        <span class="currency">€</span>
-        <span class="amount px-price-amount" data-month="99" data-year="84">99</span>
-        <span class="period">/ Monat</span>
+    <div class="pr-server">
+      <div class="pr-box">
+        <h3>Weitere Leistungen</h3>
+        <table class="pr-extras">
+          <tr><td>Datenübernahme Plus (Behandlungshistorie, Dokumente, mehrere Quellsysteme)</td><td>ab 290&nbsp;€</td></tr>
+          <tr><td>Zusätzliche Online-Schulung</td><td>89&nbsp;€ / Std.</td></tr>
+          <tr><td>Schulungstag vor Ort</td><td>690&nbsp;€ zzgl. Anfahrt</td></tr>
+          <tr><td>KI-Assistent (Serienplanung, Mail-Entwurf, Diktat)</td><td>in Kürze</td></tr>
+          <tr><td>TI-Anbindung</td><td>in Vorbereitung</td></tr>
+        </table>
       </div>
-      <div class="px-pricing-billing" data-billing>monatlich abgerechnet</div>
-      <p class="px-pricing-desc">Maximale Leistung inkl. GKV-Abrechnung für interdisziplinäre Praxen.</p>
-      <div class="px-plan-base">Alles aus Professional</div>
-      <div class="px-plan-und-noch">und noch</div>
-      <ul class="px-pricing-features px-pricing-features--sub">
-        <li>✓ Unbegrenzte Therapeut:innen</li>
-        <li>✓ §302 DTA-Abrechnung vorbereiten</li>
-        <li>✓ Rechte- &amp; Rollenverwaltung</li>
-        <li>✓ Abrechnung ohne Provision (0 %)</li>
-        <li>✓ Persönlicher Account Manager</li>
-      </ul>
-      <div class="px-pricing-extras">
-        <ul class="px-pricing-features px-pricing-extras-list">
-          <li>✓ ITSG-konforme DTA-Dateierstellung</li>
-          <li>✓ 93 Krankenkassen inkl. Stammdaten</li>
-          <li>✓ Zuzahlung-Nachweis &amp; Quittungen</li>
-          <li>✓ GoBD-konforme Belegliste</li>
-          <li>✓ Therapiebericht-Erstellung</li>
-          <li>✓ Prioritäts-Support</li>
-        </ul>
+      <div style="display:grid; gap:1.2rem; align-content:start;">
+        <div class="pr-box">
+          <h3>Serverkosten</h3>
+          <p class="pr-server-text">Die Serverkosten zahlt Ihre Praxis direkt an Hetzner (Rechenzentrum in Deutschland) – derzeit rund 25–30&nbsp;€ im Monat inklusive Sicherung. Den genauen Betrag nennen wir Ihnen vor der Einrichtung.</p>
+        </div>
+        <div class="pr-why">
+          <strong>Warum zahlen Sie den Server selbst?</strong>
+          <p>Weil er Ihnen gehört: Der Vertrag läuft auf Ihre Praxis, Ihre Patientendaten liegen bei Ihnen – nicht bei uns.</p>
+        </div>
       </div>
-      <button class="px-pricing-more-btn" type="button">
-        <span class="px-more-text">Mehr anzeigen</span>
-        <em class="px-more-arrow">↓</em>
-      </button>
-      <a href="/vorregistrierung.html" class="btn btn-primary-arrow px-pricing-btn-primary">
-        Kostenlos starten
-        <span class="arrow-pill">↗</span>
+    </div>
+
+    <div class="pr-cta">
+      <p><strong>Unsicher, welches Paket passt?</strong> Im Analysegespräch rechnen wir mit Ihren Zahlen: Behandler:innen, Standorte, Datenübernahme. Danach erhalten Sie ein festes Angebot.</p>
+      <a href="/demo-booking.html" class="btn-book" data-cta="pricing-book">
+        Analysegespräch buchen
+        <span class="btn-book-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></svg></span>
       </a>
-    </article>
-
-    [Plan 4: Enterprise]
-    <article class="px-pricing-card">
-      <div class="px-pricing-tag">Mehrere Standorte</div>
-      <h3 class="px-pricing-title">Enterprise</h3>
-      <div class="px-pricing-price">
-        <span class="amount" style="font-size:2rem; letter-spacing:-0.01em;">Individuell</span>
-      </div>
-      <div class="px-pricing-billing" style="visibility:hidden">–</div>
-      <p class="px-pricing-desc">Für Praxisverbünde &amp; mehrere Standorte mit individuellen Anforderungen.</p>
-      <div class="px-plan-base">Alles aus Klinik</div>
-      <div class="px-plan-und-noch">und noch</div>
-      <ul class="px-pricing-features px-pricing-features--sub">
-        <li>✓ Multi-Standort-Verwaltung</li>
-        <li>✓ Standortübergreifende Auswertung</li>
-        <li>✓ Persönlicher Ansprechpartner &amp; SLA</li>
-        <li>✓ Individuelle Anbindung</li>
-        <li>✓ Dediziertes Onboarding</li>
-      </ul>
-      <div class="px-pricing-extras">
-        <ul class="px-pricing-features px-pricing-extras-list">
-          <li>✓ Getrennte Datenhaltung pro Standort</li>
-          <li>✓ Zentrales Reporting-Dashboard</li>
-          <li>✓ Rollen &amp; Rechte standortübergreifend</li>
-          <li>✓ Custom API-Anbindung auf Anfrage</li>
-          <li>✓ Vertragslaufzeit individuell verhandelbar</li>
-        </ul>
-      </div>
-      <button class="px-pricing-more-btn" type="button">
-        <span class="px-more-text">Mehr anzeigen</span>
-        <em class="px-more-arrow">↓</em>
-      </button>
-      <a href="mailto:info@praxura.de?subject=Enterprise%20Anfrage%20Praxura" class="btn btn-secondary px-pricing-btn">Gespräch vereinbaren</a>
-    </article>
-
+    </div>
   </div>
--->
+
+  <script>
+  (function () {
+    var root = document.getElementById('preise');
+    if (!root) return;
+    var btns = root.querySelectorAll('.pr-pick-opts button');
+    var cards = root.querySelectorAll('.pr-grid [data-tier]');
+    function pick(tier) {
+      btns.forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.tier === tier ? 'true' : 'false'); });
+      cards.forEach(function (c) { c.classList.toggle('is-match', c.dataset.tier === tier); });
+    }
+    btns.forEach(function (b) { b.addEventListener('click', function () { pick(b.dataset.tier); }); });
+  })();
+  </script>
+</section>
+
+<!-- ────────────── Zusatzmodul: §302-Klarstellung + TI ────────────── -->
+<section class="block" id="zusatzmodul" data-reveal style="padding-top: 0;">
 
   <!-- §302 Klarstellung: kein Abrechnungsdienstleister -->
   <div style="max-width:60rem; margin:2.4rem auto 0; padding:1.4rem 1.6rem; border:1px solid var(--line); border-radius:14px; background:rgba(107,85,56,0.04);">
@@ -1982,24 +2037,34 @@
 <aside class="px-closing" id="kontakt" data-reveal>
   <div class="px-closing-card">
     <div>
-      <div class="px-closing-eyebrow">Analysegespräch · kostenfrei</div>
+      <div class="px-closing-eyebrow">Analysegespräch · kostenfrei · 30 Minuten</div>
       <h2 class="px-closing-title">
         Sehen, ob Praxura zu Ihrer <em>Praxis passt.</em>
       </h2>
-      <p class="px-closing-text">
-        In 30 Minuten klären wir Ihre Anforderungen, werfen einen Blick auf Ihre aktuelle Software und zeigen Ihnen, wie Sie mit Praxura Zeit und bares Geld sparen können. Unverbindlich und persönlich.
-      </p>
+      <ol class="px-closing-agenda">
+        <li><strong>Ihr Alltag zuerst.</strong> Wie arbeiten Sie heute, wo verlieren Sie Zeit oder Geld?</li>
+        <li><strong>Live statt Folien.</strong> Wir zeigen Praxura an Fällen aus Ihrem Fachbereich.</li>
+        <li><strong>Ehrliche Einschätzung.</strong> Passt Praxura nicht zu Ihnen, sagen wir es Ihnen.</li>
+      </ol>
+      <div class="px-closing-host">
+        <picture>
+          <source srcset="assets/img/gruender-kemal.webp" type="image/webp" />
+          <img src="assets/img/gruender-kemal.jpg" alt="Kemal Demir, Gründer von Praxura" width="56" height="56" loading="lazy" decoding="async" />
+        </picture>
+        <p>Sie sprechen mit <strong>Kemal Demir</strong>, Gründer von Praxura.<br />Kein Callcenter, kein Verkaufsskript.</p>
+      </div>
     </div>
     <div class="px-closing-side">
-      <a href="/kontakt.html" class="px-closing-btn">
-        Uns schreiben
-        <span class="px-closing-btn-circle" aria-hidden="true">→</span>
+      <a href="/demo-booking.html" class="btn-book btn-book--light" data-cta="closing-book">
+        Termin auswählen
+        <span class="btn-book-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></svg></span>
       </a>
-      <a href="/demo-booking.html" class="px-closing-btn" style="background:transparent;border:1px solid rgba(248,243,232,0.3);color:var(--bg);box-shadow:none;">
-        Termin buchen
-        <span class="px-closing-btn-circle" style="background:rgba(248,243,232,0.15);color:var(--bg);" aria-hidden="true">→</span>
-      </a>
-      <div class="px-closing-side-quiet">Oder direkt per E-Mail</div>
+      <ul class="book-assure book-assure--dark">
+        <li>freie Termine sofort sichtbar</li>
+        <li>Bestätigung per E-Mail</li>
+      </ul>
+      <div class="px-closing-side-quiet">Lieber schriftlich?</div>
+      <a href="/kontakt.html" class="px-closing-side-mail">Nachricht schreiben</a>
       <a href="mailto:info@praxura.de" class="px-closing-side-mail">info@praxura.de</a>
     </div>
   </div>
@@ -2020,9 +2085,10 @@
       <summary>Kann ich mit Praxura selbst nach §302 SGB V abrechnen — ohne Abrechnungszentrum?</summary>
       <p>Ja. Praxura erstellt aus Ihren Behandlungsdaten die fertigen, verschlüsselten DTA-Dateien für die Abrechnung nach §302 SGB V. Die Signatur mit Ihrem eigenen ITSG-Zertifikat und die Einreichung beim Kostenträger nehmen Sie selbst vor — kommissionsfrei und ohne Abrechnungszentrum. Sie zahlen keine Provision von 2–5 % auf Ihren Umsatz.</p>
     </details>
-    <!-- PREISE VORÜBERGEHEND AUSGEBLENDET (2026-08-17) — FAQ "Was kostet Praxura?" entfernt.
-         Wiederherstellen: details-Block mit Text "Praxura startet bei 29 EUR pro Monat (Starter),
-         Professional 49 EUR und Klinik 99 EUR ..." hier wieder einsetzen. -->
+    <details class="px-faq-item">
+      <summary>Was kostet Praxura?</summary>
+      <p>Praxura kostet einen festen Monatspreis nach Praxisgröße, ohne Prozent vom Umsatz: Solo (1 Behandler:in) 39 €, Praxis (2–5) 69 €, Team (6–10) 99 €, Groß (11–20) 149 € pro Monat, ab 21 Behandler:innen nach Angebot. Dazu kommt ein einmaliges Einrichtungspaket (190–890 €) inklusive Server-Einrichtung, Datenübernahme und zwei Online-Schulungen. Die Serverkosten (derzeit rund 25–30 € im Monat) zahlt Ihre Praxis direkt an Hetzner. Einführungspreise für Neukunden bis 31.03.2027, Preise netto, USt entfällt derzeit (§ 19 UStG). <a href="#preise">Alle Preise ansehen</a></p>
+    </details>
     <details class="px-faq-item">
       <summary>Ist Praxura ein PVS für Heilmittelerbringer?</summary>
       <p>Ja. Praxura ist ein Praxisverwaltungssystem (PVS) speziell für Heilmittelerbringer – Physiotherapie, Ergotherapie, Logopädie und Podologie. Anders als Arzt-PVS ist es auf Heilmittelverordnungen (Muster 13), die Heilmittelrichtlinie und die Abrechnung nach §302 SGB V ausgelegt.</p>
@@ -2059,7 +2125,7 @@
       <h4>Produkt</h4>
       <ul>
         <li><a href="#funktionen">Funktionen</a></li>
-        <!-- PREISE VORÜBERGEHEND AUSGEBLENDET (2026-08-17) — <li><a href="#preise">Preise</a></li> -->
+        <li><a href="#preise">Preise</a></li>
         <li><a href="/praxis.html">Alle Details</a></li>
         <li><a href="/pvs-heilmittelerbringer.html">PVS für Heilmittelerbringer</a></li>
         <li><a href="/heilmittelabrechnung-software.html">§302-Abrechnung &amp; Provisionsfrei</a></li>
@@ -2164,7 +2230,7 @@
 <!-- Chatbot Widget -->
 <script>
 (function(){
-  var DATA = {"botName": "Praxura", "welcomeMessage": "Herzlich willkommen bei Praxura! Ich helfe Ihnen gerne bei Fragen zu unserer All-in-One Praxissoftware für Therapeuten.", "noMatchMessage": "Dazu kann ich leider keine Auskunft geben. Bei weiteren Fragen wenden Sie sich bitte direkt an kontakt@praxura.de", "tone": "formal", "brandColor": "#b1891b", "language": "de", "typeMessage": "Nachricht schreiben...", "errTooShort": "Bitte schreiben Sie eine längere Nachricht.", "errTooLong": "Ihre Nachricht ist zu lang (max. 500 Zeichen).", "errCooldown": "Bitte warten Sie einen Moment...", "errNetwork": "Verbindungsproblem. Bitte später erneut versuchen.", "sessionEnded": "Diese Unterhaltung wurde beendet. Bei weiteren Fragen kontaktieren Sie uns bitte direkt.", "sessionLimit": "Das Nachrichtenlimit dieser Sitzung wurde erreicht.", "chatWebhookUrl": "https://n8n.infinitymade.de/webhook/chat", "limits": {"minLen": 2, "maxLen": 500, "maxMessagesPerSession": 30, "maxOffTopicStrikes": 3, "cooldownMs": 1500}, "extraKnowledge": "Praxura Wissensdatei für KI-Assistenten & Support-Chatbot Dieses Dokument enthält alle relevanten Informationen über Praxura — Produkt, Funktionen, Preise, Abrechnung, Datenschutz und häufige Fragen. Es dient als Wissensbasis für den KI-Chatbot auf praxura.de. Stand: Oktober 2026 · Kontakt: kontakt@praxura.de · Website: praxura.de 1. Was ist Praxura? Praxura ist eine moderne All-in-One-Praxissoftware speziell für Heilmittelerbringer in Deutschland — Physiotherapie, Ergotherapie, Logopädie und Podologie. Praxura ist ein Praxisverwaltungssystem (PVS) und läuft als eigene Praxis-Cloud der Praxis: so bequem wie Cloud-Software, aber die Patientendaten liegen auf dem eigenen Server der Praxis, nicht bei Praxura. Praxura richtet den Server im eigenen Hetzner-Konto der Praxis ein (Rechenzentrum in Deutschland, Vertrag direkt zwischen Praxis und Hetzner), installiert Praxura, richtet die Sicherung ein und übergibt den Zugang, bevor der erste Patient angelegt wird. Alternativ läuft Praxura auf einem Windows-PC oder Linux-Server in der Praxis. Praxura ist keine vom Hersteller gehostete Cloud-Software. Die Software deckt die gesamte Praxisverwaltung ab: von der Terminplanung über die digitale Patientenakte bis hin zur GKV-Abrechnungsvorbereitung nach § 302 SGB V. Praxura ist ein Software-Werkzeug zur Vorbereitung der Abrechnung — kein Abrechnungszentrum und kein Abrechnungsdienstleister. Genau deshalb fallen keine Provisionen auf den Umsatz an. Hersteller: Praxura, Inh. Yavuz Kemal Demir (Siegburg, NRW) · Website: praxura.de 2. Zielgruppe Praxura richtet sich ausschließlich an: Physiotherapeut:innen, Ergotherapeut:innen, Logopäd:innen, Podolog:innen, interdisziplinäre Heilmittelpraxen und Praxisverbünde. Nicht geeignet für: Arztpraxen, Zahnarztpraxen, Kosmetiksalons oder andere Branchen außerhalb der Heilmittelversorgung. 3. Kernfunktionen 3.1 Terminverwaltung & Kalender: Tages-, Wochen- und Monatsansicht, Farbcodierung, Termin in unter 10 Sekunden anlegen, Wartelisten-Verwaltung, Online-Terminanfragen, Teamkalender (automatische Terminerinnerungen gibt es derzeit nicht). 3.2 Digitale Patientenakte: Behandlungsdokumentation, Rezeptverwaltung mit Laufzeitkontrolle, Anamnese und Therapieberichte, GKV/Privat/Selbstzahler, PDF-Export. 3.3 Verordnungsprüfung: Verordnungsdaten aus dem Barcode des Muster 13 lokal einlesen (das Bild verlässt den Rechner nicht), Prüfung gegen die Heilmittelrichtlinie, Hinweise auf Absetzungsrisiken vor Behandlungsbeginn. KI-Funktionen sind derzeit nicht aktiv. 3.4 §302 GKV-Abrechnung: ITSG-konforme DTA-Dateien, 93 Krankenkassen, Zuzahlung-Nachweise, GoBD-Belegliste, ohne Provision. 3.5 Elektronisches Fahrtenbuch: Fahrten zu Hausbesuchen mit Kilometern dokumentieren. 3.6 B2B & Lead-Management: Zuweiser, Kooperationspartner, Interessenten verwalten. 3.7 Statistiken: Umsatz- und Auslastungsstatistiken, standortübergreifend bei mehreren Standorten. 3.8 Rollen & Rechte: Inhaber, Therapeut, Rezeptionist. 3.9 TI-Anbindung: optionales Zusatzmodul, geplant zur TI-Pflicht ab 01.10.2027, heute noch nicht verfügbar; Pflicht ab 01.10.2027, Kosten können nach aktuellem Stand weitgehend durch die TI-Förderpauschale gedeckt sein (Physio ca. 221,74 €/Monat 2026, ohne Gewähr). 4. Preise: Die Preisgestaltung wird derzeit überarbeitet und ist vorübergehend nicht veröffentlicht. Auf Preisfragen bitte antworten: Preise auf Anfrage — Kontakt kontakt@praxura.de. Keine Beträge, Tarifnamen oder Rabatte nennen. 5. Onboarding: unverbindlicher Testzugang, kein Vertrag, Patientenstamm per CSV-Import selbst übernehmen (Spalten frei zuordenbar) oder begleitetes Datenübernahme-Paket (Festpreis auf Anfrage, keine Beträge nennen); in der Podologie zusätzlich offene und teilweise behandelte, noch nicht abgerechnete Verordnungen (mit bereits erbrachten Behandlungstagen und Zuzahlungs-Vermerk) sowie die Vorgeschichte; Befunde, Behandlungsnotizen, Rechnungen und bereits abgerechnete Verordnungen werden nicht übernommen, kostenloses Einrichtungsgespräch. 6. Datenschutz: Patientendaten liegen ausschließlich auf dem Server der Praxis (eigene Praxis-Cloud oder Praxis-PC); Praxura hat keinen Zugang dazu, auch nicht im Support. Ausgenommen ist nur, was die Praxis selbst freigibt: Bildschirmfreigabe bei der Datenübernahme und Zusatzfunktionen wie KI-Texterkennung (derzeit nicht aktiv), dafür gilt ein gesonderter AV-Vertrag. Nie sagen: \"gehostet von Praxura\", \"Cloud-Praxissoftware\", \"C5-zertifiziert\", \"DSGVO-zertifiziert\". Nächtliche verschlüsselte Sicherung auf ein Ziel der Praxis (externe Festplatte, NAS, Storage Box), automatische Updates, Recht auf Löschung, kein Training auf Kundendaten. 7. Support: E-Mail kontakt@praxura.de, Telefon-Support, persönliche Betreuung und SLA je nach Praxisgröße — Details auf Anfrage. 8. FAQ: Für wen? Nur Heilmittelerbringer. §302 ohne Abrechnungszentrum? Ja, ohne Provision. Kostenlos testen? Ja, unverbindlicher Testzugang auf Anfrage. TI-Anbindung? Geplant als Zusatzmodul (geplant zur TI-Pflicht ab 01.10.2027, heute noch nicht verfügbar); die Kosten können nach aktuellem Stand weitgehend durch die TI-Förderpauschale gedeckt sein (ohne Gewähr). Ist Praxura Cloud-Software? Praxura ist die eigene Praxis-Cloud der Praxis: von überall im Browser erreichbar, Updates automatisch, aber der Server gehört zum Konto der Praxis, nicht zu Praxura. Wo liegen die Daten? Auf dem eigenen Server der Praxis, nicht bei Praxura. Smartphone? Ja, mit der Praxis-Cloud von überall; beim Betrieb auf einem Praxis-PC unterwegs über das VPN der Praxis. Einrichtung? Übernimmt Praxura. Status: Pilotphase mit ausgewählten Praxen, zuerst Podologie. Kündigung? Keine Mindestlaufzeit.", "qaPairs": [{"question": "Was ist Praxura?", "answer": "Praxura ist eine Praxissoftware (PVS) für Heilmittelerbringer – Physiotherapie, Ergotherapie, Logopädie und Podologie. Sie bündelt Terminverwaltung, Patientenakte, Verordnungsprüfung, §302-Abrechnungsvorbereitung und ein elektronisches Fahrtenbuch – als Ihre eigene Praxis-Cloud: so bequem wie Cloud-Software, aber Ihre Patientendaten bleiben auf Ihrem eigenen Server, nicht bei uns.", "keywords": "praxissoftware, physiotherapie, ergotherapie, logopädie, podologie, funktionen"}, {"question": "Kann ich mit Praxura meine Abrechnung nach §302 SGB V vorbereiten?", "answer": "Ja, Praxura erstellt aus Ihren Behandlungsdaten fertige, verschlüsselte DTA-Dateien für die Abrechnung nach §302 SGB V. Die Einreichung nehmen Sie selbst vor — somit zahlen Sie 0 % Provision auf Ihren Umsatz.", "keywords": "abrechnung, §302, dta, kassenabrechnung, provision, einsparung"}, {"question": "Was kostet Praxura?", "answer": "Die Preisgestaltung wird derzeit überarbeitet, daher sind aktuell keine Preise veröffentlicht. Schreiben Sie uns gerne an kontakt@praxura.de — wir melden uns mit einem passenden Vorschlag für Ihre Praxis.", "keywords": "preise, kosten, tarife, starter, professional, klinik"}, {"question": "Wie funktioniert die Verordnungsprüfung?", "answer": "Praxura liest die Verordnungsdaten aus dem Barcode des Muster 13 lokal ein – das Bild verlässt Ihren Rechner nicht – und prüft sie gegen die Heilmittelrichtlinie. Sie bestätigen die Felder; Formfehler werden vor Behandlungsbeginn angezeigt.", "keywords": "rezeptprüfung, ki, ocr, scan, absetzung, heilmittelverordnung"}, {"question": "Ist Praxura DSGVO-konform und wo werden die Daten gespeichert?", "answer": "Auf Ihrem eigenen Server – nicht bei Praxura: in Ihrer Praxis-Cloud im eigenen Hetzner-Konto (Rechenzentrum in Deutschland) oder auf einem PC/Server in Ihrer Praxis. Praxura hat keinen Zugang zu Ihren Patientendaten, auch nicht im Support – ausgenommen nur, was Sie selbst freigeben (Bildschirmfreigabe bei der Datenübernahme). Jede Nacht entsteht eine verschlüsselte Sicherung auf ein separates Ziel.", "keywords": "datenschutz, dsgvo, hosting, avv, sicherheit, cloud, server"}, {"question": "Ist Praxura eine Cloud-Software?", "answer": "Praxura ist Ihre eigene Praxis-Cloud – so bequem wie Cloud-Software, aber Ihre Patientendaten bleiben auf Ihrem eigenen Server, nicht bei uns. Wir richten den Server in Ihrem Hetzner-Konto ein, installieren Praxura und übergeben Ihnen den Zugang. Danach erreichen Sie Praxura von überall im Browser, Updates kommen automatisch.", "keywords": "cloud, saas, online, browser, server, hetzner, einrichtung, installation"}, {"question": "Kann ich Praxura kostenlos testen?", "answer": "Ja. Sie können Praxura unverbindlich und kostenlos testen. Schreiben Sie uns an kontakt@praxura.de — wir richten Ihnen einen Testzugang ein und begleiten Sie beim Start.", "keywords": "testphase, kostenlos testen, gratis, ausprobieren, unverbindlich"}, {"question": "Bietet Praxura eine TI-Anbindung?", "answer": "Ja, als optionales Zusatzmodul. Die TI-Anschlusspflicht gilt ab 01.10.2027. Die Kosten können nach aktuellem Stand weitgehend durch die TI-Förderpauschale gedeckt sein (Stand 2026, ohne Gewähr).", "keywords": "ti-anbindung, telematikinfrastruktur, gkv, förderung, refinanzierung"}, {"question": "Wie kann ich Kontakt aufnehmen oder ein Gespräch buchen?", "answer": "Am schnellsten über unsere Online-Terminbuchung: praxura.de/demo-booking.html — dort wählen Sie direkt einen freien Termin für ein kostenloses Analysegespräch (ca. 30 Minuten, per Video). Alternativ schreiben Sie uns an kontakt@praxura.de.", "keywords": "kontakt, e-mail, beratung, support, termin, demo"}]};
+  var DATA = {"botName": "Praxura", "welcomeMessage": "Herzlich willkommen bei Praxura! Ich helfe Ihnen gerne bei Fragen zu unserer All-in-One Praxissoftware für Therapeuten.", "noMatchMessage": "Dazu kann ich leider keine Auskunft geben. Bei weiteren Fragen wenden Sie sich bitte direkt an kontakt@praxura.de", "tone": "formal", "brandColor": "#b1891b", "language": "de", "typeMessage": "Nachricht schreiben...", "errTooShort": "Bitte schreiben Sie eine längere Nachricht.", "errTooLong": "Ihre Nachricht ist zu lang (max. 500 Zeichen).", "errCooldown": "Bitte warten Sie einen Moment...", "errNetwork": "Verbindungsproblem. Bitte später erneut versuchen.", "sessionEnded": "Diese Unterhaltung wurde beendet. Bei weiteren Fragen kontaktieren Sie uns bitte direkt.", "sessionLimit": "Das Nachrichtenlimit dieser Sitzung wurde erreicht.", "chatWebhookUrl": "https://n8n.infinitymade.de/webhook/chat", "limits": {"minLen": 2, "maxLen": 500, "maxMessagesPerSession": 30, "maxOffTopicStrikes": 3, "cooldownMs": 1500}, "extraKnowledge": "Praxura Wissensdatei für KI-Assistenten & Support-Chatbot Dieses Dokument enthält alle relevanten Informationen über Praxura — Produkt, Funktionen, Preise, Abrechnung, Datenschutz und häufige Fragen. Es dient als Wissensbasis für den KI-Chatbot auf praxura.de. Stand: Oktober 2026 · Kontakt: kontakt@praxura.de · Website: praxura.de 1. Was ist Praxura? Praxura ist eine moderne All-in-One-Praxissoftware speziell für Heilmittelerbringer in Deutschland — Physiotherapie, Ergotherapie, Logopädie und Podologie. Praxura ist ein Praxisverwaltungssystem (PVS) und läuft als eigene Praxis-Cloud der Praxis: so bequem wie Cloud-Software, aber die Patientendaten liegen auf dem eigenen Server der Praxis, nicht bei Praxura. Praxura richtet den Server im eigenen Hetzner-Konto der Praxis ein (Rechenzentrum in Deutschland, Vertrag direkt zwischen Praxis und Hetzner), installiert Praxura, richtet die Sicherung ein und übergibt den Zugang, bevor der erste Patient angelegt wird. Alternativ läuft Praxura auf einem Windows-PC oder Linux-Server in der Praxis. Praxura ist keine vom Hersteller gehostete Cloud-Software. Die Software deckt die gesamte Praxisverwaltung ab: von der Terminplanung über die digitale Patientenakte bis hin zur GKV-Abrechnungsvorbereitung nach § 302 SGB V. Praxura ist ein Software-Werkzeug zur Vorbereitung der Abrechnung — kein Abrechnungszentrum und kein Abrechnungsdienstleister. Genau deshalb fallen keine Provisionen auf den Umsatz an. Hersteller: Praxura, Inh. Yavuz Kemal Demir (Siegburg, NRW) · Website: praxura.de 2. Zielgruppe Praxura richtet sich ausschließlich an: Physiotherapeut:innen, Ergotherapeut:innen, Logopäd:innen, Podolog:innen, interdisziplinäre Heilmittelpraxen und Praxisverbünde. Nicht geeignet für: Arztpraxen, Zahnarztpraxen, Kosmetiksalons oder andere Branchen außerhalb der Heilmittelversorgung. 3. Kernfunktionen 3.1 Terminverwaltung & Kalender: Tages-, Wochen- und Monatsansicht, Farbcodierung, Termin in unter 10 Sekunden anlegen, Wartelisten-Verwaltung, Online-Terminanfragen, Teamkalender (automatische Terminerinnerungen gibt es derzeit nicht). 3.2 Digitale Patientenakte: Behandlungsdokumentation, Rezeptverwaltung mit Laufzeitkontrolle, Anamnese und Therapieberichte, GKV/Privat/Selbstzahler, PDF-Export. 3.3 Verordnungsprüfung: Verordnungsdaten aus dem Barcode des Muster 13 lokal einlesen (das Bild verlässt den Rechner nicht), Prüfung gegen die Heilmittelrichtlinie, Hinweise auf Absetzungsrisiken vor Behandlungsbeginn. KI-Funktionen sind derzeit nicht aktiv. 3.4 §302 GKV-Abrechnung: ITSG-konforme DTA-Dateien, 93 Krankenkassen, Zuzahlung-Nachweise, GoBD-Belegliste, ohne Provision. 3.5 Elektronisches Fahrtenbuch: Fahrten zu Hausbesuchen mit Kilometern dokumentieren. 3.6 B2B & Lead-Management: Zuweiser, Kooperationspartner, Interessenten verwalten. 3.7 Statistiken: Umsatz- und Auslastungsstatistiken, standortübergreifend bei mehreren Standorten. 3.8 Rollen & Rechte: Inhaber, Therapeut, Rezeptionist. 3.9 TI-Anbindung: optionales Zusatzmodul, geplant zur TI-Pflicht ab 01.10.2027, heute noch nicht verfügbar; Pflicht ab 01.10.2027, Kosten können nach aktuellem Stand weitgehend durch die TI-Förderpauschale gedeckt sein (Physio ca. 221,74 €/Monat 2026, ohne Gewähr). 4. Preise (Einführungspreise für Neukunden bis 31.03.2027, netto, USt entfällt derzeit nach § 19 UStG): fester Monatspreis nach Anzahl Behandler:innen, kein Prozent vom Umsatz, alle Funktionen in jedem Paket. Solo (1 Behandler:in) 39 €/Monat, Praxis (2–5) 69 €/Monat, Team (6–10) 99 €/Monat, Groß (11–20) 149 €/Monat, ab 21 Behandler:innen oder Verbund nach Angebot, zusätzlicher Standort +39 €/Monat. Empfang und Verwaltung werden nicht gezählt. Einmaliges Einrichtungspaket: Solo 190 €, Praxis 390 €, Team 590 €, Groß 890 € (Server-Einrichtung, Stammdaten, Standard-Datenübernahme, 2 Online-Schulungen à 90 Min.). Serverkosten zahlt die Praxis direkt an Hetzner, derzeit rund 25–30 € im Monat inkl. Sicherung. 12 Monate Laufzeit, danach monatlich kündbar, 60 Tage Geld-zurück auf die Lizenzgebühr, −10 % bei jährlicher Zahlung. Weitere Leistungen: Datenübernahme Plus ab 290 €, zusätzliche Online-Schulung 89 €/Std., Schulungstag vor Ort 690 € zzgl. Anfahrt. KI-Assistent in Kürze, TI-Anbindung in Vorbereitung (keine Preise nennen). Keine Rabatte versprechen; für ein festes Angebot auf das Analysegespräch verweisen (praxura.de/demo-booking.html). 5. Onboarding: unverbindlicher Testzugang, kein Vertrag, Patientenstamm per CSV-Import selbst übernehmen (Spalten frei zuordenbar) oder begleitetes Datenübernahme-Paket (Festpreis auf Anfrage, keine Beträge nennen); in der Podologie zusätzlich offene und teilweise behandelte, noch nicht abgerechnete Verordnungen (mit bereits erbrachten Behandlungstagen und Zuzahlungs-Vermerk) sowie die Vorgeschichte; Befunde, Behandlungsnotizen, Rechnungen und bereits abgerechnete Verordnungen werden nicht übernommen, kostenloses Einrichtungsgespräch. 6. Datenschutz: Patientendaten liegen ausschließlich auf dem Server der Praxis (eigene Praxis-Cloud oder Praxis-PC); Praxura hat keinen Zugang dazu, auch nicht im Support. Ausgenommen ist nur, was die Praxis selbst freigibt: Bildschirmfreigabe bei der Datenübernahme und Zusatzfunktionen wie KI-Texterkennung (derzeit nicht aktiv), dafür gilt ein gesonderter AV-Vertrag. Nie sagen: \"gehostet von Praxura\", \"Cloud-Praxissoftware\", \"C5-zertifiziert\", \"DSGVO-zertifiziert\". Nächtliche verschlüsselte Sicherung auf ein Ziel der Praxis (externe Festplatte, NAS, Storage Box), automatische Updates, Recht auf Löschung, kein Training auf Kundendaten. 7. Support: E-Mail kontakt@praxura.de, Telefon-Support, persönliche Betreuung und SLA je nach Praxisgröße — Details auf Anfrage. 8. FAQ: Für wen? Nur Heilmittelerbringer. §302 ohne Abrechnungszentrum? Ja, ohne Provision. Kostenlos testen? Ja, unverbindlicher Testzugang auf Anfrage. TI-Anbindung? Geplant als Zusatzmodul (geplant zur TI-Pflicht ab 01.10.2027, heute noch nicht verfügbar); die Kosten können nach aktuellem Stand weitgehend durch die TI-Förderpauschale gedeckt sein (ohne Gewähr). Ist Praxura Cloud-Software? Praxura ist die eigene Praxis-Cloud der Praxis: von überall im Browser erreichbar, Updates automatisch, aber der Server gehört zum Konto der Praxis, nicht zu Praxura. Wo liegen die Daten? Auf dem eigenen Server der Praxis, nicht bei Praxura. Smartphone? Ja, mit der Praxis-Cloud von überall; beim Betrieb auf einem Praxis-PC unterwegs über das VPN der Praxis. Einrichtung? Übernimmt Praxura. Status: Pilotphase mit ausgewählten Praxen, zuerst Podologie. Kündigung? 12 Monate Laufzeit, danach monatlich kündbar; 60 Tage Geld-zurück auf die Lizenzgebühr.", "qaPairs": [{"question": "Was ist Praxura?", "answer": "Praxura ist eine Praxissoftware (PVS) für Heilmittelerbringer – Physiotherapie, Ergotherapie, Logopädie und Podologie. Sie bündelt Terminverwaltung, Patientenakte, Verordnungsprüfung, §302-Abrechnungsvorbereitung und ein elektronisches Fahrtenbuch – als Ihre eigene Praxis-Cloud: so bequem wie Cloud-Software, aber Ihre Patientendaten bleiben auf Ihrem eigenen Server, nicht bei uns.", "keywords": "praxissoftware, physiotherapie, ergotherapie, logopädie, podologie, funktionen"}, {"question": "Kann ich mit Praxura meine Abrechnung nach §302 SGB V vorbereiten?", "answer": "Ja, Praxura erstellt aus Ihren Behandlungsdaten fertige, verschlüsselte DTA-Dateien für die Abrechnung nach §302 SGB V. Die Einreichung nehmen Sie selbst vor — somit zahlen Sie 0 % Provision auf Ihren Umsatz.", "keywords": "abrechnung, §302, dta, kassenabrechnung, provision, einsparung"}, {"question": "Was kostet Praxura?", "answer": "Praxura kostet einen festen Monatspreis nach Praxisgröße, ohne Prozent vom Umsatz: Solo (1 Behandler:in) 39 €, Praxis (2–5) 69 €, Team (6–10) 99 €, Groß (11–20) 149 € pro Monat (Einführungspreise bis 31.03.2027, netto). Dazu kommt ein einmaliges Einrichtungspaket ab 190 €. Die Serverkosten (rund 25–30 €/Monat) zahlt Ihre Praxis direkt an Hetzner. Ein festes Angebot erhalten Sie im kostenlosen Analysegespräch: praxura.de/demo-booking.html", "keywords": "preise, kosten, tarife, solo, praxis, team, groß, einrichtung, server"}, {"question": "Wie funktioniert die Verordnungsprüfung?", "answer": "Praxura liest die Verordnungsdaten aus dem Barcode des Muster 13 lokal ein – das Bild verlässt Ihren Rechner nicht – und prüft sie gegen die Heilmittelrichtlinie. Sie bestätigen die Felder; Formfehler werden vor Behandlungsbeginn angezeigt.", "keywords": "rezeptprüfung, ki, ocr, scan, absetzung, heilmittelverordnung"}, {"question": "Ist Praxura DSGVO-konform und wo werden die Daten gespeichert?", "answer": "Auf Ihrem eigenen Server – nicht bei Praxura: in Ihrer Praxis-Cloud im eigenen Hetzner-Konto (Rechenzentrum in Deutschland) oder auf einem PC/Server in Ihrer Praxis. Praxura hat keinen Zugang zu Ihren Patientendaten, auch nicht im Support – ausgenommen nur, was Sie selbst freigeben (Bildschirmfreigabe bei der Datenübernahme). Jede Nacht entsteht eine verschlüsselte Sicherung auf ein separates Ziel.", "keywords": "datenschutz, dsgvo, hosting, avv, sicherheit, cloud, server"}, {"question": "Ist Praxura eine Cloud-Software?", "answer": "Praxura ist Ihre eigene Praxis-Cloud – so bequem wie Cloud-Software, aber Ihre Patientendaten bleiben auf Ihrem eigenen Server, nicht bei uns. Wir richten den Server in Ihrem Hetzner-Konto ein, installieren Praxura und übergeben Ihnen den Zugang. Danach erreichen Sie Praxura von überall im Browser, Updates kommen automatisch.", "keywords": "cloud, saas, online, browser, server, hetzner, einrichtung, installation"}, {"question": "Kann ich Praxura kostenlos testen?", "answer": "Ja. Sie können Praxura unverbindlich und kostenlos testen. Schreiben Sie uns an kontakt@praxura.de — wir richten Ihnen einen Testzugang ein und begleiten Sie beim Start.", "keywords": "testphase, kostenlos testen, gratis, ausprobieren, unverbindlich"}, {"question": "Bietet Praxura eine TI-Anbindung?", "answer": "Ja, als optionales Zusatzmodul. Die TI-Anschlusspflicht gilt ab 01.10.2027. Die Kosten können nach aktuellem Stand weitgehend durch die TI-Förderpauschale gedeckt sein (Stand 2026, ohne Gewähr).", "keywords": "ti-anbindung, telematikinfrastruktur, gkv, förderung, refinanzierung"}, {"question": "Wie kann ich Kontakt aufnehmen oder ein Gespräch buchen?", "answer": "Am schnellsten über unsere Online-Terminbuchung: praxura.de/demo-booking.html — dort wählen Sie direkt einen freien Termin für ein kostenloses Analysegespräch (ca. 30 Minuten, per Video). Alternativ schreiben Sie uns an kontakt@praxura.de.", "keywords": "kontakt, e-mail, beratung, support, termin, demo"}]};
 
   var brand = DATA.brandColor;
 
@@ -2345,5 +2411,35 @@
 })();
 </script>
 
+<!-- Mobile Buchungsleiste: erscheint nach dem Hero, verschwindet am Seitenende-CTA -->
+<div class="book-sticky" id="bookSticky" aria-hidden="true">
+  <a href="/demo-booking.html" class="btn-book btn-book--sm" data-cta="sticky-book" tabindex="-1">
+    Kostenloses Analysegespräch buchen
+    <span class="btn-book-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></svg></span>
+  </a>
+</div>
+<style>
+  /* Chat-Knopf über die Buchungsleiste heben, solange sie sichtbar ist */
+  body.has-book-sticky .cwb-launcher { bottom: 92px !important; }
+</style>
+<script>
+(function () {
+  var bar = document.getElementById('bookSticky');
+  var hero = document.querySelector('.px-hero');
+  var closing = document.getElementById('kontakt');
+  if (!bar || !hero || !('IntersectionObserver' in window)) return;
+  var heroGone = false, closingIn = false;
+  function sync() {
+    var on = heroGone && !closingIn && window.innerWidth <= 760;
+    bar.classList.toggle('is-on', on);
+    bar.setAttribute('aria-hidden', on ? 'false' : 'true');
+    bar.querySelector('a').tabIndex = on ? 0 : -1;
+    document.body.classList.toggle('has-book-sticky', on);
+  }
+  new IntersectionObserver(function (e) { heroGone = !e[0].isIntersecting; sync(); }).observe(hero);
+  if (closing) new IntersectionObserver(function (e) { closingIn = e[0].isIntersecting; sync(); }).observe(closing);
+  window.addEventListener('resize', sync);
+})();
+</script>
 </body>
 </html>

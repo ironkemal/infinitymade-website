@@ -240,6 +240,97 @@ body::before {
 }
 .btn-primary-arrow:active { transform: translateY(-1px) scale(0.97); }
 
+/* Nav-Variante des Buchungs-CTA: gleiche Signalfarbe wie .btn-book */
+.nav-cta.nav-cta--book, .nav-mobile-cta-btn.nav-cta--book { background: var(--emerald-deep); color: #FBF7EE; }
+@media (hover: hover) and (pointer: fine) {
+  .nav-cta.nav-cta--book:hover { background: #17332A; }
+}
+
+/* ── Buchungs-CTA (2026-11-24) ──
+   Bewusst die EINZIGE grüne Fläche der Seite (Von-Restorff): wer „Gespräch buchen"
+   sucht, findet es überall in derselben Farbe, Form und Größe. Nicht für andere
+   Aktionen verwenden, sonst verliert die Farbe ihre Signalwirkung. */
+.btn-book {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.5rem;
+  padding: 0.55rem 0.6rem 0.55rem 1.5rem;
+  background: var(--emerald-deep);
+  color: #FBF7EE;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  border-radius: 999px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.10) inset,
+    0 10px 24px -10px rgba(30, 61, 47, 0.55),
+    0 2px 5px -1px rgba(26, 22, 17, 0.10);
+  transition:
+    transform 280ms var(--ease-spring),
+    background 240ms var(--ease-out),
+    box-shadow 280ms var(--ease-out);
+}
+.btn-book-icon {
+  width: 2.4rem; height: 2.4rem;
+  display: grid; place-items: center;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  flex-shrink: 0;
+  transition: transform 320ms var(--ease-spring), background 240ms var(--ease-out);
+}
+.btn-book-icon svg { width: 1.05rem; height: 1.05rem; }
+@media (hover: hover) and (pointer: fine) {
+  .btn-book:hover {
+    background: #17332A;
+    transform: translateY(-3px);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.12) inset,
+      0 20px 34px -12px rgba(30, 61, 47, 0.6),
+      0 6px 12px -3px rgba(26, 22, 17, 0.12);
+  }
+  .btn-book:hover .btn-book-icon { background: rgba(255, 255, 255, 0.22); transform: translateX(3px); }
+}
+.btn-book:active { transform: translateY(-1px) scale(0.97); }
+.btn-book:focus-visible { outline: 3px solid var(--highlight); outline-offset: 3px; }
+.btn-book--sm { min-height: 2.75rem; padding: 0.35rem 0.4rem 0.35rem 1.1rem; font-size: 0.86rem; gap: 0.55rem; }
+.btn-book--sm .btn-book-icon { width: 1.95rem; height: 1.95rem; }
+.btn-book--light { background: #FBF7EE; color: var(--emerald-deep); }
+.btn-book--light .btn-book-icon { background: rgba(30, 61, 47, 0.10); }
+@media (hover: hover) and (pointer: fine) {
+  .btn-book--light:hover { background: #fff; }
+  .btn-book--light:hover .btn-book-icon { background: rgba(30, 61, 47, 0.16); }
+}
+/* Mikrotext unter dem Buchungs-CTA: nimmt die drei häufigsten Einwände vorweg */
+.book-assure {
+  display: flex; flex-wrap: wrap; gap: 0.35rem 1.1rem;
+  margin-top: 0.9rem;
+  font-size: 0.84rem; color: var(--ink-mute);
+  list-style: none; padding: 0;
+}
+.book-assure li { display: inline-flex; align-items: center; gap: 0.4rem; }
+.book-assure li::before {
+  content: ""; width: 0.95rem; height: 0.95rem; flex-shrink: 0;
+  background: no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231E3D2F' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+}
+
+/* Mobile: fixierte Buchungsleiste, erscheint erst nach dem Hero */
+.book-sticky {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 900;
+  display: none;
+  padding: 0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom, 0px));
+  background: rgba(248, 243, 232, 0.94);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid var(--line);
+  transform: translateY(110%);
+  transition: transform 360ms var(--ease-out);
+}
+.book-sticky.is-on { transform: translateY(0); }
+.book-sticky .btn-book { width: 100%; justify-content: space-between; }
+@media (max-width: 760px) { .book-sticky { display: block; } }
+
 .btn-secondary {
   padding: 0.75rem 1.3rem;
   background: var(--bg);
@@ -581,6 +672,9 @@ footer {
   .footer-grid { grid-template-columns: 1fr; }
   .px-hero-actions { flex-direction: column; }
   .px-hero-actions .btn-primary-arrow { width: 100%; justify-content: center; }
+  .px-hero-actions { align-items: stretch; }
+  .px-hero-actions .btn-book { width: 100%; justify-content: space-between; font-size: 0.95rem; }
+  .px-hero-actions .px-hero-link { text-align: center; padding: 0.4rem 0; }
 }
 
 /* ────────────── Form error states ────────────── */
@@ -635,3 +729,7 @@ textarea.input-error {
   transition: background 200ms ease, transform 200ms ease;
 }
 .nav-mobile-cta-btn:hover { opacity: 1 !important; background: var(--emerald-deep); transform: translateY(-2px); }
+
+/* 2026-11-24: Nav-CTA nie umbrechen; kurze Variante des Buchungs-CTA auf kleinen Screens */
+.nav-cta { white-space: nowrap; }
+@media (max-width: 480px) { .hide-sm { display: none; } }
