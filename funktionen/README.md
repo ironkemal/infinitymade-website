@@ -117,6 +117,12 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 24.11.2026 · Analysegespräch: Verfügbarkeit serverseitig (`api/demo-booking.js`)
+- Niye: Terminbuchung auf praxura.de wieder aktiv. Kemals Regel (Di geschlossen, Fr 13–16 geschlossen, keine Abendtermine) stand nur im Client (`demo-booking.html` `CONFIG.availableDays/timeSlots/blockedRanges`); ein direkter API-Aufruf hätte einen Dienstagstermin anlegen können.
+- Neu: `isBookableSlot(date, time)` + Konstante `SLOT_TIMES`. Nerede: Anfang von `handleCreate` und `handleReschedule`, 400 bei unzulässigem Slot.
+- Bewusste Zwillinge (Client/Server, wie `imZeitfenster` 04.11.): nicht zusammenlegen, gemeinsam ändern — beide Dateien tragen einen Hinweiskommentar.
+- `demo-booking.html` init: wählt den ersten freien Tag automatisch; nutzt vorhandene `isAvailableDate` + `selectDate`, keine neue Funktion.
+
 ### 07.11.2026 · Physio-Abrechnung: Paket-Hash und Readback-Bindung (`api-backend/billing/api/artefakt-registry.js`, Commit `1f2508d2`)
 - Niye: Die Readback-Quittung soll an den Paket-Hash gebunden sein. Der Hash kommt aus PostgreSQL (`physio_v1_hash`), weil `JSON.stringify` nicht die jsonb-Kanonisierung ist. Ein JS-Nachbau des Hashs wäre ein zweiter, abweichender Vertrag, deshalb keinen schreiben.
 - Neu: `berechnePhysioPaketHash({db, paket})`. Geändert: `reserviereUndLadeHoch(…, physio)` nimmt optional `{generation, packageSha256}`. Die Quittung kommt erst nach Upload, Readback und Fachprüfung (`pruefeReadback` ist dann Pflicht).

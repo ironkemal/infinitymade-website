@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- ===== SEO ===== -->
-  <title>Praxura — Praxissoftware (PVS) für Heilmittelerbringer · Ihre eigene Praxis-Cloud</title>
-  <meta name="description" content="Praxissoftware (PVS) für Physiotherapie, Ergotherapie, Logopädie &amp; Podologie: Termine, Patientenakte, Verordnungsprüfung &amp; §302-Abrechnung provisionsfrei vorbereiten. Ihre eigene Praxis-Cloud – Patientendaten bleiben auf Ihrem Server, nicht bei uns." />
+  <title>Praxissoftware (PVS) für Heilmittel-Praxen | Praxura</title>
+  <meta name="description" content="Praxissoftware (PVS) für Physio, Ergo, Logo &amp; Podologie: Termine, Verordnungsprüfung, §302-Abrechnung ohne Provision. Ab 39 €/Monat. Gespräch buchen." />
   <meta name="keywords" content="Praxissoftware Heilmittel, PVS Heilmittelerbringer, PVS Physiotherapie, PVS Podologie, Praxisverwaltungssoftware Therapeuten, Heilmittelsoftware, Therapiesoftware, Software für Therapeuten, Praxis-Cloud, Private Cloud Praxissoftware, Praxissoftware eigener Server, lokale Praxissoftware, Praxissoftware Physiotherapie, Praxissoftware Ergotherapie, Praxissoftware Logopädie, Praxissoftware Podologie, §302 DTA Abrechnung, Heilmittelabrechnung, Rezepte scannen Software, Praxissoftware mit Fahrtenbuch, Online-Terminbuchung Therapeuten" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
   <meta name="author" content="Praxura" />
@@ -1065,6 +1065,15 @@
     }
 
     /* ── Micro CTA strips ── */
+    .px-br { position: relative; transition: border-color 240ms var(--ease-out), transform 280ms var(--ease-spring), box-shadow 240ms var(--ease-out); }
+    .px-br-link { color: inherit; text-decoration: none; }
+    .px-br-link::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+    .px-br-link:focus-visible { outline: none; }
+    .px-br:has(.px-br-link:focus-visible) { outline: 3px solid var(--highlight); outline-offset: 3px; }
+    .px-br .px-br-kw::after { content: "  →"; color: var(--bronze); }
+    @media (hover: hover) and (pointer: fine) {
+      .px-br:hover { border-color: var(--bronze); transform: translateY(-3px); box-shadow: 0 18px 34px -20px rgba(26,22,17,0.25); }
+    }
     .px-loss-box { margin-top: 2rem; background: var(--bg-card); border: 1px solid var(--line); border-radius: 14px; padding: 1.4rem 1.5rem; max-width: 26rem; box-shadow: 0 14px 30px -20px rgba(26,22,17,0.25); }
     .px-loss-label { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--bronze); margin-bottom: 0.9rem; }
     .px-loss-row, .px-loss-total { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.92rem; color: var(--ink-soft); padding: 0.35rem 0; }
@@ -1717,7 +1726,7 @@
     <!-- Zielgruppe 1: Physiotherapie -->
     <article class="px-br">
       <span class="px-br-tag">Physio</span>
-      <h3 class="px-br-h">Praxissoftware für <em>Physiotherapie</em></h3>
+      <h3 class="px-br-h"><a class="px-br-link" href="/praxissoftware-physiotherapie.html">Praxissoftware für <em>Physiotherapie</em></a></h3>
       <p class="px-br-p">
         Manuelle Therapie, Krankengymnastik (auch ZNS), Lymphdrainage oder Hausbesuche: Alle Heilmittel-Positionen, Regelbehandlungszeiten und Kassenverträge sind vorkonfiguriert.
       </p>
@@ -1727,7 +1736,7 @@
     <!-- Zielgruppe 2: Ergotherapie -->
     <article class="px-br">
       <span class="px-br-tag">Ergo</span>
-      <h3 class="px-br-h">Praxissoftware für <em>Ergotherapie</em></h3>
+      <h3 class="px-br-h"><a class="px-br-link" href="/praxissoftware-ergotherapie.html">Praxissoftware für <em>Ergotherapie</em></a></h3>
       <p class="px-br-p">
         Optimiert für motorisch-funktionelle, sensomotorisch-perzeptive und psychisch-funktionelle Behandlungen. Erfassen Sie Eltern-Beratungen und Schienenabrechnungen mühelos digital.
       </p>
@@ -1737,7 +1746,7 @@
     <!-- Zielgruppe 3: Logopädie -->
     <article class="px-br">
       <span class="px-br-tag">Logo</span>
-      <h3 class="px-br-h">Praxissoftware für <em>Logopädie</em></h3>
+      <h3 class="px-br-h"><a class="px-br-link" href="/praxissoftware-logopaedie.html">Praxissoftware für <em>Logopädie</em></a></h3>
       <p class="px-br-p">
         Integrierte Vorlagen für Sprach-, Sprech- und Stimmtherapie. Einfache digitale Verlaufsdokumentation, strukturierte Anamnesebögen und schneller Arztbericht-Export.
       </p>
@@ -1747,7 +1756,7 @@
     <!-- Zielgruppe 4: Podologie -->
     <article class="px-br">
       <span class="px-br-tag">Podo</span>
-      <h3 class="px-br-h">Praxissoftware für <em>Podologie</em></h3>
+      <h3 class="px-br-h"><a class="px-br-link" href="/praxissoftware-podologie.html">Praxissoftware für <em>Podologie</em></a></h3>
       <p class="px-br-p">
         Schnelle Dokumentation von podologischen Komplexbehandlungen, Nagelspangentechniken und Entlastungen. Abrechnungsvorbereitung konform mit der GKV-Heilmittel-Richtlinie und § 302 SGB V.
       </p>
