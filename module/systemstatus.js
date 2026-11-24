@@ -67,6 +67,7 @@ export function statusZeilen(s) {
  */
 export async function mountSystemstatus(abschnitt, { apiBase, getToken, fetchImpl = fetch, istKutu }) {
   if (!abschnitt) return 'versteckt';
+  if (istKutu === false) { abschnitt.hidden = true; return 'versteckt'; }
   const ziel = abschnitt.querySelector('[data-systemstatus]') || abschnitt;
   try {
     const token = await getToken();

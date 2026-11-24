@@ -45,13 +45,42 @@ test('mountSystemstatus: 404/403 verbergen den Abschnitt, Antwort wird maskiert 
   assert.match(abschnitt.innerHTML, /Gesamtzustand: Hinweise/);
 });
 
-test('Phase 7b F5: Netzwerkfehler im SaaS blendet aus, auf der Box wird er gemeldet', async () => {
-  const mk = () => { const ziel = { textContent: '', innerHTML: '' }; return { hidden: true, querySelector: () => ziel, ziel }; };
-  const kaputt = async () => { throw new Error('offline'); };
-  const saas = mk();
-  assert.equal(await mountSystemstatus(saas, { apiBase: '/api', getToken: async () => 't', fetchImpl: kaputt, istKutu: false }), 'versteckt');
+test('Phase 7b / Restpunkt 4: istKutu=false fragt /api/status gar nicht ab; Box zeigt Status bzw. Netzwerkfehler', async () => {
+  const mk = (initialHidden = false) => { const ziel = { textContent: '', innerHTML: '' }; return { hidden: initialHidden, innerHTML: '', textContent: '', querySelector: () => ziel, ziel }; };
+
+  let fetchAufrufe = 0;
+  const saas = mk(false);
+  assert.equal(
+    await mountSystemstatus(saas, {
+      apiBase: '/api',
+      getToken: async () => 't',
+      fetchImpl: async () => { fetchAufrufe++; throw new Error('darf im SaaS nicht aufgerufen werden'); },
+      istKutu: false,
+    }),
+    'versteckt',
+  );
+  assert.equal(fetchAufrufe, 0, 'im SaaS darf kein GET /api/status ausgelöst werden');
   assert.equal(saas.hidden, true);
-  const box = mk();
+
+  // istKutu=true (Box): normaler Abruf wie bisher
+  let boxAufrufe = 0;
+  const boxOk = mk(true);
+  assert.equal(
+    await mountSystemstatus(boxOk, {
+      apiBase: '/api',
+      getToken: async () => 't',
+      fetchImpl: async () => { boxAufrufe++; return /** @type {any} */ ({ status: 200, json: async () => antwort }); },
+      istKutu: true,
+    }),
+    'angezeigt',
+  );
+  assert.equal(boxAufrufe, 1);
+  assert.equal(boxOk.hidden, false);
+
+  // Netzwerkfehler auf der Box → sichtbare Fehlermeldung
+  const kaputt = async () => { throw new Error('offline'); };
+  const box = mk(true);
   assert.equal(await mountSystemstatus(box, { apiBase: '/api', getToken: async () => 't', fetchImpl: kaputt, istKutu: true }), 'fehler');
   assert.equal(box.hidden, false);
+  assert.equal(box.ziel.textContent, 'Systemstatus derzeit nicht abrufbar.');
 });
