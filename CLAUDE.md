@@ -510,6 +510,9 @@ tarihini biriktirir, bir dahaki turda sıfırdan başlanmaz.
   ne `agy`, ne başka model. Deterministik araç + orijinale karşı örnekleme. Gerekçe
   ölçülmüş: `api-backend/preise_pruefen.mjs` başlığı, ve Anlage 2 PDF'inde bir fiyatın
   kendi kodunun bir satır üstünde durduğu gerçek olay.
+  **Kemal, 24.11.2026:** YZ rakam *girebilir*, ama yalnız **çift dikişle** — bir bacak her zaman
+  deterministik ayrıştırma (XML/XLSX), öteki YZ'nin bağımsız okuması; ikisi birebir tutmazsa
+  Kemal'e sorulur. **Tek** YZ okuması hâlâ yetmez. Uygulama: `tools/bekci-ajan/SPEC.md` (K-A1).
 - **Türev asla otorite değildir.** md/csv/json okumayı ucuzlatır; fatura veya hukuk
   iddiası her zaman orijinal + bölüm + sürüm üçlüsüne dayanır.
 
