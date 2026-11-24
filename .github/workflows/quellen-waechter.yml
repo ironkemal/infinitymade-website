@@ -1,0 +1,66 @@
+name: Quellen-Wächter (Herausgeberseiten)
+
+# wissensbank/REGISTER.md W-A06 · onprem/REGISTER.md O-256 — "Neue Fassung erscheint
+# still auf der Herausgeberseite, niemand merkt es". Ergänzt die drei bestehenden
+# Wächter (preise-check, kostentraeger-check, itsg-trust-anchor-check) um 19 Quellen:
+# TP5-Anlagen, HPNR, GGT/SECON, KVNR, §125/§125a-Verträge (Podo/Physio/Ergo/SSSST),
+# HeilM-RL + Beschlüsse, KBV-Diagnoseliste + BFB-Handbuch, ICD-10-GM, DGUV, § 61 SGB V.
+# Liste, Muster und bekannter Stand: tools/quellen-waechter.json.
+#
+# NUR BERICHT: kein Commit, kein Download, keine DB, keine KI. Kein Zustand — die
+# Meldung kommt täglich, bis ein Mensch die Quelle bearbeitet und mit
+# `node tools/quellen-waechter.mjs --baseline=<id>` den bekannten Stand committet.
+#
+# onprem-Vorgaben (O-138 + O-256, verbindlich):
+#   - EIN Job, permissions: contents: read, KEIN `npm ci` (nur node:-Module + fetch).
+#   - Nur schedule + workflow_dispatch, persist-credentials: false.
+#   - Host-Allowlist fest im Code, redirect:'error', 5 MB, 30 s, generischer User-Agent.
+#   - TELEGRAM_* ausschließlich im env-Block des letzten curl-Schritts; nichts aus dem
+#     Netz gelangt in die Shell oder in ${{ }} — Texte gehen über Dateien an curl.
+
+on:
+  schedule:
+    - cron: '41 5 * * *'   # täglich 05:41 UTC (ca. 07:41 Sommerzeit / 06:41 Winterzeit Berlin)
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  quellen-waechter:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Herausgeberseiten prüfen
+        # Kein Secret hier. Absturz → das Skript schreibt msg-01.txt selbst, Exit 1;
+        # der Telegram-Schritt läuft trotzdem (always()), der Job wird rot.
+        run: node tools/quellen-waechter.mjs --out="$RUNNER_TEMP/qw"
+
+      - name: Telegram senden (falls Nachrichten vorliegen)
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          shopt -s nullglob
+          fehler=0
+          for f in "$RUNNER_TEMP"/qw/msg-*.txt; do
+            if ! curl -sS --fail -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+              --data-urlencode "text@${f}"; then
+              printf 'Telegram-Versand fehlgeschlagen: %s\n' "${f##*/}" >&2
+              fehler=1
+            fi
+          done
+          exit "$fehler"
