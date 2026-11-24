@@ -17,24 +17,34 @@
  * NICHT verschluckt: ohne Regeln gibt es kein Urteil, `null` sagt das offen.
  */
 
-import { bereichSchluessel, regelnFuerBereich } from './verordnung-regeln.js?v=20261119physio';
+import { bereichSchluessel, dgWurzel, regelnFuerBereich } from './verordnung-regeln.js?v=20261119physio';
 
-const _cache = new Map();
+/** @type {WeakMap<object, Map<string, any>>} */
+const _caches = new WeakMap();
+const _fallbackCache = new Map();
+
+/** @param {unknown} sb */
+function cacheFuer(sb) {
+  if (!sb || (typeof sb !== 'object' && typeof sb !== 'function')) return _fallbackCache;
+  let c = _caches.get(sb);
+  if (!c) { c = new Map(); _caches.set(sb, c); }
+  return c;
+}
 
 /**
  * @param {{ from: (table: string) => any }} supabase
  * @param {string} bereich  roher Wert (z. B. 'podo', 'physio', 'Podologie') —
  *   wird über `bereichSchluessel()` normalisiert, bevor er als Cache-Key dient.
- * @returns {Promise<{bereich:string, profil:object|null, gruppen:object, luecken:string[]}|null>}
+ * @returns {Promise<{bereich:string, profil:object|null, gruppen:Record<string, any>, veraltet:Set<string>, luecken:string[]}|null>}
  */
 export async function regelsatzLaden(supabase, bereich) {
   const key = bereichSchluessel(bereich);
-  if (_cache.has(key)) return _cache.get(key);
+  const cache = cacheFuer(supabase);
+  if (cache.has(key)) return cache.get(key);
 
   const { data, error } = await supabase
     .from('diagnosegruppen')
-    .select('code, label, hoechstmenge, untergruppen, icd_accept, icd_exclude, icd_accept_unsicher, icd_enforcement, icd_ranges')
-    .eq('aktiv', true)
+    .select('code, aktiv, label, hoechstmenge, untergruppen, icd_accept, icd_exclude, icd_accept_unsicher, icd_enforcement, icd_ranges')
     .eq('bereich', key)
     .order('sort');
 
@@ -42,7 +52,18 @@ export async function regelsatzLaden(supabase, bereich) {
     console.warn('[verordnung-regelsatz-cache]', error.message);
     return null;   // kein Regelsatz → der Aufrufer meldet das offen
   }
-  const satz = regelnFuerBereich(key, data || []);
-  _cache.set(key, satz);
+  const zeilen = Array.isArray(data) ? data : [];
+  const aktive = zeilen.filter((/** @type {any} */ z) => z?.aktiv !== false);
+  const satz = /** @type {any} */ (regelnFuerBereich(key, aktive));
+  /** @type {Set<string>} */
+  const veraltet = new Set();
+  for (const z of zeilen) {
+    if (z?.aktiv === false) {
+      const code = dgWurzel(z.code);
+      if (code && !satz.gruppen[code]) veraltet.add(code);
+    }
+  }
+  satz.veraltet = veraltet;
+  cache.set(key, satz);
   return satz;
 }

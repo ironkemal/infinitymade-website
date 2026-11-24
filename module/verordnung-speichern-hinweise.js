@@ -11,8 +11,8 @@
  */
 
 import { gespeicherterKodeHinweis } from '../katalog-suche.js?v=20261001a';
-import { pruefeVerordnung } from './verordnung-pruefung.js?v=20261031k3';
-import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261031k3';
+import { pruefeVerordnung } from './verordnung-pruefung.js?v=20261124dg1';
+import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261124dg1';
 
 export const ARZT_KORREKTUR = 'Korrektur nur durch den Arzt (neue Unterschrift + Datum).';
 

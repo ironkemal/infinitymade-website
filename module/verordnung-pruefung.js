@@ -79,6 +79,7 @@ const PFLICHTFELDER = [
 
 const QUELLE_PFLICHT = 'Anlage 3 §125 SGB V, Abschnitt 3';
 const QUELLE_FRIST   = 'HeilM-RL § 15 Abs. 1 und 2';
+const QUELLE_DG_KORREKTUR = 'HeilM-RL 15.05.2025 (iK 05.08.2025), § 13 Abs. 1 Satz 3 i. V. m. Anlage 3 Zeile j; Anlage 3a § 125 Abs. 1 SGB V Physiotherapie (01.12.2024), Ziff. 4 Abs. 5, 7–8 u. Ziff. 5 lit. j';
 
 /** ISO-Datum von heute, ohne Zeitzonenrutsch. */
 function heuteIso() {
@@ -163,8 +164,8 @@ export function heilmittelGegenLeitsymptomatik({ buchstabe, dg, steht, position 
  *    heilmittel, heilmittelPosition,
  *    anzahl, frequenz, ausstellungsdatum, behandlungsbeginn, dringend,
  *    versichertennummer, kasseIk, arztLanr, arztBsnr, rezeptart}
- * @param {{bereich:string, profil:object|null, gruppen:object, luecken:string[]}} regelsatz
- *   aus `regelnFuerBereich()`.
+ * @param {{bereich:string, profil:object|null, gruppen:object, veraltet?:Set<string>, luecken:string[]}} regelsatz
+ *   aus `regelnFuerBereich()` bzw. `regelsatzLaden()`.
  * @param {{heute?:string}} [opt]  `heute` nur für Tests.
  * @returns {{ok:boolean, sauber:boolean, befunde:Array, geprueft:string[], ungeprueft:string[]}}
  *   `ok` = kein Blocker. `sauber` = überhaupt kein Befund.
@@ -256,15 +257,26 @@ export function pruefeVerordnung(vo, regelsatz, opt = {}) {
     }
   }
 
-  // ── 2. Diagnosegruppe bekannt ────────────────────────────────────────────
+  // ── 2. Diagnosegruppe bekannt / noch gültig ──────────────────────────────
   const dg = dgWurzel(vo?.diagnosegruppe);
   const regel = dg ? gruppen[dg] : null;
-  if (Object.keys(gruppen).length) {
+  const veraltet = regelsatz?.veraltet instanceof Set ? regelsatz.veraltet : null;
+  if (Object.keys(gruppen).length || veraltet?.size) {
     geprueft.push('Diagnosegruppe');
     if (dg && !regel) {
-      melde(SCHWERE.blocker, 'DG_UNBEKANNT',
-        `Die Diagnosegruppe „${vo.diagnosegruppe}" gehört nicht zum Fachbereich ${profil?.label || bereich}.`,
-        'diagnosegruppe', profil?.quelle);
+      const eingabe = String(vo?.diagnosegruppe ?? '').trim() || dg;
+      if (veraltet?.has(dg)) {
+        melde(SCHWERE.blocker, 'DG_VERALTET',
+          `„${eingabe}“ ist eine alte Diagnosegruppe und gilt seit 2021 nicht mehr. `
+          + 'Die Krankenkasse lehnt das Rezept sonst ab. Die Praxis darf die Diagnosegruppe nicht selbst ändern — '
+          + 'bitte in der Arztpraxis mit Arztunterschrift und Datum ändern lassen oder ein neues Rezept anfordern.',
+          'diagnosegruppe', QUELLE_DG_KORREKTUR);
+      } else {
+        melde(SCHWERE.blocker, 'DG_UNBEKANNT',
+          `„${eingabe}“ passt nicht zu ${profil?.label || bereich}. `
+          + 'Bitte die Diagnosegruppe auf dem Rezept prüfen — steht sie dort falsch, muss die Arztpraxis sie mit Arztunterschrift und Datum ändern.',
+          'diagnosegruppe', profil?.quelle || QUELLE_DG_KORREKTUR);
+      }
     }
   }
 

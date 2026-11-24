@@ -44,7 +44,7 @@ import { sitzungsplan } from './sitzungsplan.js?v=20261003a';
 import { TOPF } from './verordnung-topf.js?v=20260930c';
 import { ladeVorgeschichte } from './podo-vorgeschichte.js?v=20261021v';
 import { POD_KATALOG, POD_HOECHSTMENGE, POD_ORIENTIEREND, dgWurzel } from './verordnung-regeln.js?v=20261119physio';
-import { heilmittelGegenLeitsymptomatik } from './verordnung-pruefung.js?v=20261031k3';
+import { heilmittelGegenLeitsymptomatik } from './verordnung-pruefung.js?v=20261124dg1';
 
 // [Q1] Heilmittelkatalog Podologische Therapie, Höchstmenge und orientierende
 // Menge je Diagnosegruppe stehen zentral in `verordnung-regeln.js` — dort

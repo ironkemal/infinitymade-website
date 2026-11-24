@@ -10,6 +10,7 @@ import assert from 'node:assert/strict';
 
 import { pruefeVerordnung, zaehleBefunde, SCHWERE, voAusGespeicherterVerordnung } from './verordnung-pruefung.js';
 import { regelnFuerBereich, dgWurzel, bereichSchluessel, POD_HOECHSTMENGE, icdInBereichen } from './verordnung-regeln.js';
+import { regelsatzLaden } from './verordnung-regelsatz-cache.js';
 
 // Ausschnitt aus `diagnosegruppen` (bereich = podologie). `hoechstmenge` ist
 // dort heute NULL — genau deshalb greift der Rückfall aus verordnung-regeln.js.
@@ -227,7 +228,10 @@ test('voAusGespeicherterVerordnung reicht diagnose_freitext als diagnosetext dur
 
 test('eine unbekannte Diagnosegruppe des falschen Fachbereichs blockiert', () => {
   const e = pruefeVerordnung(saubereVo({ diagnosegruppe: 'WS2' }), PODO, HEUTE);
-  assert.ok(codes(e).includes('DG_UNBEKANNT'));
+  const b = e.befunde.find(x => x.code === 'DG_UNBEKANNT');
+  assert.ok(b);
+  assert.equal(b.schwere, SCHWERE.blocker);
+  assert.match(b.text, /^„WS2“ passt nicht zu Podologische Therapie\. Bitte die Diagnosegruppe auf dem Rezept prüfen/);
   assert.equal(e.ok, false);
 });
 
@@ -627,4 +631,131 @@ test('Physio: ICD ausserhalb icd_ranges ergibt Warnung ICD_DG_UNTYPISCH, nie Blo
   assert.equal(b.schwere, SCHWERE.warnung);
   const zweiKodes = pruefeVerordnung({ ...basis, icd: 'S82.0, M54.5' }, satz, HEUTE);
   assert.ok(!codes(zweiKodes).includes('ICD_DG_UNTYPISCH'));
+});
+
+// ── 0122 / DG_VERALTET vs. DG_UNBEKANNT (24.11.2026) ────────────────────────
+
+function mockDiagnosegruppenSb(zeilenJeBereich) {
+  const filterLog = [];
+  return {
+    filterLog,
+    from(table) {
+      assert.equal(table, 'diagnosegruppen');
+      let bereichKey = '';
+      const q = {
+        select(spalten) {
+          assert.match(spalten, /\baktiv\b/, 'regelsatzLaden muss aktiv mitlesen');
+          return q;
+        },
+        eq(col, val) {
+          filterLog.push([col, val]);
+          if (col === 'bereich') bereichKey = val;
+          return q;
+        },
+        async order() {
+          return { data: zeilenJeBereich[bereichKey] || [], error: null };
+        },
+      };
+      return q;
+    },
+  };
+}
+
+test('regelsatzLaden trennt aktiv/inaktiv im Client: inaktive Gruppen nie in gruppen, sondern in veraltet', async () => {
+  const altPhysio = ['WS1', 'WS2', 'EX1', 'EX2', 'EX3', 'EX4', 'ZN1', 'ZN2', 'AT1', 'AT2', 'AT3', 'LY1', 'LY2', 'LY3', 'SM'];
+  const gueltigPhysio = ['WS', 'EX', 'CS', 'ZN', 'PN', 'AT', 'GE', 'LY', 'SO1', 'SO2', 'SO3', 'SO4', 'SO5'];
+  const sb = mockDiagnosegruppenSb({
+    physiotherapy: [
+      ...gueltigPhysio.map(code => ({ code, aktiv: true, label: code, hoechstmenge: 6 })),
+      ...altPhysio.map(code => ({ code, aktiv: false, label: `${code} (alt)`, hoechstmenge: 6 })),
+    ],
+    ergotherapie: [
+      { code: 'SB1', aktiv: true, label: 'SB1', hoechstmenge: 10 },
+      { code: 'PS2', aktiv: true, label: 'PS2', hoechstmenge: 20 },
+      { code: 'WS1', aktiv: false, label: 'Alt-Test Ergo', hoechstmenge: 10 },
+    ],
+    logopaedie: [
+      { code: 'ST1', aktiv: true, label: 'ST1', hoechstmenge: 10 },
+      { code: 'SP1', aktiv: true, label: 'SP1', hoechstmenge: 10 },
+      { code: 'ST9', aktiv: false, label: 'Alt-Test Logo', hoechstmenge: 10 },
+    ],
+  });
+
+  const physioSatz = await regelsatzLaden(sb, 'physio');
+  assert.ok(!sb.filterLog.some(([col]) => col === 'aktiv'), 'kein Serverfilter .eq(aktiv, true) mehr');
+  assert.deepEqual(Object.keys(physioSatz.gruppen).sort(), [...gueltigPhysio].sort());
+  for (const alt of altPhysio) {
+    assert.equal(physioSatz.gruppen[alt], undefined, `${alt} darf nicht als gültige Gruppe erscheinen`);
+    assert.equal(physioSatz.veraltet.has(alt), true, `${alt} muss in veraltet stehen`);
+  }
+
+  const basisVo = (bereich, dg) => ({
+    bereich,
+    icd: 'M54.5',
+    diagnosegruppe: dg,
+    heilmittel: 'Behandlung',
+    heilmittelPosition: 'X0501',
+    anzahl: 6,
+    frequenz: '2x wöchentlich',
+    ausstellungsdatum: '2026-09-01',
+    behandlungsbeginn: '2026-09-05',
+    versichertennummer: 'A123456780',
+    kasseIk: '101575519',
+    arztLanr: '123456601',
+    arztBsnr: '987654321',
+    rezeptart: 'gkv',
+  });
+
+  // Physio: gültige Gruppen ohne DG-Befund, alle 15 Alt-Gruppen → DG_VERALTET, fremde Gruppe → DG_UNBEKANNT
+  for (const g of gueltigPhysio) {
+    const erg = pruefeVerordnung(basisVo('physio', g), physioSatz, HEUTE);
+    assert.deepEqual(codes(erg).filter(c => c.startsWith('DG_')), [], `gültige Gruppe ${g}`);
+  }
+  for (const alt of altPhysio) {
+    const erg = pruefeVerordnung(basisVo('physio', alt), physioSatz, HEUTE);
+    const b = erg.befunde.find(x => x.code === 'DG_VERALTET');
+    assert.ok(b, `Alt-Gruppe ${alt} muss DG_VERALTET melden`);
+    assert.equal(b.schwere, SCHWERE.blocker);
+    assert.equal(erg.ok, false);
+    assert.match(b.text, new RegExp(`^„${alt}“ ist eine alte Diagnosegruppe und gilt seit 2021 nicht mehr\\.`));
+    assert.match(b.text, /Arztpraxis mit Arztunterschrift und Datum ändern lassen oder ein neues Rezept anfordern/);
+    assert.doesNotMatch(b.text, /\b(HeilM-RL|DG)\b/, 'keine Fachabkürzungen im Empfangstext');
+    assert.match(b.quelle, /HeilM-RL 15\.05\.2025.*§ 13 Abs\. 1/);
+  }
+  const physioFremd = pruefeVerordnung(basisVo('physio', 'SB1'), physioSatz, HEUTE);
+  const bPhysioFremd = physioFremd.befunde.find(x => x.code === 'DG_UNBEKANNT');
+  assert.ok(bPhysioFremd);
+  assert.equal(bPhysioFremd.schwere, SCHWERE.blocker);
+  assert.match(bPhysioFremd.text, /^„SB1“ passt nicht zu Physiotherapie\. Bitte die Diagnosegruppe auf dem Rezept prüfen/);
+  assert.doesNotMatch(bPhysioFremd.text, /\b(HeilM-RL|DG)\b/);
+
+  // Ergo: gültig (SB1, PS2) → leer, deaktiviert → DG_VERALTET, fremd (WS) → DG_UNBEKANNT mit „Ergotherapie“
+  const ergoSatz = await regelsatzLaden(sb, 'ergo');
+  assert.deepEqual(codes(pruefeVerordnung(basisVo('ergo', 'SB1'), ergoSatz, HEUTE)).filter(c => c.startsWith('DG_')), []);
+  assert.deepEqual(codes(pruefeVerordnung(basisVo('ergo', 'PS2'), ergoSatz, HEUTE)).filter(c => c.startsWith('DG_')), []);
+  assert.equal(pruefeVerordnung(basisVo('ergo', 'WS1'), ergoSatz, HEUTE).befunde.find(x => x.code === 'DG_VERALTET')?.schwere, SCHWERE.blocker);
+  const ergoFremd = pruefeVerordnung(basisVo('ergo', 'WS'), ergoSatz, HEUTE).befunde.find(x => x.code === 'DG_UNBEKANNT');
+  assert.ok(ergoFremd);
+  assert.match(ergoFremd.text, /^„WS“ passt nicht zu Ergotherapie\./);
+
+  // Logo: gültig (ST1, SP1) → leer, deaktiviert → DG_VERALTET, fremd (EX) → DG_UNBEKANNT mit Logo-Label
+  const logoSatz = await regelsatzLaden(sb, 'logo');
+  assert.deepEqual(codes(pruefeVerordnung(basisVo('logo', 'ST1'), logoSatz, HEUTE)).filter(c => c.startsWith('DG_')), []);
+  assert.deepEqual(codes(pruefeVerordnung(basisVo('logo', 'SP1'), logoSatz, HEUTE)).filter(c => c.startsWith('DG_')), []);
+  assert.equal(pruefeVerordnung(basisVo('logo', 'ST9'), logoSatz, HEUTE).befunde.find(x => x.code === 'DG_VERALTET')?.schwere, SCHWERE.blocker);
+  const logoFremd = pruefeVerordnung(basisVo('logo', 'EX'), logoSatz, HEUTE).befunde.find(x => x.code === 'DG_UNBEKANNT');
+  assert.ok(logoFremd);
+  assert.match(logoFremd.text, /^„EX“ passt nicht zu Stimm-, Sprech-, Sprach- und Schlucktherapie\./);
+
+  // Bestandsverordnung mit Alt-Gruppe lässt sich normal übersetzen; Blocker entsteht erst im Prüfergebnis
+  const bestandVo = voAusGespeicherterVerordnung({
+    therapie_bereich: 'physio', icd10: 'M54.5', diagnosegruppe: 'WS1',
+    heilmittel: 'KG', heilmittel_position: '20501', anzahl_einheiten: 6,
+    frequenz: '2x', ausstellungsdatum: '2026-09-01', behandlungsbeginn: '2026-09-05',
+    versichertennummer: 'A123456780', krankenkasse_ik: '101575519',
+    doctor_lanr: '123456601', doctor_bsnr: '987654321', rezeptart: 'gkv',
+  });
+  assert.equal(bestandVo.diagnosegruppe, 'WS1');
+  const bestandErg = pruefeVerordnung(bestandVo, physioSatz, HEUTE);
+  assert.ok(codes(bestandErg).includes('DG_VERALTET'));
 });
