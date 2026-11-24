@@ -7,8 +7,6 @@
   <link rel="alternate icon" type="image/png" href="/favicon.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <title>Analysegespräch buchen · Praxura</title>
-  <!-- TERMINBUCHUNG VORUEBERGEHEND AUSGEBLENDET (2026-08-27) — Zeile unten entfernen, um die Buchung wieder freizugeben -->
-  <meta name="robots" content="noindex,nofollow">
   <!-- Schriften selbst gehostet (DSGVO): keine Verbindung des Besucher-Browsers
        zu Google. Fraunces, Plus Jakarta Sans und JetBrains Mono liegen in /fonts. -->
   <link rel="stylesheet" href="fonts/system-fonts.css">
@@ -114,7 +112,7 @@
     }
 
     /* ── Main Layout ── */
-    /* TERMINBUCHUNG VORUEBERGEHEND AUSGEBLENDET (2026-08-27) */
+    /* [hidden] immer verbergen */
     [hidden] { display: none !important; }
 
     .page-wrap {
@@ -821,38 +819,6 @@
   </a>
 </nav>
 
-<!-- TERMINBUCHUNG VORUEBERGEHEND AUSGEBLENDET (2026-08-27) — Block + Script unten entfernen, um die Buchung wieder freizugeben -->
-<div class="page-wrap" id="bookingPausedNotice" hidden
-     style="max-width:640px;margin:0 auto;padding:64px 20px;text-align:center">
-  <div class="page-title">
-    <h1>Terminbuchung vorübergehend pausiert</h1>
-    <p>Wegen der aktuell hohen Nachfrage vergeben wir gerade keine Online-Termine für das
-       Analysegespräch. Schreiben Sie uns kurz — wir melden uns bei Ihnen, sobald wieder
-       Termine frei sind.</p>
-  </div>
-  <p style="margin-top:28px">
-    <a href="/kontakt.html" style="display:inline-block;padding:0.8rem 1.6rem;border-radius:999px;background:var(--ink);color:var(--bg);font-family:var(--sans);font-weight:500;font-size:0.92rem;text-decoration:none">
-      Nachricht schreiben
-    </a>
-  </p>
-  <p style="margin-top:18px;font-size:.9rem;opacity:.75">
-    Oder direkt per E-Mail: <a href="mailto:kontakt@praxura.de">kontakt@praxura.de</a>
-  </p>
-</div>
-<script>
-  // Bestehende Termine bleiben verschiebbar (?reschedule=...), nur Neubuchung ist pausiert.
-  (function () {
-    if (new URLSearchParams(location.search).get('reschedule')) return;
-    document.documentElement.setAttribute('data-booking-paused', '1');
-    document.addEventListener('DOMContentLoaded', function () {
-      var notice = document.getElementById('bookingPausedNotice');
-      var app = document.getElementById('bookingApp');
-      if (app) app.hidden = true;
-      if (notice) notice.hidden = false;
-    });
-  })();
-</script>
-
 <!-- Page Content -->
 <div class="page-wrap" id="bookingApp">
   <div class="page-title">
@@ -965,11 +931,14 @@
      CONFIG
   ───────────────────────────────────────── */
   const CONFIG = {
-    availableDays: [1, 2, 3, 4, 5], // Mon-Fri
+    // Dienstag geschlossen, Freitag 13–16 Uhr geschlossen, keine Abendtermine.
+    // Muss zu SLOT_TIMES/isBookableSlot in api/demo-booking.js passen.
+    availableDays: [1, 3, 4, 5], // Mo, Mi, Do, Fr
     timeSlots: [
       "09:00","09:30","10:00","10:30","11:00","11:30",
-      "13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00"
+      "13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30"
     ],
+    blockedRanges: { 5: ["13:00", "16:00"] }, // Wochentag → [von, bis)
     lookAheadDays: 90,
     skipToday: true
   };
@@ -1188,7 +1157,9 @@
       return;
     }
 
-    const slotsHtml = CONFIG.timeSlots.map(t => {
+    const selDay = new Date(state.selectedDate + 'T12:00:00').getDay();
+    const block  = CONFIG.blockedRanges[selDay];
+    const slotsHtml = CONFIG.timeSlots.filter(t => !(block && t >= block[0] && t < block[1])).map(t => {
       const isBooked   = state.bookedTimes.includes(t);
       const isSelected = (t === state.selectedTime);
       if (isBooked) return '';

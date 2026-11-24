@@ -1,9 +1,9 @@
 # Funktionskarte
 
-> Üretim: 2026-11-23 · `node tools/funktionskarte.mjs`
+> Üretim: 2026-11-24 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4946 fonksiyon** (4823 JS · 96 bash · 27 ps1) · 607 dosya · 42 sidebar modülü
+**4949 fonksiyon** (4824 JS · 98 bash · 27 ps1) · 607 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -600,7 +600,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `$` — attendance.js:10 · module/anamnese.js:44 · module/branding-ui.js:31 · module/heilmittel-zeilen-ui.js:29 · module/kiosk.js:74 · module/podo-vorgeschichte-form.js:88 · module/rechnung-zahlungseingang.js:455 · module/ueber.js:52 · module/verordnung-einheiten.js:543 · module/verordnung-podo.js:85 · module/verordnung-pruefen-knopf.js:43 · module/zuzahlung-korrektur.js:206 · ops/app.js:48 · widget/booking-widget.js:24
 - `schliessen` — cookie-consent.js:137 · module/abrechnung-freigabe.js:190 · module/abrechnungsstatus.js:603 · module/arzt-register.js:278 · module/formular-editor.js:427 · module/patienten-import.js:479 · module/rechnung-zahlungseingang.js:555 · module/verordnung-einheiten.js:300 · module/verordnung-einheiten.js:398 · module/verordnung-einheiten.js:591 · module/verordnung-feldmarker.js:241 · module/verordnung-import.js:725 · module/zuzahlung-befreiung.js:151 · module/zuzahlung-korrektur.js:209
 - `render` — calendar-widget.js:127 · dashboard.js:11648 · dashboard.js:16537 · module/app-start.js:36 · module/ki-einstellungen.js:16 · module/mail-signatur-editor.js:41 · ops/board.js:206 · ops/decisions.js:14 · ops/files.js:52 · ops/finance.js:959 · ops/meetings.js:23 · ops/wissen.js:66 · patient-suche.js:116
-- `handler` — api/admin/data.js:37 · api/admin/feedbacks.js:8 · api/apify/search.js:10 · api/config.js:6 · api/contact.js:33 · api/demo-booking.js:416 · api/onboarding/check-email.js:12 · api/onboarding/pending.js:13 · api/stripe/create-checkout-session.js:17 · api/stripe/portal-session.js:15 · api/stripe/webhook.js:98 · module/arztangaben-banner.js:104
+- `handler` — api/admin/data.js:37 · api/admin/feedbacks.js:8 · api/apify/search.js:10 · api/config.js:6 · api/contact.js:33 · api/demo-booking.js:430 · api/onboarding/check-email.js:12 · api/onboarding/pending.js:13 · api/stripe/create-checkout-session.js:17 · api/stripe/portal-session.js:15 · api/stripe/webhook.js:98 · module/arztangaben-banner.js:104
 - `fmt` — api-backend/setup/router.js:136 · dashboard.js:1130 · dashboard.js:6993 · dashboard.js:8744 · dashboard.js:9013 · dashboard.js:12090 · dashboard.js:16721 · module/kalender-raster.js:76 · module/rechnung-ansicht.js:234 · module/rezeptinfo-geld.js:71 · module/tageszentrale-ansicht.js:610
 - `g` — dashboard.js:13000 · dashboard.js:13013 · dashboard.js:13186 · module/heilmittel-zeilen-ui.js:262 · module/rezept-barcode-bestaetigung.js:15 · module/rezept-barcode-dialog.js:6 · module/rezept-in-maske.js:40 · module/rezept-patientenkopf.js:7 · module/verordnung-anlegen.js:32 · module/verordnung-maske.js:460 · module/verordnung-nachweis.js:29
 - `r2` — api-backend/billing/api/abrechnung.routes.js:2543 · api-backend/billing/api/statistik.routes.js:267 · api-backend/billing/api/zuzahlung.routes.js:47 · api-backend/billing/dta/builder.js:137 · api-backend/billing/dta/preflight.js:1113 · api-backend/billing/preise/resolver.js:44 · api-backend/billing/utils/abrechnung-zeilen.js:39 · api-backend/billing/zuzahlung/calculator.js:78 · api-backend/billing/zuzahlung/korrektur.js:17 · module/abrechnung-verlauf.js:128 · module/zuzahlung-rechnen.js:42
@@ -774,18 +774,20 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `warn()` — Zeile 61 · calledBy: bildirim_degerlendir, mail_gonder_container, onprem/update.sh, zertifikat_pruefen
 - `fehler()` — Zeile 65 · calledBy: fail, onprem/update.sh
 - `fail()` — Zeile 79
-- `env_wert()` — Zeile 125 · calledBy: onprem/update.sh, owner_bilgisini_guncelle, zertifikat_pruefen
-- `mail_gonder_container()` — Zeile 141 · calledBy: bildirim_degerlendir, zertifikat_pruefen
+- `env_wert()` — Zeile 125 · calledBy: aktuelle_images_sammeln, onprem/update.sh, owner_bilgisini_guncelle, zertifikat_pruefen
+- `mail_gonder_container()` — Zeile 141 · calledBy: bildirim_degerlendir, onprem/update.sh, zertifikat_pruefen
 - `zert_json_merken()` — Zeile 177 · calledBy: zertifikat_pruefen
 - `zertifikat_pruefen()` — Zeile 186 · calledBy: onprem/update.sh
-- `manifest_feld()` — Zeile 274 · calledBy: onprem/update.sh
-- `dateien_sha_icerik()` — Zeile 321 · calledBy: durumu_yaz
-- `onceki_sha()` — Zeile 324 · calledBy: onprem/update.sh
-- `durumu_yaz()` — Zeile 330 · calledBy: onprem/update.sh
-- `owner_bilgisini_guncelle()` — Zeile 358 · calledBy: onprem/update.sh
-- `bildirim_alani_oku()` — Zeile 374 · calledBy: bildirim_degerlendir, onprem/update.sh
-- `bildirim_kaydet()` — Zeile 386 · calledBy: bildirim_degerlendir
-- `bildirim_degerlendir()` — Zeile 403 · calledBy: durumu_yaz
-- `geri_yukle()` — Zeile 562 · calledBy: onprem/update.sh
-- `anahtarlari_oku()` — Zeile 581 · calledBy: onprem/update.sh
-- `deger_oku()` — Zeile 585 · calledBy: onprem/update.sh
+- `speicher_stand_schreiben()` — Zeile 235 · calledBy: onprem/update.sh
+- `manifest_feld()` — Zeile 301 · calledBy: onprem/update.sh
+- `dateien_sha_icerik()` — Zeile 348 · calledBy: durumu_yaz
+- `onceki_sha()` — Zeile 351 · calledBy: onprem/update.sh
+- `durumu_yaz()` — Zeile 357 · calledBy: onprem/update.sh
+- `owner_bilgisini_guncelle()` — Zeile 385 · calledBy: onprem/update.sh
+- `bildirim_alani_oku()` — Zeile 401 · calledBy: bildirim_degerlendir, onprem/update.sh
+- `bildirim_kaydet()` — Zeile 413 · calledBy: bildirim_degerlendir
+- `bildirim_degerlendir()` — Zeile 430 · calledBy: durumu_yaz
+- `geri_yukle()` — Zeile 589 · calledBy: onprem/update.sh
+- `aktuelle_images_sammeln()` — Zeile 605 · calledBy: onprem/update.sh
+- `anahtarlari_oku()` — Zeile 624 · calledBy: onprem/update.sh
+- `deger_oku()` — Zeile 628 · calledBy: onprem/update.sh

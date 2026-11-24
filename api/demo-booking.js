@@ -268,6 +268,18 @@ async function handleAvailability(req, res) {
   } catch { return json(res, 200, { bookedTimes: [] }); }
 }
 
+// Buchbare Zeiten — muss zu CONFIG in demo-booking.html passen.
+// Dienstag geschlossen, Freitag 13–16 Uhr geschlossen, keine Abendtermine.
+const SLOT_TIMES = ['09:00','09:30','10:00','10:30','11:00','11:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30'];
+/** @param {string} date @param {string} time */
+function isBookableSlot(date, time) {
+  const day = new Date(date + 'T12:00:00').getDay();
+  if (![1, 3, 4, 5].includes(day)) return false;
+  if (!SLOT_TIMES.includes(time)) return false;
+  if (day === 5 && time >= '13:00' && time < '16:00') return false;
+  return true;
+}
+
 /**
  * @param {import('./_lib/auth.js').VercelRequest} req
  * @param {import('./_lib/auth.js').VercelResponse} res
@@ -284,6 +296,7 @@ async function handleCreate(req, res) {
   if (name.length > 200 || (company && String(company).length > 200) || (message && String(message).length > 2000)) return json(res, 400, { error: 'Eingabe zu lang' });
   if (!/^\d{4}-\d{2}-\d{2}$/.test(booking_date)) return json(res, 400, { error: 'Ungültiges Datum' });
   if (!/^\d{2}:\d{2}$/.test(booking_time)) return json(res, 400, { error: 'Ungültige Uhrzeit' });
+  if (!isBookableSlot(booking_date, booking_time)) return json(res, 400, { error: 'Zu dieser Zeit sind keine Termine buchbar.' });
 
   const { ok: chkOk, data: existing } = await adminFetch(
     `/demo_bookings?booking_date=eq.${booking_date}&booking_time=eq.${booking_time}&status=eq.confirmed&select=id&limit=1`
@@ -327,6 +340,7 @@ async function handleReschedule(req, res) {
   if (!token || !new_date || !new_time) return json(res, 400, { error: 'token, new_date und new_time sind erforderlich' });
   if (!/^\d{4}-\d{2}-\d{2}$/.test(new_date)) return json(res, 400, { error: 'Ungültiges Datum' });
   if (!/^\d{2}:\d{2}$/.test(new_time)) return json(res, 400, { error: 'Ungültige Uhrzeit' });
+  if (!isBookableSlot(new_date, new_time)) return json(res, 400, { error: 'Zu dieser Zeit sind keine Termine buchbar.' });
 
   const { ok: findOk, data: found } = await adminFetch(`/demo_bookings?reschedule_token=eq.${encodeURIComponent(token)}&select=*&limit=1`);
   if (!findOk || !Array.isArray(found) || found.length === 0) return json(res, 404, { error: 'Ungültiger oder abgelaufener Token' });
