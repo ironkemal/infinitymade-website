@@ -62,9 +62,16 @@ if (TON) {
   const { sprich, SPRECHERIN } = await import('./tts.mjs');
   const sp = SPRECHERIN[process.env.SPRECHERIN || 'katharina'];
   tlMs = [];
+  // Cache je Stimme+Text: Musik/Schnitt neu machen, ohne die Sprecherin neu anzufragen (Gemini-Kontingent)
+  const { createHash } = await import('node:crypto');
+  const { existsSync, copyFileSync } = await import('node:fs');
+  const CACHE = join(tmpdir(), 'praxura-tts-cache'); mkdirSync(CACHE, { recursive: true });
   for (let i = 0; i < TEXT.length; i++) {
     const f = join(TMP, `stimme${i}.wav`);
-    const d = await sprich(TEXT[i][0], f, sp);
+    const c = join(CACHE, createHash('sha1').update(sp.stimme + '|' + sp.weise + '|' + TEXT[i][0]).digest('hex') + '.wav');
+    if (!existsSync(c)) await sprich(TEXT[i][0], c, sp);
+    copyFileSync(c, f);
+    const { dauer } = await import('./tts.mjs'); const d = dauer(f);
     clips.push({ f, d, lead: TEXT[i][2], sub: TEXT[i][1] });
     tlMs.push(Math.max(BASIS_TL[i], Math.round((TEXT[i][2] + d + 0.6) * 1000)));
     console.log(`  Satz ${i + 1}: ${d.toFixed(1)} s`);
@@ -123,18 +130,22 @@ if (TON) {
   // Zeitachse: Video beginnt beim ersten Frame, der Film bei filmStart
   const off = filmStart - frames[0].t;
   const starts = []; let acc = off; tlMs.forEach((ms) => { starts.push(acc); acc += ms / 1000; });
-  const ende = total, tPaid = starts[5];
+  const ende = total, tPx = starts[4]; // Szene „Mit Praxura": hier kippt die Musik
+  const VOR = 60 / 122;                  // aufbruch.wav beginnt mit 1 Schlag Anstieg → Eins fällt auf den Szenenwechsel
   const vStumm = join(TMP, 'stumm.mp4');
   ff(['-f', 'concat', '-safe', '0', '-i', listPath, '-vf', vf, '-c:v', 'libx264', '-preset', 'slow', '-crf', '24', '-tune', 'stillimage', '-an', vStumm]);
-  // Ton: Sätze an ihre Stelle; Musik leise darunter — bis „bezahlt" traurig.wav, dann warm.wav (eigene Kompositionen, sosyal/musik)
+  // Ton (Kemal 25.11.: „Praxura gelince canlı, enerjik müzik girmeli"):
+  //   Problem-Teil: traurig.wav leise · ab „Mit Praxura": aufbruch.wav (122 bpm), kräftig, unter der Stimme geduckt
+  //   (sidechaincompress), am Ende ausgeblendet. Eigene Kompositionen aus sosyal/musik/komponiere.py.
   const M = join(ROOT, 'sosyal', 'musik'); const n = clips.length;
   const vox = clips.map((c, i) => `[${i}:a]aresample=48000,adelay=${Math.round((starts[i] + c.lead) * 1000)}:all=1[v${i}]`).join(';');
-  const fc = `${vox};${clips.map((_, i) => `[v${i}]`).join('')}amix=inputs=${n}:normalize=0[vox];`
-    + `[${n}:a]aresample=48000,atrim=0:${(tPaid + 1).toFixed(2)},afade=t=in:d=1.2,afade=t=out:st=${(tPaid - 0.6).toFixed(2)}:d=1.5,volume=0.16[m1];`
-    + `[${n + 1}:a]aresample=48000,aloop=loop=-1:size=2000000000,atrim=0:${(ende - tPaid + 1).toFixed(2)},afade=t=in:d=1.2,afade=t=out:st=${Math.max(ende - tPaid - 2, 1).toFixed(2)}:d=2,adelay=${Math.round((tPaid - 0.6) * 1000)}:all=1,volume=0.16[m2];`
+  const fc = `${vox};${clips.map((_, i) => `[v${i}]`).join('')}amix=inputs=${n}:normalize=0,asplit=2[vox][key];`
+    + `[${n}:a]aresample=48000,atrim=0:${(tPx + 0.3).toFixed(2)},afade=t=in:d=1.2,afade=t=out:st=${(tPx - 0.7).toFixed(2)}:d=0.8,volume=0.16[m1];`
+    + `[${n + 1}:a]aresample=48000,atrim=0:${(ende - tPx + VOR + 0.5).toFixed(2)},afade=t=out:st=${Math.max(ende - tPx + VOR - 2.2, 1).toFixed(2)}:d=2.2,adelay=${Math.round((tPx - VOR) * 1000)}:all=1,volume=0.42[m2r];`
+    + `[m2r][key]sidechaincompress=threshold=0.04:ratio=5:attack=20:release=350[m2];`
     + `[vox][m1][m2]amix=inputs=3:normalize=0,alimiter=limit=0.8:level=0,atrim=0:${ende.toFixed(2)}[a]`;
   const ton = join(TMP, 'ton.wav');
-  ff([...clips.flatMap((c) => ['-i', c.f]), '-i', join(M, 'traurig.wav'), '-i', join(M, 'warm.wav'), '-filter_complex', fc, '-map', '[a]', ton]);
+  ff([...clips.flatMap((c) => ['-i', c.f]), '-i', join(M, 'traurig.wav'), '-i', join(M, 'aufbruch.wav'), '-filter_complex', fc, '-map', '[a]', ton]);
   ff(['-i', vStumm, '-i', ton, '-c:v', 'copy', '-c:a', 'aac', '-b:a', '128k', '-shortest', '-movflags', '+faststart', mp4]);
   ff(['-i', vStumm, '-i', ton, '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', '38', '-row-mt', '1', '-deadline', 'good', '-c:a', 'libopus', '-b:a', '96k', '-shortest', webm]);
   // Untertitel (WebVTT): lange Sätze an Satzzeichen geteilt, Zeit anteilig nach Zeichen

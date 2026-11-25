@@ -149753,6 +149753,7 @@
     "(datei) tools/browser-probe/p01-shell.mjs",
     "(datei) tools/browser-probe/physio-demo-p01.mjs",
     "(datei) tools/browser-probe/raum-details-probe.mjs",
+    "(datei) tools/hero-clip/aufnehmen.mjs",
     "(datei) tools/onprem-manifest.mjs",
     "_enterAnsichtEditMode",
     "_verdrahteSitzungsHeilmittelTausch",
@@ -176799,6 +176800,7 @@
     "(datei) tools/browser-probe/p01-shell.mjs",
     "(datei) tools/browser-probe/physio-demo-p01.mjs",
     "(datei) tools/browser-probe/raum-details-probe.mjs",
+    "(datei) tools/hero-clip/aufnehmen.mjs",
     "(datei) tools/onprem-manifest.mjs",
     "_enterAnsichtEditMode",
     "_verdrahteSitzungsHeilmittelTausch",
@@ -241253,6 +241255,7 @@
     "esc"
    ],
    "calledBy": [
+    "(datei) tools/hero-clip/aufnehmen.mjs",
     "freiHtml",
     "hinweis",
     "sprich",
@@ -316741,6 +316744,7 @@
     "zeilen"
    ],
    "calledBy": [
+    "(datei) tools/hero-clip/aufnehmen.mjs",
     "freiHtml",
     "hinweis",
     "sprich",
@@ -327824,9 +327828,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "tools/hero-clip/aufnehmen.mjs",
-   "start": 112,
-   "end": 153,
-   "lines": 42,
+   "start": 119,
+   "end": 164,
+   "lines": 46,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -327897,9 +327901,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "tools/hero-clip/aufnehmen.mjs",
-   "start": 120,
-   "end": 153,
-   "lines": 34,
+   "start": 127,
+   "end": 164,
+   "lines": 38,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -327972,8 +327976,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "tools/hero-clip/aufnehmen.mjs",
-   "start": 141,
-   "end": 141,
+   "start": 152,
+   "end": 152,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -328213,6 +328217,7 @@
     "sprich"
    ],
    "calledBy": [
+    "(datei) tools/hero-clip/aufnehmen.mjs",
     "freiHtml",
     "hinweis",
     "sprich",
@@ -352438,7 +352443,7 @@
    "name": "kb",
    "orte": [
     "ops/wissen.js:44",
-    "tools/hero-clip/aufnehmen.mjs:120"
+    "tools/hero-clip/aufnehmen.mjs:127"
    ],
    "aynalar": []
   },

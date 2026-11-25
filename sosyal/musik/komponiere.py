@@ -375,6 +375,52 @@ def klaenge():
     y = np.concatenate(teile); y = fft_filter(y, lo=300, hi=3400)
     schreib('fax', y, 0.02)
 
+# --- 8. aufbruch: energisch-positiv, 122 bpm, Four-on-the-floor, Pumpen — „Praxura kommt" (Kemal 25.11.2026) ---
+# Für den Moment, in dem der Film von Problem zu Lösung kippt. Beginnt mit kurzem Rauschanstieg auf die Eins.
+def aufbruch():
+    bpm = 122; beat = 60 / bpm; takt = 4 * beat
+    akkorde = [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62]]  # Am  F  C  G
+    takte = 12; vor = beat; dauer = vor + takte * takt; n = int(dauer * SR) + SR
+    L, R = np.zeros(n), np.zeros(n)
+    # Anstieg (1 Schlag Rauschen, hochgefiltert) auf die Eins
+    t = zeit(int(vor * SR)); swell = fft_filter(rng.standard_normal(len(t)), lo=2500) * (t / vor) ** 2.2 * 0.35
+    platziere(L, swell, 0); platziere(R, swell, 0)
+    pump = lambda k: 1 - 0.55 * np.exp(-zeit(k) / 0.09)  # Sidechain-Gefühl je Schlag
+    melodie = [(0, 76), (0.75, 79), (1.5, 81), (2.5, 79), (3, 76)]
+    antwort = [(0, 72), (0.75, 74), (1.5, 76), (2, 79), (3, 84)]
+    for tk in range(takte):
+        t0 = vor + tk * takt; ak = akkorde[tk % 4]
+        # Fläche, pro Schlag „gepumpt"
+        fl = flaeche([mf(m + 12) for m in ak], takt + 0.05, 0.22); k = int(beat * SR)
+        for s in range(4): fl[s * k:(s + 1) * k] *= pump(len(fl[s * k:(s + 1) * k]))
+        a, b = pan(fl, 0); platziere(L, a, t0); platziere(R, b, t0)
+        # Bass: treibende Achtel auf den Offbeats + Grundton auf der Eins
+        for s in range(8):
+            v = 0.42 if s % 2 else 0.3
+            b_ = bass(mf(ak[0] - 24 + (12 if s % 2 else 0)), beat * 0.42, v); platziere(L, b_, t0 + s * beat / 2); platziere(R, b_, t0 + s * beat / 2)
+        # Klavier-Stabs im 3-3-2-Rhythmus
+        for pos in (0, 0.75, 1.5, 2.5, 3.25):
+            for m in ak:
+                ton = klavier(mf(m + 12), 0.5, 0.2); a, b = pan(ton, -0.25); platziere(L, a, t0 + pos * beat); platziere(R, b, t0 + pos * beat)
+        # Melodie ab Takt 3, hell (Pluck + Oktave)
+        if tk >= 2:
+            phrase = melodie if (tk // 2) % 2 == 1 else antwort
+            for pos, m in phrase:
+                for okt, v in ((0, 0.34), (12, 0.12)):
+                    a, b = pan(pluck(mf(m + okt), v), 0.3); platziere(L, a, t0 + pos * beat + human()); platziere(R, b, t0 + pos * beat + human())
+        # Schlagzeug
+        for s in range(4):
+            ts = t0 + s * beat
+            platziere(L, kick(0.75), ts); platziere(R, kick(0.75), ts)
+            if s in (1, 3): a, b = pan(klatsch(0.3), 0); platziere(L, a, ts); platziere(R, b, ts)
+            a, b = pan(hat(0.11, 0.07), 0.4); platziere(L, a, ts + beat / 2); platziere(R, b, ts + beat / 2)  # offene Hat
+            for h in (1, 3):
+                a, b = pan(hat(0.05, 0.015), -0.4); platziere(L, a, ts + h * beat / 4); platziere(R, b, ts + h * beat / 4)
+        if tk % 4 == 3:  # kleiner Fill zum nächsten Durchgang
+            for h in range(4):
+                a, b = pan(klatsch(0.12 + 0.04 * h), 0); platziere(L, a, t0 + 3 * beat + h * beat / 4); platziere(R, b, t0 + 3 * beat + h * beat / 4)
+    k = int(dauer * SR); fertig('aufbruch', L[:k], R[:k], hall_anteil=0.12, lp=11000)
+
 if __name__ == '__main__':
     import sys
     wahl = sys.argv[1:] or ['ruhig', 'warm', 'leicht', 'episch', 'klaenge']
