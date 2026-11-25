@@ -232,6 +232,49 @@ if [ -n "$positions_degisti" ] && [ -z "$yeni_migration" ] && [ "$SKIP_SEED_GATE
   seed_ihlal=$(echo "$positions_degisti" | sed 's/^/      /')
 fi
 
+# --- Kostenträger-Seed kapısı (O-118, 25.11.2026) --------------------------
+#
+# Neden: Kostenträgerdatei'ler (wissensbank/gemeinsam/kostentraeger/*.txt) ve
+# hangisinin ne zaman geçerli olduğu (tools/kostentraeger-ausgaben.json) yalnız
+# SaaS'a laden.mjs ile yazılıyordu; kutuya giden seed'i hatırlatan hiçbir şey
+# yoktu. 18.11.2026'da tam bu oldu: üç dosya yalnız SaaS'a girdi, kutular
+# 01.10/01.11'den beri eski alıcıyla çalıştı (O-258, düzeltme 0132).
+#
+# Kural: yeni/değişen bir KE dosyası ya da listede yeni/değişen bir giriş, gültig-ab
+# BUGÜN veya geçmişteyse → aynı commit'te YENİ bir *_seed_kostentraeger*.sql
+# girmeli ve o dosya ilgili KE dosya adını başlığında anmalı. gültig-ab gelecekteyse
+# kapı geçer (O-139 Adım 2: o gün gelmeden seed üretilemez; günü gelince
+# bekci-kostentraeger.yml kutu ikizinden seed'i kendisi üretir).
+kt_seed_ihlal=""
+if [ "$SKIP_KT_SEED_GATE" != "1" ]; then
+  kt_degisen=$(git diff --cached --no-renames --name-only --diff-filter=AM -- 'wissensbank/gemeinsam/kostentraeger/*_KE*.txt' 'tools/kostentraeger-ausgaben.json' 2>/dev/null)
+  if [ -n "$kt_degisen" ]; then
+    kt_seed_yeni=$(git diff --cached --no-renames --name-only --diff-filter=A -- 'api-backend/db/migrations/*_seed_kostentraeger*.sql' 2>/dev/null)
+    kt_seed_metin=""
+    for f in $kt_seed_yeni; do kt_seed_metin="$kt_seed_metin$(git show ":$f" 2>/dev/null | head -80)"; done
+    kt_gerekli=$(KT_DEGISEN="$kt_degisen" node -e '
+      const { execFileSync } = require("child_process");
+      const oku = ref => { try { return JSON.parse(execFileSync("git", ["show", ref], { encoding: "utf8", stdio: ["ignore","pipe","ignore"] })).ausgaben || []; } catch { return []; } };
+      const yeni = oku(":tools/kostentraeger-ausgaben.json"), eski = oku("HEAD:tools/kostentraeger-ausgaben.json");
+      const heute = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin" }).format(new Date());
+      const eskiMap = new Map(eski.map(a => [a.datei, a.gueltigAb]));
+      const adaylar = new Set();
+      for (const a of yeni) if (eskiMap.get(a.datei) !== a.gueltigAb) adaylar.add(a.datei);
+      for (const p of process.env.KT_DEGISEN.split(/\r?\n/)) { const m = p.match(/([A-Z]{2}\d{2}\w+_KE\d\.txt)$/); if (m) adaylar.add(m[1]); }
+      const tarih = new Map(yeni.map(a => [a.datei, a.gueltigAb]));
+      for (const d of adaylar) { const t = tarih.get(d); if (!t || t <= heute) console.log(d + (t ? " (ab " + t + ")" : " (nicht in kostentraeger-ausgaben.json)")); }
+    ' 2>/dev/null)
+    while IFS= read -r satir; do
+      [ -z "$satir" ] && continue
+      datei="${satir%% *}"
+      if [ -z "$kt_seed_yeni" ] || ! printf '%s' "$kt_seed_metin" | grep -qF "$datei"; then
+        kt_seed_ihlal="$kt_seed_ihlal
+      $satir"
+      fi
+    done <<< "$kt_gerekli"
+  fi
+fi
+
 # --- pg_net kapısı (sayaç değil, doğrudan kontrol) --------------------------
 #
 # O-49 (12.09.2026): pg_net kutuda hiç kurulmuyor artık — ama bunu sağlayan
@@ -439,6 +482,18 @@ if [ -n "$zaehler_ihlal" ]; then
       Çıkış: erwartete-zaehler.json'ı taze bir on-prem kutusunda ölçüp
       bis_version'ı bu migration'a eşitle (SaaS değil — onprem/REGISTER.md O-90/O-91).
       Yalnızca biçimsel bir düzeltmeyse: SKIP_ZAEHLER_GATE=1 git commit ...
+"
+fi
+
+if [ -n "$kt_seed_ihlal" ]; then
+  ihlal="$ihlal
+    ✗ Kostenträger-Seed kapısı (O-118) — bugün geçerli KE dosyası kutuya gitmiyor:$kt_seed_ihlal
+      Kutular Kostenträger'i yalnız seed migration'ından alır; SaaS'a laden.mjs ile
+      yazmak kutuya ulaşmaz (O-258: 18.11.2026'da tam bu oldu).
+      Çıkış: aynı commit'e yeni bir NNNN_seed_kostentraeger_*.sql ekle; başlığında bu
+      dosya adları geçsin. Üretim: tools/kostentraeger-kutu-seed.mjs (kutu ikizi) ya da
+      bekci-kostentraeger.yml'nin günlük koşusu.
+      Bilinçli istisna: SKIP_KT_SEED_GATE=1 git commit ...
 "
 fi
 
