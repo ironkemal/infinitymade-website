@@ -46,7 +46,7 @@
   <!-- ===== Cookie consent banner ===== -->
   <link rel="stylesheet" href="/cookie-consent.css?v=20260610" />
 
-  <link rel="preload" href="assets/img/hero-praxura.webp?v=20260615" as="image" fetchpriority="high" type="image/webp" />
+  <link rel="preload" href="assets/video/praxura-hero-poster.webp?v=20261125" as="image" fetchpriority="high" type="image/webp" />
 
   <!-- ===== Structured Data: Organization ===== -->
   <script type="application/ld+json">
@@ -178,8 +178,8 @@
       margin: 0 auto;
       padding: 9rem 2rem 5rem;
       display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 5rem;
+      grid-template-columns: 1fr 1.08fr;
+      gap: 3.5rem;
       align-items: center;
     }
     .px-eyebrow {
@@ -296,7 +296,26 @@
       text-transform: none;
     }
 
-    /* ── Hero right: product photo ── */
+    /* ── Hero right: stummer Produkt-Clip (Kemal 25.11.2026: Video statt Foto).
+       Quelle: demo-dashboard.html?film=1, erzeugt mit `npm run hero-clip`.
+       Poster zuerst (LCP), das Video lädt erst nach dem load-Event, nie bei
+       prefers-reduced-motion oder Datensparmodus. Klick → interaktive Tour. ── */
+    .px-hero-clip {
+      position: relative; display: block; text-decoration: none; color: inherit;
+      border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--bg-warm);
+      box-shadow: 0 34px 80px -30px rgba(26, 22, 17, 0.36);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .px-hero-clip:hover { transform: translateY(-4px); box-shadow: 0 44px 96px -34px rgba(26, 22, 17, 0.44); }
+    .px-hero-clip video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; background: #F8F3E8; }
+    .px-hero-clip-cta {
+      position: absolute; right: 14px; bottom: 14px; display: inline-flex; align-items: center; gap: 0.4rem;
+      background: var(--bronze-gold, #b1891b); color: #1A1611; font-weight: 700; font-size: 0.86rem;
+      padding: 0.55rem 0.95rem; border-radius: 999px; box-shadow: 0 8px 22px -8px rgba(26, 22, 17, 0.5);
+    }
+    .px-hero-clip-note { margin: 0.7rem 0 0; font-size: 0.8rem; color: var(--ink-quiet); text-align: center; }
+
+    /* ── Hero right: product photo (nicht mehr im Hero, Klassen bleiben für Wiederverwendung) ── */
     .px-hero-visual { position: relative; }
     .px-hero-photo {
       width: 100%;
@@ -1192,13 +1211,40 @@
   </div>
 
   <aside class="px-hero-visual is-visible" data-reveal>
-    <picture>
-      <source srcset="assets/img/hero-praxura.webp?v=20260615" type="image/webp" />
-      <img src="assets/img/hero-praxura.png?v=20260602"
-           alt="Praxura — Therapeutin mit Rezepten und der App in der Hand"
-           class="px-hero-photo" width="2000" height="1414" loading="eager" decoding="async" fetchpriority="high" />
-    </picture>
+    <a class="px-hero-clip" href="demo-dashboard.html#tour" target="_blank" rel="noopener" data-cta="hero-clip"
+       aria-label="Praxura in 40 Sekunden: Verordnung einlesen, Serie planen, quittieren, E-Mail, Hausbesuch, Standorte, §302-Abrechnung. Klicken startet die interaktive Demo.">
+      <div class="px-demo-bar" aria-hidden="true">
+        <span class="px-demo-dot"></span><span class="px-demo-dot"></span><span class="px-demo-dot"></span>
+        <span class="px-demo-url">app.praxura.de/dashboard</span>
+      </div>
+      <video id="heroClip" muted playsinline loop preload="none" width="1280" height="800"
+             poster="assets/video/praxura-hero-poster.webp?v=20261125" aria-hidden="true">
+        <source data-src="assets/video/praxura-hero.webm?v=20261125" type="video/webm" />
+        <source data-src="assets/video/praxura-hero.mp4?v=20261125" type="video/mp4" />
+      </video>
+      <span class="px-hero-clip-cta">Selbst ausprobieren <span aria-hidden="true">→</span></span>
+    </a>
+    <p class="px-hero-clip-note">Echte Oberfläche, erfundene Beispieldaten · ohne Ton</p>
   </aside>
+  <script>
+    (function () {
+      var v = document.getElementById('heroClip');
+      if (!v) return;
+      var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var sparen = navigator.connection && navigator.connection.saveData;
+      if (still || sparen) return; // Poster bleibt stehen
+      function laden() {
+        v.querySelectorAll('source[data-src]').forEach(function (s) { s.src = s.getAttribute('data-src'); });
+        v.load();
+        var p = v.play(); if (p && p.catch) p.catch(function () {});
+      }
+      if (document.readyState === 'complete') laden(); else window.addEventListener('load', laden);
+      // Außer Sicht pausieren: spart Akku auf dem Handy
+      if ('IntersectionObserver' in window) new IntersectionObserver(function (e) {
+        if (!v.currentSrc) return; if (e[0].isIntersecting) { var p = v.play(); if (p && p.catch) p.catch(function () {}); } else v.pause();
+      }).observe(v);
+    })();
+  </script>
 </header>
 
 <!-- ────────────── Sectors Strip ────────────── -->
@@ -1216,11 +1262,12 @@
 <!-- ────────────── Interactive Demo ────────────── -->
 <section class="px-demo" id="demo">
   <div class="px-demo-head" data-reveal>
-    <p class="px-demo-eyebrow">Interaktive Demo · ca. 2 Minuten</p>
+    <p class="px-demo-eyebrow">Interaktive Demo · ca. 3 Minuten</p>
     <h2 class="px-demo-title">Ein Vormittag in Ihrer Praxis, <em>selbst geklickt.</em></h2>
     <p class="px-demo-lede">
-      Verordnung per Barcode einlesen, die ganze Serie planen, Behandlung quittieren
-      lassen, §302-Abrechnung prüfen. Fünf Schritte, geführt. Kein Login, keine Installation.
+      Verordnung per Barcode einlesen, die ganze Serie planen, Behandlung quittieren lassen,
+      Terminanfrage per E-Mail beantworten, Hausbesuche ins Fahrtenbuch, zwei Standorte im Blick,
+      §302-Abrechnung prüfen. Acht Schritte, geführt. Kein Login, keine Installation.
     </p>
   </div>
   <a href="demo-dashboard.html" target="_blank" rel="noopener"
@@ -1300,13 +1347,13 @@
           <button type="button" class="px-video-ph" data-wistia="y7ho9jh8qd" aria-label="Video ansehen: E-Mails">
             <span class="px-video-ph-play" aria-hidden="true"></span>
             <span class="px-video-ph-label">E-Mails ansehen</span>
-            <span class="px-video-ph-text">Automatische Nachrichten an Patient:innen und Zuweiser — ohne Tippen.</span>
+            <span class="px-video-ph-text">Nachrichten an Patient:innen und Zuweiser als fertiger Entwurf. Sie lesen kurz und senden.</span>
             <span class="px-video-ph-note">Zum Abspielen tippen · Video l&auml;dt &uuml;ber <a href="/datenschutz.html#wistia">Wistia</a></span>
           </button>
         </div>
         <div class="px-video-info">
           <p class="px-video-tag">Kommunikation · Mail</p>
-          <p class="px-video-name">Automatische E-Mails für Patienten &amp; Zuweiser</p>
+          <p class="px-video-name">E-Mails an Patient:innen &amp; Zuweiser in Sekunden</p>
         </div>
       </div>
       <div class="px-video-card">
@@ -1314,13 +1361,13 @@
           <button type="button" class="px-video-ph" data-wistia="8qc1rgyne0" aria-label="Video ansehen: Fahrtenbuch">
             <span class="px-video-ph-play" aria-hidden="true"></span>
             <span class="px-video-ph-label">Fahrtenbuch ansehen</span>
-            <span class="px-video-ph-text">Hausbesuchsfahrten werden Finanzamt-konform von selbst erfasst.</span>
+            <span class="px-video-ph-text">Hausbesuchsfahrten mit Route und Kilometern dokumentiert, ohne Zettel.</span>
             <span class="px-video-ph-note">Zum Abspielen tippen · Video l&auml;dt &uuml;ber <a href="/datenschutz.html#wistia">Wistia</a></span>
           </button>
         </div>
         <div class="px-video-info">
           <p class="px-video-tag">Hausbesuch · Fahrtenbuch</p>
-          <p class="px-video-name">Fahrten Finanzamt-konform automatisch erfassen</p>
+          <p class="px-video-name">Hausbesuchsfahrten mit Route und Kilometern erfassen</p>
         </div>
       </div>
     </div>
@@ -1566,7 +1613,7 @@
       {img:'dunning-modal',t:'Mahnung in einem Klick',d:'Zahlungserinnerung und Mahnstufen automatisch erstellt.',hx:62,hy:66,hi:'Mahnstufen vollautomatisch'}
     ]},
     'fahrtenbuch':{name:'Fahrtenbuch',tag:'Hausbesuche & Pauschalen automatisch',steps:[
-      {img:'fahrtenbuch',t:'Elektronisches Fahrtenbuch',d:'Hausbesuchsfahrten GoBD-konform und steuersicher dokumentiert.',hx:94,hy:11,hi:'GoBD-konform & steuersicher'},
+      {img:'fahrtenbuch',t:'Elektronisches Fahrtenbuch',d:'Hausbesuchsfahrten mit Datum, Fahrzeug, Ziel und Kilometern dokumentiert.',hx:94,hy:11,hi:'Route & Kilometer'},
       {img:'fahrtenbuch-new',t:'Fahrt in Sekunden erfassen',d:'Strecke, Patient und Pauschale werden automatisch berechnet.',hx:64,hy:69,hi:'Pauschale automatisch berechnet'}
     ]},
     'statistics':{name:'Statistik & Berichte',tag:'Praxis-Kennzahlen auf einen Blick',steps:[

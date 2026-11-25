@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Praxura – Interaktive Demo (Physiotherapie)</title>
-  <meta name="description" content="Ein Vormittag in einer Physiotherapie-Praxis mit Praxura: Verordnung einlesen, Serie planen, Behandlung quittieren, §302-Abrechnung vorbereiten. Interaktiv, ohne Login." />
+  <meta name="description" content="Ein Vormittag in einer Physiotherapie-Praxis mit Praxura: Verordnung einlesen, Serie planen, quittieren, E-Mail-Entwurf, Hausbesuchs-Route und Fahrtenbuch, mehrere Standorte, §302-Abrechnung vorbereiten. Interaktiv, ohne Login." />
   <meta name="robots" content="noindex, follow" />
   <link rel="canonical" href="https://praxura.de/demo-dashboard.html" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -16,9 +16,18 @@
     Demo-Dashboard (Neubau 25.11.2026, Kemal: „Demo ist alt — aktualisieren, mit
     Marketing-Psychologie polieren, nichts versprechen, was es nicht gibt").
     Regeln dieser Datei:
-      · Nur zeigen, was es im Produkt heute gibt. Kein KI-Feature (aus), keine
-        automatischen Erinnerungen (gibt es nicht), keine Paket-/Enterprise-Rozetten
-        (alle Funktionen in jedem Paket), keine Preise des Produkts.
+      · Nur zeigen, was es im Produkt heute gibt. Keine automatischen Erinnerungen
+        (gibt es nicht), keine Paket-/Enterprise-Rozetten (alle Funktionen in jedem
+        Paket), keine Preise des Produkts.
+      · Einzige KI-Stelle: der Mail-Entwurf (Kemal 25.11.2026: „otomatik mail yazma
+        da olsun"). Echt: api-backend/ai/tasks/b2c-draft.js über ki-gateway.js mit
+        PII-Maskierung, nur Entwurf, nie Versand. Die Freischaltung läuft
+        (module/ki-client.js → capabilities.mailDraft), deshalb „KI-Assistent" und der
+        Hinweis „nur ein Entwurf". Kein KI-Rezept-Scan zeigen (OCR ist aus).
+      · Fahrtenbuch-Route = supabase/functions/fahrtenbuch-matrix (Reihenfolge, km, Min.).
+        Standorte = data_sharing_settings + bizScope; Kalender bleibt je Standort getrennt.
+      · ?film=1 spielt die Tour allein ab (Vorlage für den Hero-Clip):
+        tools/hero-clip/aufnehmen.mjs nimmt ihn auf. Demo geändert → Clip neu aufnehmen.
       · GKV-Preise/Zuzahlung aus api-backend/billing/codes/physio_positions.js
         (PREISSTAND 01-01-26) — nicht von Hand ändern, dort nachsehen.
       · Alle Datumsangaben relativ zu „heute" (Berlin) → die Demo veraltet nicht mehr.
@@ -441,7 +450,92 @@
     .toast b { color: var(--gold); }
     @keyframes toast { 0% { opacity: 0; transform: translateY(10px); } 8%,85% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-6px); } }
 
+    @media (max-width: 860px) { body.tour-on .toast-wrap { bottom: auto; top: calc(var(--top) + 64px); } }
     .empty-note { font-size: 12.5px; color: var(--ink-mute); padding: 10px 0 0; }
+
+    /* ── Standort-Wechsel ────────────────────────────── */
+    .praxis { position: relative; width: calc(100% - 8px); text-align: left; cursor: pointer; display: block; }
+    .praxis .chev { position: absolute; right: 10px; top: 50%; width: 14px; height: 14px; margin-top: -7px; stroke: var(--ink-mute); fill: none; stroke-width: 2; }
+    .praxis:hover { border-color: rgba(177,137,27,.45); }
+    .loc-menu {
+      position: absolute; left: 4px; right: 4px; top: calc(100% + 6px); z-index: 40; background: var(--card);
+      border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-lg); padding: 6px; animation: pop .25s var(--ease);
+    }
+    .loc-menu button { display: flex; flex-direction: column; width: 100%; text-align: left; border: 0; background: transparent; border-radius: 8px; padding: 8px 10px; font-size: 13px; }
+    .loc-menu button:hover { background: var(--hover); }
+    .loc-menu button span { font-size: 11.5px; color: var(--ink-mute); }
+    .loc-menu button.cur b::after { content: ' ✓'; color: var(--ok); }
+    .loc-menu hr { border: 0; border-top: 1px solid var(--line-soft); margin: 4px 0; }
+    .loc-wrap { position: relative; }
+    .loc-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 16px; }
+    .loc-card .card-b { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 16px; }
+    .loc-card .m { font-size: 12px; color: var(--ink-mute); }
+    .loc-card .m b { display: block; font-family: var(--serif); font-weight: 400; font-size: 24px; color: var(--ink); letter-spacing: -.02em; }
+    .share { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid var(--line-soft); }
+    .share:first-child { border-top: 0; }
+    .share div { flex: 1; }
+    .share small { display: block; color: var(--ink-mute); font-size: 12px; }
+    .tog { width: 38px; height: 22px; border-radius: 999px; background: var(--hover); position: relative; flex: none; border: 0; }
+    .tog::after { content: ''; position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: left .2s var(--ease); }
+    .tog.on { background: var(--ok); }
+    .tog.on::after { left: 19px; }
+
+    /* ── E-Mail-Entwurf ──────────────────────────────── */
+    .mail-meta { display: grid; grid-template-columns: 64px 1fr; gap: 6px 10px; font-size: 13px; margin-bottom: 12px; }
+    .mail-meta label { color: var(--ink-mute); font-size: 12px; padding-top: 2px; }
+    .mail-ask { display: flex; gap: 10px; align-items: flex-start; background: var(--gold-soft); border-radius: 10px; padding: 9px 12px; font-size: 13px; margin-bottom: 12px; }
+    .mail-ask svg { width: 16px; height: 16px; flex: none; margin-top: 2px; stroke: var(--bronze); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .mail-body { border: 1px solid var(--line); border-radius: 10px; background: #FFFDF8; padding: 12px 14px; min-height: 190px; font-size: 13.5px; line-height: 1.6; white-space: pre-wrap; }
+    .mail-body.typing::after { content: ''; display: inline-block; width: 2px; height: 1.05em; background: var(--gold); vertical-align: -2px; margin-left: 1px; animation: blink .8s infinite; }
+
+    /* ── Hausbesuchs-Route ───────────────────────────── */
+    .route { display: grid; grid-template-columns: 1.1fr 1fr; gap: 0; margin-bottom: 16px; overflow: hidden; }
+    .route-map { position: relative; background: #EFE7D3; min-height: 250px; border-right: 1px solid var(--line); }
+    .route-map svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .route-map .road { fill: none; stroke: rgba(255,255,255,.75); stroke-width: 7; stroke-linecap: round; }
+    .route-map .path { fill: none; stroke: var(--emerald); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+    .route-map.drawn .path { transition: stroke-dashoffset 1.8s var(--ease); stroke-dashoffset: 0; }
+    .route-map .pin circle { fill: var(--card); stroke: var(--bronze); stroke-width: 2; }
+    .route-map .pin text { font: 700 10px var(--mono); fill: var(--bronze); text-anchor: middle; dominant-baseline: central; }
+    .route-map .pin.home circle { fill: var(--emerald); stroke: var(--emerald); }
+    .route-map .pin.home text { fill: #F8F3E8; }
+    .route-map.drawn .pin:not(.home) circle { fill: var(--gold); stroke: var(--gold); }
+    .route-map.drawn .pin:not(.home) text { fill: var(--ink); }
+    .route-side { padding: 16px 20px 18px; display: flex; flex-direction: column; }
+    .stops { list-style: none; margin: 10px 0 0; padding: 0; counter-reset: s; }
+    .stops li { display: flex; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line-soft); font-size: 13px; transition: background .3s; }
+    .stops li:first-child { border-top: 0; }
+    .stops .sn { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-family: var(--mono); font-size: 10.5px; font-weight: 700; background: var(--gold-soft); color: var(--bronze); flex: none; }
+    .stops li span.k { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--ink-mute); }
+    .route-sum { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: var(--emerald-soft); font-size: 13px; }
+    .route-sum b { font-family: var(--serif); font-weight: 400; font-size: 20px; }
+    .route-acts { margin-top: auto; padding-top: 14px; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+
+    /* ── Film-Modus (?film=1): Vorlage für den Hero-Clip auf praxura.de ── */
+    body.film { --ribbon-h: 0px; --top: 0px; }
+    body.film .ribbon, body.film .coach, body.film .toast-wrap { display: none !important; }
+    body.film .shell { padding-top: 0; }
+    .film-cap {
+      position: fixed; left: 50%; bottom: 34px; transform: translate(-50%, 12px); z-index: 95; opacity: 0;
+      background: rgba(26,22,17,.92); color: #FFF8EA; border-radius: 16px; padding: 14px 24px 15px;
+      font-family: var(--serif); font-size: 30px; letter-spacing: -.02em; white-space: nowrap;
+      box-shadow: var(--shadow-lg); transition: opacity .35s var(--ease), transform .45s var(--ease); pointer-events: none;
+    }
+    .film-cap small { display: block; font-family: var(--mono); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); margin-bottom: 2px; }
+    .film-cap.on { opacity: 1; transform: translate(-50%, 0); }
+    .fcur { position: fixed; z-index: 96; left: 0; top: 0; width: 26px; height: 26px; pointer-events: none; transition: transform .75s var(--ease); filter: drop-shadow(0 2px 4px rgba(0,0,0,.3)); }
+    .fcur::after { content: ''; position: absolute; left: -14px; top: -14px; width: 28px; height: 28px; border-radius: 50%; background: rgba(177,137,27,.45); transform: scale(0); opacity: 0; }
+    .fcur.tap::after { animation: tap .5s var(--ease); }
+    @keyframes tap { 0% { transform: scale(.3); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+    .film-end {
+      position: fixed; inset: 0; z-index: 97; display: grid; place-items: center; text-align: center;
+      background: rgba(248,243,232,.94); backdrop-filter: blur(6px); opacity: 0; transition: opacity .6s var(--ease); pointer-events: none;
+    }
+    .film-end.on { opacity: 1; }
+    .film-end .brand-mark { width: 64px; height: 64px; font-size: 36px; border-radius: 18px; margin: 0 auto 16px; }
+    .film-end h2 { font-family: var(--serif); font-weight: 400; font-size: 46px; letter-spacing: -.03em; margin: 0; }
+    .film-end h2 em { font-style: italic; font-weight: 300; color: var(--bronze); }
+    .film-end p { font-size: 18px; color: var(--ink-soft); margin: 10px 0 0; }
 
     /* ── Responsive ──────────────────────────────────── */
     @media (max-width: 1080px) {
@@ -465,6 +559,9 @@
       .scan-grid { grid-template-columns: 1fr; }
       .rx { max-width: 340px; }
       .bill-steps { grid-template-columns: 1fr; }
+      .route { grid-template-columns: 1fr; }
+      .route-map { min-height: 200px; border-right: 0; border-bottom: 1px solid var(--line); }
+      .loc-cards { grid-template-columns: 1fr; }
       .coach { left: 12px; right: 12px; bottom: 12px; width: auto; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
       .ribbon .note { display: none; }
       .hero-modal .modal-b { padding: 26px 22px 22px; }
@@ -500,7 +597,15 @@
 <div class="shell">
   <aside class="side" aria-label="Navigation">
     <div class="brand"><span class="brand-mark">P</span><b>Praxura</b></div>
-    <div class="praxis"><strong>Physiotherapie am Stadtpark</strong><span>Anna Lindner · Inhaberin</span></div>
+    <div class="loc-wrap">
+      <button class="praxis" id="locBtn" type="button" aria-haspopup="true" aria-expanded="false"><strong id="locName">Physiotherapie am Stadtpark</strong><span id="locSub">Standort Siegburg · Anna Lindner</span><svg class="chev" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg></button>
+      <div class="loc-menu" id="locMenu" hidden>
+        <button type="button" data-loc="sb" class="cur"><b>Siegburg</b><span>Stadtpark · 3 Behandler:innen</span></button>
+        <button type="button" data-loc="td"><b>Troisdorf</b><span>Kölner Straße · 2 Behandler:innen</span></button>
+        <hr>
+        <button type="button" data-loc="all"><b>Alle Standorte</b><span>Übersicht für die Inhaberin</span></button>
+      </div>
+    </div>
 
     <div class="nav-label">Praxis</div>
     <button class="nav-item active" data-panel="overview"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Überblick</button>
@@ -514,6 +619,7 @@
     <button class="nav-item" data-panel="rechnungen"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h3"/></svg>Rechnungen</button>
 
     <div class="nav-label">Organisation</div>
+    <button class="nav-item" data-panel="standorte"><svg viewBox="0 0 24 24"><path d="M12 21s-6-5.6-6-10.5a6 6 0 0 1 12 0C18 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.2"/></svg>Standorte</button>
     <button class="nav-item" data-panel="team"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1-3.8 3.8-5.8 7-5.8s6 2 7 5.8"/></svg>Team</button>
     <button class="nav-item" data-panel="fahrtenbuch"><svg viewBox="0 0 24 24"><path d="M3 16V11l2.5-5h13L21 11v5z"/><circle cx="7.5" cy="16.5" r="2"/><circle cx="16.5" cy="16.5" r="2"/></svg>Fahrtenbuch</button>
 
@@ -658,11 +764,54 @@
         <p class="empty-note">Rollen: Inhaber:in, Therapeut:in, Empfang. Jede Rolle sieht nur, was sie braucht.</p>
       </section>
 
+      <!-- STANDORTE -->
+      <section class="panel" id="panel-standorte" aria-label="Standorte">
+        <p class="muted" style="margin:0 0 14px">Zwei Standorte, ein System. Jedes Team arbeitet in seinem eigenen Kalender, die Inhaberin sieht beide auf einen Blick.</p>
+        <div class="grid loc-cards" id="locCards"></div>
+        <div class="card">
+          <div class="card-h"><h3>Was die Standorte teilen</h3><span class="sp"></span><span class="chip neutral">Sie entscheiden</span></div>
+          <div class="card-b">
+            <div class="share"><div><b>Patient:innen</b><small>Wer in Troisdorf war, muss in Siegburg nicht neu angelegt werden.</small></div><button class="tog on" type="button" data-soon aria-label="Patient:innen teilen"></button></div>
+            <div class="share"><div><b>Verordnungen</b><small>Eine Verordnung, an beiden Standorten behandelbar.</small></div><button class="tog on" type="button" data-soon aria-label="Verordnungen teilen"></button></div>
+            <div class="share"><div><b>Rechnungen</b><small>Getrennt je Standort oder gemeinsam, wie Sie es führen.</small></div><button class="tog" type="button" data-soon aria-label="Rechnungen teilen"></button></div>
+            <div class="share"><div><b>Terminkalender</b><small>Bleibt immer je Standort getrennt, damit sich niemand verbucht.</small></div><span class="chip neutral">getrennt</span></div>
+          </div>
+        </div>
+      </section>
+
       <!-- FAHRTENBUCH -->
       <section class="panel" id="panel-fahrtenbuch" aria-label="Fahrtenbuch">
+        <div class="card route">
+          <div class="route-map" id="routeMap">
+            <svg viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <path class="road" d="M-10 180 C 80 160, 120 200, 210 170 S 340 110, 420 130"/>
+              <path class="road" d="M120 -10 C 130 60, 90 120, 140 260"/>
+              <path class="road" d="M260 -10 C 250 70, 300 140, 290 260"/>
+              <path class="road" style="stroke-width:4" d="M-10 70 C 100 90, 220 40, 420 60"/>
+              <path class="path" id="routePath" pathLength="1" d="M70 175 C 100 150, 115 110, 128 80 S 230 55, 268 62 S 300 150, 292 200 S 120 215, 70 175"/>
+              <g class="pin home"><circle cx="70" cy="175" r="12"/><text x="70" y="175">P</text></g>
+              <g class="pin" id="pinA"><circle cx="128" cy="80" r="11"/><text x="128" y="80">1</text></g>
+              <g class="pin" id="pinB"><circle cx="268" cy="62" r="11"/><text x="268" y="62">2</text></g>
+              <g class="pin" id="pinC"><circle cx="292" cy="200" r="11"/><text x="292" y="200">3</text></g>
+            </svg>
+          </div>
+          <div class="route-side">
+            <div style="display:flex;align-items:center;gap:8px"><h3 style="margin:0;font-family:var(--serif);font-weight:500;font-size:17px">Hausbesuche heute</h3><span class="sp" style="flex:1"></span><span class="chip neutral">Lea Hoffmann · VW Caddy</span></div>
+            <ol class="stops" id="stops">
+              <li><span class="sn">1</span><div><b>Helga Krüger</b><div class="small muted">Troisdorf, Seniorenzentrum</div></div><span class="k" data-k>—</span></li>
+              <li><span class="sn">2</span><div><b>Erika Zimmermann</b><div class="small muted">Siegburg, Kaiserstraße</div></div><span class="k" data-k>—</span></li>
+              <li><span class="sn">3</span><div><b>Gerd Hahn</b><div class="small muted">Lohmar, Am Bach</div></div><span class="k" data-k>—</span></li>
+            </ol>
+            <div class="route-sum" id="routeSum" hidden></div>
+            <div class="route-acts">
+              <button class="btn btn-sm btn-primary" id="routeCalc" type="button">Route berechnen</button>
+              <button class="btn btn-sm btn-gold" id="routeSave" type="button" hidden>Fahrten ins Fahrtenbuch</button>
+            </div>
+          </div>
+        </div>
         <div class="grid kpis" style="grid-template-columns:repeat(3,minmax(0,1fr))">
-          <div class="card kpi"><div class="lab">Hausbesuche diese Woche</div><div class="val">9</div><div class="sub">2 Fahrzeuge</div></div>
-          <div class="card kpi"><div class="lab">Gefahrene Kilometer</div><div class="val">146 km</div><div class="sub">diese Woche</div></div>
+          <div class="card kpi"><div class="lab">Hausbesuche diese Woche</div><div class="val" id="kpiHb">9</div><div class="sub">2 Fahrzeuge</div></div>
+          <div class="card kpi"><div class="lab">Gefahrene Kilometer</div><div class="val" id="kpiKm">146 km</div><div class="sub">diese Woche</div></div>
           <div class="card kpi"><div class="lab">Fahrten ohne Zweck</div><div class="val">0</div><div class="sub">alles dokumentiert</div></div>
         </div>
         <div class="card tbl-wrap"><table><thead><tr><th>Datum</th><th>Fahrzeug</th><th>Ziel</th><th>Zweck</th><th class="num">km</th></tr></thead><tbody id="tripRows"></tbody></table></div>
@@ -677,14 +826,17 @@
 <div class="modal narrow hero-modal" id="introModal" role="dialog" aria-modal="true" aria-labelledby="introTitle">
   <div class="modal-b">
     <div class="eyebrow">Interaktive Demo · Physiotherapie</div>
-    <h2 id="introTitle">Ein Vormittag in Ihrer Praxis, <em>in zwei Minuten.</em></h2>
-    <p class="lede">Sie übernehmen den Empfang der „Physiotherapie am Stadtpark". Fünf kurze Schritte, von der Verordnung auf dem Tresen bis zur fertigen Abrechnungsdatei.</p>
+    <h2 id="introTitle">Ein Vormittag in Ihrer Praxis, <em>in drei Minuten.</em></h2>
+    <p class="lede">Sie übernehmen den Empfang der „Physiotherapie am Stadtpark". Acht kurze Schritte, von der Verordnung auf dem Tresen bis zur fertigen Abrechnungsdatei.</p>
     <ol class="journey" id="introJourney">
       <li><span class="jn"><span>1</span></span>Verordnung per Barcode einlesen</li>
       <li><span class="jn"><span>2</span></span>Behandlungsserie planen lassen</li>
       <li><span class="jn"><span>3</span></span>Behandlung quittieren lassen</li>
-      <li><span class="jn"><span>4</span></span>§302-Abrechnung prüfen</li>
-      <li><span class="jn"><span>5</span></span>Abrechnungsdatei erstellen</li>
+      <li><span class="jn"><span>4</span></span>Terminanfrage beantworten, die E-Mail schreibt sich</li>
+      <li><span class="jn"><span>5</span></span>Hausbesuche: Route und Fahrtenbuch</li>
+      <li><span class="jn"><span>6</span></span>Zwei Standorte auf einen Blick</li>
+      <li><span class="jn"><span>7</span></span>§302-Abrechnung prüfen</li>
+      <li><span class="jn"><span>8</span></span>Abrechnungsdatei erstellen</li>
     </ol>
     <div class="hero-acts">
       <button class="btn btn-primary" id="startTour" type="button">Tour starten →</button>
@@ -769,6 +921,17 @@
   <div class="modal-f"><span class="small muted">Zuzahlung bar: <b id="sigZz"></b></span><span class="sp"></span><button class="btn btn-primary" id="sigDone" type="button" disabled>Quittieren</button></div>
 </div>
 
+<div class="modal narrow" id="mailModal" role="dialog" aria-modal="true" aria-labelledby="mailTitle">
+  <div class="modal-h"><h3 id="mailTitle">Terminbestätigung</h3><span class="chip info">KI-Assistent</span><span class="sp"></span><button class="x" data-close aria-label="Schließen">×</button></div>
+  <div class="modal-b">
+    <div class="mail-meta"><label>An</label><div id="mailTo"></div><label>Betreff</label><div id="mailSubj"></div></div>
+    <div class="mail-ask"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg><span id="mailAsk"></span></div>
+    <div class="mail-body" id="mailBody"></div>
+    <p class="small muted" style="margin:10px 0 0">Nur ein Entwurf: Sie lesen, ändern und senden selbst. Name und Adresse gehen nicht an die KI, sie werden vorher maskiert.</p>
+  </div>
+  <div class="modal-f"><button class="btn" data-close type="button">Verwerfen</button><button class="btn btn-primary" id="mailSend" type="button" disabled>Senden</button></div>
+</div>
+
 <div class="modal narrow hero-modal" id="finaleModal" role="dialog" aria-modal="true" aria-labelledby="finaleTitle">
   <div class="modal-b">
     <div class="eyebrow">Geschafft</div>
@@ -777,6 +940,8 @@
       <div><b>1</b><span>Verordnung eingelesen und geprüft</span></div>
       <div><b>6</b><span>Termine in einem Zug geplant</span></div>
       <div><b>1</b><span>Behandlung digital quittiert</span></div>
+      <div><b>1</b><span>E-Mail geschrieben, ohne zu tippen</span></div>
+      <div><b>3</b><span>Hausbesuche geplant und im Fahrtenbuch</span></div>
       <div><b>1</b><span>Fehler gefunden, bevor die Kasse ihn findet</span></div>
     </div>
     <p class="lede">Wie sähe das mit <b>Ihrer</b> Praxis aus? Im Analysegespräch schauen wir uns Ihre Abläufe an und zeigen Praxura mit Ihren Fragen, live.</p>
@@ -803,6 +968,9 @@
 </div>
 
 <div class="toast-wrap" id="toasts" aria-live="polite"></div>
+<div class="film-cap" id="filmCap" hidden><small id="filmNo"></small><span id="filmText"></span></div>
+<svg class="fcur" id="fcur" viewBox="0 0 24 24" hidden><path d="M4 2.5l15 9.2-6.6 1.3 3.8 7.2-2.9 1.4-3.7-7.3L4 19z" fill="#1A1611" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>
+<div class="film-end" id="filmEnd" hidden><div><div class="brand-mark">P</div><h2>Praxura. <em>Ihre Praxis, ein System.</em></h2><p>Termine · Verordnungen · §302-Abrechnung · Fahrtenbuch · mehrere Standorte</p></div></div>
 
 <script>
 (function () {
@@ -888,7 +1056,7 @@
   const hhmm = (h) => String(Math.floor(h)).padStart(2, '0') + ':' + (h % 1 ? '30' : '00');
 
   /* ── Navigation ─────────────────────────────────────────────────── */
-  const TITLES = { overview: 'Überblick', calendar: 'Terminkalender', anfragen: 'Termin-Anfragen', patients: 'Patienten', verordnungen: 'Verordnungen', abrechnung: '§302-Abrechnung', rechnungen: 'Rechnungen', team: 'Team', fahrtenbuch: 'Fahrtenbuch' };
+  const TITLES = { overview: 'Überblick', calendar: 'Terminkalender', anfragen: 'Termin-Anfragen', patients: 'Patienten', verordnungen: 'Verordnungen', abrechnung: '§302-Abrechnung', rechnungen: 'Rechnungen', standorte: 'Standorte', team: 'Team', fahrtenbuch: 'Fahrtenbuch' };
   function go(panel) {
     $$('.panel').forEach((p) => p.classList.toggle('active', p.id === 'panel-' + panel));
     $$('.nav-item').forEach((n) => n.classList.toggle('active', n.dataset.panel === panel));
@@ -1000,8 +1168,92 @@
   renderAnfragen();
   $('#anfrageList').addEventListener('click', (e) => {
     const b = e.target.closest('[data-accept]'); if (!b) return;
-    const a = anfragen.splice(Number(b.dataset.accept), 1)[0];
-    renderAnfragen(); toast(`<b>${esc(a.n)}</b> hat eine Terminbestätigung per E-Mail bekommen.`);
+    openMail(Number(b.dataset.accept));
+  });
+
+  /* ── E-Mail-Entwurf (KI-Assistent) ──────────────────────────────── */
+  let mailIdx = -1, mailTimer = null;
+  function mailText(a) {
+    const nm = a.n.split(' ').pop();
+    const d = addDays(TODAY, a.n === 'Laura Meier' ? ((7 - todayIdx) % 7 || 7) : 1);
+    const when = a.n === 'Laura Meier' ? `${d.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })} um 9:00 Uhr` : `${d.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })} um 16:30 Uhr`;
+    const anrede = a.n === 'Laura Meier' ? `Sehr geehrte Frau ${nm},` : `Sehr geehrter Herr ${nm},`;
+    const extra = a.k === 'Selbstzahler' ? 'Die Behandlung rechnen wir nach unserer Preisliste ab, die Rechnung erhalten Sie im Anschluss.' : 'Bitte bringen Sie Ihre Verordnung und Ihre Versichertenkarte mit.';
+    return { when, subj: `Ihr Termin am ${d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}`, body: `${anrede}\n\nvielen Dank für Ihre Anfrage. Gern bestätigen wir Ihren Termin am ${when} bei uns in der Physiotherapie am Stadtpark.\n\n${extra} Falls etwas dazwischenkommt, sagen Sie bitte bis 24 Stunden vorher ab.\n\nWir freuen uns auf Sie.\nIhr Team der Physiotherapie am Stadtpark` };
+  }
+  function openMail(i) {
+    const a = anfragen[i]; if (!a) return; mailIdx = i;
+    const m = mailText(a);
+    $('#mailTo').textContent = a.n; $('#mailSubj').textContent = m.subj;
+    $('#mailAsk').textContent = `„Termin ${m.when} bestätigen, freundlich, kurz."`;
+    const body = $('#mailBody'); body.textContent = ''; body.classList.add('typing'); $('#mailSend').disabled = true;
+    openModal('mailModal'); Tour.on('mail:open');
+    clearInterval(mailTimer); let n = 0; const txt = m.body;
+    setTimeout(() => {
+      mailTimer = setInterval(() => {
+        n += 3; body.textContent = txt.slice(0, n);
+        if (n >= txt.length) { clearInterval(mailTimer); body.classList.remove('typing'); $('#mailSend').disabled = false; Tour.on('mail:drafted'); }
+      }, 16);
+    }, 500);
+  }
+  $('#mailSend').addEventListener('click', () => {
+    const a = anfragen.splice(mailIdx, 1)[0]; closeModals(); renderAnfragen();
+    if (a) toast(`<b>E-Mail an ${esc(a.n)} gesendet.</b> Der Termin steht im Kalender.`);
+    Tour.on('mail:sent');
+  });
+
+  /* ── Standorte ──────────────────────────────────────────────────── */
+  const LOCS = {
+    sb: { name: 'Physiotherapie am Stadtpark', sub: 'Standort Siegburg · Anna Lindner', ther: 3, heute: 14, ausl: 86, rx: 47, bill: 38 },
+    td: { name: 'Physiotherapie am Stadtpark', sub: 'Standort Troisdorf · Lea Hoffmann', ther: 2, heute: 9, ausl: 78, rx: 29, bill: 21 }
+  };
+  $('#locCards').innerHTML = [['sb', 'Siegburg', 'Stadtpark'], ['td', 'Troisdorf', 'Kölner Straße']].map(([k, n, s]) => {
+    const l = LOCS[k];
+    return `<div class="card loc-card"><div class="card-h"><h3>${n}</h3><span class="small muted">${s} · ${l.ther} Behandler:innen</span></div><div class="card-b">
+      <div class="m"><b>${l.heute}</b>Termine heute</div><div class="m"><b>${l.ausl} %</b>Auslastung diese Woche</div>
+      <div class="m"><b>${l.rx}</b>laufende Verordnungen</div><div class="m"><b>${l.bill}</b>abrechnungsbereit</div></div></div>`;
+  }).join('');
+  function toggleLoc(open) {
+    const m = $('#locMenu'); const on = open === undefined ? m.hidden : open;
+    m.hidden = !on; $('#locBtn').setAttribute('aria-expanded', String(on)); if (on) Tour.on('loc:open');
+  }
+  function selectLoc(k) {
+    toggleLoc(false);
+    $$('#locMenu [data-loc]').forEach((b) => b.classList.toggle('cur', b.dataset.loc === k));
+    if (k === 'all') { $('#locSub').textContent = 'Alle Standorte · Anna Lindner'; go('standorte'); Tour.on('loc:all'); return; }
+    $('#locName').textContent = LOCS[k].name; $('#locSub').textContent = LOCS[k].sub;
+    toast(`Gewechselt zu <b>${k === 'sb' ? 'Siegburg' : 'Troisdorf'}</b>. In der Demo bleiben die Beispieldaten gleich.`);
+  }
+  $('#locBtn').addEventListener('click', (e) => { e.stopPropagation(); toggleLoc(); });
+  $('#locMenu').addEventListener('click', (e) => { const b = e.target.closest('[data-loc]'); if (b) selectLoc(b.dataset.loc); });
+  document.addEventListener('click', (e) => { if (!e.target.closest('.loc-wrap')) toggleLoc(false); });
+
+  /* ── Hausbesuchs-Route → Fahrtenbuch ────────────────────────────── */
+  // Reihenfolge und km wie fahrtenbuch-matrix sie liefert: Praxis → 1 → 2 → 3 → Praxis
+  const LEGS = [['Praxis → H. Krüger', 7.8], ['H. Krüger → E. Zimmermann', 5.6], ['E. Zimmermann → G. Hahn', 9.1], ['G. Hahn → Praxis', 6.3]];
+  const LEG_KM = LEGS.reduce((s, l) => s + l[1], 0);
+  let routeState = 'none';
+  $('#routeCalc').addEventListener('click', () => {
+    if (routeState !== 'none') return; routeState = 'calc';
+    const btn = $('#routeCalc'); btn.disabled = true; btn.textContent = 'Berechne …';
+    setTimeout(() => {
+      $('#routeMap').classList.add('drawn');
+      $$('#stops [data-k]').forEach((k, i) => setTimeout(() => { k.textContent = LEGS[i][1].toLocaleString('de-DE') + ' km'; }, 400 + i * 350));
+      setTimeout(() => {
+        const s = $('#routeSum'); s.hidden = false;
+        s.innerHTML = `<b>${LEG_KM.toLocaleString('de-DE')} km</b> · ca. 52 Min. Fahrzeit · Rückfahrt zur Praxis eingerechnet<br><span class="small muted">Beste Reihenfolge, damit niemand doppelt fährt.</span>`;
+        btn.hidden = true; $('#routeSave').hidden = false; Tour.on('route:calc');
+      }, 1700);
+    }, 600);
+  });
+  $('#routeSave').addEventListener('click', () => {
+    if (routeState === 'saved') return; routeState = 'saved';
+    $('#routeSave').hidden = true;
+    const rows = LEGS.map((l) => `<tr class="fresh"><td>${fmtShort(TODAY)}</td><td>VW Caddy</td><td>${esc(l[0])}</td><td>Hausbesuch</td><td class="num">${l[1].toLocaleString('de-DE')}</td></tr>`).join('');
+    $('#tripRows').insertAdjacentHTML('afterbegin', rows);
+    $('#kpiHb').textContent = '12'; $('#kpiKm').textContent = Math.round(146 + LEG_KM) + ' km';
+    toast(`<b>4 Fahrten eingetragen</b> mit Datum, Fahrzeug, Ziel und Kilometern.`);
+    Tour.on('route:saved');
   });
 
   /* ── Render: Patienten / Verordnungen ───────────────────────────── */
@@ -1173,6 +1425,9 @@
     { title: 'Barcode lesen statt abtippen', text: 'Klicken Sie auf „Barcode lesen". Praxura füllt die Felder aus und prüft die Verordnung gegen die Heilmittel-Richtlinie, bevor die erste Behandlung stattfindet.', spot: '#doScan', waitText: 'Warte auf „Barcode lesen"', wait: 'scan:done', then: { text: 'Alle Felder sind gefüllt, drei Prüfungen bestanden und ein Hinweis zur Frist. Übernehmen Sie die Verordnung.', spot: '#acceptRx', waitText: 'Warte auf „Übernehmen"', wait: 'rx:accepted' } },
     { title: 'Die ganze Serie in einem Zug', text: 'Statt sechs Termine einzeln zu suchen: ein Klick, und Praxura schlägt passende Lücken bei einer Therapeut:in vor.', spot: '#proposeSeries', waitText: 'Warte auf „6 Termine vorschlagen"', wait: 'series:proposed', then: { text: 'Die gestrichelten Termine sind nur ein Vorschlag. Nichts ist gebucht, bis Sie es bestätigen.', spot: '#proposalAccept', waitText: 'Warte auf „Alle 6 übernehmen"', wait: 'series:accepted' } },
     { panel: 'overview', title: 'Quittieren ohne Papierliste', text: 'Petra Schulz ist gerade mit ihrer dritten Behandlung fertig. Kurz dokumentieren, auf dem Tablet unterschreiben lassen, Zuzahlung erfassen.', spot: '#todayPetra', waitText: 'Warte auf „Abschließen"', wait: 'sig:open', then: { text: 'Unterschreiben Sie mit Finger oder Maus, oder setzen Sie die Beispiel-Unterschrift ein. Dann „Quittieren".', spot: '#sigPad', waitText: 'Warte auf „Quittieren"', wait: 'sig:done' } },
+    { panel: 'anfragen', title: 'Die E-Mail schreibt sich', text: 'Laura Meier hat online einen Termin angefragt. Nehmen Sie an: der KI-Assistent schreibt die Bestätigung gleich mit.', spot: '#anfrageList [data-accept="0"]', waitText: 'Warte auf „Annehmen"', wait: 'mail:open', then: { text: 'Anrede, Termin, was mitzubringen ist: fertig formuliert. Sie lesen kurz drüber und senden.', spot: '#mailSend', waitText: 'Warte auf „Senden"', wait: 'mail:sent' } },
+    { panel: 'fahrtenbuch', title: 'Hausbesuche ohne Umweg', text: 'Drei Hausbesuche heute. Praxura sucht die beste Reihenfolge und rechnet die Kilometer aus.', spot: '#routeCalc', waitText: 'Warte auf „Route berechnen"', wait: 'route:calc', then: { text: 'Ein Klick, und alle Fahrten stehen im Fahrtenbuch: Datum, Fahrzeug, Ziel, Kilometer. Kein Zettel im Handschuhfach.', spot: '#routeSave', waitText: 'Warte auf „Fahrten ins Fahrtenbuch"', wait: 'route:saved' } },
+    { title: 'Zwei Standorte, ein Blick', text: 'Die Praxis hat einen zweiten Standort in Troisdorf. Oben links wechseln Sie zwischen den Standorten, oder sehen alle auf einmal.', spot: '#locBtn', go: 'Alle Standorte zeigen', act: () => selectLoc('all'), wait: 'loc:all' },
     { panel: 'abrechnung', title: 'Monatsende: erst prüfen, dann einreichen', text: 'Praxura prüft jede Verordnung des Vormonats auf das, wofür Kassen gern absetzen: fehlende Unterschriften, Fristen, Mengen.', spot: '#billCheck', waitText: 'Warte auf „Prüfung starten"', wait: 'bill:checked', then: { text: 'Gefunden: eine fehlende Unterschrift. Die Verordnung wird zurückgestellt, statt bei der Kasse abgelehnt zu werden. Der Rest ist bereit.', spot: '#billCreate', waitText: 'Warte auf „Abrechnungsdatei erstellen"', wait: 'bill:created' } }
   ];
   const Tour = {
@@ -1226,6 +1481,11 @@
     'series:accepted': () => { if (seriesState === 'proposed') $('#proposalAccept').click(); else $('#proposeSeries').click(); },
     'sig:open': () => { go('overview'); openSig(); },
     'sig:done': () => { if (!$('#sigModal').classList.contains('on')) openSig(); setTimeout(() => { $('#sigAuto').click(); setTimeout(() => $('#sigDone').click(), 1100); }, 300); },
+    'mail:open': () => { go('anfragen'); if (anfragen.length) openMail(0); },
+    'mail:sent': () => { if (!$('#mailModal').classList.contains('on')) { if (anfragen.length) openMail(0); return; } if (!$('#mailSend').disabled) $('#mailSend').click(); },
+    'route:calc': () => { go('fahrtenbuch'); $('#routeCalc').click(); },
+    'route:saved': () => { if (routeState === 'none') $('#routeCalc').click(); else if (!$('#routeSave').hidden) $('#routeSave').click(); },
+    'loc:all': () => selectLoc('all'),
     'bill:checked': () => { go('abrechnung'); if (!$('#billCheck').disabled) $('#billCheck').click(); },
     'bill:created': () => { if (!$('#billCreate').hidden) $('#billCreate').click(); }
   };
@@ -1236,9 +1496,58 @@
   $('#finaleExplore').addEventListener('click', () => closeModals());
   $('#restartTour').addEventListener('click', () => { location.hash = 'tour'; location.reload(); });
 
-  // Einstieg: Intro, außer ?shot=1 (Vorschaubild) oder #frei (direkt frei umsehen)
+  /* ── Film-Modus: spielt alles allein ab, mit Untertitel und Zeiger ── */
+  async function film() {
+    document.body.classList.add('film');
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    const cur = $('#fcur'), cap = $('#filmCap'); cur.hidden = false; cap.hidden = false;
+    let cx = window.innerWidth * 0.6, cy = window.innerHeight * 0.55; cur.style.transform = `translate(${cx}px,${cy}px)`;
+    async function caption(no, text) {
+      cap.classList.remove('on'); await sleep(250);
+      $('#filmNo').textContent = no; $('#filmText').textContent = text; cap.classList.add('on'); await sleep(450);
+    }
+    async function click(sel, wait = 0) {
+      const el = typeof sel === 'string' ? $(sel) : sel; if (!el) return;
+      const r = el.getBoundingClientRect();
+      cx = r.left + Math.min(r.width / 2, 60); cy = r.top + r.height / 2;
+      cur.style.transform = `translate(${cx}px,${cy}px)`; await sleep(800);
+      cur.classList.remove('tap'); void cur.offsetWidth; cur.classList.add('tap');
+      el.click(); await sleep(wait);
+    }
+    const until = async (fn, max = 8000) => { const t0 = Date.now(); while (!fn() && Date.now() - t0 < max) await sleep(100); };
+    await sleep(700);
+    await caption('1 · Verordnung', 'Barcode lesen statt abtippen');
+    await click('#taskNewRx .btn', 600); await click('#doScan');
+    await until(() => !$('#acceptRx').disabled); await sleep(900);
+    await click('#acceptRx', 700);
+    await caption('2 · Serie', 'Sechs Termine in einem Klick');
+    await click('#proposeSeries', 1500); await click('#proposalAccept', 1400);
+    await caption('3 · Behandlung', 'Quittieren direkt auf dem Tablet');
+    await click('.nav-item[data-panel="overview"]', 600); await click('#openSig', 500);
+    await click('#sigAuto', 1100); await click('#sigDone', 1200);
+    await caption('4 · E-Mail', 'Die Bestätigung schreibt sich selbst');
+    await click('.nav-item[data-panel="anfragen"]', 600); await click('#anfrageList [data-accept="0"]');
+    await until(() => !$('#mailSend').disabled); await sleep(800);
+    await click('#mailSend', 900);
+    await caption('5 · Hausbesuch', 'Beste Route, Fahrtenbuch füllt sich');
+    await click('.nav-item[data-panel="fahrtenbuch"]', 600); await click('#routeCalc');
+    await until(() => !$('#routeSave').hidden); await sleep(900);
+    await click('#routeSave', 1500);
+    await caption('6 · Standorte', 'Zwei Standorte, ein Blick');
+    await click('#locBtn', 700); await click('#locMenu [data-loc="all"]', 2200);
+    await caption('7 · §302', 'Abrechnung prüfen, bevor die Kasse es tut');
+    await click('.nav-item[data-panel="abrechnung"]', 500); await click('#billCheck');
+    await until(() => !$('#billCreate').hidden); await sleep(1300);
+    await click('#billCreate', 2200);
+    cap.classList.remove('on'); $('#filmEnd').hidden = false; await sleep(30); $('#filmEnd').classList.add('on');
+    await sleep(2600);
+    window.__filmDone = true;
+  }
+
+  // Einstieg: Intro, außer ?shot=1 (Vorschaubild), ?film=1 (Hero-Clip) oder #frei (direkt frei umsehen)
   const params = new URLSearchParams(location.search);
-  if (params.get('shot') === '1') { /* kein Overlay: für das Vorschaubild auf praxura.de */ }
+  if (params.get('film') === '1') { document.body.classList.add('film'); window.startFilm = film; if (params.get('auto') !== '0') film(); }
+  else if (params.get('shot') === '1') { /* kein Overlay: für das Vorschaubild auf praxura.de */ }
   else if (location.hash === '#tour') { history.replaceState(null, '', location.pathname); Tour.start(); }
   else if (location.hash !== '#frei') { openModal('introModal'); }
 })();

@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-25",
- "dateien": 738,
- "funktionen": 5609,
+ "dateien": 739,
+ "funktionen": 5611,
  "module": [
   "abrechnung",
   "anamnese",
@@ -41030,6 +41030,7 @@
     "(datei) tools/check-secrets.mjs",
     "(datei) tools/db-vollkette/migrate-zweimal.mjs",
     "(datei) tools/funktionskarte.mjs",
+    "(datei) tools/hero-clip/aufnehmen.mjs",
     "(datei) tools/onprem-manifest.mjs",
     "(datei) tools/redesign-geometrie.mjs",
     "(datei) tools/redesign-kontaktbogen.mjs",
@@ -57634,6 +57635,7 @@
     "esc",
     "escapeText",
     "fall",
+    "ff",
     "geminiSprich",
     "handler",
     "hat",
@@ -57644,6 +57646,7 @@
     "istRelevant",
     "json",
     "kassierDialog",
+    "kb",
     "kennzahlText",
     "kennzahlenSammeln",
     "kurzZahl",
@@ -60457,6 +60460,7 @@
     "f",
     "fail",
     "feedbackWindow",
+    "ff",
     "flyoutLage",
     "folgeterminStart",
     "formExpense",
@@ -88847,6 +88851,7 @@
     "(datei) tools/browser-probe/v805-fingerziele.mjs",
     "(datei) tools/browser-probe/verordnung-maske-probe.mjs",
     "(datei) tools/browser-probe/widget-probe.mjs",
+    "(datei) tools/hero-clip/aufnehmen.mjs",
     "(datei) tools/redesign-geometrie.mjs",
     "(datei) tools/redesign-smoke.mjs",
     "(datei) tools/redesign-zustaende.mjs",
@@ -230646,6 +230651,7 @@
     "(datei) tools/browser-probe/terminerinnerung-probe.mjs",
     "(datei) tools/browser-probe/verordnung-maske-probe.mjs",
     "(datei) tools/browser-probe/widget-probe.mjs",
+    "(datei) tools/hero-clip/aufnehmen.mjs",
     "accessLogger",
     "attachPatientSearch",
     "baslat",
@@ -304163,6 +304169,7 @@
     "(datei) tools/browser-probe/redesign-fixture.js",
     "(datei) tools/browser-probe/termin-anfrage-bis-liste-probe.mjs",
     "(datei) tools/browser-probe/widget-probe.mjs",
+    "(datei) tools/hero-clip/aufnehmen.mjs",
     "(datei) tools/pruefstand-zitate.mjs",
     "(datei) tools/redesign-geometrie.mjs",
     "(datei) tools/redesign-zustaende.mjs",
@@ -304552,6 +304559,7 @@
     "round"
    ],
    "calledBy": [
+    "ff",
     "form",
     "render"
    ],
@@ -305377,6 +305385,7 @@
     "(datei) tools/browser-probe/v805-fingerziele.mjs",
     "(datei) tools/browser-probe/verordnung-maske-probe.mjs",
     "(datei) tools/browser-probe/widget-probe.mjs",
+    "(datei) tools/hero-clip/aufnehmen.mjs",
     "(datei) tools/redesign-geometrie.mjs",
     "(datei) tools/redesign-smoke.mjs",
     "(datei) tools/redesign-zustaende.mjs",
@@ -308917,6 +308926,7 @@
     "esc",
     "escapeText",
     "fall",
+    "ff",
     "geminiSprich",
     "handler",
     "hat",
@@ -308927,6 +308937,7 @@
     "istRelevant",
     "json",
     "kassierDialog",
+    "kb",
     "kennzahlText",
     "kennzahlenSammeln",
     "kurzZahl",
@@ -327782,6 +327793,104 @@
    ]
   },
   {
+   "name": "ff",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "tools/hero-clip/aufnehmen.mjs",
+   "start": 69,
+   "end": 85,
+   "lines": 17,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "kb",
+    "log",
+    "round"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "kb",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "tools/hero-clip/aufnehmen.mjs",
+   "start": 81,
+   "end": 85,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "log",
+    "round"
+   ],
+   "calledBy": [
+    "ff",
+    "form",
+    "render"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "parseKodes",
    "kind": "function",
    "lang": "js",
@@ -335231,6 +335340,7 @@
     "wechsle"
    ],
    "calledBy": [
+    "(datei) tools/hero-clip/aufnehmen.mjs",
     "lauf",
     "liste"
    ],
@@ -351868,6 +351978,14 @@
    "aynalar": [
     "module/krankenkasse-suche.js:169 — Spiegel von `kartenIkNormalisieren()` in `api-backend/lib/rezept-felder"
    ]
+  },
+  {
+   "name": "kb",
+   "orte": [
+    "ops/wissen.js:44",
+    "tools/hero-clip/aufnehmen.mjs:81"
+   ],
+   "aynalar": []
   },
   {
    "name": "kopfHtml",
