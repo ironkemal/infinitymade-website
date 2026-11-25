@@ -4,7 +4,7 @@
   "description": "InfinityMade — landing + dashboard + onboarding + Vercel API functions",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": "26.x"
   },
   "scripts": {
     "test": "npm run test:frontend && npm run test:backend && npm run test:tools && npm run test:merkez",
