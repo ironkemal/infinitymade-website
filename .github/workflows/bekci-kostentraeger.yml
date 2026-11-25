@@ -23,6 +23,14 @@ on:
       vaka_id:
         type: string
         default: ''
+      prova:
+        description: 'Nur Probe (auch wenn BEKCI_AJAN aus ist): Zwilling + Seed trocken, nichts committen, nichts senden'
+        type: boolean
+        default: false
+      prova_stichtag:
+        description: 'Nur mit prova: Stichtag JJJJ-MM-TT (Vergangenheit erlaubt, Zukunft sperrt Adim 2)'
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -33,7 +41,7 @@ concurrency:
 
 jobs:
   hazirla:
-    if: vars.BEKCI_AJAN == 'an'
+    if: vars.BEKCI_AJAN == 'an' || inputs.prova == true
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -96,9 +104,20 @@ jobs:
           fi
 
       - name: Kutu-Zwilling → Seed (deterministisch)
+        env:
+          PROVA: ${{ inputs.prova == true && 'true' || 'false' }}
+          PROVA_STICHTAG: ${{ inputs.prova_stichtag }}
         run: |
           set -euo pipefail
-          node tools/kostentraeger-kutu-seed.mjs > bekci-in/seed-out.txt
+          ARGS=""
+          if [ "$PROVA" = true ]; then
+            ARGS="--kuru"
+            if [ -n "$PROVA_STICHTAG" ]; then
+              [[ "$PROVA_STICHTAG" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || { echo "::error::prova_stichtag ungültig"; exit 1; }
+              ARGS="$ARGS --stichtag=$PROVA_STICHTAG"
+            fi
+          fi
+          node tools/kostentraeger-kutu-seed.mjs $ARGS > bekci-in/seed-out.txt
           tail -n 1 bekci-in/seed-out.txt > bekci-in/ozet.json
           node -e 'const o=JSON.parse(require("fs").readFileSync("bekci-in/ozet.json","utf8")); console.log("degisiklik", o.degisiklik, o.dosya||"", o.hata||"")'
 
@@ -131,7 +150,7 @@ jobs:
             console.log("karar", karar);'
 
       - name: Seed-Datei für den Schreibweg bereitlegen
-        if: steps.karar.outputs.karar == 'auto' || steps.karar.outputs.karar == 'onay'
+        if: inputs.prova != true && (steps.karar.outputs.karar == 'auto' || steps.karar.outputs.karar == 'onay')
         run: |
           set -euo pipefail
           f=$(node -e 'const o=JSON.parse(require("fs").readFileSync("bekci-in/ozet.json","utf8")); process.stdout.write(o.dosya||"")')
@@ -149,7 +168,7 @@ jobs:
 
   uebernehmen:
     needs: hazirla
-    if: needs.hazirla.outputs.karar == 'auto' || needs.hazirla.outputs.karar == 'onay'
+    if: inputs.prova != true && (needs.hazirla.outputs.karar == 'auto' || needs.hazirla.outputs.karar == 'onay')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -202,7 +221,7 @@ jobs:
 
   bildir:
     needs: [hazirla, uebernehmen]
-    if: always() && needs.hazirla.result != 'skipped'
+    if: always() && needs.hazirla.result != 'skipped' && inputs.prova != true
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
