@@ -314,6 +314,26 @@
       padding: 0.55rem 0.95rem; border-radius: 999px; box-shadow: 0 8px 22px -8px rgba(26, 22, 17, 0.5);
     }
     .px-hero-clip-note { margin: 0.7rem 0 0; font-size: 0.8rem; color: var(--ink-quiet); text-align: center; }
+    /* „Mit Ton ansehen": gleiche Geschichte, gesprochen von Katharina (KI-Stimme), mit Untertiteln.
+       Bewusst nur auf Klick — der Hero selbst bleibt stumm. */
+    .px-hero-ton {
+      position: absolute; left: 14px; top: 14px; z-index: 2; display: inline-flex; align-items: center; gap: 0.45rem;
+      border: 0; cursor: pointer; font: inherit; font-weight: 600; font-size: 0.84rem; color: #F8F3E8;
+      background: rgba(26, 22, 17, 0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      padding: 0.5rem 0.85rem; border-radius: 999px; transition: background 0.2s ease, transform 0.2s ease;
+    }
+    .px-hero-ton:hover, .px-hero-ton:focus-visible { background: rgba(26, 22, 17, 0.9); transform: translateY(-1px); }
+    .px-hero-ton svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .px-ton-dlg { border: 0; padding: 0; background: transparent; width: min(1040px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 24px); margin: auto; overflow: visible; }
+    .px-ton-dlg::backdrop { background: rgba(21, 18, 14, 0.82); backdrop-filter: blur(4px); }
+    .px-ton-box { position: relative; border-radius: 16px; overflow: hidden; background: #15120E; box-shadow: 0 40px 100px -30px rgba(0,0,0,.6); }
+    .px-ton-box video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; background: #15120E; }
+    .px-ton-box video::cue { font-family: inherit; font-size: 1.35rem; line-height: 1.4; background: rgba(21, 18, 14, 0.82); color: #FFF8EA; }
+    .px-ton-x { position: absolute; right: 12px; top: 12px; z-index: 2; width: 40px; height: 40px; border-radius: 50%; border: 0; cursor: pointer;
+                background: rgba(248, 243, 232, 0.92); color: #1A1611; font-size: 1.3rem; line-height: 1; }
+    .px-ton-foot { display: flex; flex-wrap: wrap; gap: 0.6rem 1.2rem; align-items: center; justify-content: space-between; margin-top: 0.8rem; color: rgba(248,243,232,.75); font-size: 0.82rem; }
+    @media (max-width: 640px) { .px-ton-box video::cue { font-size: 0.78rem; } .px-hero-ton { font-size: 0.78rem; padding: 0.42rem 0.7rem; } }
+    .px-ton-foot a { color: #1A1611; background: #b1891b; font-weight: 700; text-decoration: none; padding: 0.55rem 1rem; border-radius: 999px; }
 
     /* ── Hero right: product photo (nicht mehr im Hero, Klassen bleiben für Wiederverwendung) ── */
     .px-hero-visual { position: relative; }
@@ -1221,8 +1241,44 @@
       </video>
       <span class="px-hero-clip-cta">Interaktive Demo <span aria-hidden="true">→</span></span>
     </a>
+    <button type="button" class="px-hero-ton" id="heroTon" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>
+      Mit Ton ansehen
+    </button>
     <p class="px-hero-clip-note">Beispielfall in 27 Sekunden · ohne Ton</p>
   </aside>
+  <dialog class="px-ton-dlg" id="heroTonDlg" aria-label="Kurzfilm mit Ton: Die Absetzung">
+    <div class="px-ton-box">
+      <button type="button" class="px-ton-x" id="heroTonX" aria-label="Schließen">×</button>
+      <video id="heroTonVideo" controls playsinline preload="none" width="1280" height="800" poster="assets/video/praxura-hero-poster.webp?v=20261125c">
+        <source data-src="assets/video/praxura-hero-ton.mp4?v=20261125d" type="video/mp4" />
+        <source data-src="assets/video/praxura-hero-ton.webm?v=20261125d" type="video/webm" />
+        <track kind="captions" srclang="de" label="Deutsch" src="assets/video/praxura-hero-ton.de.vtt?v=20261125d" default />
+      </video>
+    </div>
+    <div class="px-ton-foot">
+      <span>Beispielfall · Sprecherin: Katharina (KI-Stimme) · Untertitel über „CC" ein- und ausblendbar</span>
+      <a href="demo-dashboard.html#tour" target="_blank" rel="noopener" data-cta="hero-ton-demo">Selbst ausprobieren →</a>
+    </div>
+  </dialog>
+  <script>
+    (function () {
+      var btn = document.getElementById('heroTon'), dlg = document.getElementById('heroTonDlg'), v = document.getElementById('heroTonVideo');
+      if (!btn || !dlg || !v || typeof dlg.showModal !== 'function') { if (btn) btn.hidden = true; return; }
+      var hero = document.getElementById('heroClip');
+      btn.addEventListener('click', function () {
+        if (!v.currentSrc) { v.querySelectorAll('source[data-src]').forEach(function (s) { s.src = s.getAttribute('data-src'); }); v.load(); }
+        if (hero) hero.pause();
+        dlg.showModal(); v.currentTime = 0;
+        if (v.textTracks && v.textTracks[0]) v.textTracks[0].mode = 'showing'; // Safari blendet „default" sonst nicht immer ein
+        var p = v.play(); if (p && p.catch) p.catch(function () {});
+      });
+      function zu() { v.pause(); if (dlg.open) dlg.close(); }
+      document.getElementById('heroTonX').addEventListener('click', zu);
+      dlg.addEventListener('click', function (e) { if (e.target === dlg) zu(); });
+      dlg.addEventListener('close', function () { v.pause(); if (hero && hero.currentSrc) { var p = hero.play(); if (p && p.catch) p.catch(function () {}); } });
+    })();
+  </script>
   <script>
     (function () {
       var v = document.getElementById('heroClip');

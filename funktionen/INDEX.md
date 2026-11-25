@@ -3,7 +3,7 @@
 > Üretim: 2026-11-25 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**5611 fonksiyon** (5486 JS · 98 bash · 27 ps1) · 739 dosya · 42 sidebar modülü
+**5616 fonksiyon** (5491 JS · 98 bash · 27 ps1) · 740 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -639,12 +639,12 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `laden` — module/kopf-dokumente.js:55 · module/mailversand.js:193 · module/mein-urlaub.js:6 · module/plz.js:40 · module/start-aufgaben.js:351 · module/startseite-handlungsbedarf-karte.js:44 · sosyal/yayinci/yayinci.mjs:265
 - `norm` — katalog-suche.js:414 · module/einstellungen-nav.js:171 · module/patienten-import.js:118 · module/termin-aktionen.js:609 · ops/tools/regroup.mjs:77 · tools/pruefstand-zitate.mjs:26 · tools/redesign-smoke.mjs:51
 - `pruefe` — api-backend/dsgvo/loeschen.js:508 · api-backend/tools/lizenzen-erzeugen.mjs:190 · tools/box-abnahme-mail/smtp-sink.mjs:13 · tools/browser-probe/konsole.mjs:19 · tools/browser-probe/leistungen-probe.mjs:149 · tools/fremde-hosts.mjs:135 · tools/redesign-geometrie.mjs:83
+- `schluessel` — api-backend/billing/kostentraeger/lade-plan.js:303 · api-backend/routes/sondertag-mitteilung.js:162 · module/startseite-handlungsbedarf-karte.js:10 · sosyal/yayinci/yayinci.mjs:76 · tools/hero-clip/tts.mjs:41 · tools/redesign-geometrie.mjs:82 · tools/redesign-smoke.mjs:128
 - `zahl` — api-backend/lib/datev.js:358 · api-backend/lib/gps-checkin.js:12 · module/frequenz-pruefung.js:150 · module/rechnung-summen.js:14 · module/rezept-in-maske.js:223 · module/startseite-darstellung.js:168 · module/startseite-geld.js:18
 - `add` — api-backend/ai/pii-mask.js:295 · api-backend/billing/dta/output-validator.js:181 · api-backend/lib/verbindungen.js:38 · module/feiertage.js:57 · module/podo-vorgeschichte.js:37 · tools/tabellenkarte.mjs:73
 - `anwenden` — module/einstellungen-nav.js:270 · module/kalender-auswahl.js:69 · module/rechnung-steuer.js:295 · module/schublade-neu.js:42 · module/tageszentrale-raster.js:85 · module/termin-konflikte.js:28
 - `fehler` — api-backend/billing/api/artefakt-historie.js:37 · api-backend/billing/api/artefakt-registry.js:21 · api-backend/billing/api/physio-publikation-ablauf.js:23 · api-backend/billing/codes/physio-leistungszeilen.js:32 · api-backend/lib/gmail-senden.js:66 · module/therapiebericht.js:205
 - `lies` — module/erst-checkin.js:26 · tools/box-abnahme-mail/abnahme.mjs:51 · tools/browser-probe/v209b-dokumente.mjs:12 · tools/fremde-hosts.mjs:141 · tools/funktionskarte.mjs:728 · tools/redesign-wachen.mjs:193
-- `load` — module/patient-notizen.js:36 · module/rezept-patientenkopf.js:28 · ops/board.js:111 · ops/decisions.js:7 · ops/meetings.js:7 · ops/wissen.js:49
 
 ## Shell (onprem/)
 

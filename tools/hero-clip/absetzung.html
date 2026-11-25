@@ -264,6 +264,9 @@
   };
   // [Szene, Dauer ms]
   const TL = [['s-brief', 5600], ['s-hit', 2900], ['s-why', 2400], ['s-rew', 2100], ['s-praxura', 5400], ['s-paid', 3200], ['s-msg', 3300], ['s-end', 3600]];
+  // ?tl=5600,2900,… überschreibt die Szenendauern (Tonfassung: Szenen passen sich der Sprecherin an)
+  const tl = new URLSearchParams(location.search).get('tl');
+  if (tl) tl.split(',').map(Number).forEach((ms, i) => { if (TL[i] && ms > 0) TL[i][1] = ms; });
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   async function play() {
     for (const [id, ms] of TL) {
