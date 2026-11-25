@@ -46,7 +46,7 @@
   <!-- ===== Cookie consent banner ===== -->
   <link rel="stylesheet" href="/cookie-consent.css?v=20260610" />
 
-  <link rel="preload" href="assets/video/praxura-hero-poster.webp?v=20261125" as="image" fetchpriority="high" type="image/webp" />
+  <link rel="preload" href="assets/video/praxura-hero-poster.webp?v=20261125b" as="image" fetchpriority="high" type="image/webp" />
 
   <!-- ===== Structured Data: Organization ===== -->
   <script type="application/ld+json">
@@ -297,7 +297,7 @@
     }
 
     /* ── Hero right: stummer Produkt-Clip (Kemal 25.11.2026: Video statt Foto).
-       Quelle: demo-dashboard.html?film=1, erzeugt mit `npm run hero-clip`.
+       Quelle: tools/hero-clip/werbefilm.html (Werbefilm, Kemal 25.11.: kein Demo-Mitschnitt), erzeugt mit `npm run hero-clip`.
        Poster zuerst (LCP), das Video lädt erst nach dem load-Event, nie bei
        prefers-reduced-motion oder Datensparmodus. Klick → interaktive Tour. ── */
     .px-hero-clip {
@@ -1212,19 +1212,15 @@
 
   <aside class="px-hero-visual is-visible" data-reveal>
     <a class="px-hero-clip" href="demo-dashboard.html#tour" target="_blank" rel="noopener" data-cta="hero-clip"
-       aria-label="Praxura in 40 Sekunden: Verordnung einlesen, Serie planen, quittieren, E-Mail, Hausbesuch, Standorte, §302-Abrechnung. Klicken startet die interaktive Demo.">
-      <div class="px-demo-bar" aria-hidden="true">
-        <span class="px-demo-dot"></span><span class="px-demo-dot"></span><span class="px-demo-dot"></span>
-        <span class="px-demo-url">app.praxura.de/dashboard</span>
-      </div>
+       aria-label="Praxura in 30 Sekunden: Verordnung per Barcode, Terminserie mit einem Klick, E-Mail-Entwurf, Hausbesuchs-Route mit Fahrtenbuch, mehrere Standorte, §302-Abrechnung ohne Provision, Daten auf Ihrem Server. Klicken startet die interaktive Demo.">
       <video id="heroClip" muted playsinline loop preload="none" width="1280" height="800"
-             poster="assets/video/praxura-hero-poster.webp?v=20261125" aria-hidden="true">
-        <source data-src="assets/video/praxura-hero.webm?v=20261125" type="video/webm" />
-        <source data-src="assets/video/praxura-hero.mp4?v=20261125" type="video/mp4" />
+             poster="assets/video/praxura-hero-poster.webp?v=20261125b" aria-hidden="true">
+        <source data-src="assets/video/praxura-hero.webm?v=20261125b" type="video/webm" />
+        <source data-src="assets/video/praxura-hero.mp4?v=20261125b" type="video/mp4" />
       </video>
-      <span class="px-hero-clip-cta">Selbst ausprobieren <span aria-hidden="true">→</span></span>
+      <span class="px-hero-clip-cta">Interaktive Demo <span aria-hidden="true">→</span></span>
     </a>
-    <p class="px-hero-clip-note">Echte Oberfläche, erfundene Beispieldaten · ohne Ton</p>
+    <p class="px-hero-clip-note">Praxura in 30 Sekunden · ohne Ton</p>
   </aside>
   <script>
     (function () {

@@ -327797,8 +327797,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "tools/hero-clip/aufnehmen.mjs",
-   "start": 69,
-   "end": 85,
+   "start": 76,
+   "end": 92,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [],
@@ -327824,8 +327824,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "tools/hero-clip/aufnehmen.mjs",
-   "start": 81,
-   "end": 85,
+   "start": 88,
+   "end": 92,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -351983,7 +351983,7 @@
    "name": "kb",
    "orte": [
     "ops/wissen.js:44",
-    "tools/hero-clip/aufnehmen.mjs:81"
+    "tools/hero-clip/aufnehmen.mjs:88"
    ],
    "aynalar": []
   },

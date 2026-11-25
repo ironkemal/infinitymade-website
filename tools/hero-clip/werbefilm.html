@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<title>Praxura – Werbefilm (Vorlage für den Hero-Clip)</title>
+<link rel="stylesheet" href="../../fonts/system-fonts.css" />
+<!--
+  Kurzer Werbefilm für den Hero auf praxura.de (Kemal 25.11.2026: „reklam videosu gibi,
+  siteye giren 'bunlar ne yapıyor, iyi mi' sorusunu direkt yanıtlayan bir şey").
+  Kein Bildschirmmitschnitt, sondern Motion-Grafik: Problem → je Szene ein Nutzen → Vertrauen → Marke.
+  Ohne Ton (läuft stumm im Hero). Aufnahme: npm run hero-clip  (tools/hero-clip/aufnehmen.mjs)
+  Regeln: nur zeigen, was das Produkt kann; keine Preise; keine Rechtsversprechen
+  („Finanzamt-/GoBD-konform" o. ä.). Alle Namen erfunden.
+  Nicht im Web veröffentlicht (tools/ steht in .vercelignore).
+-->
+<style>
+  :root {
+    --bg: #F8F3E8; --card: #FFFEFB; --ink: #1A1611; --soft: #4A4036; --mute: #6E6458;
+    --line: rgba(26,22,17,.09); --em: #1E3D2F; --em2: #2a5240; --gold: #b1891b; --bronze: #6B5538;
+    --ok: #2F6B4A; --warn: #9A6A12;
+    --serif: 'Fraunces', 'Times New Roman', serif; --sans: 'Plus Jakarta Sans', system-ui, sans-serif; --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --ease: cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); overflow: hidden; }
+  body { width: 1280px; height: 800px; font-family: var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased; }
+  .stage { position: relative; width: 1280px; height: 800px; overflow: hidden; background: var(--bg); }
+
+  .sc { position: absolute; inset: 0; opacity: 0; transition: opacity .5s var(--ease); }
+  .sc.on { opacity: 1; }
+  .sc.dark { background: var(--em); color: #F8F3E8; }
+  .a { opacity: 0; }
+  .sc.on .a { animation: up .8s var(--ease) both; animation-delay: var(--d, 0s); }
+  .sc.on .a.pop { animation-name: pop; }
+  .sc.on .a.left { animation-name: left; }
+  @keyframes up { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+  @keyframes pop { from { opacity: 0; transform: scale(.82); } to { opacity: 1; transform: none; } }
+  @keyframes left { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: none; } }
+
+  .center { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+  .eyebrow { font-family: var(--mono); font-size: 16px; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); }
+  h1, h2 { font-family: var(--serif); font-weight: 400; letter-spacing: -.035em; margin: 0; }
+  h2 { font-size: 70px; line-height: 1.02; }
+  h2 em { font-style: italic; font-weight: 300; color: var(--bronze); }
+  .dark h2 em { color: var(--gold); }
+  .sub { font-size: 22px; color: var(--soft); margin-top: 22px; line-height: 1.45; }
+  .dark .sub { color: rgba(248,243,232,.78); }
+
+  /* Szene 1: Problem */
+  .hook { position: absolute; left: 120px; top: 190px; }
+  .hook div { font-family: var(--serif); font-size: 72px; letter-spacing: -.03em; line-height: 1.32; position: relative; width: max-content; }
+  .hook div::after { content: ''; position: absolute; left: -6px; right: -6px; top: 54%; height: 6px; border-radius: 3px; background: var(--gold); transform: scaleX(0); transform-origin: left; }
+  .sc.on .hook div::after { animation: strike .45s var(--ease) both; animation-delay: var(--s); }
+  .sc.on .hook div { animation: up .7s var(--ease) both, dim .4s linear both; animation-delay: var(--d), var(--s); }
+  @keyframes strike { to { transform: scaleX(1); } }
+  @keyframes dim { to { color: rgba(248,243,232,.45); } }
+
+  /* Marke */
+  .mark { width: 96px; height: 96px; border-radius: 26px; background: var(--em); color: #F1E9D6; display: grid; place-items: center; font-family: var(--serif); font-size: 56px; margin: 0 auto 26px; box-shadow: 0 24px 50px -20px rgba(30,61,47,.6); }
+  .word { font-family: var(--serif); font-size: 96px; letter-spacing: -.04em; line-height: 1; }
+
+  /* Nutzen-Szenen: Text links, Karte rechts */
+  .feat { position: absolute; inset: 0; display: grid; grid-template-columns: 530px 1fr; align-items: center; padding: 0 70px 30px 90px; gap: 50px; }
+  .feat .no { font-family: var(--mono); font-size: 15px; color: var(--mute); letter-spacing: .14em; margin-bottom: 18px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 26px; box-shadow: 0 2px 4px rgba(26,22,17,.04), 0 40px 80px -36px rgba(26,22,17,.35); padding: 30px 32px; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 600; border-radius: 999px; padding: 7px 14px; }
+  .chip.ok { background: rgba(47,107,74,.11); color: var(--ok); }
+  .chip.warn { background: rgba(177,137,27,.16); color: var(--warn); }
+  .lab { font-size: 14px; color: var(--mute); margin-bottom: 4px; }
+  .fld { border: 1.5px solid var(--line); border-radius: 12px; padding: 11px 14px; font-size: 19px; background: #FFFDF8; min-height: 48px; }
+  .sc.on .fld.fill { animation: fill .5s var(--ease) both; animation-delay: var(--d); }
+  @keyframes fill { from { border-color: var(--line); background: #FFFDF8; } to { border-color: rgba(47,107,74,.5); background: rgba(47,107,74,.06); } }
+
+  /* Verordnung */
+  .rx { position: relative; height: 170px; border-radius: 14px; background: #FBF4F4; border: 1px solid rgba(156,58,58,.25); overflow: hidden; margin-bottom: 20px; }
+  .rx .ln { height: 9px; border-radius: 5px; background: rgba(156,58,58,.14); margin: 16px 20px 0; }
+  .rx .ln:nth-child(2) { width: 60%; } .rx .ln:nth-child(3) { width: 75%; }
+  .rx .code { position: absolute; right: 20px; bottom: 18px; width: 190px; height: 70px; background: repeating-linear-gradient(90deg, #2a1a1a 0 3px, transparent 3px 5px, #2a1a1a 5px 7px, transparent 7px 10px, #2a1a1a 10px 14px, transparent 14px 16px); }
+  .rx .beam { position: absolute; left: 0; right: 0; height: 40%; top: -45%; background: linear-gradient(180deg, transparent, rgba(177,137,27,.3) 70%, rgba(177,137,27,.9)); border-bottom: 3px solid var(--gold); }
+  .sc.on .rx .beam { animation: beam 1s var(--ease) .3s 1 both; }
+  @keyframes beam { from { top: -45%; } to { top: 105%; } }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+  .checks { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+
+  /* Kalender */
+  .week { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .week .d { font-family: var(--mono); font-size: 14px; color: var(--mute); text-align: center; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+  .week .col { position: relative; height: 330px; background: repeating-linear-gradient(180deg, transparent 0 54px, var(--line) 54px 55px); border-radius: 8px; }
+  .ev { position: absolute; left: 4px; right: 4px; height: 46px; border-radius: 9px; font-size: 13px; padding: 6px 8px; line-height: 1.25; }
+  .ev.g { background: rgba(26,22,17,.06); color: var(--mute); }
+  .ev.n { background: repeating-linear-gradient(135deg, rgba(177,137,27,.18) 0 7px, rgba(177,137,27,.32) 7px 14px); border: 2px solid var(--gold); color: var(--ink); font-weight: 600; }
+  .bigbtn { display: inline-flex; margin-top: 22px; background: var(--gold); color: var(--ink); font-weight: 700; font-size: 19px; padding: 13px 22px; border-radius: 14px; }
+  .sc.on .press { animation: press .5s var(--ease) both; animation-delay: var(--d); }
+  @keyframes press { 0% { transform: scale(1); } 40% { transform: scale(.94); box-shadow: 0 0 0 0 rgba(177,137,27,.6); } 100% { transform: scale(1); box-shadow: 0 0 0 18px rgba(177,137,27,0); } }
+
+  /* Mail */
+  .mhead { display: grid; grid-template-columns: 80px 1fr; gap: 8px; font-size: 17px; margin-bottom: 16px; }
+  .mhead span { color: var(--mute); }
+  .ki { display: inline-flex; align-items: center; gap: 8px; background: rgba(30,61,47,.09); color: var(--em); font-weight: 700; font-size: 14px; border-radius: 999px; padding: 5px 12px; margin-bottom: 14px; }
+  .mbody { font-size: 19px; line-height: 1.6; white-space: pre-wrap; min-height: 250px; }
+  .mbody.typing::after { content: ''; display: inline-block; width: 3px; height: 1.05em; background: var(--gold); vertical-align: -3px; margin-left: 2px; animation: blink .7s infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .send { display: flex; justify-content: flex-end; margin-top: 10px; }
+  .send b { background: var(--em); color: #F8F3E8; padding: 11px 22px; border-radius: 12px; font-size: 17px; }
+
+  /* Route */
+  .map { position: relative; height: 300px; border-radius: 16px; background: #EFE7D3; overflow: hidden; margin-bottom: 16px; }
+  .map svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .road { fill: none; stroke: rgba(255,255,255,.8); stroke-width: 10; stroke-linecap: round; }
+  .path { fill: none; stroke: var(--em); stroke-width: 5; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .sc.on .path { animation: draw 1.6s var(--ease) .5s both; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .pin circle { fill: var(--gold); } .pin text { font: 700 14px var(--mono); fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
+  .pin.home circle { fill: var(--em); } .pin.home text { fill: #F8F3E8; }
+  .trip { display: grid; grid-template-columns: 1fr auto; font-size: 17px; padding: 8px 2px; border-top: 1px solid var(--line); }
+  .trip b { font-family: var(--mono); font-weight: 500; }
+  .total { display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px; padding: 12px 16px; border-radius: 12px; background: rgba(30,61,47,.09); font-size: 17px; }
+  .total b { font-family: var(--serif); font-weight: 400; font-size: 34px; }
+
+  /* Standorte */
+  .locs { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; position: relative; }
+  .loc h3 { font-family: var(--serif); font-weight: 400; font-size: 34px; margin: 0 0 4px; letter-spacing: -.02em; }
+  .loc .m { margin-top: 18px; font-size: 15px; color: var(--mute); }
+  .loc .m b { display: block; font-family: var(--serif); font-weight: 400; font-size: 46px; color: var(--ink); letter-spacing: -.03em; line-height: 1.1; }
+  .shared { grid-column: 1 / -1; text-align: center; font-size: 18px; }
+
+  /* §302 */
+  .bar { height: 14px; border-radius: 999px; background: rgba(26,22,17,.07); overflow: hidden; margin: 14px 0 10px; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--em); border-radius: 999px; }
+  .sc.on .bar i { animation: grow 1.5s cubic-bezier(.4,0,.2,1) .4s both; }
+  @keyframes grow { to { width: 100%; } }
+  .kk { display: grid; grid-template-columns: 1fr auto; gap: 10px; font-size: 18px; padding: 9px 0; border-top: 1px solid var(--line); align-items: center; }
+  .file { display: flex; gap: 16px; align-items: center; margin-top: 16px; padding: 18px 20px; border-radius: 16px; background: linear-gradient(135deg, var(--em), var(--em2)); color: #F8F3E8; font-size: 18px; }
+  .file .ic { width: 50px; height: 60px; border-radius: 9px; background: rgba(248,243,232,.16); display: grid; place-items: center; font-family: var(--mono); font-size: 13px; }
+  .prov { font-family: var(--serif); font-size: 64px; letter-spacing: -.03em; line-height: 1; margin-top: 26px; }
+  .prov small { display: block; font-family: var(--sans); font-size: 19px; color: var(--soft); letter-spacing: 0; margin-top: 6px; }
+
+  /* Vertrauen */
+  .lock { width: 92px; height: 92px; margin: 0 auto 30px; border-radius: 50%; background: rgba(248,243,232,.1); display: grid; place-items: center; }
+  .lock svg { width: 44px; height: 44px; stroke: var(--gold); fill: none; stroke-width: 1.8; }
+
+  .wm { position: absolute; left: 90px; bottom: 44px; display: flex; align-items: center; gap: 10px; font-family: var(--serif); font-size: 22px; color: var(--soft); opacity: 0; transition: opacity .5s; }
+  .wm i { width: 30px; height: 30px; border-radius: 9px; background: var(--em); color: #F1E9D6; font-style: normal; display: grid; place-items: center; font-size: 18px; }
+  .wm.on { opacity: 1; }
+  .dots { position: absolute; right: 70px; bottom: 54px; display: flex; gap: 8px; opacity: 0; transition: opacity .5s; }
+  .dots.on { opacity: 1; }
+  .dots i { width: 26px; height: 5px; border-radius: 3px; background: rgba(26,22,17,.12); transition: background .4s; }
+  .dots i.on { background: var(--gold); }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- 1 · Problem -->
+  <section class="sc dark" id="s-hook">
+    <div class="hook">
+      <div style="--d:.1s;--s:1.0s">Rezepte abtippen.</div>
+      <div style="--d:.5s;--s:1.5s">Termine einzeln suchen.</div>
+      <div style="--d:.9s;--s:2.0s">Bei der Abrechnung zittern.</div>
+    </div>
+  </section>
+
+  <!-- 2 · Wende -->
+  <section class="sc" id="s-turn">
+    <div class="center"><div>
+      <div class="mark a pop" style="--d:.5s">P</div>
+      <h2 class="a" style="--d:0s">Das geht <em>leichter.</em></h2>
+      <div class="sub a" style="--d:.8s">Praxura · die Praxissoftware für Physio, Ergo, Logo &amp; Podologie</div>
+    </div></div>
+  </section>
+
+  <!-- 3 · Verordnung -->
+  <section class="sc" id="s-rx">
+    <div class="feat">
+      <div>
+        <div class="eyebrow a" style="--d:0s">Verordnung</div>
+        <h2 class="a" style="--d:.1s;margin-top:16px">Barcode lesen.<br><em>Statt abtippen.</em></h2>
+        <div class="sub a" style="--d:.3s">Geprüft gegen die Heilmittel-Richtlinie, bevor die erste Behandlung beginnt.</div>
+      </div>
+      <div class="card a pop" style="--d:.15s">
+        <div class="rx"><div class="ln"></div><div class="ln"></div><div class="ln"></div><div class="code"></div><div class="beam"></div></div>
+        <div class="grid2">
+          <div><div class="lab">Patient:in</div><div class="fld fill" style="--d:1.3s"><span class="a" style="--d:1.3s">Markus Becker</span></div></div>
+          <div><div class="lab">Diagnose</div><div class="fld fill" style="--d:1.45s"><span class="a" style="--d:1.45s">M54.4 · WS</span></div></div>
+          <div><div class="lab">Heilmittel</div><div class="fld fill" style="--d:1.6s"><span class="a" style="--d:1.6s">KG · 6×</span></div></div>
+          <div><div class="lab">Frequenz</div><div class="fld fill" style="--d:1.75s"><span class="a" style="--d:1.75s">2× pro Woche</span></div></div>
+        </div>
+        <div class="checks">
+          <span class="chip ok a pop" style="--d:2.0s">✓ Diagnosegruppe passt</span>
+          <span class="chip ok a pop" style="--d:2.2s">✓ Menge zulässig</span>
+          <span class="chip warn a pop" style="--d:2.4s">! Beginn bis 21.12.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · Serie -->
+  <section class="sc" id="s-cal">
+    <div class="feat">
+      <div>
+        <div class="eyebrow a" style="--d:0s">Terminplanung</div>
+        <h2 class="a" style="--d:.1s;margin-top:16px">Sechs Termine.<br><em>Ein Klick.</em></h2>
+        <div class="sub a" style="--d:.3s">Praxura sucht die passenden Lücken bei Ihrem Team. Sie bestätigen.</div>
+      </div>
+      <div class="card a pop" style="--d:.15s">
+        <div class="week" id="week"></div>
+        <div style="text-align:right"><span class="bigbtn press" style="--d:.9s">6 Termine vorschlagen</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · Mail -->
+  <section class="sc" id="s-mail">
+    <div class="feat">
+      <div>
+        <div class="eyebrow a" style="--d:0s">Kommunikation</div>
+        <h2 class="a" style="--d:.1s;margin-top:16px">Die E-Mail<br><em>schreibt sich.</em></h2>
+        <div class="sub a" style="--d:.3s">Terminbestätigung als fertiger Entwurf. Kurz lesen, senden.</div>
+      </div>
+      <div class="card a pop" style="--d:.15s">
+        <div class="ki">✦ KI-Assistent · Entwurf</div>
+        <div class="mhead"><span>An</span><b>Laura Meier</b><span>Betreff</span><b>Ihr Termin am Montag</b></div>
+        <div class="mbody" id="mbody"></div>
+        <div class="send"><b class="press" style="--d:3.1s">Senden</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · Hausbesuch -->
+  <section class="sc" id="s-route">
+    <div class="feat">
+      <div>
+        <div class="eyebrow a" style="--d:0s">Hausbesuche</div>
+        <h2 class="a" style="--d:.1s;margin-top:16px">Beste Route.<br><em>Fahrtenbuch voll.</em></h2>
+        <div class="sub a" style="--d:.3s">Reihenfolge und Kilometer berechnet, jede Fahrt sofort eingetragen.</div>
+      </div>
+      <div class="card a pop" style="--d:.15s;padding:22px 24px">
+        <div class="map"><svg viewBox="0 0 560 300" preserveAspectRatio="xMidYMid slice">
+          <path class="road" d="M-10 220 C 110 200, 170 250, 290 210 S 470 130, 580 160"/>
+          <path class="road" d="M170 -10 C 180 80, 130 150, 200 320"/>
+          <path class="road" d="M380 -10 C 360 90, 420 170, 410 320"/>
+          <path class="path" pathLength="1" d="M95 215 C 130 180, 160 130, 178 92 S 320 62, 372 72 S 425 180, 408 236 S 170 262, 95 215"/>
+          <g class="pin home"><circle cx="95" cy="215" r="17"/><text x="95" y="215">P</text></g>
+          <g class="pin"><circle cx="178" cy="92" r="15"/><text x="178" y="92">1</text></g>
+          <g class="pin"><circle cx="372" cy="72" r="15"/><text x="372" y="72">2</text></g>
+          <g class="pin"><circle cx="408" cy="236" r="15"/><text x="408" y="236">3</text></g>
+        </svg></div>
+        <div class="trip a left" style="--d:1.9s"><span>Praxis → H. Krüger</span><b>7,8 km</b></div>
+        <div class="trip a left" style="--d:2.05s"><span>H. Krüger → E. Zimmermann</span><b>5,6 km</b></div>
+        <div class="trip a left" style="--d:2.2s"><span>E. Zimmermann → G. Hahn → Praxis</span><b>15,4 km</b></div>
+        <div class="total a" style="--d:2.5s"><span>Heute · VW Caddy</span><b>28,8 km</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · Standorte -->
+  <section class="sc" id="s-loc">
+    <div class="feat">
+      <div>
+        <div class="eyebrow a" style="--d:0s">Mehrere Standorte</div>
+        <h2 class="a" style="--d:.1s;margin-top:16px">Zwei Standorte.<br><em>Ein System.</em></h2>
+        <div class="sub a" style="--d:.3s">Jedes Team im eigenen Kalender. Sie sehen alles auf einen Blick.</div>
+      </div>
+      <div class="locs">
+        <div class="card loc a pop" style="--d:.2s"><h3>Siegburg</h3><span class="lab">3 Behandler:innen</span>
+          <div class="m"><b data-count="14">0</b>Termine heute</div><div class="m"><b data-count="86" data-suf=" %">0</b>Auslastung</div></div>
+        <div class="card loc a pop" style="--d:.4s"><h3>Troisdorf</h3><span class="lab">2 Behandler:innen</span>
+          <div class="m"><b data-count="9">0</b>Termine heute</div><div class="m"><b data-count="78" data-suf=" %">0</b>Auslastung</div></div>
+        <div class="shared a" style="--d:1.4s"><span class="chip ok">✓ Patient:innen und Verordnungen gemeinsam, wenn Sie wollen</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · §302 -->
+  <section class="sc" id="s-bill">
+    <div class="feat">
+      <div>
+        <div class="eyebrow a" style="--d:0s">§302-Abrechnung</div>
+        <h2 class="a" style="--d:.1s;margin-top:16px;font-size:58px">Fehler finden,<br><em>bevor die Kasse<br>es tut.</em></h2>
+        <div class="prov a" style="--d:2.4s">0&nbsp;% Provision<small>Sie reichen selbst ein, ohne Abrechnungszentrum.</small></div>
+      </div>
+      <div class="card a pop" style="--d:.15s">
+        <div class="lab" style="font-size:16px">Prüfe 38 Verordnungen …</div>
+        <div class="bar"><i></i></div>
+        <div class="kk a" style="--d:1.0s"><span>AOK Rheinland/Hamburg</span><span class="chip warn">1 zurückgestellt</span></div>
+        <div class="kk a" style="--d:1.15s"><span>Techniker Krankenkasse</span><span class="chip ok">✓ geprüft</span></div>
+        <div class="kk a" style="--d:1.3s"><span>BARMER</span><span class="chip ok">✓ geprüft</span></div>
+        <div class="file a pop" style="--d:1.9s"><span class="ic">DTA</span><div><b style="font-family:var(--serif);font-weight:400;font-size:24px;display:block">Abrechnungsdatei fertig</b><span style="opacity:.8">37 Verordnungen · verschlüsselt und signiert</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · Vertrauen -->
+  <section class="sc dark" id="s-trust">
+    <div class="center"><div>
+      <div class="lock a pop" style="--d:0s"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></div>
+      <h2 class="a" style="--d:.15s">Ihre Patientendaten bleiben<br><em>auf Ihrem Server.</em></h2>
+      <div class="sub a" style="--d:.6s">Ihre eigene Praxis-Cloud. Wir richten alles für Sie ein.</div>
+    </div></div>
+  </section>
+
+  <!-- 10 · Marke -->
+  <section class="sc" id="s-end">
+    <div class="center"><div>
+      <div class="mark a pop" style="--d:0s">P</div>
+      <div class="word a" style="--d:.15s">Praxura</div>
+      <h2 class="a" style="--d:.5s;font-size:52px;margin-top:20px">Weniger Papier. <em>Mehr Therapie.</em></h2>
+      <div class="sub a" style="--d:.9s;font-family:var(--mono);font-size:16px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)">Physiotherapie · Ergotherapie · Logopädie · Podologie</div>
+    </div></div>
+  </section>
+
+  <div class="wm" id="wm"><i>P</i>Praxura</div>
+  <div class="dots" id="dots"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+</div>
+
+<script>
+(function () {
+  const $ = (s) => document.querySelector(s);
+  // Wochenraster: bestehende Termine grau, neue Serie golden (pop nacheinander)
+  const days = ['Mo', 'Di', 'Mi', 'Do', 'Fr'];
+  const busy = [[0, 0], [0, 2], [1, 1], [1, 4], [2, 0], [2, 3], [3, 1], [3, 2], [4, 0], [4, 4]];
+  const neu = [[1, 3], [3, 4], [0, 4], [2, 5], [4, 2], [1, 5]];
+  $('#week').innerHTML = days.map((d) => `<div class="d">${d}</div>`).join('') + days.map((_, i) =>
+    `<div class="col">${busy.filter((b) => b[0] === i).map((b) => `<div class="ev g" style="top:${b[1] * 55 + 4}px">belegt</div>`).join('')}` +
+    neu.map((n, k) => n[0] === i ? `<div class="ev n a pop" style="top:${n[1] * 55 + 4}px;--d:${1.3 + k * .18}s">M. Becker<br>KG ${k + 1}/6</div>` : '').join('') + '</div>').join('');
+
+  const MAIL = 'Sehr geehrte Frau Meier,\n\ngern bestätigen wir Ihren Termin am Montag um 9:00 Uhr.\nBitte bringen Sie Ihre Verordnung mit.\n\nWir freuen uns auf Sie!\nIhr Praxisteam';
+  const HOOKS = {
+    's-mail': () => {
+      const b = $('#mbody'); b.textContent = ''; b.classList.add('typing'); let n = 0;
+      setTimeout(() => { const iv = setInterval(() => { n += 2; b.textContent = MAIL.slice(0, n); if (n >= MAIL.length) { clearInterval(iv); b.classList.remove('typing'); } }, 17); }, 600);
+    },
+    's-loc': () => document.querySelectorAll('[data-count]').forEach((el) => {
+      const to = +el.dataset.count, suf = el.dataset.suf || ''; const t0 = performance.now() + 500;
+      const tick = (t) => { const p = Math.min(Math.max((t - t0) / 900, 0), 1); el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3))) + suf; if (p < 1) requestAnimationFrame(tick); };
+      requestAnimationFrame(tick);
+    })
+  };
+  // [Szene, Dauer ms, Fortschrittspunkt (Nutzen-Szenen 1–6) oder 0]
+  const TL = [['s-hook', 3300, 0], ['s-turn', 2500, 0], ['s-rx', 3700, 1], ['s-cal', 3400, 2], ['s-mail', 3900, 3], ['s-route', 3700, 4], ['s-loc', 3300, 5], ['s-bill', 4000, 6], ['s-trust', 3000, 0], ['s-end', 3600, 0]];
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  async function play() {
+    for (const [id, ms, dot] of TL) {
+      document.querySelectorAll('.sc.on').forEach((s) => s.classList.remove('on'));
+      const sc = document.getElementById(id);
+      // Animationen neu starten
+      sc.querySelectorAll('.a, .press, .path, .bar i').forEach((el) => { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; });
+      sc.classList.add('on');
+      $('#wm').classList.toggle('on', dot > 0); $('#dots').classList.toggle('on', dot > 0);
+      document.querySelectorAll('#dots i').forEach((d, i) => d.classList.toggle('on', i < dot));
+      if (HOOKS[id]) HOOKS[id]();
+      await sleep(ms);
+    }
+    window.__filmDone = true;
+  }
+  window.startFilm = play;
+  if (!/auto=0/.test(location.search)) document.fonts.ready.then(play);
+})();
+</script>
+</body>
+</html>

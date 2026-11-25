@@ -4,9 +4,13 @@
 // Warum aus der Demo und nicht von Hand gefilmt: Die Demo ändert sich mit dem Produkt.
 // Ein von Hand geschnittenes Video veraltet; dieses hier wird mit einem Befehl neu erzeugt.
 //
-//   npm run hero-clip
+//   npm run hero-clip                 → Werbefilm (tools/hero-clip/werbefilm.html), Standard
+//   QUELLE=demo npm run hero-clip     → Mitschnitt der Demo (demo-dashboard.html?film=1)
 //
-// Ablauf: demo-dashboard.html?film=1&auto=0 öffnen → window.startFilm() → CDP-Screencast
+// Kemal 25.11.2026 (zweiter Wunsch): kein Demo-Mitschnitt im Hero, sondern ein Werbefilm,
+// der „was macht das, ist das gut?" beantwortet → werbefilm.html ist jetzt der Standard.
+//
+// Ablauf: Quelle mit &auto=0 öffnen → window.startFilm() → CDP-Screencast
 // (JPEG-Frames mit Zeitstempel, schärfer als Playwrights eigene VP8-Aufnahme) → ffmpeg baut
 // daraus MP4 (H.264) + WebM (VP9) + Poster. Ausgabe: assets/video/
 //
@@ -22,9 +26,11 @@ import { tmpdir } from 'node:os';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const OUT = join(ROOT, 'assets', 'video');
 const TMP = join(tmpdir(), 'praxura-hero-clip');
-const W = 1440, H = 900;          // Aufnahme
+const DEMO = process.env.QUELLE === 'demo';
+const W = DEMO ? 1440 : 1280, H = DEMO ? 900 : 800; // Aufnahme (Werbefilm ist fest 1280×800 gebaut)
 const OW = 1280, OH = 800;        // Ausgabe
-const POSTER_AT = Number(process.env.POSTER_AT || 6.3); // Sekunde: Verordnung eingelesen, Felder gefüllt
+// Poster = erstes Bild, das man sieht, bevor das Video lädt: Demo → Verordnung eingelesen; Werbefilm → Verordnungs-Szene
+const POSTER_AT = Number(process.env.POSTER_AT || (DEMO ? 6.3 : 8.6));
 
 rmSync(TMP, { recursive: true, force: true });
 mkdirSync(TMP, { recursive: true });
@@ -32,7 +38,8 @@ mkdirSync(OUT, { recursive: true });
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1, locale: 'de-DE', timezoneId: 'Europe/Berlin' });
-const url = pathToFileURL(join(ROOT, 'demo-dashboard.html')).href + '?film=1&auto=0';
+const url = DEMO ? pathToFileURL(join(ROOT, 'demo-dashboard.html')).href + '?film=1&auto=0'
+                 : pathToFileURL(join(ROOT, 'tools', 'hero-clip', 'werbefilm.html')).href + '?auto=0';
 await page.goto(url, { waitUntil: 'load' });
 await page.evaluate(() => document.fonts && document.fonts.ready);
 await page.waitForTimeout(400);
@@ -68,7 +75,7 @@ const total = frames[frames.length - 1].t - frames[0].t;
 
 const ff = (args) => execFileSync('ffmpeg', ['-y', '-loglevel', 'error', ...args], { stdio: 'inherit' });
 // Leicht beschleunigt: in der Demo wartet alles auf Menschen, im Clip soll es zügig wirken.
-const SPEED = Number(process.env.SPEED || 1.4);
+const SPEED = Number(process.env.SPEED || (DEMO ? 1.4 : 1));
 const vf = `setpts=PTS/${SPEED},fps=30,scale=${OW}:${OH}:flags=lanczos,format=yuv420p`;
 const mp4 = join(OUT, 'praxura-hero.mp4');
 const webm = join(OUT, 'praxura-hero.webm');
