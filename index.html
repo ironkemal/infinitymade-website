@@ -1215,8 +1215,9 @@
        aria-label="Kurzfilm, 27 Sekunden: Eine Krankenkasse kürzt 213,54 Euro, weil die Behandlung zu spät begann. Mit Praxura meldet sich die Frist schon beim Einlesen der Verordnung, die Behandlung beginnt rechtzeitig und wird bezahlt. Praxura findet Fehler, bevor die Kasse es tut. Klicken startet die interaktive Demo.">
       <video id="heroClip" muted playsinline loop preload="none" width="1280" height="800"
              poster="assets/video/praxura-hero-poster.webp?v=20261125c" aria-hidden="true">
-        <source data-src="assets/video/praxura-hero.webm?v=20261125c" type="video/webm" />
+        <!-- MP4 zuerst: Safari/iOS wählt sonst WebM und zeigt eine leere Fläche (25.11.2026, Kemal sah grauen Kasten) -->
         <source data-src="assets/video/praxura-hero.mp4?v=20261125c" type="video/mp4" />
+        <source data-src="assets/video/praxura-hero.webm?v=20261125c" type="video/webm" />
       </video>
       <span class="px-hero-clip-cta">Interaktive Demo <span aria-hidden="true">→</span></span>
     </a>
