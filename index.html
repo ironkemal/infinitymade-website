@@ -1167,7 +1167,7 @@
   <!-- Aktionen (2026-11-25): Thema nach Datum, gleiche Preise, Ende 31.12.2026. Vorschau: ?aktion=bf|cyber|xmas -->
   <script>
   (function () {
-    var T = [['bf', '2026-11-29T23:59:59+01:00'], ['cyber', '2026-12-06T23:59:59+01:00'], ['xmas', '2026-12-31T23:59:59+01:00']];
+    var T = [['bf', '2026-11-27T23:59:59+01:00'], ['cyber', '2026-12-06T23:59:59+01:00'], ['xmas', '2026-12-31T23:59:59+01:00']];
     var m = location.search.match(/[?&]aktion=(bf|cyber|xmas)/), now = Date.now(), a = m ? m[1] : null;
     if (!a) for (var i = 0; i < T.length; i++) if (now <= new Date(T[i][1]).getTime()) { a = T[i][0]; break; }
     if (!a) return;
@@ -2500,7 +2500,7 @@
     var promo = Date.now() < ENDE;
     // Gleiche Preise, wechselndes Thema nach Datum. Vorschau: ?aktion=bf|cyber|xmas
     var THEMEN = {
-      bf:    { bis: '2026-11-29T23:59:59+01:00', icon: '%',  kicker: 'Nur für kurze Zeit', title: 'Black <em>Friday</em> Week', ribbon: 'Black Friday', tag: 'Black-Friday-Preis' },
+      bf:    { bis: '2026-11-27T23:59:59+01:00', icon: '%',  kicker: 'Nur für kurze Zeit', title: 'Black <em>Friday</em> Week', ribbon: 'Black Friday', tag: 'Black-Friday-Preis' },
       cyber: { bis: '2026-12-06T23:59:59+01:00', icon: '⚡', kicker: 'Online-Deal',        title: 'Cyber <em>Week</em>',         ribbon: 'Cyber Week',   tag: 'Cyber-Week-Preis' },
       xmas:  { bis: '2026-12-31T23:59:59+01:00', icon: '★',  kicker: 'Zum Jahresende',     title: 'Weihnachts-<em>Aktion</em>',  ribbon: 'Weihnachten',  tag: 'Weihnachtspreis' }
     };
