@@ -117,6 +117,13 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 25.11.2026 · Bekçi-Ajan: Quellen-Faz 3 + Kostenträger-Kutu-Zwilling (`tools/bekci-ajan/`, `tools/kostentraeger-*`)
+- Niye: Kaynak bekçisi (`bekci-quellen.yml`) yeni resmî belgeyi indirip ajan kararını sıkı şemayla değerlendirsin; aynı konu ikinci vaka açmasın. Kostenträger seed'i kutu için deterministik üretilsin, Kemal'e yalnız eşik aşılınca vaka gitsin.
+- Neu: `belge-indir.mjs` (`indir`, `htmlToText`, `tespitEtTur`, `normalizeLink`) · `quellen-bewerten.mjs` (`bewerte`, `kararGecerliMi`, `quellenBefundIz`) · `iz.mjs` (`iz`, `kararlıStringify` — ortak parmak izi, preise/quellen/kostentraeger-bewerten üçü kullanıyor) · `kostentraeger-bewerten.mjs` (`bewerte`, gkv-302 eşikleri) · `tools/kostentraeger-kutu-seed.mjs`.
+- Geändert: `tools/quellen-waechter.mjs` → `lauf().befunde`, `--json`, `uebernehme()` (Kemal ✅ → yalnız vakadaki linkler "bekannt"). `tools/kostentraeger-annahmestellen-laden.mjs` → `synchronisiere()`, `sqlClient()`, `ladeAusgaben()` + `tools/kostentraeger-ausgaben.json`; yükleyici her Postgres'e (kutu ikizi) karşı koşar, ilk kullanıcı `kostentraeger-kutu-seed.mjs`. `tools/check-onprem.sh` Kostenträger-Seed kapısı (O-118).
+- Nerede: `bekci-quellen.yml`, `bekci-kostentraeger.yml` (prova modu dahil).
+- Küçük ikizler (kopya değil, karar gerektirmez): `gecerliTarihMi` preise-/quellen-bewerten'de birebir aynı 5 satır; `sha256` üç dosyada (dogrula, kostentraeger-bewerten, onprem-manifest); `envLesen` empfaenger-zertifikat-laden ile ikiz. `kararGecerliMi` iki dosyada aynı adla ama şemaları farklı — katman, kopya değil. Bir dahaki dokunuşta `gecerliTarihMi` `iz.mjs`'e taşınabilir.
+
 ### 24.11.2026 · Analysegespräch: Verfügbarkeit serverseitig (`api/demo-booking.js`)
 - Niye: Terminbuchung auf praxura.de wieder aktiv. Kemals Regel (Di geschlossen, Fr 13–16 geschlossen, keine Abendtermine) stand nur im Client (`demo-booking.html` `CONFIG.availableDays/timeSlots/blockedRanges`); ein direkter API-Aufruf hätte einen Dienstagstermin anlegen können.
 - Neu: `isBookableSlot(date, time)` + Konstante `SLOT_TIMES`. Nerede: Anfang von `handleCreate` und `handleReschedule`, 400 bei unzulässigem Slot.
