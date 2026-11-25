@@ -1,0 +1,32 @@
+{
+  "id": "20261125-quellen-4",
+  "bekci": "quellen",
+  "olusturma": "2026-11-25T11:05:27.224Z",
+  "durum": "acik",
+  "baslik": "Kaynak: kbv-bfb",
+  "satirlar": [
+    "• Kaynak: kbv-bfb (mittel) · KBV Technisches Handbuch Blankoformularbedruckung (Muster-13-PDF417; fester Dateiname, Spur = Dateig",
+    "  + KBV_ITA_VGEX_Technisches_Handbuch_BFB.pdf",
+    "  Kaçırılırsa: Neues Barcode-Layout → lokaler Barcode-Leser ordnet Felder falsch zu."
+  ],
+  "dosyalar": [],
+  "yamaSha256": null,
+  "oneri": "Ajan çıktısı geçersiz: beklenmeyen fazla anahtar: gecersiz; beklenmeyen fazla anahtar: hatalar; zorunlu anahtar eksik: belgeler",
+  "ek": {
+    "quelleId": "kbv-bfb",
+    "neu": [
+      "update.kbv.de/ita-update/Blankoformulare/KBV_ITA_VGEX_Technisches_Handbuch_BFB.pdf | 5341596 Bytes"
+    ],
+    "weg": [],
+    "iz": "6c59fce913448a2a",
+    "uygulanabilir": true
+  },
+  "hatirlatma": 0,
+  "sonHatirlatma": null,
+  "gecmis": [
+    {
+      "zaman": "2026-11-25T11:05:27.224Z",
+      "eylem": "olusturuldu"
+    }
+  ]
+}

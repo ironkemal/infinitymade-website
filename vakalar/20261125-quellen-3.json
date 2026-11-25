@@ -1,0 +1,34 @@
+{
+  "id": "20261125-quellen-3",
+  "bekci": "quellen",
+  "olusturma": "2026-11-25T11:05:27.224Z",
+  "durum": "acik",
+  "baslik": "Kaynak: gba-heilm-rl-beschluesse",
+  "satirlar": [
+    "• Kaynak: gba-heilm-rl-beschluesse (mittel) · G-BA HeilM-RL Beschlüsse (Frühwarnung vor Inkrafttreten)",
+    "  + 7977",
+    "  + 8129",
+    "  Kaçırılırsa: Änderung fällt erst beim Inkrafttreten auf, keine Vorbereitungszeit."
+  ],
+  "dosyalar": [],
+  "yamaSha256": null,
+  "oneri": "Ajan çıktısı geçersiz: beklenmeyen fazla anahtar: gecersiz; beklenmeyen fazla anahtar: hatalar; zorunlu anahtar eksik: belgeler",
+  "ek": {
+    "quelleId": "gba-heilm-rl-beschluesse",
+    "neu": [
+      "www.g-ba.de/beschluesse/7977/",
+      "www.g-ba.de/beschluesse/8129/"
+    ],
+    "weg": [],
+    "iz": "f58c56a58dc18452",
+    "uygulanabilir": true
+  },
+  "hatirlatma": 0,
+  "sonHatirlatma": null,
+  "gecmis": [
+    {
+      "zaman": "2026-11-25T11:05:27.224Z",
+      "eylem": "olusturuldu"
+    }
+  ]
+}
