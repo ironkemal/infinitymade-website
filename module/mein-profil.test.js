@@ -79,3 +79,45 @@ test('Entfernen berücksichtigt Mitarbeiterordner, Storage-Adresse und Fehler', 
   bucket.remove = async () => ({ error: true });
   await assert.rejects(entferneProfilfoto(sb, uid, basis + alt), /nicht entfernt/);
 });
+
+test('Datenschutz-Befund 1: leere Loeschliste bei HTTP 200 bricht Entfernen ab statt Erfolg zu melden', async () => {
+  const { entferneProfilfoto } = await import('./praxis-logo-upload.js');
+  const uid = '11111111-1111-4111-8111-111111111111';
+  const basis = 'https://storage.example/storage/v1/object/public/avatars/';
+  const fest = `${uid}/profilfoto.jpg`;
+  const bucket = {
+    getPublicUrl: (pfad) => ({ data: { publicUrl: basis + pfad } }),
+    remove: async () => ({ data: [], error: null }),
+  };
+  await assert.rejects(
+    entferneProfilfoto({ storage: { from: () => bucket } }, uid, basis + fest + '?t=1'),
+    /im Speicher nicht entfernt/
+  );
+  bucket.remove = async () => ({ data: [{ name: fest }], error: null });
+  await entferneProfilfoto({ storage: { from: () => bucket } }, uid, basis + fest + '?t=1');
+});
+
+test('Datenschutz-Befund 2: Teamfoto-Ersetzen nutzt festen Pfad und raeumt alte Zeitstempel-Dateien auf', async () => {
+  const { ladeProfilfotoHoch, entferneProfilfoto } = await import('./praxis-logo-upload.js');
+  const uid = '11111111-1111-4111-8111-111111111111';
+  const basis = 'https://storage.example/storage/v1/object/public/avatars/';
+  const entfernt = [];
+  const bucket = {
+    upload: async () => ({ error: null }),
+    getPublicUrl: (pfad) => ({ data: { publicUrl: basis + pfad } }),
+    list: async () => ({ data: [{ name: 'profilfoto.jpg' }, { name: '1732000000001.jpg' }, { name: '1732000000002.jpg' }, { name: 'praxis-logo.png' }] }),
+    remove: async (pfade) => { entfernt.push(...pfade); return { data: pfade.map(name => ({ name })), error: null }; },
+  };
+  const sb = { storage: { from: () => bucket } };
+  await ladeProfilfotoHoch(sb, uid, new Blob(['x'], { type: 'image/jpeg' }), basis + uid + '/1732000000001.jpg');
+  assert.ok(entfernt.includes(`${uid}/1732000000001.jpg`));
+  assert.ok(entfernt.includes(`${uid}/1732000000002.jpg`));
+  assert.equal(entfernt.includes(`${uid}/profilfoto.jpg`), false);
+  assert.equal(entfernt.includes(`${uid}/praxis-logo.png`), false);
+
+  entfernt.length = 0;
+  await entferneProfilfoto(sb, uid, basis + uid + '/profilfoto.jpg?t=9');
+  assert.ok(entfernt.includes(`${uid}/profilfoto.jpg`));
+  assert.ok(entfernt.includes(`${uid}/1732000000001.jpg`));
+  assert.ok(entfernt.includes(`${uid}/1732000000002.jpg`));
+});

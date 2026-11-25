@@ -1,4 +1,4 @@
-import { emojisAus } from './module/ohne-emoji.js?v=20261123hw1'; import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261124cx1'; import { ladePraxisLogoHoch, entferneProfilfoto } from './module/praxis-logo-upload.js?v=20261124cx1'; import { standorteFuerNutzer } from './module/standort-zuordnung.js?v=20261123sz1'; import { einstellungenKategorienAufbauen, einstellungenZeigeAbschnitt } from './module/einstellungen-nav.js?v=20261123mp1'; import { renderMeinProfil } from './module/mein-profil.js?v=20261124cx1';
+import { emojisAus } from './module/ohne-emoji.js?v=20261123hw1'; import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261125pf1'; import { ladePraxisLogoHoch, ladeProfilfotoHoch, entferneProfilfoto } from './module/praxis-logo-upload.js?v=20261125pf1'; import { standorteFuerNutzer } from './module/standort-zuordnung.js?v=20261123sz1'; import { einstellungenKategorienAufbauen, einstellungenZeigeAbschnitt } from './module/einstellungen-nav.js?v=20261123mp1'; import { renderMeinProfil } from './module/mein-profil.js?v=20261125pf1';
 import { oeffneLeistungsRaum, leistungsRaumPayload } from './module/leistungs-raum.js?v=20261103raum';
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
 import { planungVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261121f11';
@@ -9441,14 +9441,9 @@ function openEmpDetail(empId) {
     const canvas = cropper.getCroppedCanvas({ width: 400, height: 400 });
     const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.85));
     if (!blob) { showToast('Bildverarbeitung fehlgeschlagen', 'error'); return; }
-    const path = `${empId}/${Date.now()}.jpg`;
     showToast('Bild wird hochgeladen…');
     try {
-      const { error: upErr } = await supabase.storage.from('avatars').upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
-      if (upErr) throw upErr;
-      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
-      const avatarUrl = urlData?.publicUrl;
-      if (!avatarUrl) throw new Error('URL fehlgeschlagen');
+      const avatarUrl = await ladeProfilfotoHoch(supabase, empId, blob, m.avatar_url);
       const { error: dbErr } = await supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', empId);
       if (dbErr) throw dbErr;
       m.avatar_url = avatarUrl;

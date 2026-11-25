@@ -1,5 +1,5 @@
 import { mountMailSignaturen } from './mail-signatur-editor.js';
-import { ladePraxisLogoHoch, logoDateiAlsPng } from './praxis-logo-upload.js?v=20261124cx1';
+import { ladePraxisLogoHoch, logoDateiAlsPng } from './praxis-logo-upload.js?v=20261125pf1';
 export function verbindeMailSignaturen({supabase,getProfil,getUserId,showToast}) {
   return mountMailSignaturen({config:document.getElementById('mailSignaturEditor'),compose:document.getElementById('mailSignaturCompose'),getProfil,isOwner:()=>getProfil()?.role==='owner',showToast,
     async speichern(settings){

@@ -36,12 +36,14 @@ export async function logoDateiAlsPng(file) {
 /**
  * Profilfoto in den eigenen Ordner `avatars/<uid>/` (Phase 7b „Mein Profil“, 23.11.2026).
  * Fester Dateiname + upsert, damit kein Altbestand je Wechsel liegen bleibt; ?t= gegen Browser-Cache.
+ * Räumt beim Ersetzen auch etwaige ältere Zeitstempel-Teamfotos (`<uid>/<digits>.jpg`) im Ordner auf.
  * @param {{ storage: { from: (bucket: string) => any } }} supabase
  * @param {string} userId
  * @param {Blob} blob  JPEG aus bildAlsQuadratJpeg
+ * @param {unknown} [alteUrl]
  * @returns {Promise<string>}
  */
-export async function ladeProfilfotoHoch(supabase, userId, blob) {
+export async function ladeProfilfotoHoch(supabase, userId, blob, alteUrl = null) {
   if (!userId || !/^[0-9a-f-]{36}$/i.test(userId) || !blob || blob.type !== 'image/jpeg' || blob.size > 2*1024*1024) throw new Error('Ungültiges Foto (JPEG, maximal 2 MB).');
   const path = `${userId}/profilfoto.jpg`;
   const bucket = supabase.storage.from('avatars');
@@ -49,6 +51,10 @@ export async function ladeProfilfotoHoch(supabase, userId, blob) {
   if (error) throw new Error('Foto konnte nicht hochgeladen werden.');
   const url = bucket.getPublicUrl(path).data?.publicUrl;
   if (!url || !url.startsWith('https://')) throw new Error('Foto-Adresse fehlt.');
+  const verwaist = await verwaisteTeamfotoPfade(bucket, userId, alteUrl, path);
+  if (verwaist.length && typeof bucket.remove === 'function') {
+    try { await bucket.remove(verwaist); } catch { /* Best-Effort-Aufraeumen alter Zeitstempel-Dateien */ }
+  }
   return `${url}?t=${Date.now()}`;
 }
 
@@ -82,7 +88,36 @@ export function avatarPfadAusUrl(url) {
   } catch { return null; }
 }
 
-/** Entfernt das feste Profilfoto und ggf. das aktuell verknüpfte ältere Teamfoto.
+/** Sammelt verwaiste Zeitstempel-Teamfotos (`<uid>/<digits>.jpg`) aus URL und Ordnerliste.
+ * @param {any} bucket
+ * @param {string} uid
+ * @param {unknown} url
+ * @param {string} behalten
+ * @returns {Promise<string[]>}
+ */
+async function verwaisteTeamfotoPfade(bucket, uid, url, behalten) {
+  const pfade = new Set();
+  const alt = avatarPfadAusUrl(url);
+  if (typeof url === 'string' && alt && alt !== behalten && alt.startsWith(`${uid}/`)) {
+    const erwartet = bucket.getPublicUrl(alt)?.data?.publicUrl;
+    if (erwartet && url.split(/[?#]/, 1)[0] === erwartet) pfade.add(alt);
+  }
+  if (typeof bucket.list === 'function') {
+    try {
+      const { data: eintraege } = await bucket.list(uid, { limit: 100 });
+      for (const e of eintraege || []) {
+        if (typeof e?.name === 'string' && /^(?:profilfoto|[0-9]+).jpg$/i.test(e.name)) {
+          const voll = `${uid}/${e.name}`;
+          if (voll !== behalten) pfade.add(voll);
+        }
+      }
+    } catch { /* list() optional im Test-Stub */ }
+  }
+  return [...pfade];
+}
+
+/** Entfernt das feste Profilfoto sowie alle verwaisten Zeitstempel-Teamfotos im Ordner des Nutzers.
+ * Schlägt fehl, wenn der Speicher trotz verknüpfter Datei eine leere Löschliste liefert (HTTP 200 ohne Löschung).
  * @param {{storage: {from: (bucket: string) => any}}} supabase
  * @param {string} uid
  * @param {unknown} url
@@ -90,12 +125,26 @@ export function avatarPfadAusUrl(url) {
 export async function entferneProfilfoto(supabase, uid, url) {
   const bucket = supabase.storage.from('avatars');
   const fest = `${uid}/profilfoto.jpg`;
-  const pfade = [fest];
   const alt = avatarPfadAusUrl(url);
-  if (typeof url === 'string' && alt && alt !== fest && alt.startsWith(`${uid}/`)) {
-    const erwartet = bucket.getPublicUrl(alt).data.publicUrl;
-    if (url.split(/[?#]/, 1)[0] === erwartet) pfade.push(alt);
+  let verknuepfterPfad = null;
+  if (typeof url === 'string' && alt && alt.startsWith(`${uid}/`)) {
+    const erwartet = bucket.getPublicUrl(alt)?.data?.publicUrl;
+    if (erwartet && url.split(/[?#]/, 1)[0] === erwartet) verknuepfterPfad = alt;
   }
-  const { error } = await bucket.remove(pfade);
+  const pfadeSet = new Set([fest]);
+  if (verknuepfterPfad) pfadeSet.add(verknuepfterPfad);
+  for (const v of await verwaisteTeamfotoPfade(bucket, uid, url, '')) pfadeSet.add(v);
+  const pfade = [...pfadeSet];
+
+  const { data, error } = await bucket.remove(pfade);
   if (error) throw new Error('Profildatei konnte nicht entfernt werden.');
+  if (verknuepfterPfad && Array.isArray(data)) {
+    const geloescht = data.some(
+      /** @param {any} x */
+      x => x?.name === verknuepfterPfad || `${uid}/${x?.name}` === verknuepfterPfad
+    );
+    if (!geloescht) {
+      throw new Error('Profildatei konnte im Speicher nicht entfernt werden.');
+    }
+  }
 }
