@@ -110,6 +110,29 @@ Bekçiler her gün tetikler. Her vakanın deterministik parmak izi var (`ek.iz`:
 kaynakta quelleId+linkler; ajan metni girmez). Aynı izli açık vaka varsa yenisi açılmaz (hatırlatmayı `bekci-cevap.yml`
 sabahları yapar); aynı konu ama farklı iz (ör. fiyat yine değişti) → eski açık vaka "bırakıldı", yenisi açılır.
 
+### 3.0e Faz 4 — Kostenträger, yalnız kutu yolu (25.11.2026)
+Kemal 25.11.2026: SaaS satılmıyor, bütün gerçek müşteriler kutuda → Kostenträger yalnız seed migration
+ile kutuya gider; SaaS DB'ye yazan bir bot YOK (Actions'a DB sırrı girmez — o soru düştü).
+- **Kutu ikizi** (`tools/kostentraeger-kutu-seed.mjs`): GitHub'ın Postgres servis kutusunda üç tablonun
+  DDL'i + kutu seed zinciri kurulur, `synchronisiere()` bugünün tarihiyle koşar, fark varsa 0132 biçiminde
+  seed yazılır, ikinci temiz DB'de kendini doğrular. Bot YALNIZ bugün geçerli dosyayı işler (Adım 2);
+  geleceğe tarihli dosya kendi günü gelince ertesi sabahki koşuda kutuya gider.
+- **Eşikler** (gkv-302, 25.11.2026; işletme eşiği, spesifikasyon değil): kapanan VKG > açıkların %3'ü,
+  ANS > %5, reopens > 20, gerçek alan değişimi > %10 (yalnız quelle/quelle_stand/updated_at değişen
+  satırlar sayılmaz), kapanan IK > 5, yeni IK > 30 → soru. Her zaman soru: faturalayan KT zinciri
+  kapalı/olmayan IK'ya dönüyor, bir KT'nin geçerli Datenannahmestelle'si (02/03 + 07/30) yeni kayboluyor,
+  09 ya da tüm VKG kayboluyor, VKG-03 partner_ik (DAS/sertifika) değişiyor, ist_abrechnender_kt dönüyor,
+  ungueltigeAnschriften artıyor, bir Kassenart dosyası %5'ten fazla küçülüyor.
+- Vaka bağlama: dosyanın kendisi değil **veri durumunun parmak izi** (updated_at hariç döküm) — ✅'da
+  seed yeniden üretilir, aynı durum izi değilse uygulanmaz.
+- O-118 kapısı (`check-onprem.sh`): bugün geçerli KE dosyası seed'siz commit edilemez (insan yolu).
+
+### 3.0f Stable hatırlatması — ertelendi (onprem, 25.11.2026)
+`:stable` hiç basılmadı; bütün kutular `:beta`'da ve fiyat/Kostenträger güncellemelerini gece 02:00'de
+zaten alıyor. Hatırlatma ilk `:stable` kararıyla anlam kazanır; ön koşulu: kutu merkeze sürüm + iki
+digest bildirsin (bugün yalnız IP). ✅ soak kanıtının yerine geçmez, yalnız "sorunsuz mu" kararının
+yerine geçer. Tasarım: onprem/REGISTER.md O-257 notu (25.11.2026).
+
 ### 3.1 onprem incelemesi (O-257, 24.11.2026) — bağlayıcı
 - **İzinli dosyalar (fiyat):** `billing/codes/*_positions.js` + heilmittel_katalog seed migration'ı + `db/erwartete-zaehler.json`.
   Seed'i ajan YAZMAZ: `sync_heilmittel_katalog.js --sql` üretir (O-95 tekrarlanmasın).

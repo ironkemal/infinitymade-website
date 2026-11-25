@@ -25,8 +25,8 @@ import { createRequire } from 'node:module';
 import { createHash } from 'node:crypto';
 
 import { berlinHeute, istStichtag } from '../api-backend/lib/berlin-tag.js';
-import { ladeAusgaben, ECHT_DIR, sqlClient, synchronisiere } from './kostentraeger-annahmestellen-laden.mjs';
-import { waehleAusgaben } from '../api-backend/billing/kostentraeger/lade-plan.js';
+import { ladeAusgaben, parseDatei, ECHT_DIR, sqlClient, synchronisiere } from './kostentraeger-annahmestellen-laden.mjs';
+import { waehleAusgaben, sollZeilen } from '../api-backend/billing/kostentraeger/lade-plan.js';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HIER, '..');
@@ -335,15 +335,206 @@ export async function dokum(query) {
 }
 
 /**
+ * Kostenträger kutu ikizi için deterministik kontrol SQL'leri.
+ */
+export const KONTROL_SQL = {
+  acikSatirlar: `
+    SELECT 'vkg' AS tablo, count(*)::int AS n FROM public.kostentraeger_annahmestellen WHERE (valid_to IS NULL OR valid_to >= $1::date)
+    UNION ALL
+    SELECT 'ans' AS tablo, count(*)::int AS n FROM public.kostentraeger_anschriften WHERE (valid_to IS NULL OR valid_to >= $1::date);
+  `,
+  gecersizAbrechnenderKt: `
+    SELECT
+      kt.ik,
+      kt.abrechnender_kt_ik,
+      ziel.ik AS ziel_ik,
+      ziel.valid_to::text AS ziel_valid_to
+    FROM public.kostentraeger kt
+    LEFT JOIN public.kostentraeger ziel ON ziel.ik = kt.abrechnender_kt_ik AND ziel.datensatz_status = 'echt'
+    WHERE kt.datensatz_status = 'echt'
+      AND kt.abrechnender_kt_ik IS NOT NULL
+      AND kt.abrechnender_kt_ik <> ''
+      AND (ziel.ik IS NULL OR ziel.valid_to < $1::date)
+    ORDER BY kt.ik;
+  `,
+  zincirDongu: `
+    WITH RECURSIVE kette(start_ik, aktueller_ik, pfad, ist_zyklus) AS (
+      SELECT ik, abrechnender_kt_ik, ARRAY[ik], false
+      FROM public.kostentraeger
+      WHERE datensatz_status = 'echt' AND abrechnender_kt_ik IS NOT NULL AND abrechnender_kt_ik <> ''
+      UNION ALL
+      SELECT k.start_ik, kt.abrechnender_kt_ik, k.pfad || kt.ik, kt.ik = ANY(k.pfad)
+      FROM kette k
+      JOIN public.kostentraeger kt ON kt.ik = k.aktueller_ik AND kt.datensatz_status = 'echt'
+      WHERE kt.abrechnender_kt_ik IS NOT NULL AND kt.abrechnender_kt_ik <> ''
+        AND NOT k.ist_zyklus
+        AND array_length(k.pfad, 1) < 20
+    )
+    SELECT DISTINCT start_ik, aktueller_ik, pfad FROM kette WHERE ist_zyklus ORDER BY start_ik;
+  `,
+  // (KT, abrechnungscode) bazında — 25.11.2026 provası: TK kod 75'in DAS'ı kayboluyordu ama KT bazında
+  // başka kodlarda 02/03 kaldığı için görünmüyordu. Anahtar "ik|kod".
+  cozulemeyenKt: `
+    SELECT kt.ik || ' Kod ' || c.abrechnungscode AS ik, kt.name
+    FROM public.kostentraeger kt
+    JOIN (SELECT DISTINCT kostentraeger_ik, abrechnungscode FROM public.kostentraeger_annahmestellen) c
+      ON c.kostentraeger_ik = kt.ik
+    WHERE kt.datensatz_status = 'echt'
+      AND (kt.valid_to IS NULL OR kt.valid_to >= $1::date)
+      AND kt.ist_abrechnender_kt = true
+      AND NOT EXISTS (
+        SELECT 1 FROM public.kostentraeger_annahmestellen vkg
+        WHERE vkg.kostentraeger_ik = kt.ik
+          AND vkg.abrechnungscode = c.abrechnungscode
+          AND (vkg.valid_to IS NULL OR vkg.valid_to >= $1::date)
+          AND vkg.verknuepfungsart IN ('02', '03')
+          AND vkg.art_datenlieferung IN ('07', '30')
+      )
+    ORDER BY 1;
+  `,
+  vkgVe09Sayisi: `
+    SELECT
+      kt.ik,
+      count(vkg.kostentraeger_ik)::int AS acik_vkg_sayisi,
+      count(CASE WHEN vkg.art_datenlieferung = '09' OR vkg.verknuepfungsart = '09' THEN 1 END)::int AS acik_09_sayisi
+    FROM public.kostentraeger kt
+    LEFT JOIN public.kostentraeger_annahmestellen vkg
+      ON vkg.kostentraeger_ik = kt.ik
+      AND (vkg.valid_to IS NULL OR vkg.valid_to >= $1::date)
+    WHERE kt.datensatz_status = 'echt'
+      AND (kt.valid_to IS NULL OR kt.valid_to >= $1::date)
+    GROUP BY kt.ik
+    ORDER BY kt.ik;
+  `,
+  // (KT, abrechnungscode) bazında, anahtar "ik Kod NN" (bkz. cozulemeyenKt notu).
+  vkg03Partnerler: `
+    SELECT
+      vkg.kostentraeger_ik || ' Kod ' || vkg.abrechnungscode AS kostentraeger_ik,
+      string_agg(DISTINCT vkg.partner_ik, ',' ORDER BY vkg.partner_ik) AS partner_ikler
+    FROM public.kostentraeger_annahmestellen vkg
+    WHERE (vkg.valid_to IS NULL OR vkg.valid_to >= $1::date)
+      AND vkg.verknuepfungsart = '03'
+    GROUP BY vkg.kostentraeger_ik, vkg.abrechnungscode
+    ORDER BY 1;
+  `,
+  istAbrechnenderKt: `
+    SELECT ik, ist_abrechnender_kt
+    FROM public.kostentraeger
+    WHERE datensatz_status = 'echt'
+    ORDER BY ik;
+  `,
+  tum03Partnerler: `
+    SELECT DISTINCT partner_ik
+    FROM public.kostentraeger_annahmestellen
+    WHERE verknuepfungsart = '03'
+    ORDER BY partner_ik;
+  `,
+};
+
+/**
+ * Veritabanında kontrolleri çalıştırıp JSON olarak döner.
+ * @param {(sql: string, params?: unknown[]) => Promise<any>} query
+ * @param {string} stichtag
+ */
+export async function calistirKontroller(query, stichtag) {
+  const acikRes = await query(KONTROL_SQL.acikSatirlar, [stichtag]);
+  const acikMap = {};
+  for (const r of acikRes.rows || []) {
+    acikMap[r.tablo] = Number(r.n);
+  }
+
+  const gecersizAbrechnenderRes = await query(KONTROL_SQL.gecersizAbrechnenderKt, [stichtag]);
+  const zincirDonguRes = await query(KONTROL_SQL.zincirDongu, []);
+  const cozulemeyenRes = await query(KONTROL_SQL.cozulemeyenKt, [stichtag]);
+  const vkg09Res = await query(KONTROL_SQL.vkgVe09Sayisi, [stichtag]);
+  const vkg03Res = await query(KONTROL_SQL.vkg03Partnerler, [stichtag]);
+  const istAbrechnenderRes = await query(KONTROL_SQL.istAbrechnenderKt, []);
+  const tum03Res = await query(KONTROL_SQL.tum03Partnerler, []);
+
+  return {
+    acikSatirlar: acikMap,
+    gecersizAbrechnenderKt: gecersizAbrechnenderRes.rows || [],
+    zincirDongu: zincirDonguRes.rows || [],
+    cozulemeyenKt: cozulemeyenRes.rows || [],
+    vkgVe09Sayisi: vkg09Res.rows || [],
+    vkg03Partnerler: vkg03Res.rows || [],
+    istAbrechnenderKt: istAbrechnenderRes.rows || [],
+    tum03Partnerler: (tum03Res.rows || []).map(r => r.partner_ik),
+  };
+}
+
+/**
+ * Kassenart başına önceki ve şimdiki kayıt sayılarını hesaplar.
+ * @param {Array<{ datei: string, gueltigAb: string }>} ausgaben
+ * @param {string} stichtag
+ */
+export function berechneDosyaSayilari(ausgaben, stichtag) {
+  const arten = [...new Set(ausgaben.map(a => a.datei.slice(0, 2)))].sort();
+  const sonuc = {};
+  for (const art of arten) {
+    const alle = ausgaben.filter(a => a.datei.slice(0, 2) === art);
+    const gueltig = alle.filter(a => a.gueltigAb <= stichtag)
+      .sort((a, b) => b.gueltigAb.localeCompare(a.gueltigAb) || b.datei.localeCompare(a.datei));
+
+    if (gueltig.length > 0) {
+      const simdiAusgabe = gueltig[0];
+      const simdiPfad = join(ECHT_DIR, simdiAusgabe.datei);
+      let simdiSayi = 0;
+      if (existsSync(simdiPfad)) {
+        try {
+          simdiSayi = parseDatei(simdiAusgabe).records.length;
+        } catch {}
+      }
+      let oncekiSayi = null;
+      if (gueltig.length > 1) {
+        const oncekiAusgabe = gueltig[1];
+        const oncekiPfad = join(ECHT_DIR, oncekiAusgabe.datei);
+        if (existsSync(oncekiPfad)) {
+          try {
+            oncekiSayi = parseDatei(oncekiAusgabe).records.length;
+          } catch {}
+        }
+      }
+      sonuc[art] = { onceki: oncekiSayi, simdi: simdiSayi };
+    }
+  }
+  return sonuc;
+}
+
+/**
  * İki döküm arasındaki fark istatistiklerini hesaplar.
  * @param {Awaited<ReturnType<typeof dokum>>} vorher
  * @param {Awaited<ReturnType<typeof dokum>>} nachher
+ * @param {string} [stichtag]
  */
-export function berechneStats(vorher, nachher) {
+export function berechneStats(vorher, nachher, stichtag = null) {
+  const isAcik = (r) => !r.valid_to || (stichtag ? r.valid_to >= stichtag : true);
+
   const stats = {
-    kostentraeger: { satir: (nachher.kostentraeger || []).length, yeni: 0, kapanan: 0, degisen: 0 },
-    kostentraeger_annahmestellen: { satir: (nachher.kostentraeger_annahmestellen || []).length, yeni: 0, kapanan: 0, degisen: 0 },
-    kostentraeger_anschriften: { satir: (nachher.kostentraeger_anschriften || []).length, yeni: 0, kapanan: 0, degisen: 0 },
+    kostentraeger: {
+      satir: (nachher.kostentraeger || []).length,
+      acik: (nachher.kostentraeger || []).filter(isAcik).length,
+      yeni: 0,
+      kapanan: 0,
+      degisen: 0,
+      degisenGercek: 0,
+    },
+    kostentraeger_annahmestellen: {
+      satir: (nachher.kostentraeger_annahmestellen || []).length,
+      acik: (nachher.kostentraeger_annahmestellen || []).filter(isAcik).length,
+      yeni: 0,
+      kapanan: 0,
+      degisen: 0,
+      degisenGercek: 0,
+    },
+    kostentraeger_anschriften: {
+      satir: (nachher.kostentraeger_anschriften || []).length,
+      acik: (nachher.kostentraeger_anschriften || []).filter(isAcik).length,
+      yeni: 0,
+      kapanan: 0,
+      degisen: 0,
+      degisenGercek: 0,
+    },
   };
 
   const yeniIk = [];
@@ -359,15 +550,21 @@ export function berechneStats(vorher, nachher) {
       yeniIk.push(n.ik);
     } else {
       let changed = false;
+      let changedReal = false;
       for (const k of Object.keys(n)) {
         if (k === 'updated_at') continue;
         if (n[k] !== v[k]) {
           changed = true;
-          break;
+          if (k !== 'quelle' && k !== 'quelle_stand') {
+            changedReal = true;
+          }
         }
       }
       if (changed) {
         stats.kostentraeger.degisen++;
+      }
+      if (changedReal) {
+        stats.kostentraeger.degisenGercek++;
       }
       if (!v.valid_to && n.valid_to) {
         stats.kostentraeger.kapanan++;
@@ -389,13 +586,17 @@ export function berechneStats(vorher, nachher) {
       stats.kostentraeger_annahmestellen.yeni++;
     } else {
       let changed = false;
+      let changedReal = false;
       for (const col of Object.keys(n)) {
         if (n[col] !== v[col]) {
           changed = true;
-          break;
+          if (col !== 'quelle' && col !== 'quelle_stand' && col !== 'updated_at') {
+            changedReal = true;
+          }
         }
       }
       if (changed) stats.kostentraeger_annahmestellen.degisen++;
+      if (changedReal) stats.kostentraeger_annahmestellen.degisenGercek++;
       if (!v.valid_to && n.valid_to) stats.kostentraeger_annahmestellen.kapanan++;
     }
   }
@@ -410,13 +611,17 @@ export function berechneStats(vorher, nachher) {
       stats.kostentraeger_anschriften.yeni++;
     } else {
       let changed = false;
+      let changedReal = false;
       for (const col of Object.keys(n)) {
         if (n[col] !== v[col]) {
           changed = true;
-          break;
+          if (col !== 'quelle' && col !== 'quelle_stand' && col !== 'updated_at') {
+            changedReal = true;
+          }
         }
       }
       if (changed) stats.kostentraeger_anschriften.degisen++;
+      if (changedReal) stats.kostentraeger_anschriften.degisenGercek++;
       if (!v.valid_to && n.valid_to) stats.kostentraeger_anschriften.kapanan++;
     }
   }
@@ -673,6 +878,20 @@ export function zaehlerAktualisieren(zaehlerPfad, bisVersion) {
  * @param {string} pfad
  * @returns {string}
  */
+/**
+ * Veri durumunun parmak izi (updated_at HARİÇ döküm) — vaka bağlama için.
+ * Seed dosyasının kendisi her koşuda farklı updated_at taşır; aynı veri durumu = aynı iz (25.11.2026).
+ * @param {Record<string, any>} dokumSonucu
+ */
+export function durumIzi(dokumSonucu) {
+  const sade = {};
+  for (const [t, v] of Object.entries(dokumSonucu)) {
+    const rows = Array.isArray(v) ? v : (v && v.rows) || [];
+    sade[t] = rows.map(r => { const { updated_at, ...x } = r; return x; });
+  }
+  return createHash('sha256').update(JSON.stringify(sade), 'utf8').digest('hex');
+}
+
 export function sha256Hesapla(pfad) {
   const buf = readFileSync(pfad);
   return createHash('sha256').update(buf).digest('hex');
@@ -706,11 +925,24 @@ export async function main() {
     // 1) İkizi kur
     await kur(query, { dropSchema: true });
 
-    // 2) vorher döküm
+    // 2) vorher döküm ve kontroller
     const vorher = await dokum(query);
+    const kontrollerVorher = await calistirKontroller(query, stichtag);
 
     // 3) synchronisiere
     const ausgaben = ladeAusgaben();
+    const { ohneGueltige } = waehleAusgaben(ausgaben, stichtag);
+    if (ohneGueltige && ohneGueltige.length > 0) {
+      const ozet = {
+        hata: `Keine zum ${stichtag} gültige Ausgabe für Kassenart ${ohneGueltige.join(', ')}`,
+        ohneGueltige,
+        degisiklik: false,
+        stichtag,
+      };
+      console.log(JSON.stringify(ozet));
+      return ozet;
+    }
+
     const syncRes = await synchronisiere({
       db: sqlClient(query),
       stichtag,
@@ -720,11 +952,23 @@ export async function main() {
       log: console.error,
     });
 
-    // 4) nachher döküm
+    // 4) nachher döküm ve kontroller
     const nachher = await dokum(query);
+    const kontrollerNachher = await calistirKontroller(query, stichtag);
 
-    // 5) Fark hesabı
-    const { stats, yeniIk, kapananIk, degisenAbrechnenderKt, degisiklik } = berechneStats(vorher, nachher);
+    // 5) Ek metrikler (dosya sayıları, ungueltigeAnschriften, reopens)
+    const dosyaSayilari = berechneDosyaSayilari(ausgaben, stichtag);
+    const reopens = (syncRes.vkg?.reopens?.length || 0) + (syncRes.ans?.reopens?.length || 0);
+    let ungueltigeAnschriften = 0;
+    try {
+      const { aktiv: aktivMeta } = waehleAusgaben(ausgaben, stichtag);
+      const parsedAktiv = aktivMeta.map(parseDatei);
+      const sz = sollZeilen(parsedAktiv);
+      ungueltigeAnschriften = sz.ungueltigeAnschriften || 0;
+    } catch {}
+
+    // 6) Fark hesabı
+    const { stats, yeniIk, kapananIk, degisenAbrechnenderKt, degisiklik } = berechneStats(vorher, nachher, stichtag);
 
     if (!degisiklik) {
       const ozet = {
@@ -737,6 +981,13 @@ export async function main() {
         yeniIk: [],
         kapananIk: [],
         degisenAbrechnenderKt: [],
+        kontroller: {
+          vorher: kontrollerVorher,
+          nachher: kontrollerNachher,
+        },
+        dosyaSayilari,
+        ungueltigeAnschriften,
+        reopens,
       };
       console.log(JSON.stringify(ozet));
       return ozet;
@@ -804,6 +1055,14 @@ export async function main() {
       yeniIk,
       kapananIk,
       degisenAbrechnenderKt,
+      kontroller: {
+        vorher: kontrollerVorher,
+        nachher: kontrollerNachher,
+      },
+      dosyaSayilari,
+      ungueltigeAnschriften,
+      reopens,
+      durumIz: durumIzi(nachher),
     };
     console.log(JSON.stringify(ozet));
     return ozet;

@@ -1492,4 +1492,40 @@ test('34. acik-iz: preise ve quellen için açık vaka ve dizin yok denetimi', a
   }
 });
 
+// 41. bildirimMetni — bekci=kostentraeger ile auto ve uygulandi metinleri
+test('41. bildirimMetni — bekci=kostentraeger ile auto ve uygulandi bildirim metni üretimi', () => {
+  const autoRes = bildirimMetni({
+    tur: 'auto',
+    satirlar: [
+      '✓ Kostenträger: kostentraeger +2 / −0 / ~5',
+      'Kaynak dosyalar: AO05Q426_KE0.txt',
+    ],
+    link: 'https://github.com/runs/kostentraeger-1',
+    bekci: 'kostentraeger',
+  });
+
+  assert.equal(autoRes.vakaMi, false);
+  const beklenenAuto = [
+    '🤖 Kostenträger bekçisi — otomatik uygulandı',
+    '✓ Kostenträger: kostentraeger +2 / −0 / ~5',
+    'Kaynak dosyalar: AO05Q426_KE0.txt',
+    ":beta'ya çıktı; :stable için elle promote bekliyor.",
+    'Çalışma: https://github.com/runs/kostentraeger-1',
+  ].join('\n');
+  assert.equal(autoRes.text, beklenenAuto);
+
+  // vaka ile uygulandi
+  const uygulandiRes = bildirimMetni({
+    tur: 'uygulandi',
+    vaka: { id: '20261125-kostentraeger-1', bekci: 'kostentraeger' },
+    link: 'https://github.com/runs/kostentraeger-2',
+  });
+  const beklenenUygulandi = [
+    "✅ #20261125-kostentraeger-1 uygulandı. :beta'ya çıktı; :stable için elle promote bekliyor.",
+    'Çalışma: https://github.com/runs/kostentraeger-2',
+  ].join('\n');
+  assert.equal(uygulandiRes.text, beklenenUygulandi);
+});
+
+
 

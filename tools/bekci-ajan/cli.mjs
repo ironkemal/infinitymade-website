@@ -276,10 +276,12 @@ export function bildirimMetni({ tur, satirlar, vaka, link, bekci } = {}) {
   }
 
   if (tur === 'auto') {
-    const baslik =
-      aktifBekci === 'quellen'
-        ? '🤖 Kaynak bekçisi — şunları "biliniyor" işaretledim (ajan: bizi etkilemiyor)'
-        : '🤖 Fiyat bekçisi — otomatik uygulandı (çift dikiş tuttu)';
+    let baslik = '🤖 Fiyat bekçisi — otomatik uygulandı (çift dikiş tuttu)';
+    if (aktifBekci === 'quellen') {
+      baslik = '🤖 Kaynak bekçisi — şunları "biliniyor" işaretledim (ajan: bizi etkilemiyor)';
+    } else if (aktifBekci === 'kostentraeger') {
+      baslik = '🤖 Kostenträger bekçisi — otomatik uygulandı';
+    }
     const parcalar = [baslik];
     if (Array.isArray(satirlar)) {
       for (const s of satirlar.slice(0, 15)) {
@@ -396,12 +398,12 @@ export function kararOku(obj) {
 
 /**
  * Konu eşleşmesi:
- * preise için bekci'nin kendisi (fiyat bekçisinde aynı anda tek konu);
+ * preise ve kostentraeger için bekci'nin kendisi (aynı anda tek konu);
  * quellen için aynı ek.quelleId.
  */
 function ayniKonuMu(v1, v2) {
   if (v1.bekci !== v2.bekci) return false;
-  if (v1.bekci === 'preise') return true;
+  if (v1.bekci === 'preise' || v1.bekci === 'kostentraeger') return true;
   if (v1.bekci === 'quellen') {
     return Boolean(v1.ek?.quelleId && v1.ek?.quelleId === v2.ek?.quelleId);
   }
