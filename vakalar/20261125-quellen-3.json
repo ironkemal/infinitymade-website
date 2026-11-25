@@ -2,7 +2,7 @@
   "id": "20261125-quellen-3",
   "bekci": "quellen",
   "olusturma": "2026-11-25T11:05:27.224Z",
-  "durum": "acik",
+  "durum": "birakildi",
   "baslik": "Kaynak: gba-heilm-rl-beschluesse",
   "satirlar": [
     "• Kaynak: gba-heilm-rl-beschluesse (mittel) · G-BA HeilM-RL Beschlüsse (Frühwarnung vor Inkrafttreten)",
@@ -29,6 +29,10 @@
     {
       "zaman": "2026-11-25T11:05:27.224Z",
       "eylem": "olusturuldu"
+    },
+    {
+      "zaman": "2026-11-25T11:59:01.006Z",
+      "eylem": "birak"
     }
   ]
 }

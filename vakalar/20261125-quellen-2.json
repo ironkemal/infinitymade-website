@@ -2,7 +2,7 @@
   "id": "20261125-quellen-2",
   "bekci": "quellen",
   "olusturma": "2026-11-25T11:05:27.223Z",
-  "durum": "acik",
+  "durum": "birakildi",
   "baslik": "‼️ Kaynak: ggt-secon",
   "satirlar": [
     "• Kaynak: ggt-secon (kritisch) · Gemeinsame Grundsätze Technik + Anlage 2/4/16/16a (Auftragsdatei, Verfahrenskennung, SECON) — feste ",
@@ -29,6 +29,10 @@
     {
       "zaman": "2026-11-25T11:05:27.223Z",
       "eylem": "olusturuldu"
+    },
+    {
+      "zaman": "2026-11-25T11:59:01.002Z",
+      "eylem": "birak"
     }
   ]
 }

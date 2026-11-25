@@ -2,7 +2,7 @@
   "id": "20261125-quellen-4",
   "bekci": "quellen",
   "olusturma": "2026-11-25T11:05:27.224Z",
-  "durum": "acik",
+  "durum": "birakildi",
   "baslik": "Kaynak: kbv-bfb",
   "satirlar": [
     "• Kaynak: kbv-bfb (mittel) · KBV Technisches Handbuch Blankoformularbedruckung (Muster-13-PDF417; fester Dateiname, Spur = Dateig",
@@ -27,6 +27,10 @@
     {
       "zaman": "2026-11-25T11:05:27.224Z",
       "eylem": "olusturuldu"
+    },
+    {
+      "zaman": "2026-11-25T11:59:01.009Z",
+      "eylem": "birak"
     }
   ]
 }
