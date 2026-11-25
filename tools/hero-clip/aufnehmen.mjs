@@ -46,16 +46,17 @@ mkdirSync(OUT, { recursive: true });
 // ihren Satz; ist er länger als die Szene, wird die Szene verlängert (?tl=… an den Film).
 const TON = process.env.TON === '1' && QUELLE === 'absetzung';
 const BASIS_TL = [5600, 2900, 2400, 2100, 5400, 3200, 3300, 3600]; // = TL in absetzung.html
-const TEXT = [ // [gesprochen, Untertitel, Vorlauf s]
+// Untertitel null = der Satz steht schon groß im Bild → nicht doppelt zeigen (Kemal 25.11.: „Dabei" zweimal zu sehen)
+const TEXT = [ // [gesprochen, Untertitel|null, Vorlauf s]
   ['Kennen Sie diesen Brief? Die Kasse kürzt zweihundertdreizehn Euro.', 'Kennen Sie diesen Brief? Die Kasse kürzt 213 Euro.', 0.7],
-  ['Sechs Behandlungen geleistet. Bezahlt: nichts.', 'Sechs Behandlungen geleistet. Bezahlt: nichts.', 0.25],
-  ['Dabei war der Fehler vom ersten Tag an sichtbar.', 'Dabei war der Fehler vom ersten Tag an sichtbar.', 0.2],
+  ['Sechs Behandlungen geleistet. Bezahlt: nichts.', null, 0.25],
+  ['Dabei war der Fehler vom ersten Tag an sichtbar.', null, 0.2],
   ['Gehen wir zurück. Zu dem Tag, an dem die Verordnung kam.', 'Gehen wir zurück. Zu dem Tag, an dem die Verordnung kam.', 0.25],
   ['Praxura prüft die Verordnung schon beim Einlesen. Und meldet: Die Behandlung muss bis zum einundzwanzigsten Dezember beginnen. Der erste Termin liegt rechtzeitig.',
     'Praxura prüft die Verordnung schon beim Einlesen. Und meldet: Die Behandlung muss bis zum 21. Dezember beginnen. Der erste Termin liegt rechtzeitig.', 0.4],
-  ['Gleiche Arbeit. Diesmal bezahlt.', 'Gleiche Arbeit. Diesmal bezahlt.', 0.6],
-  ['Praxura findet Fehler, bevor die Kasse es tut.', 'Praxura findet Fehler, bevor die Kasse es tut.', 0.3],
-  ['Damit Ihre Arbeit auch bezahlt wird.', 'Damit Ihre Arbeit auch bezahlt wird.', 0.5]
+  ['Gleiche Arbeit. Diesmal bezahlt.', null, 0.6],
+  ['Praxura findet Fehler, bevor die Kasse es tut.', null, 0.3],
+  ['Damit Ihre Arbeit auch bezahlt wird.', null, 0.5]
 ];
 let tlMs = null; const clips = [];
 if (TON) {
@@ -69,11 +70,13 @@ if (TON) {
   for (let i = 0; i < TEXT.length; i++) {
     const f = join(TMP, `stimme${i}.wav`);
     const c = join(CACHE, createHash('sha1').update(sp.stimme + '|' + sp.weise + '|' + TEXT[i][0]).digest('hex') + '.wav');
-    if (!existsSync(c)) await sprich(TEXT[i][0], c, sp);
+    // NEU=3,5 → diese Sätze neu sprechen lassen (Versprecher o. ä.)
+    if (!existsSync(c) || (process.env.NEU || '').split(',').includes(String(i + 1))) await sprich(TEXT[i][0], c, sp);
     copyFileSync(c, f);
     const { dauer } = await import('./tts.mjs'); const d = dauer(f);
     clips.push({ f, d, lead: TEXT[i][2], sub: TEXT[i][1] });
-    tlMs.push(Math.max(BASIS_TL[i], Math.round((TEXT[i][2] + d + 0.6) * 1000)));
+    // letzte Szene: Logo bleibt nach dem letzten Wort noch ~3 s stehen, Musik blendet darin aus
+    tlMs.push(Math.max(BASIS_TL[i], Math.round((TEXT[i][2] + d + (i === TEXT.length - 1 ? 3.4 : 0.6)) * 1000)));
     console.log(`  Satz ${i + 1}: ${d.toFixed(1)} s`);
   }
 }
@@ -96,7 +99,9 @@ await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 92, maxWidth: 
 await page.waitForTimeout(300);
 const filmStart = Date.now() / 1000;
 await page.evaluate(() => window.startFilm());
-await page.waitForFunction(() => window.__filmDone === true, null, { timeout: 120000, polling: 200 });
+await page.waitForFunction(() => window.__filmDone === true, null, { timeout: 120000, polling: 50 });
+// Der Screencast liefert nur bei Änderung Frames → ein ruhiges Schlussbild hätte sonst keine Dauer (Video endete zu früh)
+const filmEnde = Date.now() / 1000;
 await cdp.send('Page.stopScreencast');
 await browser.close();
 
@@ -107,19 +112,21 @@ let list = '';
 frames.forEach((f, i) => {
   const p = join(TMP, `f${String(i).padStart(5, '0')}.jpg`);
   writeFileSync(p, Buffer.from(f.data, 'base64'));
-  const dur = i < frames.length - 1 ? Math.max(frames[i + 1].t - f.t, 0.001) : 0.5;
+  const dur = i < frames.length - 1 ? Math.max(frames[i + 1].t - f.t, 0.001) : Math.max(filmEnde - f.t, 0.5);
   list += `file '${p.replace(/\\/g, '/')}'\nduration ${dur.toFixed(4)}\n`;
 });
 const last = join(TMP, `f${String(frames.length - 1).padStart(5, '0')}.jpg`).replace(/\\/g, '/');
 list += `file '${last}'\n`;
 const listPath = join(TMP, 'list.txt');
 writeFileSync(listPath, list);
-const total = frames[frames.length - 1].t - frames[0].t;
+const total = Math.max(filmEnde, frames[frames.length - 1].t + 0.5) - frames[0].t;
 
 const ff = (args) => execFileSync('ffmpeg', ['-y', '-loglevel', 'error', ...args], { stdio: 'inherit' });
 // Leicht beschleunigt: in der Demo wartet alles auf Menschen, im Clip soll es zügig wirken.
 const SPEED = Number(process.env.SPEED || (DEMO ? 1.4 : 1));
-const vf = `setpts=PTS/${SPEED},fps=30,scale=${OW}:${OH}:flags=lanczos,format=yuv420p`;
+// tpad + -t: Schlussbild bis zum echten Filmende halten (concat übernimmt die Dauer des letzten Frames nicht zuverlässig)
+const vf = `setpts=PTS/${SPEED},fps=30,scale=${OW}:${OH}:flags=lanczos,format=yuv420p,tpad=stop_mode=clone:stop_duration=6`;
+const T_OUT = () => ['-t', (total / SPEED).toFixed(3)];
 const name = TON ? 'praxura-hero-ton' : 'praxura-hero';
 const mp4 = join(OUT, name + '.mp4');
 const webm = join(OUT, name + '.webm');
@@ -133,13 +140,13 @@ if (TON) {
   const ende = total, tPx = starts[4]; // Szene „Mit Praxura": hier kippt die Musik
   const VOR = 60 / 122;                  // aufbruch.wav beginnt mit 1 Schlag Anstieg → Eins fällt auf den Szenenwechsel
   const vStumm = join(TMP, 'stumm.mp4');
-  ff(['-f', 'concat', '-safe', '0', '-i', listPath, '-vf', vf, '-c:v', 'libx264', '-preset', 'slow', '-crf', '24', '-tune', 'stillimage', '-an', vStumm]);
+  ff(['-f', 'concat', '-safe', '0', '-i', listPath, ...T_OUT(), '-vf', vf, '-c:v', 'libx264', '-preset', 'slow', '-crf', '24', '-tune', 'stillimage', '-an', vStumm]);
   // Ton (Kemal 25.11.: „Praxura gelince canlı, enerjik müzik girmeli"):
   //   Problem-Teil: traurig.wav leise · ab „Mit Praxura": aufbruch.wav (122 bpm), kräftig, unter der Stimme geduckt
   //   (sidechaincompress), am Ende ausgeblendet. Eigene Kompositionen aus sosyal/musik/komponiere.py.
   const M = join(ROOT, 'sosyal', 'musik'); const n = clips.length;
   const vox = clips.map((c, i) => `[${i}:a]aresample=48000,adelay=${Math.round((starts[i] + c.lead) * 1000)}:all=1[v${i}]`).join(';');
-  const fc = `${vox};${clips.map((_, i) => `[v${i}]`).join('')}amix=inputs=${n}:normalize=0,asplit=2[vox][key];`
+  const fc = `${vox};${clips.map((_, i) => `[v${i}]`).join('')}amix=inputs=${n}:normalize=0,apad=whole_dur=${ende.toFixed(2)},asplit=2[vox][key];` // apad: sonst endet sidechaincompress (und damit die Musik) mit dem letzten Wort
     + `[${n}:a]aresample=48000,atrim=0:${(tPx + 0.3).toFixed(2)},afade=t=in:d=1.2,afade=t=out:st=${(tPx - 0.7).toFixed(2)}:d=0.8,volume=0.16[m1];`
     + `[${n + 1}:a]aresample=48000,atrim=0:${(ende - tPx + VOR + 0.5).toFixed(2)},afade=t=out:st=${Math.max(ende - tPx + VOR - 2.2, 1).toFixed(2)}:d=2.2,adelay=${Math.round((tPx - VOR) * 1000)}:all=1,volume=0.42[m2r];`
     + `[m2r][key]sidechaincompress=threshold=0.04:ratio=5:attack=20:release=350[m2];`
@@ -152,19 +159,20 @@ if (TON) {
   const ts = (x) => { const m = Math.floor(x / 60), s = (x % 60).toFixed(3).padStart(6, '0'); return `00:${String(m).padStart(2, '0')}:${s}`; };
   let vtt = 'WEBVTT\n\n';
   clips.forEach((c, i) => {
+    if (!c.sub) return;
     // nur am Satzende teilen („Bezahlt: nichts." bleibt eine Zeile), Zeilen überlappen nicht
-    const teile = c.sub.match(/[^.?!]+[.?!]+/g) || [c.sub];
+    const teile = c.sub.match(/(?:\d+\.(?=\s)|[^.?!])+[.?!]+/g) || [c.sub]; // „21. Dezember" nicht teilen
     const ges = teile.reduce((s, t) => s + t.length, 0); let t0 = starts[i] + c.lead;
     teile.forEach((t) => { const d = c.d * t.length / ges; vtt += `${ts(t0)} --> ${ts(t0 + d - 0.05)}\n${t.trim()}\n\n`; t0 += d; });
   });
   writeFileSync(join(OUT, name + '.de.vtt'), vtt);
   console.log(`Tonfassung: ${ende.toFixed(1)} s · MP4 ${kb(mp4)} · WebM ${kb(webm)} · Szenen ${tlMs.join(',')}`);
-  rmSync(TMP, { recursive: true, force: true });
+  if (!process.env.KEEP) rmSync(TMP, { recursive: true, force: true });
   process.exit(0);
 }
 
-ff(['-f', 'concat', '-safe', '0', '-i', listPath, '-vf', vf, '-c:v', 'libx264', '-preset', 'slow', '-crf', '27', '-tune', 'stillimage', '-movflags', '+faststart', '-an', mp4]);
-ff(['-f', 'concat', '-safe', '0', '-i', listPath, '-vf', vf, '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', '40', '-row-mt', '1', '-deadline', 'good', '-an', webm]);
+ff(['-f', 'concat', '-safe', '0', '-i', listPath, ...T_OUT(), '-vf', vf, '-c:v', 'libx264', '-preset', 'slow', '-crf', '27', '-tune', 'stillimage', '-movflags', '+faststart', '-an', mp4]);
+ff(['-f', 'concat', '-safe', '0', '-i', listPath, ...T_OUT(), '-vf', vf, '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', '40', '-row-mt', '1', '-deadline', 'good', '-an', webm]);
 ff(['-ss', String(POSTER_AT), '-i', mp4, '-frames:v', '1', '-vf', `scale=${OW}:${OH}`, '-c:v', 'libwebp', '-quality', '82', poster]);
 
 console.log(`Frames: ${frames.length} · Dauer: ${total.toFixed(1)} s`);

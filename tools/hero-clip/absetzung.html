@@ -103,7 +103,7 @@
   .card { background: var(--paper); border: 1px solid var(--line); border-radius: 24px; padding: 26px 28px;
     box-shadow: 0 2px 4px rgba(26,22,17,.04), 0 40px 80px -36px rgba(26,22,17,.4); }
   .ch { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-  .ch .pm { width: 30px; height: 30px; border-radius: 9px; background: var(--em); color: #F1E9D6; display: grid; place-items: center; font-family: var(--serif); font-size: 18px; }
+  .ch .pm { width: 32px; height: 32px; border-radius: 9px; display: block; box-shadow: 0 2px 6px rgba(26,22,17,.15); }
   .ch b { font-size: 22px; }
   .ch .ok { margin-left: auto; font-size: 14px; font-weight: 700; color: var(--ok); background: rgba(47,107,74,.1); border-radius: 999px; padding: 5px 12px; }
   .flds { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
@@ -130,8 +130,10 @@
   @keyframes tick { to { stroke-dashoffset: 0; } }
 
   /* ── Marke ───────────────────────────────────────── */
-  .mark { width: 92px; height: 92px; border-radius: 26px; background: var(--em); color: #F1E9D6; display: grid; place-items: center; font-family: var(--serif); font-size: 54px; margin: 0 auto 24px; box-shadow: 0 24px 50px -20px rgba(30,61,47,.6); }
-  .word { font-family: var(--serif); font-size: 92px; letter-spacing: -.04em; line-height: 1; }
+  /* Echtes Praxura-Zeichen (Px-Monogramm, apple-touch-icon.png) + Wortmarke wie in der Navigation: Prax<em>ura</em> */
+  .mark { width: 112px; height: 112px; border-radius: 28px; display: block; margin: 0 auto 26px; box-shadow: 0 26px 50px -22px rgba(107,85,56,.55); }
+  .word { font-family: var(--serif); font-weight: 500; font-size: 96px; letter-spacing: -.035em; line-height: 1; }
+  .word em { font-style: italic; color: var(--bronze); }
   .pills { display: flex; gap: 10px; justify-content: center; margin-top: 30px; flex-wrap: wrap; }
   .pills span { border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; font-size: 16px; color: var(--soft); background: rgba(255,254,251,.7); }
 </style>
@@ -191,7 +193,7 @@
         <div class="sub a" style="--d:.35s">Jede Verordnung wird beim Einlesen geprüft. Bevor die erste Behandlung stattfindet.</div>
       </div>
       <div class="card a pop" style="--d:.15s">
-        <div class="ch"><span class="pm">P</span><b>Verordnung eingelesen</b><span class="ok">per Barcode</span></div>
+        <div class="ch"><img class="pm" src="../../apple-touch-icon.png" alt=""><b>Verordnung eingelesen</b><span class="ok">per Barcode</span></div>
         <div class="flds">
           <div><div class="lab">Patient</div><div class="fld">Markus B.</div></div>
           <div><div class="lab">Ausgestellt am</div><div class="fld">23.11.</div></div>
@@ -228,8 +230,8 @@
   <!-- 8 · Marke -->
   <section class="sc" id="s-end">
     <div class="center"><div>
-      <div class="mark a pop" style="--d:0s">P</div>
-      <div class="word a" style="--d:.12s">Praxura</div>
+      <img class="mark a pop" style="--d:0s" src="../../apple-touch-icon.png" alt="Praxura">
+      <div class="word a" style="--d:.12s">Prax<em>ura</em></div>
       <div class="sub a" style="--d:.45s;font-size:28px;color:var(--ink);font-family:var(--serif);letter-spacing:-.01em">Damit Ihre Arbeit auch bezahlt wird.</div>
       <div class="pills">
         <span class="a" style="--d:.8s">Physiotherapie</span><span class="a" style="--d:.9s">Ergotherapie</span>
