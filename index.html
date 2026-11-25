@@ -2816,27 +2816,16 @@
 <!-- Chatbot Widget -->
 <script>
 (function(){
-  var DATA = {"botName": "Praxura", "welcomeMessage": "Herzlich willkommen bei Praxura! Ich helfe Ihnen gerne bei Fragen zu unserer All-in-One Praxissoftware für Therapeuten.", "noMatchMessage": "Dazu kann ich leider keine Auskunft geben. Bei weiteren Fragen wenden Sie sich bitte direkt an kontakt@praxura.de", "tone": "formal", "brandColor": "#b1891b", "language": "de", "typeMessage": "Nachricht schreiben...", "errTooShort": "Bitte schreiben Sie eine längere Nachricht.", "errTooLong": "Ihre Nachricht ist zu lang (max. 500 Zeichen).", "errCooldown": "Bitte warten Sie einen Moment...", "errNetwork": "Verbindungsproblem. Bitte später erneut versuchen.", "sessionEnded": "Diese Unterhaltung wurde beendet. Bei weiteren Fragen kontaktieren Sie uns bitte direkt.", "sessionLimit": "Das Nachrichtenlimit dieser Sitzung wurde erreicht.", "chatWebhookUrl": "https://n8n.infinitymade.de/webhook/chat", "limits": {"minLen": 2, "maxLen": 500, "maxMessagesPerSession": 30, "maxOffTopicStrikes": 3, "cooldownMs": 1500}, "extraKnowledge": "Praxura Wissensdatei für KI-Assistenten & Support-Chatbot Dieses Dokument enthält alle relevanten Informationen über Praxura — Produkt, Funktionen, Preise, Abrechnung, Datenschutz und häufige Fragen. Es dient als Wissensbasis für den KI-Chatbot auf praxura.de. Stand: Oktober 2026 · Kontakt: kontakt@praxura.de · Website: praxura.de 1. Was ist Praxura? Praxura ist eine moderne All-in-One-Praxissoftware speziell für Heilmittelerbringer in Deutschland — Physiotherapie, Ergotherapie, Logopädie und Podologie. Praxura ist ein Praxisverwaltungssystem (PVS) und läuft als eigene Praxis-Cloud der Praxis: so bequem wie Cloud-Software, aber die Patientendaten liegen auf dem eigenen Server der Praxis, nicht bei Praxura. Praxura richtet den Server im eigenen Hetzner-Konto der Praxis ein (Rechenzentrum in Deutschland, Vertrag direkt zwischen Praxis und Hetzner), installiert Praxura, richtet die Sicherung ein und übergibt den Zugang, bevor der erste Patient angelegt wird. Alternativ läuft Praxura auf einem Windows-PC oder Linux-Server in der Praxis. Praxura ist keine vom Hersteller gehostete Cloud-Software. Die Software deckt die gesamte Praxisverwaltung ab: von der Terminplanung über die digitale Patientenakte bis hin zur GKV-Abrechnungsvorbereitung nach § 302 SGB V. Praxura ist ein Software-Werkzeug zur Vorbereitung der Abrechnung — kein Abrechnungszentrum und kein Abrechnungsdienstleister. Genau deshalb fallen keine Provisionen auf den Umsatz an. Hersteller: Praxura, Inh. Yavuz Kemal Demir (Siegburg, NRW) · Website: praxura.de 2. Zielgruppe Praxura richtet sich ausschließlich an: Physiotherapeut:innen, Ergotherapeut:innen, Logopäd:innen, Podolog:innen, interdisziplinäre Heilmittelpraxen und Praxisverbünde. Nicht geeignet für: Arztpraxen, Zahnarztpraxen, Kosmetiksalons oder andere Branchen außerhalb der Heilmittelversorgung. 3. Kernfunktionen 3.1 Terminverwaltung & Kalender: Tages-, Wochen- und Monatsansicht, Farbcodierung, Termin in unter 10 Sekunden anlegen, Wartelisten-Verwaltung, Online-Terminanfragen, Teamkalender (automatische Terminerinnerungen gibt es derzeit nicht). 3.2 Digitale Patientenakte: Behandlungsdokumentation, Rezeptverwaltung mit Laufzeitkontrolle, Anamnese und Therapieberichte, GKV/Privat/Selbstzahler, PDF-Export. 3.3 Verordnungsprüfung: Verordnungsdaten aus dem Barcode des Muster 13 lokal einlesen (das Bild verlässt den Rechner nicht), Prüfung gegen die Heilmittelrichtlinie, Hinweise auf Absetzungsrisiken vor Behandlungsbeginn. KI-Funktionen sind derzeit nicht aktiv. 3.4 §302 GKV-Abrechnung: ITSG-konforme DTA-Dateien, 93 Krankenkassen, Zuzahlung-Nachweise, GoBD-Belegliste, ohne Provision. 3.5 Elektronisches Fahrtenbuch: Fahrten zu Hausbesuchen mit Kilometern dokumentieren. 3.6 B2B & Lead-Management: Zuweiser, Kooperationspartner, Interessenten verwalten. 3.7 Statistiken: Umsatz- und Auslastungsstatistiken, standortübergreifend bei mehreren Standorten. 3.8 Rollen & Rechte: Inhaber, Therapeut, Rezeptionist. 3.9 TI-Anbindung: optionales Zusatzmodul, geplant zur TI-Pflicht ab 01.10.2027, heute noch nicht verfügbar; Pflicht ab 01.10.2027, Kosten können nach aktuellem Stand weitgehend durch die TI-Förderpauschale gedeckt sein (Physio ca. 221,74 €/Monat 2026, ohne Gewähr). 4. Preise (nur für Praxen/Unternehmer; Aktionspreise für Verträge mit Abschluss bis 31.12.2026, garantiert für die ersten 12 Monate, reguläre Preise Solo 49 €, Praxis 89 €, Team 129 €, Groß 189 €, Einrichtung regulär 290/490/790/1.190 €; Endpreise, keine USt gemäß § 19 UStG): fester Monatspreis nach Anzahl Behandler:innen, kein Prozent vom Umsatz, alle Funktionen in jedem Paket. Solo (1 Behandler:in) 39 €/Monat, Praxis (2–5) 69 €/Monat, Team (6–10) 99 €/Monat, Groß (11–20) 149 €/Monat, ab 21 Behandler:innen oder Verbund nach Angebot. Empfang und Verwaltung werden nicht gezählt. Einmaliges Einrichtungspaket: Solo 190 €, Praxis 390 €, Team 590 €, Groß 890 € (Server-Einrichtung, Stammdaten, Standard-Datenübernahme, 2 Online-Schulungen à 90 Min.). Serverkosten zahlt die Praxis direkt an Hetzner (keinen Betrag nennen, genauer Betrag im Analysegespräch). 12 Monate Laufzeit, danach monatlich kündbar, 60 Tage Geld-zurück auf die Lizenzgebühr (Kündigung innerhalb 60 Tagen ab Übergabe, Einrichtung und Serverkosten ausgenommen), −10 % auf die Lizenzgebühr bei jährlicher Zahlung. Weitere Leistungen (erweiterte Datenübernahme, zusätzliche Schulungen, Schulungstag vor Ort) nach Angebot, keine Beträge nennen. KI-Assistent in Kürze, TI-Anbindung in Vorbereitung (keine Preise nennen). Keine Rabatte versprechen; für ein festes Angebot auf das Analysegespräch verweisen (praxura.de/demo-booking.html). 5. Onboarding: unverbindlicher Testzugang, kein Vertrag, Patientenstamm per CSV-Import selbst übernehmen (Spalten frei zuordenbar) oder begleitetes Datenübernahme-Paket (Festpreis auf Anfrage, keine Beträge nennen); in der Podologie zusätzlich offene und teilweise behandelte, noch nicht abgerechnete Verordnungen (mit bereits erbrachten Behandlungstagen und Zuzahlungs-Vermerk) sowie die Vorgeschichte; Befunde, Behandlungsnotizen, Rechnungen und bereits abgerechnete Verordnungen werden nicht übernommen, kostenloses Einrichtungsgespräch. 6. Datenschutz: Patientendaten liegen ausschließlich auf dem Server der Praxis (eigene Praxis-Cloud oder Praxis-PC); Praxura hat keinen Zugang dazu, auch nicht im Support. Ausgenommen ist nur, was die Praxis selbst freigibt: Bildschirmfreigabe bei der Datenübernahme und Zusatzfunktionen wie KI-Texterkennung (derzeit nicht aktiv), dafür gilt ein gesonderter AV-Vertrag. Nie sagen: \"gehostet von Praxura\", \"Cloud-Praxissoftware\", \"C5-zertifiziert\", \"DSGVO-zertifiziert\". Nächtliche verschlüsselte Sicherung auf ein Ziel der Praxis (externe Festplatte, NAS, Storage Box), automatische Updates, Recht auf Löschung, kein Training auf Kundendaten. 7. Support: E-Mail kontakt@praxura.de, Telefon-Support, persönliche Betreuung und SLA je nach Praxisgröße — Details auf Anfrage. 8. FAQ: Für wen? Nur Heilmittelerbringer. §302 ohne Abrechnungszentrum? Ja, ohne Provision. Kostenlos testen? Ja, unverbindlicher Testzugang auf Anfrage. TI-Anbindung? Geplant als Zusatzmodul (geplant zur TI-Pflicht ab 01.10.2027, heute noch nicht verfügbar); die Kosten können nach aktuellem Stand weitgehend durch die TI-Förderpauschale gedeckt sein (ohne Gewähr). Ist Praxura Cloud-Software? Praxura ist die eigene Praxis-Cloud der Praxis: von überall im Browser erreichbar, Updates automatisch, aber der Server gehört zum Konto der Praxis, nicht zu Praxura. Wo liegen die Daten? Auf dem eigenen Server der Praxis, nicht bei Praxura. Smartphone? Ja, mit der Praxis-Cloud von überall; beim Betrieb auf einem Praxis-PC unterwegs über das VPN der Praxis. Einrichtung? Übernimmt Praxura. Status: Pilotphase mit ausgewählten Praxen, zuerst Podologie. Kündigung? 12 Monate Laufzeit, danach monatlich kündbar; 60 Tage Geld-zurück auf die Lizenzgebühr.", "qaPairs": [{"question": "Was ist Praxura?", "answer": "Praxura ist eine Praxissoftware (PVS) für Heilmittelerbringer – Physiotherapie, Ergotherapie, Logopädie und Podologie. Sie bündelt Terminverwaltung, Patientenakte, Verordnungsprüfung, §302-Abrechnungsvorbereitung und ein elektronisches Fahrtenbuch – als Ihre eigene Praxis-Cloud: so bequem wie Cloud-Software, aber Ihre Patientendaten bleiben auf Ihrem eigenen Server, nicht bei uns.", "keywords": "praxissoftware, physiotherapie, ergotherapie, logopädie, podologie, funktionen"}, {"question": "Kann ich mit Praxura meine Abrechnung nach §302 SGB V vorbereiten?", "answer": "Ja, Praxura erstellt aus Ihren Behandlungsdaten fertige, verschlüsselte DTA-Dateien für die Abrechnung nach §302 SGB V. Die Einreichung nehmen Sie selbst vor — somit zahlen Sie 0 % Provision auf Ihren Umsatz.", "keywords": "abrechnung, §302, dta, kassenabrechnung, provision, einsparung"}, {"question": "Was kostet Praxura?", "answer": "Praxura kostet einen festen Monatspreis nach Praxisgröße, ohne Prozent vom Umsatz: Solo (1 Behandler:in) 39 €, Praxis (2–5) 69 €, Team (6–10) 99 €, Groß (11–20) 149 € pro Monat (Aktionspreise für Verträge bis 31.12.2026, Endpreise gemäß § 19 UStG). Dazu kommt ein einmaliges Einrichtungspaket ab 190 €. Die Serverkosten zahlt Ihre Praxis direkt an Hetzner, den genauen Betrag nennen wir im Analysegespräch. Ein festes Angebot erhalten Sie im kostenlosen Analysegespräch: praxura.de/demo-booking.html", "keywords": "preise, kosten, tarife, solo, praxis, team, groß, einrichtung, server"}, {"question": "Wie funktioniert die Verordnungsprüfung?", "answer": "Praxura liest die Verordnungsdaten aus dem Barcode des Muster 13 lokal ein – das Bild verlässt Ihren Rechner nicht – und prüft sie gegen die Heilmittelrichtlinie. Sie bestätigen die Felder; Formfehler werden vor Behandlungsbeginn angezeigt.", "keywords": "rezeptprüfung, ki, ocr, scan, absetzung, heilmittelverordnung"}, {"question": "Ist Praxura DSGVO-konform und wo werden die Daten gespeichert?", "answer": "Auf Ihrem eigenen Server – nicht bei Praxura: in Ihrer Praxis-Cloud im eigenen Hetzner-Konto (Rechenzentrum in Deutschland) oder auf einem PC/Server in Ihrer Praxis. Praxura hat keinen Zugang zu Ihren Patientendaten, auch nicht im Support – ausgenommen nur, was Sie selbst freigeben (Bildschirmfreigabe bei der Datenübernahme). Jede Nacht entsteht eine verschlüsselte Sicherung auf ein separates Ziel.", "keywords": "datenschutz, dsgvo, hosting, avv, sicherheit, cloud, server"}, {"question": "Ist Praxura eine Cloud-Software?", "answer": "Praxura ist Ihre eigene Praxis-Cloud – so bequem wie Cloud-Software, aber Ihre Patientendaten bleiben auf Ihrem eigenen Server, nicht bei uns. Wir richten den Server in Ihrem Hetzner-Konto ein, installieren Praxura und übergeben Ihnen den Zugang. Danach erreichen Sie Praxura von überall im Browser, Updates kommen automatisch.", "keywords": "cloud, saas, online, browser, server, hetzner, einrichtung, installation"}, {"question": "Kann ich Praxura kostenlos testen?", "answer": "Ja. Sie können Praxura unverbindlich und kostenlos testen. Schreiben Sie uns an kontakt@praxura.de — wir richten Ihnen einen Testzugang ein und begleiten Sie beim Start.", "keywords": "testphase, kostenlos testen, gratis, ausprobieren, unverbindlich"}, {"question": "Bietet Praxura eine TI-Anbindung?", "answer": "Ja, als optionales Zusatzmodul. Die TI-Anschlusspflicht gilt ab 01.10.2027. Die Kosten können nach aktuellem Stand weitgehend durch die TI-Förderpauschale gedeckt sein (Stand 2026, ohne Gewähr).", "keywords": "ti-anbindung, telematikinfrastruktur, gkv, förderung, refinanzierung"}, {"question": "Wie kann ich Kontakt aufnehmen oder ein Gespräch buchen?", "answer": "Am schnellsten über unsere Online-Terminbuchung: praxura.de/demo-booking.html — dort wählen Sie direkt einen freien Termin für ein kostenloses Analysegespräch (ca. 30 Minuten, per Video). Alternativ schreiben Sie uns an kontakt@praxura.de.", "keywords": "kontakt, e-mail, beratung, support, termin, demo"}]};
+  var DATA = {"botName": "Lena", "welcomeMessage": "Hallo, ich bin Lena, die KI-Assistentin von Praxura 👋 Ich beantworte Ihre Fragen zu Terminplanung, Abrechnung, Datenschutz und Preisen – und wenn Sie mögen, vereinbaren wir direkt ein kostenloses Analysegespräch. Womit darf ich helfen?", "noMatchMessage": "Dazu kann ich Ihnen leider keine verlässliche Auskunft geben. Am besten klären wir das persönlich im kostenlosen Analysegespräch: praxura.de/demo-booking.html – oder schreiben Sie an kontakt@praxura.de.", "tone": "formal", "brandColor": "#b1891b", "language": "de", "typeMessage": "Ihre Frage an Lena …", "errTooShort": "Bitte schreiben Sie eine längere Nachricht.", "errTooLong": "Ihre Nachricht ist zu lang (max. 500 Zeichen).", "errCooldown": "Bitte warten Sie einen Moment...", "errNetwork": "Verbindungsproblem. Bitte später erneut versuchen.", "sessionEnded": "Diese Unterhaltung wurde beendet. Bei weiteren Fragen kontaktieren Sie uns bitte direkt.", "sessionLimit": "Das Nachrichtenlimit dieser Sitzung wurde erreicht.", "chatWebhookUrl": "https://n8n.infinitymade.de/webhook/chat", "limits": {"minLen": 2, "maxLen": 500, "maxMessagesPerSession": 30, "maxOffTopicStrikes": 3, "cooldownMs": 1500}, "extraKnowledge": "Praxura Wissensdatei für KI-Assistenten & Support-Chatbot Dieses Dokument enthält alle relevanten Informationen über Praxura — Produkt, Funktionen, Preise, Abrechnung, Datenschutz und häufige Fragen. Es dient als Wissensbasis für den KI-Chatbot auf praxura.de. Stand: Oktober 2026 · Kontakt: kontakt@praxura.de · Website: praxura.de 1. Was ist Praxura? Praxura ist eine moderne All-in-One-Praxissoftware speziell für Heilmittelerbringer in Deutschland — Physiotherapie, Ergotherapie, Logopädie und Podologie. Praxura ist ein Praxisverwaltungssystem (PVS) und läuft als eigene Praxis-Cloud der Praxis: so bequem wie Cloud-Software, aber die Patientendaten liegen auf dem eigenen Server der Praxis, nicht bei Praxura. Praxura richtet den Server im eigenen Hetzner-Konto der Praxis ein (Rechenzentrum in Deutschland, Vertrag direkt zwischen Praxis und Hetzner), installiert Praxura, richtet die Sicherung ein und übergibt den Zugang, bevor der erste Patient angelegt wird. Alternativ läuft Praxura auf einem Windows-PC oder Linux-Server in der Praxis. Praxura ist keine vom Hersteller gehostete Cloud-Software. Die Software deckt die gesamte Praxisverwaltung ab: von der Terminplanung über die digitale Patientenakte bis hin zur GKV-Abrechnungsvorbereitung nach § 302 SGB V. Praxura ist ein Software-Werkzeug zur Vorbereitung der Abrechnung — kein Abrechnungszentrum und kein Abrechnungsdienstleister. Genau deshalb fallen keine Provisionen auf den Umsatz an. Hersteller: Praxura, Inh. Yavuz Kemal Demir (Siegburg, NRW) · Website: praxura.de 2. Zielgruppe Praxura richtet sich ausschließlich an: Physiotherapeut:innen, Ergotherapeut:innen, Logopäd:innen, Podolog:innen, interdisziplinäre Heilmittelpraxen und Praxisverbünde. Nicht geeignet für: Arztpraxen, Zahnarztpraxen, Kosmetiksalons oder andere Branchen außerhalb der Heilmittelversorgung. 3. Kernfunktionen 3.1 Terminverwaltung & Kalender: Tages-, Wochen- und Monatsansicht, Farbcodierung, Termin in unter 10 Sekunden anlegen, Wartelisten-Verwaltung, Online-Terminanfragen, Teamkalender (automatische Terminerinnerungen gibt es derzeit nicht). 3.2 Digitale Patientenakte: Behandlungsdokumentation, Rezeptverwaltung mit Laufzeitkontrolle, Anamnese und Therapieberichte, GKV/Privat/Selbstzahler, PDF-Export. 3.3 Verordnungsprüfung: Verordnungsdaten aus dem Barcode des Muster 13 lokal einlesen (das Bild verlässt den Rechner nicht), Prüfung gegen die Heilmittelrichtlinie, Hinweise auf Absetzungsrisiken vor Behandlungsbeginn. KI-Funktionen sind derzeit nicht aktiv. 3.4 §302 GKV-Abrechnung: ITSG-konforme DTA-Dateien, 93 Krankenkassen, Zuzahlung-Nachweise, GoBD-Belegliste, ohne Provision. 3.5 Elektronisches Fahrtenbuch: Fahrten zu Hausbesuchen mit Kilometern dokumentieren. 3.6 B2B & Lead-Management: Zuweiser, Kooperationspartner, Interessenten verwalten. 3.7 Statistiken: Umsatz- und Auslastungsstatistiken, standortübergreifend bei mehreren Standorten. 3.8 Rollen & Rechte: Inhaber, Therapeut, Rezeptionist. 3.9 TI-Anbindung: optionales Zusatzmodul, geplant zur TI-Pflicht ab 01.10.2027, heute noch nicht verfügbar; Pflicht ab 01.10.2027, Kosten können nach aktuellem Stand weitgehend durch die TI-Förderpauschale gedeckt sein (Physio ca. 221,74 €/Monat 2026, ohne Gewähr). 4. Preise (nur für Praxen/Unternehmer; Aktionspreise für Verträge mit Abschluss bis 31.12.2026, garantiert für die ersten 12 Monate, reguläre Preise Solo 49 €, Praxis 89 €, Team 129 €, Groß 189 €, Einrichtung regulär 290/490/790/1.190 €; Endpreise, keine USt gemäß § 19 UStG): fester Monatspreis nach Anzahl Behandler:innen, kein Prozent vom Umsatz, alle Funktionen in jedem Paket. Solo (1 Behandler:in) 39 €/Monat, Praxis (2–5) 69 €/Monat, Team (6–10) 99 €/Monat, Groß (11–20) 149 €/Monat, ab 21 Behandler:innen oder Verbund nach Angebot. Empfang und Verwaltung werden nicht gezählt. Einmaliges Einrichtungspaket: Solo 190 €, Praxis 390 €, Team 590 €, Groß 890 € (Server-Einrichtung, Stammdaten, Standard-Datenübernahme, 2 Online-Schulungen à 90 Min.). Serverkosten zahlt die Praxis direkt an Hetzner (keinen Betrag nennen, genauer Betrag im Analysegespräch). 12 Monate Laufzeit, danach monatlich kündbar, 60 Tage Geld-zurück auf die Lizenzgebühr (Kündigung innerhalb 60 Tagen ab Übergabe, Einrichtung und Serverkosten ausgenommen), −10 % auf die Lizenzgebühr bei jährlicher Zahlung. Weitere Leistungen (erweiterte Datenübernahme, zusätzliche Schulungen, Schulungstag vor Ort) nach Angebot, keine Beträge nennen. KI-Assistent in Kürze, TI-Anbindung in Vorbereitung (keine Preise nennen). Keine Rabatte versprechen; für ein festes Angebot auf das Analysegespräch verweisen (praxura.de/demo-booking.html). 5. Onboarding: unverbindlicher Testzugang, kein Vertrag, Patientenstamm per CSV-Import selbst übernehmen (Spalten frei zuordenbar) oder begleitetes Datenübernahme-Paket (Festpreis auf Anfrage, keine Beträge nennen); in der Podologie zusätzlich offene und teilweise behandelte, noch nicht abgerechnete Verordnungen (mit bereits erbrachten Behandlungstagen und Zuzahlungs-Vermerk) sowie die Vorgeschichte; Befunde, Behandlungsnotizen, Rechnungen und bereits abgerechnete Verordnungen werden nicht übernommen, kostenloses Einrichtungsgespräch. 6. Datenschutz: Patientendaten liegen ausschließlich auf dem Server der Praxis (eigene Praxis-Cloud oder Praxis-PC); Praxura hat keinen Zugang dazu, auch nicht im Support. Ausgenommen ist nur, was die Praxis selbst freigibt: Bildschirmfreigabe bei der Datenübernahme und Zusatzfunktionen wie KI-Texterkennung (derzeit nicht aktiv), dafür gilt ein gesonderter AV-Vertrag. Nie sagen: \"gehostet von Praxura\", \"Cloud-Praxissoftware\", \"C5-zertifiziert\", \"DSGVO-zertifiziert\". Nächtliche verschlüsselte Sicherung auf ein Ziel der Praxis (externe Festplatte, NAS, Storage Box), automatische Updates, Recht auf Löschung, kein Training auf Kundendaten. 7. Support: E-Mail kontakt@praxura.de, Telefon-Support, persönliche Betreuung und SLA je nach Praxisgröße — Details auf Anfrage. 8. FAQ: Für wen? Nur Heilmittelerbringer. §302 ohne Abrechnungszentrum? Ja, ohne Provision. Kostenlos testen? Ja, unverbindlicher Testzugang auf Anfrage. TI-Anbindung? Geplant als Zusatzmodul (geplant zur TI-Pflicht ab 01.10.2027, heute noch nicht verfügbar); die Kosten können nach aktuellem Stand weitgehend durch die TI-Förderpauschale gedeckt sein (ohne Gewähr). Ist Praxura Cloud-Software? Praxura ist die eigene Praxis-Cloud der Praxis: von überall im Browser erreichbar, Updates automatisch, aber der Server gehört zum Konto der Praxis, nicht zu Praxura. Wo liegen die Daten? Auf dem eigenen Server der Praxis, nicht bei Praxura. Smartphone? Ja, mit der Praxis-Cloud von überall; beim Betrieb auf einem Praxis-PC unterwegs über das VPN der Praxis. Einrichtung? Übernimmt Praxura. Status: Pilotphase mit ausgewählten Praxen, zuerst Podologie. Kündigung? 12 Monate Laufzeit, danach monatlich kündbar; 60 Tage Geld-zurück auf die Lizenzgebühr. 9. Gesprächsstil des Chat-Assistenten: Der Assistent heißt Lena und ist eine KI-Assistentin von Praxura. Lena gibt sich nie als Mensch aus; auf Nachfrage sagt sie offen, dass sie eine KI ist, und bietet das Gespräch mit dem Praxura-Team an. Antworten sind kurz, in der Sie-Form, freundlich, konkret und ohne Fachjargon-Ballast. FORMAT: Sobald eine Antwort mehrere Punkte, Preise, Pakete, Schritte, Funktionen oder Vergleiche enthält, schreibt Lena sie NICHT als Fließtext, sondern so: ein kurzer Einleitungssatz, dann eine Liste mit Zeilenumbrüchen, jede Zeile beginnt mit \"- \" (bei Abläufen \"1. \", \"2. \"), höchstens 5 Zeilen. Werte stehen am Zeilenende nach einem Doppelpunkt, der Begriff ist fett, z. B. \"- **Praxis** (2–5 Behandler:innen): 69 €/Monat\". Optional eine fette Zwischenzeile wie \"**Einmalig:**\". Danach eine Leerzeile und genau ein Abschlusssatz (Rückfrage oder Einladung). Einfache Ja/Nein-Fragen beantwortet sie in 2 bis 3 Sätzen ohne Liste. Jede Antwort endet mit genau einem nächsten Schritt: entweder einer kurzen Rückfrage zur Praxis (Fachbereich, Anzahl Behandler:innen, bisherige Software, größtes Ärgernis im Alltag) oder einer Einladung zum kostenlosen, unverbindlichen Analysegespräch (ca. 30 Minuten per Video). Sobald Interesse erkennbar ist (Preis, Testzugang, Wechsel, Abrechnung, Datenübernahme, Einrichtung), lädt Lena aktiv zum Analysegespräch ein und verweist dafür auf den Buchungs-Button unter ihrer Antwort (Formulierung etwa: „über den Button unten“). Den Nutzen fürs Gespräch nennt sie konkret: persönliches Festangebot, Live-Blick auf die eigenen Abläufe, Klärung der Datenübernahme. Für einen Testzugang verweist Lena ebenfalls auf das Analysegespräch, dort wird der Zugang eingerichtet. Keine URLs ausschreiben; die Website zeigt passende Buttons (Termin buchen, Preise, Funktionen) automatisch unter der Antwort an. Keinen Druck aufbauen, keine erfundenen Fristen oder Rabatte.", "qaPairs": [{"question": "Was ist Praxura?", "answer": "Praxura ist eine Praxissoftware (PVS) für Heilmittelerbringer – Physiotherapie, Ergotherapie, Logopädie und Podologie. Sie bündelt Terminverwaltung, Patientenakte, Verordnungsprüfung, §302-Abrechnungsvorbereitung und ein elektronisches Fahrtenbuch – als Ihre eigene Praxis-Cloud: so bequem wie Cloud-Software, aber Ihre Patientendaten bleiben auf Ihrem eigenen Server, nicht bei uns.", "keywords": "praxissoftware, physiotherapie, ergotherapie, logopädie, podologie, funktionen"}, {"question": "Kann ich mit Praxura meine Abrechnung nach §302 SGB V vorbereiten?", "answer": "Ja, Praxura erstellt aus Ihren Behandlungsdaten fertige, verschlüsselte DTA-Dateien für die Abrechnung nach §302 SGB V. Die Einreichung nehmen Sie selbst vor — somit zahlen Sie 0 % Provision auf Ihren Umsatz.", "keywords": "abrechnung, §302, dta, kassenabrechnung, provision, einsparung"}, {"question": "Was kostet Praxura?", "answer": "Praxura kostet einen festen Monatspreis nach Anzahl der Behandler:innen – ohne Prozent vom Umsatz, alle Funktionen in jedem Paket (Aktionspreise bis 31.12.2026):\n- **Solo** (1 Behandler:in): 39 €/Monat\n- **Praxis** (2–5): 69 €/Monat\n- **Team** (6–10): 99 €/Monat\n- **Groß** (11–20): 149 €/Monat\n\n**Einmalig:**\n- **Einrichtungspaket**: ab 190 €\n\nDie Serverkosten zahlt Ihre Praxis direkt an Hetzner. Wie viele Behandler:innen arbeiten bei Ihnen? Im kostenlosen Analysegespräch erhalten Sie Ihr festes Angebot.", "keywords": "preise, kosten, tarife, solo, praxis, team, groß, einrichtung, server"}, {"question": "Wie funktioniert die Verordnungsprüfung?", "answer": "Praxura liest die Verordnungsdaten aus dem Barcode des Muster 13 lokal ein – das Bild verlässt Ihren Rechner nicht – und prüft sie gegen die Heilmittelrichtlinie. Sie bestätigen die Felder; Formfehler werden vor Behandlungsbeginn angezeigt.", "keywords": "rezeptprüfung, ki, ocr, scan, absetzung, heilmittelverordnung"}, {"question": "Ist Praxura DSGVO-konform und wo werden die Daten gespeichert?", "answer": "Auf Ihrem eigenen Server – nicht bei Praxura: in Ihrer Praxis-Cloud im eigenen Hetzner-Konto (Rechenzentrum in Deutschland) oder auf einem PC/Server in Ihrer Praxis. Praxura hat keinen Zugang zu Ihren Patientendaten, auch nicht im Support – ausgenommen nur, was Sie selbst freigeben (Bildschirmfreigabe bei der Datenübernahme). Jede Nacht entsteht eine verschlüsselte Sicherung auf ein separates Ziel.", "keywords": "datenschutz, dsgvo, hosting, avv, sicherheit, cloud, server"}, {"question": "Ist Praxura eine Cloud-Software?", "answer": "Praxura ist Ihre eigene Praxis-Cloud – so bequem wie Cloud-Software, aber Ihre Patientendaten bleiben auf Ihrem eigenen Server, nicht bei uns. Wir richten den Server in Ihrem Hetzner-Konto ein, installieren Praxura und übergeben Ihnen den Zugang. Danach erreichen Sie Praxura von überall im Browser, Updates kommen automatisch.", "keywords": "cloud, saas, online, browser, server, hetzner, einrichtung, installation"}, {"question": "Kann ich Praxura kostenlos testen?", "answer": "Ja, Sie können Praxura unverbindlich und kostenlos testen. Am schnellsten geht es über ein kurzes Analysegespräch: Dort schauen wir uns Ihre Abläufe an und richten Ihnen direkt den Testzugang ein – praxura.de/demo-booking.html. Alternativ schreiben Sie an kontakt@praxura.de.", "keywords": "testphase, kostenlos testen, gratis, ausprobieren, unverbindlich"}, {"question": "Bietet Praxura eine TI-Anbindung?", "answer": "Ja, als optionales Zusatzmodul. Die TI-Anschlusspflicht gilt ab 01.10.2027. Die Kosten können nach aktuellem Stand weitgehend durch die TI-Förderpauschale gedeckt sein (Stand 2026, ohne Gewähr).", "keywords": "ti-anbindung, telematikinfrastruktur, gkv, förderung, refinanzierung"}, {"question": "Wie kann ich Kontakt aufnehmen oder ein Gespräch buchen?", "answer": "Am schnellsten über ein kostenloses Analysegespräch (ca. 30 Minuten per Video) – den Termin wählen Sie direkt über den Button unten. Alternativ schreiben Sie uns an kontakt@praxura.de.", "keywords": "kontakt, e-mail, beratung, support, termin, demo"}]};
+  // Persona: „Lena" — KI-Assistentin (fiktives, KI-erzeugtes Porträt). Sie gibt sich nie als Mensch aus;
+  // Kopfzeile und Hinweis sagen sichtbar „KI-Assistentin" (Transparenz, EU AI Act Art. 50).
+  var AVATAR = '/assets/img/lena-assistentin.webp?v=20261125b';
+  var BOOK_URL = '/demo-booking.html';
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  var brand = DATA.brandColor;
+  function applyTone(text){ return text; }
 
-  // 3D gold infinity SVG — used in launcher button and chat header
-  var SVG_INF = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="100%" height="100%" aria-hidden="true"><defs>'
-    + '<radialGradient id="cwb-gbg" cx="45%" cy="32%" r="65%"><stop offset="0%" stop-color="#f2cf5a"/><stop offset="50%" stop-color="#c49820"/><stop offset="100%" stop-color="#7a5810"/></radialGradient>'
-    + '<linearGradient id="cwb-ginf" x1="15%" y1="0%" x2="85%" y2="100%"><stop offset="0%" stop-color="#fffbe8"/><stop offset="28%" stop-color="#f5d870"/><stop offset="65%" stop-color="#c49820"/><stop offset="100%" stop-color="#8a6210"/></linearGradient>'
-    + '<filter id="cwb-gsh" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#4a3008" flood-opacity="0.45"/></filter>'
-    + '</defs>'
-    + '<circle cx="28" cy="28" r="28" fill="url(#cwb-gbg)"/>'
-    + '<ellipse cx="28" cy="13" rx="13" ry="4.5" fill="rgba(255,255,255,0.18)"/>'
-    + '<path filter="url(#cwb-gsh)" d="M28,28 C28,22.5 24,18 19,18 C12,18 11,23.5 11,28 C11,32.5 12,38 19,38 C24,38 28,33.5 28,28 C28,22.5 32,18 37,18 C44,18 45,23.5 45,28 C45,32.5 44,38 37,38 C32,38 28,33.5 28,28 Z" fill="none" stroke="url(#cwb-ginf)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>'
-    + '</svg>';
-
-  function applyTone(text){
-    if(DATA.tone === 'formal') return text;
-    return text;
-  }
-
-  var SESSION = { history:[], count:0, strikes:0, terminated:false, lastSent:0 };
+  var SESSION = { history:[], count:0, strikes:0, terminated:false, lastSent:0, botReplies:0, lastBookAt:-9 };
 
   function fetchAnswer(msg){
     var cfg = {
@@ -2855,63 +2844,149 @@
     }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
   }
 
+  var ICON = {
+    cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></svg>',
+    arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+    mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg>',
+    send: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
+  };
+
   var css = ''
-    + '.cwb-launcher{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:transparent;border:none;padding:0;box-shadow:0 6px 22px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:99998;transition:transform .2s ease,box-shadow .2s ease;}'
-    + '.cwb-launcher:hover{transform:scale(1.1);box-shadow:0 10px 30px rgba(0,0,0,.4);}'
-    + '.cwb-window{position:fixed;bottom:24px;right:24px;width:380px;height:520px;max-width:calc(100vw - 32px);max-height:calc(100vh - 48px);background:#fff;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.4);display:flex;flex-direction:column;overflow:hidden;transform:translateY(20px) scale(.95);opacity:0;pointer-events:none;transition:all .25s ease;z-index:99999;font-family:system-ui,-apple-system,sans-serif;}'
-    + '.cwb-window.cwb-open{transform:translateY(0) scale(1);opacity:1;pointer-events:auto;}'
-    + '.cwb-header{background:'+brand+';padding:14px 16px;display:flex;align-items:center;gap:12px;}'
-    + '.cwb-hav{width:34px;height:34px;flex-shrink:0;}'
-    + '.cwb-name{font-weight:600;font-size:15px;flex:1;color:#fff;}'
-    + '.cwb-close{background:transparent;border:none;color:rgba(255,255,255,.8);font-size:22px;width:28px;height:28px;border-radius:6px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;}'
-    + '.cwb-close:hover{color:#fff;background:rgba(0,0,0,.15);}'
-    + '.cwb-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;}'
-    + '.cwb-msg{display:flex;flex-direction:column;max-width:82%;}'
-    + '.cwb-msg.cwb-bot{align-self:flex-start;align-items:flex-start;}'
-    + '.cwb-msg.cwb-user{align-self:flex-end;align-items:flex-end;}'
-    + '.cwb-bubble{padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.45;word-wrap:break-word;}'
-    + '.cwb-bot .cwb-bubble{background:#f1f0ee;color:#1a1612;border-bottom-left-radius:4px;}'
-    + '.cwb-user .cwb-bubble{background:'+brand+';color:#fff;border-bottom-right-radius:4px;}'
-    + '.cwb-time{font-size:10px;color:#aaa;margin-top:3px;padding:0 4px;}'
-    + '.cwb-typing{align-self:flex-start;background:#f1f0ee;border-radius:14px;border-bottom-left-radius:4px;padding:12px 14px;display:none;}'
-    + '.cwb-typing.cwb-vis{display:flex;gap:4px;}'
-    + '.cwb-typing span{width:6px;height:6px;background:#aaa;border-radius:50%;animation:cwb-bounce 1.2s infinite;}'
+    + '.cwb-root{--cwb-ink:#1A1611;--cwb-soft:#4A4036;--cwb-mute:#685E52;--cwb-paper:#FFFEFB;--cwb-warm:#F6EFE0;--cwb-line:rgba(26,22,17,.09);--cwb-bronze:#6B5538;--cwb-em:#1E3D2F;--cwb-hl:#C9A876;--cwb-ease:cubic-bezier(.23,1,.32,1);font-family:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif;}'
+    /* Launcher: Porträt mit Online-Punkt und ruhigem Puls-Ring */
+    + '.cwb-launcher{position:fixed;bottom:calc(24px + var(--cwb-lift,0px));right:24px;width:62px;height:62px;border-radius:50%;border:3px solid #FFFEFB;padding:0;background:#E8DCC0;box-shadow:0 10px 28px rgba(26,22,17,.28),0 0 0 1px rgba(26,22,17,.06);cursor:pointer;z-index:99998;transition:transform .35s var(--cwb-ease),box-shadow .35s var(--cwb-ease),bottom .3s ease;}'
+    + '.cwb-launcher img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;}'
+    + '.cwb-launcher:hover{transform:translateY(-3px) scale(1.05);box-shadow:0 16px 36px rgba(26,22,17,.32),0 0 0 1px rgba(26,22,17,.06);}'
+    + '.cwb-launcher::before{content:"";position:absolute;inset:-7px;border-radius:50%;border:2px solid rgba(201,168,118,.7);animation:cwb-ring 2.8s var(--cwb-ease) infinite;pointer-events:none;}'
+    + '.cwb-launcher.cwb-seen::before{display:none;}'
+    + '.cwb-dot{position:absolute;right:1px;bottom:1px;width:14px;height:14px;border-radius:50%;background:#2F9E5E;border:2.5px solid #FFFEFB;}'
+    + '.cwb-badge{position:absolute;top:-4px;left:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#9C3A3A;color:#fff;font-size:11px;font-weight:700;line-height:20px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.25);transform:scale(0);transition:transform .35s var(--cwb-ease);}'
+    + '.cwb-badge.cwb-on{transform:scale(1);}'
+    + '@keyframes cwb-ring{0%{transform:scale(.92);opacity:.9;}70%,100%{transform:scale(1.22);opacity:0;}}'
+    /* Begrüßungs-Bubble */
+    + '.cwb-teaser{position:fixed;right:24px;bottom:calc(100px + var(--cwb-lift,0px));width:272px;max-width:calc(100vw - 48px);background:var(--cwb-paper);color:var(--cwb-ink);border-radius:18px 18px 6px 18px;padding:14px 16px 14px 14px;box-shadow:0 18px 44px rgba(26,22,17,.2),0 0 0 1px var(--cwb-line);z-index:99998;display:flex;gap:11px;align-items:flex-start;cursor:pointer;opacity:0;transform:translateY(12px) scale(.96);transform-origin:bottom right;pointer-events:none;transition:opacity .45s var(--cwb-ease),transform .45s var(--cwb-ease),bottom .3s ease;}'
+    + '.cwb-teaser.cwb-on{opacity:1;transform:none;pointer-events:auto;}'
+    + '.cwb-teaser img{width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;}'
+    + '.cwb-teaser b{display:block;font-size:13.5px;margin-bottom:2px;}'
+    + '.cwb-teaser p{margin:0;font-size:13.5px;line-height:1.45;color:var(--cwb-soft);}'
+    + '.cwb-teaser-x{position:absolute;top:-9px;right:-9px;width:24px;height:24px;border-radius:50%;border:none;background:var(--cwb-ink);color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,.25);}'
+    /* Fenster */
+    + '.cwb-window{position:fixed;bottom:24px;right:24px;width:390px;height:600px;max-width:calc(100vw - 32px);max-height:calc(100vh - 48px);max-height:calc(100dvh - 48px);background:var(--cwb-paper);border-radius:22px;box-shadow:0 30px 70px rgba(26,22,17,.32),0 0 0 1px var(--cwb-line);display:flex;flex-direction:column;overflow:hidden;transform:translateY(16px) scale(.96);transform-origin:bottom right;opacity:0;pointer-events:none;transition:opacity .3s var(--cwb-ease),transform .4s var(--cwb-ease);z-index:99999;}'
+    + '.cwb-window.cwb-open{transform:none;opacity:1;pointer-events:auto;}'
+    + '.cwb-header{background:linear-gradient(135deg,#1E3D2F 0%,#2A4A3A 100%);padding:16px 16px 16px 18px;display:flex;align-items:center;gap:12px;color:#FFFEFB;}'
+    + '.cwb-hav{position:relative;width:44px;height:44px;flex-shrink:0;}'
+    + '.cwb-hav img{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,254,251,.85);}'
+    + '.cwb-hav .cwb-dot{width:12px;height:12px;border-color:#1E3D2F;}'
+    + '.cwb-hmeta{flex:1;min-width:0;}'
+    + '.cwb-name{font-weight:700;font-size:15.5px;letter-spacing:-.01em;}'
+    + '.cwb-role{font-size:12px;opacity:.78;margin-top:1px;}'
+    + '.cwb-close{background:rgba(255,254,251,.1);border:none;color:#FFFEFB;font-size:20px;width:32px;height:32px;border-radius:10px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;transition:background .2s;}'
+    + '.cwb-close:hover{background:rgba(255,254,251,.2);}'
+    + '.cwb-msgs{flex:1;overflow-y:auto;padding:18px 14px 10px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,#FBF7EE 0%,#FFFEFB 120px);overscroll-behavior:contain;}'
+    + '.cwb-row{display:flex;gap:8px;align-items:flex-end;animation:cwb-in .45s var(--cwb-ease) both;}'
+    + '.cwb-row.cwb-user{justify-content:flex-end;}'
+    + '.cwb-mav{width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0;margin-bottom:16px;}'
+    + '.cwb-msg{display:flex;flex-direction:column;max-width:84%;}'
+    + '.cwb-user .cwb-msg{align-items:flex-end;}'
+    + '.cwb-bubble{padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.5;word-wrap:break-word;overflow-wrap:anywhere;}'
+    + '.cwb-bot .cwb-bubble{background:#fff;color:var(--cwb-ink);border-bottom-left-radius:6px;box-shadow:0 1px 2px rgba(26,22,17,.06),0 0 0 1px var(--cwb-line);}'
+    + '.cwb-user .cwb-bubble{background:var(--cwb-em);color:#FFFEFB;border-bottom-right-radius:6px;}'
+    + '.cwb-bubble a{color:var(--cwb-bronze);font-weight:600;text-decoration:underline;text-underline-offset:2px;}'
+    + '.cwb-bubble strong{font-weight:700;}'
+    + '.cwb-bubble p{margin:0;}.cwb-bubble p+p,.cwb-bubble p+.cwb-list,.cwb-bubble .cwb-list+p,.cwb-bubble .cwb-h+p{margin-top:8px;}'
+    + '.cwb-bubble .cwb-h{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--cwb-bronze);margin:10px 0 2px;}'
+    + '.cwb-bubble .cwb-h:first-child{margin-top:0;}'
+    + '.cwb-list{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:5px;}'
+    + '.cwb-list li{position:relative;padding:0 0 0 18px;}'
+    + '.cwb-list li::before{content:"";position:absolute;left:3px;top:.62em;width:6px;height:6px;border-radius:50%;background:var(--cwb-hl);}'
+    + 'ol.cwb-list{counter-reset:cwb;}'
+    + 'ol.cwb-list li{counter-increment:cwb;padding-left:26px;}'
+    + 'ol.cwb-list li::before{content:counter(cwb);top:.1em;left:0;width:19px;height:19px;font-size:11px;font-weight:700;line-height:19px;text-align:center;color:#FFFEFB;background:var(--cwb-em);}'
+    + '.cwb-list li.cwb-kv{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:8px 11px;background:#F8F3E8;border-radius:10px;}'
+    + '.cwb-list li.cwb-kv::before{display:none;}'
+    + '.cwb-list li.cwb-kv span{color:var(--cwb-ink);font-size:13.5px;}.cwb-list li.cwb-kv span strong{font-weight:600;}'
+    + '.cwb-list li.cwb-kv b{font-weight:700;color:var(--cwb-em);white-space:nowrap;font-variant-numeric:tabular-nums;}'    + '.cwb-time{font-size:10.5px;color:#9A9083;margin-top:4px;padding:0 6px;}'
+    + '@keyframes cwb-in{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}'
+    /* Aktions-Buttons unter Antworten */
+    + '.cwb-actions{display:flex;flex-direction:column;gap:7px;margin:2px 0 2px 34px;max-width:calc(100% - 34px);}'
+    + '.cwb-act{position:relative;overflow:hidden;display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:14px;font-size:13.5px;font-weight:600;text-decoration:none;cursor:pointer;border:1px solid var(--cwb-line);background:#fff;color:var(--cwb-ink);transition:transform .25s var(--cwb-ease),box-shadow .25s var(--cwb-ease),border-color .25s;animation:cwb-in .5s var(--cwb-ease) both;}'
+    + '.cwb-act:nth-child(2){animation-delay:.08s;}.cwb-act:nth-child(3){animation-delay:.16s;}'
+    + '.cwb-act svg{width:17px;height:17px;flex-shrink:0;}'
+    + '.cwb-act .cwb-arr{margin-left:auto;transition:transform .25s var(--cwb-ease);}'
+    + '.cwb-act:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(26,22,17,.1);border-color:rgba(107,85,56,.35);}'
+    + '.cwb-act:hover .cwb-arr{transform:translateX(3px);}'
+    + '.cwb-act.cwb-primary{background:linear-gradient(135deg,#1E3D2F,#2C5442);color:#FFFEFB;border-color:transparent;box-shadow:0 6px 16px rgba(30,61,47,.28);}'
+    + '.cwb-act.cwb-primary small{display:block;font-weight:500;font-size:11.5px;opacity:.78;margin-top:1px;}'
+    + '.cwb-act.cwb-primary::after{content:"";position:absolute;top:0;left:-60%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.28),transparent);transform:skewX(-18deg);animation:cwb-shine 3.2s ease-in-out 1s infinite;}'
+    + '@keyframes cwb-shine{0%,60%{left:-60%;}100%{left:130%;}}'
+    /* Schnellantworten */
+    + '.cwb-chips{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 2px 34px;}'
+    + '.cwb-chip{border:1px solid rgba(107,85,56,.3);background:var(--cwb-warm);color:var(--cwb-bronze);font:inherit;font-size:13px;font-weight:600;padding:8px 12px;border-radius:999px;cursor:pointer;transition:background .2s,color .2s,transform .2s var(--cwb-ease);animation:cwb-in .45s var(--cwb-ease) both;}'
+    + '.cwb-chip:hover{background:var(--cwb-bronze);color:#FFFEFB;transform:translateY(-1px);}'
+    + '.cwb-typing{display:none;gap:8px;align-items:flex-end;}'
+    + '.cwb-typing.cwb-vis{display:flex;}'
+    + '.cwb-typing .cwb-tb{background:#fff;border-radius:18px;border-bottom-left-radius:6px;padding:13px 15px;display:flex;gap:4px;box-shadow:0 0 0 1px var(--cwb-line);}'
+    + '.cwb-typing .cwb-mav{margin-bottom:0;}'
+    + '.cwb-typing span{width:6px;height:6px;background:#B5A98F;border-radius:50%;animation:cwb-bounce 1.2s infinite;}'
     + '.cwb-typing span:nth-child(2){animation-delay:.15s;}'
     + '.cwb-typing span:nth-child(3){animation-delay:.3s;}'
     + '@keyframes cwb-bounce{0%,60%,100%{transform:translateY(0);opacity:.6;}30%{transform:translateY(-5px);opacity:1;}}'
-    + '.cwb-input-area{border-top:1px solid #ece9e3;padding:10px 12px;display:flex;align-items:center;gap:8px;}'
-    + '.cwb-input-area input{flex:1;border:none;outline:none;padding:10px 4px;font-size:14px;color:#1a1612;background:transparent;}'
-    + '.cwb-send{width:36px;height:36px;border-radius:50%;background:'+brand+';border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:opacity .15s;}'
-    + '.cwb-send:hover{opacity:.85;}'
-    + '.cwb-notice{font-size:11px;line-height:1.35;color:var(--ink-quiet, #888);margin:-2px 0 6px 4px;max-width:85%;}';
+    + '.cwb-notice{font-size:11px;line-height:1.4;color:#857A6C;margin:0 0 2px 34px;max-width:82%;}'
+    + '.cwb-foot{border-top:1px solid var(--cwb-line);padding:10px 12px 12px;background:var(--cwb-paper);}'
+    + '.cwb-input-area{display:flex;align-items:center;gap:8px;background:#F6F1E6;border-radius:16px;padding:4px 4px 4px 14px;border:1px solid transparent;transition:border-color .2s,background .2s;}'
+    + '.cwb-input-area:focus-within{border-color:rgba(107,85,56,.35);background:#fff;}'
+    + '.cwb-input-area input{flex:1;min-width:0;border:none;outline:none;padding:10px 0;font:inherit;font-size:16px;color:var(--cwb-ink);background:transparent;}'
+    + '.cwb-send{width:40px;height:40px;border-radius:12px;background:var(--cwb-em);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:transform .2s var(--cwb-ease),opacity .2s;}'
+    + '.cwb-send:hover{transform:scale(1.06);}'
+    + '.cwb-quickbook{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;font-size:12px;color:var(--cwb-mute);text-decoration:none;}'
+    + '.cwb-quickbook b{color:var(--cwb-em);font-weight:700;}'
+    + '.cwb-quickbook:hover b{text-decoration:underline;}'
+    + '.cwb-quickbook svg{width:14px;height:14px;color:var(--cwb-em);}'
+    + '@media (max-width:520px){.cwb-window{right:0;left:0;bottom:0;width:100%;max-width:100%;height:100%;max-height:100%;max-height:100dvh;border-radius:0;}.cwb-launcher{right:16px;bottom:calc(16px + var(--cwb-lift,0px));width:56px;height:56px;}.cwb-teaser{right:16px;bottom:calc(86px + var(--cwb-lift,0px));}}'
+    + 'body.has-book-sticky .cwb-teaser{bottom:162px;}'
+    + '@media (prefers-reduced-motion: reduce){.cwb-root *,.cwb-root *::before,.cwb-root *::after{animation:none!important;transition:none!important;}}';
 
   var style = document.createElement('style');
   style.textContent = css;
   document.head.appendChild(style);
 
+  function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
   var launcher = document.createElement('button');
-  launcher.className = 'cwb-launcher';
-  launcher.setAttribute('aria-label', 'Chat öffnen');
-  launcher.innerHTML = SVG_INF;
+  launcher.className = 'cwb-launcher cwb-root';
+  launcher.type = 'button';
+  launcher.setAttribute('aria-label', 'Chat mit Lena, der KI-Assistentin von Praxura, öffnen');
+  launcher.innerHTML = '<img src="' + AVATAR + '" alt="" width="62" height="62" decoding="async"><span class="cwb-dot"></span><span class="cwb-badge">1</span>';
+
+  var teaser = document.createElement('div');
+  teaser.className = 'cwb-teaser cwb-root';
+  teaser.setAttribute('role', 'status');
+  teaser.innerHTML = '<img src="' + AVATAR + '" alt="" width="38" height="38">'
+    + '<div><b>Hallo, ich bin Lena 👋</b><p>Wenn Sie Fragen zu Praxura haben oder Hilfe brauchen – ich bin hier.</p></div>'
+    + '<button class="cwb-teaser-x" type="button" aria-label="Hinweis schließen">&#215;</button>';
 
   var win = document.createElement('div');
-  win.className = 'cwb-window';
+  win.className = 'cwb-window cwb-root';
   win.setAttribute('lang', DATA.language);
+  win.setAttribute('role', 'dialog');
+  win.setAttribute('aria-label', 'Chat mit Lena, KI-Assistentin von Praxura');
   win.innerHTML = ''
     + '<div class="cwb-header">'
-    +   '<div class="cwb-hav">' + SVG_INF + '</div>'
-    +   '<div class="cwb-name">' + DATA.botName + '</div>'
-    +   '<button class="cwb-close" type="button" aria-label="Schließen">&#215;</button>'
+    +   '<div class="cwb-hav"><img src="' + AVATAR + '" alt="" width="44" height="44"><span class="cwb-dot"></span></div>'
+    +   '<div class="cwb-hmeta"><div class="cwb-name">Lena</div><div class="cwb-role">KI-Assistentin von Praxura · antwortet sofort</div></div>'
+    +   '<button class="cwb-close" type="button" aria-label="Chat schließen">&#215;</button>'
     + '</div>'
-    + '<div class="cwb-msgs"><div class="cwb-typing"><span></span><span></span><span></span></div></div>'
-    + '<div class="cwb-input-area">'
-    +   '<input type="text" placeholder="' + DATA.typeMessage + '" aria-label="Nachricht" />'
-    +   '<button class="cwb-send" type="button" aria-label="Senden">'
-    +     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>'
-    +   '</button>'
+    + '<div class="cwb-msgs" aria-live="polite"><div class="cwb-typing"><img class="cwb-mav" src="' + AVATAR + '" alt=""><div class="cwb-tb"><span></span><span></span><span></span></div></div></div>'
+    + '<div class="cwb-foot">'
+    +   '<div class="cwb-input-area">'
+    +     '<input type="text" placeholder="' + esc(DATA.typeMessage) + '" aria-label="Nachricht" maxlength="500" />'
+    +     '<button class="cwb-send" type="button" aria-label="Senden">' + ICON.send + '</button>'
+    +   '</div>'
+    +   '<a class="cwb-quickbook" href="' + BOOK_URL + '" data-cta="chat-footer-book">' + ICON.cal + '<span>Lieber persönlich? <b>Kostenloses Analysegespräch buchen</b></span></a>'
     + '</div>';
 
   document.body.appendChild(launcher);
+  document.body.appendChild(teaser);
   document.body.appendChild(win);
 
   var msgs    = win.querySelector('.cwb-msgs');
@@ -2919,44 +2994,197 @@
   var input   = win.querySelector('input');
   var sendBtn = win.querySelector('.cwb-send');
   var closeBtn= win.querySelector('.cwb-close');
+  var badge   = launcher.querySelector('.cwb-badge');
 
   function timeNow(){
     var d = new Date();
     return ('0'+d.getHours()).slice(-2) + ':' + ('0'+d.getMinutes()).slice(-2);
   }
+  function scrollDown(){ msgs.scrollTop = msgs.scrollHeight; }
+  function place(node){ msgs.insertBefore(node, typing); scrollDown(); }
 
-  function addMsg(text, who){
-    var div = document.createElement('div');
-    div.className = 'cwb-msg cwb-' + who;
-    div.innerHTML = '<div class="cwb-bubble"></div><div class="cwb-time">' + timeNow() + '</div>';
-    div.querySelector('.cwb-bubble').textContent = text;
-    msgs.insertBefore(div, typing);
-    msgs.scrollTop = msgs.scrollHeight;
+  // Antworttext → sicheres HTML: Absätze, **fett**, E-Mail und Links. Der Buchungslink
+  // wird aus dem Fließtext genommen und stattdessen als Button gezeigt.
+  var BOOK_RE = /(?:https?:\/\/)?(?:www\.)?praxura\.de\/demo-booking(?:\.html)?\/?/gi;
+  function formatReply(text){
+    var hadBook = BOOK_RE.test(text); BOOK_RE.lastIndex = 0;
+    var t = text.replace(/\s*:\s*\(?(?:https?:\/\/)?(?:www\.)?praxura\.de\/demo-booking(?:\.html)?\/?\)?/gi, '')
+      .replace(/(?:\s+hier)?\s*\(?(?:https?:\/\/)?(?:www\.)?praxura\.de\/demo-booking(?:\.html)?\/?\)?/gi, ' über den Button unten')
+      .replace(/(\s)(?:über|unter|auf)\s+über den Button/g, '$1über den Button')
+      .replace(/((?:Nutzen|Verwenden|Klicken)[^.!?]{0,20}?)\s+über den Button/g, '$1 den Button')
+      .replace(/\s+([.,!?])/g, '$1').replace(/([.!?])\1+/g, '$1').replace(/,\s*([.!?])/g, '$1');
+    return { html: renderBlocks(t), hadBook: hadBook };
   }
 
+  function inline(s){
+    return esc(s)
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/([a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,})/gi, '<a href="mailto:$1">$1</a>')
+      .replace(/(?:https?:\/\/)?((?:www\.)?praxura\.de(?:\/[^\s<),]*)?)/gi, function(m, u){ return '<a href="https://' + u.replace(/[.]$/, '') + '">' + u.replace(/[.]$/, '') + '</a>' + (/[.]$/.test(u) ? '.' : ''); });
+  }
+
+  // Strukturierte Antworten: Absätze, Zwischenüberschriften (### oder **Titel:** allein in der Zeile),
+  // Aufzählungen (- • * oder 1.) und Wert-Zeilen („**Solo** (1 Behandler:in): 39 €/Monat") als
+  // zweispaltige Zeile mit rechtsbündigem Wert — damit Preise & Co. sauber untereinander stehen.
+  var LIST_RE = /^\s*(?:[-•*–]|\d+[.)])\s+/;
+  function listItem(raw){
+    var s = raw.replace(LIST_RE, '').trim();
+    var m = s.match(/^(.{2,70})\s*(?::|\s[–—-]\s)\s*([^:]{1,60})$/);
+    var plain = m ? m[2].replace(/\*\*/g, '') : '';
+    if (m && /\d/.test(plain) && plain.length <= 40 && /€|%|min|monat|tag|jahr|stunde|\d{2}\.\d{2}\./i.test(plain)) {
+      return '<li class="cwb-kv"><span>' + inline(m[1]) + '</span><b>' + inline(plain) + '</b></li>';
+    }
+    return '<li>' + inline(s) + '</li>';
+  }
+  function renderBlocks(t){
+    var lines = t.replace(/\r/g, '').split('\n');
+    var out = [], para = [], list = null, ordered = false;
+    function flushPara(){ if (para.length) { out.push('<p>' + para.map(inline).join('<br>') + '</p>'); para = []; } }
+    function flushList(){ if (list) { out.push((ordered ? '<ol' : '<ul') + ' class="cwb-list">' + list.join('') + (ordered ? '</ol>' : '</ul>')); list = null; } }
+    lines.forEach(function(line){
+      var l = line.trim();
+      if (!l) { flushPara(); flushList(); return; }
+      var head = l.match(/^#{1,4}\s+(.+)$/) || l.match(/^\*\*([^*]{2,60})\*\*:?$/) || l.match(/^([^.!?:]{2,28}):$/);
+      if (head) { flushPara(); flushList(); out.push('<div class="cwb-h">' + inline(head[1].replace(/:$/, '')) + '</div>'); return; }
+      if (LIST_RE.test(l)) {
+        flushPara();
+        var isOl = /^\s*\d+[.)]\s/.test(l);
+        if (list && isOl !== ordered) flushList();
+        if (!list) { list = []; ordered = isOl; }
+        list.push(listItem(l));
+        return;
+      }
+      flushList(); para.push(l);
+    });
+    flushPara(); flushList();
+    return out.join('');
+  }
+
+  function addMsg(text, who, opts){
+    opts = opts || {};
+    var row = document.createElement('div');
+    row.className = 'cwb-row cwb-' + who;
+    row.innerHTML = (who === 'bot' ? '<img class="cwb-mav" src="' + AVATAR + '" alt="">' : '')
+      + '<div class="cwb-msg"><div class="cwb-bubble"></div><div class="cwb-time">' + (who === 'bot' ? 'Lena · ' : '') + timeNow() + '</div></div>';
+    var b = row.querySelector('.cwb-bubble');
+    if (opts.html) b.innerHTML = opts.html; else b.textContent = text;
+    place(row);
+    return row;
+  }
+
+  function actionBtn(a){
+    var el = document.createElement('a');
+    el.className = 'cwb-act' + (a.primary ? ' cwb-primary' : '');
+    el.href = a.href;
+    el.setAttribute('data-cta', a.cta);
+    el.innerHTML = (a.icon || '') + '<span>' + esc(a.label) + (a.sub ? '<small>' + esc(a.sub) + '</small>' : '') + '</span>' + '<span class="cwb-arr">' + ICON.arrow + '</span>';
+    if (a.href.charAt(0) === '#') {
+      el.addEventListener('click', function(e){
+        var target = document.querySelector(a.href);
+        if (!target) return;
+        e.preventDefault();
+        if (window.innerWidth <= 520) closeChat();
+        target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+      });
+    }
+    return el;
+  }
+  var A = {
+    book:  { label:'Kostenloses Analysegespräch buchen', sub:'30 Min. per Video · unverbindlich', href:BOOK_URL, cta:'chat-book', icon:ICON.cal, primary:true },
+    price: { label:'Preise & Aktion ansehen', href:'#preise', cta:'chat-preise' },
+    funcs: { label:'Alle Funktionen ansehen', href:'#funktionen', cta:'chat-funktionen' },
+    faq:   { label:'Häufige Fragen lesen', href:'#faq', cta:'chat-faq' },
+    mail:  { label:'E-Mail an kontakt@praxura.de', href:'mailto:kontakt@praxura.de', cta:'chat-mail', icon:ICON.mail }
+  };
+  function addActions(list){
+    if (!list.length) return;
+    var box = document.createElement('div');
+    box.className = 'cwb-actions';
+    list.forEach(function(a){ box.appendChild(actionBtn(a)); });
+    place(box);
+  }
+
+  // Welche Buttons passen zur Frage/Antwort? Der Buchungs-Button kommt, sobald Interesse
+  // erkennbar ist – und spätestens bei jeder zweiten Antwort, aber nie zweimal hintereinander.
+  function pickActions(q, reply, hadBook){
+    var s = (q + ' ' + reply).toLowerCase();
+    var out = [];
+    var interest = hadBook || /analysegespräch|termin|demo|beratung|gespräch|test|ausprobier|wechsel|umstieg|angebot|kosten|preis|€|einricht|vertrag|kündig/.test(s);
+    var due = SESSION.botReplies - SESSION.lastBookAt >= 2;
+    if (interest || due) { out.push(A.book); SESSION.lastBookAt = SESSION.botReplies; }
+    if (/preis|\bkosten\b|kostet|€|tarif|\bpakete?\b|aktion|black friday|cyber|weihnacht|rabatt|angebot|\/monat|pro monat/.test(s)) out.push(A.price);
+    else if (/funktion|kalender|termin(?:planung|verwaltung)|abrechnung|§ ?302|fahrtenbuch|patientenakte|verordnung|rezept/.test(s)) out.push(A.funcs);
+    else if (/datenschutz|dsgvo|daten|server|cloud|hetzner|sicher/.test(s)) out.push(A.faq);
+    return out.slice(0, 2);
+  }
+
+  var CHIPS = ['Was kostet Praxura?', 'Kann ich Praxura testen?', 'Wo liegen meine Patientendaten?', 'Klappt die §302-Abrechnung?'];
+  function addChips(){
+    var box = document.createElement('div');
+    box.className = 'cwb-chips';
+    CHIPS.forEach(function(c, i){
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'cwb-chip'; b.textContent = c;
+      b.style.animationDelay = (0.1 + i * 0.06) + 's';
+      b.addEventListener('click', function(){ box.remove(); input.value = c; userSend(); });
+      box.appendChild(b);
+    });
+    place(box);
+  }
+
+  function hideTeaser(){ teaser.classList.remove('cwb-on'); badge.classList.remove('cwb-on'); }
+  function rememberSeen(){ try { sessionStorage.setItem('cwb-seen', '1'); } catch(e){} launcher.classList.add('cwb-seen'); }
+
   var inited = false;
-  launcher.addEventListener('click', function(){
+  function openChat(){
+    hideTeaser(); rememberSeen();
     win.classList.add('cwb-open');
-    input.focus();
+    launcher.style.visibility = 'hidden';
+    if (window.innerWidth > 520) input.focus();
     if(!inited){
       inited = true;
       setTimeout(function(){
         addMsg(DATA.welcomeMessage, 'bot');
         var notice = document.createElement('div');
         notice.className = 'cwb-notice';
-        notice.textContent = 'KI-Assistent – Antworten werden automatisch erzeugt und können fehlerhaft sein. Bitte keine Patientendaten eingeben.';
-        msgs.insertBefore(notice, typing);
-        msgs.scrollTop = msgs.scrollHeight;
-      }, 200);
+        notice.textContent = 'Lena ist eine KI – Antworten werden automatisch erzeugt und können fehlerhaft sein. Bitte keine Patientendaten eingeben.';
+        place(notice);
+        addChips();
+      }, 180);
     }
-  });
-  closeBtn.addEventListener('click', function(){ win.classList.remove('cwb-open'); });
+  }
+  function closeChat(){ win.classList.remove('cwb-open'); launcher.style.visibility = ''; }
+  launcher.addEventListener('click', openChat);
+  teaser.addEventListener('click', function(e){ if (e.target.closest('.cwb-teaser-x')) { e.stopPropagation(); hideTeaser(); rememberSeen(); return; } openChat(); });
+  closeBtn.addEventListener('click', closeChat);
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && win.classList.contains('cwb-open')) closeChat(); });
+
+  // Solange das Einwilligungsbanner unten liegt, Launcher und Bubble darüber heben –
+  // der Avatar darf „Akzeptieren"/„Ablehnen" nicht verdecken.
+  function syncLift(){
+    var cb = document.getElementById('cookie-banner');
+    document.documentElement.style.setProperty('--cwb-lift', (cb ? cb.offsetHeight + 8 : 0) + 'px');
+  }
+  syncLift();
+  if ('MutationObserver' in window) new MutationObserver(syncLift).observe(document.body, { childList: true });
+  window.addEventListener('resize', syncLift);
+
+  // Begrüßung nach kurzer Verweildauer – einmal pro Sitzung.
+  var seen = false;
+  try { seen = sessionStorage.getItem('cwb-seen') === '1'; } catch(e){}
+  if (seen) launcher.classList.add('cwb-seen');
+  else setTimeout(function(){
+    if (inited) return;
+    teaser.classList.add('cwb-on'); badge.classList.add('cwb-on');
+    setTimeout(function(){ if (!inited) teaser.classList.remove('cwb-on'); }, 14000);
+  }, 3500);
 
   function lockSession(reasonText){
     SESSION.terminated = true;
     input.disabled = true;
     input.placeholder = DATA.sessionEnded;
     addMsg(reasonText || DATA.sessionEnded, 'bot');
+    addActions([A.book, A.mail]);
   }
 
   function userSend(){
@@ -2968,27 +3196,36 @@
     var now = Date.now();
     if(now - SESSION.lastSent < DATA.limits.cooldownMs){ addMsg(DATA.errCooldown, 'bot'); return; }
     SESSION.lastSent = now;
+    var chips = msgs.querySelector('.cwb-chips'); if (chips) chips.remove();
     addMsg(t, 'user');
     input.value = '';
     SESSION.count++;
     if(SESSION.count > DATA.limits.maxMessagesPerSession){ lockSession(DATA.sessionLimit); return; }
     typing.classList.add('cwb-vis');
-    msgs.scrollTop = msgs.scrollHeight;
+    scrollDown();
+    var started = Date.now();
     fetchAnswer(t).then(function(data){
-      typing.classList.remove('cwb-vis');
-      if(!data || data.error || !data.reply){ addMsg(DATA.errNetwork, 'bot'); return; }
-      addMsg(applyTone(data.reply), 'bot');
-      SESSION.history.push({role:'user', content:t});
-      SESSION.history.push({role:'assistant', content:data.reply});
-      if(data.offTopic){
-        SESSION.strikes++;
-        if(SESSION.strikes >= DATA.limits.maxOffTopicStrikes){
-          setTimeout(function(){ lockSession(DATA.sessionEnded); }, 600);
+      // kurze Mindest-Tippzeit, damit die Antwort nicht „hineinspringt"
+      setTimeout(function(){
+        typing.classList.remove('cwb-vis');
+        if(!data || data.error || !data.reply){ addMsg(DATA.errNetwork, 'bot'); addActions([A.book, A.mail]); return; }
+        var f = formatReply(applyTone(data.reply));
+        addMsg('', 'bot', { html: f.html });
+        SESSION.botReplies++;
+        if (!data.offTopic) addActions(pickActions(t, data.reply, f.hadBook));
+        SESSION.history.push({role:'user', content:t});
+        SESSION.history.push({role:'assistant', content:data.reply});
+        if(data.offTopic){
+          SESSION.strikes++;
+          if(SESSION.strikes >= DATA.limits.maxOffTopicStrikes){
+            setTimeout(function(){ lockSession(DATA.sessionEnded); }, 600);
+          }
         }
-      }
+      }, Math.max(0, 650 - (Date.now() - started)));
     }).catch(function(){
       typing.classList.remove('cwb-vis');
       addMsg(DATA.errNetwork, 'bot');
+      addActions([A.book, A.mail]);
     });
   }
 
