@@ -309,7 +309,7 @@ jobs:
       sessiz: true
     secrets:
       tg_token: ${{ secrets.TELEGRAM_BEKCI_BOT_TOKEN || secrets.TELEGRAM_BOT_TOKEN }}
-      tg_chat: ${{ secrets.TELEGRAM_BEKCI_CHAT_ID }}
+      tg_chat: ${{ secrets.TELEGRAM_BEKCI_CHAT_ID || secrets.TELEGRAM_CHAT_ID }}
 
   bildir:
     needs: [hazirla, ajan, bewerten, uebernehmen]
@@ -321,8 +321,8 @@ jobs:
       actions: read     # download-artifact
     env:
       TELEGRAM_BEKCI_BOT_TOKEN: ${{ secrets.TELEGRAM_BEKCI_BOT_TOKEN || secrets.TELEGRAM_BOT_TOKEN }}
-      TELEGRAM_BEKCI_CHAT_ID: ${{ secrets.TELEGRAM_BEKCI_CHAT_ID }}
-      TELEGRAM_BEKCI_USER_ID: ${{ secrets.TELEGRAM_BEKCI_USER_ID }}
+      TELEGRAM_BEKCI_CHAT_ID: ${{ secrets.TELEGRAM_BEKCI_CHAT_ID || secrets.TELEGRAM_CHAT_ID }}
+      TELEGRAM_BEKCI_USER_ID: ${{ secrets.TELEGRAM_BEKCI_USER_ID || secrets.TELEGRAM_BEKCI_CHAT_ID || secrets.TELEGRAM_CHAT_ID }}
       LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       EYLEM: ${{ inputs.eylem }}
       VAKA: ${{ inputs.vaka_id }}
