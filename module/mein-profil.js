@@ -8,7 +8,7 @@
  * Rollen: Inhaber → Vor-/Nachname (owner_first_name/last_name; business_name ist beim Inhaber der Praxisname!),
  * Mitarbeiter → Anzeigename (business_name, so zeigt ihn die Team-Liste). Foto für alle (avatar_url).
  */
-import { ladeProfilfotoHoch, bildAlsQuadratJpeg } from './praxis-logo-upload.js?v=20261123mp1';
+import { ladeProfilfotoHoch, bildAlsQuadratJpeg, entferneProfilfoto } from './praxis-logo-upload.js?v=20261124cx1';
 
 export const SECTION_ID = 'settingsMeinProfilSection';
 const MAX = 80;
@@ -148,6 +148,7 @@ export function renderMeinProfil(deps) {
   weg.addEventListener('click', async () => {
     weg.setAttribute('disabled', '');
     try {
+      await entferneProfilfoto(deps.supabase, uid, p.avatar_url);
       const { error } = await deps.supabase.from('profiles').update({ avatar_url: null }).eq('id', uid);
       if (error) throw error;
       fertig({ avatar_url: null });

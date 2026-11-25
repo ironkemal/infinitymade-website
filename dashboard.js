@@ -1,4 +1,4 @@
-import { emojisAus } from './module/ohne-emoji.js?v=20261123hw1'; import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261123mp1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261123mp1'; import { standorteFuerNutzer } from './module/standort-zuordnung.js?v=20261123sz1'; import { einstellungenKategorienAufbauen, einstellungenZeigeAbschnitt } from './module/einstellungen-nav.js?v=20261123mp1'; import { renderMeinProfil } from './module/mein-profil.js?v=20261123mp1';
+import { emojisAus } from './module/ohne-emoji.js?v=20261123hw1'; import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261124cx1'; import { ladePraxisLogoHoch, entferneProfilfoto } from './module/praxis-logo-upload.js?v=20261124cx1'; import { standorteFuerNutzer } from './module/standort-zuordnung.js?v=20261123sz1'; import { einstellungenKategorienAufbauen, einstellungenZeigeAbschnitt } from './module/einstellungen-nav.js?v=20261123mp1'; import { renderMeinProfil } from './module/mein-profil.js?v=20261124cx1';
 import { oeffneLeistungsRaum, leistungsRaumPayload } from './module/leistungs-raum.js?v=20261103raum';
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
 import { planungVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261121f11';
@@ -9467,6 +9467,7 @@ function openEmpDetail(empId) {
     const okAvatar = await showConfirmModal({ title: 'Profilbild entfernen', message: 'Profilbild entfernen?', confirmText: 'Entfernen', cancelText: 'Abbrechen', variant: 'danger' });
     if (!okAvatar) return;
     try {
+      await entferneProfilfoto(supabase, empId, m.avatar_url);
       const { error: dbErr } = await supabase.from('profiles').update({ avatar_url: null }).eq('id', empId);
       if (dbErr) throw dbErr;
       m.avatar_url = null;
@@ -9478,7 +9479,6 @@ function openEmpDetail(empId) {
       showToast('Fehler: ' + e.message, 'error');
     }
   };
-
   const detail = document.getElementById('teamDetailView');
 
   detail.querySelectorAll('.tab-btn').forEach(btn => {

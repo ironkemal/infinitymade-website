@@ -60,7 +60,7 @@ try {
       if (breite === 1280) {
         // Erfolgsweg im echten DOM mit Attrappe (Fixture ist nur lesend): Inhaber-Patch nur Vor-/Nachname, Profil lokal nachgezogen
         const erg = await page.evaluate(async () => {
-          const m = await import('/module/mein-profil.js?v=20261123mp1');
+          const m = await import('/module/mein-profil.js?v=20261124cx1');
           const patches = []; const toasts = []; const profil = { role: 'owner', owner_first_name: 'Ines', owner_last_name: 'Inhaberin', business_name: 'Praxis X' };
           const sb = { from: (t) => ({ update: (p) => ({ eq: async (k, v) => { patches.push({ t, p, k, v }); return { error: null }; } }) }) };
           let nach = 0;
@@ -74,6 +74,22 @@ try {
         if (!p0 || p0.t !== 'profiles' || JSON.stringify(Object.keys(p0.p).sort()) !== JSON.stringify(['owner_first_name', 'owner_last_name']) || p0.p.owner_first_name !== 'Ina') befunde.push(`Mein Profil Erfolgsweg: falscher Patch ${JSON.stringify(erg.patches)}`);
         if (erg.profil.business_name !== 'Praxis X' || erg.profil.owner_first_name !== 'Ina' || erg.nach !== 1) befunde.push(`Mein Profil Erfolgsweg: Profil/Neuzeichnen falsch ${JSON.stringify(erg.profil)} nach=${erg.nach}`);
         if (!erg.toasts.some(([x, y]) => /Profil gespeichert/.test(x) && y === 'success')) befunde.push(`Mein Profil Erfolgsweg: keine Bestätigung ${JSON.stringify(erg.toasts)}`);
+        // Foto entfernen: Datei im eigenen Ordner löschen, DANN Verweis leeren (Live-Test 24.11.: Datei blieb öffentlich)
+        const weg = await page.evaluate(async () => {
+          const m = await import('/module/mein-profil.js?v=20261124cx1');
+          const schritte = []; const uid = '11111111-1111-4111-8111-111111111111';
+          const basis = location.origin + '/storage/v1/object/public/avatars/';
+          const profil = { role: 'employee', business_name: 'Mia', avatar_url: basis + uid + '/1732000000000.jpg' };
+          const sb = { storage: { from: (b) => ({ getPublicUrl: (pfad) => ({ data: { publicUrl: basis + pfad } }), remove: async (pfade) => { schritte.push(['remove', b, pfade]); return { error: null }; } }) },
+            from: (t) => ({ update: (p) => ({ eq: async () => { schritte.push(['update', t, p]); return { error: null }; } }) }) };
+          m.renderMeinProfil({ supabase: sb, profile: () => profil, userId: () => uid, showToast: () => {} });
+          document.getElementById('meinProfilFotoWeg').click();
+          await new Promise((r) => setTimeout(r, 50));
+          return { schritte, profil };
+        });
+        const [s1, s2] = weg.schritte;
+        if (!s1 || s1[0] !== 'remove' || s1[1] !== 'avatars' || JSON.stringify(s1[2]) !== JSON.stringify(['11111111-1111-4111-8111-111111111111/profilfoto.jpg', '11111111-1111-4111-8111-111111111111/1732000000000.jpg'])) befunde.push(`Foto entfernen löscht die Datei nicht (${JSON.stringify(weg.schritte)})`);
+        if (!s2 || s2[0] !== 'update' || s2[2].avatar_url !== null || weg.profil.avatar_url !== null) befunde.push(`Foto entfernen leert den Verweis nicht nach dem Löschen (${JSON.stringify(weg.schritte)})`);
         await wechsle(page, 'settings'); await ruhe(page, 300);
       }
       await page.evaluate(() => { location.hash = '#settings/abo'; });

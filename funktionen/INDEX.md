@@ -1,9 +1,9 @@
 # Funktionskarte
 
-> Üretim: 2026-11-24 · `node tools/funktionskarte.mjs`
+> Üretim: 2026-11-25 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**5532 fonksiyon** (5407 JS · 98 bash · 27 ps1) · 732 dosya · 42 sidebar modülü
+**5534 fonksiyon** (5409 JS · 98 bash · 27 ps1) · 732 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -61,7 +61,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `renderLegendeSettings()` — [module/fussbefund.js:1804](module/fussbefund.js#L1804-L1869) · 66 satır · profiles:update
 
 **Yol 15 — `renderMeinProfil()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
-- `renderMeinProfil()` — [module/mein-profil.js:48](module/mein-profil.js#L48-L160) · 113 satır · profiles:update
+- `renderMeinProfil()` — [module/mein-profil.js:48](module/mein-profil.js#L48-L161) · 114 satır · profiles:update
 
 **Yol 16 — `mountPraxisStandort()`** · Ekran: _UI yolu çözülemedi_
 - `mountPraxisStandort()` — [module/praxis-standort.js:99](module/praxis-standort.js#L99-L179) · 81 satır · profiles:update
@@ -609,7 +609,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `escapeHtml` — admin.js:61 · api-backend/billing/pdf/ausfallrechnung.template.js:16 · api-backend/billing/pdf/begleitzettel.template.js:29 · api-backend/billing/pdf/rechnung.template.js:11 · api-backend/billing/pdf/rezeptvorderseite.template.js:12 · api-backend/billing/pdf/rzg-quittung.template.js:9 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:14 · dashboard.js:526 · module/abrechnung-status.js:195 · module/abrechnungsstatus.js:742 · module/anstellung.js:15 · module/ausfallrechnung.js:19 · module/behandlungsbestaetigung.js:37 · module/diagnosegruppen-regeln.js:32 · module/ehemalige-mitarbeiter.js:13 · module/fax-deckblatt.js:30 · module/formular-editor.js:172 · module/formular-unterschreiben.js:102 · module/fussbefund.js:204 · module/kalender-raster.js:29 · module/kalender-woche.js:43 · module/leistung-farbwahl.js:30 · module/leistungen-liste.js:28 · module/patient-dokumente.js:40 · module/patient-termine.js:2 · module/physio-befund.js:46 · module/raum-streifen.js:105 · module/raum-verwaltung.js:20 · module/rezeptinfo-geld.js:73 · module/sondertag-mitteilung.js:11 · module/sondertag.js:29 · module/standort-plan.js:93 · module/termin-aktionen.js:43 · module/termin-druck.js:27 · module/termin-panel.js:34 · module/warteliste-ansicht.js:31 · module/warteliste-nachruecker.js:83
 - `schliessen` — cookie-consent.js:137 · module/abrechnung-freigabe.js:190 · module/abrechnungsstatus.js:603 · module/abwesenheit-termine.js:364 · module/arzt-register.js:278 · module/formular-editor.js:427 · module/patienten-import.js:479 · module/rechnung-zahlungseingang.js:555 · module/tagesplan-druck.js:306 · module/verordnung-einheiten.js:300 · module/verordnung-einheiten.js:398 · module/verordnung-einheiten.js:591 · module/verordnung-feldmarker.js:241 · module/verordnung-import.js:725 · module/zuzahlung-befreiung.js:252 · module/zuzahlung-korrektur.js:209
 - `$` — attendance.js:10 · module/anamnese.js:44 · module/branding-ui.js:31 · module/heilmittel-zeilen-ui.js:29 · module/kiosk.js:74 · module/podo-vorgeschichte-form.js:88 · module/rechnung-zahlungseingang.js:455 · module/ueber.js:52 · module/verordnung-einheiten.js:543 · module/verordnung-podo.js:85 · module/verordnung-pruefen-knopf.js:43 · module/zuzahlung-korrektur.js:206 · ops/app.js:48 · widget/booking-widget.js:24
-- `main` — api-backend/check_diagnosegruppen_icd.js:101 · api-backend/merkez-istemci/kayit.js:230 · api-backend/preise_autoupdate.mjs:388 · api-backend/preise_pruefen.mjs:261 · api-backend/sync_heilmittel_katalog.js:159 · sosyal/yayinci/yayinci.mjs:260 · tools/check-select-spalten.mjs:113 · tools/empfaenger-zertifikat-laden.mjs:65 · tools/icd10-seed.mjs:146 · tools/indexnow.mjs:46 · tools/itsg-trust-anchor-laden.mjs:68 · tools/kostentraeger-annahmestellen-laden.mjs:177 · tools/quellen-waechter.mjs:456 · tools/seed-generieren.mjs:182
+- `main` — api-backend/check_diagnosegruppen_icd.js:101 · api-backend/merkez-istemci/kayit.js:230 · api-backend/preise_autoupdate.mjs:389 · api-backend/preise_pruefen.mjs:261 · api-backend/sync_heilmittel_katalog.js:159 · sosyal/yayinci/yayinci.mjs:260 · tools/check-select-spalten.mjs:113 · tools/empfaenger-zertifikat-laden.mjs:65 · tools/icd10-seed.mjs:146 · tools/indexnow.mjs:46 · tools/itsg-trust-anchor-laden.mjs:68 · tools/kostentraeger-annahmestellen-laden.mjs:177 · tools/quellen-waechter.mjs:456 · tools/seed-generieren.mjs:182
 - `render` — calendar-widget.js:127 · dashboard.js:11648 · dashboard.js:16537 · module/abwesenheit-termine.js:371 · module/app-start.js:36 · module/ki-einstellungen.js:16 · module/mail-signatur-editor.js:41 · ops/board.js:206 · ops/decisions.js:14 · ops/files.js:52 · ops/finance.js:959 · ops/meetings.js:23 · ops/wissen.js:66 · patient-suche.js:116
 - `handler` — api/admin/data.js:37 · api/admin/feedbacks.js:8 · api/apify/search.js:10 · api/config.js:6 · api/contact.js:33 · api/demo-booking.js:430 · api/onboarding/check-email.js:12 · api/onboarding/pending.js:13 · api/stripe/create-checkout-session.js:17 · api/stripe/portal-session.js:15 · api/stripe/webhook.js:98 · module/arztangaben-banner.js:104
 - `lauf` — api-backend/lib/status.js:119 · module/verordnung-detail.js:1052 · module/verordnung-podo.js:1151 · sosyal/erzeuge.mjs:68 · tools/browser-probe/v205-leiste.mjs:17 · tools/browser-probe/v209b-dokumente.mjs:14 · tools/browser-probe/v212b-suche.mjs:8 · tools/browser-probe/v505-kalender.mjs:13 · tools/browser-probe/v602-handlungsbedarf.mjs:8 · tools/browser-probe/v6b03-geld.mjs:7 · tools/kostentraeger-check.mjs:237 · tools/quellen-waechter.mjs:233

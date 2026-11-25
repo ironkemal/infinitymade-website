@@ -487,6 +487,7 @@ test('Physio und Podologie sind beide automatisierbar (kein DB-Override mehr)', 
   test('sprung: erlaubeSprung boş -> art:sprung + sprungCodes; dosya değişmez', () => {
     assert.equal(resLeer.ok, false);
     assert.equal(resLeer.art, 'sprung');
+    assert.ok(resLeer.sprungCodes);
     assert.equal(resLeer.sprungCodes.length, 2);
     assert.equal(readFileSync(ziel, 'utf8'), vorher);
   });
@@ -496,6 +497,7 @@ test('Physio und Podologie sind beide automatisierbar (kein DB-Override mehr)', 
   test('sprung: yalnız bir kısmı listede -> yine sprung, dosya değişmez', () => {
     assert.equal(resTeil.ok, false);
     assert.equal(resTeil.art, 'sprung');
+    assert.ok(resTeil.sprungCodes);
     assert.equal(resTeil.sprungCodes.length, 1);
     assert.equal(resTeil.sprungCodes[0].code, '78020');
     assert.equal(readFileSync(ziel, 'utf8'), vorher);

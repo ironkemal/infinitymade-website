@@ -365,6 +365,7 @@ export async function fuehreAus({ xml, stand = null, dryRun = false, erlaubeSpru
           }
         }
       } else {
+        /** @type {(typeof bericht.needsReview)[number]} */
         const item = {
           art: res.art || 'fehler',
           grund: `${bereich}: ${res.grund}`,

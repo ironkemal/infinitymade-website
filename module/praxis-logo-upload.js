@@ -70,3 +70,32 @@ export async function bildAlsQuadratJpeg(file, kante = 400) {
     return /** @type {Blob} */ (blob);
   } finally { bitmap.close(); }
 }
+
+/** @param {unknown} url @returns {string|null} */
+export function avatarPfadAusUrl(url) {
+  if (typeof url !== 'string') return null;
+  try {
+    const adresse = new URL(url);
+    if (!['http:', 'https:'].includes(adresse.protocol)) return null;
+    const treffer = adresse.pathname.match(/\/storage\/v1\/object\/public\/avatars\/([a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}\/(?:profilfoto|[0-9]+)\.jpg)$/i);
+    return treffer?.[1] ?? null;
+  } catch { return null; }
+}
+
+/** Entfernt das feste Profilfoto und ggf. das aktuell verknüpfte ältere Teamfoto.
+ * @param {{storage: {from: (bucket: string) => any}}} supabase
+ * @param {string} uid
+ * @param {unknown} url
+ */
+export async function entferneProfilfoto(supabase, uid, url) {
+  const bucket = supabase.storage.from('avatars');
+  const fest = `${uid}/profilfoto.jpg`;
+  const pfade = [fest];
+  const alt = avatarPfadAusUrl(url);
+  if (typeof url === 'string' && alt && alt !== fest && alt.startsWith(`${uid}/`)) {
+    const erwartet = bucket.getPublicUrl(alt).data.publicUrl;
+    if (url.split(/[?#]/, 1)[0] === erwartet) pfade.push(alt);
+  }
+  const { error } = await bucket.remove(pfade);
+  if (error) throw new Error('Profildatei konnte nicht entfernt werden.');
+}
