@@ -159,6 +159,33 @@ jobs:
             --allowedTools "Read,Glob,Grep,Write"
             --disallowedTools "Bash,WebFetch,WebSearch,Edit,MultiEdit,NotebookEdit,Task,Read(//proc/**),Read(//home/runner/work/_temp/**),Read(//home/runner/.*/**),Read(//etc/**),Read(//tmp/**),Read(//run/**)"
 
+      - name: Zweite Meinung (anderes Modell) — darf der Bekçi das selbst übernehmen?
+        # Kemal 25.11.2026: risikolose Änderungen selbst übernehmen; bei kritischen Quellen nur,
+        # wenn ein zweiter Agent zustimmt (quellen-bewerten.mjs, ikinci.json).
+        if: inputs.eylem == 'yeni'
+        uses: anthropics/claude-code-action@eb56b6666facdbd501035f4a0269d8caee2e7a8b # v1.0.289
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          prompt: |
+            Lies tools/bekci-ajan/prompts/ikinci-goz.md vollständig und führe genau die dort beschriebene Aufgabe aus.
+          claude_args: >-
+            --model claude-sonnet-5-5
+            --max-turns 30
+            --allowedTools "Read,Glob,Grep,Write"
+            --disallowedTools "Bash,WebFetch,WebSearch,Edit,MultiEdit,NotebookEdit,Task,Read(//proc/**),Read(//home/runner/work/_temp/**),Read(//home/runner/.*/**),Read(//etc/**),Read(//tmp/**),Read(//run/**)"
+
+      - name: Zweite Meinung — Geheimnis-Filter
+        if: inputs.eylem == 'yeni'
+        run: |
+          set -euo pipefail
+          [ -f bekci-out/ikinci.json ] || exit 0
+          node --input-type=module -e '
+            import fs from "node:fs";
+            import { sirIceriyor } from "./tools/bekci-ajan/cli.mjs";
+            const t = fs.readFileSync("bekci-out/ikinci.json", "utf8");
+            if (sirIceriyor(t)) { fs.writeFileSync("bekci-out/ikinci.json", "{}"); console.log("verworfen"); }'
+
       - name: Nur bekci-out/ geschrieben?
         run: |
           set -euo pipefail
@@ -221,7 +248,7 @@ jobs:
             uygula) echo "karar=onay" >> "$GITHUB_OUTPUT" ;;
             yeni)
               node tools/bekci-ajan/quellen-bewerten.mjs --befunde=bekci-in/quellen.json --karar=bekci-out/karar.json \
-                --indeks=bekci-in/belgeler/index.json --out=bekci-in/entscheidung.json
+                --indeks=bekci-in/belgeler/index.json --ikinci=bekci-out/ikinci.json --out=bekci-in/entscheidung.json
               node -e '
                 const e = JSON.parse(require("fs").readFileSync("bekci-in/entscheidung.json","utf8"));
                 const ok = id => /^[a-z0-9][a-z0-9-]{1,40}$/.test(id);
@@ -485,9 +512,9 @@ jobs:
             yeni)
               if [ -n "$OTOMATIK" ]; then
                 node -e 'const e=JSON.parse(require("fs").readFileSync("bekci-in/entscheidung.json","utf8"));require("fs").writeFileSync("rapor.txt",(e.rapor||[]).join("\n"))'
-                $CLI bildir --kok=vakalar --bekci=quellen --tur=auto --dosya=rapor.txt --link="$LINK"
+                $CLI bildir --kok=vakalar --bekci=quellen --tur=auto --dosya=rapor.txt --link="$LINK" --takipler=bekci-in/entscheidung.json
               fi
-              $CLI vaka-ac-coklu --entscheidung=bekci-in/entscheidung.json --dizin="$D" --out-ids=ids.txt
+              $CLI vaka-ac-coklu --kok=vakalar --entscheidung=bekci-in/entscheidung.json --dizin="$D" --out-ids=ids.txt
               while read -r id; do [ -n "$id" ] && gonder node main/tools/bekci-ajan/gonder-vaka.mjs --kok=vakalar --anlatim=bekci-anlat/anlatim.json --denetim=bekci-anlat/denetim.json --id="$id" --entscheidung=bekci-in/entscheidung.json --belgeler=bekci-in/belgeler --olgular=bekci-in/entscheidung.json,bekci-in/quellen.json; done < ids.txt ;;
             *)
               $CLI bildir --kok=vakalar --bekci=quellen --tur=hata --link="$LINK" ;;

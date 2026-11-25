@@ -1,7 +1,7 @@
 // tools/bekci-ajan/quellen-bewerten.test.js
-// Ne: quellen-bewerten.mjs için kapsamlı birim testleri (en az 10 test).
-// Niye: SPEC.md ve görev tanımı uyarınca sıkı şema denetimleri, tam otomatik / vaka kararları,
-// kritik kaynak korkulukları, eksik/kesik belge durumları, deterministik satır biçimi ve CLI doğrulanması.
+// Ne: quellen-bewerten.mjs için kapsamlı birim testleri.
+// Niye: SPEC.md ve Kemal'in 25.11.2026 kararı uyarınca yeni otomatik kuralı (kritik+ikinci, etki:dusuk,
+// ZIP+PDF, takip çıkarımı vb.), sıkı şema denetimleri, deterministik satır biçimi ve CLI doğrulanması.
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -85,30 +85,64 @@ test('1. Tam otomatik: kritik olmayan, karar geçerli, etki yok, oneri biliniyor
   assert.deepEqual(sonuc.otomatik, ['gkv-anlage2']);
   assert.equal(sonuc.vakalar.length, 0);
   assert.equal(sonuc.rapor.length, 1);
-  assert.ok(sonuc.rapor[0].startsWith('✓ gkv-anlage2: 1 yeni belge — ajan: bizi etkilemiyor'));
+  assert.ok(sonuc.rapor[0].startsWith('✓ Yeni fiyat listesi ve teşhis ekleri:'));
   assert.ok(sonuc.rapor[0].includes('Podoloji için geçerli değil'));
 });
 
-// 2. Kritik kaynak her zaman vaka
-test('2. Kritik kaynak (wichtig=kritisch) her zaman vaka açar (otomatik olamaz)', () => {
+// 2. Kritik kaynak + ikinci katılıyor -> otomatik
+test('2. Kritik kaynak (wichtig=kritisch) + ikinci katılıyor -> otomatik', () => {
+  const befunde = ornekBefunde();
+  befunde[0].wichtig = 'kritisch';
+  const karar = ornekGecerliKarar();
+  const indeks = ornekIndeks();
+  const ikinci = {
+    kaynaklar: [
+      {
+        quelle_id: 'gkv-anlage2',
+        katiliyor: true,
+        neden: 'Faturaları ve reçete okumayı etkilemiyor.',
+      },
+    ],
+  };
+
+  const sonuc = bewerte({ befunde, karar, indeks, ikinci });
+
+  assert.deepEqual(sonuc.otomatik, ['gkv-anlage2']);
+  assert.equal(sonuc.vakalar.length, 0);
+});
+
+// 3. Kritik kaynak + ikinci yok veya katılmıyor -> vaka
+test('3. Kritik kaynak + ikinci yok veya katılmıyor -> vaka', () => {
   const befunde = ornekBefunde();
   befunde[0].wichtig = 'kritisch';
   const karar = ornekGecerliKarar();
   const indeks = ornekIndeks();
 
-  const sonuc = bewerte({ befunde, karar, indeks });
+  // a) İkinci yok
+  const sonuc1 = bewerte({ befunde, karar, indeks });
+  assert.equal(sonuc1.otomatik.length, 0);
+  assert.equal(sonuc1.vakalar.length, 1);
+  assert.equal(sonuc1.vakalar[0].baslik, '‼️ Kaynak: gkv-anlage2');
+  assert.ok(sonuc1.gruende.includes('kritik kaynak: ikinci görüş yok'));
 
-  assert.equal(sonuc.otomatik.length, 0);
-  assert.equal(sonuc.vakalar.length, 1);
-  const v = sonuc.vakalar[0];
-  assert.equal(v.bekci, 'quellen');
-  assert.equal(v.baslik, '‼️ Kaynak: gkv-anlage2');
-  assert.ok(v.satirlar.some(s => s.includes('(kritisch)')));
-  assert.ok(sonuc.gruende.includes('kaynak kritik'));
+  // b) İkinci katılmıyor
+  const ikinciKatilmiyor = {
+    kaynaklar: [
+      {
+        quelle_id: 'gkv-anlage2',
+        katiliyor: false,
+        neden: '60 gün içinde fiyat listesi değişiyor, gözden kaçmış.',
+      },
+    ],
+  };
+  const sonuc2 = bewerte({ befunde, karar, indeks, ikinci: ikinciKatilmiyor });
+  assert.equal(sonuc2.otomatik.length, 0);
+  assert.equal(sonuc2.vakalar.length, 1);
+  assert.ok(sonuc2.gruende.includes('kritik kaynak: ikinci görüş katılmıyor'));
 });
 
-// 3. Bir belge etki: dusuk -> vaka
-test('3. Bir belge etki: dusuk olduğunda vaka açılır', () => {
+// 4. etki: dusuk + biliniyor -> otomatik
+test('4. etki: dusuk ve oneri: biliniyor -> otomatik onaylanır', () => {
   const befunde = ornekBefunde();
   const karar = ornekGecerliKarar();
   karar.belgeler[0].etki = 'dusuk';
@@ -116,14 +150,26 @@ test('3. Bir belge etki: dusuk olduğunda vaka açılır', () => {
 
   const sonuc = bewerte({ befunde, karar, indeks });
 
-  assert.equal(sonuc.otomatik.length, 0);
-  assert.equal(sonuc.vakalar.length, 1);
-  assert.equal(sonuc.vakalar[0].baslik, 'Kaynak: gkv-anlage2');
-  assert.ok(sonuc.gruende.some(g => g.includes('etki=dusuk')));
+  assert.deepEqual(sonuc.otomatik, ['gkv-anlage2']);
+  assert.equal(sonuc.vakalar.length, 0);
 });
 
-// 4. Eksik belge kaydı -> vaka
-test('4. Kaynağın neu/weg öğelerinden biri kararda eksikse vaka açılır', () => {
+// 5. oneri: incele -> vaka
+test('5. oneri: incele veya acil olduğunda vaka açılır', () => {
+  const befunde = ornekBefunde();
+  const karar = ornekGecerliKarar();
+  karar.belgeler[0].oneri = 'incele';
+  const indeks = ornekIndeks();
+
+  const sonuc = bewerte({ befunde, karar, indeks });
+
+  assert.equal(sonuc.otomatik.length, 0);
+  assert.equal(sonuc.vakalar.length, 1);
+  assert.ok(sonuc.gruende.some(g => g.includes('öneri=incele')));
+});
+
+// 6. Eksik belge kaydı -> vaka
+test('6. Kaynağın neu/weg öğelerinden biri kararda eksikse vaka açılır', () => {
   const befunde = ornekBefunde();
   befunde[0].neu.push('www.gkv-spitzenverband.de/downloads/ikinci_belge.pdf');
   const karar = ornekGecerliKarar(); // Sadece birinci belge var
@@ -136,8 +182,8 @@ test('4. Kaynağın neu/weg öğelerinden biri kararda eksikse vaka açılır', 
   assert.ok(sonuc.gruende.includes('eksik belge kaydı'));
 });
 
-// 5. Kesik belge -> vaka
-test('5. İndirilen belge kisaltildi: true olduğunda vaka açılır', () => {
+// 7. Hiç okunmuş belge yok -> vaka
+test('7. Hiç okunmuş belge olmadığında (tümü kisaltildi/ikili) vaka açılır', () => {
   const befunde = ornekBefunde();
   const karar = ornekGecerliKarar();
   const indeks = ornekIndeks();
@@ -147,11 +193,90 @@ test('5. İndirilen belge kisaltildi: true olduğunda vaka açılır', () => {
 
   assert.equal(sonuc.otomatik.length, 0);
   assert.equal(sonuc.vakalar.length, 1);
-  assert.ok(sonuc.gruende.some(g => g.includes('kisaltildi=true')));
+  assert.ok(sonuc.gruende.includes('hiç okunmuş belge yok'));
 });
 
-// 6. Şema ihlalleri: yabancı url, ../ dosya, fazla anahtar
-test('6. Şema ihlalleri: kararGecerliMi sıkı kontrolleri', () => {
+// 8. ZIP okunmamış ama PDF okunmuş -> otomatik
+test('8. ZIP eki okunmamış olsa bile PDF okunmuşsa otomatik onaylanır', () => {
+  const befunde = ornekBefunde();
+  befunde[0].neu.push('www.gkv-spitzenverband.de/downloads/ornek_ek.zip');
+
+  const karar = ornekGecerliKarar();
+  karar.belgeler.push({
+    quelle_id: 'gkv-anlage2',
+    url: 'https://www.gkv-spitzenverband.de/downloads/ornek_ek.zip',
+    ne_degisti: 'ZIP içeriği binary ek, fakat PDF ana sözleşme incelendi ve bizi etkilemiyor.',
+    etki: 'yok',
+    gecerlilik: null,
+    etkilenen_dosyalar: [],
+    oneri: 'biliniyor',
+    guven: 'hoch',
+  });
+
+  const indeks = ornekIndeks();
+  indeks.push({
+    quelleId: 'gkv-anlage2',
+    url: 'https://www.gkv-spitzenverband.de/downloads/ornek_ek.zip',
+    dosya: null,
+    bayt: 50000,
+    sha256: 'z'.repeat(64),
+    tur: 'zip',
+    kisaltildi: false,
+    not: 'zip arşivi',
+    atlandi: null,
+  });
+
+  const sonuc = bewerte({ befunde, karar, indeks });
+
+  assert.deepEqual(sonuc.otomatik, ['gkv-anlage2']);
+  assert.equal(sonuc.vakalar.length, 0);
+});
+
+// 9. takipler çıkarımı
+test('9. takipler çıkarımı: takip alanı dolu olan belgelerden takipler listesi üretilir', () => {
+  const befunde = ornekBefunde();
+  const karar = ornekGecerliKarar();
+  karar.belgeler[0].takip = {
+    is: '2027 yürürlük tarihi öncesi kodları kontrol et',
+    son_tarih: '2026-12-15',
+  };
+  const indeks = ornekIndeks();
+
+  const sonuc = bewerte({ befunde, karar, indeks });
+
+  assert.equal(sonuc.takipler.length, 1);
+  assert.deepEqual(sonuc.takipler[0], {
+    quelleId: 'gkv-anlage2',
+    is: '2027 yürürlük tarihi öncesi kodları kontrol et',
+    son_tarih: '2026-12-15',
+  });
+});
+
+// 10. Kritik olmayan kaynakta ikinci katılıyor: false ise vaka açılır
+test('10. Kritik olmayan kaynakta ikinci görüş katılıyor: false derse vaka açılır', () => {
+  const befunde = ornekBefunde();
+  befunde[0].wichtig = 'normal';
+  const karar = ornekGecerliKarar();
+  const indeks = ornekIndeks();
+  const ikinci = {
+    kaynaklar: [
+      {
+        quelle_id: 'gkv-anlage2',
+        katiliyor: false,
+        neden: 'Şüpheli durum tespit edildi.',
+      },
+    ],
+  };
+
+  const sonuc = bewerte({ befunde, karar, indeks, ikinci });
+
+  assert.equal(sonuc.otomatik.length, 0);
+  assert.equal(sonuc.vakalar.length, 1);
+  assert.ok(sonuc.gruende.includes('ikinci görüş katılmıyor'));
+});
+
+// 11. Şema ihlalleri: yabancı url, ../ dosya, fazla anahtar
+test('11. Şema ihlalleri: kararGecerliMi sıkı kontrolleri', () => {
   const befunde = ornekBefunde();
 
   // Fazla kök anahtarı
@@ -191,8 +316,8 @@ test('6. Şema ihlalleri: kararGecerliMi sıkı kontrolleri', () => {
   assert.ok(resMutlak.hatalar.some(h => h.includes('güvensiz dosya yolu')));
 });
 
-// 7. Karar yok -> Ajan çalışmadı.
-test('7. Karar verilmediğinde (karar: null) vaka önerisi "Ajan çalışmadı." olur', () => {
+// 12. Karar yok -> Ajan çalışmadı.
+test('12. Karar verilmediğinde (karar: null) vaka önerisi "Ajan çalışmadı." olur', () => {
   const befunde = ornekBefunde();
   const indeks = ornekIndeks();
 
@@ -204,8 +329,8 @@ test('7. Karar verilmediğinde (karar: null) vaka önerisi "Ajan çalışmadı."
   assert.ok(sonuc.gruende.includes('Ajan çalışmadı.'));
 });
 
-// 8. Deterministik satır biçimi
-test('8. Deterministik satır biçimi ve etiketli alanlar', () => {
+// 13. Deterministik satır biçimi
+test('13. Deterministik satır biçimi ve etiketli alanlar', () => {
   const befunde = [
     {
       id: 'gkv-anlage2',
@@ -284,42 +409,28 @@ test('8. Deterministik satır biçimi ve etiketli alanlar', () => {
   assert.deepEqual(v.ek.weg, ['www.gkv-spitzenverband.de/downloads/eski.pdf']);
 });
 
-// 9. İkili dosya indirildiğinde otomatik olamaz
-test('9. İndirilen belge ikili/xlsx olduğunda vaka açılır', () => {
-  const befunde = ornekBefunde();
-  const karar = ornekGecerliKarar();
-  const indeks = [
-    {
-      quelleId: 'gkv-anlage2',
-      url: 'https://www.gkv-spitzenverband.de/downloads/anlage2_2027.pdf',
-      dosya: null,
-      bayt: 2000,
-      sha256: 'c'.repeat(64),
-      tur: 'xlsx',
-      kisaltildi: false,
-      not: 'ikili dosya, içerik okunmadı',
-      atlandi: null,
-    },
-  ];
-
-  const sonuc = bewerte({ befunde, karar, indeks });
-  assert.equal(sonuc.otomatik.length, 0);
-  assert.equal(sonuc.vakalar.length, 1);
-  assert.ok(sonuc.gruende.some(g => g.includes('tur=xlsx')));
-});
-
-// 10. CLI çalıştırılması
-test('10. CLI --befunde, --karar, --indeks ve --out ile doğru çalışır (exit 0)', async () => {
+// 14. CLI çalıştırılması
+test('14. CLI --befunde, --karar, --indeks, --ikinci ve --out ile doğru çalışır (exit 0)', async () => {
   const tempDir = await mkdtemp(path.join(os.tmpdir(), 'quellen-bewerten-cli-'));
   const befundeFile = path.join(tempDir, 'befunde.json');
   const kararFile = path.join(tempDir, 'karar.json');
   const indeksFile = path.join(tempDir, 'indeks.json');
+  const ikinciFile = path.join(tempDir, 'ikinci.json');
   const outFile = path.join(tempDir, 'entscheidung.json');
 
   try {
-    await writeFile(befundeFile, JSON.stringify(ornekBefunde()), 'utf-8');
+    const bef = ornekBefunde();
+    bef[0].wichtig = 'kritisch';
+    await writeFile(befundeFile, JSON.stringify(bef), 'utf-8');
     await writeFile(kararFile, JSON.stringify(ornekGecerliKarar()), 'utf-8');
     await writeFile(indeksFile, JSON.stringify(ornekIndeks()), 'utf-8');
+    await writeFile(
+      ikinciFile,
+      JSON.stringify({
+        kaynaklar: [{ quelle_id: 'gkv-anlage2', katiliyor: true, neden: 'Uygun' }],
+      }),
+      'utf-8'
+    );
 
     const out = execFileSync(
       process.execPath,
@@ -328,6 +439,7 @@ test('10. CLI --befunde, --karar, --indeks ve --out ile doğru çalışır (exit
         `--befunde=${befundeFile}`,
         `--karar=${kararFile}`,
         `--indeks=${indeksFile}`,
+        `--ikinci=${ikinciFile}`,
         `--out=${outFile}`,
       ],
       { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }
@@ -343,7 +455,7 @@ test('10. CLI --befunde, --karar, --indeks ve --out ile doğru çalışır (exit
   }
 });
 
-test('11. her vakada ek.iz sha256(JSON.stringify([quelleId, sıralı neu, sıralı weg])) ilk 16 hanesidir', () => {
+test('15. her vakada ek.iz sha256(JSON.stringify([quelleId, sıralı neu, sıralı weg])) ilk 16 hanesidir', () => {
   const befunde = [
     {
       id: 'gkv-anlage2',
@@ -363,7 +475,6 @@ test('11. her vakada ek.iz sha256(JSON.stringify([quelleId, sıralı neu, sıral
   assert.equal(v.ek.iz.length, 16);
   assert.match(v.ek.iz, /^[0-9a-f]{16}$/);
 
-  // Doğrudan sha256 hesabı ile karşılaştır
   const beklenen = createHash('sha256')
     .update(JSON.stringify(['gkv-anlage2', ['www.gkv.de/a.pdf', 'www.gkv.de/b.pdf'], ['www.gkv.de/eski.pdf']]))
     .digest('hex')
@@ -371,7 +482,7 @@ test('11. her vakada ek.iz sha256(JSON.stringify([quelleId, sıralı neu, sıral
   assert.equal(v.ek.iz, beklenen);
 });
 
-test('12. neu ve weg sırası karışık verilse bile sıralandığı için aynı ek.iz üretilir', () => {
+test('16. neu ve weg sırası karışık verilse bile sıralandığı için aynı ek.iz üretilir', () => {
   const b1 = [
     {
       id: 'gkv-anlage2',
@@ -396,7 +507,7 @@ test('12. neu ve weg sırası karışık verilse bile sıralandığı için ayn�
   assert.equal(res1.vakalar[0].ek.iz, res2.vakalar[0].ek.iz);
 });
 
-test('13. neu veya weg listesi değiştiğinde ek.iz değişir', () => {
+test('17. neu veya weg listesi değiştiğinde ek.iz değişir', () => {
   const b1 = [{ id: 'gkv-anlage2', wichtig: 'normal', neu: ['a.pdf'], weg: [] }];
   const b2 = [{ id: 'gkv-anlage2', wichtig: 'normal', neu: ['b.pdf'], weg: [] }];
   const b3 = [{ id: 'gkv-anlage2', wichtig: 'normal', neu: ['a.pdf'], weg: ['c.pdf'] }];
@@ -409,7 +520,7 @@ test('13. neu veya weg listesi değiştiğinde ek.iz değişir', () => {
   assert.notEqual(res1.vakalar[0].ek.iz, res3.vakalar[0].ek.iz);
 });
 
-test('14. ajan önerisi veya özeti değişse bile ek.iz değişmez', () => {
+test('18. ajan önerisi veya özeti değişse bile ek.iz değişmez', () => {
   const befunde = [{ id: 'gkv-anlage2', wichtig: 'normal', neu: ['a.pdf'], weg: [] }];
   const k1 = {
     belgeler: [
@@ -453,7 +564,7 @@ test('14. ajan önerisi veya özeti değişse bile ek.iz değişmez', () => {
   assert.equal(res1.vakalar[0].ek.iz, resNull.vakalar[0].ek.iz);
 });
 
-test('15. M4: quellen-bewerten her vakada ek.uygulanabilir true belirler', () => {
+test('19. M4: quellen-bewerten her vakada ek.uygulanabilir true belirler', () => {
   const befunde = [
     {
       id: 'gkv-anlage2',
@@ -470,7 +581,7 @@ test('15. M4: quellen-bewerten her vakada ek.uygulanabilir true belirler', () =>
   assert.equal(res.vakalar[0].ek.iz, quellenBefundIz(befunde[0]));
 });
 
-test('16. L12(4): yalnız weg bulgusu olan kritik olmayan kaynakta otomatik biliniyor yerine vaka açılır', () => {
+test('20. L12(4): yalnız weg bulgusu olan kritik olmayan kaynakta otomatik biliniyor yerine vaka açılır', () => {
   const befund = {
     id: 'gkv-eski-dokuman',
     wichtig: 'normal',
@@ -497,8 +608,6 @@ test('16. L12(4): yalnız weg bulgusu olan kritik olmayan kaynakta otomatik bili
     warnungen: [],
   };
 
-  // Karar geçerli olmasına ve her belge etki: yok, oneri: biliniyor, guven: hoch olmasına rağmen
-  // weg.length > 0 olduğu için otomatik olamaz, insana (vaka) gitmelidir.
   const res = bewerte({ befunde: [befund], karar, indeks: [] });
   assert.equal(res.otomatik.length, 0, 'Kaldırılan belgede otomatik biliniyor işaretlenemez');
   assert.equal(res.vakalar.length, 1, 'Yalnız weg bulgusunda vaka açılmalıdır');

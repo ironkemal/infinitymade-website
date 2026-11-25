@@ -22,6 +22,8 @@ import {
 import {
   olayEkle,
   olaylariYukle,
+  takipEkle,
+  takipYukle,
   haftalikRapor,
   ikinciHataMi,
   eskiOlaylariBuda,
@@ -808,22 +810,77 @@ async function _cliInternal(rawArgs, opts = {}) {
       let ozet = '';
       if (tur === 'auto') {
         const lines = satirlar.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-        const ilkSatir = lines[0] || `${bekci} otomatik uygulandı`;
-        ozet = `${ilkSatir} (${lines.length} değişiklik)`;
+        if (bekci === 'quellen') {
+          // Rapor satırlarının HER BİRİ ayrı auto olayı (haftalık sayım "6 tane" doğru çıksın)
+          if (lines.length === 0) {
+            try {
+              await olayEkle(kok, { bekci, tur: 'auto', ozet: 'Kaynak bekçisi otomatik uygulandı', simdi: new Date() });
+            } catch (err) {
+              console.error(`Olay eklenemedi: ${err.message}`);
+              process.exit(1);
+            }
+          } else {
+            for (const line of lines) {
+              try {
+                await olayEkle(kok, { bekci, tur: 'auto', ozet: line, simdi: new Date() });
+              } catch (err) {
+                console.error(`Olay eklenemedi: ${err.message}`);
+                process.exit(1);
+              }
+            }
+          }
+        } else {
+          const ilkSatir = lines[0] || `${bekci} otomatik uygulandı`;
+          ozet = `${ilkSatir} (${lines.length} değişiklik)`;
+          try {
+            await olayEkle(kok, { bekci, tur, ozet, simdi: new Date() });
+          } catch (err) {
+            console.error(`Olay eklenemedi: ${err.message}`);
+            process.exit(1);
+          }
+        }
       } else if (tur === 'uygulandi') {
         const baslik = vaka?.baslik || id;
         ozet = `Senin onayınla uyguladım: ${baslik}`;
+        try {
+          await olayEkle(kok, { bekci, tur, ozet, simdi: new Date() });
+        } catch (err) {
+          console.error(`Olay eklenemedi: ${err.message}`);
+          process.exit(1);
+        }
       } else if (tur === 'elle') {
         const baslik = vaka?.baslik || id;
         ozet = `${baslik}: otomatik uygulanamadı, yerel oturumda yapılacak`;
+        try {
+          await olayEkle(kok, { bekci, tur, ozet, simdi: new Date() });
+        } catch (err) {
+          console.error(`Olay eklenemedi: ${err.message}`);
+          process.exit(1);
+        }
       }
 
-      try {
-        await olayEkle(kok, { bekci, tur, ozet, simdi: new Date() });
-      } catch (err) {
-        console.error(`Olay eklenemedi: ${err.message}`);
-        process.exit(1);
+      // Ayrıca --takipler=FILE (entscheidung.json) verilirse takipEkle ile yaz
+      const takiplerFile = flags.takipler;
+      if (takiplerFile && existsSync(takiplerFile)) {
+        try {
+          const raw = readFileSync(takiplerFile, 'utf-8');
+          const p = JSON.parse(raw);
+          const tList = Array.isArray(p) ? p : (p.takipler || []);
+          for (const t of tList) {
+            if (t && t.quelleId && t.is) {
+              await takipEkle(kok, {
+                quelleId: t.quelleId,
+                is: t.is,
+                son_tarih: t.son_tarih || null,
+                simdi: new Date(),
+              });
+            }
+          }
+        } catch (err) {
+          console.error(`Takipler yazılamadı: ${err.message}`);
+        }
       }
+
       process.exit(0);
     }
 
@@ -974,6 +1031,7 @@ async function _cliInternal(rawArgs, opts = {}) {
     const entscheidungFile = flags.entscheidung;
     const dizin = flags.dizin;
     const outIdsFile = flags['out-ids'];
+    const kok = flags.kok;
 
     if (!entscheidungFile || !dizin) {
       console.error('Eksik parametre: --entscheidung ve --dizin zorunludur');
@@ -987,6 +1045,24 @@ async function _cliInternal(rawArgs, opts = {}) {
     } catch {
       console.error(`Entscheidung dosyası okunamadı veya JSON geçersiz: ${entscheidungFile}`);
       process.exit(1);
+    }
+
+    if (kok) {
+      const tList = Array.isArray(entscheidung?.takipler) ? entscheidung.takipler : [];
+      for (const t of tList) {
+        if (t && t.quelleId && t.is) {
+          try {
+            await takipEkle(kok, {
+              quelleId: t.quelleId,
+              is: t.is,
+              son_tarih: t.son_tarih || null,
+              simdi: new Date(),
+            });
+          } catch (err) {
+            console.error(`Takip eklenemedi: ${err.message}`);
+          }
+        }
+      }
     }
 
     let mevcutVakalar = [];
@@ -1358,9 +1434,17 @@ async function _cliInternal(rawArgs, opts = {}) {
       acikVakalar = [];
     }
 
+    let takipler = [];
+    try {
+      takipler = await takipYukle(kok);
+    } catch {
+      takipler = [];
+    }
+
     const raporMetni = haftalikRapor({
       olaylar,
       acikVakalar,
+      takipler,
       simdi: simdiDate,
     });
 
@@ -1383,6 +1467,51 @@ async function _cliInternal(rawArgs, opts = {}) {
       console.error(`Eski olaylar budanamadı: ${err.message}`);
     }
 
+    process.exit(0);
+  }
+
+  // 11. takip-ekle
+  if (komut === 'takip-ekle') {
+    const kok = flags.kok;
+    const entscheidungFile = flags.entscheidung;
+
+    if (!kok || !entscheidungFile) {
+      console.error('Eksik parametre: --kok ve --entscheidung zorunludur');
+      process.exit(2);
+    }
+
+    let entscheidung = null;
+    try {
+      const raw = readFileSync(entscheidungFile, 'utf-8');
+      entscheidung = JSON.parse(raw);
+    } catch {
+      console.error(`Entscheidung dosyası okunamadı veya JSON geçersiz: ${entscheidungFile}`);
+      process.exit(1);
+    }
+
+    const tList = Array.isArray(entscheidung)
+      ? entscheidung
+      : (Array.isArray(entscheidung?.takipler) ? entscheidung.takipler : []);
+
+    let eklenen = 0;
+    for (const t of tList) {
+      if (t && t.quelleId && t.is) {
+        try {
+          await takipEkle(kok, {
+            quelleId: t.quelleId,
+            is: t.is,
+            son_tarih: t.son_tarih || null,
+            simdi: new Date(),
+          });
+          eklenen++;
+        } catch (err) {
+          console.error(`Takip eklenemedi: ${err.message}`);
+          process.exit(1);
+        }
+      }
+    }
+
+    console.log(`eklendi=${eklenen}`);
     process.exit(0);
   }
 

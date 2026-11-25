@@ -1,6 +1,6 @@
 // tools/bekci-ajan/rapor.test.js
-// Ne: rapor.mjs birim testleri (olayEkle, haftalikRapor, ikinciHataMi, eskiOlaylariBuda).
-// Niye: Kemal'in 25.11.2026 talimatı uyarınca haftalık bekçi raporlama ve hata takip
+// Ne: rapor.mjs birim testleri (olayEkle, takipEkle, takipKapat, takipYukle, haftalikRapor, ikinciHataMi, eskiOlaylariBuda).
+// Niye: Kemal'in 25.11.2026 talimatı uyarınca haftalık bekçi raporlama, takip listesi ve hata takip
 // kurallarının doğrulanması.
 
 import test from 'node:test';
@@ -11,6 +11,9 @@ import { mkdtemp, rm, readFile, writeFile } from 'node:fs/promises';
 import {
   olayEkle,
   olaylariYukle,
+  takipEkle,
+  takipYukle,
+  takipKapat,
   haftalikRapor,
   ikinciHataMi,
   eskiOlaylariBuda,
@@ -56,12 +59,13 @@ test('1. olayEkle: geçerli türlerle olaylar.jsonl dosyasına yazar ve kontrol 
 
 test('2. haftalikRapor: boş hafta ve 0 açık vaka biçimi', () => {
   const simdi = new Date('2026-11-25T12:00:00Z');
-  const rapor = haftalikRapor({ olaylar: [], acikVakalar: [], simdi });
+  const rapor = haftalikRapor({ olaylar: [], acikVakalar: [], takipler: [], simdi });
 
   assert.ok(rapor.includes('📋 Haftalık bekçi raporu (18.11 – 25.11)'));
-  assert.ok(rapor.includes('Kendim hallettiklerim:'));
+  assert.ok(rapor.includes('Bu hafta kendim uyguladıklarım (0):'));
   assert.ok(rapor.includes('Bu hafta resmî kaynaklarda bizi ilgilendiren bir değişiklik olmadı.'));
   assert.ok(rapor.includes('Senin kararını bekleyenler: Senden beklediğim bir karar yok ✅'));
+  assert.ok(!rapor.includes('Takip listesi'));
   assert.ok(!rapor.includes('Sorun:'));
 });
 
@@ -95,6 +99,7 @@ test('3. haftalikRapor: dolu hafta, açık vaka ve hata satırı', () => {
 
   const rapor = haftalikRapor({ olaylar, acikVakalar, simdi });
 
+  assert.ok(rapor.includes('Bu hafta kendim uyguladıklarım (2):'));
   assert.ok(rapor.includes('• 78010 Podologie fiyatı güncellendi (1 değişiklik)'));
   assert.ok(rapor.includes('• Senin onayınla uyguladım: GKV Anlage 2'));
   assert.ok(rapor.includes('Senin kararını bekleyenler: 2 → /vakalar'));
@@ -117,6 +122,7 @@ test('4. haftalikRapor: 10+ olay kesmesi ("… ve N tane daha")', () => {
   }
 
   const rapor = haftalikRapor({ olaylar, acikVakalar: 0, simdi });
+  assert.ok(rapor.includes('Bu hafta kendim uyguladıklarım (14):'));
   assert.ok(rapor.includes('• Değişiklik 10'));
   assert.ok(!rapor.includes('• Değişiklik 11'));
   assert.ok(rapor.includes('… ve 4 tane daha'));
@@ -175,6 +181,117 @@ test('6. eskiOlaylariBuda: 60 günden eski olayları siler', async () => {
     const yuklenenSonra = await olaylariYukle(tmpDir);
     assert.equal(yuklenenSonra.length, 1);
     assert.equal(yuklenenSonra[0].ozet, 'Yeni olay');
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('7. takipEkle: aynı quelleId + is tekrarlanmaz', async () => {
+  const tmpDir = await mkdtemp(path.join(os.tmpdir(), 'takip-test-'));
+  try {
+    const t1 = await takipEkle(tmpDir, {
+      quelleId: 'podo-125',
+      is: 'Podoloji fiyat listesi kontrol edilecek',
+      son_tarih: '2026-12-15',
+    });
+
+    assert.equal(t1.quelleId, 'podo-125');
+    assert.equal(t1.is, 'Podoloji fiyat listesi kontrol edilecek');
+    assert.equal(t1.durum, 'acik');
+
+    // Aynı quelleId + is tekrar eklenmeye çalışıldığında yeni kayıt eklenmez
+    const t2 = await takipEkle(tmpDir, {
+      quelleId: 'podo-125',
+      is: 'Podoloji fiyat listesi kontrol edilecek',
+      son_tarih: '2026-12-20',
+    });
+
+    const yuklenen = await takipYukle(tmpDir);
+    assert.equal(yuklenen.length, 1);
+    assert.equal(t2.son_tarih, '2026-12-15'); // İlk kayıt korunur
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('8. takipKapat: eşleşen açık takip maddesini kapatır', async () => {
+  const tmpDir = await mkdtemp(path.join(os.tmpdir(), 'takip-kapat-test-'));
+  try {
+    await takipEkle(tmpDir, {
+      quelleId: 'tp5-anlagen',
+      is: 'Yeni EDIFACT şeması kontrol edilecek',
+      son_tarih: '2027-01-01',
+    });
+
+    const kapatilan = await takipKapat(tmpDir, {
+      quelleId: 'tp5-anlagen',
+      is: 'Yeni EDIFACT şeması kontrol edilecek',
+    });
+    assert.equal(kapatilan, 1);
+
+    const yuklenen = await takipYukle(tmpDir);
+    assert.equal(yuklenen.length, 1);
+    assert.equal(yuklenen[0].durum, 'kapandi');
+    assert.ok(yuklenen[0].kapanis);
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('9. haftalikRapor: takip listesi, tarihi yaklaşan önce ve 30 günden yakına ⏰', () => {
+  const simdi = new Date('2026-11-25T12:00:00Z');
+  const takipler = [
+    {
+      quelleId: 'podo-125',
+      is: 'Uzak vadeli kontrol',
+      son_tarih: '2027-04-01', // > 30 gün -> ⏰ yok
+      durum: 'acik',
+    },
+    {
+      quelleId: 'tp5-anlagen',
+      is: 'Acil EDIFACT kontrolü',
+      son_tarih: '2026-11-28', // 3 gün var (<= 30 gün) -> ⏰
+      durum: 'acik',
+    },
+    {
+      quelleId: 'hpnr',
+      is: 'Tarihsiz genel takip',
+      son_tarih: null, // Tarih yok -> en sona
+      durum: 'acik',
+    },
+    {
+      quelleId: 'kvnr',
+      is: 'Kapanmış madde',
+      son_tarih: '2026-11-26',
+      durum: 'kapandi', // Kapanmış -> listelenmez
+    },
+  ];
+
+  const rapor = haftalikRapor({
+    olaylar: [],
+    acikVakalar: 0,
+    takipler,
+    simdi,
+  });
+
+  assert.ok(rapor.includes('Takip listesi (tarihi yaklaşan önce):'));
+
+  const satirlar = rapor.split('\n');
+  const takipSatirlari = satirlar.filter(s => s.startsWith('• '));
+
+  assert.equal(takipSatirlari.length, 3);
+  assert.equal(takipSatirlari[0], '• ⏰ 28.11.2026 — Acil EDIFACT kontrolü');
+  assert.equal(takipSatirlari[1], '• 01.04.2027 — Uzak vadeli kontrol');
+  assert.equal(takipSatirlari[2], '• tarih yok — Tarihsiz genel takip');
+});
+
+test('10. olayEkle tur listesine takip eklenmez (ayrı defter)', async () => {
+  const tmpDir = await mkdtemp(path.join(os.tmpdir(), 'olay-takip-test-'));
+  try {
+    await assert.rejects(
+      async () => olayEkle(tmpDir, { bekci: 'quellen', tur: 'takip', ozet: 'Takip konusu' }),
+      /gecersiz_olay_turu/
+    );
   } finally {
     await rm(tmpDir, { recursive: true, force: true });
   }

@@ -107,6 +107,13 @@ Eski bekçilerin mesajları `TELEGRAM_CHAT_ID`'ye (bugün Melih) gitmeye devam e
   + hiçbir belge kesik/ikili değil. Kritik kaynak her zaman vaka. Rakam hiçbir zaman bu yoldan girmez (wissensbank protokolü).
 - ✅ = `quellen-waechter.mjs --uebernehme`: yalnız vakadaki linkler, yalnız sayfa hâlâ birebir öyleyse (değiştiyse hiçbir şey yazılmaz).
 
+### 3.0c-2 Risksiz değişiklik = kendisi uygular (Kemal 25.11.2026) — 3.0c'deki "kritik her zaman vaka" kuralının yerine
+Kaynak başına otomatik "biliniyor": ajan her belgede `oneri: biliniyor`, `etki: yok|dusuk`, `guven: hoch`, kaldırılan belge
+yok, en az bir belge okunmuş; **kritik kaynakta ayrıca ikinci ajan** (`prompts/ikinci-goz.md`, farklı model) katılıyor.
+"Şimdi değil ama ileride" işleri `takip` olarak `rapor/takip.jsonl`'a gider ve haftalık raporda tarihleriyle görünür.
+Kemal'e yalnız faturaları, reçete okumayı, fiyatları ya da kasalarla veri alışverişini şimdi veya 60 gün içinde
+etkileyen konular sorulur.
+
 ### 3.0d Aynı konu iki kez açılmaz
 Bekçiler her gün tetikler. Her vakanın deterministik parmak izi var (`ek.iz`: fiyatta art+kodlar+XML fiyat/tarih,
 kaynakta quelleId+linkler; ajan metni girmez). Aynı izli açık vaka varsa yenisi açılmaz (hatırlatmayı `bekci-cevap.yml`

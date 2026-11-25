@@ -1833,6 +1833,184 @@ test('47. rapor-gonder: pazartesi değilse ve --hep yoksa göndermez', async () 
   }
 });
 
+// 48. bildir --tur=auto --bekci=quellen çok satırlı raporda satır başına ayrı auto olayı ekler
+test('48. bildir --tur=auto --bekci=quellen çok satırlı raporda satır başına ayrı auto olayı ekler', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'bildir-multi-auto-'));
+  const dosya = path.join(tempDir, 'rapor.txt');
+
+  try {
+    const { olaylariYukle } = await import('./rapor.mjs');
+    const { cli } = await import('./cli.mjs');
+
+    const satirlar = [
+      '✓ TP5 Teknik Ekler: Yeni şema incelendi',
+      '✓ Podoloji Sözleşmesi: Fiyat listesi güncellendi',
+      '✓ HPNR Pozisyon Listesi: Değişiklik yok',
+    ].join('\n');
+    await writeFile(dosya, satirlar, 'utf-8');
+
+    let exitCode = null;
+    await cli(
+      ['bildir', '--tur=auto', '--bekci=quellen', `--kok=${tempDir}`, `--dosya=${dosya}`],
+      { exit: c => { exitCode = c; } }
+    );
+
+    assert.equal(exitCode, 0);
+    const olaylar = await olaylariYukle(tempDir);
+    assert.equal(olaylar.length, 3);
+    assert.equal(olaylar[0].ozet, '✓ TP5 Teknik Ekler: Yeni şema incelendi');
+    assert.equal(olaylar[1].ozet, '✓ Podoloji Sözleşmesi: Fiyat listesi güncellendi');
+    assert.equal(olaylar[2].ozet, '✓ HPNR Pozisyon Listesi: Değişiklik yok');
+    assert.ok(olaylar.every(o => o.tur === 'auto' && o.bekci === 'quellen'));
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+// 49. bildir --tur=auto --bekci=quellen --takipler=FILE ile takipler takip.jsonl dosyasına yazılır
+test('49. bildir --tur=auto --bekci=quellen --takipler=FILE ile takipler takip.jsonl dosyasına yazılır', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'bildir-takipler-'));
+  const dosya = path.join(tempDir, 'rapor.txt');
+  const entscheidungFile = path.join(tempDir, 'entscheidung.json');
+
+  try {
+    const { takipYukle } = await import('./rapor.mjs');
+    const { cli } = await import('./cli.mjs');
+
+    await writeFile(dosya, '✓ Kaynak: Değişiklik uygulandı\n', 'utf-8');
+    await writeFile(
+      entscheidungFile,
+      JSON.stringify({
+        takipler: [
+          {
+            quelleId: 'podo-125',
+            is: '2027 yürürlük öncesi fiyat kodlarını doğrula',
+            son_tarih: '2026-12-15',
+          },
+        ],
+      }),
+      'utf-8'
+    );
+
+    let exitCode = null;
+    await cli(
+      [
+        'bildir',
+        '--tur=auto',
+        '--bekci=quellen',
+        `--kok=${tempDir}`,
+        `--dosya=${dosya}`,
+        `--takipler=${entscheidungFile}`,
+      ],
+      { exit: c => { exitCode = c; } }
+    );
+
+    assert.equal(exitCode, 0);
+    const takipler = await takipYukle(tempDir);
+    assert.equal(takipler.length, 1);
+    assert.equal(takipler[0].quelleId, 'podo-125');
+    assert.equal(takipler[0].is, '2027 yürürlük öncesi fiyat kodlarını doğrula');
+    assert.equal(takipler[0].son_tarih, '2026-12-15');
+    assert.equal(takipler[0].durum, 'acik');
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+// 50. vaka-ac-coklu --kok verildiğinde entscheidung takipler listesini takip.jsonl dosyasına yazar
+test('50. vaka-ac-coklu --kok verildiğinde entscheidung takipler listesini takip.jsonl dosyasına yazar', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'vaka-ac-coklu-takip-'));
+  const entscheidungFile = path.join(tempDir, 'entscheidung.json');
+  const vakalarDir = path.join(tempDir, 'vakalar');
+  const outIdsFile = path.join(tempDir, 'out-ids.txt');
+
+  try {
+    const { takipYukle } = await import('./rapor.mjs');
+    const { cli } = await import('./cli.mjs');
+
+    const entscheidung = {
+      vakalar: [
+        {
+          bekci: 'quellen',
+          baslik: 'Kaynak: podo-125',
+          satirlar: ['• Kaynak: podo-125'],
+          dosyalar: [],
+          oneri: 'İnceleme gerekir',
+          ek: { quelleId: 'podo-125', neu: ['a.pdf'], weg: [], iz: '1234567812345678' },
+        },
+      ],
+      takipler: [
+        {
+          quelleId: 'podo-125',
+          is: 'Vaka ile birlikte takip maddesi eklendi',
+          son_tarih: '2027-01-01',
+        },
+      ],
+    };
+    await writeFile(entscheidungFile, JSON.stringify(entscheidung), 'utf-8');
+
+    let exitCode = null;
+    await cli(
+      [
+        'vaka-ac-coklu',
+        `--entscheidung=${entscheidungFile}`,
+        `--dizin=${vakalarDir}`,
+        `--kok=${tempDir}`,
+        `--out-ids=${outIdsFile}`,
+      ],
+      { exit: c => { exitCode = c; } }
+    );
+
+    assert.equal(exitCode, 0);
+    const takipler = await takipYukle(tempDir);
+    assert.equal(takipler.length, 1);
+    assert.equal(takipler[0].quelleId, 'podo-125');
+    assert.equal(takipler[0].is, 'Vaka ile birlikte takip maddesi eklendi');
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+// 51. takip-ekle alt komutu --kok ve --entscheidung ile takip listesini ekler
+test('51. takip-ekle alt komutu --kok ve --entscheidung ile takip listesini ekler', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'takip-ekle-cli-'));
+  const entscheidungFile = path.join(tempDir, 'entscheidung.json');
+
+  try {
+    const { takipYukle } = await import('./rapor.mjs');
+    const { cli } = await import('./cli.mjs');
+
+    await writeFile(
+      entscheidungFile,
+      JSON.stringify({
+        takipler: [
+          {
+            quelleId: 'tp5-anlagen',
+            is: 'TA1 geçiş kurallarını kontrol et',
+            son_tarih: null,
+          },
+        ],
+      }),
+      'utf-8'
+    );
+
+    let exitCode = null;
+    await cli(
+      ['takip-ekle', `--kok=${tempDir}`, `--entscheidung=${entscheidungFile}`],
+      { exit: c => { exitCode = c; } }
+    );
+
+    assert.equal(exitCode, 0);
+    const takipler = await takipYukle(tempDir);
+    assert.equal(takipler.length, 1);
+    assert.equal(takipler[0].quelleId, 'tp5-anlagen');
+    assert.equal(takipler[0].is, 'TA1 geçiş kurallarını kontrol et');
+    assert.equal(takipler[0].son_tarih, null);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
 
 
 

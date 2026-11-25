@@ -1,7 +1,7 @@
 // tools/bekci-ajan/rapor.mjs
-// Ne: Bekçi-Ajan haftalık raporlama, olay defteri (olaylar.jsonl) ve hata takip modülü.
+// Ne: Bekçi-Ajan haftalık raporlama, olay defteri (olaylar.jsonl), takip listesi (takip.jsonl) ve hata takip modülü.
 // Niye: Kemal'in 25.11.2026 talimatı uyarınca: "Bana yalnız aksiyon almam gereken mesaj gelsin.
-// Kendi uyguladığını tek tek yazma, haftada bir rapor ver."
+// Zaten okey olan, risksiz şeyleri kendisi uygulasın, bana hafta sonunda '6 tane uygulandı' diye rapor versin."
 
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -52,7 +52,7 @@ function formatGgAa(date) {
  * @param {string} kokDizin - vakalar dalının kök dizini
  * @param {object} params
  * @param {string} params.bekci - Bekçi adı (preise | quellen | kostentraeger vs.)
- * @param {'auto'|'uygulandi'|'birakildi'|'hata'|'takili'|'sessiz'} params.tur - Olay türü
+ * @param {'auto'|'uygulandi'|'birakildi'|'hata'|'takili'|'sessiz'|'elle'} params.tur - Olay türü
  * @param {string} params.ozet - Düz Türkçe tek cümle ≤ 300
  * @param {Date|string} [params.simdi=new Date()]
  * @returns {Promise<object>} Eklenen olay nesnesi
@@ -78,7 +78,6 @@ export async function olayEkle(kokDizin, { bekci, tur, ozet, simdi = new Date() 
   const dosyaYolu = path.join(raporDir, 'olaylar.jsonl');
   const satir = JSON.stringify(olay) + '\n';
 
-  // Dosyaya ekle (append)
   let mevcut = '';
   if (existsSync(dosyaYolu)) {
     try {
@@ -119,15 +118,137 @@ export async function olaylariYukle(kokDizin) {
 }
 
 /**
- * Son 7 günde (Europe/Berlin) gerçekleşen olaylara göre sade dille haftalık rapor üretir.
+ * kokDizin/rapor/takip.jsonl dosyasındaki takip kayıtlarını okur.
+ *
+ * @param {string} kokDizin
+ * @returns {Promise<Array<object>>}
+ */
+export async function takipYukle(kokDizin) {
+  if (!kokDizin) return [];
+  const dosyaYolu = path.join(kokDizin, 'rapor', 'takip.jsonl');
+  if (!existsSync(dosyaYolu)) return [];
+
+  try {
+    const icerik = await readFile(dosyaYolu, 'utf-8');
+    return icerik
+      .split(/\r?\n/)
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(s => {
+        try {
+          return JSON.parse(s);
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Takip listesine (kokDizin/rapor/takip.jsonl) yeni bir madde ekler.
+ * Aynı quelleId + is tekrarlanmaz.
+ *
+ * @param {string} kokDizin
+ * @param {object} params
+ * @param {string} params.quelleId
+ * @param {string} params.is - ≤ 200, sade Türkçe, ne yapılacak
+ * @param {string|null} [params.son_tarih=null] - YYYY-MM-DD takvim tarihi veya null
+ * @param {Date|string} [params.simdi=new Date()]
+ * @returns {Promise<object>} Eklenen veya mevcut takip nesnesi
+ */
+export async function takipEkle(kokDizin, { quelleId, is, son_tarih = null, simdi = new Date() }) {
+  if (!kokDizin || typeof kokDizin !== 'string') {
+    throw new Error('gecersiz_kok_dizin');
+  }
+  const qId = String(quelleId || '');
+  const isTemiz = temizleOzet(is).slice(0, 200);
+  if (!isTemiz) {
+    throw new Error('gecersiz_is');
+  }
+
+  const simdiDate = simdi instanceof Date ? simdi : new Date(simdi);
+  const raporDir = path.join(kokDizin, 'rapor');
+  await mkdir(raporDir, { recursive: true });
+  const dosyaYolu = path.join(raporDir, 'takip.jsonl');
+
+  const mevcut = await takipYukle(kokDizin);
+  const varOlan = mevcut.find(t => t.quelleId === qId && t.is === isTemiz && t.durum !== 'kapandi');
+  if (varOlan) {
+    return varOlan;
+  }
+
+  const kayit = {
+    quelleId: qId,
+    is: isTemiz,
+    son_tarih: son_tarih || null,
+    durum: 'acik',
+    zaman: simdiDate.toISOString(),
+  };
+
+  const satir = JSON.stringify(kayit) + '\n';
+  let icerik = '';
+  if (existsSync(dosyaYolu)) {
+    try {
+      icerik = await readFile(dosyaYolu, 'utf-8');
+    } catch {
+      icerik = '';
+    }
+  }
+  await writeFile(dosyaYolu, icerik + satir, 'utf-8');
+  return kayit;
+}
+
+/**
+ * Takip listesindeki açık maddeyi kapatır (durum = 'kapandi').
+ *
+ * @param {string} kokDizin
+ * @param {object} params
+ * @param {string} params.quelleId
+ * @param {string} params.is
+ * @returns {Promise<number>} Kapatılan madde sayısı
+ */
+export async function takipKapat(kokDizin, { quelleId, is }) {
+  if (!kokDizin || typeof kokDizin !== 'string') {
+    throw new Error('gecersiz_kok_dizin');
+  }
+  const qId = String(quelleId || '');
+  const isTemiz = temizleOzet(is).slice(0, 200);
+
+  const dosyaYolu = path.join(kokDizin, 'rapor', 'takip.jsonl');
+  if (!existsSync(dosyaYolu)) return 0;
+
+  const mevcut = await takipYukle(kokDizin);
+  let kapatilanSayi = 0;
+  for (const t of mevcut) {
+    if (t.quelleId === qId && t.is === isTemiz && t.durum === 'acik') {
+      t.durum = 'kapandi';
+      t.kapanis = new Date().toISOString();
+      kapatilanSayi++;
+    }
+  }
+
+  if (kapatilanSayi > 0) {
+    const yeniIcerik = mevcut.map(t => JSON.stringify(t)).join('\n') + '\n';
+    await writeFile(dosyaYolu, yeniIcerik, 'utf-8');
+  }
+
+  return kapatilanSayi;
+}
+
+/**
+ * Son 7 günde (Europe/Berlin) gerçekleşen olaylara ve takip listesine göre haftalık rapor üretir.
  *
  * @param {object} params
  * @param {Array<object>} params.olaylar
  * @param {Array<object>|number} [params.acikVakalar=[]]
+ * @param {Array<object>} [params.takipler=[]]
  * @param {Date|string} [params.simdi=new Date()]
  * @returns {string} Telegram metni
  */
-export function haftalikRapor({ olaylar = [], acikVakalar = [], simdi = new Date() }) {
+export function haftalikRapor({ olaylar = [], acikVakalar = [], takipler = [], simdi = new Date() }) {
   const simdiDate = simdi instanceof Date ? simdi : new Date(simdi);
   const baslangicDate = new Date(simdiDate.getTime() - 7 * 24 * 60 * 60 * 1000);
 
@@ -150,7 +271,7 @@ export function haftalikRapor({ olaylar = [], acikVakalar = [], simdi = new Date
   const parcalar = [];
   parcalar.push(`📋 Haftalık bekçi raporu (${ggAaBaslangic} – ${ggAaBitis})`);
   parcalar.push('');
-  parcalar.push('Kendim hallettiklerim:');
+  parcalar.push(`Bu hafta kendim uyguladıklarım (${halledilenler.length}):`);
 
   if (halledilenler.length === 0) {
     parcalar.push('Bu hafta resmî kaynaklarda bizi ilgilendiren bir değişiklik olmadı.');
@@ -161,6 +282,51 @@ export function haftalikRapor({ olaylar = [], acikVakalar = [], simdi = new Date
     }
     if (halledilenler.length > 10) {
       parcalar.push(`… ve ${halledilenler.length - 10} tane daha`);
+    }
+  }
+
+  // Takip listesi (tarihi yaklaşan önce)
+  const acikTakipler = (Array.isArray(takipler) ? takipler : []).filter(
+    t => t && t.durum !== 'kapandi'
+  );
+  if (acikTakipler.length > 0) {
+    parcalar.push('');
+    parcalar.push('Takip listesi (tarihi yaklaşan önce):');
+
+    const sirali = [...acikTakipler].sort((a, b) => {
+      const aTarih = a.son_tarih;
+      const bTarih = b.son_tarih;
+      if (aTarih && bTarih) {
+        return aTarih.localeCompare(bTarih);
+      }
+      if (aTarih && !bTarih) return -1;
+      if (!aTarih && bTarih) return 1;
+      return 0;
+    });
+
+    for (const t of sirali) {
+      let tarihMetni = 'tarih yok';
+      let saatVar = false;
+
+      if (t.son_tarih && /^\d{4}-\d{2}-\d{2}$/.test(t.son_tarih)) {
+        const [y, m, d] = t.son_tarih.split('-');
+        tarihMetni = `${d}.${m}.${y}`;
+
+        // 30 günden yakın kontrolü (hedef <= simdi + 30 gün)
+        const simdiUtcMidnight = Date.UTC(
+          simdiDate.getUTCFullYear(),
+          simdiDate.getUTCMonth(),
+          simdiDate.getUTCDate()
+        );
+        const hedefUtcMidnight = Date.UTC(Number(y), Number(m) - 1, Number(d));
+        const farkGun = (hedefUtcMidnight - simdiUtcMidnight) / (24 * 60 * 60 * 1000);
+        if (farkGun <= 30) {
+          saatVar = true;
+        }
+      }
+
+      const ikon = saatVar ? '⏰ ' : '';
+      parcalar.push(`• ${ikon}${tarihMetni} — ${t.is}`);
     }
   }
 

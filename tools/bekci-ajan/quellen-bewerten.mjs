@@ -1,8 +1,8 @@
 // tools/bekci-ajan/quellen-bewerten.mjs
 // Ne: Kaynak bekçisi değerlendiricisi (karar şeması doğrulayıcı + deterministik karar motoru + CLI).
-// Niye: SPEC.md §4 uyarınca quellen-waechter bulguları ve ajanın karar.json çıktısını değerlendirip
-// sadece tam güvenli durumlarda "biliniyor" (otomatik) kararı verir, aksi halde deterministik
-// satır formatıyla vaka nesneleri üretir.
+// Niye: SPEC.md §4 ve Kemal'in 25.11.2026 kararı uyarınca quellen-waechter bulguları, ajanın karar.json
+// ve opsiyonel ikinci görüş (ikinci.json) çıktısını değerlendirip risksiz kaynak değişikliklerini
+// otomatik "biliniyor" kararıyla onaylar, takip kayıtlarını toplar, aksi halde vaka nesneleri üretir.
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -21,11 +21,64 @@ const IZINLI_BELGE_ANAHTARLARI = new Set([
   'etkilenen_dosyalar',
   'oneri',
   'guven',
+  'takip',
+]);
+
+const ZORUNLU_BELGE_ANAHTARLARI = new Set([
+  'quelle_id',
+  'url',
+  'ne_degisti',
+  'etki',
+  'gecerlilik',
+  'etkilenen_dosyalar',
+  'oneri',
+  'guven',
 ]);
 
 const GECERLI_ETKI = new Set(['yok', 'dusuk', 'orta', 'yuksek']);
 const GECERLI_ONERI = new Set(['biliniyor', 'incele', 'acil']);
 const GECERLI_GUVEN = new Set(['hoch', 'mittel', 'niedrig']);
+
+export const KAYNAK_TURKCE_ADLARI = {
+  'tp5-anlagen': 'TP5 Teknik Ekler',
+  'hpnr': 'HPNR Pozisyon Listesi',
+  'ggt-secon': 'Teknik Standartlar (SECON)',
+  'kvnr': 'KVNR Kontrol Rakamı',
+  'podo-125': 'Podoloji Sözleşmesi',
+  'physio-125': 'Fizyo Sözleşmesi',
+  'physio-125a-blanko': 'Fizyo Blanko Sözleşmesi',
+  'ergo-125': 'Ergo Sözleşmesi',
+  'ergo-125a-blanko': 'Ergo Blanko Sözleşmesi',
+  'sssst-125': 'Logopedi Sözleşmesi',
+  'gkv-heilmittel-vertraege': 'GKV Sözleşme Aynası',
+  'gba-heilm-rl': 'G-BA Heilmittel Yönergesi',
+  'gba-heilm-rl-beschluesse': 'G-BA Kararları',
+  'kbv-diagnoseliste': 'KBV Teşhis Listesi',
+  'bfarm-icd10gm': 'BfArM ICD-10',
+  'kbv-bfb': 'KBV Blanko El Kitabı',
+  'dguv-verguetung': 'DGUV Ücret Tarifesi',
+  'dguv-handlungsanleitung': 'DGUV Uygulama Rehberi',
+  'sgb5-61-zuzahlung': 'SGB V Ek Ödeme',
+};
+
+/**
+ * Kaynağın Türkçe kısa adını döner.
+ * quellen-waechter.json'daki 'ne' alanının sadeleştirilmişi yoksa id.
+ * @param {object} befund
+ * @returns {string}
+ */
+export function kaynakKisaAd(befund) {
+  if (!befund) return '';
+  const id = befund.id || '';
+  if (KAYNAK_TURKCE_ADLARI[id]) {
+    return KAYNAK_TURKCE_ADLARI[id];
+  }
+  if (befund.ne && typeof befund.ne === 'string') {
+    const sade = befund.ne.split(/[—–]/)[0].replace(/\([^)]*\)/g, '').trim();
+    if (sade.length > 0) return sade.slice(0, 40);
+  }
+  return id;
+}
 
 /**
  * YYYY-MM-DD formatındaki tarihin geçerli bir takvim tarihi olup olmadığını denetler.
@@ -163,7 +216,7 @@ export function kararGecerliMi(karar, befunde = []) {
       }
 
       // Eksik anahtar kontrolü
-      for (const bk of IZINLI_BELGE_ANAHTARLARI) {
+      for (const bk of ZORUNLU_BELGE_ANAHTARLARI) {
         if (b[bk] === undefined) {
           hatalar.push(`belgeler[${i}] içinde zorunlu anahtar eksik: ${bk}`);
         }
@@ -214,6 +267,25 @@ export function kararGecerliMi(karar, befunde = []) {
         hatalar.push(`belgeler[${i}].gecerlilik null veya YYYY-MM-DD takvim tarihi olmalıdır`);
       }
 
+      // takip: opsiyonel veya null veya { is, son_tarih }
+      if (b.takip !== undefined && b.takip !== null) {
+        if (typeof b.takip !== 'object' || Array.isArray(b.takip)) {
+          hatalar.push(`belgeler[${i}].takip düz bir nesne veya null olmalıdır`);
+        } else {
+          for (const tk of Object.keys(b.takip)) {
+            if (tk !== 'is' && tk !== 'son_tarih') {
+              hatalar.push(`belgeler[${i}].takip içinde beklenmeyen fazla anahtar: ${tk}`);
+            }
+          }
+          if (typeof b.takip.is !== 'string' || b.takip.is.length > 200 || b.takip.is.trim().length === 0) {
+            hatalar.push(`belgeler[${i}].takip.is boş olmayan bir string ve en fazla 200 karakter olmalıdır`);
+          }
+          if (b.takip.son_tarih !== null && b.takip.son_tarih !== undefined && !gecerliTarihMi(b.takip.son_tarih)) {
+            hatalar.push(`belgeler[${i}].takip.son_tarih null veya YYYY-MM-DD takvim tarihi olmalıdır`);
+          }
+        }
+      }
+
       // etkilenen_dosyalar <= 10, depo-göreli yol
       if (!Array.isArray(b.etkilenen_dosyalar)) {
         hatalar.push(`belgeler[${i}].etkilenen_dosyalar dizi olmalıdır`);
@@ -253,12 +325,13 @@ export function kararGecerliMi(karar, befunde = []) {
 }
 
 /**
- * quellen-waechter bulguları, ajan kararı ve indirilen belge indeksini değerlendirir.
+ * quellen-waechter bulguları, ajan kararı, indirilen belge indeksi ve opsiyonel ikinci görüşü değerlendirir.
  *
  * @param {object} params
  * @param {Array<object>} params.befunde
  * @param {object|null} params.karar
  * @param {Array<object>} [params.indeks=[]]
+ * @param {object|null} [params.ikinci=null] - opsiyonel ikinci.json ({ kaynaklar: [{ quelle_id, katiliyor, neden }] })
  * @returns {{
  *   otomatik: string[],
  *   vakalar: Array<{
@@ -270,14 +343,16 @@ export function kararGecerliMi(karar, befunde = []) {
  *     ek: { quelleId: string, neu: string[], weg: string[] }
  *   }>,
  *   rapor: string[],
- *   gruende: string[]
+ *   gruende: string[],
+ *   takipler: Array<{ quelleId: string, is: string, son_tarih: string|null }>
  * }}
  */
-export function bewerte({ befunde = [], karar = null, indeks = [] }) {
+export function bewerte({ befunde = [], karar = null, indeks = [], ikinci = null }) {
   const otomatik = [];
   const vakalar = [];
   const rapor = [];
   const gruende = [];
+  const takipler = [];
 
   const safeBefunde = Array.isArray(befunde) ? befunde : [];
   const safeIndeks = Array.isArray(indeks) ? indeks : [];
@@ -294,6 +369,19 @@ export function bewerte({ befunde = [], karar = null, indeks = [] }) {
     if (!kararGecerli) {
       gruende.push(`Ajan çıktısı geçersiz: ${kararHatalari.slice(0, 3).join('; ')}`);
     }
+
+    // Takip kayıtlarını topla (otomatik ya da vaka, takip dolu olan her belgeden)
+    if (Array.isArray(karar.belgeler)) {
+      for (const b of karar.belgeler) {
+        if (b && b.takip && b.takip.is) {
+          takipler.push({
+            quelleId: b.quelle_id,
+            is: b.takip.is,
+            son_tarih: b.takip.son_tarih ?? null,
+          });
+        }
+      }
+    }
   }
 
   for (const befund of safeBefunde) {
@@ -305,24 +393,19 @@ export function bewerte({ befunde = [], karar = null, indeks = [] }) {
 
     const kaynakGruende = [];
 
-    // 1. Kritik kaynak kontrolü
-    if (wichtig === 'kritisch') {
-      kaynakGruende.push('kaynak kritik');
-    }
-
-    // 2. Karar geçerliliği
+    // 1. Karar geçerliliği
     if (!karar) {
       kaynakGruende.push('Ajan çalışmadı.');
     } else if (!kararGecerli) {
       kaynakGruende.push('Ajan çıktısı geçersiz');
     }
 
-    // 3. Karar uyarıları kontrolü
+    // 2. Karar uyarıları kontrolü
     if (karar && Array.isArray(karar.warnungen) && karar.warnungen.length > 0) {
       kaynakGruende.push(`kararda uyarılar var (${karar.warnungen.length})`);
     }
 
-    // 4. Belge kayıtları ve ajan alanları kontrolü
+    // 3. Belge kayıtları ve ajan alanları kontrolü
     const ilgiliKararBelgeleri = [];
     if (karar && Array.isArray(karar.belgeler)) {
       for (const b of karar.belgeler) {
@@ -349,10 +432,11 @@ export function bewerte({ befunde = [], karar = null, indeks = [] }) {
       kaynakGruende.push('eksik belge kaydı');
     }
 
-    // Belge alanları: etki === 'yok', oneri === 'biliniyor', guven === 'hoch'
+    // Belge alanları: oneri === 'biliniyor', etki ∈ {yok, dusuk}, guven === 'hoch'
     let alanlarUygun = ilgiliKararBelgeleri.length > 0;
     for (const b of ilgiliKararBelgeleri) {
-      if (b.etki !== 'yok' || b.oneri !== 'biliniyor' || b.guven !== 'hoch') {
+      const etkiUygun = b.etki === 'yok' || b.etki === 'dusuk';
+      if (!etkiUygun || b.oneri !== 'biliniyor' || b.guven !== 'hoch') {
         alanlarUygun = false;
         kaynakGruende.push(
           `belge alanı uygun değil: etki=${b.etki}, öneri=${b.oneri}, güven=${b.guven}`
@@ -361,8 +445,14 @@ export function bewerte({ befunde = [], karar = null, indeks = [] }) {
       }
     }
 
-    // 5. İndirilen belgeler kontrolü (kisaltildi / ikili / indirilemedi)
-    let indirmeSorunlu = false;
+    // 4. Kaldırılan belge kontrolü (weg varsa her zaman vaka)
+    if (wegList.length > 0) {
+      kaynakGruende.push(`kaldırılan belge var (weg=${wegList.length})`);
+    }
+
+    // 5. İndirilen belgeler kontrolü:
+    // En az bir belge gerçekten okunmuş (kesik/ikili/indirilemeyen olmayan)
+    let enAzBirOkunmus = false;
     for (const item of neuList) {
       const link = item.includes('|') ? item.split('|')[0].trim() : item.trim();
       const idxEntry = safeIndeks.find(
@@ -371,41 +461,57 @@ export function bewerte({ befunde = [], karar = null, indeks = [] }) {
           (urlEslesiyorMu(entry.url, link) || (befund.art === 'text' && urlEslesiyorMu(entry.url, befund.url)))
       );
 
-      if (!idxEntry) {
-        indirmeSorunlu = true;
-        kaynakGruende.push(`belge indekste bulunamadı: ${link}`);
-        break;
-      }
-
       if (
-        idxEntry.kisaltildi ||
-        idxEntry.dosya === null ||
-        idxEntry.atlandi !== null ||
-        idxEntry.tur === 'xlsx' ||
-        idxEntry.tur === 'zip' ||
-        idxEntry.tur === 'ikili' ||
-        (idxEntry.not && idxEntry.not.includes('ikili'))
+        idxEntry &&
+        !idxEntry.kisaltildi &&
+        idxEntry.dosya !== null &&
+        idxEntry.atlandi === null &&
+        idxEntry.tur !== 'xlsx' &&
+        idxEntry.tur !== 'zip' &&
+        idxEntry.tur !== 'ikili' &&
+        !(idxEntry.not && idxEntry.not.includes('ikili'))
       ) {
-        indirmeSorunlu = true;
-        kaynakGruende.push(
-          `belge tam okunamadı (kisaltildi=${idxEntry.kisaltildi}, tur=${idxEntry.tur}, dosya=${idxEntry.dosya})`
-        );
+        enAzBirOkunmus = true;
         break;
       }
     }
 
-    // Kaldırılan belge kontrolü (M6/L12: kaldırılan belge her zaman insana/vaka)
-    if (wegList.length > 0) {
-      kaynakGruende.push(`kaldırılan belge var (weg=${wegList.length})`);
+    if (neuList.length > 0 && !enAzBirOkunmus) {
+      kaynakGruende.push('hiç okunmuş belge yok');
+    }
+
+    // 6. İkinci görüş kontrolü:
+    // - kritik kaynakta ek şart: ikinci.kaynaklar'da bu quelle_id için katiliyor === true (ikinci yoksa ya da katılmıyorsa → vaka)
+    // - kritik olmayan kaynakta ikinci katılmıyorsa da vaka (yoksa sorun değil)
+    const ikinciKayit = Array.isArray(ikinci?.kaynaklar)
+      ? ikinci.kaynaklar.find(k => k && k.quelle_id === quelleId)
+      : null;
+
+    let ikinciUygun = true;
+    if (wichtig === 'kritisch') {
+      if (!ikinciKayit || ikinciKayit.katiliyor !== true) {
+        ikinciUygun = false;
+        if (!ikinciKayit) {
+          kaynakGruende.push('kritik kaynak: ikinci görüş yok');
+        } else {
+          kaynakGruende.push('kritik kaynak: ikinci görüş katılmıyor');
+        }
+      }
+    } else {
+      if (ikinciKayit && ikinciKayit.katiliyor === false) {
+        ikinciUygun = false;
+        kaynakGruende.push('ikinci görüş katılmıyor');
+      }
     }
 
     // Otomatik "biliniyor" şartı:
-    // kaynak wichtig !== 'kritisch' VE karar geçerli VE her neu/weg için belge kaydı var
-    // VE hepsi etki==='yok', oneri==='biliniyor', guven==='hoch' VE warnungen boş
-    // VE kaldırılan belge yok (weg.length === 0)
-    // VE ilgili belgelerin hiçbiri kisaltildi/ikili/indirilemedi değil
+    // - karar geçerli, warnungen boş;
+    // - o kaynağın her neu/weg öğesi için belge kaydı var ve hepsinde oneri === 'biliniyor', etki ∈ {yok, dusuk}, guven === 'hoch';
+    // - weg (kaldırılan belge) yok;
+    // - en az bir belge gerçekten okunmuş;
+    // - kritik kaynakta ikinci görüş katılıyor === true;
+    // - kritik olmayanda ikinci katılmıyorsa ret (yoksa sorun değil).
     const isOtomatik =
-      wichtig !== 'kritisch' &&
       kararGecerli &&
       tumOgeler.length > 0 &&
       wegList.length === 0 &&
@@ -413,15 +519,14 @@ export function bewerte({ befunde = [], karar = null, indeks = [] }) {
       alanlarUygun &&
       Array.isArray(karar.warnungen) &&
       karar.warnungen.length === 0 &&
-      !indirmeSorunlu;
+      enAzBirOkunmus &&
+      ikinciUygun;
 
     if (isOtomatik) {
       otomatik.push(quelleId);
-      const n = neuList.length;
-      const ilkNe = ilgiliKararBelgeleri[0]?.ne_degisti || '';
-      rapor.push(
-        `✓ ${quelleId}: ${n} yeni belge — ajan: bizi etkilemiyor (${String(ilkNe).slice(0, 80)})`
-      );
+      const kisaAd = kaynakKisaAd(befund);
+      const ilkNe = String(ilgiliKararBelgeleri[0]?.ne_degisti || '').slice(0, 120);
+      rapor.push(`✓ ${kisaAd}: ${ilkNe}`);
     } else {
       // Vaka oluştur
       for (const kg of kaynakGruende) {
@@ -451,12 +556,20 @@ export function bewerte({ befunde = [], karar = null, indeks = [] }) {
         satirlar.push(
           `  ajan: etki=${b.etki}, öneri=${b.oneri}, geçerlilik=${tarih}, güven=${b.guven}`
         );
+        if (b.takip && b.takip.is) {
+          satirlar.push(`  takip: ${b.takip.is}${b.takip.son_tarih ? ` (son: ${b.takip.son_tarih})` : ''}`);
+        }
         if (Array.isArray(b.etkilenen_dosyalar) && b.etkilenen_dosyalar.length > 0) {
           satirlar.push(`  dosya: ${b.etkilenen_dosyalar.join(', ')}`);
         }
       }
 
-      // 5. Kaçırılırsa
+      // 5. İkinci görüş (varsa)
+      if (ikinciKayit) {
+        satirlar.push(`  ikinci göz: katılıyor=${ikinciKayit.katiliyor} (${ikinciKayit.neden || '—'})`);
+      }
+
+      // 6. Kaçırılırsa
       const folgeKisaltilmis = String(befund?.folge || '').slice(0, 120);
       satirlar.push(`  Kaçırılırsa: ${folgeKisaltilmis}`);
 
@@ -509,6 +622,7 @@ export function bewerte({ befunde = [], karar = null, indeks = [] }) {
     vakalar,
     rapor,
     gruende,
+    takipler,
   };
 }
 
@@ -520,6 +634,7 @@ function cliCalistir() {
   let befundePath = null;
   let kararPath = null;
   let indeksPath = null;
+  let ikinciPath = null;
   let outPath = null;
 
   for (let i = 0; i < args.length; i++) {
@@ -536,6 +651,10 @@ function cliCalistir() {
       indeksPath = a.slice('--indeks='.length);
     } else if (a === '--indeks' && i + 1 < args.length) {
       indeksPath = args[++i];
+    } else if (a.startsWith('--ikinci=')) {
+      ikinciPath = a.slice('--ikinci='.length);
+    } else if (a === '--ikinci' && i + 1 < args.length) {
+      ikinciPath = args[++i];
     } else if (a.startsWith('--out=')) {
       outPath = a.slice('--out='.length);
     } else if (a === '--out' && i + 1 < args.length) {
@@ -576,7 +695,17 @@ function cliCalistir() {
     }
   }
 
-  const sonuc = bewerte({ befunde, karar, indeks });
+  let ikinci = null;
+  if (ikinciPath) {
+    try {
+      const raw = readFileSync(ikinciPath, 'utf-8');
+      ikinci = JSON.parse(raw);
+    } catch {
+      ikinci = null;
+    }
+  }
+
+  const sonuc = bewerte({ befunde, karar, indeks, ikinci });
 
   if (outPath) {
     try {

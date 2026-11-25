@@ -18,7 +18,12 @@ Du schreibst genau EINE Datei: `bekci-out/karar.json`. Keine andere Datei, kein 
    - `gecerlilik`: "JJJJ-AA-GG" (z. B. "2027-01-01") oder `null`.
    - `etkilenen_dosyalar`: Repo-relative Dateipfade (max. 10 Pfade, z. B. `api-backend/billing/codes/podologie_positions.js`, keine `..`, keine absoluten Pfade).
    - `oneri`: "biliniyor" | "incele" | "acil".
+     - `biliniyor`: risikolos (betrifft uns heute nicht, kann Nachverfolgung in `takip` haben).
+     - `incele`: Kemals Entscheidung erforderlich.
+     - `acil`: Dringend, sofortige Prüfung nötig.
+     - Wann `incele` / `acil` (= Rückfrage an Kemal): Wenn etwas unsere Rechnungen, Belegerkennung (Rezept-OCR), Preise oder den Datenaustausch mit den Krankenkassen JETZT oder INNERHALB VON 60 TAGEN ändert; oder das Dokument nicht lesbar war und seine Tragweite nicht eingeschätzt werden kann. Alles andere ist `biliniyor` (+ ggf. `takip`).
    - `guven`: "hoch" | "mittel" | "niedrig". ACHTUNG: Bei unlesbaren, binären oder abgeschnittenen Dokumenten zwingend `niedrig`!
+   - `takip`: Optional. `{ "is": "≤ 200, sade Türkçe, ne yapılacak", "son_tarih": "JJJJ-AA-GG | null" } | null`. Kural: heute betrifft es uns nicht, aber in Zukunft muss etwas getan oder geprüft werden (Inkrafttreten, Übergangsfrist, noch nicht heruntergeladener Volltext des Beschlusses) → `takip` ausfüllen. Ansonsten `null`.
 6. Schreibe `ozet`: TÜRKÇE, maximal 2-3 kurze Sätze in Alltagssprache für Kemal (max. 600 Zeichen).
 
 ## Ausgabe `bekci-out/karar.json` (nur JSON, UTF-8)
@@ -28,14 +33,18 @@ Du schreibst genau EINE Datei: `bekci-out/karar.json`. Keine andere Datei, kein 
     {
       "quelle_id": "gkv-anlage2",
       "url": "https://www.gkv-spitzenverband.de/...",
-      "ne_degisti": "Podoloji fiyat listesi güncellendi, 01.01.2027 itibarıyla geçerli.",
+      "ne_degisti": "Podoloji için geçerli değil, yalnızca işitme cihazı listesi güncellenmiş.",
       "etki": "yok | dusuk | orta | yuksek",
       "gecerlilik": "2027-01-01",
       "etkilenen_dosyalar": [
         "api-backend/billing/codes/podologie_positions.js"
       ],
       "oneri": "biliniyor | incele | acil",
-      "guven": "hoch | mittel | niedrig"
+      "guven": "hoch | mittel | niedrig",
+      "takip": {
+        "is": "2027 fiyat listesi yürürlüğe girmeden önce kodları kontrol et",
+        "son_tarih": "2026-12-15"
+      }
     }
   ],
   "ozet": "Kemal için kısa Türkçe özet.",
