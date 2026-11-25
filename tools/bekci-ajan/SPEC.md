@@ -55,10 +55,12 @@
    **tek cümleyle** geri yazar ve uygulamadan önce bir kez [✅] ister (yanlış anlama sigortası).
 5. Açık vaka her sabah tekrar hatırlatılır (bugünkü "susmaz" kuralı), 14 gün sonra "hâlâ açık" diye işaretlenir.
 
-### 2.3 Telegram botu
-`getUpdates` bot başına **tek okuyucu** kabul eder. `sosyal/yayinci` kendi botunu okuyor. Bekçi botu ondan
-ayrı olmalı: GitHub'daki `TELEGRAM_BOT_TOKEN` yayıncı botuyla aynıysa bekçi için **yeni bot** açılır
-(`TELEGRAM_BEKCI_BOT_TOKEN`). Mesaj gönderen mevcut bekçiler etkilenmez (sendMessage çakışmaz).
+### 2.3 Telegram botu (Kemal 25.11.2026: mevcut botu kullan)
+Bekçi, GitHub'daki mevcut bekçi botunu (`TELEGRAM_BOT_TOKEN`, PraxuraTest_bot) kullanır — iş akışlarında
+`secrets.TELEGRAM_BEKCI_BOT_TOKEN || secrets.TELEGRAM_BOT_TOKEN`. `getUpdates` bot başına tek okuyucu kabul eder;
+bu botu başka okuyan yok (`sosyal/yayinci` ayrı bot, id 8733625913 — 25.11.2026 karşılaştırıldı). Mesajlar Kemal'e
+gider: `TELEGRAM_BEKCI_CHAT_ID` = `TELEGRAM_BEKCI_USER_ID` = Kemal'in Telegram kullanıcı numarası (özel sohbet).
+Eski bekçilerin mesajları `TELEGRAM_CHAT_ID`'ye (bugün Melih) gitmeye devam eder.
 
 ## 3. Güvenlik korkulukları (guvenlik incelemesine açık)
 
