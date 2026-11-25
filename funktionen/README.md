@@ -1444,3 +1444,13 @@ aber nicht als generierte App-Funktionen ausgewiesen. Keine manuelle Indexergän
 - `module/systemstatus.js` `mountSystemstatus` (:68): dep `istKutu`. `module/fax-einstellungen.js` `renderFaxSettings` (:97): im SaaS ausgeblendet.
 - `dashboard.js` profileSaveBtn/billingSaveBtn schreiben kein `ik_number`/KIM/Telematik mehr — ein Wert = ein Speicherweg (vorher zwei Schreibwege auf dieselben `profiles`-Felder; Kopie-Risiko erledigt).
 - Status: committet und auf der Karte (erzeugt 23.11.2026), nicht gepusht.
+
+### 25.11.2026 · Demo-Tour erweitert + Hero-Clip aus der Demo (commit 2e62809c)
+- `demo-dashboard.html` (Marketing-Demo, kein Produktcode), Inline-Skript: `mailText` (:1176), `openMail` (:1184) — KI-Mailentwurf zeigen; `toggleLoc` (:1216), `selectLoc` (:1220) — Standort-Umschalter; Handler „Route berechnen“/Fahrtenbuch; `film` (:1500) — `?film=1` spielt die Tour selbst (Untertitel, Schein-Cursor).
+  - Niye: Kemal wollte einen bewegten Produktclip im Hero und Multi-Standort, Fahrtenbuch, automatische Mail als Demo-Schritte.
+  - Nerede: nur `demo-dashboard.html`; `film()` ist die Quelle des `index.html`-Hero-Clips.
+  - Hinweis: Inline-Funktionen in HTML stehen nicht auf der Karte (Scanner liest JS-Dateien) — diese Zeilen sind der einzige Nachweis.
+- `tools/hero-clip/aufnehmen.mjs` (`npm run hero-clip`): nimmt `demo-dashboard.html?film=1` per Playwright + CDP-Screencast auf, ffmpeg → `assets/video/praxura-hero.{webm,mp4}` + Poster.
+  - Niye: Clip mit einem Befehl erneuerbar, wenn die Demo sich ändert — veraltet nicht.
+  - Nerede: erste Verwendung `index.html` Hero.
+- Status: committet, Karte erneuert (erzeugt 25.11.2026).
