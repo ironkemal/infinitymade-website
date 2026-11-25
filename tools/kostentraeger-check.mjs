@@ -33,6 +33,7 @@ import { berlinHeute } from '../api-backend/lib/berlin-tag.js';
 const HIER = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HIER, '..');
 const WB_DIR = join(REPO, 'wissensbank', 'gemeinsam', 'kostentraeger');
+const AUSGABEN_JSON = join(HIER, 'kostentraeger-ausgaben.json');
 const LADER = join(HIER, 'kostentraeger-annahmestellen-laden.mjs');
 
 export const RSS_URL =
@@ -82,17 +83,26 @@ export function rssParsen(xml) {
   return { eintraege, unerwartet };
 }
 
-/** Bekannte Ausgaben: AUSGABEN-Liste (Text, kein Import — der Lader öffnet einen DB-Client) + wissensbank-Dateinamen.
- * @param {{ ladeText: string, wbNamen: string[] }} opts
+/** Bekannte Ausgaben: ausgaben-Liste (JSON/Array) + wissensbank-Dateinamen.
+ * @param {{ ausgaben?: Array<{ datei?: string, name?: string, gueltigAb: string }>, ladeText?: string | null, wbNamen?: string[] }} opts
  */
-export function bekannteAusgaben({ ladeText, wbNamen }) {
+export function bekannteAusgaben({ ausgaben = null, ladeText = null, wbNamen = [] }) {
   /** @type {KtAusgabeInfo[]} */
-  const ausgaben = [];
-  for (const m of ladeText.matchAll(/datei:\s*'([^']+)'\s*,\s*gueltigAb:\s*'(\d{4}-\d{2}-\d{2})'/g)) {
-    ausgaben.push({ name: m[1], gueltigAb: m[2] });
+  const out = [];
+  if (Array.isArray(ausgaben)) {
+    for (const a of ausgaben) {
+      const name = a.name || a.datei;
+      if (name && a.gueltigAb) {
+        out.push({ name, gueltigAb: a.gueltigAb });
+      }
+    }
+  } else if (ladeText) {
+    for (const m of ladeText.matchAll(/datei:\s*'([^']+)'\s*,\s*gueltigAb:\s*'(\d{4}-\d{2}-\d{2})'/g)) {
+      out.push({ name: m[1], gueltigAb: m[2] });
+    }
   }
-  const bekannt = new Set([...ausgaben.map(a => a.name.toUpperCase()), ...wbNamen.map(n => n.toUpperCase())]);
-  return { ausgaben, bekannt };
+  const bekannt = new Set([...out.map(a => a.name.toUpperCase()), ...wbNamen.map(n => n.toUpperCase())]);
+  return { ausgaben: out, bekannt };
 }
 
 /** Heute gültige Ausgabe derselben Kassenart (neueste mit gültig-ab <= Stichtag).
@@ -232,18 +242,28 @@ async function holen(url, { text = false } = {}) {
 }
 
 /**
- * @param {{ out?: string, vergiss?: string[], rssDatei?: string | null, heute?: string | null, ladeText?: string | null, wbNamen?: string[] | null }} [opts]
+ * @param {{ out?: string, vergiss?: string[], rssDatei?: string | null, heute?: string | null, ausgaben?: Array<{ datei?: string, name?: string, gueltigAb: string }> | null, ladeText?: string | null, wbNamen?: string[] | null }} [opts]
  */
-export async function lauf({ out = '.', vergiss = [], rssDatei = null, heute = null, ladeText = null, wbNamen = null } = {}) {
+export async function lauf({ out = '.', vergiss = [], rssDatei = null, heute = null, ausgaben = null, ladeText = null, wbNamen = null } = {}) {
   const stichtag = heute || berlinHeute();
-  const { ausgaben, bekannt } = bekannteAusgaben({
-    ladeText: ladeText ?? readFileSync(LADER, 'utf8'),
+  let rawAusgaben = ausgaben;
+  if (!rawAusgaben && ladeText === null) {
+    try {
+      const parsed = JSON.parse(readFileSync(AUSGABEN_JSON, 'utf8'));
+      rawAusgaben = Array.isArray(parsed) ? parsed : parsed.ausgaben;
+    } catch {
+      rawAusgaben = [];
+    }
+  }
+  const { ausgaben: ausgabenListe, bekannt } = bekannteAusgaben({
+    ausgaben: rawAusgaben,
+    ladeText,
     wbNamen: wbNamen ?? readdirSync(WB_DIR).filter(n => DATEINAME_RE.test(n)),
   });
   for (const v of vergiss) {
     bekannt.delete(v.toUpperCase());
-    const i = ausgaben.findIndex(a => a.name.toUpperCase() === v.toUpperCase());
-    if (i >= 0) ausgaben.splice(i, 1);
+    const i = ausgabenListe.findIndex(a => a.name.toUpperCase() === v.toUpperCase());
+    if (i >= 0) ausgabenListe.splice(i, 1);
   }
 
   // 1) RSS — nicht abrufbar/leer = der Wächter ist blind. Kein Zustand: jeden Tag erneut melden.
@@ -273,7 +293,7 @@ export async function lauf({ out = '.', vergiss = [], rssDatei = null, heute = n
       const text = leseKostentraegerDatei(pfad);
       if (!/^UN[AB]/.test(text)) throw new Error('kein EDIFACT (weder UNA noch UNB am Anfang)'); // BN-Datei hat keinen UNA-Kopf
       const neu = analysiere(text);
-      const bs = basisFuer(e.name, ausgaben, stichtag);
+      const bs = basisFuer(e.name, ausgabenListe, stichtag);
       let basis = null;
       try { if (bs) basis = analysiere(leseKostentraegerDatei(join(WB_DIR, bs.name))); } catch { /* Basis nicht lesbar → ohne Vergleich */ }
       abschnitte.push(berichtDatei({ eintrag: { ...e, heute: stichtag }, sha, neu, basis, basisName: bs?.name }));
@@ -285,7 +305,7 @@ export async function lauf({ out = '.', vergiss = [], rssDatei = null, heute = n
   if (!abschnitte.length) return { meldungen: [], neu: 0 }; // nichts Neues → Stille
   const kopf = `Kostenträgerdatei-Wächter (O-138): ${neue.length} neue Datei(en) im RSS, ${eintraege.length} Einträge insgesamt. Nur Bericht — nichts übernommen.`;
   const fuss = neue.length
-    ? 'Freigabe -> Datei in wissensbank/gemeinsam/kostentraeger/ ablegen (W-01), in tools/kostentraeger-annahmestellen-laden.mjs (AUSGABEN) eintragen, laden (db-ustasi).'
+    ? 'Freigabe -> Datei in wissensbank/gemeinsam/kostentraeger/ ablegen (W-01), in tools/kostentraeger-ausgaben.json eintragen, laden (db-ustasi).'
     : '';
   return { meldungen: nachrichten(abschnitte, kopf, fuss), neu: neue.length };
 }

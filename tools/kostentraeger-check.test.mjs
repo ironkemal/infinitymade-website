@@ -48,9 +48,12 @@ test('RSS: fremde Hosts, Traversal, Injection werden verworfen', () => {
   assert.equal(r.unerwartet.length, bös.length);
 });
 
-test('bekannte Ausgaben: AUSGABEN-Text + wissensbank, Basis = neueste mit gültig-ab <= Stichtag', () => {
-  const text = "{ datei: 'AO05Q326_KE3.txt', gueltigAb: '2026-07-27' },\n{ datei: 'AO05Q426_KE0.txt', gueltigAb: '2026-10-01' },";
-  const { ausgaben, bekannt } = bekannteAusgaben({ ladeText: text, wbNamen: ['EK05Q426_KE0.txt'] });
+test('bekannte Ausgaben: ausgaben-Array + wissensbank, Basis = neueste mit gültig-ab <= Stichtag', () => {
+  const liste = [
+    { datei: 'AO05Q326_KE3.txt', gueltigAb: '2026-07-27' },
+    { datei: 'AO05Q426_KE0.txt', gueltigAb: '2026-10-01' },
+  ];
+  const { ausgaben, bekannt } = bekannteAusgaben({ ausgaben: liste, wbNamen: ['EK05Q426_KE0.txt'] });
   assert.ok(bekannt.has('EK05Q426_KE0.TXT') && bekannt.has('AO05Q426_KE0.TXT'));
   assert.equal(basisFuer('AO05Q127_KE0.txt', ausgaben, '2026-09-30')?.name, 'AO05Q326_KE3.txt');
   assert.equal(basisFuer('AO05Q127_KE0.txt', ausgaben, '2026-10-02')?.name, 'AO05Q426_KE0.txt');
@@ -78,7 +81,7 @@ test('Nachrichten: teilt auf, Kopf/Fuß bleiben', () => {
 
 test('lauf: RSS nicht lesbar → BLIND-Meldung; nichts Neues → Stille; Fehler einer Datei nur dort', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'ktc-'));
-  const ohne = { out: dir, ladeText: '', wbNamen: [] };
+  const ohne = { out: dir, ausgaben: [], wbNamen: [] };
   const blind = await lauf({ ...ohne, rssDatei: join(dir, 'gibt-es-nicht.xml') });
   assert.match(blind.meldungen[0], /BLIND/);
   const leer = join(dir, 'leer.xml'); writeFileSync(leer, '<rss></rss>');

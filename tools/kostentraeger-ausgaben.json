@@ -1,0 +1,30 @@
+{
+  "_hinweis": "Neue Lieferung: Datei in ausgaben eintragen (Dateiname + gültig-ab laut wissensbank/REGISTER.md W-01), alte Zeile stehen lassen (Datei bleibt im Repo). Heute gilt je Kassenart die neueste Ausgabe mit gültig-ab <= Stichtag.",
+  "ausgaben": [
+    { "datei": "AO05Q326_KE3.txt", "gueltigAb": "2026-07-27" },
+    { "datei": "BK05Q326_KE1.txt", "gueltigAb": "2026-07-01" },
+    { "datei": "IK05Q326_KE1.txt", "gueltigAb": "2026-07-01" },
+    { "datei": "EK05Q226_KE0.txt", "gueltigAb": "2026-04-01" },
+    {
+      "datei": "AO05Q426_KE0.txt",
+      "gueltigAb": "2026-10-01",
+      "not": "Q4/2026 (30.09.2026 byte-exakt vom Herausgeber, ISO-8859-1). EK05Q426_KE0 ist NIE gültig geworden (durch KE1 ersetzt) und steht bewusst nicht in der Liste."
+    },
+    { "datei": "BK05Q426_KE0.txt", "gueltigAb": "2026-10-01" },
+    { "datei": "IK05Q426_KE0.txt", "gueltigAb": "2026-10-01" },
+    { "datei": "EK05Q426_KE1.txt", "gueltigAb": "2026-10-01" },
+    {
+      "datei": "EK05Q426_KE2.txt",
+      "gueltigAb": "2026-10-01",
+      "not": "Nachlieferungen Q4/2026 (18.11.2026 byte-exakt, gemeldet vom RSS-Wächter O-138; gültig-ab laut Herausgeber-RSS). EK KE2 trägt dasselbe Datum wie KE1 → gleiches Datum: höherer Dateiname gewinnt."
+    },
+    { "datei": "AO05Q426_KE2.txt", "gueltigAb": "2026-11-01" },
+    { "datei": "EK05Q426_KE3.txt", "gueltigAb": "2026-12-01" },
+    {
+      "datei": "BN050526_KE0.txt",
+      "gueltigAb": "2026-05-01",
+      "not": "Unverändert gültig"
+    },
+    { "datei": "LK05Q226_KE0.txt", "gueltigAb": "2025-08-26" }
+  ]
+}
