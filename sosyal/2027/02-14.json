@@ -1,0 +1,11 @@
+{
+  "art": "video",
+  "caption": "POV: Der Patient sagt, die Verordnung liegt noch zu Hause.\n\nDie Frist läuft trotzdem: Die Behandlung muss innerhalb von 28 Kalendertagen nach dem Verordnungsdatum beginnen, bei dringlichem Bedarf innerhalb von 14 (HeilM-RL § 15). Praxura prüft die Frist, bevor Sie behandeln.\n\nMehr auf praxura.de\n\n#Physiotherapie #Heilmittel #Praxisalltag #GKV",
+  "szenen": [
+    { "typ": "aussage", "dauer": 2.8, "kicker": "POV · Physio-Praxis", "titel": "„Die Verordnung liegt noch zu <em>Hause.</em>“" },
+    { "typ": "aussage", "dauer": 2.4, "uebergang": "schnitt", "titel": "Sie rechnen: <em>Tag 19</em> von 28." },
+    { "typ": "aussage", "dauer": 3, "kicker": "Die Regel", "titel": "<em>28 Tage</em> ab dem Verordnungs&shy;datum.", "quelle": "Heilmittel-Richtlinie § 15" },
+    { "typ": "aussage", "dauer": 2.4, "kicker": "Also", "titel": "Erster Termin <em>innerhalb</em> der Frist." },
+    { "typ": "outro", "dauer": 2.6, "kicker": "Praxura Lokal", "titel": "Die Frist im <em>Blick.</em>", "cta": "Folgen für mehr Praxiswissen" }
+  ]
+}

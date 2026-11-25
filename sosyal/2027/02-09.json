@@ -1,0 +1,33 @@
+{
+  "art": "video",
+  "caption": "Ein Tablet. Die ganze Praxis.\n\nPraxura läuft im Browser, im Praxisnetz: am Empfang, im Behandlungsraum oder am Tablet. Kein Installationsmarathon an jedem Platz, die Daten bleiben auf Ihrem eigenen Rechner.\n\nMehr auf praxura.de\n\n#Praxissoftware #Heilmittel #Therapiepraxis #Praxisalltag",
+  "szenen": [
+    {
+      "typ": "enthuellung",
+      "dauer": 2.8,
+      "ton": "dunkel",
+      "kicker": "Wir zeigen nicht alles. Nur das:",
+      "titel": "Ein Tablet. Die ganze <em>Praxis.</em>"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.8,
+      "kicker": "Im Browser",
+      "titel": "Kein Installations&shy;marathon an jedem <em>Platz.</em>"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.6,
+      "kicker": "Und die Daten?",
+      "titel": "Liegen bei <em>Ihnen.</em>",
+      "text": "Auf Ihrem eigenen Rechner."
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.6,
+      "kicker": "Praxura Lokal",
+      "titel": "Mehr zeigen wir <em>bald.</em>",
+      "cta": "Folgen für Teil 2"
+    }
+  ]
+}

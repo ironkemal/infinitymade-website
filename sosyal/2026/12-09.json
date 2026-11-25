@@ -1,41 +1,93 @@
 {
   "art": "video",
-  "caption": "Ergo-Blanko: Wer bestimmt die Anzahl der Einheiten?\n\nBei der Blankoverordnung entscheiden Ergotherapeut:innen über Heilmittel, Menge und Frequenz und tragen dafür auch die wirtschaftliche Verantwortung (HeilM-RL § 13a). Ob eine Blankoverordnung ausgestellt wird, entscheidet weiterhin die verordnende Praxis.\n\nWie läuft das bei Ihnen? Schreiben Sie es in die Kommentare.\n\nMehr Praxiswissen für Heilmittelpraxen: praxura.de\n\n#Heilmittel #Ergotherapie #Praxisalltag #GKV",
+  "musik": "leicht",
+  "stimme": "Gacrux",
+  "sprechweise": "Laute, neugierige Verwandte beim Sonntagskaffee, gut gemeint und völlig ahnungslos.",
+  "caption": "Jedes. Einzelne. Familienfest. ☕🙃\n\nSchick das deiner Familie. Oder der Kollegin, die es auch erklären muss.\n\nMehr auf praxura.de\n\n(Bilder und Stimmen KI-generiert)\n\n#Physiotherapie #Ergotherapie #Logopädie #Podologie #Therapeutenleben #Heilmittel",
   "szenen": [
     {
-      "typ": "frage",
-      "dauer": 4,
-      "kicker": "Ergo-Blanko · Wissen Sie es?",
-      "titel": "Wer bestimmt die <em>Anzahl</em> der Einheiten?",
-      "antwort": "Sie selbst. Nicht die Verordnerin.",
-      "antwortBei": 2,
-      "quelle": "HeilM-RL § 13a Abs. 1"
+      "typ": "foto",
+      "dauer": 3.2,
+      "bild": "foto/beruf/b1.jpg",
+      "kicker": "Sonntag · Familienkaffee",
+      "titel": "Und, was machst du <em>eigentlich beruflich?</em>",
+      "effekt": [
+        "korn"
+      ],
+      "sprecher": "Und, Lena … was machst du eigentlich beruflich?"
     },
     {
-      "typ": "aussage",
-      "dauer": 2.6,
-      "kicker": "Bei der Blankoverordnung",
-      "titel": "Verordner:innen stellen die <em>Diagnose.</em>"
+      "typ": "foto",
+      "dauer": 2.4,
+      "bild": "foto/beruf/b2.jpg",
+      "kicker": "Physiotherapie",
+      "titel": "„Ah, du <em>massierst</em> also!“",
+      "stimme": "Algenib",
+      "sprechweise": "Jovialer Onkel mit Bier, laut und stolz auf seinen Witz.",
+      "ruck": "nach",
+      "nachlauf": 0.8,
+      "sprecher": "Ah, du massierst also!"
     },
     {
-      "typ": "aussage",
-      "dauer": 3,
-      "kicker": "Sie entscheiden über",
-      "titel": "Heilmittel, <em>Menge</em> und Frequenz.",
-      "quelle": "KBV Praxiswissen Heilmittel 2026"
+      "typ": "foto",
+      "dauer": 2.4,
+      "bild": "foto/beruf/b3.jpg",
+      "kicker": "Ergotherapie",
+      "titel": "„Also … <em>basteln?</em>“",
+      "stimme": "Vindemiatrix",
+      "sprechweise": "Liebe, begeisterte Oma, die es wirklich ernst meint.",
+      "ruck": "nach",
+      "nachlauf": 0.8,
+      "sprecher": "Ergotherapie? Ach, also basteln!"
     },
     {
-      "typ": "aussage",
-      "dauer": 2.8,
-      "kicker": "Das gehört dazu",
-      "titel": "Die wirtschaftliche <em>Verantwortung.</em>"
+      "typ": "foto",
+      "dauer": 2.4,
+      "bild": "foto/beruf/b4.jpg",
+      "kicker": "Logopädie",
+      "titel": "„Kindern das Sprechen beibringen? <em>Süß!</em>“",
+      "stimme": "Puck",
+      "sprechweise": "Übermotivierter Cousin, herablassend-niedlich, wie zu einem Kind.",
+      "ruck": "nach",
+      "nachlauf": 0.8,
+      "sprecher": "Du bringst Kindern das Sprechen bei? Süß!"
+    },
+    {
+      "typ": "foto",
+      "dauer": 2.4,
+      "bild": "foto/beruf/b5.jpg",
+      "kicker": "Podologie",
+      "titel": "„Fußpflege! Machst du mir <em>die Nägel?</em>“",
+      "sprechweise": "Fröhliche Tante, völlig schamlos, schon halb aus dem Schuh.",
+      "ruck": "nach",
+      "nachlauf": 0.8,
+      "sprecher": "Fußpflege! Machst du mir mal die Nägel?"
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.4,
+      "bild": "foto/beruf/b6.jpg",
+      "musikStopp": true,
+      "kicker": "Und dann noch",
+      "titel": "„Und die Abrechnung <em>macht ihr auch?</em>“",
+      "stimme": "Algenib",
+      "sprechweise": "Jovialer Onkel, ahnungslos neugierig.",
+      "nachlauf": 1.2,
+      "sprecher": "Und die Abrechnung … macht ihr dann auch noch?"
     },
     {
       "typ": "outro",
-      "dauer": 2.6,
+      "dauer": 3,
       "kicker": "Praxura Lokal",
-      "titel": "Gebaut für <em>Therapie.</em>",
-      "cta": "Folgen für mehr Praxiswissen"
+      "titel": "Schick das <em>deiner Familie.</em>",
+      "cta": "Für Physio, Ergo, Logo und Podologie.",
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15
+        }
+      ]
     }
-  ]
+  ],
+  "quelleMuster": "F6-beruf"
 }

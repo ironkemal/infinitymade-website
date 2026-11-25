@@ -1,0 +1,11 @@
+{
+  "art": "video",
+  "caption": "Eine Logopädin, 30 Kinder, jede Woche neue Termine.\n\nSerientermine statt Einzeleintrag: einmal anlegen, und die Wochentermine stehen im Kalender. Gebaut für Logopädie, Ergo, Physio und Podologie.\n\nMehr auf praxura.de\n\n#Logopädie #Therapiepraxis #Praxisalltag #Praxissoftware",
+  "szenen": [
+    { "typ": "aussage", "dauer": 2.4, "kicker": "Logopädie-Praxen", "titel": "Eine Logopädin. <em>30&nbsp;Kinder.</em>" },
+    { "typ": "aussage", "dauer": 2.2, "kicker": "Jede Woche", "titel": "Jedes Mal <em>derselbe</em> Termin." },
+    { "typ": "tippen", "dauer": 2.6, "kicker": "Bisher", "titel": "Jeden Termin einzeln eintragen." },
+    { "typ": "aussage", "dauer": 2.6, "kicker": "Mit Praxura", "titel": "Serie anlegen. <em>Fertig.</em>", "text": "Die Wochentermine stehen im Kalender." },
+    { "typ": "outro", "dauer": 2.6, "kicker": "Praxura Lokal", "titel": "Terminserien für <em>Therapie.</em>", "cta": "Mehr auf praxura.de" }
+  ]
+}

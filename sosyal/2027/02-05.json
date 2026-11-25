@@ -1,0 +1,10 @@
+{
+  "art": "video",
+  "caption": "Black Friday: Überall Prozente. Bei Ihrer Abrechnung: keine.\n\nPraxura bereitet Ihre §302-Dateien vor, ohne Provision auf Ihren Umsatz. Eingereicht wird selbst, mit Ihrem eigenen ITSG-Zertifikat.\n\nFragen? Schreiben Sie uns: kontakt@praxura.de\n\n#Heilmittel #Praxissoftware #Therapiepraxis #GKV",
+  "szenen": [
+    { "typ": "aussage", "dauer": 2.4, "kicker": "POV: Black Friday", "titel": "Überall <em>Prozente.</em>" },
+    { "typ": "aussage", "dauer": 2.4, "ton": "dunkel", "uebergang": "schnitt", "kicker": "Und bei Ihrer Abrechnung?", "titel": "Keine. <em>Kein</em> Prozent vom Umsatz." },
+    { "typ": "vergleich", "dauer": 3.4, "links": { "label": "Sonst", "text": "Ein Teil vom Umsatz bleibt hängen." }, "rechts": { "label": "Praxura", "text": "Provisionsfrei. Sie reichen selbst ein." }, "rechtsBei": 1.2 },
+    { "typ": "outro", "dauer": 2.6, "kicker": "Praxura Lokal", "titel": "Abrechnung vorbereiten. <em>Ohne</em> Provision.", "cta": "Mehr auf praxura.de" }
+  ]
+}

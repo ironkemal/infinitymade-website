@@ -363,3 +363,10 @@ Her video aynı iskelet: **figür stresli → bir tıkla rahat** (`figur` + `wec
 - **24.10.2026 (03:00):** Motora `--ohne-stimme` eklendi: TTS harcamadan önizleme (konuşma süresi ~13 harf/sn tahmini, altyazı bandı dahil), yerleşim/taşma kotasız kontrol edilir; çıktı `<ad>-entwurf-vorschau.png`. F22–F30 yazıldı, dokuzu taşmasız. İddialar kodda doğrulandı: Mahnwesen'de „Erinnerung" değil „Mahnung" var (metin düzeltildi); Armstrong sınıflaması yok; F23'teki „haftada iki kez" takvim animasyonuyla çelişiyordu, çıkarıldı. Görsel siparişi tur 3: `C:/tmp/agy-tasks/sosyal-runde3-bilder.md` (6 görsel). Zamanlama: 04:37 görsel tur 2, 05:07 görsel tur 3, 09:13 F18–F21 render, 10:07 F22–F30 render.
 - **12.11.2026:** Facebook 28.10–12.11 arası yayın almadı: Graph `code 368` „Confirm your identity before you can publish as this Page" (23–27.10 beş gönderi gitmişti, token aynı). Token/API değil — **sayfa** düzeyinde kimlik onayı; elle paylaşım da aynı uyarıyı veriyordu, kişisel profil doğrulaması yetmedi. Çözüm: telefondaki Facebook uygulamasında **sayfa profiline geçmek** → SMS kodu akışı kendiliğinden açıldı. Sonra 11-12 yalnız Facebook'a `--posten 11-12` ile telafi edildi (Instagram zaten gönderilmiş, atlandı). Sunucuda elle koşturma: `systemd-run --uid=sosyal` + unit'teki `SOSYAL_*` Environment satırları, yoksa „kein Inhalt".
 
+- **25.11.2026:** Kemal: „Erst die hochwertigen Videos, auch die witzigen — ab morgen." → `sosyal/umplanen-2026-11-25.mjs`:
+  11-26 … 12-09 = 13 Premium-Videos aus `_muster` im Wechsel witzig/Nutzen (F9, F10, F7, F12, F8, F13, F4, F11, F5, F15, F3, F16, F6);
+  12-06 (Nikolaus) bleibt. Verdrängte 13 Tage → 2027-02-04 … 02-16 (Reihenfolge gleich, Medien mitverschoben).
+  **Nicht eingeplant:** F14 + F17 — sprechen „läuft ohne Internet" / „Rechner in Ihrer Praxis", widerspricht der
+  Praxis-Cloud-Positionierung (23.11.) → neu sprechen, dann einplanen. **Offen:** 2027-02-04 (früher 11-26 „Router aus")
+  hat keine Caption *und* dieselbe Offline-Aussage → vor Februar überarbeiten. F7-Caption: „lokal in Ihrer Praxis" →
+  „auf Ihrem eigenen Server".
