@@ -122,7 +122,7 @@ test('3. Kritik kaynak + ikinci yok veya katılmıyor -> vaka', () => {
   const sonuc1 = bewerte({ befunde, karar, indeks });
   assert.equal(sonuc1.otomatik.length, 0);
   assert.equal(sonuc1.vakalar.length, 1);
-  assert.equal(sonuc1.vakalar[0].baslik, '‼️ Kaynak: gkv-anlage2');
+  assert.equal(sonuc1.vakalar[0].baslik, '‼️ Yeni fiyat listesi ve teşhis ekleri');
   assert.ok(sonuc1.gruende.includes('kritik kaynak: ikinci görüş yok'));
 
   // b) İkinci katılmıyor

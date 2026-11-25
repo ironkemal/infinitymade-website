@@ -40,25 +40,26 @@ const GECERLI_ONERI = new Set(['biliniyor', 'incele', 'acil']);
 const GECERLI_GUVEN = new Set(['hoch', 'mittel', 'niedrig']);
 
 export const KAYNAK_TURKCE_ADLARI = {
-  'tp5-anlagen': 'TP5 Teknik Ekler',
-  'hpnr': 'HPNR Pozisyon Listesi',
-  'ggt-secon': 'Teknik Standartlar (SECON)',
-  'kvnr': 'KVNR Kontrol Rakamı',
-  'podo-125': 'Podoloji Sözleşmesi',
-  'physio-125': 'Fizyo Sözleşmesi',
-  'physio-125a-blanko': 'Fizyo Blanko Sözleşmesi',
-  'ergo-125': 'Ergo Sözleşmesi',
-  'ergo-125a-blanko': 'Ergo Blanko Sözleşmesi',
-  'sssst-125': 'Logopedi Sözleşmesi',
-  'gkv-heilmittel-vertraege': 'GKV Sözleşme Aynası',
-  'gba-heilm-rl': 'G-BA Heilmittel Yönergesi',
-  'gba-heilm-rl-beschluesse': 'G-BA Kararları',
-  'kbv-diagnoseliste': 'KBV Teşhis Listesi',
-  'bfarm-icd10gm': 'BfArM ICD-10',
-  'kbv-bfb': 'KBV Blanko El Kitabı',
-  'dguv-verguetung': 'DGUV Ücret Tarifesi',
-  'dguv-handlungsanleitung': 'DGUV Uygulama Rehberi',
-  'sgb5-61-zuzahlung': 'SGB V Ek Ödeme',
+  // Kemal 25.11.2026: alanı bilmeyen biri anlasın — kısaltma değil, ne işe yaradığı
+  'tp5-anlagen': 'Kasalara fatura gönderme kuralları',
+  'hpnr': 'Kasaların tedavi kodu listesi',
+  'ggt-secon': 'Faturaları kasaya güvenli gönderme kuralları',
+  'kvnr': 'Sigortalı numarası kontrol kuralı',
+  'podo-125': 'Podoloji fiyat ve tedavi sözleşmesi',
+  'physio-125': 'Fizyoterapi fiyat ve tedavi sözleşmesi',
+  'physio-125a-blanko': 'Fizyoterapi serbest reçete sözleşmesi',
+  'ergo-125': 'Ergoterapi fiyat ve tedavi sözleşmesi',
+  'ergo-125a-blanko': 'Ergoterapi serbest reçete sözleşmesi',
+  'sssst-125': 'Logopedi fiyat ve tedavi sözleşmesi',
+  'gkv-heilmittel-vertraege': 'Kasaların sözleşmeler sayfası',
+  'gba-heilm-rl': 'Tedavi yönergesi (G-BA)',
+  'gba-heilm-rl-beschluesse': 'Tedavi yönergesi kararları (G-BA)',
+  'kbv-diagnoseliste': 'Doktorların uzun süreli tedavi listesi (KBV)',
+  'bfarm-icd10gm': 'Hastalık kodları listesi (ICD-10)',
+  'kbv-bfb': 'Reçete barkodu el kitabı (KBV)',
+  'dguv-verguetung': 'İş kazası hastaları ücret listesi (DGUV)',
+  'dguv-handlungsanleitung': 'İş kazası hastaları uygulama rehberi (DGUV)',
+  'sgb5-61-zuzahlung': 'Hastanın kendi ödediği pay (yasa)',
 };
 
 /**
@@ -533,7 +534,7 @@ export function bewerte({ befunde = [], karar = null, indeks = [], ikinci = null
         if (!gruende.includes(kg)) gruende.push(kg);
       }
 
-      const baslik = wichtig === 'kritisch' ? `‼️ Kaynak: ${quelleId}` : `Kaynak: ${quelleId}`;
+      const baslik = (wichtig === 'kritisch' ? '‼️ ' : '') + kaynakKisaAd(befund); // sade ad, iç id değil (Kemal 25.11.2026)
       const satirlar = [];
 
       // 1. Kaynak başlık satırı

@@ -311588,8 +311588,8 @@
    "kind": "function",
    "lang": "js",
    "file": "tools/bekci-ajan/quellen-bewerten.mjs",
-   "start": 70,
-   "end": 81,
+   "start": 71,
+   "end": 82,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [],
@@ -311613,8 +311613,8 @@
    "kind": "function",
    "lang": "js",
    "file": "tools/bekci-ajan/quellen-bewerten.mjs",
-   "start": 88,
-   "end": 93,
+   "start": 89,
+   "end": 94,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -311639,8 +311639,8 @@
    "kind": "function",
    "lang": "js",
    "file": "tools/bekci-ajan/quellen-bewerten.mjs",
-   "start": 101,
-   "end": 106,
+   "start": 102,
+   "end": 107,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -311665,8 +311665,8 @@
    "kind": "function",
    "lang": "js",
    "file": "tools/bekci-ajan/quellen-bewerten.mjs",
-   "start": 113,
-   "end": 124,
+   "start": 114,
+   "end": 125,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [],
@@ -311690,8 +311690,8 @@
    "kind": "function",
    "lang": "js",
    "file": "tools/bekci-ajan/quellen-bewerten.mjs",
-   "start": 131,
-   "end": 138,
+   "start": 132,
+   "end": 139,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -311718,8 +311718,8 @@
    "kind": "function",
    "lang": "js",
    "file": "tools/bekci-ajan/quellen-bewerten.mjs",
-   "start": 147,
-   "end": 325,
+   "start": 148,
+   "end": 326,
    "lines": 179,
    "spiegelHinweis": null,
    "tables": [],
@@ -311752,8 +311752,8 @@
    "kind": "function",
    "lang": "js",
    "file": "tools/bekci-ajan/quellen-bewerten.mjs",
-   "start": 350,
-   "end": 627,
+   "start": 351,
+   "end": 628,
    "lines": 278,
    "spiegelHinweis": null,
    "tables": [],
@@ -311787,8 +311787,8 @@
    "kind": "function",
    "lang": "js",
    "file": "tools/bekci-ajan/quellen-bewerten.mjs",
-   "start": 632,
-   "end": 720,
+   "start": 633,
+   "end": 721,
    "lines": 89,
    "spiegelHinweis": null,
    "tables": [],
@@ -350447,7 +350447,7 @@
     "tools/bekci-ajan/belge-indir.mjs:503",
     "tools/bekci-ajan/kostentraeger-bewerten.mjs:341",
     "tools/bekci-ajan/preise-bewerten.mjs:693",
-    "tools/bekci-ajan/quellen-bewerten.mjs:632"
+    "tools/bekci-ajan/quellen-bewerten.mjs:633"
    ],
    "aynalar": []
   },
@@ -350692,7 +350692,7 @@
    "orte": [
     "tools/bekci-ajan/kostentraeger-bewerten.mjs:44",
     "tools/bekci-ajan/preise-bewerten.mjs:353",
-    "tools/bekci-ajan/quellen-bewerten.mjs:350"
+    "tools/bekci-ajan/quellen-bewerten.mjs:351"
    ],
    "aynalar": []
   },
@@ -350782,7 +350782,7 @@
    "orte": [
     "tools/bekci-ajan/anlat.mjs:76",
     "tools/bekci-ajan/preise-bewerten.mjs:66",
-    "tools/bekci-ajan/quellen-bewerten.mjs:88"
+    "tools/bekci-ajan/quellen-bewerten.mjs:89"
    ],
    "aynalar": []
   },
@@ -351855,7 +351855,7 @@
    "name": "kararGecerliMi",
    "orte": [
     "tools/bekci-ajan/preise-bewerten.mjs:78",
-    "tools/bekci-ajan/quellen-bewerten.mjs:147"
+    "tools/bekci-ajan/quellen-bewerten.mjs:148"
    ],
    "aynalar": []
   },
