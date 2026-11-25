@@ -18,9 +18,16 @@ export class VakaHatasi extends Error {
 }
 
 /** Tarihi Europe/Berlin saat diliminde YYYY-MM-DD olarak döner. */
-function berlinGunu(date) {
+export function berlinGunu(date) {
   const d = date instanceof Date ? date : new Date(date);
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(d);
+}
+
+/** İki tarih arasındaki Berlin takvim günü farkını (tarih2 - tarih1) döner. */
+export function gunFarki(tarih1, tarih2) {
+  const d1 = new Date(berlinGunu(tarih1) + 'T00:00:00Z');
+  const d2 = new Date(berlinGunu(tarih2) + 'T00:00:00Z');
+  return Math.round((d2.getTime() - d1.getTime()) / (24 * 60 * 60 * 1000));
 }
 
 /**
@@ -35,6 +42,7 @@ export function yeniVaka({
   yamaSha256 = null,
   oneri = null,
   ek = null,
+  mesajId = null,
   simdi = new Date(),
   mevcutIdler = [],
 }) {
@@ -99,6 +107,14 @@ export function yeniVaka({
     temizEk = JSON.parse(jsonStr);
   }
 
+  let temizMesajId = null;
+  if (mesajId !== null && mesajId !== undefined) {
+    const num = Number(mesajId);
+    if (Number.isInteger(num) && num > 0) {
+      temizMesajId = num;
+    }
+  }
+
   return {
     id,
     bekci,
@@ -110,10 +126,27 @@ export function yeniVaka({
     yamaSha256: sha,
     oneri: temizOneri,
     ek: temizEk,
+    mesajId: temizMesajId,
     hatirlatma: 0,
     sonHatirlatma: null,
     gecmis: [{ zaman: d.toISOString(), eylem: 'olusturuldu' }],
   };
+}
+
+/**
+ * Vakaya Telegram message_id bilgisini yazar ve yeni bir kopya döner (değişmezlik kuralı).
+ */
+export function mesajIdYaz(vaka, id) {
+  if (!vaka || typeof vaka !== 'object') {
+    throw new VakaHatasi('gecersiz_vaka');
+  }
+  const num = Number(id);
+  if (!Number.isInteger(num) || num <= 0) {
+    throw new VakaHatasi('gecersiz_mesaj_id');
+  }
+  const yeni = structuredClone(vaka);
+  yeni.mesajId = num;
+  return yeni;
 }
 
 /**
@@ -232,13 +265,13 @@ export function mesaj(vaka) {
 
 /**
  * Vaka için bugün hatırlatma yapılması gerekip gerekmediğini kontrol eder.
+ * Kural (Kemal 25.11.2026): Son hatırlatmadan (yoksa oluşturmadan) bu yana ≥ 3 Berlin günü geçtiyse true.
  */
 export function hatirlatmaGerekli(vaka, simdi = new Date()) {
   if (vaka.durum !== 'acik') return false;
-  const bugun = berlinGunu(simdi);
-  const olusturmaGunu = berlinGunu(vaka.olusturma);
-  const sonHatirlatmaGunu = vaka.sonHatirlatma ? berlinGunu(vaka.sonHatirlatma) : null;
-  return (!sonHatirlatmaGunu || sonHatirlatmaGunu < bugun) && (olusturmaGunu < bugun);
+  const refTarih = vaka.sonHatirlatma || vaka.olusturma;
+  const fark = gunFarki(refTarih, simdi);
+  return fark >= 3;
 }
 
 /**

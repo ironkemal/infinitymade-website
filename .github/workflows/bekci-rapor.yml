@@ -1,0 +1,61 @@
+name: Bekçi — Wochenbericht an Kemal
+
+# Kemal 25.11.2026: "Was du selbst erledigst, nicht einzeln melden — einmal pro Woche ein Bericht."
+# Liest das Ereignisbuch (rapor/olaylar.jsonl im Zweig bekci-vakalar), schickt EINE Nachricht
+# (Selbst erledigt · offene Entscheidungen · Störungen) und kürzt Ereignisse älter als 60 Tage.
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'   # Montag ≈07:00 Winterzeit / 08:00 Sommerzeit
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bekci-rapor
+  cancel-in-progress: false
+
+jobs:
+  rapor:
+    if: vars.BEKCI_AJAN == 'an'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write   # nur Zweig bekci-vakalar (Buch kürzen)
+    env:
+      TELEGRAM_BEKCI_BOT_TOKEN: ${{ secrets.TELEGRAM_BEKCI_BOT_TOKEN || secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_BEKCI_CHAT_ID: ${{ secrets.TELEGRAM_BEKCI_CHAT_ID || secrets.TELEGRAM_CHAT_ID }}
+      TELEGRAM_BEKCI_USER_ID: ${{ secrets.TELEGRAM_BEKCI_USER_ID || secrets.TELEGRAM_BEKCI_CHAT_ID || secrets.TELEGRAM_CHAT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Fall-Zweig auschecken
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          git clone --quiet --depth 1 --branch bekci-vakalar "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" vakalar
+
+      - name: Bericht senden
+        run: node main/tools/bekci-ajan/cli.mjs rapor-gonder --kok=vakalar --hep
+
+      - name: Gekürztes Buch speichern
+        working-directory: vakalar
+        run: |
+          set -euo pipefail
+          [ -f vercel.json ] || echo '{"git":{"deploymentEnabled":false}}' > vercel.json
+          git add -A
+          if git diff --cached --quiet; then exit 0; fi
+          git -c user.name="praxura-bekci" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit --quiet -m "bekci: Wochenbericht, alte Ereignisse gekürzt"
+          for i in 1 2 3; do git push --quiet origin HEAD:bekci-vakalar && exit 0; git pull --quiet --rebase origin bekci-vakalar || true; done
+          exit 1

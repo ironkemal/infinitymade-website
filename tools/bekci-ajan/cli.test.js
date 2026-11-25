@@ -609,7 +609,7 @@ test('23. CLI alt süreç — vaka-durum eylemi dosyayı günceller (exit 0)', a
 test('24. CLI alt süreç — bildir bot token eksikken exit 0 ve açıklama basar', () => {
   const out = execFileSync(
     process.execPath,
-    [cliPath, 'bildir', '--tur=elle', '--id=20261124-preise-1'],
+    [cliPath, 'bildir', '--tur=aciklama', '--id=20261124-preise-1', '--kok=tmp'],
     {
       encoding: 'utf-8',
       env: { ...process.env, TELEGRAM_BEKCI_BOT_TOKEN: '' },
@@ -1150,13 +1150,47 @@ test('31. sirIceriyor: her kalıp için pozitif, temiz metinlerde yanlış pozit
   assert.equal(sirIceriyor('-----BEGIN PRIVATE KEY-----'), true); // secret-scan: ignore (sahte test değeri)
   assert.equal(sirIceriyor('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0'), true); // secret-scan: ignore (sahte test değeri)
   assert.equal(sirIceriyor('YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY3ODkwYWJjZGVmZ2g='), true); // secret-scan: ignore (sahte test değeri)
-  assert.equal(sirIceriyor('e3b0c44298fc1c149afbf4c8996fb92427ae41e4'), true); // secret-scan: ignore (sahte test değeri)
+  assert.equal(sirIceriyor('e3b0c44298fc1c149afbf4c8996fb92427ae41e4'), true); // 40 hex char secret-scan: ignore (sahte test değeri)
   assert.equal(sirIceriyor('123456789:ABCdefGHIjklMNOpqrSTUvwxYZ123456'), true); // secret-scan: ignore (sahte test değeri)
   assert.equal(sirIceriyor('export CLAUDE_CODE_OAUTH_TOKEN=secret'), true); // secret-scan: ignore (sahte test değeri)
   assert.equal(sirIceriyor('prefix GITHUB_TOKEN suffix'), true); // secret-scan: ignore (sahte test değeri)
   assert.equal(sirIceriyor('ACTIONS_RUNTIME_TOKEN=xyz'), true); // secret-scan: ignore (sahte test değeri)
 
+  // /'siz karışık 44'lük dizi -> sır
+  assert.equal(sirIceriyor('aB3dE5gH7jK9mN1pQ3rS5tU7vW9xY1zA3bC5dE7fG9hJ'), true); // secret-scan: ignore (sahte test değeri)
+
+  // Önünde sha256 olmayan 64 hex -> sır
+  assert.equal(sirIceriyor('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'), true); // secret-scan: ignore (sahte test değeri)
+
   // Yanlış pozitif vermeyen temiz metinler
+  // sha256 kelimesi ≤12 karakter mesafede olan 64 haneli hex -> temiz
+  assert.equal(
+    sirIceriyor('sha256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
+    false
+  );
+  assert.equal(
+    sirIceriyor('sha-256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
+    false
+  );
+  assert.equal(
+    sirIceriyor('SHA256 = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
+    false
+  );
+
+  // Gerçek gkv-datenaustausch.de URL'leri ve wissensbank yolları -> temiz
+  assert.equal(
+    sirIceriyor('https://www.gkv-datenaustausch.de/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/'),
+    false
+  );
+  assert.equal(
+    sirIceriyor('wissensbank/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/'),
+    false
+  );
+  assert.equal(
+    sirIceriyor('https://example.com/search?q=aB3dE5gH7jK9mN1pQ3rS5tU7vW9xY1zA3bC5dE7fG9hJ'),
+    false
+  );
+
   assert.equal(sirIceriyor('Podoloji fiyat sıçraması resmî sözleşme ile doğrulandı.'), false);
   assert.equal(sirIceriyor('2027-01-01'), false);
   assert.equal(sirIceriyor('78010'), false);
@@ -1526,6 +1560,279 @@ test('41. bildirimMetni — bekci=kostentraeger ile auto ve uygulandi bildirim m
   ].join('\n');
   assert.equal(uygulandiRes.text, beklenenUygulandi);
 });
+
+// 42. bildir auto/uygulandi/elle — Telegram'a göndermez ama olay yazar
+test('42. bildir auto, uygulandi ve elle: Telegram araması yapmaz, olay defterine yazar', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'bildir-olay-test-'));
+  const vakalarDizin = path.join(tempDir, 'vakalar');
+  const dosya = path.join(tempDir, 'rapor.txt');
+
+  try {
+    const { kaydet, yukle } = await import('./vaka.mjs');
+    const { olaylariYukle } = await import('./rapor.mjs');
+
+    // 1) auto testi
+    await writeFile(dosya, '78010: 30.00 → 32.00 €\n78011: 40.00 → 42.00 €\n', 'utf-8');
+    execFileSync(
+      process.execPath,
+      [cliPath, 'bildir', '--tur=auto', `--kok=${tempDir}`, `--dosya=${dosya}`, '--bekci=preise'],
+      { stdio: 'pipe' }
+    );
+
+    let olaylar = await olaylariYukle(tempDir);
+    assert.equal(olaylar.length, 1);
+    assert.equal(olaylar[0].tur, 'auto');
+    assert.equal(olaylar[0].ozet, '78010: 30.00 → 32.00 € (2 değişiklik)');
+
+    // 2) uygulandi testi
+    const vUyg = yeniVaka({ bekci: 'preise', baslik: 'Podologie artışı' });
+    await kaydet(vakalarDizin, vUyg);
+    execFileSync(
+      process.execPath,
+      [cliPath, 'bildir', '--tur=uygulandi', `--kok=${tempDir}`, `--id=${vUyg.id}`, '--bekci=preise'],
+      { stdio: 'pipe' }
+    );
+
+    olaylar = await olaylariYukle(tempDir);
+    assert.equal(olaylar.length, 2);
+    assert.equal(olaylar[1].tur, 'uygulandi');
+    assert.equal(olaylar[1].ozet, 'Senin onayınla uyguladım: Podologie artışı');
+
+    // 3) elle testi -> vaka açık kalır
+    const vElle = yeniVaka({ bekci: 'preise', baslik: 'Yeni kod bulundu', mevcutIdler: [vUyg.id] });
+    await kaydet(vakalarDizin, vElle);
+    execFileSync(
+      process.execPath,
+      [cliPath, 'bildir', '--tur=elle', `--kok=${tempDir}`, `--id=${vElle.id}`, '--bekci=preise'],
+      { stdio: 'pipe' }
+    );
+
+    olaylar = await olaylariYukle(tempDir);
+    assert.equal(olaylar.length, 3);
+    assert.equal(olaylar[2].tur, 'elle');
+    assert.equal(olaylar[2].ozet, 'Yeni kod bulundu: otomatik uygulanamadı, yerel oturumda yapılacak');
+
+    const guncelVaka = await yukle(vakalarDizin, vElle.id);
+    assert.equal(guncelVaka.durum, 'acik');
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+// 43. bildir hata — ilk hata göndermez, ikinci ardışık hata gönderir
+test('43. bildir hata: ilk hatada Telegram göndermez, ikinci ardışık hatada gönderir', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'bildir-hata-test-'));
+  const dosya = path.join(tempDir, 'hata.txt');
+
+  try {
+    const { olaylariYukle } = await import('./rapor.mjs');
+    await writeFile(dosya, 'API zaman aşımı', 'utf-8');
+
+    // İlk hata: bot token yapılandırılmamış olsa dahi 'nicht konfiguriert' basmadan exit 0 ile çıkar (Telegram aranmaz)
+    const out1 = execFileSync(
+      process.execPath,
+      [cliPath, 'bildir', '--tur=hata', `--kok=${tempDir}`, `--dosya=${dosya}`, '--bekci=preise'],
+      {
+        encoding: 'utf-8',
+        env: { ...process.env, TELEGRAM_BEKCI_BOT_TOKEN: '' },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }
+    );
+    assert.ok(!out1.includes('Bekçi-Bot nicht konfiguriert'));
+
+    let olaylar = await olaylariYukle(tempDir);
+    assert.equal(olaylar.length, 1);
+    assert.equal(olaylar[0].tur, 'hata');
+
+    // İkinci hata (üst üste): artık Telegram'a gitmeye çalışır ve token yoksa 'nicht konfiguriert' basar
+    const out2 = execFileSync(
+      process.execPath,
+      [cliPath, 'bildir', '--tur=hata', `--kok=${tempDir}`, `--dosya=${dosya}`, '--bekci=preise'],
+      {
+        encoding: 'utf-8',
+        env: { ...process.env, TELEGRAM_BEKCI_BOT_TOKEN: '' },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }
+    );
+    assert.ok(out2.includes('Bekçi-Bot nicht konfiguriert'));
+
+    olaylar = await olaylariYukle(tempDir);
+    assert.equal(olaylar.length, 2);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+// 44. bildir vaka — dönen message_id'yi vakaya kaydeder
+test('44. bildir vaka: Telegram dönen message_id değerini vakaya kaydeder', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'bildir-vaka-test-'));
+  const vakalarDizin = path.join(tempDir, 'vakalar');
+
+  try {
+    const { kaydet, yukle } = await import('./vaka.mjs');
+    const { cli } = await import('./cli.mjs');
+
+    const v = yeniVaka({ bekci: 'preise', baslik: 'Vaka kayıt testi' });
+    assert.equal(v.mesajId, null);
+    await kaydet(vakalarDizin, v);
+
+    const sahteFetch = async (url, opts) => {
+      return {
+        json: async () => ({
+          ok: true,
+          result: { message_id: 123456 },
+        }),
+      };
+    };
+
+    let exitCode = null;
+    await cli(
+      [
+        'bildir',
+        '--tur=vaka',
+        `--kok=${tempDir}`,
+        `--id=${v.id}`,
+      ],
+      {
+        fetch: sahteFetch,
+        exit: code => {
+          exitCode = code;
+        },
+      }
+    );
+
+    assert.equal(exitCode, 0);
+
+    const guncel = await yukle(vakalarDizin, v.id);
+    assert.equal(guncel.mesajId, 123456);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+// 45. bildir aciklama — mesajId varsa yanıt olarak gönderir
+test('45. bildir aciklama: vakanın mesajId alanı varsa reply_parameters ile gönderir', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'bildir-aciklama-test-'));
+  const vakalarDizin = path.join(tempDir, 'vakalar');
+
+  try {
+    const { kaydet } = await import('./vaka.mjs');
+    const { cli } = await import('./cli.mjs');
+
+    const v = yeniVaka({ bekci: 'preise', baslik: 'Açıklama testi', mesajId: 99911 });
+    await kaydet(vakalarDizin, v);
+
+    let gonderilenBody = null;
+    const sahteFetch = async (url, opts) => {
+      gonderilenBody = opts.body ? JSON.parse(opts.body) : {};
+      return {
+        json: async () => ({
+          ok: true,
+          result: { message_id: 88822 },
+        }),
+      };
+    };
+
+    let exitCode = null;
+    await cli(
+      [
+        'bildir',
+        '--tur=aciklama',
+        `--kok=${tempDir}`,
+        `--id=${v.id}`,
+      ],
+      {
+        fetch: sahteFetch,
+        exit: code => {
+          exitCode = code;
+        },
+      }
+    );
+
+    assert.equal(exitCode, 0);
+    assert.ok(gonderilenBody);
+    assert.deepEqual(gonderilenBody.reply_parameters, { message_id: 99911 });
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+// 46. rapor-gonder — --hep bayrağı ile rapor gönderir ve eski olayları budar
+test('46. rapor-gonder: --hep ile haftalık raporu Telegrama gönderir ve eski olayları budar', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'rapor-gonder-test-'));
+  const vakalarDizin = path.join(tempDir, 'vakalar');
+
+  try {
+    const { kaydet } = await import('./vaka.mjs');
+    const { olayEkle, olaylariYukle } = await import('./rapor.mjs');
+    const { cli } = await import('./cli.mjs');
+
+    const simdi = new Date('2026-11-25T12:00:00Z');
+    const eskiTarih = new Date('2026-09-01T12:00:00Z'); // 80+ gün önce
+
+    // Olaylar ekle
+    await olayEkle(tempDir, { bekci: 'preise', tur: 'auto', ozet: 'Yeni auto olay', simdi });
+    await olayEkle(tempDir, { bekci: 'preise', tur: 'auto', ozet: 'Çok eski olay', simdi: eskiTarih });
+
+    const v = yeniVaka({ bekci: 'preise', baslik: 'Açık vaka' });
+    await kaydet(vakalarDizin, v);
+
+    let gonderilenMesaj = null;
+    const sahteFetch = async (url, opts) => {
+      const b = opts.body ? JSON.parse(opts.body) : {};
+      gonderilenMesaj = b.text;
+      return {
+        json: async () => ({
+          ok: true,
+          result: { message_id: 1111 },
+        }),
+      };
+    };
+
+    let exitCode = null;
+    await cli(['rapor-gonder', `--kok=${tempDir}`, '--hep'], {
+      fetch: sahteFetch,
+      exit: code => {
+        exitCode = code;
+      },
+    });
+
+    assert.equal(exitCode, 0);
+    assert.ok(gonderilenMesaj);
+    assert.ok(gonderilenMesaj.includes('📋 Haftalık bekçi raporu'));
+    assert.ok(gonderilenMesaj.includes('• Yeni auto olay'));
+    assert.ok(gonderilenMesaj.includes('Senin kararını bekleyenler: 1 → /vakalar'));
+
+    // Budama kontrolü: 60 günden eski olan silinmeli
+    const kalanOlaylar = await olaylariYukle(tempDir);
+    assert.equal(kalanOlaylar.length, 1);
+    assert.equal(kalanOlaylar[0].ozet, 'Yeni auto olay');
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+// 47. rapor-gonder — pazartesi değilse ve --hep yoksa rapor göndermez
+test('47. rapor-gonder: pazartesi değilse ve --hep yoksa göndermez', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'rapor-pazartesi-test-'));
+
+  try {
+    // 25.11.2026 Çarşamba (Wednesday) günüdür
+    const out = execFileSync(
+      process.execPath,
+      [cliPath, 'rapor-gonder', `--kok=${tempDir}`],
+      {
+        encoding: 'utf-8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }
+    );
+
+    assert.ok(out.includes('Pazartesi değil (--hep yok), rapor gönderilmedi.'));
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
 
 
 

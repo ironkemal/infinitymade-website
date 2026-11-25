@@ -1,8 +1,8 @@
 // tools/bekci-ajan/cevap-isle.test.js
-// Ne: cevap-isle.mjs birim testleri (en az 10 senaryo).
-// Niye: SPEC.md §2.2, §3.0 ve .github/workflows/bekci-cevap.yml uyarınca; liste, metin,
-// vaka eylemleri (birak, acikla, uygula), kapalı vaka ve çift basış kontrolleri,
-// hatırlatma döngüleri, offset/dispatch dosya yazımları ve hata dayanıklılığını doğrulamak.
+// Ne: cevap-isle.mjs birim testleri (en az 12 senaryo).
+// Niye: SPEC.md ve Kemal 25.11.2026 talimatı uyarınca: liste ve metin yanıtları,
+// toast bildirimleri (sohbete mesaj yok), takılı vakanın sessiz geri açılması,
+// hatırlatmalarda 3 gün eşiği, mesajId yanıtı ve 3'ten fazla vakada toplu özet.
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -10,12 +10,15 @@ import os from 'node:os';
 import path from 'node:path';
 import { mkdtemp, rm, readFile, writeFile } from 'node:fs/promises';
 import { isle, parseCliArgs } from './cevap-isle.mjs';
-import { yeniVaka, kaydet, yukle, gecis } from './vaka.mjs';
+import { yeniVaka, kaydet, yukle, gecis, mesajIdYaz } from './vaka.mjs';
+import { olaylariYukle } from './rapor.mjs';
 
 function sahteTg(opts = {}) {
   const gonderilenKisa = [];
   const gonderilenSende = [];
   const gonderilenVaka = [];
+  const gonderilenYanit = [];
+  const onaylananlar = [];
   let kisaHataKalan = opts.kisaHataSayisi || 0;
 
   return {
@@ -23,6 +26,8 @@ function sahteTg(opts = {}) {
     gonderilenKisa,
     gonderilenSende,
     gonderilenVaka,
+    gonderilenYanit,
+    onaylananlar,
     async cevaplar(offset = 0) {
       if (opts.cevaplarHata) {
         throw new Error('Telegram getUpdates hatası');
@@ -32,24 +37,32 @@ function sahteTg(opts = {}) {
         cevaplar: this.cevaplarListesi,
       };
     },
-    async sendeKisa(text) {
+    async onayla(cqId, metin) {
+      onaylananlar.push({ cqId, metin });
+      return { ok: true };
+    },
+    async sendeKisa(text, { replyTo } = {}) {
       if (kisaHataKalan > 0) {
         kisaHataKalan--;
         throw new Error('Telegram sendeKisa hatası');
       }
-      gonderilenKisa.push(text);
-      return { ok: true };
+      gonderilenKisa.push({ text, replyTo });
+      return { ok: true, message_id: 9001 };
     },
     async sende(text, knoepfe) {
       if (opts.sendeHata) {
         throw new Error('Telegram sende hatası');
       }
       gonderilenSende.push({ text, knoepfe });
-      return { ok: true };
+      return { ok: true, message_id: 9002 };
     },
     async sendeVaka(vaka) {
       gonderilenVaka.push(vaka);
-      return { ok: true };
+      return { ok: true, message_id: 9900 };
+    },
+    async sendeYanit(mesajId, text) {
+      gonderilenYanit.push({ mesajId, text });
+      return { ok: true, message_id: 9003 };
     },
   };
 }
@@ -68,25 +81,29 @@ async function geciciOrtamOlustur() {
   };
 }
 
-test('1. liste (dolu): açık ve uygulanıyor vakaları listeler, kapatılanları göstermez', async () => {
+test('1. liste (dolu): açık vakaları "• <baslik> — <n> gün" biçiminde listeler', async () => {
   const env = await geciciOrtamOlustur();
   try {
-    const simdi = new Date('2026-11-24T10:00:00Z');
-    const v1 = yeniVaka({ bekci: 'fiyat', baslik: 'Podologie artış', simdi, mevcutIdler: [] });
-    const v2 = yeniVaka({ bekci: 'fiyat', baslik: 'Physio yeni kod', simdi, mevcutIdler: [v1.id] });
-    const v3 = yeniVaka({ bekci: 'fiyat', baslik: 'Eski kapatılmış', simdi, mevcutIdler: [v1.id, v2.id] });
+    const simdi = new Date('2026-11-25T10:00:00Z');
+    const v1Tarih = new Date('2026-11-20T10:00:00Z'); // 5 gün önce
+    const v2Tarih = new Date('2026-11-24T10:00:00Z'); // 1 gün önce
+
+    const v1 = yeniVaka({ bekci: 'fiyat', baslik: 'Podologie artış', simdi: v1Tarih, mevcutIdler: [] });
+    const v2 = yeniVaka({ bekci: 'fiyat', baslik: 'Physio yeni kod', simdi: v2Tarih, mevcutIdler: [v1.id] });
+    const v3 = yeniVaka({ bekci: 'fiyat', baslik: 'Eski kapatılmış', simdi: v1Tarih, mevcutIdler: [v1.id, v2.id] });
 
     await kaydet(env.vakalarDizini, v1);
     await kaydet(env.vakalarDizini, gecis(v2, 'uygula', { simdi }));
     await kaydet(env.vakalarDizini, gecis(v3, 'birak', { simdi }));
 
     const tg = sahteTg({
-      cevaplarListesi: [{ vakaId: null, eylem: 'liste', updateId: 10 }],
+      cevaplarListesi: [{ vakaId: null, eylem: 'liste', updateId: 10, cqId: null }],
     });
 
     const res = await isle({
       tg,
       dizin: env.vakalarDizini,
+      kok: env.tempDir,
       offsetDosya: env.offsetDosya,
       dispatchDosya: env.dispatchDosya,
       simdi,
@@ -95,24 +112,25 @@ test('1. liste (dolu): açık ve uygulanıyor vakaları listeler, kapatılanlar�
     assert.equal(res.islenen, 1);
     assert.equal(res.dispatch.length, 0);
     assert.equal(tg.gonderilenKisa.length, 1);
-    const beklenen = `#${v1.id} · Podologie artış\n#${v2.id} · Physio yeni kod`;
-    assert.equal(tg.gonderilenKisa[0], beklenen);
+    const beklenen = '• Podologie artış — 5 gün\n• Physio yeni kod — 1 gün';
+    assert.equal(tg.gonderilenKisa[0].text, beklenen);
   } finally {
     await env.temizle();
   }
 });
 
-test('2. liste (boş): hiç açık vaka yoksa "Açık vaka yok ✅" döner', async () => {
+test('2. liste (boş): hiç açık vaka yoksa "Şu an senden beklediğim bir karar yok ✅" döner', async () => {
   const env = await geciciOrtamOlustur();
   try {
-    const simdi = new Date('2026-11-24T10:00:00Z');
+    const simdi = new Date('2026-11-25T10:00:00Z');
     const tg = sahteTg({
-      cevaplarListesi: [{ vakaId: null, eylem: 'liste', updateId: 11 }],
+      cevaplarListesi: [{ vakaId: null, eylem: 'liste', updateId: 11, cqId: null }],
     });
 
     const res = await isle({
       tg,
       dizin: env.vakalarDizini,
+      kok: env.tempDir,
       offsetDosya: env.offsetDosya,
       dispatchDosya: env.dispatchDosya,
       simdi,
@@ -120,22 +138,23 @@ test('2. liste (boş): hiç açık vaka yoksa "Açık vaka yok ✅" döner', asy
 
     assert.equal(res.islenen, 1);
     assert.equal(tg.gonderilenKisa.length, 1);
-    assert.equal(tg.gonderilenKisa[0], 'Açık vaka yok ✅');
+    assert.equal(tg.gonderilenKisa[0].text, 'Şu an senden beklediğim bir karar yok ✅');
   } finally {
     await env.temizle();
   }
 });
 
-test('3. metin: desteklenmeyen metin cevabında bilgilendirme mesajı gönderir', async () => {
+test('3. metin: desteklenmeyen metin cevabında yönlendirme mesajı gönderir', async () => {
   const env = await geciciOrtamOlustur();
   try {
     const tg = sahteTg({
-      cevaplarListesi: [{ vakaId: null, eylem: 'metin_desteklenmiyor', updateId: 12 }],
+      cevaplarListesi: [{ vakaId: null, eylem: 'metin_desteklenmiyor', updateId: 12, cqId: null }],
     });
 
     const res = await isle({
       tg,
       dizin: env.vakalarDizini,
+      kok: env.tempDir,
       offsetDosya: env.offsetDosya,
       dispatchDosya: env.dispatchDosya,
     });
@@ -143,51 +162,57 @@ test('3. metin: desteklenmeyen metin cevabında bilgilendirme mesajı gönderir'
     assert.equal(res.islenen, 1);
     assert.equal(tg.gonderilenKisa.length, 1);
     assert.equal(
-      tg.gonderilenKisa[0],
-      'Şimdilik yalnız düğmeler çalışıyor (✅ Uygula · ❌ Bırak · 💬 Açıkla). Açık vakalar: /vakalar'
+      tg.gonderilenKisa[0].text,
+      'Şimdilik yalnız mesajlardaki düğmeler çalışıyor. Bekleyen kararlar için: /vakalar'
     );
   } finally {
     await env.temizle();
   }
 });
 
-test('4. bulunamayan id: vaka mevcut değilse "#id bulunamadı" yazar', async () => {
+test('4. bulunamayan id: cqId varsa tg.onayla çağrılır, sohbete mesaj gitmez', async () => {
   const env = await geciciOrtamOlustur();
   try {
     const tg = sahteTg({
-      cevaplarListesi: [{ vakaId: '20261124-fiyat-99', eylem: 'uygula', updateId: 13 }],
+      cevaplarListesi: [{ vakaId: '20261124-fiyat-99', eylem: 'uygula', updateId: 13, cqId: 'cq_404' }],
     });
 
     const res = await isle({
       tg,
       dizin: env.vakalarDizini,
+      kok: env.tempDir,
       offsetDosya: env.offsetDosya,
       dispatchDosya: env.dispatchDosya,
     });
 
     assert.equal(res.islenen, 1);
     assert.equal(res.dispatch.length, 0);
-    assert.equal(tg.gonderilenKisa.length, 1);
-    assert.equal(tg.gonderilenKisa[0], '#20261124-fiyat-99 bulunamadı');
+    // Sohbete mesaj gitmez!
+    assert.equal(tg.gonderilenKisa.length, 0);
+    // onayla toast çağrılır
+    assert.equal(tg.onaylananlar.length, 1);
+    assert.equal(tg.onaylananlar[0].cqId, 'cq_404');
+    assert.equal(tg.onaylananlar[0].metin, 'Bu soruyu bulamadım.');
   } finally {
     await env.temizle();
   }
 });
 
-test('5. birak: vaka durumunu "birakildi" yapar, onay mesajı atar, dispatch etmez', async () => {
+test('5. birak: cqId ile sohbete mesaj gitmez, toast onayı verilir', async () => {
   const env = await geciciOrtamOlustur();
   try {
-    const simdi = new Date('2026-11-24T10:00:00Z');
+    const simdi = new Date('2026-11-25T10:00:00Z');
     const v = yeniVaka({ bekci: 'fiyat', baslik: 'Bırakılacak vaka', simdi });
     await kaydet(env.vakalarDizini, v);
 
     const tg = sahteTg({
-      cevaplarListesi: [{ vakaId: v.id, eylem: 'birak', updateId: 14 }],
+      cevaplarListesi: [{ vakaId: v.id, eylem: 'birak', updateId: 14, cqId: 'cq_birak_1' }],
     });
 
     const res = await isle({
       tg,
       dizin: env.vakalarDizini,
+      kok: env.tempDir,
       offsetDosya: env.offsetDosya,
       dispatchDosya: env.dispatchDosya,
       simdi,
@@ -195,7 +220,12 @@ test('5. birak: vaka durumunu "birakildi" yapar, onay mesajı atar, dispatch etm
 
     assert.equal(res.islenen, 1);
     assert.equal(res.dispatch.length, 0);
-    assert.equal(tg.gonderilenKisa[0], `❌ #${v.id} bırakıldı.`);
+    // Sohbete mesaj gitmedi
+    assert.equal(tg.gonderilenKisa.length, 0);
+    // Toast onayı
+    assert.equal(tg.onaylananlar.length, 1);
+    assert.equal(tg.onaylananlar[0].cqId, 'cq_birak_1');
+    assert.equal(tg.onaylananlar[0].metin, '❌ Tamam, bırakıldı.');
 
     const guncel = await yukle(env.vakalarDizini, v.id);
     assert.equal(guncel.durum, 'birakildi');
@@ -204,20 +234,21 @@ test('5. birak: vaka durumunu "birakildi" yapar, onay mesajı atar, dispatch etm
   }
 });
 
-test('6. acikla → dispatch: vaka açık kalır, dispatch listesine eklenir', async () => {
+test('6. acikla: cqId ile sohbete mesaj gitmez, dispatch listesine eklenir ve toast onayı verilir', async () => {
   const env = await geciciOrtamOlustur();
   try {
-    const simdi = new Date('2026-11-24T10:00:00Z');
+    const simdi = new Date('2026-11-25T10:00:00Z');
     const v = yeniVaka({ bekci: 'fiyat', baslik: 'Açıklama istenecek', simdi });
     await kaydet(env.vakalarDizini, v);
 
     const tg = sahteTg({
-      cevaplarListesi: [{ vakaId: v.id, eylem: 'acikla', updateId: 15 }],
+      cevaplarListesi: [{ vakaId: v.id, eylem: 'acikla', updateId: 15, cqId: 'cq_acikla_1' }],
     });
 
     const res = await isle({
       tg,
       dizin: env.vakalarDizini,
+      kok: env.tempDir,
       offsetDosya: env.offsetDosya,
       dispatchDosya: env.dispatchDosya,
       simdi,
@@ -225,31 +256,35 @@ test('6. acikla → dispatch: vaka açık kalır, dispatch listesine eklenir', a
 
     assert.equal(res.islenen, 1);
     assert.deepEqual(res.dispatch, [{ vakaId: v.id, eylem: 'acikla' }]);
-    assert.equal(tg.gonderilenKisa[0], `💬 #${v.id} için açıklama hazırlanıyor…`);
+    // Sohbete mesaj yok
+    assert.equal(tg.gonderilenKisa.length, 0);
+    // Toast onayı
+    assert.equal(tg.onaylananlar.length, 1);
+    assert.equal(tg.onaylananlar[0].metin, '💬 Açıklama hazırlanıyor, birkaç dakika içinde gelecek.');
 
     const guncel = await yukle(env.vakalarDizini, v.id);
     assert.equal(guncel.durum, 'acik');
-    assert.equal(guncel.gecmis.at(-1)?.eylem, 'acikla');
   } finally {
     await env.temizle();
   }
 });
 
-test('7. uygula → dispatch + durum uygulaniyor: vaka uygulaniyor olur ve dispatch edilir', async () => {
+test('7. uygula: cqId ile toast onayı verilir ("bitince haftalık raporda görürsün"), dispatch edilir', async () => {
   const env = await geciciOrtamOlustur();
   try {
-    const simdi = new Date('2026-11-24T10:00:00Z');
+    const simdi = new Date('2026-11-25T10:00:00Z');
     const sha = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
     const v = yeniVaka({ bekci: 'fiyat', baslik: 'Uygulanacak', yamaSha256: sha, simdi });
     await kaydet(env.vakalarDizini, v);
 
     const tg = sahteTg({
-      cevaplarListesi: [{ vakaId: v.id, eylem: 'uygula', updateId: 16 }],
+      cevaplarListesi: [{ vakaId: v.id, eylem: 'uygula', updateId: 16, cqId: 'cq_uygula_1' }],
     });
 
     const res = await isle({
       tg,
       dizin: env.vakalarDizini,
+      kok: env.tempDir,
       offsetDosya: env.offsetDosya,
       dispatchDosya: env.dispatchDosya,
       simdi,
@@ -257,7 +292,14 @@ test('7. uygula → dispatch + durum uygulaniyor: vaka uygulaniyor olur ve dispa
 
     assert.equal(res.islenen, 1);
     assert.deepEqual(res.dispatch, [{ vakaId: v.id, eylem: 'uygula' }]);
-    assert.equal(tg.gonderilenKisa[0], `✅ #${v.id} uygulanıyor, bitince haber veririm.`);
+    // Sohbete mesaj yok
+    assert.equal(tg.gonderilenKisa.length, 0);
+    // Toast onayı
+    assert.equal(tg.onaylananlar.length, 1);
+    assert.equal(
+      tg.onaylananlar[0].metin,
+      '✅ Alındı — uyguluyorum, bitince haftalık raporda görürsün.'
+    );
 
     const guncel = await yukle(env.vakalarDizini, v.id);
     assert.equal(guncel.durum, 'uygulaniyor');
@@ -266,22 +308,22 @@ test('7. uygula → dispatch + durum uygulaniyor: vaka uygulaniyor olur ve dispa
   }
 });
 
-test('8. kapalı vakaya basış: vaka zaten kapalıysa VakaHatasi yakalanır ve kullanıcı bilgilendirilir', async () => {
+test('8. kapalı vakaya basış: cqId varsa toast onayı "Bu soru zaten kapanmış." verilir', async () => {
   const env = await geciciOrtamOlustur();
   try {
-    const simdi = new Date('2026-11-24T10:00:00Z');
+    const simdi = new Date('2026-11-25T10:00:00Z');
     const v = yeniVaka({ bekci: 'fiyat', baslik: 'Zaten uygulanmış', simdi });
     const kapali = gecis(gecis(v, 'uygula', { simdi }), 'tamam', { simdi });
-    assert.equal(kapali.durum, 'uygulandi');
     await kaydet(env.vakalarDizini, kapali);
 
     const tg = sahteTg({
-      cevaplarListesi: [{ vakaId: v.id, eylem: 'uygula', updateId: 17 }],
+      cevaplarListesi: [{ vakaId: v.id, eylem: 'uygula', updateId: 17, cqId: 'cq_kapali_1' }],
     });
 
     const res = await isle({
       tg,
       dizin: env.vakalarDizini,
+      kok: env.tempDir,
       offsetDosya: env.offsetDosya,
       dispatchDosya: env.dispatchDosya,
       simdi,
@@ -289,368 +331,194 @@ test('8. kapalı vakaya basış: vaka zaten kapalıysa VakaHatasi yakalanır ve 
 
     assert.equal(res.islenen, 1);
     assert.equal(res.dispatch.length, 0);
-    assert.equal(tg.gonderilenKisa[0], `#${v.id} zaten kapalı (durum: uygulandi).`);
+    assert.equal(tg.gonderilenKisa.length, 0);
+    assert.equal(tg.onaylananlar.length, 1);
+    assert.equal(tg.onaylananlar[0].metin, 'Bu soru zaten kapanmış.');
   } finally {
     await env.temizle();
   }
 });
 
-test('9. çift basış: aynı turda ilk basış işlenir, ikinci basış VakaHatasi yoluna düşer', async () => {
+test('9. hatırlatma (3 gün eşiği): 1 veya 2 günlük vakaya hatırlatma gönderilmez, 3+ günde gönderilir', async () => {
   const env = await geciciOrtamOlustur();
   try {
-    const simdi = new Date('2026-11-24T10:00:00Z');
-    const v = yeniVaka({ bekci: 'fiyat', baslik: 'Çift basış testi', simdi });
-    await kaydet(env.vakalarDizini, v);
+    const simdi = new Date('2026-11-25T10:00:00Z');
+    const ikiGunOnce = new Date('2026-11-23T10:00:00Z'); // 2 gün
+    const ucGunOnce = new Date('2026-11-22T10:00:00Z'); // 3 gün
 
-    const tg = sahteTg({
-      cevaplarListesi: [
-        { vakaId: v.id, eylem: 'uygula', updateId: 18 },
-        { vakaId: v.id, eylem: 'uygula', updateId: 19 },
-      ],
-    });
+    const v2 = yeniVaka({ bekci: 'fiyat', baslik: '2 günlük vaka', simdi: ikiGunOnce, mevcutIdler: [] });
+    const v3 = yeniVaka({ bekci: 'fiyat', baslik: '3 günlük vaka', simdi: ucGunOnce, mevcutIdler: [v2.id] });
 
-    const res = await isle({
-      tg,
-      dizin: env.vakalarDizini,
-      offsetDosya: env.offsetDosya,
-      dispatchDosya: env.dispatchDosya,
-      simdi,
-    });
-
-    assert.equal(res.islenen, 2);
-    assert.equal(res.dispatch.length, 1);
-    assert.equal(tg.gonderilenKisa.length, 2);
-    assert.equal(tg.gonderilenKisa[0], `✅ #${v.id} uygulanıyor, bitince haber veririm.`);
-    assert.equal(tg.gonderilenKisa[1], `#${v.id} zaten kapalı (durum: uygulaniyor).`);
-
-    const guncel = await yukle(env.vakalarDizini, v.id);
-    assert.equal(guncel.durum, 'uygulaniyor');
-  } finally {
-    await env.temizle();
-  }
-});
-
-test('10. hatırlatma (gerekli): dünün açık vakası hatırlatılır ve hatirlatma sayısı artar', async () => {
-  const env = await geciciOrtamOlustur();
-  try {
-    const dun = new Date('2026-11-23T10:00:00Z');
-    const bugun = new Date('2026-11-24T10:00:00Z');
-
-    const v = yeniVaka({ bekci: 'fiyat', baslik: 'Dünden kalan vaka', simdi: dun });
-    await kaydet(env.vakalarDizini, v);
-
-    const tg = sahteTg();
-
-    const res = await isle({
-      tg,
-      dizin: env.vakalarDizini,
-      offsetDosya: env.offsetDosya,
-      dispatchDosya: env.dispatchDosya,
-      hatirlat: true,
-      simdi: bugun,
-    });
-
-    assert.equal(res.hatirlatilan, 1);
-    assert.equal(tg.gonderilenSende.length, 1);
-    assert.ok(tg.gonderilenSende[0].text.startsWith('🔁 Hatırlatma 1 · '));
-
-    const guncel = await yukle(env.vakalarDizini, v.id);
-    assert.equal(guncel.hatirlatma, 1);
-    assert.equal(guncel.sonHatirlatma, bugun.toISOString());
-  } finally {
-    await env.temizle();
-  }
-});
-
-test('11. hatırlatma (gereksiz): bugün açılan vakaya hatırlatma gönderilmez', async () => {
-  const env = await geciciOrtamOlustur();
-  try {
-    const bugun = new Date('2026-11-24T10:00:00Z');
-    const v = yeniVaka({ bekci: 'fiyat', baslik: 'Bugün açılan vaka', simdi: bugun });
-    await kaydet(env.vakalarDizini, v);
-
-    const tg = sahteTg();
-
-    const res = await isle({
-      tg,
-      dizin: env.vakalarDizini,
-      offsetDosya: env.offsetDosya,
-      dispatchDosya: env.dispatchDosya,
-      hatirlat: true,
-      simdi: bugun,
-    });
-
-    assert.equal(res.hatirlatilan, 0);
-    assert.equal(tg.gonderilenSende.length, 0);
-  } finally {
-    await env.temizle();
-  }
-});
-
-test('12. hatırlatma (eskidi öneki): 14 günden eski vakaya ⏳ öneki eklenir', async () => {
-  const env = await geciciOrtamOlustur();
-  try {
-    const eskiTarih = new Date('2026-11-01T10:00:00Z');
-    const bugun = new Date('2026-11-24T10:00:00Z');
-
-    let v = yeniVaka({ bekci: 'fiyat', baslik: 'Çok eski vaka', simdi: eskiTarih });
-    v = gecis(v, 'hatirlat', { simdi: new Date('2026-11-10T10:00:00Z') });
-    v = gecis(v, 'hatirlat', { simdi: new Date('2026-11-15T10:00:00Z') });
-    assert.equal(v.hatirlatma, 2);
-    await kaydet(env.vakalarDizini, v);
-
-    const tg = sahteTg();
-
-    const res = await isle({
-      tg,
-      dizin: env.vakalarDizini,
-      offsetDosya: env.offsetDosya,
-      dispatchDosya: env.dispatchDosya,
-      hatirlat: true,
-      simdi: bugun,
-    });
-
-    assert.equal(res.hatirlatilan, 1);
-    assert.equal(tg.gonderilenSende.length, 1);
-    assert.ok(
-      tg.gonderilenSende[0].text.startsWith('⏳ 14+ gündür açık · 🔁 Hatırlatma 3 · ')
-    );
-
-    const guncel = await yukle(env.vakalarDizini, v.id);
-    assert.equal(guncel.hatirlatma, 3);
-  } finally {
-    await env.temizle();
-  }
-});
-
-test('13. offset yazılıyor: offset dosyası yeni offset değeriyle güncellenir', async () => {
-  const env = await geciciOrtamOlustur();
-  try {
-    await writeFile(env.offsetDosya, JSON.stringify({ offset: 100 }), 'utf-8');
-
-    const tg = sahteTg({
-      yeniOffset: 155,
-      cevaplarListesi: [{ vakaId: null, eylem: 'liste', updateId: 154 }],
-    });
-
-    await isle({
-      tg,
-      dizin: env.vakalarDizini,
-      offsetDosya: env.offsetDosya,
-      dispatchDosya: env.dispatchDosya,
-    });
-
-    const icerik = await readFile(env.offsetDosya, 'utf-8');
-    const parsed = JSON.parse(icerik);
-    assert.equal(parsed.offset, 155);
-  } finally {
-    await env.temizle();
-  }
-});
-
-test('14. dispatch dosyası biçimi: satır başına "<vakaId> <eylem>" yazar, boşsa boş dosya üretir', async () => {
-  const env = await geciciOrtamOlustur();
-  try {
-    const simdi = new Date('2026-11-24T10:00:00Z');
-    const v1 = yeniVaka({ bekci: 'fiyat', baslik: 'Vaka 1', simdi });
-    const v2 = yeniVaka({ bekci: 'fiyat', baslik: 'Vaka 2', simdi, mevcutIdler: [v1.id] });
-    await kaydet(env.vakalarDizini, v1);
     await kaydet(env.vakalarDizini, v2);
+    await kaydet(env.vakalarDizini, v3);
 
-    const tg = sahteTg({
-      cevaplarListesi: [
-        { vakaId: v1.id, eylem: 'uygula', updateId: 20 },
-        { vakaId: v2.id, eylem: 'acikla', updateId: 21 },
-      ],
-    });
-
-    await isle({
-      tg,
-      dizin: env.vakalarDizini,
-      offsetDosya: env.offsetDosya,
-      dispatchDosya: env.dispatchDosya,
-      simdi,
-    });
-
-    const dispatchIcerik = await readFile(env.dispatchDosya, 'utf-8');
-    assert.equal(dispatchIcerik, `${v1.id} uygula\n${v2.id} acikla\n`);
-
-    // Boş dispatch durumu testi
-    const tgBos = sahteTg({
-      cevaplarListesi: [{ vakaId: null, eylem: 'liste', updateId: 22 }],
-    });
-
-    await isle({
-      tg: tgBos,
-      dizin: env.vakalarDizini,
-      offsetDosya: env.offsetDosya,
-      dispatchDosya: env.dispatchDosya,
-      simdi,
-    });
-
-    const bosDispatch = await readFile(env.dispatchDosya, 'utf-8');
-    assert.equal(bosDispatch, '');
-  } finally {
-    await env.temizle();
-  }
-});
-
-test('15. gönderme hatası diğerlerini düşürmüyor: hata yakalanır, sonraki cevaplar işlenir ve dosyalar yazılır', async () => {
-  const env = await geciciOrtamOlustur();
-  try {
-    const simdi = new Date('2026-11-24T10:00:00Z');
-    const v1 = yeniVaka({ bekci: 'fiyat', baslik: 'Vaka 1', simdi });
-    const v2 = yeniVaka({ bekci: 'fiyat', baslik: 'Vaka 2', simdi, mevcutIdler: [v1.id] });
-    await kaydet(env.vakalarDizini, v1);
-    await kaydet(env.vakalarDizini, v2);
-
-    // İlk sendeKisa çağrısında hata fırlat, sonrakinde başarılı ol
-    const tg = sahteTg({
-      kisaHataSayisi: 1,
-      yeniOffset: 88,
-      cevaplarListesi: [
-        { vakaId: v1.id, eylem: 'birak', updateId: 30 },
-        { vakaId: v2.id, eylem: 'birak', updateId: 31 },
-      ],
-    });
+    const tg = sahteTg();
 
     const res = await isle({
       tg,
       dizin: env.vakalarDizini,
+      kok: env.tempDir,
       offsetDosya: env.offsetDosya,
       dispatchDosya: env.dispatchDosya,
+      hatirlat: true,
       simdi,
     });
 
-    assert.equal(res.islenen, 2);
-    assert.equal(res.hataSayisi, 1);
+    // Yalnızca 3 günlük vaka hatırlatılmalı
+    assert.equal(res.hatirlatilan, 1);
+    const guncel3 = await yukle(env.vakalarDizini, v3.id);
+    assert.equal(guncel3.hatirlatma, 1);
 
-    // Her iki vaka da diske kaydedilmiş olmalıdır
-    const guncel1 = await yukle(env.vakalarDizini, v1.id);
     const guncel2 = await yukle(env.vakalarDizini, v2.id);
-    assert.equal(guncel1.durum, 'birakildi');
-    assert.equal(guncel2.durum, 'birakildi');
-
-    // Offset dosyası yine de güncellenmelidir
-    const offsetIcerik = await readFile(env.offsetDosya, 'utf-8');
-    assert.equal(JSON.parse(offsetIcerik).offset, 88);
+    assert.equal(guncel2.hatirlatma, 0);
   } finally {
     await env.temizle();
   }
 });
 
-test('16. import edildiğinde CLI çalışmıyor & parseCliArgs argümanları doğru ayrıştırır', () => {
-  // Test dosyasında import yapılmış olmasına rağmen CLI'ın çalışmadığı (process.exit çağrılmadığı) kanıtlandı.
-  // parseCliArgs doğrulaması:
-  const args1 = parseCliArgs([
-    '--vakalar=vakalar/yol',
-    '--offset=offset.json',
-    '--dispatch=dispatch.txt',
-    '--hatirlat',
-  ]);
-  assert.equal(args1.dizin, 'vakalar/yol');
-  assert.equal(args1.offsetDosya, 'offset.json');
-  assert.equal(args1.dispatchDosya, 'dispatch.txt');
-  assert.equal(args1.hatirlat, true);
-
-  const args2 = parseCliArgs([
-    '--vakalar',
-    'dizin2',
-    '--offset',
-    'off2.json',
-    '--dispatch',
-    'disp2.txt',
-  ]);
-  assert.equal(args2.dizin, 'dizin2');
-  assert.equal(args2.offsetDosya, 'off2.json');
-  assert.equal(args2.dispatchDosya, 'disp2.txt');
-  assert.equal(args2.hatirlat, false);
-});
-
-test('17. M10: takılı uygulaniyor vaka 2 saatten eskiyse yeniden açılır ve Telegram bildirilir', async () => {
+test('10. hatırlatma (mesajId yanıtı ve mesajId yoksa tam mesaj): mesajId varsa yanıt, yoksa tam mesaj ve id kaydı', async () => {
   const env = await geciciOrtamOlustur();
   try {
-    const simdi = new Date('2026-11-24T12:00:00Z');
-    const eskiZaman = new Date('2026-11-24T09:00:00Z'); // 3 saat önce
-    const yeniZaman = new Date('2026-11-24T11:30:00Z'); // 30 dakika önce
+    const simdi = new Date('2026-11-25T10:00:00Z');
+    const dortGunOnce = new Date('2026-11-21T10:00:00Z');
 
-    // 1. 3 saat önce uygulaniyor durumuna geçmiş takılı vaka
-    let vTakili = yeniVaka({
+    // 1. mesajId'li vaka
+    let vWithMsg = yeniVaka({
       bekci: 'preise',
-      baslik: 'Takılı fiyat vakası',
-      simdi: eskiZaman,
+      baslik: 'MesajId olan vaka',
+      simdi: dortGunOnce,
+      mesajId: 444,
       mevcutIdler: [],
     });
-    vTakili = gecis(vTakili, 'uygula', { simdi: eskiZaman });
-    await kaydet(env.vakalarDizini, vTakili);
+    await kaydet(env.vakalarDizini, vWithMsg);
 
-    // 2. 30 dakika önce uygulaniyor durumuna geçmiş güncel vaka (takılı değil)
-    let vGuncel = yeniVaka({
+    // 2. mesajId'siz vaka
+    let vNoMsg = yeniVaka({
       bekci: 'preise',
-      baslik: 'Yeni uygulanan vaka',
-      simdi: yeniZaman,
-      mevcutIdler: [vTakili.id],
+      baslik: 'MesajId olmayan vaka',
+      simdi: dortGunOnce,
+      mevcutIdler: [vWithMsg.id],
     });
-    vGuncel = gecis(vGuncel, 'uygula', { simdi: yeniZaman });
-    await kaydet(env.vakalarDizini, vGuncel);
+    await kaydet(env.vakalarDizini, vNoMsg);
 
-    const tg1 = sahteTg({ cevaplarListesi: [] });
+    const tg = sahteTg();
 
-    // hatirlat = false turu
-    await isle({
-      tg: tg1,
+    const res = await isle({
+      tg,
       dizin: env.vakalarDizini,
+      kok: env.tempDir,
+      offsetDosya: env.offsetDosya,
+      dispatchDosya: env.dispatchDosya,
+      hatirlat: true,
+      simdi,
+    });
+
+    assert.equal(res.hatirlatilan, 2);
+
+    // mesajId olan vaka için sendeYanit çağrıldı
+    assert.equal(tg.gonderilenYanit.length, 1);
+    assert.equal(tg.gonderilenYanit[0].mesajId, 444);
+    assert.equal(
+      tg.gonderilenYanit[0].text,
+      '🔁 Bu soru hâlâ cevabını bekliyor (4 gündür).'
+    );
+
+    // mesajId olmayan vaka için sendeVaka çağrıldı ve dönen message_id vakaya yazıldı
+    assert.equal(tg.gonderilenVaka.length, 1);
+    assert.equal(tg.gonderilenVaka[0].id, vNoMsg.id);
+
+    const guncelNoMsg = await yukle(env.vakalarDizini, vNoMsg.id);
+    assert.equal(guncelNoMsg.mesajId, 9900); // sahteTg'nin döndürdüğü id
+  } finally {
+    await env.temizle();
+  }
+});
+
+test('11. hatırlatma (>3 vaka): 3\'ten fazla vaka hatırlatılacaksa tek özet mesaj atılır, asıl mesaja yanıt yok', async () => {
+  const env = await geciciOrtamOlustur();
+  try {
+    const simdi = new Date('2026-11-25T10:00:00Z');
+    const besGunOnce = new Date('2026-11-20T10:00:00Z');
+
+    // 4 adet vaka oluştur
+    const mevcutIdler = [];
+    for (let i = 1; i <= 4; i++) {
+      const v = yeniVaka({
+        bekci: 'preise',
+        baslik: `Vaka ${i}`,
+        simdi: besGunOnce,
+        mesajId: 100 + i,
+        mevcutIdler,
+      });
+      mevcutIdler.push(v.id);
+      await kaydet(env.vakalarDizini, v);
+    }
+
+    const tg = sahteTg();
+
+    const res = await isle({
+      tg,
+      dizin: env.vakalarDizini,
+      kok: env.tempDir,
+      offsetDosya: env.offsetDosya,
+      dispatchDosya: env.dispatchDosya,
+      hatirlat: true,
+      simdi,
+    });
+
+    assert.equal(res.hatirlatilan, 4);
+
+    // Bireysel yanıtlama veya sendeVaka YAPILMADI
+    assert.equal(tg.gonderilenYanit.length, 0);
+    assert.equal(tg.gonderilenVaka.length, 0);
+
+    // Tek özet mesajı gönderildi
+    assert.equal(tg.gonderilenKisa.length, 1);
+    assert.equal(tg.gonderilenKisa[0].text, '🔁 4 soru cevabını bekliyor: /vakalar');
+  } finally {
+    await env.temizle();
+  }
+});
+
+test('12. takılı uygulaniyor: 2 saatten eskiyse acik durumuna döner, Kemal\'e mesaj gitmez, rapor olayına yazılır', async () => {
+  const env = await geciciOrtamOlustur();
+  try {
+    const simdi = new Date('2026-11-25T12:00:00Z');
+    const ucSaatOnce = new Date('2026-11-25T09:00:00Z');
+
+    let v = yeniVaka({
+      bekci: 'preise',
+      baslik: 'Takılı fiyat vakası',
+      simdi: ucSaatOnce,
+    });
+    v = gecis(v, 'uygula', { simdi: ucSaatOnce });
+    await kaydet(env.vakalarDizini, v);
+
+    const tg = sahteTg();
+
+    const res = await isle({
+      tg,
+      dizin: env.vakalarDizini,
+      kok: env.tempDir,
       offsetDosya: env.offsetDosya,
       dispatchDosya: env.dispatchDosya,
       hatirlat: false,
       simdi,
     });
 
-    // Takılı vaka 'acik' durumuna dönmeli
-    const yuklenenTakili = await yukle(env.vakalarDizini, vTakili.id);
-    assert.equal(yuklenenTakili.durum, 'acik');
-    assert.ok(
-      tg1.gonderilenKisa.some(m =>
-        m.includes(`⏳ #${vTakili.id} uygulanırken yanıt gelmedi, vaka yeniden açıldı.`)
-      )
-    );
+    // Kemal'e sohbete mesaj gitmedi!
+    assert.equal(tg.gonderilenKisa.length, 0);
+    assert.equal(tg.gonderilenYanit.length, 0);
 
-    // Güncel vaka hâlâ 'uygulaniyor' kalmalı
-    const yuklenenGuncel = await yukle(env.vakalarDizini, vGuncel.id);
-    assert.equal(yuklenenGuncel.durum, 'uygulaniyor');
+    // Vaka 'acik' durumuna döndü
+    const guncel = await yukle(env.vakalarDizini, v.id);
+    assert.equal(guncel.durum, 'acik');
 
-    // hatirlat = true turu testi
-    let vTakiliHatirlat = yeniVaka({
-      bekci: 'quellen',
-      baslik: 'Takılı kaynak vakası',
-      simdi: eskiZaman,
-      mevcutIdler: [vTakili.id, vGuncel.id],
-    });
-    vTakiliHatirlat = gecis(vTakiliHatirlat, 'uygula', { simdi: eskiZaman });
-    await kaydet(env.vakalarDizini, vTakiliHatirlat);
-
-    const tg2 = sahteTg({ cevaplarListesi: [] });
-    const res2 = await isle({
-      tg: tg2,
-      dizin: env.vakalarDizini,
-      offsetDosya: env.offsetDosya,
-      dispatchDosya: env.dispatchDosya,
-      hatirlat: true,
-      simdi,
-    });
-
-    const yuklenenHatirlat = await yukle(env.vakalarDizini, vTakiliHatirlat.id);
-    assert.equal(yuklenenHatirlat.durum, 'acik');
-    assert.ok(
-      tg2.gonderilenKisa.some(m =>
-        m.includes(`⏳ #${vTakiliHatirlat.id} uygulanırken yanıt gelmedi, vaka yeniden açıldı.`)
-      )
-    );
-    assert.ok(
-      tg2.gonderilenSende.some(m => m.text.includes(`#${vTakiliHatirlat.id}`)),
-      'Normal hatırlatma mesajı da gönderilmelidir'
-    );
-    assert.ok(res2.hatirlatilan >= 1);
+    // Rapor olay defterine 'takili' olayı yazıldı
+    const olaylar = await olaylariYukle(env.tempDir);
+    assert.equal(olaylar.length, 1);
+    assert.equal(olaylar[0].tur, 'takili');
+    assert.ok(olaylar[0].ozet.includes(v.id));
   } finally {
     await env.temizle();
   }

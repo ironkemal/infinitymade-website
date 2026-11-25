@@ -311,8 +311,80 @@ jobs:
       tg_token: ${{ secrets.TELEGRAM_BEKCI_BOT_TOKEN || secrets.TELEGRAM_BOT_TOKEN }}
       tg_chat: ${{ secrets.TELEGRAM_BEKCI_CHAT_ID || secrets.TELEGRAM_CHAT_ID }}
 
+  anlat:
+    # Kemal 25.11.2026: Fragen müssen ohne Vorwissen verständlich sein; vor dem Senden prüft ein
+    # zweiter Agent. Ergebnis ist nur Text (anlatim/denetim) — Zahlen prüft anlat.mjs gegen die Daten.
+    needs: [bewerten]
+    if: always() && (needs.bewerten.outputs.karar == 'vaka' || needs.bewerten.outputs.karar == 'aciklama')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: bekci-ajan
+    permissions:
+      contents: read
+      actions: write   # upload-artifact
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: bekci-karar
+          path: bekci-in
+
+      - run: mkdir -p bekci-out
+
+      - name: Claude schreibt die Erklärung für Kemal
+        uses: anthropics/claude-code-action@eb56b6666facdbd501035f4a0269d8caee2e7a8b # v1.0.289
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          prompt: |
+            Lies tools/bekci-ajan/prompts/anlat.md vollständig und halte dich genau daran.
+            ${{ inputs.eylem == 'acikla' && 'Modus AÇIKLA (Kemal hat auf "Açıkla" gedrückt): genau EIN Fall, nämlich bekci-in/vaka.json; schreibe ausführlicher (Grenzen x2). Ausgabe bekci-out/anlatim.json als {"vakalar":[<ein Objekt>]}.' || 'Erzeuge für JEDEN Fall in bekci-in/entscheidung.json (Feld vakalar[] oder vaka) genau ein Objekt im Schema, in derselben Reihenfolge. Ausgabe bekci-out/anlatim.json als {"vakalar":[...]}.' }}
+          claude_args: >-
+            --model claude-opus-5-5
+            --max-turns 40
+            --allowedTools "Read,Glob,Grep,Write"
+            --disallowedTools "Bash,WebFetch,WebSearch,Edit,MultiEdit,NotebookEdit,Task,Read(//proc/**),Read(//home/runner/work/_temp/**),Read(//home/runner/.*/**),Read(//etc/**),Read(//tmp/**),Read(//run/**)"
+
+      - name: Zweiter Agent prüft die Erklärung (anderes Modell)
+        uses: anthropics/claude-code-action@eb56b6666facdbd501035f4a0269d8caee2e7a8b # v1.0.289
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          prompt: |
+            Lies tools/bekci-ajan/prompts/denetci.md vollständig und halte dich genau daran.
+            Prüfe bekci-out/anlatim.json (Feld vakalar[]) gegen die Daten in bekci-in/. Schreibe bekci-out/denetim.json als {"vakalar":[...]} — ein Prüfobjekt je Eintrag, gleiche Reihenfolge.
+          claude_args: >-
+            --model claude-sonnet-5-5
+            --max-turns 30
+            --allowedTools "Read,Glob,Grep,Write"
+            --disallowedTools "Bash,WebFetch,WebSearch,Edit,MultiEdit,NotebookEdit,Task,Read(//proc/**),Read(//home/runner/work/_temp/**),Read(//home/runner/.*/**),Read(//etc/**),Read(//tmp/**),Read(//run/**)"
+
+      - name: Nur bekci-out/ geschrieben? + Geheimnis-Filter (vor dem öffentlichen Artefakt)
+        run: |
+          set -euo pipefail
+          fremd=$(git status --porcelain --untracked-files=all --ignored | awk '{print $2}' | grep -vE '^(bekci-in|bekci-out)/' || true)
+          if [ -n "$fremd" ]; then echo "::error::Agent hat ausserhalb von bekci-out/ geschrieben:"; echo "$fremd"; exit 1; fi
+          node --input-type=module -e '
+            import fs from "node:fs";
+            import { sirIceriyor } from "./tools/bekci-ajan/cli.mjs";
+            for (const f of ["bekci-out/anlatim.json", "bekci-out/denetim.json"]) {
+              if (!fs.existsSync(f)) continue;
+              const t = fs.readFileSync(f, "utf8");
+              if (sirIceriyor(t)) { fs.writeFileSync(f, "{}"); console.log("verworfen:", f); }
+            }'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bekci-anlat
+          path: bekci-out/
+          if-no-files-found: ignore
+          retention-days: 7
+
   bildir:
-    needs: [hazirla, ajan, bewerten, uebernehmen]
+    needs: [hazirla, ajan, bewerten, uebernehmen, anlat]
     if: always() && needs.hazirla.result != 'skipped'
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -354,6 +426,12 @@ jobs:
           name: bekci-out
           path: bekci-out
 
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: bekci-anlat
+          path: bekci-anlat
+
       - name: Fall-Zweig auschecken (oder neu anlegen)
         env:
           GH_TOKEN: ${{ github.token }}
@@ -384,7 +462,7 @@ jobs:
 
           if [ "$fehler" = 1 ]; then
             if [ "$EYLEM" = uygula ] && [ -n "$VAKA" ]; then $CLI vaka-durum --dizin="$D" --id="$VAKA" --eylem=hata || true; fi
-            gonder $CLI bildir --tur=hata ${VAKA:+--dizin="$D" --id="$VAKA"} --link="$LINK"
+            $CLI bildir --kok=vakalar --tur=hata ${VAKA:+--dizin="$D" --id="$VAKA"} --link="$LINK"
             exit 0
           fi
           if [ "$NEEDS_REVIEW" != true ]; then
@@ -395,29 +473,28 @@ jobs:
           case "$KARAR" in
             auto)
               node -e 'const k=JSON.parse(require("fs").readFileSync("bekci-in/yama-kontrol.json","utf8"));require("fs").writeFileSync("ozet.txt",(k.ozet||[]).join("\n"))'
-              gonder $CLI bildir --tur=auto --dosya=ozet.txt --link="$LINK" ;;
+              $CLI bildir --kok=vakalar --tur=auto --dosya=ozet.txt --link="$LINK" ;;
             onay)
               if [ "$R_UEBERNEHMEN" = success ]; then
                 $CLI vaka-durum --dizin="$D" --id="$VAKA" --eylem=tamam
-                gonder $CLI bildir --tur=uygulandi --dizin="$D" --id="$VAKA" --link="$LINK"
+                $CLI bildir --kok=vakalar --tur=uygulandi --dizin="$D" --id="$VAKA" --link="$LINK"
               else
                 # keine Yama mehr (z. B. schon von Hand übernommen) → nichts geschrieben, Fall wieder offen
                 $CLI vaka-durum --dizin="$D" --id="$VAKA" --eylem=hata
-                gonder $CLI bildir --tur=elle --dizin="$D" --id="$VAKA"
+                $CLI bildir --kok=vakalar --tur=elle --dizin="$D" --id="$VAKA"
               fi ;;
             elle)
               $CLI vaka-durum --dizin="$D" --id="$VAKA" --eylem=hata
-              gonder $CLI bildir --tur=elle --dizin="$D" --id="$VAKA" ;;
+              $CLI bildir --kok=vakalar --tur=elle --dizin="$D" --id="$VAKA" ;;
             aciklama)
-              if [ -s bekci-out/aciklama.md ]; then gonder $CLI bildir --tur=aciklama --dizin="$D" --id="$VAKA" --dosya=bekci-out/aciklama.md
-              else gonder $CLI bildir --tur=hata --dizin="$D" --id="$VAKA" --link="$LINK"; fi ;;
+              gonder node main/tools/bekci-ajan/gonder-vaka.mjs --kok=vakalar --anlatim=bekci-anlat/anlatim.json --denetim=bekci-anlat/denetim.json --id="$VAKA" --entscheidung=bekci-in/vaka.json --olgular=bekci-in/vaka.json,bekci-in/bericht.json --aciklama ;;
             vaka)
               PATCH_ARG=""; [ -s bekci-in/yama.patch ] && PATCH_ARG="--patch=bekci-in/yama.patch"
               $CLI vaka-ac --entscheidung=bekci-in/entscheidung.json --dizin="$D" $PATCH_ARG --out-id=neu-id.txt
               # Leere ID = derselbe Fall ist schon offen → keine zweite Nachricht (Erinnerung macht bekci-cevap.yml)
-              if [ -s neu-id.txt ]; then gonder $CLI bildir --tur=vaka --dizin="$D" --id="$(cat neu-id.txt)"; fi ;;
+              if [ -s neu-id.txt ]; then gonder node main/tools/bekci-ajan/gonder-vaka.mjs --kok=vakalar --anlatim=bekci-anlat/anlatim.json --denetim=bekci-anlat/denetim.json --id="$(cat neu-id.txt)" --entscheidung=bekci-in/entscheidung.json --olgular=bekci-in/entscheidung.json,bekci-in/bericht.json; fi ;;
             *)
-              gonder $CLI bildir --tur=hata --link="$LINK" ;;
+              $CLI bildir --kok=vakalar --tur=hata --link="$LINK" ;;
           esac
 
       - name: Fall-Zweig speichern
@@ -439,3 +516,14 @@ jobs:
           set -uo pipefail
           [ -s gonder.sh ] || exit 0
           bash gonder.sh
+
+      - name: Fall-Zweig erneut speichern (Nachrichten-IDs)
+        if: always()
+        working-directory: vakalar
+        run: |
+          set -euo pipefail
+          git add -A
+          if git diff --cached --quiet; then exit 0; fi
+          git -c user.name="praxura-bekci" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit --quiet -m "bekci: Nachrichten-IDs"
+          for i in 1 2 3; do git push --quiet origin HEAD:bekci-vakalar && exit 0; git pull --quiet --rebase origin bekci-vakalar || true; done
+          exit 1

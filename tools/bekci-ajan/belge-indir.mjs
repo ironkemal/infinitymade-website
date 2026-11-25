@@ -470,11 +470,18 @@ export async function indir({
       dosyaSayac++;
       const dosyaAdi = `${String(dosyaSayac).padStart(2, '0')}.txt`;
       await writeFile(join(hedefDizin, dosyaAdi), metin, 'utf-8');
+      // PDF'in kendisi de kalır: isaretle.mjs ilgili sayfayı işaretli görsel yapar (Kemal 25.11.2026)
+      let pdfDosya = null;
+      if (tespitTur === 'pdf') {
+        pdfDosya = dosyaAdi.replace(/\.txt$/, '.pdf');
+        await writeFile(join(hedefDizin, pdfDosya), buffer);
+      }
 
       index.push({
         quelleId,
         url,
         dosya: dosyaAdi,
+        pdf: pdfDosya,
         bayt,
         sha256: sha,
         tur: tespitTur,

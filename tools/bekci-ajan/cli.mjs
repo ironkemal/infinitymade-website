@@ -1,8 +1,8 @@
 // tools/bekci-ajan/cli.mjs
 // Ne: Bekçi-Ajan iş akışının çağırdığı tek komut satırı aracı (CLI) ve saf mantık fonksiyonları.
 // Niye: SPEC.md §2 ve §3.0 uyarınca GitHub Actions workflow'larında yama kontrolü,
-// vaka açma, vaka durumu güncelleme, Telegram bildirimi gönderme ve karar okuma adımlarını
-// tek merkezden, katı güvenlik kuralları ve deterministik çıktılarla yürütmek.
+// vaka açma, vaka durumu güncelleme, Telegram bildirimi gönderme, haftalık raporlama
+// ve karar okuma adımlarını tek merkezden, katı güvenlik kuralları ve deterministik çıktılarla yürütmek.
 
 import { readFileSync, writeFileSync, appendFileSync, existsSync, unlinkSync } from 'node:fs';
 import { resolve, join } from 'node:path';
@@ -17,7 +17,15 @@ import {
   yukle,
   listele,
   VakaHatasi,
+  mesajIdYaz,
 } from './vaka.mjs';
+import {
+  olayEkle,
+  olaylariYukle,
+  haftalikRapor,
+  ikinciHataMi,
+  eskiOlaylariBuda,
+} from './rapor.mjs';
 import {
   parseDiff,
   pruefeYama,
@@ -28,7 +36,7 @@ import { kararGecerliMi as preiseKararGecerliMi, preiseIz } from './preise-bewer
 import { kararGecerliMi as quellenKararGecerliMi, quellenBefundIz } from './quellen-bewerten.mjs';
 
 /**
- * Sır / güvenlik jetonu tespiti için regex kalıpları.
+ * Sır / güvenlik jetonu tespiti için regex kalıpları (açık kalıplar).
  */
 export const SIR_KALIPLARI = [
   /sk-ant-/,
@@ -39,8 +47,6 @@ export const SIR_KALIPLARI = [
   /xox[abp]-/,
   /-----BEGIN/,
   /eyJ[A-Za-z0-9_-]{20,}/,
-  /[A-Za-z0-9+/]{40,}={0,2}/,
-  /[a-f0-9]{40,}/i,
   /\d{8,10}:[A-Za-z0-9_-]{30,}/,
   /CLAUDE_CODE_OAUTH_TOKEN/,
   /GITHUB_TOKEN/,
@@ -49,28 +55,77 @@ export const SIR_KALIPLARI = [
 
 /**
  * Metnin herhangi bir sır kalıbı içerip içermediğini denetler (saf).
- * URL yollarındaki '/' karakterlerinin uzun base64 kalıbında ([A-Za-z0-9+/]{40,}={0,2})
- * yanlış pozitif vermesini önler.
+ * Kemal 25.11.2026:
+ * - Açık kalıplar (sk-ant-, ghp_, ghs_, gho_, github_pat_, xox?-, -----BEGIN, JWT eyJ…, Telegram token, CLAUDE_CODE_OAUTH_TOKEN, GITHUB_TOKEN, ACTIONS_RUNTIME) aynen.
+ * - Genel base64 kuralı: / İÇERMEYEN, ≥40 karakterlik [A-Za-z0-9+_-] dizisi VE içinde en az bir rakam, bir büyük, bir küçük harf olmalı VE URL'nin parçası olmamalı (önünde :// ile başlayan kesintisiz bir URL içinde geçiyorsa sayma).
+ * - Uzun hex kuralı ([a-f0-9]{40,}) kalsın ama 64 haneli hex'in hemen önünde sha256 / sha-256 / SHA256 kelimesi (≤12 karakter mesafede) varsa sayma.
+ *
  * @param {any} metin
  * @returns {boolean}
  */
 export function sirIceriyor(metin) {
   if (typeof metin !== 'string') return false;
 
+  // 1. Açık kalıplar
   for (const re of SIR_KALIPLARI) {
-    const isBase64 = re.toString().includes('40,}={0,2}');
-    if (isBase64) {
-      // URL yollarındaki '/' ayırıcılarını temizle (tek bir segment 40+ karakter değilse)
-      const base64Metin = metin.replace(/(?:https?|ftp|file):\/\/[^\s?#]+/gi, (url) => {
-        const segments = url.split('/');
-        if (segments.some(s => /[A-Za-z0-9+/]{40,}/.test(s))) return url;
-        return segments.join(' ');
-      });
-      if (re.test(base64Metin)) return true;
-    } else {
-      if (re.test(metin)) return true;
+    if (re.test(metin)) return true;
+  }
+
+  // 2. Base64 kuralı:
+  // / İÇERMEYEN, ≥40 karakterlik [A-Za-z0-9+_-] dizisi
+  // VE içinde en az bir rakam, bir büyük, bir küçük harf olmalı
+  // VE URL'nin parçası olmamalı (önünde :// ile başlayan kesintisiz bir URL içinde geçiyorsa sayma).
+  const base64Re = /[A-Za-z0-9+_-]{40,}={0,2}/g;
+  let bMatch;
+  while ((bMatch = base64Re.exec(metin)) !== null) {
+    const aday = bMatch[0];
+    if (/[0-9]/.test(aday) && /[a-z]/.test(aday) && /[A-Z]/.test(aday)) {
+      const idx = bMatch.index;
+      const metinBasi = metin.slice(0, idx);
+      const sonBosluk = metinBasi.search(/\s\S*$/);
+      const kelimeBasi = sonBosluk === -1 ? 0 : sonBosluk + 1;
+      const kelimeOnu = metin.slice(kelimeBasi, idx);
+      if (kelimeOnu.includes('://')) {
+        continue;
+      }
+      // 64 haneli hex ve önünde sha256 varsa sayma
+      if (aday.length === 64 && /^[0-9a-fA-F]{64}$/.test(aday)) {
+        const onMetin = metin.slice(Math.max(0, idx - 30), idx);
+        const shaMatches = [...onMetin.matchAll(/sha-?256/gi)];
+        if (shaMatches.length > 0) {
+          const sonSha = shaMatches[shaMatches.length - 1];
+          const shaSonu = sonSha.index + sonSha[0].length;
+          if (onMetin.length - shaSonu <= 12) {
+            continue;
+          }
+        }
+      }
+      return true;
     }
   }
+
+  // 3. Uzun hex kuralı ([a-f0-9]{40,}):
+  // 64 haneli hex'in hemen önünde sha256 / sha-256 / SHA256 kelimesi (≤12 karakter mesafede) varsa sayma.
+  const hexRe = /[a-f0-9]{40,}/gi;
+  let hMatch;
+  while ((hMatch = hexRe.exec(metin)) !== null) {
+    const aday = hMatch[0];
+    if (aday.length === 64) {
+      const idx = hMatch.index;
+      const onMetin = metin.slice(Math.max(0, idx - 30), idx);
+      const shaMatches = [...onMetin.matchAll(/sha-?256/gi)];
+      if (shaMatches.length > 0) {
+        const sonSha = shaMatches[shaMatches.length - 1];
+        const shaSonu = sonSha.index + sonSha[0].length;
+        const mesafe = onMetin.length - shaSonu;
+        if (mesafe <= 12) {
+          continue;
+        }
+      }
+    }
+    return true;
+  }
+
   return false;
 }
 
@@ -125,13 +180,6 @@ export function guvenliYolMu(yol) {
 
 /**
  * 1. Yama doğrulama saf fonksiyonu.
- *
- * @param {object} params
- * @param {string} params.patch - Unified git diff metni
- * @param {string|object} [params.preset='preise'] - Preset adı ('preise') veya { erlaubt: RegExp[] }
- * @param {Record<string, string>} [params.dateiInhalt={}] - Dosya yollarının orijinal içerikleri
- * @param {string} [params.beklenenSha] - Doğrulanması beklenen SHA-256 hash'i (hex)
- * @returns {{ ok: boolean, gruende: string[], sha256: string, ozet: string[] }}
  */
 export function yamaKontrol({
   patch,
@@ -198,13 +246,6 @@ export function yamaKontrol({
 
 /**
  * 2. Vaka hazırlama saf fonksiyonu.
- *
- * @param {object} params
- * @param {object} params.entscheidung - preise-bewerten çıktısı ({ karar: 'vaka', vaka: {...} })
- * @param {string} [params.patch] - Varsa yama diff metni
- * @param {string[]} [params.mevcutIdler=[]] - Mevcut vaka ID'leri listesi
- * @param {Date|string} [params.simdi=new Date()] - Referans zaman
- * @returns {object} yeniVaka nesnesi
  */
 export function vakaHazirla({
   entscheidung,
@@ -242,13 +283,6 @@ export function vakaHazirla({
 
 /**
  * 3. Vaka durumu güncelleme saf fonksiyonu (vaka.mjs köprüsü).
- *
- * @param {object} vaka - Vaka nesnesi
- * @param {'tamam'|'hata'|'uygula'} eylem - Gerçekleştirilecek eylem
- * @param {object} [opsiyonlar]
- * @param {string} [opsiyonlar.sha] - Varsa yama sha256 doğrulaması için
- * @param {Date|string} [opsiyonlar.simdi=new Date()]
- * @returns {object} Güncellenmiş yeni vaka nesnesi
  */
 export function vakaDurumGuncelle(vaka, eylem, { sha = null, simdi = new Date() } = {}) {
   return gecis(vaka, eylem, { yamaSha256: sha, simdi });
@@ -256,13 +290,6 @@ export function vakaDurumGuncelle(vaka, eylem, { sha = null, simdi = new Date() 
 
 /**
  * 4. Bildirim metni oluşturma saf fonksiyonu.
- *
- * @param {object} params
- * @param {'auto'|'vaka'|'aciklama'|'hata'|'uygulandi'|'elle'} params.tur - Bildirim türü
- * @param {string|string[]} [params.satirlar] - Dosya veya detay satırları
- * @param {object|string} [params.vaka] - Vaka nesnesi veya vaka ID'si
- * @param {string} [params.link] - İlgili GitHub run/işlem URL'si
- * @returns {{ text: string, knoepfe?: Array<Array<{ text: string, befehl: string }>>, vakaMi: boolean }}
  */
 export function bildirimMetni({ tur, satirlar, vaka, link, bekci } = {}) {
   const vakaId = typeof vaka === 'string' ? vaka : (vaka?.id || '');
@@ -352,9 +379,6 @@ const GECERLI_KARARLAR = new Set(['sessiz', 'auto', 'vaka', 'elle']);
 
 /**
  * 5. Karar okuma saf fonksiyonu.
- *
- * @param {object} obj - preise-bewerten veya karar JSON çıktısı
- * @returns {{ karar: string, erlaube_sprung: string, uygulanabilir: boolean }}
  */
 export function kararOku(obj) {
   if (!obj || typeof obj !== 'object' || typeof obj.karar !== 'string') {
@@ -413,11 +437,6 @@ function ayniKonuMu(v1, v2) {
 /**
  * Aynı bekci ve konu için açık/uygulanıyor vaka varsa tekilleştirir,
  * farklı izli açık vakaları eskitir (bırakıldı durumuna aday yapar).
- *
- * @param {object} params
- * @param {object} params.yeni - Yeni oluşturulacak vaka nesnesi
- * @param {Array<object>} [params.mevcut=[]] - Dizin içindeki mevcut vakalar listesi
- * @returns {{ ac: boolean, tekrarId: string|null, eskiyenler: string[] }}
  */
 export function tekillestir({ yeni, mevcut = [] }) {
   if (!yeni || !yeni.ek?.iz) {
@@ -491,13 +510,31 @@ export function parseArgs(rawArgs) {
 
 /**
  * CLI ana fonksiyonu.
- *
- * Çıkış kodları:
- * 0: Başarı
- * 1: Hata / Ret
- * 2: Kullanım hatası
  */
-export async function cli(rawArgs = process.argv.slice(2)) {
+export async function cli(rawArgs = process.argv.slice(2), opts = {}) {
+  const originalExit = process.exit;
+  if (typeof opts.exit === 'function') {
+    process.exit = code => {
+      opts.exit(code);
+      const err = new Error(`CLI_EXIT_${code}`);
+      err.code = code;
+      err.isCliExit = true;
+      throw err;
+    };
+  }
+  try {
+    return await _cliInternal(rawArgs, opts);
+  } catch (err) {
+    if (err?.isCliExit) {
+      return;
+    }
+    throw err;
+  } finally {
+    process.exit = originalExit;
+  }
+}
+
+async function _cliInternal(rawArgs, opts = {}) {
   const { komut, flags } = parseArgs(rawArgs);
 
   if (!komut) {
@@ -715,7 +752,8 @@ export async function cli(rawArgs = process.argv.slice(2)) {
   if (komut === 'bildir') {
     const tur = flags.tur;
     const dosya = flags.dosya;
-    const dizin = flags.dizin;
+    const kok = flags.kok;
+    const dizin = flags.dizin || (kok ? join(kok, 'vakalar') : null);
     const id = flags.id;
     const link = flags.link;
     const bekci = flags.bekci || 'preise';
@@ -725,17 +763,13 @@ export async function cli(rawArgs = process.argv.slice(2)) {
       process.exit(2);
     }
 
-    const token = process.env.TELEGRAM_BEKCI_BOT_TOKEN;
-    const chatId = process.env.TELEGRAM_BEKCI_CHAT_ID;
-    const userId = process.env.TELEGRAM_BEKCI_USER_ID;
-
-    if (!token || !chatId || !userId) {
-      console.log('Bekçi-Bot nicht konfiguriert');
-      process.exit(0);
+    if (!kok) {
+      console.error('Eksik parametre: --kok zorunludur');
+      process.exit(2);
     }
 
-    if (tur === 'vaka' && (!dizin || !id)) {
-      console.error('tur=vaka için --dizin ve --id zorunludur');
+    if (tur === 'vaka' && !id) {
+      console.error('tur=vaka için --id zorunludur');
       process.exit(2);
     }
 
@@ -769,6 +803,104 @@ export async function cli(rawArgs = process.argv.slice(2)) {
       vaka = { id };
     }
 
+    // 1) auto, uygulandi, elle -> Telegram'a göndermez; olayEkle
+    if (tur === 'auto' || tur === 'uygulandi' || tur === 'elle') {
+      let ozet = '';
+      if (tur === 'auto') {
+        const lines = satirlar.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+        const ilkSatir = lines[0] || `${bekci} otomatik uygulandı`;
+        ozet = `${ilkSatir} (${lines.length} değişiklik)`;
+      } else if (tur === 'uygulandi') {
+        const baslik = vaka?.baslik || id;
+        ozet = `Senin onayınla uyguladım: ${baslik}`;
+      } else if (tur === 'elle') {
+        const baslik = vaka?.baslik || id;
+        ozet = `${baslik}: otomatik uygulanamadı, yerel oturumda yapılacak`;
+      }
+
+      try {
+        await olayEkle(kok, { bekci, tur, ozet, simdi: new Date() });
+      } catch (err) {
+        console.error(`Olay eklenemedi: ${err.message}`);
+        process.exit(1);
+      }
+      process.exit(0);
+    }
+
+    // 2) hata -> olayEkle(hata); yalnız ikinciHataMi true ise Kemal'e gönder
+    if (tur === 'hata') {
+      let ozet = satirlar.trim() || `${bekci} çalışırken hata oldu`;
+      if (id && !ozet.includes(id)) {
+        ozet = `#${id}: ${ozet}`;
+      }
+
+      try {
+        await olayEkle(kok, { bekci, tur: 'hata', ozet, simdi: new Date() });
+      } catch (err) {
+        console.error(`Hata olayı eklenemedi: ${err.message}`);
+        process.exit(1);
+      }
+
+      let tumOlaylar = [];
+      try {
+        tumOlaylar = await olaylariYukle(kok);
+      } catch {
+        tumOlaylar = [];
+      }
+
+      const ikinciHata = ikinciHataMi(tumOlaylar, bekci);
+      if (!ikinciHata) {
+        // İlk hata, sessiz kal
+        process.exit(0);
+      }
+
+      // İkinci hata -> Kemal'e bildir
+      const token = opts.token || process.env.TELEGRAM_BEKCI_BOT_TOKEN || (opts.fetch ? 'test_token' : null);
+      const chatId = opts.chatId || process.env.TELEGRAM_BEKCI_CHAT_ID || (opts.fetch ? '12345' : null);
+      const userId = opts.userId || process.env.TELEGRAM_BEKCI_USER_ID || (opts.fetch ? '67890' : null);
+
+      if (!token || !chatId || !userId) {
+        console.log('Bekçi-Bot nicht konfiguriert');
+        process.exit(0);
+      }
+
+      const BEKCI_ADLARI = {
+        preise: 'Fiyat bekçisi',
+        quellen: 'Kaynak bekçisi',
+        kostentraeger: 'Kostenträger bekçisi',
+      };
+      const bekciTurkce = BEKCI_ADLARI[bekci] || `${bekci} bekçisi`;
+      let hataMetni = `⚠️ ${bekciTurkce} iki kez üst üste çalışamadı. Senin yapman gereken bir şey yok — Claude'a "bekçi hatasına bak" demen yeterli.`;
+      if (link) {
+        hataMetni += ` (Ayrıntı: ${link})`;
+      }
+
+      try {
+        const tg = new BekciTelegram({
+          token,
+          chatId,
+          userId,
+          ...(opts.fetch ? { fetch: opts.fetch } : {}),
+        });
+        await tg.sendeKisa(hataMetni);
+      } catch {
+        console.error('Telegram bildirimi gönderilemedi');
+        process.exit(1);
+      }
+
+      process.exit(0);
+    }
+
+    // 3) vaka veya aciklama -> Telegram'a gönder
+    const token = opts.token || process.env.TELEGRAM_BEKCI_BOT_TOKEN || (opts.fetch ? 'test_token' : null);
+    const chatId = opts.chatId || process.env.TELEGRAM_BEKCI_CHAT_ID || (opts.fetch ? '12345' : null);
+    const userId = opts.userId || process.env.TELEGRAM_BEKCI_USER_ID || (opts.fetch ? '67890' : null);
+
+    if (!token || !chatId || !userId) {
+      console.log('Bekçi-Bot nicht konfiguriert');
+      process.exit(0);
+    }
+
     let bildirim;
     try {
       bildirim = bildirimMetni({ tur, satirlar, vaka, link, bekci });
@@ -778,11 +910,24 @@ export async function cli(rawArgs = process.argv.slice(2)) {
     }
 
     try {
-      const tg = new BekciTelegram({ token, chatId, userId });
-      if (bildirim.vakaMi) {
-        await tg.sendeVaka(vaka);
-      } else {
-        await tg.sendeKisa(bildirim.text);
+      const tg = new BekciTelegram({
+        token,
+        chatId,
+        userId,
+        ...(opts.fetch ? { fetch: opts.fetch } : {}),
+      });
+      if (tur === 'vaka') {
+        const res = await tg.sendeVaka(vaka);
+        if (res?.message_id && dizin) {
+          const guncel = mesajIdYaz(vaka, res.message_id);
+          await kaydet(dizin, guncel);
+        }
+      } else if (tur === 'aciklama') {
+        if (vaka?.mesajId) {
+          await tg.sendeYanit(vaka.mesajId, bildirim.text);
+        } else {
+          await tg.sendeKisa(bildirim.text);
+        }
       }
     } catch {
       console.error('Telegram bildirimi gönderilemedi');
@@ -1165,6 +1310,80 @@ export async function cli(rawArgs = process.argv.slice(2)) {
       console.log(`kalan=${kalanBefunde.length}`);
       process.exit(0);
     }
+  }
+
+  // 10. rapor-gonder
+  if (komut === 'rapor-gonder') {
+    const kok = flags.kok;
+    const hep = Boolean(flags.hep);
+
+    if (!kok) {
+      console.error('Eksik parametre: --kok zorunludur');
+      process.exit(2);
+    }
+
+    const simdiDate = new Date();
+    const berlinGunAdi = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Europe/Berlin',
+      weekday: 'short',
+    }).format(simdiDate);
+
+    const pazartesiMi = berlinGunAdi === 'Mon';
+    if (!hep && !pazartesiMi) {
+      console.log('Pazartesi değil (--hep yok), rapor gönderilmedi.');
+      process.exit(0);
+    }
+
+    const token = opts.token || process.env.TELEGRAM_BEKCI_BOT_TOKEN || (opts.fetch ? 'test_token' : null);
+    const chatId = opts.chatId || process.env.TELEGRAM_BEKCI_CHAT_ID || (opts.fetch ? '12345' : null);
+    const userId = opts.userId || process.env.TELEGRAM_BEKCI_USER_ID || (opts.fetch ? '67890' : null);
+
+    if (!token || !chatId || !userId) {
+      console.log('Bekçi-Bot nicht konfiguriert');
+      process.exit(0);
+    }
+
+    let olaylar = [];
+    try {
+      olaylar = await olaylariYukle(kok);
+    } catch {
+      olaylar = [];
+    }
+
+    let acikVakalar = [];
+    try {
+      const vakalar = await listele(join(kok, 'vakalar'));
+      acikVakalar = vakalar.filter(v => v.durum === 'acik' || v.durum === 'uygulaniyor');
+    } catch {
+      acikVakalar = [];
+    }
+
+    const raporMetni = haftalikRapor({
+      olaylar,
+      acikVakalar,
+      simdi: simdiDate,
+    });
+
+    try {
+      const tg = new BekciTelegram({
+        token,
+        chatId,
+        userId,
+        ...(opts.fetch ? { fetch: opts.fetch } : {}),
+      });
+      await tg.sendeKisa(raporMetni);
+    } catch {
+      console.error('Haftalık rapor gönderilemedi');
+      process.exit(1);
+    }
+
+    try {
+      await eskiOlaylariBuda(kok, simdiDate);
+    } catch (err) {
+      console.error(`Eski olaylar budanamadı: ${err.message}`);
+    }
+
+    process.exit(0);
   }
 
   console.error(`Bilinmeyen komut: ${komut}`);

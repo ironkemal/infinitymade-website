@@ -1,8 +1,8 @@
 // tools/bekci-ajan/telegram.test.js
 // Ne: BekciTelegram sınıfı birim testleri (sahte fetch ile).
 // Niye: SPEC.md §2.2, §2.3 ve §3.0 güvenlik kurallarına uygun olarak: chatId/userId
-// doğrulamasını, callback_query ayrıştırmasını, serbest metnin gizliliğini (saklanmaması)
-// ve offset ilerlemesini doğrulamak.
+// doğrulamasını, callback_query ayrıştırmasını (cqId, mesajId), serbest metnin gizliliğini (saklanmaması),
+// offset ilerlemesini ve onayla/sendeYanit metotlarını doğrulamak.
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -78,7 +78,7 @@ test('3. doğru chat ama yanlış from.id atlanır', async () => {
   assert.deepEqual(res.cevaplar, []);
 });
 
-test('4. geçerli callback ayrışır ve answerCallbackQuery çağrılır', async () => {
+test('4. geçerli callback ayrışır, cqId ve mesajId eklenir; cevaplar answerCallbackQuery ÇAĞIRMAZ', async () => {
   let callbackCevaplandi = null;
   const updates = [
     {
@@ -86,7 +86,7 @@ test('4. geçerli callback ayrışır ve answerCallbackQuery çağrılır', asyn
       callback_query: {
         id: 'cq_999',
         from: { id: 456 },
-        message: { chat: { id: 123 } },
+        message: { message_id: 777, chat: { id: 123 } },
         data: 'v:20261124-fiyat-1:uygula',
       },
     },
@@ -107,8 +107,12 @@ test('4. geçerli callback ayrışır ve answerCallbackQuery çağrılır', asyn
     vakaId: '20261124-fiyat-1',
     eylem: 'uygula',
     updateId: 301,
+    cqId: 'cq_999',
+    mesajId: 777,
   });
-  assert.equal(callbackCevaplandi, 'cq_999');
+  // Kemal 25.11.2026: cevaplar() artık answerCallbackQuery çağırmaz!
+  assert.equal(callbackCevaplandi, null);
+  assert.ok(!cagrilanlar.some(c => c.methode === 'answerCallbackQuery'));
 });
 
 test('5. bozuk data formatı atlanır', async () => {
@@ -149,11 +153,12 @@ test('5. bozuk data formatı atlanır', async () => {
   assert.deepEqual(res.cevaplar, []);
 });
 
-test('6. /vakalar komutu liste eylemine dönüşür', async () => {
+test('6. /vakalar komutu liste eylemine dönüşür ve mesajId taşır', async () => {
   const updates = [
     {
       update_id: 501,
       message: {
+        message_id: 55,
         chat: { id: 123 },
         from: { id: 456 },
         text: '/vakalar',
@@ -162,6 +167,7 @@ test('6. /vakalar komutu liste eylemine dönüşür', async () => {
     {
       update_id: 502,
       message: {
+        message_id: 56,
         chat: { id: 123 },
         from: { id: 456 },
         text: '/vakalar@bekcibot',
@@ -174,8 +180,20 @@ test('6. /vakalar komutu liste eylemine dönüşür', async () => {
   const res = await bot.cevaplar(0);
   assert.equal(res.offset, 503);
   assert.equal(res.cevaplar.length, 2);
-  assert.deepEqual(res.cevaplar[0], { vakaId: null, eylem: 'liste', updateId: 501 });
-  assert.deepEqual(res.cevaplar[1], { vakaId: null, eylem: 'liste', updateId: 502 });
+  assert.deepEqual(res.cevaplar[0], {
+    vakaId: null,
+    eylem: 'liste',
+    updateId: 501,
+    cqId: null,
+    mesajId: 55,
+  });
+  assert.deepEqual(res.cevaplar[1], {
+    vakaId: null,
+    eylem: 'liste',
+    updateId: 502,
+    cqId: null,
+    mesajId: 56,
+  });
 });
 
 test('7. serbest metin metni döndürmez ve saklamaz', async () => {
@@ -184,6 +202,7 @@ test('7. serbest metin metni döndürmez ve saklamaz', async () => {
     {
       update_id: 601,
       message: {
+        message_id: 88,
         chat: { id: 123 },
         from: { id: 456 },
         text: gizliMetin,
@@ -200,6 +219,8 @@ test('7. serbest metin metni döndürmez ve saklamaz', async () => {
     vakaId: null,
     eylem: 'metin_desteklenmiyor',
     updateId: 601,
+    cqId: null,
+    mesajId: 88,
   });
   // Çıktıda metnin bulunmadığını doğrula
   assert.equal(JSON.stringify(res).includes(gizliMetin), false);
@@ -306,4 +327,40 @@ test('12. eylem listesi dışı v:<id>:sil atlanır', async () => {
   const res = await bot.cevaplar(0);
   assert.equal(res.offset, 902);
   assert.deepEqual(res.cevaplar, []);
+});
+
+test('13. onayla metodu answerCallbackQuery çağırır ve metni ≤ 200 karakterde sınırlar', async () => {
+  let sonAnswer = null;
+  const { fetch, cagrilanlar } = mockFetch({
+    answerCallbackQuery: body => {
+      sonAnswer = body;
+      return true;
+    },
+  });
+  const bot = new BekciTelegram({ token: 't', chatId: '123', userId: '456', fetch });
+
+  const uzunMetin = 'A'.repeat(250);
+  await bot.onayla('cq_123', uzunMetin);
+
+  assert.ok(sonAnswer);
+  assert.equal(sonAnswer.callback_query_id, 'cq_123');
+  assert.equal(sonAnswer.text.length, 200);
+  assert.equal(sonAnswer.show_alert, false);
+
+  // cqId yoksa çağrı yapmaz
+  sonAnswer = null;
+  await bot.onayla(null, 'metin');
+  assert.equal(sonAnswer, null);
+});
+
+test('14. sendeYanit metodu reply_parameters ile mesaj gönderir', async () => {
+  const { fetch, cagrilanlar } = mockFetch();
+  const bot = new BekciTelegram({ token: 't', chatId: '123', userId: '456', fetch });
+
+  await bot.sendeYanit(42, '🔁 Bu soru hâlâ cevabını bekliyor (3 gündür).');
+  const msgCall = cagrilanlar.find(c => c.methode === 'sendMessage');
+  assert.ok(msgCall);
+  assert.equal(msgCall.body.chat_id, '123');
+  assert.equal(msgCall.body.text, '🔁 Bu soru hâlâ cevabını bekliyor (3 gündür).');
+  assert.deepEqual(msgCall.body.reply_parameters, { message_id: 42 });
 });

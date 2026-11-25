@@ -135,6 +135,18 @@ zaten alıyor. Hatırlatma ilk `:stable` kararıyla anlam kazanır; ön koşulu:
 digest bildirsin (bugün yalnız IP). ✅ soak kanıtının yerine geçmez, yalnız "sorunsuz mu" kararının
 yerine geçer. Tasarım: onprem/REGISTER.md O-257 notu (25.11.2026).
 
+### 3.0g Bildirim düzeni (Kemal 25.11.2026) — bağlayıcı
+"Bana yalnız aksiyon almam gereken mesaj gelsin; mesajı okuyarak anlayıp karar verebileyim."
+- Kendi yaptığı işler (auto/uygulandi/elle), takılı vaka, tek hata → **mesaj YOK**, `rapor/olaylar.jsonl`'a yazılır;
+  **pazartesi tek haftalık rapor** (`bekci-rapor.yml`). Aynı bekçi iki kez üst üste hata → tek kısa uyarı.
+- Düğmeye basınca sohbete mesaj yok, yalnız küçük onay bildirimi (callback toast). Hatırlatma 3 günde bir,
+  asıl soruya yanıt olarak; 3'ten fazlaysa tek özet.
+- Soru mesajı: Claude yazar (`prompts/anlat.md`: Ne oldu · Bizi nasıl etkiliyor · Senden istediğim · ✅/❌ ne yapar ·
+  önerim · son tarih; sade dil, numaralar açıklanır, dosya adı/URL yok), **ikinci ajan** (`prompts/denetci.md`,
+  farklı model) "Kemal bunu anlar mı" diye denetler; `anlat.mjs` şema + rakam koruması (uydurma sayı = ret) +
+  yasak kalıplar; onaysız ya da geçersizse ham satır değil sade yedek mesaj. Belgenin ilgili sayfası
+  **sarı işaretli görsel** olarak gider (`isaretle.mjs`).
+
 ### 3.1 onprem incelemesi (O-257, 24.11.2026) — bağlayıcı
 - **İzinli dosyalar (fiyat):** `billing/codes/*_positions.js` + heilmittel_katalog seed migration'ı + `db/erwartete-zaehler.json`.
   Seed'i ajan YAZMAZ: `sync_heilmittel_katalog.js --sql` üretir (O-95 tekrarlanmasın).

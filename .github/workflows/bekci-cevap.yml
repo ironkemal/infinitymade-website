@@ -72,7 +72,7 @@ jobs:
         run: |
           set -euo pipefail
           node main/tools/bekci-ajan/cevap-isle.mjs \
-            --vakalar=vakalar/vakalar --offset=vakalar/offset.json \
+            --vakalar=vakalar/vakalar --kok=vakalar --offset=vakalar/offset.json \
             --dispatch=dispatch.txt $( [ "$ERINNERUNG" = 1 ] && echo --hatirlat )
 
       - name: Fall-Zweig speichern

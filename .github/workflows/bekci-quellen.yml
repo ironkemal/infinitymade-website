@@ -189,6 +189,7 @@ jobs:
     outputs:
       karar: ${{ steps.karar.outputs.karar }}
       otomatik: ${{ steps.karar.outputs.otomatik }}
+      vaka_sayisi: ${{ steps.karar.outputs.vaka_sayisi }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -226,7 +227,7 @@ jobs:
                 const ok = id => /^[a-z0-9][a-z0-9-]{1,40}$/.test(id);
                 const oto = (e.otomatik||[]).filter(ok);
                 require("fs").appendFileSync(process.env.GITHUB_OUTPUT,
-                  "karar=yeni\notomatik=" + oto.join(",") + "\n");' ;;
+                  "karar=yeni\notomatik=" + oto.join(",") + "\nvaka_sayisi=" + ((e.vakalar||[]).length) + "\n");' ;;
           esac
 
       - uses: actions/upload-artifact@v4
@@ -305,8 +306,80 @@ jobs:
           done
           exit 1
 
+  anlat:
+    # Kemal 25.11.2026: Fragen müssen ohne Vorwissen verständlich sein; vor dem Senden prüft ein
+    # zweiter Agent. Ergebnis ist nur Text (anlatim/denetim) — Zahlen prüft anlat.mjs gegen die Daten.
+    needs: [bewerten]
+    if: always() && (needs.bewerten.outputs.karar == 'aciklama' || (needs.bewerten.outputs.vaka_sayisi != '' && needs.bewerten.outputs.vaka_sayisi != '0'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: bekci-ajan
+    permissions:
+      contents: read
+      actions: write   # upload-artifact
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: bekci-karar
+          path: bekci-in
+
+      - run: mkdir -p bekci-out
+
+      - name: Claude schreibt die Erklärung für Kemal
+        uses: anthropics/claude-code-action@eb56b6666facdbd501035f4a0269d8caee2e7a8b # v1.0.289
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          prompt: |
+            Lies tools/bekci-ajan/prompts/anlat.md vollständig und halte dich genau daran.
+            ${{ inputs.eylem == 'acikla' && 'Modus AÇIKLA (Kemal hat auf "Açıkla" gedrückt): genau EIN Fall, nämlich bekci-in/vaka.json; schreibe ausführlicher (Grenzen x2). Ausgabe bekci-out/anlatim.json als {"vakalar":[<ein Objekt>]}.' || 'Erzeuge für JEDEN Fall in bekci-in/entscheidung.json (Feld vakalar[] oder vaka) genau ein Objekt im Schema, in derselben Reihenfolge. Ausgabe bekci-out/anlatim.json als {"vakalar":[...]}.' }}
+          claude_args: >-
+            --model claude-opus-5-5
+            --max-turns 40
+            --allowedTools "Read,Glob,Grep,Write"
+            --disallowedTools "Bash,WebFetch,WebSearch,Edit,MultiEdit,NotebookEdit,Task,Read(//proc/**),Read(//home/runner/work/_temp/**),Read(//home/runner/.*/**),Read(//etc/**),Read(//tmp/**),Read(//run/**)"
+
+      - name: Zweiter Agent prüft die Erklärung (anderes Modell)
+        uses: anthropics/claude-code-action@eb56b6666facdbd501035f4a0269d8caee2e7a8b # v1.0.289
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          prompt: |
+            Lies tools/bekci-ajan/prompts/denetci.md vollständig und halte dich genau daran.
+            Prüfe bekci-out/anlatim.json (Feld vakalar[]) gegen die Daten in bekci-in/. Schreibe bekci-out/denetim.json als {"vakalar":[...]} — ein Prüfobjekt je Eintrag, gleiche Reihenfolge.
+          claude_args: >-
+            --model claude-sonnet-5-5
+            --max-turns 30
+            --allowedTools "Read,Glob,Grep,Write"
+            --disallowedTools "Bash,WebFetch,WebSearch,Edit,MultiEdit,NotebookEdit,Task,Read(//proc/**),Read(//home/runner/work/_temp/**),Read(//home/runner/.*/**),Read(//etc/**),Read(//tmp/**),Read(//run/**)"
+
+      - name: Nur bekci-out/ geschrieben? + Geheimnis-Filter (vor dem öffentlichen Artefakt)
+        run: |
+          set -euo pipefail
+          fremd=$(git status --porcelain --untracked-files=all --ignored | awk '{print $2}' | grep -vE '^(bekci-in|bekci-out)/' || true)
+          if [ -n "$fremd" ]; then echo "::error::Agent hat ausserhalb von bekci-out/ geschrieben:"; echo "$fremd"; exit 1; fi
+          node --input-type=module -e '
+            import fs from "node:fs";
+            import { sirIceriyor } from "./tools/bekci-ajan/cli.mjs";
+            for (const f of ["bekci-out/anlatim.json", "bekci-out/denetim.json"]) {
+              if (!fs.existsSync(f)) continue;
+              const t = fs.readFileSync(f, "utf8");
+              if (sirIceriyor(t)) { fs.writeFileSync(f, "{}"); console.log("verworfen:", f); }
+            }'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bekci-anlat
+          path: bekci-out/
+          if-no-files-found: ignore
+          retention-days: 7
+
   bildir:
-    needs: [hazirla, ajan, bewerten, uebernehmen]
+    needs: [hazirla, ajan, bewerten, uebernehmen, anlat]
     if: always() && needs.hazirla.result != 'skipped'
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -337,6 +410,9 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Werkzeuge für markierte Seitenbilder (pdftoppm, ImageMagick)
+        run: sudo apt-get install -y -qq poppler-utils imagemagick >/dev/null
+
       - uses: actions/download-artifact@v4
         continue-on-error: true
         with:
@@ -348,6 +424,12 @@ jobs:
         with:
           name: bekci-out
           path: bekci-out
+
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: bekci-anlat
+          path: bekci-anlat
 
       - name: Fall-Zweig auschecken (oder neu anlegen)
         env:
@@ -378,14 +460,14 @@ jobs:
           [ "$R_UEBERNEHMEN" = success ] || [ "$R_UEBERNEHMEN" = skipped ] || fehler=1
           if [ "$fehler" = 1 ]; then
             if [ "$EYLEM" = uygula ] && [ -n "$VAKA" ]; then $CLI vaka-durum --dizin="$D" --id="$VAKA" --eylem=hata || true; fi
-            gonder $CLI bildir --bekci=quellen --tur=hata ${VAKA:+--dizin="$D" --id="$VAKA"} --link="$LINK"
+            $CLI bildir --kok=vakalar --bekci=quellen --tur=hata ${VAKA:+--dizin="$D" --id="$VAKA"} --link="$LINK"
             exit 0
           fi
           if [ "$HAT_BEFUND" != true ]; then
             # Beim Nachfassen ist die Quelle wieder unverändert (jemand hat sie schon übernommen).
             if [ -n "$VAKA" ] && [ "$EYLEM" = uygula ]; then
               $CLI vaka-durum --dizin="$D" --id="$VAKA" --eylem=tamam
-              gonder $CLI bildir --bekci=quellen --tur=uygulandi --dizin="$D" --id="$VAKA"
+              $CLI bildir --kok=vakalar --bekci=quellen --tur=uygulandi --dizin="$D" --id="$VAKA"
             fi
             exit 0
           fi
@@ -393,23 +475,22 @@ jobs:
             onay)
               if [ "$R_UEBERNEHMEN" = success ]; then
                 $CLI vaka-durum --dizin="$D" --id="$VAKA" --eylem=tamam
-                gonder $CLI bildir --bekci=quellen --tur=uygulandi --dizin="$D" --id="$VAKA"
+                $CLI bildir --kok=vakalar --bekci=quellen --tur=uygulandi --dizin="$D" --id="$VAKA"
               else
                 $CLI vaka-durum --dizin="$D" --id="$VAKA" --eylem=hata
-                gonder $CLI bildir --bekci=quellen --tur=hata --dizin="$D" --id="$VAKA" --link="$LINK"
+                $CLI bildir --kok=vakalar --bekci=quellen --tur=hata --dizin="$D" --id="$VAKA" --link="$LINK"
               fi ;;
             aciklama)
-              if [ -s bekci-out/aciklama.md ]; then gonder $CLI bildir --bekci=quellen --tur=aciklama --dizin="$D" --id="$VAKA" --dosya=bekci-out/aciklama.md
-              else gonder $CLI bildir --bekci=quellen --tur=hata --dizin="$D" --id="$VAKA" --link="$LINK"; fi ;;
+              gonder node main/tools/bekci-ajan/gonder-vaka.mjs --kok=vakalar --anlatim=bekci-anlat/anlatim.json --denetim=bekci-anlat/denetim.json --id="$VAKA" --entscheidung=bekci-in/vaka.json --belgeler=bekci-in/belgeler --olgular=bekci-in/vaka.json,bekci-in/quellen.json --aciklama ;;
             yeni)
               if [ -n "$OTOMATIK" ]; then
                 node -e 'const e=JSON.parse(require("fs").readFileSync("bekci-in/entscheidung.json","utf8"));require("fs").writeFileSync("rapor.txt",(e.rapor||[]).join("\n"))'
-                gonder $CLI bildir --bekci=quellen --tur=auto --dosya=rapor.txt --link="$LINK"
+                $CLI bildir --kok=vakalar --bekci=quellen --tur=auto --dosya=rapor.txt --link="$LINK"
               fi
               $CLI vaka-ac-coklu --entscheidung=bekci-in/entscheidung.json --dizin="$D" --out-ids=ids.txt
-              while read -r id; do [ -n "$id" ] && gonder $CLI bildir --bekci=quellen --tur=vaka --dizin="$D" --id="$id"; done < ids.txt ;;
+              while read -r id; do [ -n "$id" ] && gonder node main/tools/bekci-ajan/gonder-vaka.mjs --kok=vakalar --anlatim=bekci-anlat/anlatim.json --denetim=bekci-anlat/denetim.json --id="$id" --entscheidung=bekci-in/entscheidung.json --belgeler=bekci-in/belgeler --olgular=bekci-in/entscheidung.json,bekci-in/quellen.json; done < ids.txt ;;
             *)
-              gonder $CLI bildir --bekci=quellen --tur=hata --link="$LINK" ;;
+              $CLI bildir --kok=vakalar --bekci=quellen --tur=hata --link="$LINK" ;;
           esac
 
       - name: Fall-Zweig speichern
@@ -431,3 +512,14 @@ jobs:
           set -uo pipefail
           [ -s gonder.sh ] || exit 0
           bash gonder.sh
+
+      - name: Fall-Zweig erneut speichern (Nachrichten-IDs)
+        if: always()
+        working-directory: vakalar
+        run: |
+          set -euo pipefail
+          git add -A
+          if git diff --cached --quiet; then exit 0; fi
+          git -c user.name="praxura-bekci" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit --quiet -m "bekci: Nachrichten-IDs"
+          for i in 1 2 3; do git push --quiet origin HEAD:bekci-vakalar && exit 0; git pull --quiet --rebase origin bekci-vakalar || true; done
+          exit 1

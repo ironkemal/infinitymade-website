@@ -1,7 +1,7 @@
 // tools/bekci-ajan/telegram.mjs
 // Ne: Bekçi-Ajan için Telegram bot arayüzü (BekciTelegram sınıfı).
 // Niye: SPEC.md §2.2 ve §2.3 uyarınca interaktif vaka bildirimlerini göndermek
-// (sendeVaka, sendeKisa) ve getUpdates üzerinden Kemal'in onay/ret/açıklama
+// (sendeVaka, sendeKisa, sendeYanit, onayla) ve getUpdates üzerinden Kemal'in onay/ret/açıklama
 // kararlarını güvenli biçimde (chatId ve userId doğrulamasıyla) okumak.
 
 import { Telegram } from '../../sosyal/yayinci/telegram.mjs';
@@ -19,6 +19,8 @@ export class BekciTelegram extends Telegram {
   /**
    * Telegram getUpdates ile yeni cevapları okur.
    * Yalnız chatId ve userId eşleşen mesajlar/callback_query'ler işlenir.
+   * Kemal 25.11.2026: answerCallbackQuery artık burada çağrılmaz;
+   * dönen her cevaba cqId ve mesajId eklenir.
    */
   async cevaplar(offset = 0) {
     if (!this.aktiv) return { offset, cevaplar: [] };
@@ -41,16 +43,19 @@ export class BekciTelegram extends Telegram {
 
         if (cChatId !== this.chatId || cFromId !== this.userId) continue;
 
-        // Düğmedeki yükleme çarkını hemen durdur
-        await this.api('answerCallbackQuery', { callback_query_id: cq.id }).catch(() => {});
-
         const rawData = String(cq.data || '').trim();
         const parts = rawData.split(':');
         if (parts.length === 3 && parts[0] === 'v') {
           const vakaId = parts[1];
           const eylem = parts[2];
           if (['uygula', 'birak', 'acikla'].includes(eylem) && ID_RE.test(vakaId)) {
-            cevaplar.push({ vakaId, eylem, updateId: u.update_id });
+            cevaplar.push({
+              vakaId,
+              eylem,
+              updateId: u.update_id,
+              cqId: cq.id || null,
+              mesajId: cq.message?.message_id || null,
+            });
           }
         }
       } else if (m) {
@@ -61,15 +66,50 @@ export class BekciTelegram extends Telegram {
 
         const text = typeof m.text === 'string' ? m.text.trim() : '';
         if (/^\/vakalar(?:@\w+)?$/i.test(text)) {
-          cevaplar.push({ vakaId: null, eylem: 'liste', updateId: u.update_id });
+          cevaplar.push({
+            vakaId: null,
+            eylem: 'liste',
+            updateId: u.update_id,
+            cqId: null,
+            mesajId: m.message_id || null,
+          });
         } else if (text.length > 0) {
           // Metnin kendisi döndürülmez veya loglanmaz (SPEC §3.0 madde 4)
-          cevaplar.push({ vakaId: null, eylem: 'metin_desteklenmiyor', updateId: u.update_id });
+          cevaplar.push({
+            vakaId: null,
+            eylem: 'metin_desteklenmiyor',
+            updateId: u.update_id,
+            cqId: null,
+            mesajId: m.message_id || null,
+          });
         }
       }
     }
 
     return { offset, cevaplar };
+  }
+
+  /**
+   * Kemal 25.11.2026: Düğmeye basıldığında sohbete mesaj atmadan
+   * Telegram toast/bildirim kutusu ile onay verir. Hata yutulur.
+   *
+   * @param {string} cqId - Callback query id
+   * @param {string} [metin] - Gösterilecek kısa toast metni (≤200 karakter)
+   */
+  async onayla(cqId, metin) {
+    if (!this.aktiv || !cqId) return;
+    const body = {
+      callback_query_id: cqId,
+      show_alert: false,
+    };
+    if (metin !== undefined && metin !== null) {
+      body.text = String(metin).slice(0, 200);
+    }
+    try {
+      await this.api('answerCallbackQuery', body);
+    } catch {
+      // Hata yutulur
+    }
   }
 
   /**
@@ -82,10 +122,26 @@ export class BekciTelegram extends Telegram {
 
   /**
    * Düz metin gönderir; 3800 karakterden uzunsa sonu kesilip "…" eklenir.
+   * İsteğe bağlı olarak { replyTo: message_id } parametresiyle yanıtlama desteği verir.
    */
-  sendeKisa(text) {
+  sendeKisa(text, { replyTo } = {}) {
     const raw = String(text ?? '');
     const kesilmis = raw.length > 3800 ? raw.slice(0, 3799) + '…' : raw;
-    return this.sende(kesilmis);
+    const body = {
+      chat_id: this.chatId,
+      text: kesilmis,
+      disable_web_page_preview: true,
+    };
+    if (replyTo != null && Number.isInteger(Number(replyTo))) {
+      body.reply_parameters = { message_id: Number(replyTo) };
+    }
+    return this.api('sendMessage', body);
+  }
+
+  /**
+   * Belirtilen mesajId'ye yanıt olarak metin gönderir.
+   */
+  sendeYanit(mesajId, text) {
+    return this.sendeKisa(text, { replyTo: mesajId });
   }
 }

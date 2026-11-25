@@ -16,10 +16,12 @@ import {
   gecis,
   mesaj,
   hatirlatmaGerekli,
+  gunFarki,
   eskidi,
   kaydet,
   yukle,
   listele,
+  mesajIdYaz,
 } from './vaka.mjs';
 
 test('1. id üretimi ve n sayacı', () => {
@@ -177,7 +179,7 @@ test('7. mesaj içeriği, düğmeler ve callback_data <= 64 bayt', () => {
   assert.equal(kapaliMesaj.knoepfe, undefined);
 });
 
-test('8. hatırlatmaGerekli mantığı', () => {
+test('8. hatırlatmaGerekli mantığı (>= 3 Berlin günü eşiği)', () => {
   const dOlusturma = new Date('2026-11-20T10:00:00Z');
   const v = yeniVaka({
     bekci: 'fiyat',
@@ -185,24 +187,41 @@ test('8. hatırlatmaGerekli mantığı', () => {
     simdi: dOlusturma,
   });
 
-  // Aynı gün: henüz hatırlatma gerekmez
+  // Aynı gün (0 gün): henüz hatırlatma gerekmez
   assert.equal(hatirlatmaGerekli(v, dOlusturma), false);
 
-  // 1 gün sonra, henüz hatırlatma yapılmamış: gerekir
-  const ertesiGun = new Date('2026-11-21T09:00:00Z');
-  assert.equal(hatirlatmaGerekli(v, ertesiGun), true);
+  // 1 gün sonra (2026-11-21): gerekmez (yeni kural: ≥ 3 gün)
+  const gun1Sonra = new Date('2026-11-21T09:00:00Z');
+  assert.equal(hatirlatmaGerekli(v, gun1Sonra), false);
+
+  // 2 gün sonra (2026-11-22): gerekmez
+  const gun2Sonra = new Date('2026-11-22T09:00:00Z');
+  assert.equal(hatirlatmaGerekli(v, gun2Sonra), false);
+
+  // 3 gün sonra (2026-11-23): gerekir!
+  const gun3Sonra = new Date('2026-11-23T09:00:00Z');
+  assert.equal(hatirlatmaGerekli(v, gun3Sonra), true);
+
+  // 4 gün sonra (2026-11-24): gerekir
+  const gun4Sonra = new Date('2026-11-24T09:00:00Z');
+  assert.equal(hatirlatmaGerekli(v, gun4Sonra), true);
 
   // Hatırlatma yapıldıktan sonra aynı gün tekrar gerekmez
-  const hatirlatildi = gecis(v, 'hatirlat', { simdi: ertesiGun });
-  assert.equal(hatirlatmaGerekli(hatirlatildi, ertesiGun), false);
+  const hatirlatildi = gecis(v, 'hatirlat', { simdi: gun3Sonra });
+  assert.equal(hatirlatmaGerekli(hatirlatildi, gun3Sonra), false);
 
-  // Ertesi gün tekrar gerekir
-  const ikiGunSonra = new Date('2026-11-22T09:00:00Z');
-  assert.equal(hatirlatmaGerekli(hatirlatildi, ikiGunSonra), true);
+  // Hatırlatmadan 1 ve 2 gün sonra tekrar gerekmez
+  assert.equal(hatirlatmaGerekli(hatirlatildi, gun4Sonra), false);
+  const gun5Sonra = new Date('2026-11-25T09:00:00Z');
+  assert.equal(hatirlatmaGerekli(hatirlatildi, gun5Sonra), false);
+
+  // Hatırlatmadan 3 gün sonra (2026-11-26) tekrar gerekir
+  const gun6Sonra = new Date('2026-11-26T09:00:00Z');
+  assert.equal(hatirlatmaGerekli(hatirlatildi, gun6Sonra), true);
 
   // Kapalı vakada gerekmez
   const kapali = gecis(v, 'birak');
-  assert.equal(hatirlatmaGerekli(kapali, ikiGunSonra), false);
+  assert.equal(hatirlatmaGerekli(kapali, gun6Sonra), false);
 });
 
 test('9. eskidi mantığı (>= 14 gün)', () => {
@@ -369,4 +388,39 @@ test('13. M4: uygulanabilir false ise yalnız Bırak ve Açıkla düğmeleri ve 
       { text: '💬 Açıkla', befehl: `v:${vNormal.id}:acikla` },
     ],
   ]);
+});
+
+test('14. mesajId alanı ve mesajIdYaz: pozitif tamsayı kaydı ve immutability', () => {
+  const simdi = new Date('2026-11-24T12:00:00Z');
+  const v = yeniVaka({
+    bekci: 'preise',
+    baslik: 'MesajId testi',
+    simdi,
+  });
+  assert.equal(v.mesajId, null);
+
+  // mesajId parametresiyle başlatma
+  const v2 = yeniVaka({
+    bekci: 'preise',
+    baslik: 'MesajId ile başla',
+    mesajId: 98765,
+    simdi,
+  });
+  assert.equal(v2.mesajId, 98765);
+
+  // mesajIdYaz ile güncelleme
+  const vGuncel = mesajIdYaz(v, 12345);
+  assert.equal(vGuncel.mesajId, 12345);
+  assert.equal(v.mesajId, null, 'Orijinal nesne değişmemeli');
+
+  // Geçersiz ID kontrolleri
+  assert.throws(() => mesajIdYaz(v, 0), /gecersiz_mesaj_id/);
+  assert.throws(() => mesajIdYaz(v, -5), /gecersiz_mesaj_id/);
+  assert.throws(() => mesajIdYaz(v, 'abc'), /gecersiz_mesaj_id/);
+});
+
+test('15. gunFarki: Berlin saat diliminde gün farkını doğru hesaplar', () => {
+  assert.equal(gunFarki('2026-11-20T10:00:00Z', '2026-11-20T18:00:00Z'), 0);
+  assert.equal(gunFarki('2026-11-20T10:00:00Z', '2026-11-21T02:00:00Z'), 1);
+  assert.equal(gunFarki('2026-11-20T10:00:00Z', '2026-11-23T10:00:00Z'), 3);
 });

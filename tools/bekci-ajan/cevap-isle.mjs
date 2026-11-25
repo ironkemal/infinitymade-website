@@ -1,8 +1,8 @@
 // tools/bekci-ajan/cevap-isle.mjs
 // Ne: Bekçi-Ajan Telegram cevaplarını işleme, vaka durumlarını güncelleme ve hatırlatma motoru.
-// Niye: SPEC.md §2.2, §3.0 ve .github/workflows/bekci-cevap.yml gereğince; Telegram'dan gelen
-// kararları (uygula/birak/acikla) ve komutları (/vakalar) güvenli şekilde işler, vaka durum
-// makinesini ilerletir, dispatch dosyasını ve offset'i günceller, açık vakalara hatırlatma gönderir.
+// Niye: SPEC.md §2.2, §3.0 ve Kemal 25.11.2026 talimatı uyarınca; düğme basışlarını sessiz onay
+// (toast) ile karşılama, seyrek hatırlatma (≥ 3 gün, yanıtlama veya toplu özet), takılı vakaları
+// sessizce geri açma ve olay defterine kaydetme.
 
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
@@ -16,15 +16,19 @@ import {
   gecis,
   mesaj,
   hatirlatmaGerekli,
+  gunFarki,
   eskidi,
+  mesajIdYaz,
 } from './vaka.mjs';
+import { olayEkle } from './rapor.mjs';
 
 /**
  * Telegram cevaplarını işler, vaka durumlarını günceller ve hatırlatmaları iletir.
  *
  * @param {object} params
  * @param {BekciTelegram} params.tg - BekciTelegram örneği veya uyumlu arayüz
- * @param {string} params.dizin - Vakaların saklandığı dizin yolu
+ * @param {string} params.dizin - Vakaların saklandığı dizin yolu (<kok>/vakalar)
+ * @param {string} [params.kok] - Vakalar dalının kök dizini (yoksa dizin'in üstü)
  * @param {string} [params.offsetDosya] - Offset bilgisinin saklandığı JSON dosyasının yolu
  * @param {string} [params.dispatchDosya] - Bekci-ajan workflow dispatch komutlarının yazılacağı dosya
  * @param {boolean} [params.hatirlat=false] - Açık vakalar için hatırlatma gönderilsin mi
@@ -34,12 +38,14 @@ import {
 export async function isle({
   tg,
   dizin,
+  kok,
   offsetDosya,
   dispatchDosya,
   hatirlat = false,
   simdi = new Date(),
 }) {
   const simdiDate = simdi instanceof Date ? simdi : new Date(simdi);
+  const kokDizin = kok || path.dirname(path.resolve(dizin));
   let hataSayisi = 0;
 
   async function guvenliGonder(fn) {
@@ -70,7 +76,8 @@ export async function isle({
   const dispatch = [];
 
   // 2. Takılı 'uygulaniyor' kontrolü (her turda yapılır):
-  // Durum 'uygulaniyor' ve son geçmiş kaydı 2 saatten eski ise vaka yeniden açılır.
+  // Kemal 25.11.2026: Durum 'uygulaniyor' ve son işlem 2 saatten eski ise vaka yeniden açılır;
+  // Kemal'e mesaj GİTMESİN, rapor.mjs olayına yazılır.
   let hatirlatilan = 0;
   const takiliAcilanlar = new Set();
 
@@ -89,31 +96,15 @@ export async function isle({
           let guncel = gecis(v, 'hata', { simdi: simdiDate });
           await kaydet(dizin, guncel);
           takiliAcilanlar.add(v.id);
-          await guvenliGonder(() =>
-            tg.sendeKisa(`⏳ #${v.id} uygulanırken yanıt gelmedi, vaka yeniden açıldı.`)
-          );
 
-          if (hatirlat) {
-            const { text, knoepfe } = mesaj(guncel);
-            const n = (guncel.hatirlatma || 0) + 1;
-            let onek = `🔁 Hatırlatma ${n} · `;
-            if (eskidi(guncel, simdiDate)) {
-              onek = `⏳ 14+ gündür açık · ${onek}`;
-            }
-            const gonderilecekText = `${onek}${text}`;
-
-            await guvenliGonder(async () => {
-              if (typeof tg.sende === 'function') {
-                await tg.sende(gonderilecekText, knoepfe);
-              } else if (typeof tg.sendeVaka === 'function') {
-                await tg.sendeVaka(guncel);
-              }
+          try {
+            await olayEkle(kokDizin, {
+              bekci: v.bekci,
+              tur: 'takili',
+              ozet: `#${v.id} 2 saatten uzun süre uygulanıyor kaldı, yeniden açıldı`,
+              simdi: simdiDate,
             });
-
-            guncel = gecis(guncel, 'hatirlat', { simdi: simdiDate });
-            await kaydet(dizin, guncel);
-            hatirlatilan++;
-          }
+          } catch {}
         }
       }
     }
@@ -122,15 +113,17 @@ export async function isle({
   // 3. Her cevap:
   for (const cevap of cevaplar) {
     islenen++;
-    const { vakaId, eylem } = cevap;
+    const { vakaId, eylem, cqId } = cevap;
 
     if (eylem === 'liste') {
       const tumVakalar = await listele(dizin);
       const aciklar = tumVakalar.filter(v => v.durum === 'acik' || v.durum === 'uygulaniyor');
       if (aciklar.length === 0) {
-        await guvenliGonder(() => tg.sendeKisa('Açık vaka yok ✅'));
+        await guvenliGonder(() => tg.sendeKisa('Şu an senden beklediğim bir karar yok ✅'));
       } else {
-        const metin = aciklar.map(v => `#${v.id} · ${v.baslik}`).join('\n');
+        const metin = aciklar
+          .map(v => `• ${v.baslik} — ${gunFarki(v.olusturma, simdiDate)} gün`)
+          .join('\n');
         await guvenliGonder(() => tg.sendeKisa(metin));
       }
       continue;
@@ -139,7 +132,7 @@ export async function isle({
     if (eylem === 'metin_desteklenmiyor') {
       await guvenliGonder(() =>
         tg.sendeKisa(
-          'Şimdilik yalnız düğmeler çalışıyor (✅ Uygula · ❌ Bırak · 💬 Açıkla). Açık vakalar: /vakalar'
+          'Şimdilik yalnız mesajlardaki düğmeler çalışıyor. Bekleyen kararlar için: /vakalar'
         )
       );
       continue;
@@ -150,7 +143,12 @@ export async function isle({
       try {
         v = await yukle(dizin, vakaId);
       } catch {
-        await guvenliGonder(() => tg.sendeKisa(`#${vakaId} bulunamadı`));
+        const bulunamadiMetin = 'Bu soruyu bulamadım.';
+        if (cqId && typeof tg.onayla === 'function') {
+          await tg.onayla(cqId, bulunamadiMetin);
+        } else {
+          await guvenliGonder(() => tg.sendeKisa(bulunamadiMetin));
+        }
         continue;
       }
 
@@ -158,25 +156,41 @@ export async function isle({
         if (eylem === 'birak') {
           const yeniV = gecis(v, 'birak', { simdi: simdiDate });
           await kaydet(dizin, yeniV);
-          await guvenliGonder(() => tg.sendeKisa(`❌ #${v.id} bırakıldı.`));
+          const onayMetin = '❌ Tamam, bırakıldı.';
+          if (cqId && typeof tg.onayla === 'function') {
+            await tg.onayla(cqId, onayMetin);
+          } else {
+            await guvenliGonder(() => tg.sendeKisa(onayMetin));
+          }
         } else if (eylem === 'acikla') {
           const yeniV = gecis(v, 'acikla', { simdi: simdiDate });
           await kaydet(dizin, yeniV);
           dispatch.push({ vakaId: v.id, eylem: 'acikla' });
-          await guvenliGonder(() => tg.sendeKisa(`💬 #${v.id} için açıklama hazırlanıyor…`));
+          const onayMetin = '💬 Açıklama hazırlanıyor, birkaç dakika içinde gelecek.';
+          if (cqId && typeof tg.onayla === 'function') {
+            await tg.onayla(cqId, onayMetin);
+          } else {
+            await guvenliGonder(() => tg.sendeKisa(onayMetin));
+          }
         } else if (eylem === 'uygula') {
           const yeniV = gecis(v, 'uygula', { simdi: simdiDate, yamaSha256: v.yamaSha256 });
           await kaydet(dizin, yeniV);
           dispatch.push({ vakaId: v.id, eylem: 'uygula' });
-          await guvenliGonder(() =>
-            tg.sendeKisa(`✅ #${v.id} uygulanıyor, bitince haber veririm.`)
-          );
+          const onayMetin = '✅ Alındı — uyguluyorum, bitince haftalık raporda görürsün.';
+          if (cqId && typeof tg.onayla === 'function') {
+            await tg.onayla(cqId, onayMetin);
+          } else {
+            await guvenliGonder(() => tg.sendeKisa(onayMetin));
+          }
         }
       } catch (err) {
         if (err instanceof VakaHatasi || err.name === 'VakaHatasi') {
-          await guvenliGonder(() =>
-            tg.sendeKisa(`#${v.id} zaten kapalı (durum: ${v.durum}).`)
-          );
+          const kapaliMetin = 'Bu soru zaten kapanmış.';
+          if (cqId && typeof tg.onayla === 'function') {
+            await tg.onayla(cqId, kapaliMetin);
+          } else {
+            await guvenliGonder(() => tg.sendeKisa(kapaliMetin));
+          }
         } else {
           throw err;
         }
@@ -184,33 +198,64 @@ export async function isle({
     }
   }
 
-  // 4. hatirlat true ise (diğer açık vakalar):
+  // 4. hatirlat true ise:
+  // Kemal 25.11.2026:
+  // - ≥ 3 Berlin günü geçmiş vakalar aranır.
+  // - Toplam 3'ten fazla vaka hatırlatılacaksa, tek tek değil tek bir özet mesaj:
+  //   🔁 <n> soru cevabını bekliyor: /vakalar (+ her vakanın asıl mesajına yanıt YOK)
+  // - 1..3 vaka için:
+  //   - mesajId varsa: asıl mesaja yanıt (reply_parameters: { message_id }) olarak tek satırlık
+  //     🔁 Bu soru hâlâ cevabını bekliyor (<n> gündür). (düğme yok)
+  //   - mesajId yoksa: bugünkü gibi tam mesajı (düğmeli) bir kez daha gönder ve dönen message_id'yi vakaya yaz.
   if (hatirlat) {
     const tumVakalar = await listele(dizin);
+    const hatirlatilacaklar = [];
     for (const v of tumVakalar) {
-      if (takiliAcilanlar.has(v.id)) {
-        continue;
-      }
+      if (takiliAcilanlar.has(v.id)) continue;
       if (hatirlatmaGerekli(v, simdiDate)) {
-        const { text, knoepfe } = mesaj(v);
-        const n = (v.hatirlatma || 0) + 1;
-        let onek = `🔁 Hatırlatma ${n} · `;
-        if (eskidi(v, simdiDate)) {
-          onek = `⏳ 14+ gündür açık · ${onek}`;
-        }
-        const gonderilecekText = `${onek}${text}`;
+        hatirlatilacaklar.push(v);
+      }
+    }
 
-        await guvenliGonder(async () => {
-          if (typeof tg.sende === 'function') {
-            await tg.sende(gonderilecekText, knoepfe);
-          } else if (typeof tg.sendeVaka === 'function') {
-            await tg.sendeVaka(v);
-          }
-        });
-
+    if (hatirlatilacaklar.length > 3) {
+      await guvenliGonder(() =>
+        tg.sendeKisa(`🔁 ${hatirlatilacaklar.length} soru cevabını bekliyor: /vakalar`)
+      );
+      for (const v of hatirlatilacaklar) {
         const yeniV = gecis(v, 'hatirlat', { simdi: simdiDate });
         await kaydet(dizin, yeniV);
         hatirlatilan++;
+      }
+    } else if (hatirlatilacaklar.length > 0) {
+      for (const v of hatirlatilacaklar) {
+        const farkGun = gunFarki(v.olusturma, simdiDate);
+        if (v.mesajId) {
+          const yanitMetni = `🔁 Bu soru hâlâ cevabını bekliyor (${farkGun} gündür).`;
+          await guvenliGonder(async () => {
+            if (typeof tg.sendeYanit === 'function') {
+              await tg.sendeYanit(v.mesajId, yanitMetni);
+            } else if (typeof tg.sendeKisa === 'function') {
+              await tg.sendeKisa(yanitMetni, { replyTo: v.mesajId });
+            }
+          });
+          const yeniV = gecis(v, 'hatirlat', { simdi: simdiDate });
+          await kaydet(dizin, yeniV);
+          hatirlatilan++;
+        } else {
+          let sonucMsg = null;
+          await guvenliGonder(async () => {
+            if (typeof tg.sendeVaka === 'function') {
+              sonucMsg = await tg.sendeVaka(v);
+            }
+          });
+          let yeniV = v;
+          if (sonucMsg?.message_id) {
+            yeniV = mesajIdYaz(yeniV, sonucMsg.message_id);
+          }
+          yeniV = gecis(yeniV, 'hatirlat', { simdi: simdiDate });
+          await kaydet(dizin, yeniV);
+          hatirlatilan++;
+        }
       }
     }
   }
@@ -240,10 +285,11 @@ export async function isle({
 
 /**
  * CLI argümanlarını ayrıştırır.
- * Desteklenen argümanlar: --vakalar=DIR, --offset=FILE, --dispatch=FILE, [--hatirlat]
+ * Desteklenen argümanlar: --vakalar=DIR, --kok=DIR, --offset=FILE, --dispatch=FILE, [--hatirlat]
  */
 export function parseCliArgs(argv = process.argv.slice(2)) {
   let dizin = null;
+  let kok = null;
   let offsetDosya = null;
   let dispatchDosya = null;
   let hatirlat = false;
@@ -254,6 +300,10 @@ export function parseCliArgs(argv = process.argv.slice(2)) {
       dizin = arg.slice('--vakalar='.length);
     } else if (arg === '--vakalar' && i + 1 < argv.length) {
       dizin = argv[++i];
+    } else if (arg.startsWith('--kok=')) {
+      kok = arg.slice('--kok='.length);
+    } else if (arg === '--kok' && i + 1 < argv.length) {
+      kok = argv[++i];
     } else if (arg.startsWith('--offset=')) {
       offsetDosya = arg.slice('--offset='.length);
     } else if (arg === '--offset' && i + 1 < argv.length) {
@@ -267,7 +317,7 @@ export function parseCliArgs(argv = process.argv.slice(2)) {
     }
   }
 
-  return { dizin, offsetDosya, dispatchDosya, hatirlat };
+  return { dizin, kok, offsetDosya, dispatchDosya, hatirlat };
 }
 
 async function cli() {
@@ -280,7 +330,7 @@ async function cli() {
     process.exit(0);
   }
 
-  const { dizin, offsetDosya, dispatchDosya, hatirlat } = parseCliArgs();
+  const { dizin, kok, offsetDosya, dispatchDosya, hatirlat } = parseCliArgs();
 
   if (!dizin || !offsetDosya || !dispatchDosya) {
     console.error('Eksik parametre: --vakalar, --offset ve --dispatch zorunludur');
@@ -292,6 +342,7 @@ async function cli() {
     const sonuc = await isle({
       tg,
       dizin,
+      kok,
       offsetDosya,
       dispatchDosya,
       hatirlat,
