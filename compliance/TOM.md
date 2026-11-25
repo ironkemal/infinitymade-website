@@ -55,7 +55,7 @@ Anhang 2 zum Auftragsverarbeitungsvertrag (AVV) zwischen InfinityMade und den Au
       Browser-Zugriff gesperrt und nur über das Backend änderbar. Abgerechnete
       Verordnungen sind nicht löschbar (GoBD).
     - Rechnungen und §302-Abrechnungstabellen (`invoices`, `abrechnung`, `abrechnung_zeile`, `abrechnung_uebermittlung`, `abrechnung_zahlung`, `zaa_fehler`): zusätzlich an das Modulrecht `abrechnung` gebunden (Migrationen 0121 und 0131).
-    - Team-Abwesenheiten (`time_offs`, Art. 9 DSGVO): seit Migration 0131 steht die datensparsame RPC `team_abwesenheiten()` ohne Grund-/Krankheitsfelder bereit; das Dashboard nutzt sie für Mitarbeiter-Kalenderansichten (Stufe 1), die vollständige RLS-Schließung der Basistabelle folgt nach `:stable`-Rollout (Entwurf `0132`).
+    - Team-Abwesenheiten (`time_offs`, Art. 9 DSGVO): seit Migration 0131 steht die datensparsame RPC `team_abwesenheiten()` ohne Grund-/Krankheitsfelder bereit; das Dashboard nutzt sie für Mitarbeiter-Kalenderansichten (Stufe 1), die vollständige RLS-Schließung der Basistabelle folgt nach `:stable`-Rollout (Entwurf `0133`).
   - Patientennotizen (`patient_notes`) sind für Angestellte **lesend** freigegeben, die
     Warteliste (`warteliste`) **lesend und schreibend, aber ohne Löschrecht**
     (17.09.2026, siehe LEGAL_DECISIONS.md). Die Schranken sind Teil der Zusicherung, nicht

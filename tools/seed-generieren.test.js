@@ -2,7 +2,7 @@
 //   node --test tools/seed-generieren.test.js
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { TABLES, buildQuery, zukunftSperreSql } from './seed-generieren.mjs';
+import { TABLES, buildQuery, checksumSpalten, zukunftSperreSql } from './seed-generieren.mjs';
 
 for (const tabelle of ['kostentraeger_annahmestellen', 'kostentraeger_anschriften']) {
   test(`${tabelle}: valid_from/valid_to sind im Seed, ON CONFLICT überschreibt valid_from NICHT`, () => {
@@ -28,4 +28,11 @@ test('zukunftSperreSql vergleicht gegen den Berliner Tag', () => {
 test('andere Tabellen behalten das bisherige ON CONFLICT-Verhalten', () => {
   const sql = buildQuery('krankenkassen', TABLES.krankenkassen);
   assert.ok(/name=EXCLUDED\.name/.test(sql));
+});
+
+test('kostentraeger: Trigger-Spalte updated_at wird im MD5-Selbstcheck ausgeschlossen (0132-Regression)', () => {
+  const cols = checksumSpalten(TABLES.kostentraeger);
+  assert.equal(cols.includes('updated_at'), false);
+  assert.equal(cols.length, 14);
+  assert.ok(cols.includes('ik') && cols.includes('quelle_stand') && cols.includes('datensatz_status'));
 });

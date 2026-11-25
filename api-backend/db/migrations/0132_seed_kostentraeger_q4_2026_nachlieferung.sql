@@ -14260,11 +14260,14 @@ BEGIN
   PERFORM set_config('TimeZone', 'UTC', true);
   PERFORM set_config('DateStyle', 'ISO, MDY', true);
 
+  -- Hinweis (Fix 25.11.2026): updated_at wird bei ON CONFLICT DO UPDATE vom BEFORE-UPDATE-Trigger
+  -- kostentraeger_updated_at (trg_billing_updated_at) immer auf now() gesetzt — deshalb prueft der
+  -- Selbstcheck alle 14 fachlichen Spalten ohne updated_at gegen den SaaS-Stand vom 18.11.2026.
   SELECT count(*), md5(string_agg(t, E'\n' ORDER BY t COLLATE "C")) INTO n, h FROM (
-    SELECT format('(%L,%L,%L,%L,%L,%L,%L,%L,%L,%L,%L,%L,%L,%L,%L)', ik, name, das_ik, payer_type, region, active, valid_from, valid_to, updated_at AT TIME ZONE 'UTC', kurzname, abrechnender_kt_ik, ist_abrechnender_kt, quelle, quelle_stand, datensatz_status) AS t
+    SELECT format('(%L,%L,%L,%L,%L,%L,%L,%L,%L,%L,%L,%L,%L,%L)', ik, name, das_ik, payer_type, region, active, valid_from, valid_to, kurzname, abrechnender_kt_ik, ist_abrechnender_kt, quelle, quelle_stand, datensatz_status) AS t
       FROM public.kostentraeger WHERE datensatz_status = 'echt') x;
   IF n <> 1043 THEN RAISE EXCEPTION '0132: kostentraeger % statt 1043 echte Zeilen', n; END IF;
-  IF h <> '3f847e472c1d983b67fe6f14c4c41382' THEN RAISE EXCEPTION '0132: kostentraeger md5 % weicht vom SaaS-Stand 18.11.2026 ab', h; END IF;
+  IF h <> 'b3a7954be1d5fe0a1984165c08bc810d' THEN RAISE EXCEPTION '0132: kostentraeger md5 % weicht vom SaaS-Stand 18.11.2026 ab', h; END IF;
 
   SELECT count(*), md5(string_agg(t, E'\n' ORDER BY t COLLATE "C")) INTO n, h FROM (
     SELECT format('(%L,%L,%L,%L,%L,%L,%L,%L,%L,%L,%L,%L)', kostentraeger_ik, verknuepfungsart, partner_ik, leistungserbringergruppe, abrechnungscode, art_datenlieferung, uebermittlungsmedium, bundesland, quelle, quelle_stand, valid_from, valid_to) AS t

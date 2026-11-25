@@ -1,4 +1,4 @@
--- ENTWURF 0132_time_offs_rls_schliessen.sql — STUFE 2 (ERST NACH FRONTEND-UMSTELLUNG AUF :stable!)
+-- ENTWURF 0133_time_offs_rls_schliessen.sql (umbenannt von 0132 -> 0133, da 0132 durch Kostentraeger-Seed Q4 belegt) — STUFE 2 (ERST NACH FRONTEND-UMSTELLUNG AUF :stable!)
 --
 -- Konsey-Entscheid 24.11.2026 (`konsey/KARARLAR.md`: legal-de + guvenlik + db-ustasi):
 -- Darf ERST live angewandt werden, nachdem alle Kalender-/Überblick-Lesewege

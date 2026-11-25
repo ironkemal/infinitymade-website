@@ -33,7 +33,7 @@ import { pathToFileURL } from 'node:url';
 // `pg` wird erst in main() geladen — so bleiben buildQuery/zukunftSperreSql ohne installiertes
 // pg importierbar (tools/seed-generieren.test.js).
 
-/** @typedef {{ columns: string[], conflictKeys: string[], orderBy: string, where?: string, keepOnConflict?: string[], zukunftSperre?: string, afterSql?: string }} SeedTableConfig */
+/** @typedef {{ columns: string[], conflictKeys: string[], orderBy: string, where?: string, keepOnConflict?: string[], checksumExclude?: string[], zukunftSperre?: string, afterSql?: string }} SeedTableConfig */
 
 /** @type {Record<string, SeedTableConfig>} */
 export const TABLES = {
@@ -42,6 +42,9 @@ export const TABLES = {
       'valid_to', 'updated_at', 'kurzname', 'abrechnender_kt_ik', 'ist_abrechnender_kt',
       'quelle', 'quelle_stand', 'datensatz_status'],
     conflictKeys: ['ik'],
+    // BEFORE-UPDATE-Trigger kostentraeger_updated_at (trg_billing_updated_at) setzt updated_at
+    // bei jedem ON CONFLICT DO UPDATE auf now() — darf nie in MD5-Selbstchecks gehasht werden (25.11.2026).
+    checksumExclude: ['updated_at'],
     where: `datensatz_status = 'echt'`,
     orderBy: 'ik',
   },
@@ -143,6 +146,17 @@ export const TABLES = {
 };
 
 const BATCH_SIZE = 500;
+
+/**
+ * Spalten für einen MD5-Selbstcheck: blendet Trigger-Spalten (z. B. updated_at) aus,
+ * die bei ON CONFLICT DO UPDATE auf now() springen würden.
+ * @param {SeedTableConfig} cfg
+ * @returns {string[]}
+ */
+export function checksumSpalten(cfg) {
+  const aus = new Set(cfg.checksumExclude || []);
+  return cfg.columns.filter((c) => !aus.has(c));
+}
 
 /**
  * SQL: Anzahl Zeilen mit Spalte > heute (Berlin) — nur für Tabellen mit zukunftSperre.
