@@ -99,6 +99,7 @@ jobs:
             case "$bekci" in
               preise)  gh workflow run bekci-ajan.yml   --repo "${{ github.repository }}" -f bekci=preise -f vaka_id="$vaka" -f eylem="$eylem" ;;
               quellen) gh workflow run bekci-quellen.yml --repo "${{ github.repository }}" -f vaka_id="$vaka" -f eylem="$eylem" ;;
+              kostentraeger) gh workflow run bekci-kostentraeger.yml --repo "${{ github.repository }}" -f vaka_id="$vaka" -f eylem="$eylem" ;;
               *) echo "unbekannter Wächter im Fall: $bekci" ;;
             esac
           done < dispatch.txt

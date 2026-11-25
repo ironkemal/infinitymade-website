@@ -293,7 +293,7 @@ export function bildirimMetni({ tur, satirlar, vaka, link, bekci } = {}) {
       parcalar.push(...lines);
     }
     if (aktifBekci !== 'quellen') {
-      parcalar.push(":beta'ya çıktı; :stable için elle promote bekliyor.");
+      parcalar.push("Paketlendi — kutular bu gece 02:00'den sonra alır.");
     }
     const lm = linkMetni(link);
     if (lm) {
@@ -324,7 +324,7 @@ export function bildirimMetni({ tur, satirlar, vaka, link, bekci } = {}) {
     const baslik =
       aktifBekci === 'quellen'
         ? `✅ #${vakaId}: kaynak "biliniyor" işaretlendi, bekçi artık bunu hatırlatmayacak.`
-        : `✅ #${vakaId} uygulandı. :beta'ya çıktı; :stable için elle promote bekliyor.`;
+        : `✅ #${vakaId} uygulandı. Paketlendi — kutular bu gece 02:00'den sonra alır.`;
     const lm = linkMetni(link);
     const text = lm ? `${baslik}\n${lm}` : baslik;
     return { text, vakaMi: false };

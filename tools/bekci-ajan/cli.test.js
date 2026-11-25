@@ -263,7 +263,7 @@ test('10. bildirimMetni — auto türü tam format ve 15 satır sınırı', () =
     '🤖 Fiyat bekçisi — otomatik uygulandı (çift dikiş tuttu)',
     '78010: 30.00 → 32.00 € (+6.7%)',
     '78011: 40.00 → 42.00 € (+5.0%)',
-    ":beta'ya çıktı; :stable için elle promote bekliyor.",
+    "Paketlendi — kutular bu gece 02:00'den sonra alır.",
     'Çalışma: https://github.com/praxura/actions/runs/123',
   ].join('\n');
 
@@ -323,7 +323,7 @@ test('13. bildirimMetni — uygulandi türü link ile birlikte birebir eşleşir
   });
 
   const beklenen1 = [
-    "✅ #20261124-preise-1 uygulandı. :beta'ya çıktı; :stable için elle promote bekliyor.",
+    "✅ #20261124-preise-1 uygulandı. Paketlendi — kutular bu gece 02:00'den sonra alır.",
     'Çalışma: https://github.com/runs/456',
   ].join('\n');
   assert.equal(res1.text, beklenen1);
@@ -334,7 +334,7 @@ test('13. bildirimMetni — uygulandi türü link ile birlikte birebir eşleşir
   });
   assert.equal(
     res2.text,
-    "✅ #20261124-preise-2 uygulandı. :beta'ya çıktı; :stable için elle promote bekliyor."
+    "✅ #20261124-preise-2 uygulandı. Paketlendi — kutular bu gece 02:00'den sonra alır."
   );
 });
 
@@ -1509,7 +1509,7 @@ test('41. bildirimMetni — bekci=kostentraeger ile auto ve uygulandi bildirim m
     '🤖 Kostenträger bekçisi — otomatik uygulandı',
     '✓ Kostenträger: kostentraeger +2 / −0 / ~5',
     'Kaynak dosyalar: AO05Q426_KE0.txt',
-    ":beta'ya çıktı; :stable için elle promote bekliyor.",
+    "Paketlendi — kutular bu gece 02:00'den sonra alır.",
     'Çalışma: https://github.com/runs/kostentraeger-1',
   ].join('\n');
   assert.equal(autoRes.text, beklenenAuto);
@@ -1521,7 +1521,7 @@ test('41. bildirimMetni — bekci=kostentraeger ile auto ve uygulandi bildirim m
     link: 'https://github.com/runs/kostentraeger-2',
   });
   const beklenenUygulandi = [
-    "✅ #20261125-kostentraeger-1 uygulandı. :beta'ya çıktı; :stable için elle promote bekliyor.",
+    "✅ #20261125-kostentraeger-1 uygulandı. Paketlendi — kutular bu gece 02:00'den sonra alır.",
     'Çalışma: https://github.com/runs/kostentraeger-2',
   ].join('\n');
   assert.equal(uygulandiRes.text, beklenenUygulandi);

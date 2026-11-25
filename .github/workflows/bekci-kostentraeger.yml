@@ -1,0 +1,309 @@
+name: Bekçi — Kostenträger in die Kutular (Zwilling → Seed)
+
+# tools/bekci-ajan/SPEC.md §3.0e (Faz 4) · onprem O-257/O-258/O-118/O-139 · gkv-302-Schwellen 25.11.2026.
+#
+# Täglich: Kutu-Zwilling in einer Wegwerf-Postgres (Service-Container) aus der Seed-Kette bauen,
+# synchronisiere() mit dem HEUTIGEN Stichtag, bei Änderung Seed-Migration erzeugen und auf einer
+# zweiten leeren DB selbst prüfen. Dann:
+#   unter den gkv-302-Schwellen → automatisch committen (+ Build anstoßen), kurzer Telegram-Bericht
+#   sonst                       → Fall mit Knöpfen an Kemal; ✅ erzeugt den Seed neu und übernimmt ihn
+#                                 nur, wenn der Datenstand (durumIz, ohne updated_at) gleich geblieben ist.
+# Kein SaaS-Zugriff, keine DB-Secrets, keine KI (rein deterministisch). Kutular holen den Build nachts.
+# Schalter: nur wenn Repo-Variable BEKCI_AJAN=an.
+
+on:
+  schedule:
+    - cron: '50 5 * * *'   # täglich ≈06:50 Winterzeit / 07:50 Sommerzeit (nach kostentraeger-check)
+  workflow_dispatch:
+    inputs:
+      eylem:
+        type: choice
+        options: [yeni, uygula, acikla]
+        default: yeni
+      vaka_id:
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bekci-kostentraeger
+  cancel-in-progress: false
+
+jobs:
+  hazirla:
+    if: vars.BEKCI_AJAN == 'an'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: write   # upload-artifact
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: zwilling
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgres://postgres:zwilling@localhost:5432/postgres   # secret-scan: ignore (Wegwerf-Postgres im CI-Container, kein Geheimnis)
+      DATABASE_URL_DOGRULA: postgres://postgres:zwilling@localhost:5432/dogrula   # secret-scan: ignore (Wegwerf-Postgres im CI-Container, kein Geheimnis)
+      EYLEM: ${{ inputs.eylem || 'yeni' }}
+      VAKA: ${{ inputs.vaka_id }}
+    outputs:
+      karar: ${{ steps.karar.outputs.karar }}
+    steps:
+      - name: Eingaben prüfen
+        run: |
+          set -euo pipefail
+          if [ "$EYLEM" != yeni ]; then
+            [[ "$VAKA" =~ ^[0-9]{8}-kostentraeger-[0-9]{1,3}$ ]] || { echo "::error::vaka_id ungültig"; exit 1; }
+          else
+            [ -z "$VAKA" ] || { echo "::error::bei eylem=yeni keine vaka_id"; exit 1; }
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Abhängigkeiten (nur pg, ohne Install-Skripte)
+        working-directory: ./api-backend
+        run: npm ci --no-audit --no-fund --ignore-scripts
+
+      - name: Zweite leere DB für die Selbstprüfung
+        run: PGPASSWORD=zwilling psql -h localhost -U postgres -c 'CREATE DATABASE dogrula;'
+
+      - name: Fälle laden (Fall-Zweig, öffentlich lesbar)
+        run: |
+          set -euo pipefail
+          mkdir -p bekci-in/_vakalar
+          if git fetch --quiet --depth 1 "https://github.com/${{ github.repository }}.git" bekci-vakalar 2>/dev/null; then
+            git --work-tree=bekci-in/_vakalar checkout FETCH_HEAD -- vakalar 2>/dev/null || true
+            git reset --quiet
+          fi
+          if [ "$EYLEM" != yeni ]; then
+            cp "bekci-in/_vakalar/vakalar/${VAKA}.json" bekci-in/vaka.json
+            node -e '
+              const v = JSON.parse(require("fs").readFileSync("bekci-in/vaka.json","utf8"));
+              const soll = process.env.EYLEM === "uygula" ? "uygulaniyor" : "acik";
+              if (v.id !== process.env.VAKA || v.durum !== soll) { console.error("Fall-Zustand passt nicht:", v.durum); process.exit(1); }'
+          fi
+
+      - name: Kutu-Zwilling → Seed (deterministisch)
+        run: |
+          set -euo pipefail
+          node tools/kostentraeger-kutu-seed.mjs > bekci-in/seed-out.txt
+          tail -n 1 bekci-in/seed-out.txt > bekci-in/ozet.json
+          node -e 'const o=JSON.parse(require("fs").readFileSync("bekci-in/ozet.json","utf8")); console.log("degisiklik", o.degisiklik, o.dosya||"", o.hata||"")'
+
+      - name: Entscheiden (gkv-302-Schwellen)
+        id: karar
+        run: |
+          set -euo pipefail
+          node tools/bekci-ajan/kostentraeger-bewerten.mjs --ozet=bekci-in/ozet.json --out=bekci-in/entscheidung.json
+          node --input-type=module -e '
+            import fs from "node:fs";
+            import { iz } from "./tools/bekci-ajan/iz.mjs";
+            const e = JSON.parse(fs.readFileSync("bekci-in/entscheidung.json","utf8"));
+            const o = JSON.parse(fs.readFileSync("bekci-in/ozet.json","utf8"));
+            let karar = ["auto","vaka","sessiz"].includes(e.karar) ? e.karar : "vaka";
+            const izNeu = e.vaka?.ek?.iz || null;
+            const eylem = process.env.EYLEM;
+            if (eylem === "yeni" && karar === "vaka") {
+              const d = "bekci-in/_vakalar/vakalar";
+              const offen = fs.existsSync(d) && fs.readdirSync(d).filter(f => f.endsWith(".json")).some(f => {
+                try { const v = JSON.parse(fs.readFileSync(d + "/" + f, "utf8")); return v.bekci === "kostentraeger" && ["acik","uygulaniyor"].includes(v.durum) && v.ek?.iz === izNeu; } catch { return false; }
+              });
+              if (offen) karar = "zaten_acik";
+            }
+            if (eylem === "uygula") {
+              const v = JSON.parse(fs.readFileSync("bekci-in/vaka.json","utf8"));
+              karar = (o.degisiklik && v.ek?.iz && iz([o.durumIz]) === v.ek.iz) ? "onay" : "durum_degisti";
+            }
+            if (eylem === "acikla") karar = "aciklama";
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, "karar=" + karar + "\n");
+            console.log("karar", karar);'
+
+      - name: Seed-Datei für den Schreibweg bereitlegen
+        if: steps.karar.outputs.karar == 'auto' || steps.karar.outputs.karar == 'onay'
+        run: |
+          set -euo pipefail
+          f=$(node -e 'const o=JSON.parse(require("fs").readFileSync("bekci-in/ozet.json","utf8")); process.stdout.write(o.dosya||"")')
+          [ -n "$f" ] && [ -f "$f" ] || { echo "::error::Seed-Datei fehlt"; exit 1; }
+          mkdir -p bekci-in/seed && cp "$f" bekci-in/seed/
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bekci-karar
+          path: |
+            bekci-in/
+            !bekci-in/_vakalar/
+          retention-days: 7
+
+  uebernehmen:
+    needs: hazirla
+    if: needs.hazirla.outputs.karar == 'auto' || needs.hazirla.outputs.karar == 'onay'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: write   # download-artifact + gh workflow run (O-102)
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: bekci-karar
+          path: _bekci
+
+      - name: Seed committen (Nummer nach dem Rebase neu), pushen, Build anstoßen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git config user.name "praxura-bekci"
+          git config user.email "bekci@users.noreply.github.com"
+          src=$(ls _bekci/seed/*.sql | head -1)
+          alt=$(basename "$src" | cut -c1-4)
+          rest=$(basename "$src" | cut -c5-)
+          for versuch in 1 2 3 4 5; do
+            git pull --quiet --rebase origin main
+            neu=$(ls api-backend/db/migrations/*.sql | sed -E 's#.*/([0-9]{4})_.*#\1#' | sort -n | tail -1)
+            neu=$(printf '%04d' $((10#$neu + 1)))
+            ziel="api-backend/db/migrations/${neu}${rest}"
+            # Nummer steht in Kopf und RAISE-Texten der Datei ("Seed 0133 fuer", "'0133: ")
+            sed -e "s/Seed ${alt} fuer/Seed ${neu} fuer/" -e "s/'${alt}: /'${neu}: /g" "$src" > "$ziel"
+            node -e '
+              const fs = require("fs"); const p = "api-backend/db/erwartete-zaehler.json";
+              const j = JSON.parse(fs.readFileSync(p, "utf8")); j.bis_version = process.argv[1];
+              fs.writeFileSync(p, JSON.stringify(j, null, 2) + "\n");' "$neu"
+            git add "$ziel" api-backend/db/erwartete-zaehler.json
+            git commit --quiet \
+              -m "chore(kostentraeger): Kutu-Seed ${neu} — vom Bekci aus dem Zwilling erzeugt" \
+              -m "tools/kostentraeger-kutu-seed.mjs (deterministisch, Selbstpruefung auf leerer DB), Schwellen tools/bekci-ajan/kostentraeger-bewerten.mjs (gkv-302). box-only, SaaS unberuehrt. Naechste manuelle Version: MINOR (enthaelt Migration, R6)." \
+              -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+            if git push --quiet; then
+              gh workflow run "Build and Publish calendar-api image" --ref main
+              exit 0
+            fi
+            git reset --quiet --hard HEAD~1
+          done
+          echo "::error::Push nach 5 Versuchen fehlgeschlagen"; exit 1
+
+  bildir:
+    needs: [hazirla, uebernehmen]
+    if: always() && needs.hazirla.result != 'skipped'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write   # nur Zweig bekci-vakalar
+      actions: read
+    env:
+      TELEGRAM_BEKCI_BOT_TOKEN: ${{ secrets.TELEGRAM_BEKCI_BOT_TOKEN }}
+      TELEGRAM_BEKCI_CHAT_ID: ${{ secrets.TELEGRAM_BEKCI_CHAT_ID }}
+      TELEGRAM_BEKCI_USER_ID: ${{ secrets.TELEGRAM_BEKCI_USER_ID }}
+      LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      EYLEM: ${{ inputs.eylem || 'yeni' }}
+      VAKA: ${{ inputs.vaka_id }}
+      KARAR: ${{ needs.hazirla.outputs.karar }}
+      R_HAZIRLA: ${{ needs.hazirla.result }}
+      R_UEBERNEHMEN: ${{ needs.uebernehmen.result }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: bekci-karar
+          path: bekci-in
+
+      - name: Fall-Zweig auschecken (oder neu anlegen)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          URL="https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
+          if git ls-remote --exit-code --heads "$URL" bekci-vakalar >/dev/null 2>&1; then
+            git clone --quiet --depth 1 --branch bekci-vakalar "$URL" vakalar
+          else
+            mkdir vakalar && cd vakalar && git init --quiet -b bekci-vakalar && git remote add origin "$URL" \
+              && mkdir -p vakalar && printf '{"offset":0}\n' > offset.json
+          fi
+
+      - name: Melden
+        run: |
+          set -euo pipefail
+          CLI="node main/tools/bekci-ajan/cli.mjs"
+          : > gonder.sh
+          gonder() { printf "%q " "$@" >> gonder.sh; echo >> gonder.sh; }
+          D=vakalar/vakalar
+          mkdir -p "$D"
+          if [ "$R_HAZIRLA" != success ] || { [ "$R_UEBERNEHMEN" != success ] && [ "$R_UEBERNEHMEN" != skipped ]; }; then
+            if [ "$EYLEM" = uygula ] && [ -n "$VAKA" ]; then $CLI vaka-durum --dizin="$D" --id="$VAKA" --eylem=hata || true; fi
+            gonder $CLI bildir --bekci=kostentraeger --tur=hata ${VAKA:+--dizin="$D" --id="$VAKA"} --link="$LINK"
+            exit 0
+          fi
+          case "$KARAR" in
+            sessiz|zaten_acik) : ;;
+            auto)
+              node -e 'const e=JSON.parse(require("fs").readFileSync("bekci-in/entscheidung.json","utf8"));require("fs").writeFileSync("rapor.txt",(e.rapor||[]).join("\n"))'
+              gonder $CLI bildir --bekci=kostentraeger --tur=auto --dosya=rapor.txt --link="$LINK" ;;
+            vaka)
+              $CLI vaka-ac --entscheidung=bekci-in/entscheidung.json --dizin="$D" --out-id=neu-id.txt
+              if [ -s neu-id.txt ]; then gonder $CLI bildir --bekci=kostentraeger --tur=vaka --dizin="$D" --id="$(cat neu-id.txt)"; fi ;;
+            onay)
+              $CLI vaka-durum --dizin="$D" --id="$VAKA" --eylem=tamam
+              gonder $CLI bildir --bekci=kostentraeger --tur=uygulandi --dizin="$D" --id="$VAKA" --link="$LINK" ;;
+            durum_degisti)
+              # Datenstand hat sich seit dem Fall geändert → nichts übernommen, Fall wieder offen;
+              # der nächste Tageslauf zeigt den neuen Stand als eigenen Fall.
+              $CLI vaka-durum --dizin="$D" --id="$VAKA" --eylem=hata
+              gonder $CLI bildir --bekci=kostentraeger --tur=hata --dizin="$D" --id="$VAKA" --link="$LINK" ;;
+            aciklama)
+              # Ausführliche, deterministische Erklärung: alle Gründe + Zahlen (keine KI nötig)
+              node -e '
+                const fs=require("fs"); const e=JSON.parse(fs.readFileSync("bekci-in/entscheidung.json","utf8"));
+                const o=JSON.parse(fs.readFileSync("bekci-in/ozet.json","utf8"));
+                const z=[]; for (const [t,s] of Object.entries(o.tablolar||{})) z.push(t+": +"+s.yeni+" neu, -"+s.kapanan+" beendet, ~"+(s.degisenGercek??s.degisen)+" echt geaendert");
+                z.push("Quellen: "+(o.aktiv||[]).join(", ")); z.push(...(e.vaka?.satirlar||e.gruende||[]));
+                fs.writeFileSync("aciklama.txt", z.join("\n"));'
+              gonder $CLI bildir --bekci=kostentraeger --tur=aciklama --dizin="$D" --id="$VAKA" --dosya=aciklama.txt ;;
+            *) gonder $CLI bildir --bekci=kostentraeger --tur=hata --link="$LINK" ;;
+          esac
+
+      - name: Fall-Zweig speichern
+        if: always()
+        working-directory: vakalar
+        run: |
+          set -euo pipefail
+          git add -A
+          if git diff --cached --quiet; then exit 0; fi
+          git -c user.name="praxura-bekci" -c user.email="bekci@users.noreply.github.com" commit --quiet -m "bekci: Fälle aktualisiert"
+          for i in 1 2 3; do git push --quiet origin HEAD:bekci-vakalar && exit 0; git pull --quiet --rebase origin bekci-vakalar || true; done
+          exit 1
+
+      - name: Nachrichten senden (nach dem Speichern)
+        if: always()
+        run: |
+          set -uo pipefail
+          [ -s gonder.sh ] || exit 0
+          bash gonder.sh
