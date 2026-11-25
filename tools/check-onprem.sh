@@ -271,7 +271,9 @@ if [ "$SKIP_KT_SEED_GATE" != "1" ]; then
         kt_seed_ihlal="$kt_seed_ihlal
       $satir"
       fi
-    done <<< "$kt_gerekli"
+    done <<EOF_KT
+$kt_gerekli
+EOF_KT
   fi
 fi
 
