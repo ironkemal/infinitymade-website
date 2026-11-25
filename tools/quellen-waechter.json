@@ -10,6 +10,9 @@
       "folge": "DTA-Datei nach alter Fassung/Revision wird bei der Annahmestelle komplett abgewiesen.",
       "bekannt": [
         "www.gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/20260521_TP5_TA1_V22.pdf",
+        "www.gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/20260923_TP5_TA3_V22.pdf",
+        "www.gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/20261007_TP5_TA1_Anhang3_V009.pdf",
+        "www.gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/20261007_TP5_TA1_Anhang3_V010.pdf",
         "www.gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/ANHANG2_TAV5.pdf",
         "www.gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/Anhang_1_Anlage_1_TP5_20170831.pdf",
         "www.gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/Anlage_1_TP5_V21_20260115.pdf",
@@ -40,6 +43,8 @@
       "bekannt": [
         "www.gkv-datenaustausch.de/media/dokumente/standards_und_normen/gg_technik/GGT.pdf | Mon, 14 Sep 2020 06:59:53 +0200",
         "www.gkv-datenaustausch.de/media/dokumente/standards_und_normen/technische_spezifikationen/Anlage_16_-_Security_Schnittstelle.pdf | Mon, 23 Nov 2026 16:51:54 +0200",
+        "www.gkv-datenaustausch.de/media/dokumente/standards_und_normen/technische_spezifikationen/Anlage_16a_-_Security_Schnittstelle_PQC.pdf | Mon, 23 Nov 2026 16:51:53 +0200",
+        "www.gkv-datenaustausch.de/media/dokumente/standards_und_normen/technische_spezifikationen/Anlage_16a_-_Security_Schnittstelle_PQC_Referenzbeispiele.zip | Mon, 23 Nov 2026 16:51:51 +0200",
         "www.gkv-datenaustausch.de/media/dokumente/standards_und_normen/technische_spezifikationen/Anlage_2_-_Auftragsdatei.pdf | Tue, 1 Apr 2025 00:46:17 +0200",
         "www.gkv-datenaustausch.de/media/dokumente/standards_und_normen/technische_spezifikationen/Anlage_4_-_Verfahrenskennungen.pdf | Wed, 17 Dec 2025 17:57:13 +0200"
       ]
@@ -344,6 +349,8 @@
         "www.g-ba.de/beschluesse/7142/",
         "www.g-ba.de/beschluesse/7225/",
         "www.g-ba.de/beschluesse/7882/",
+        "www.g-ba.de/beschluesse/7977/",
+        "www.g-ba.de/beschluesse/8129/",
         "www.g-ba.de/beschluesse/8137/",
         "www.g-ba.de/beschluesse/8141/"
       ]
@@ -386,7 +393,9 @@
       "url": "https://update.kbv.de/ita-update/Blankoformulare/KBV_ITA_VGEX_Technisches_Handbuch_BFB.pdf",
       "muster": ".",
       "folge": "Neues Barcode-Layout → lokaler Barcode-Leser ordnet Felder falsch zu.",
-      "bekannt": []
+      "bekannt": [
+        "update.kbv.de/ita-update/Blankoformulare/KBV_ITA_VGEX_Technisches_Handbuch_BFB.pdf | 5341596 Bytes"
+      ]
     },
     {
       "id": "dguv-verguetung",
