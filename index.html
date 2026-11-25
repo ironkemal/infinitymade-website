@@ -96,7 +96,7 @@
       "lowPrice": "39",
       "highPrice": "149",
       "offerCount": "4",
-      "description": "Monatliche Lizenz nach Praxisgröße (Solo 39 €, Praxis 69 €, Team 99 €, Groß 149 €), Endpreise, keine USt gemäß § 19 UStG, zzgl. einmaligem Einrichtungspaket. Einführungspreise für Verträge bis 31.03.2027.",
+      "description": "Monatliche Lizenz nach Praxisgröße (Solo 39 €, Praxis 69 €, Team 99 €, Groß 149 €), Endpreise, keine USt gemäß § 19 UStG, zzgl. einmaligem Einrichtungspaket. Winter-Aktionspreise für Verträge bis 31.12.2026.",
       "offers": [
         { "@type": "Offer", "name": "Solo (1 Behandler:in)", "priceSpecification": { "@type": "UnitPriceSpecification", "price": "39", "priceCurrency": "EUR", "unitCode": "MON" } },
         { "@type": "Offer", "name": "Praxis (2–5 Behandler:innen)", "priceSpecification": { "@type": "UnitPriceSpecification", "price": "69", "priceCurrency": "EUR", "unitCode": "MON" } },
@@ -154,7 +154,7 @@
       {
         "@type": "Question",
         "name": "Was kostet Praxura?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Praxura kostet einen festen Monatspreis nach Praxisgröße, ohne Prozent vom Umsatz: Solo (1 Behandler:in) 39 €, Praxis (2–5) 69 €, Team (6–10) 99 €, Groß (11–20) 149 € pro Monat, ab 21 Behandler:innen nach Angebot. Dazu kommt ein einmaliges Einrichtungspaket (190–890 €) inklusive Server-Einrichtung, Datenübernahme und zwei Online-Schulungen. Die Serverkosten (derzeit rund 25–30 € im Monat) zahlt Ihre Praxis direkt an Hetzner. Einführungspreise für Verträge mit Abschluss bis 31.03.2027, garantiert für die ersten 12 Monate. Alle Preise sind Endpreise, gemäß § 19 UStG wird keine Umsatzsteuer berechnet. Angebot nur für Praxen und Unternehmer." }
+        "acceptedAnswer": { "@type": "Answer", "text": "Praxura kostet einen festen Monatspreis nach Praxisgröße, ohne Prozent vom Umsatz: Solo (1 Behandler:in) 39 €, Praxis (2–5) 69 €, Team (6–10) 99 €, Groß (11–20) 149 € pro Monat, ab 21 Behandler:innen nach Angebot. Dazu kommt ein einmaliges Einrichtungspaket (190–890 €) inklusive Server-Einrichtung, Datenübernahme und zwei Online-Schulungen. Die Serverkosten zahlt Ihre Praxis direkt an Hetzner; den genauen Betrag nennen wir im Analysegespräch. Winter-Aktion: Aktionspreise für Verträge mit Abschluss bis 31.12.2026, garantiert für die ersten 12 Monate. Alle Preise sind Endpreise, gemäß § 19 UStG wird keine Umsatzsteuer berechnet. Angebot nur für Praxen und Unternehmer." }
       },
       {
         "@type": "Question",
@@ -1946,16 +1946,57 @@
     .pr-cta { margin-top: 2.4rem; display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.6rem; padding: 1.6rem 1.8rem; border-radius: 16px; background: var(--bg-warm); border: 1px solid var(--line); }
     .pr-cta p { margin: 0; flex: 1 1 18rem; font-size: 0.98rem; color: var(--ink-soft); line-height: 1.55; }
     .pr-cta p strong { color: var(--ink); }
+    /* Winter-Aktion (2026-11-25, bis 31.12.2026). Nach Fristende blendet das Script die Aktion
+       selbst aus (Klasse promo-on fällt weg) – kein Streichpreis bleibt stehen. */
+    .pr-wrap:not(.promo-on) .promo-only { display: none !important; }
+    .pr-event { position: relative; overflow: hidden; margin: 2.4rem 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.8rem; padding: 1.3rem 1.6rem; border-radius: 18px; color: #FBF7EE; background: radial-gradient(120% 140% at 0% 0%, #2c5a44 0%, var(--emerald-deep, #1E3D2F) 55%, #142a20 100%); box-shadow: 0 26px 50px -30px rgba(20,42,32,0.7); }
+    .pr-event-ic { flex: none; width: 2.8rem; height: 2.8rem; border-radius: 50%; display: grid; place-items: center; background: rgba(177,137,27,0.22); border: 1px solid rgba(177,137,27,0.55); }
+    .pr-event-ic svg { width: 1.45rem; height: 1.45rem; stroke: #e2c46a; animation: prSpin 14s linear infinite; }
+    .pr-event-txt { flex: 1 1 18rem; position: relative; z-index: 1; }
+    .pr-event-txt strong { display: block; font-family: var(--serif); font-weight: 400; font-size: 1.35rem; letter-spacing: -0.02em; }
+    .pr-event-txt span { font-size: 0.9rem; opacity: 0.86; line-height: 1.5; }
+    .pr-count { position: relative; z-index: 1; display: flex; gap: 0.45rem; }
+    .pr-count div { min-width: 3.4rem; text-align: center; padding: 0.45rem 0.4rem 0.35rem; border-radius: 12px; background: rgba(251,247,238,0.1); border: 1px solid rgba(251,247,238,0.18); }
+    .pr-count b { display: block; font-family: var(--serif); font-weight: 400; font-size: 1.45rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+    .pr-count small { font-size: 0.66rem; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.75; }
+    .pr-snow { position: absolute; inset: 0; pointer-events: none; }
+    .pr-snow i { position: absolute; top: -10%; width: 6px; height: 6px; border-radius: 50%; background: rgba(251,247,238,0.75); filter: blur(0.4px); animation: prFall linear infinite; }
+    .pr-snow i:nth-child(1) { left: 6%;  animation-duration: 9s;  animation-delay: -2s; }
+    .pr-snow i:nth-child(2) { left: 17%; animation-duration: 12s; animation-delay: -7s; width: 4px; height: 4px; }
+    .pr-snow i:nth-child(3) { left: 29%; animation-duration: 10s; animation-delay: -4s; }
+    .pr-snow i:nth-child(4) { left: 41%; animation-duration: 14s; animation-delay: -1s; width: 3px; height: 3px; }
+    .pr-snow i:nth-child(5) { left: 53%; animation-duration: 11s; animation-delay: -9s; }
+    .pr-snow i:nth-child(6) { left: 64%; animation-duration: 13s; animation-delay: -5s; width: 4px; height: 4px; }
+    .pr-snow i:nth-child(7) { left: 75%; animation-duration: 9.5s; animation-delay: -3s; }
+    .pr-snow i:nth-child(8) { left: 86%; animation-duration: 12.5s; animation-delay: -8s; width: 3px; height: 3px; }
+    .pr-snow i:nth-child(9) { left: 95%; animation-duration: 10.5s; animation-delay: -6s; }
+    @keyframes prFall { from { transform: translate3d(0,-1rem,0); opacity: 0; } 15% { opacity: 1; } to { transform: translate3d(1.2rem,9rem,0); opacity: 0; } }
+    @keyframes prSpin { to { transform: rotate(360deg); } }
+    @keyframes prPop { 0% { transform: scale(0.96); } 60% { transform: scale(1.04); } 100% { transform: scale(1); } }
+    .pr-bill { display: inline-flex; align-items: center; gap: 0.6rem; margin-left: auto; }
+    .pr-bill .pr-pick-opts button em { font-style: normal; font-size: 0.74rem; font-weight: 700; color: #8a6a12; margin-left: 0.3rem; }
+    .pr-bill .pr-pick-opts button[aria-pressed="true"] em { color: #e2c46a; }
+    .pr-tag { align-self: flex-start; margin-top: 0.9rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.03em; color: #1A1611; background: linear-gradient(135deg, #e2c46a, #b1891b); padding: 0.26rem 0.6rem; border-radius: 999px; }
+    .pr-card .pr-price { margin-top: 0.7rem; flex-wrap: wrap; }
+    .pr-was { font-size: 1.05rem; color: var(--ink-mute); text-decoration: line-through; text-decoration-color: #b1891b; text-decoration-thickness: 2px; font-variant-numeric: tabular-nums; margin-right: 0.15rem; }
+    .pr-price strong.is-pop { animation: prPop 360ms var(--ease-spring, ease-out); }
+    .pr-note { font-size: 0.78rem; color: var(--ink-mute); margin-top: 0.15rem; min-height: 1.1em; }
+    .pr-save { font-size: 0.8rem; font-weight: 600; color: var(--emerald-deep); margin-top: 0.55rem; }
+    .pr-setup s { color: var(--ink-mute); text-decoration-color: #b1891b; margin-right: 0.2rem; }
+    @media (prefers-reduced-motion: reduce) { .pr-snow { display: none; } .pr-event-ic svg, .pr-price strong.is-pop { animation: none; } }
     @media (max-width: 1000px) { .pr-grid { grid-template-columns: repeat(2, 1fr); } .pr-incl, .pr-server { grid-template-columns: 1fr; } }
     @media (max-width: 560px) {
       .pr-grid { grid-template-columns: 1fr; }
       .pr-list { grid-template-columns: 1fr; }
       .pr-card.is-match { transform: none; }
       .pr-cta .btn-book { width: 100%; justify-content: space-between; }
+      .pr-bill { margin-left: 0; }
+      .pr-count { width: 100%; }
+      .pr-count div { flex: 1; }
     }
   </style>
 
-  <div class="pr-wrap">
+  <div class="pr-wrap promo-on">
     <div class="section-head">
       <div><div class="section-eyebrow">03 · Preise</div></div>
       <div>
@@ -1964,6 +2005,20 @@
           Sie zahlen nach der Größe Ihrer Praxis, nicht nach Ihrem Umsatz. Jedes Paket enthält alle Funktionen.
           Gezählt werden Behandler:innen, Empfang und Verwaltung sind immer inklusive.
         </p>
+      </div>
+    </div>
+
+    <div class="pr-event promo-only" role="note" aria-label="Winter-Aktion">
+      <div class="pr-snow" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <span class="pr-event-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M4.9 6l14.2 12M19.1 6 4.9 18"/><path d="m9.5 3.5 2.5 2 2.5-2M9.5 20.5l2.5-2 2.5 2M3.6 9.2l3 .9-.8 3M20.4 14.8l-3-.9.8-3M3.6 14.8l3-.9-.8-3M20.4 9.2l-3 .9.8 3"/></svg></span>
+      <div class="pr-event-txt">
+        <strong>Winter-Aktion bis 31.12.2026</strong>
+        <span>Aktionspreise auf alle Pakete und das Einrichtungspaket – garantiert für die ersten 12 Monate. Bei jährlicher Zahlung sparen Sie zusätzlich 10&nbsp;%.</span>
+      </div>
+      <div class="pr-count" aria-label="Verbleibende Zeit der Aktion">
+        <div><b data-cd="d">–</b><small>Tage</small></div>
+        <div><b data-cd="h">–</b><small>Std.</small></div>
+        <div><b data-cd="m">–</b><small>Min.</small></div>
       </div>
     </div>
 
@@ -1976,45 +2031,63 @@
         <button type="button" data-tier="gross" aria-pressed="false">11–20</button>
         <button type="button" data-tier="verbund" aria-pressed="false">21+</button>
       </div>
+      <div class="pr-bill" role="group" aria-label="Zahlweise wählen">
+        <div class="pr-pick-opts">
+          <button type="button" data-bill="monat" aria-pressed="true">Monatlich</button>
+          <button type="button" data-bill="jahr" aria-pressed="false">Jährlich<em>−10&nbsp;%</em></button>
+        </div>
+      </div>
     </div>
 
     <div class="pr-grid">
-      <article class="pr-card" data-tier="solo">
+      <article class="pr-card" data-tier="solo" data-reg="49" data-akt="39" data-sreg="290" data-sakt="190">
         <span class="pr-badge">Passt zu Ihrer Praxis</span>
         <div class="pr-name">Solo</div>
         <div class="pr-size">1 Behandler:in</div>
-        <div class="pr-price"><strong>39&nbsp;€</strong><span>/ Monat</span></div>
-        <div class="pr-setup">Einrichtung einmalig 190&nbsp;€</div>
+        <span class="pr-tag promo-only">Winter-Aktion −20&nbsp;%</span>
+        <div class="pr-price"><s class="pr-was promo-only">49&nbsp;€</s><strong>39&nbsp;€</strong><span>/ Monat</span></div>
+        <div class="pr-note"></div>
+        <div class="pr-setup">Einrichtung einmalig <s class="promo-only">290&nbsp;€</s><span class="pr-sakt">190&nbsp;€</span></div>
+        <div class="pr-save promo-only"></div>
       </article>
-      <article class="pr-card is-match" data-tier="praxis">
+      <article class="pr-card is-match" data-tier="praxis" data-reg="89" data-akt="69" data-sreg="490" data-sakt="390">
         <span class="pr-badge">Passt zu Ihrer Praxis</span>
         <div class="pr-name">Praxis</div>
         <div class="pr-size">2–5 Behandler:innen</div>
-        <div class="pr-price"><strong>69&nbsp;€</strong><span>/ Monat</span></div>
-        <div class="pr-setup">Einrichtung einmalig 390&nbsp;€</div>
+        <span class="pr-tag promo-only">Winter-Aktion −22&nbsp;%</span>
+        <div class="pr-price"><s class="pr-was promo-only">89&nbsp;€</s><strong>69&nbsp;€</strong><span>/ Monat</span></div>
+        <div class="pr-note"></div>
+        <div class="pr-setup">Einrichtung einmalig <s class="promo-only">490&nbsp;€</s><span class="pr-sakt">390&nbsp;€</span></div>
+        <div class="pr-save promo-only"></div>
       </article>
-      <article class="pr-card" data-tier="team">
+      <article class="pr-card" data-tier="team" data-reg="129" data-akt="99" data-sreg="790" data-sakt="590">
         <span class="pr-badge">Passt zu Ihrer Praxis</span>
         <div class="pr-name">Team</div>
         <div class="pr-size">6–10 Behandler:innen</div>
-        <div class="pr-price"><strong>99&nbsp;€</strong><span>/ Monat</span></div>
-        <div class="pr-setup">Einrichtung einmalig 590&nbsp;€</div>
+        <span class="pr-tag promo-only">Winter-Aktion −23&nbsp;%</span>
+        <div class="pr-price"><s class="pr-was promo-only">129&nbsp;€</s><strong>99&nbsp;€</strong><span>/ Monat</span></div>
+        <div class="pr-note"></div>
+        <div class="pr-setup">Einrichtung einmalig <s class="promo-only">790&nbsp;€</s><span class="pr-sakt">590&nbsp;€</span></div>
+        <div class="pr-save promo-only"></div>
       </article>
-      <article class="pr-card" data-tier="gross">
+      <article class="pr-card" data-tier="gross" data-reg="189" data-akt="149" data-sreg="1190" data-sakt="890">
         <span class="pr-badge">Passt zu Ihrer Praxis</span>
         <div class="pr-name">Groß</div>
         <div class="pr-size">11–20 Behandler:innen</div>
-        <div class="pr-price"><strong>149&nbsp;€</strong><span>/ Monat</span></div>
-        <div class="pr-setup">Einrichtung einmalig 890&nbsp;€</div>
+        <span class="pr-tag promo-only">Winter-Aktion −21&nbsp;%</span>
+        <div class="pr-price"><s class="pr-was promo-only">189&nbsp;€</s><strong>149&nbsp;€</strong><span>/ Monat</span></div>
+        <div class="pr-note"></div>
+        <div class="pr-setup">Einrichtung einmalig <s class="promo-only">1.190&nbsp;€</s><span class="pr-sakt">890&nbsp;€</span></div>
+        <div class="pr-save promo-only"></div>
       </article>
       <div class="pr-big" data-tier="verbund">
-        <p><strong>Ab 21 Behandler:innen oder mehrere Standorte (Verbund):</strong> Preis nach Angebot. Jeder zusätzliche Standort: +39&nbsp;€ / Monat.</p>
+        <p><strong>Ab 21 Behandler:innen oder mehrere Standorte (Verbund):</strong> Preis nach Angebot.</p>
         <a href="/kontakt.html">Angebot anfordern →</a>
       </div>
     </div>
 
     <ul class="pr-terms">
-      <li><strong>Einführungspreise</strong> für Verträge mit Abschluss bis 31.03.2027 – garantiert für die ersten 12 Monate</li>
+      <li class="promo-only"><strong>Winter-Aktion</strong> für Verträge mit Abschluss bis 31.12.2026 – Aktionspreis garantiert für die ersten 12 Monate</li>
       <li><strong>60 Tage Geld-zurück</strong> auf die Lizenzgebühr: Kündigen Sie innerhalb von 60 Tagen ab Übergabe, endet der Vertrag sofort und wir erstatten die gezahlten Lizenzgebühren. Einrichtungspaket und Serverkosten sind ausgenommen.</li>
       <li>12 Monate Laufzeit, danach monatlich kündbar</li>
       <li>Jährliche Zahlung: <strong>−10&nbsp;%</strong> auf die Lizenzgebühr</li>
@@ -2047,29 +2120,18 @@
           <li>2 Online-Schulungen à 90 Minuten</li>
           <li>Übergabe des Zugangs an Sie</li>
         </ul>
+        <p style="margin: 1rem 0 0;">Erweiterte Datenübernahme, zusätzliche Schulungen oder ein Schulungstag vor Ort? Gerne – wir erstellen Ihnen ein Angebot.</p>
       </div>
     </div>
 
     <div class="pr-server">
       <div class="pr-box">
-        <h3>Weitere Leistungen</h3>
-        <table class="pr-extras">
-          <tr><td>Datenübernahme Plus (Behandlungshistorie, Dokumente, mehrere Quellsysteme)</td><td>ab 290&nbsp;€</td></tr>
-          <tr><td>Zusätzliche Online-Schulung</td><td>89&nbsp;€ / Std.</td></tr>
-          <tr><td>Schulungstag vor Ort</td><td>690&nbsp;€ zzgl. Anfahrt</td></tr>
-          <tr><td>KI-Assistent (Serienplanung, Mail-Entwurf, Diktat)</td><td>in Kürze</td></tr>
-          <tr><td>TI-Anbindung</td><td>in Vorbereitung</td></tr>
-        </table>
+        <h3>Serverkosten</h3>
+        <p class="pr-server-text">Den Server zahlt Ihre Praxis direkt an Hetzner (Rechenzentrum in Deutschland) – ein überschaubarer Monatsbetrag inklusive Sicherung. Den genauen Betrag nennen wir Ihnen im Analysegespräch, bevor wir einrichten.</p>
       </div>
-      <div style="display:grid; gap:1.2rem; align-content:start;">
-        <div class="pr-box">
-          <h3>Serverkosten</h3>
-          <p class="pr-server-text">Die Serverkosten zahlt Ihre Praxis direkt an Hetzner (Rechenzentrum in Deutschland) – derzeit rund 25–30&nbsp;€ im Monat inklusive Sicherung. Den genauen Betrag nennen wir Ihnen vor der Einrichtung.</p>
-        </div>
-        <div class="pr-why">
-          <strong>Warum zahlen Sie den Server selbst?</strong>
-          <p>Weil er Ihnen gehört: Der Vertrag läuft auf Ihre Praxis, Ihre Patientendaten liegen bei Ihnen – nicht bei uns.</p>
-        </div>
+      <div class="pr-why">
+        <strong>Warum zahlen Sie den Server selbst?</strong>
+        <p>Weil er Ihnen gehört: Der Vertrag läuft auf Ihre Praxis, Ihre Patientendaten liegen bei Ihnen – nicht bei uns.</p>
       </div>
     </div>
 
@@ -2086,13 +2148,63 @@
   (function () {
     var root = document.getElementById('preise');
     if (!root) return;
-    var btns = root.querySelectorAll('.pr-pick-opts button');
+    var wrap = root.querySelector('.pr-wrap');
+    // Winter-Aktion: Ende 31.12.2026, 23:59:59 Uhr (Berlin). Danach verschwinden Streichpreise,
+    // Banner und Hinweise automatisch und es gelten die regulären Preise (data-reg / data-sreg).
+    var ENDE = new Date('2026-12-31T23:59:59+01:00').getTime();
+    var promo = Date.now() < ENDE;
+
+    var tierBtns = root.querySelectorAll('.pr-pick-opts button[data-tier]');
+    var billBtns = root.querySelectorAll('.pr-bill button[data-bill]');
     var cards = root.querySelectorAll('.pr-grid [data-tier]');
+    var priced = root.querySelectorAll('.pr-card[data-reg]');
+    var bill = 'monat';
+
+    function eur(n) {
+      var cent = Math.round(n * 100) % 100 !== 0;
+      return n.toLocaleString('de-DE', { minimumFractionDigits: cent ? 2 : 0, maximumFractionDigits: 2 }) + ' €';
+    }
+    function render(pop) {
+      wrap.classList.toggle('promo-on', promo);
+      var f = bill === 'jahr' ? 0.9 : 1;
+      priced.forEach(function (c) {
+        var reg = +c.dataset.reg, akt = promo ? +c.dataset.akt : reg;
+        var sreg = +c.dataset.sreg, sakt = promo ? +c.dataset.sakt : sreg;
+        var strong = c.querySelector('.pr-price strong');
+        strong.textContent = eur(akt * f);
+        if (pop) { strong.classList.remove('is-pop'); void strong.offsetWidth; strong.classList.add('is-pop'); }
+        c.querySelector('.pr-was').textContent = eur(reg * f);
+        c.querySelector('.pr-note').textContent = bill === 'jahr' ? 'jährlich ' + eur(akt * f * 12) + ', im Voraus' : '';
+        c.querySelector('.pr-sakt').textContent = eur(sakt);
+        c.querySelector('.pr-save').textContent = 'Sie sparen ' + eur((reg - akt) * f * 12 + (sreg - sakt)) + ' im ersten Jahr';
+      });
+    }
     function pick(tier) {
-      btns.forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.tier === tier ? 'true' : 'false'); });
+      tierBtns.forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.tier === tier ? 'true' : 'false'); });
       cards.forEach(function (c) { c.classList.toggle('is-match', c.dataset.tier === tier); });
     }
-    btns.forEach(function (b) { b.addEventListener('click', function () { pick(b.dataset.tier); }); });
+    tierBtns.forEach(function (b) { b.addEventListener('click', function () { pick(b.dataset.tier); }); });
+    billBtns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        bill = b.dataset.bill;
+        billBtns.forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        render(true);
+      });
+    });
+    render(false);
+
+    if (promo) {
+      var cd = { d: root.querySelector('[data-cd="d"]'), h: root.querySelector('[data-cd="h"]'), m: root.querySelector('[data-cd="m"]') };
+      var tick = function () {
+        var s = Math.max(0, Math.floor((ENDE - Date.now()) / 1000));
+        if (s === 0) { promo = false; render(false); return; }
+        cd.d.textContent = Math.floor(s / 86400);
+        cd.h.textContent = String(Math.floor(s % 86400 / 3600)).padStart(2, '0');
+        cd.m.textContent = String(Math.floor(s % 3600 / 60)).padStart(2, '0');
+        setTimeout(tick, 20000);
+      };
+      tick();
+    }
   })();
   </script>
 </section>
@@ -2195,7 +2307,7 @@
     </details>
     <details class="px-faq-item">
       <summary>Was kostet Praxura?</summary>
-      <p>Praxura kostet einen festen Monatspreis nach Praxisgröße, ohne Prozent vom Umsatz: Solo (1 Behandler:in) 39 €, Praxis (2–5) 69 €, Team (6–10) 99 €, Groß (11–20) 149 € pro Monat, ab 21 Behandler:innen nach Angebot. Dazu kommt ein einmaliges Einrichtungspaket (190–890 €) inklusive Server-Einrichtung, Datenübernahme und zwei Online-Schulungen. Die Serverkosten (derzeit rund 25–30 € im Monat) zahlt Ihre Praxis direkt an Hetzner. Einführungspreise für Verträge mit Abschluss bis 31.03.2027, garantiert für die ersten 12 Monate. Alle Preise sind Endpreise, gemäß § 19 UStG wird keine Umsatzsteuer berechnet. Angebot nur für Praxen und Unternehmer. <a href="#preise">Alle Preise ansehen</a></p>
+      <p>Praxura kostet einen festen Monatspreis nach Praxisgröße, ohne Prozent vom Umsatz: Solo (1 Behandler:in) 39 €, Praxis (2–5) 69 €, Team (6–10) 99 €, Groß (11–20) 149 € pro Monat, ab 21 Behandler:innen nach Angebot. Dazu kommt ein einmaliges Einrichtungspaket (190–890 €) inklusive Server-Einrichtung, Datenübernahme und zwei Online-Schulungen. Die Serverkosten zahlt Ihre Praxis direkt an Hetzner; den genauen Betrag nennen wir im Analysegespräch. Winter-Aktion: Aktionspreise für Verträge mit Abschluss bis 31.12.2026, garantiert für die ersten 12 Monate. Alle Preise sind Endpreise, gemäß § 19 UStG wird keine Umsatzsteuer berechnet. Angebot nur für Praxen und Unternehmer. <a href="#preise">Alle Preise ansehen</a></p>
     </details>
     <details class="px-faq-item">
       <summary>Ist Praxura ein PVS für Heilmittelerbringer?</summary>
@@ -2338,7 +2450,7 @@
 <!-- Chatbot Widget -->
 <script>
 (function(){
-  var DATA = {"botName": "Praxura", "welcomeMessage": "Herzlich willkommen bei Praxura! Ich helfe Ihnen gerne bei Fragen zu unserer All-in-One Praxissoftware für Therapeuten.", "noMatchMessage": "Dazu kann ich leider keine Auskunft geben. Bei weiteren Fragen wenden Sie sich bitte direkt an kontakt@praxura.de", "tone": "formal", "brandColor": "#b1891b", "language": "de", "typeMessage": "Nachricht schreiben...", "errTooShort": "Bitte schreiben Sie eine längere Nachricht.", "errTooLong": "Ihre Nachricht ist zu lang (max. 500 Zeichen).", "errCooldown": "Bitte warten Sie einen Moment...", "errNetwork": "Verbindungsproblem. Bitte später erneut versuchen.", "sessionEnded": "Diese Unterhaltung wurde beendet. Bei weiteren Fragen kontaktieren Sie uns bitte direkt.", "sessionLimit": "Das Nachrichtenlimit dieser Sitzung wurde erreicht.", "chatWebhookUrl": "https://n8n.infinitymade.de/webhook/chat", "limits": {"minLen": 2, "maxLen": 500, "maxMessagesPerSession": 30, "maxOffTopicStrikes": 3, "cooldownMs": 1500}, "extraKnowledge": "Praxura Wissensdatei für KI-Assistenten & Support-Chatbot Dieses Dokument enthält alle relevanten Informationen über Praxura — Produkt, Funktionen, Preise, Abrechnung, Datenschutz und häufige Fragen. Es dient als Wissensbasis für den KI-Chatbot auf praxura.de. Stand: Oktober 2026 · Kontakt: kontakt@praxura.de · Website: praxura.de 1. Was ist Praxura? Praxura ist eine moderne All-in-One-Praxissoftware speziell für Heilmittelerbringer in Deutschland — Physiotherapie, Ergotherapie, Logopädie und Podologie. Praxura ist ein Praxisverwaltungssystem (PVS) und läuft als eigene Praxis-Cloud der Praxis: so bequem wie Cloud-Software, aber die Patientendaten liegen auf dem eigenen Server der Praxis, nicht bei Praxura. Praxura richtet den Server im eigenen Hetzner-Konto der Praxis ein (Rechenzentrum in Deutschland, Vertrag direkt zwischen Praxis und Hetzner), installiert Praxura, richtet die Sicherung ein und übergibt den Zugang, bevor der erste Patient angelegt wird. Alternativ läuft Praxura auf einem Windows-PC oder Linux-Server in der Praxis. Praxura ist keine vom Hersteller gehostete Cloud-Software. Die Software deckt die gesamte Praxisverwaltung ab: von der Terminplanung über die digitale Patientenakte bis hin zur GKV-Abrechnungsvorbereitung nach § 302 SGB V. Praxura ist ein Software-Werkzeug zur Vorbereitung der Abrechnung — kein Abrechnungszentrum und kein Abrechnungsdienstleister. Genau deshalb fallen keine Provisionen auf den Umsatz an. Hersteller: Praxura, Inh. Yavuz Kemal Demir (Siegburg, NRW) · Website: praxura.de 2. Zielgruppe Praxura richtet sich ausschließlich an: Physiotherapeut:innen, Ergotherapeut:innen, Logopäd:innen, Podolog:innen, interdisziplinäre Heilmittelpraxen und Praxisverbünde. Nicht geeignet für: Arztpraxen, Zahnarztpraxen, Kosmetiksalons oder andere Branchen außerhalb der Heilmittelversorgung. 3. Kernfunktionen 3.1 Terminverwaltung & Kalender: Tages-, Wochen- und Monatsansicht, Farbcodierung, Termin in unter 10 Sekunden anlegen, Wartelisten-Verwaltung, Online-Terminanfragen, Teamkalender (automatische Terminerinnerungen gibt es derzeit nicht). 3.2 Digitale Patientenakte: Behandlungsdokumentation, Rezeptverwaltung mit Laufzeitkontrolle, Anamnese und Therapieberichte, GKV/Privat/Selbstzahler, PDF-Export. 3.3 Verordnungsprüfung: Verordnungsdaten aus dem Barcode des Muster 13 lokal einlesen (das Bild verlässt den Rechner nicht), Prüfung gegen die Heilmittelrichtlinie, Hinweise auf Absetzungsrisiken vor Behandlungsbeginn. KI-Funktionen sind derzeit nicht aktiv. 3.4 §302 GKV-Abrechnung: ITSG-konforme DTA-Dateien, 93 Krankenkassen, Zuzahlung-Nachweise, GoBD-Belegliste, ohne Provision. 3.5 Elektronisches Fahrtenbuch: Fahrten zu Hausbesuchen mit Kilometern dokumentieren. 3.6 B2B & Lead-Management: Zuweiser, Kooperationspartner, Interessenten verwalten. 3.7 Statistiken: Umsatz- und Auslastungsstatistiken, standortübergreifend bei mehreren Standorten. 3.8 Rollen & Rechte: Inhaber, Therapeut, Rezeptionist. 3.9 TI-Anbindung: optionales Zusatzmodul, geplant zur TI-Pflicht ab 01.10.2027, heute noch nicht verfügbar; Pflicht ab 01.10.2027, Kosten können nach aktuellem Stand weitgehend durch die TI-Förderpauschale gedeckt sein (Physio ca. 221,74 €/Monat 2026, ohne Gewähr). 4. Preise (nur für Praxen/Unternehmer; Einführungspreise für Verträge mit Abschluss bis 31.03.2027, garantiert für die ersten 12 Monate; Endpreise, keine USt gemäß § 19 UStG): fester Monatspreis nach Anzahl Behandler:innen, kein Prozent vom Umsatz, alle Funktionen in jedem Paket. Solo (1 Behandler:in) 39 €/Monat, Praxis (2–5) 69 €/Monat, Team (6–10) 99 €/Monat, Groß (11–20) 149 €/Monat, ab 21 Behandler:innen oder Verbund nach Angebot, zusätzlicher Standort +39 €/Monat. Empfang und Verwaltung werden nicht gezählt. Einmaliges Einrichtungspaket: Solo 190 €, Praxis 390 €, Team 590 €, Groß 890 € (Server-Einrichtung, Stammdaten, Standard-Datenübernahme, 2 Online-Schulungen à 90 Min.). Serverkosten zahlt die Praxis direkt an Hetzner, derzeit rund 25–30 € im Monat inkl. Sicherung. 12 Monate Laufzeit, danach monatlich kündbar, 60 Tage Geld-zurück auf die Lizenzgebühr (Kündigung innerhalb 60 Tagen ab Übergabe, Einrichtung und Serverkosten ausgenommen), −10 % auf die Lizenzgebühr bei jährlicher Zahlung. Weitere Leistungen: Datenübernahme Plus ab 290 €, zusätzliche Online-Schulung 89 €/Std., Schulungstag vor Ort 690 € zzgl. Anfahrt. KI-Assistent in Kürze, TI-Anbindung in Vorbereitung (keine Preise nennen). Keine Rabatte versprechen; für ein festes Angebot auf das Analysegespräch verweisen (praxura.de/demo-booking.html). 5. Onboarding: unverbindlicher Testzugang, kein Vertrag, Patientenstamm per CSV-Import selbst übernehmen (Spalten frei zuordenbar) oder begleitetes Datenübernahme-Paket (Festpreis auf Anfrage, keine Beträge nennen); in der Podologie zusätzlich offene und teilweise behandelte, noch nicht abgerechnete Verordnungen (mit bereits erbrachten Behandlungstagen und Zuzahlungs-Vermerk) sowie die Vorgeschichte; Befunde, Behandlungsnotizen, Rechnungen und bereits abgerechnete Verordnungen werden nicht übernommen, kostenloses Einrichtungsgespräch. 6. Datenschutz: Patientendaten liegen ausschließlich auf dem Server der Praxis (eigene Praxis-Cloud oder Praxis-PC); Praxura hat keinen Zugang dazu, auch nicht im Support. Ausgenommen ist nur, was die Praxis selbst freigibt: Bildschirmfreigabe bei der Datenübernahme und Zusatzfunktionen wie KI-Texterkennung (derzeit nicht aktiv), dafür gilt ein gesonderter AV-Vertrag. Nie sagen: \"gehostet von Praxura\", \"Cloud-Praxissoftware\", \"C5-zertifiziert\", \"DSGVO-zertifiziert\". Nächtliche verschlüsselte Sicherung auf ein Ziel der Praxis (externe Festplatte, NAS, Storage Box), automatische Updates, Recht auf Löschung, kein Training auf Kundendaten. 7. Support: E-Mail kontakt@praxura.de, Telefon-Support, persönliche Betreuung und SLA je nach Praxisgröße — Details auf Anfrage. 8. FAQ: Für wen? Nur Heilmittelerbringer. §302 ohne Abrechnungszentrum? Ja, ohne Provision. Kostenlos testen? Ja, unverbindlicher Testzugang auf Anfrage. TI-Anbindung? Geplant als Zusatzmodul (geplant zur TI-Pflicht ab 01.10.2027, heute noch nicht verfügbar); die Kosten können nach aktuellem Stand weitgehend durch die TI-Förderpauschale gedeckt sein (ohne Gewähr). Ist Praxura Cloud-Software? Praxura ist die eigene Praxis-Cloud der Praxis: von überall im Browser erreichbar, Updates automatisch, aber der Server gehört zum Konto der Praxis, nicht zu Praxura. Wo liegen die Daten? Auf dem eigenen Server der Praxis, nicht bei Praxura. Smartphone? Ja, mit der Praxis-Cloud von überall; beim Betrieb auf einem Praxis-PC unterwegs über das VPN der Praxis. Einrichtung? Übernimmt Praxura. Status: Pilotphase mit ausgewählten Praxen, zuerst Podologie. Kündigung? 12 Monate Laufzeit, danach monatlich kündbar; 60 Tage Geld-zurück auf die Lizenzgebühr.", "qaPairs": [{"question": "Was ist Praxura?", "answer": "Praxura ist eine Praxissoftware (PVS) für Heilmittelerbringer – Physiotherapie, Ergotherapie, Logopädie und Podologie. Sie bündelt Terminverwaltung, Patientenakte, Verordnungsprüfung, §302-Abrechnungsvorbereitung und ein elektronisches Fahrtenbuch – als Ihre eigene Praxis-Cloud: so bequem wie Cloud-Software, aber Ihre Patientendaten bleiben auf Ihrem eigenen Server, nicht bei uns.", "keywords": "praxissoftware, physiotherapie, ergotherapie, logopädie, podologie, funktionen"}, {"question": "Kann ich mit Praxura meine Abrechnung nach §302 SGB V vorbereiten?", "answer": "Ja, Praxura erstellt aus Ihren Behandlungsdaten fertige, verschlüsselte DTA-Dateien für die Abrechnung nach §302 SGB V. Die Einreichung nehmen Sie selbst vor — somit zahlen Sie 0 % Provision auf Ihren Umsatz.", "keywords": "abrechnung, §302, dta, kassenabrechnung, provision, einsparung"}, {"question": "Was kostet Praxura?", "answer": "Praxura kostet einen festen Monatspreis nach Praxisgröße, ohne Prozent vom Umsatz: Solo (1 Behandler:in) 39 €, Praxis (2–5) 69 €, Team (6–10) 99 €, Groß (11–20) 149 € pro Monat (Einführungspreise für Verträge bis 31.03.2027, Endpreise gemäß § 19 UStG). Dazu kommt ein einmaliges Einrichtungspaket ab 190 €. Die Serverkosten (rund 25–30 €/Monat) zahlt Ihre Praxis direkt an Hetzner. Ein festes Angebot erhalten Sie im kostenlosen Analysegespräch: praxura.de/demo-booking.html", "keywords": "preise, kosten, tarife, solo, praxis, team, groß, einrichtung, server"}, {"question": "Wie funktioniert die Verordnungsprüfung?", "answer": "Praxura liest die Verordnungsdaten aus dem Barcode des Muster 13 lokal ein – das Bild verlässt Ihren Rechner nicht – und prüft sie gegen die Heilmittelrichtlinie. Sie bestätigen die Felder; Formfehler werden vor Behandlungsbeginn angezeigt.", "keywords": "rezeptprüfung, ki, ocr, scan, absetzung, heilmittelverordnung"}, {"question": "Ist Praxura DSGVO-konform und wo werden die Daten gespeichert?", "answer": "Auf Ihrem eigenen Server – nicht bei Praxura: in Ihrer Praxis-Cloud im eigenen Hetzner-Konto (Rechenzentrum in Deutschland) oder auf einem PC/Server in Ihrer Praxis. Praxura hat keinen Zugang zu Ihren Patientendaten, auch nicht im Support – ausgenommen nur, was Sie selbst freigeben (Bildschirmfreigabe bei der Datenübernahme). Jede Nacht entsteht eine verschlüsselte Sicherung auf ein separates Ziel.", "keywords": "datenschutz, dsgvo, hosting, avv, sicherheit, cloud, server"}, {"question": "Ist Praxura eine Cloud-Software?", "answer": "Praxura ist Ihre eigene Praxis-Cloud – so bequem wie Cloud-Software, aber Ihre Patientendaten bleiben auf Ihrem eigenen Server, nicht bei uns. Wir richten den Server in Ihrem Hetzner-Konto ein, installieren Praxura und übergeben Ihnen den Zugang. Danach erreichen Sie Praxura von überall im Browser, Updates kommen automatisch.", "keywords": "cloud, saas, online, browser, server, hetzner, einrichtung, installation"}, {"question": "Kann ich Praxura kostenlos testen?", "answer": "Ja. Sie können Praxura unverbindlich und kostenlos testen. Schreiben Sie uns an kontakt@praxura.de — wir richten Ihnen einen Testzugang ein und begleiten Sie beim Start.", "keywords": "testphase, kostenlos testen, gratis, ausprobieren, unverbindlich"}, {"question": "Bietet Praxura eine TI-Anbindung?", "answer": "Ja, als optionales Zusatzmodul. Die TI-Anschlusspflicht gilt ab 01.10.2027. Die Kosten können nach aktuellem Stand weitgehend durch die TI-Förderpauschale gedeckt sein (Stand 2026, ohne Gewähr).", "keywords": "ti-anbindung, telematikinfrastruktur, gkv, förderung, refinanzierung"}, {"question": "Wie kann ich Kontakt aufnehmen oder ein Gespräch buchen?", "answer": "Am schnellsten über unsere Online-Terminbuchung: praxura.de/demo-booking.html — dort wählen Sie direkt einen freien Termin für ein kostenloses Analysegespräch (ca. 30 Minuten, per Video). Alternativ schreiben Sie uns an kontakt@praxura.de.", "keywords": "kontakt, e-mail, beratung, support, termin, demo"}]};
+  var DATA = {"botName": "Praxura", "welcomeMessage": "Herzlich willkommen bei Praxura! Ich helfe Ihnen gerne bei Fragen zu unserer All-in-One Praxissoftware für Therapeuten.", "noMatchMessage": "Dazu kann ich leider keine Auskunft geben. Bei weiteren Fragen wenden Sie sich bitte direkt an kontakt@praxura.de", "tone": "formal", "brandColor": "#b1891b", "language": "de", "typeMessage": "Nachricht schreiben...", "errTooShort": "Bitte schreiben Sie eine längere Nachricht.", "errTooLong": "Ihre Nachricht ist zu lang (max. 500 Zeichen).", "errCooldown": "Bitte warten Sie einen Moment...", "errNetwork": "Verbindungsproblem. Bitte später erneut versuchen.", "sessionEnded": "Diese Unterhaltung wurde beendet. Bei weiteren Fragen kontaktieren Sie uns bitte direkt.", "sessionLimit": "Das Nachrichtenlimit dieser Sitzung wurde erreicht.", "chatWebhookUrl": "https://n8n.infinitymade.de/webhook/chat", "limits": {"minLen": 2, "maxLen": 500, "maxMessagesPerSession": 30, "maxOffTopicStrikes": 3, "cooldownMs": 1500}, "extraKnowledge": "Praxura Wissensdatei für KI-Assistenten & Support-Chatbot Dieses Dokument enthält alle relevanten Informationen über Praxura — Produkt, Funktionen, Preise, Abrechnung, Datenschutz und häufige Fragen. Es dient als Wissensbasis für den KI-Chatbot auf praxura.de. Stand: Oktober 2026 · Kontakt: kontakt@praxura.de · Website: praxura.de 1. Was ist Praxura? Praxura ist eine moderne All-in-One-Praxissoftware speziell für Heilmittelerbringer in Deutschland — Physiotherapie, Ergotherapie, Logopädie und Podologie. Praxura ist ein Praxisverwaltungssystem (PVS) und läuft als eigene Praxis-Cloud der Praxis: so bequem wie Cloud-Software, aber die Patientendaten liegen auf dem eigenen Server der Praxis, nicht bei Praxura. Praxura richtet den Server im eigenen Hetzner-Konto der Praxis ein (Rechenzentrum in Deutschland, Vertrag direkt zwischen Praxis und Hetzner), installiert Praxura, richtet die Sicherung ein und übergibt den Zugang, bevor der erste Patient angelegt wird. Alternativ läuft Praxura auf einem Windows-PC oder Linux-Server in der Praxis. Praxura ist keine vom Hersteller gehostete Cloud-Software. Die Software deckt die gesamte Praxisverwaltung ab: von der Terminplanung über die digitale Patientenakte bis hin zur GKV-Abrechnungsvorbereitung nach § 302 SGB V. Praxura ist ein Software-Werkzeug zur Vorbereitung der Abrechnung — kein Abrechnungszentrum und kein Abrechnungsdienstleister. Genau deshalb fallen keine Provisionen auf den Umsatz an. Hersteller: Praxura, Inh. Yavuz Kemal Demir (Siegburg, NRW) · Website: praxura.de 2. Zielgruppe Praxura richtet sich ausschließlich an: Physiotherapeut:innen, Ergotherapeut:innen, Logopäd:innen, Podolog:innen, interdisziplinäre Heilmittelpraxen und Praxisverbünde. Nicht geeignet für: Arztpraxen, Zahnarztpraxen, Kosmetiksalons oder andere Branchen außerhalb der Heilmittelversorgung. 3. Kernfunktionen 3.1 Terminverwaltung & Kalender: Tages-, Wochen- und Monatsansicht, Farbcodierung, Termin in unter 10 Sekunden anlegen, Wartelisten-Verwaltung, Online-Terminanfragen, Teamkalender (automatische Terminerinnerungen gibt es derzeit nicht). 3.2 Digitale Patientenakte: Behandlungsdokumentation, Rezeptverwaltung mit Laufzeitkontrolle, Anamnese und Therapieberichte, GKV/Privat/Selbstzahler, PDF-Export. 3.3 Verordnungsprüfung: Verordnungsdaten aus dem Barcode des Muster 13 lokal einlesen (das Bild verlässt den Rechner nicht), Prüfung gegen die Heilmittelrichtlinie, Hinweise auf Absetzungsrisiken vor Behandlungsbeginn. KI-Funktionen sind derzeit nicht aktiv. 3.4 §302 GKV-Abrechnung: ITSG-konforme DTA-Dateien, 93 Krankenkassen, Zuzahlung-Nachweise, GoBD-Belegliste, ohne Provision. 3.5 Elektronisches Fahrtenbuch: Fahrten zu Hausbesuchen mit Kilometern dokumentieren. 3.6 B2B & Lead-Management: Zuweiser, Kooperationspartner, Interessenten verwalten. 3.7 Statistiken: Umsatz- und Auslastungsstatistiken, standortübergreifend bei mehreren Standorten. 3.8 Rollen & Rechte: Inhaber, Therapeut, Rezeptionist. 3.9 TI-Anbindung: optionales Zusatzmodul, geplant zur TI-Pflicht ab 01.10.2027, heute noch nicht verfügbar; Pflicht ab 01.10.2027, Kosten können nach aktuellem Stand weitgehend durch die TI-Förderpauschale gedeckt sein (Physio ca. 221,74 €/Monat 2026, ohne Gewähr). 4. Preise (nur für Praxen/Unternehmer; Winter-Aktion: Aktionspreise für Verträge mit Abschluss bis 31.12.2026, garantiert für die ersten 12 Monate, reguläre Preise Solo 49 €, Praxis 89 €, Team 129 €, Groß 189 €, Einrichtung regulär 290/490/790/1.190 €; Endpreise, keine USt gemäß § 19 UStG): fester Monatspreis nach Anzahl Behandler:innen, kein Prozent vom Umsatz, alle Funktionen in jedem Paket. Solo (1 Behandler:in) 39 €/Monat, Praxis (2–5) 69 €/Monat, Team (6–10) 99 €/Monat, Groß (11–20) 149 €/Monat, ab 21 Behandler:innen oder Verbund nach Angebot. Empfang und Verwaltung werden nicht gezählt. Einmaliges Einrichtungspaket: Solo 190 €, Praxis 390 €, Team 590 €, Groß 890 € (Server-Einrichtung, Stammdaten, Standard-Datenübernahme, 2 Online-Schulungen à 90 Min.). Serverkosten zahlt die Praxis direkt an Hetzner (keinen Betrag nennen, genauer Betrag im Analysegespräch). 12 Monate Laufzeit, danach monatlich kündbar, 60 Tage Geld-zurück auf die Lizenzgebühr (Kündigung innerhalb 60 Tagen ab Übergabe, Einrichtung und Serverkosten ausgenommen), −10 % auf die Lizenzgebühr bei jährlicher Zahlung. Weitere Leistungen (erweiterte Datenübernahme, zusätzliche Schulungen, Schulungstag vor Ort) nach Angebot, keine Beträge nennen. KI-Assistent in Kürze, TI-Anbindung in Vorbereitung (keine Preise nennen). Keine Rabatte versprechen; für ein festes Angebot auf das Analysegespräch verweisen (praxura.de/demo-booking.html). 5. Onboarding: unverbindlicher Testzugang, kein Vertrag, Patientenstamm per CSV-Import selbst übernehmen (Spalten frei zuordenbar) oder begleitetes Datenübernahme-Paket (Festpreis auf Anfrage, keine Beträge nennen); in der Podologie zusätzlich offene und teilweise behandelte, noch nicht abgerechnete Verordnungen (mit bereits erbrachten Behandlungstagen und Zuzahlungs-Vermerk) sowie die Vorgeschichte; Befunde, Behandlungsnotizen, Rechnungen und bereits abgerechnete Verordnungen werden nicht übernommen, kostenloses Einrichtungsgespräch. 6. Datenschutz: Patientendaten liegen ausschließlich auf dem Server der Praxis (eigene Praxis-Cloud oder Praxis-PC); Praxura hat keinen Zugang dazu, auch nicht im Support. Ausgenommen ist nur, was die Praxis selbst freigibt: Bildschirmfreigabe bei der Datenübernahme und Zusatzfunktionen wie KI-Texterkennung (derzeit nicht aktiv), dafür gilt ein gesonderter AV-Vertrag. Nie sagen: \"gehostet von Praxura\", \"Cloud-Praxissoftware\", \"C5-zertifiziert\", \"DSGVO-zertifiziert\". Nächtliche verschlüsselte Sicherung auf ein Ziel der Praxis (externe Festplatte, NAS, Storage Box), automatische Updates, Recht auf Löschung, kein Training auf Kundendaten. 7. Support: E-Mail kontakt@praxura.de, Telefon-Support, persönliche Betreuung und SLA je nach Praxisgröße — Details auf Anfrage. 8. FAQ: Für wen? Nur Heilmittelerbringer. §302 ohne Abrechnungszentrum? Ja, ohne Provision. Kostenlos testen? Ja, unverbindlicher Testzugang auf Anfrage. TI-Anbindung? Geplant als Zusatzmodul (geplant zur TI-Pflicht ab 01.10.2027, heute noch nicht verfügbar); die Kosten können nach aktuellem Stand weitgehend durch die TI-Förderpauschale gedeckt sein (ohne Gewähr). Ist Praxura Cloud-Software? Praxura ist die eigene Praxis-Cloud der Praxis: von überall im Browser erreichbar, Updates automatisch, aber der Server gehört zum Konto der Praxis, nicht zu Praxura. Wo liegen die Daten? Auf dem eigenen Server der Praxis, nicht bei Praxura. Smartphone? Ja, mit der Praxis-Cloud von überall; beim Betrieb auf einem Praxis-PC unterwegs über das VPN der Praxis. Einrichtung? Übernimmt Praxura. Status: Pilotphase mit ausgewählten Praxen, zuerst Podologie. Kündigung? 12 Monate Laufzeit, danach monatlich kündbar; 60 Tage Geld-zurück auf die Lizenzgebühr.", "qaPairs": [{"question": "Was ist Praxura?", "answer": "Praxura ist eine Praxissoftware (PVS) für Heilmittelerbringer – Physiotherapie, Ergotherapie, Logopädie und Podologie. Sie bündelt Terminverwaltung, Patientenakte, Verordnungsprüfung, §302-Abrechnungsvorbereitung und ein elektronisches Fahrtenbuch – als Ihre eigene Praxis-Cloud: so bequem wie Cloud-Software, aber Ihre Patientendaten bleiben auf Ihrem eigenen Server, nicht bei uns.", "keywords": "praxissoftware, physiotherapie, ergotherapie, logopädie, podologie, funktionen"}, {"question": "Kann ich mit Praxura meine Abrechnung nach §302 SGB V vorbereiten?", "answer": "Ja, Praxura erstellt aus Ihren Behandlungsdaten fertige, verschlüsselte DTA-Dateien für die Abrechnung nach §302 SGB V. Die Einreichung nehmen Sie selbst vor — somit zahlen Sie 0 % Provision auf Ihren Umsatz.", "keywords": "abrechnung, §302, dta, kassenabrechnung, provision, einsparung"}, {"question": "Was kostet Praxura?", "answer": "Praxura kostet einen festen Monatspreis nach Praxisgröße, ohne Prozent vom Umsatz: Solo (1 Behandler:in) 39 €, Praxis (2–5) 69 €, Team (6–10) 99 €, Groß (11–20) 149 € pro Monat (Winter-Aktionspreise für Verträge bis 31.12.2026, Endpreise gemäß § 19 UStG). Dazu kommt ein einmaliges Einrichtungspaket ab 190 €. Die Serverkosten zahlt Ihre Praxis direkt an Hetzner, den genauen Betrag nennen wir im Analysegespräch. Ein festes Angebot erhalten Sie im kostenlosen Analysegespräch: praxura.de/demo-booking.html", "keywords": "preise, kosten, tarife, solo, praxis, team, groß, einrichtung, server"}, {"question": "Wie funktioniert die Verordnungsprüfung?", "answer": "Praxura liest die Verordnungsdaten aus dem Barcode des Muster 13 lokal ein – das Bild verlässt Ihren Rechner nicht – und prüft sie gegen die Heilmittelrichtlinie. Sie bestätigen die Felder; Formfehler werden vor Behandlungsbeginn angezeigt.", "keywords": "rezeptprüfung, ki, ocr, scan, absetzung, heilmittelverordnung"}, {"question": "Ist Praxura DSGVO-konform und wo werden die Daten gespeichert?", "answer": "Auf Ihrem eigenen Server – nicht bei Praxura: in Ihrer Praxis-Cloud im eigenen Hetzner-Konto (Rechenzentrum in Deutschland) oder auf einem PC/Server in Ihrer Praxis. Praxura hat keinen Zugang zu Ihren Patientendaten, auch nicht im Support – ausgenommen nur, was Sie selbst freigeben (Bildschirmfreigabe bei der Datenübernahme). Jede Nacht entsteht eine verschlüsselte Sicherung auf ein separates Ziel.", "keywords": "datenschutz, dsgvo, hosting, avv, sicherheit, cloud, server"}, {"question": "Ist Praxura eine Cloud-Software?", "answer": "Praxura ist Ihre eigene Praxis-Cloud – so bequem wie Cloud-Software, aber Ihre Patientendaten bleiben auf Ihrem eigenen Server, nicht bei uns. Wir richten den Server in Ihrem Hetzner-Konto ein, installieren Praxura und übergeben Ihnen den Zugang. Danach erreichen Sie Praxura von überall im Browser, Updates kommen automatisch.", "keywords": "cloud, saas, online, browser, server, hetzner, einrichtung, installation"}, {"question": "Kann ich Praxura kostenlos testen?", "answer": "Ja. Sie können Praxura unverbindlich und kostenlos testen. Schreiben Sie uns an kontakt@praxura.de — wir richten Ihnen einen Testzugang ein und begleiten Sie beim Start.", "keywords": "testphase, kostenlos testen, gratis, ausprobieren, unverbindlich"}, {"question": "Bietet Praxura eine TI-Anbindung?", "answer": "Ja, als optionales Zusatzmodul. Die TI-Anschlusspflicht gilt ab 01.10.2027. Die Kosten können nach aktuellem Stand weitgehend durch die TI-Förderpauschale gedeckt sein (Stand 2026, ohne Gewähr).", "keywords": "ti-anbindung, telematikinfrastruktur, gkv, förderung, refinanzierung"}, {"question": "Wie kann ich Kontakt aufnehmen oder ein Gespräch buchen?", "answer": "Am schnellsten über unsere Online-Terminbuchung: praxura.de/demo-booking.html — dort wählen Sie direkt einen freien Termin für ein kostenloses Analysegespräch (ca. 30 Minuten, per Video). Alternativ schreiben Sie uns an kontakt@praxura.de.", "keywords": "kontakt, e-mail, beratung, support, termin, demo"}]};
 
   var brand = DATA.brandColor;
 
