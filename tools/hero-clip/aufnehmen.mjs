@@ -4,8 +4,12 @@
 // Warum aus der Demo und nicht von Hand gefilmt: Die Demo ändert sich mit dem Produkt.
 // Ein von Hand geschnittenes Video veraltet; dieses hier wird mit einem Befehl neu erzeugt.
 //
-//   npm run hero-clip                 → Werbefilm (tools/hero-clip/werbefilm.html), Standard
+//   npm run hero-clip                 → „Die Absetzung" (tools/hero-clip/absetzung.html), Standard
+//   QUELLE=werbung npm run hero-clip  → Nutzen-Werbefilm (tools/hero-clip/werbefilm.html)
 //   QUELLE=demo npm run hero-clip     → Mitschnitt der Demo (demo-dashboard.html?film=1)
+//
+// Kemal 25.11.2026 (dritter Schritt): Nutzen-Film war zu nah an der Demo → Hero zeigt jetzt
+// „Die Absetzung" (Verlust → Rückblende → bezahlt), gebaut für Besucher, die uns nicht kennen.
 //
 // Kemal 25.11.2026 (zweiter Wunsch): kein Demo-Mitschnitt im Hero, sondern ein Werbefilm,
 // der „was macht das, ist das gut?" beantwortet → werbefilm.html ist jetzt der Standard.
@@ -30,7 +34,8 @@ const DEMO = process.env.QUELLE === 'demo';
 const W = DEMO ? 1440 : 1280, H = DEMO ? 900 : 800; // Aufnahme (Werbefilm ist fest 1280×800 gebaut)
 const OW = 1280, OH = 800;        // Ausgabe
 // Poster = erstes Bild, das man sieht, bevor das Video lädt: Demo → Verordnung eingelesen; Werbefilm → Verordnungs-Szene
-const POSTER_AT = Number(process.env.POSTER_AT || (DEMO ? 6.3 : 8.6));
+const QUELLE = process.env.QUELLE || 'absetzung';
+const POSTER_AT = Number(process.env.POSTER_AT || (DEMO ? 6.3 : QUELLE === 'werbung' ? 8.6 : 4.4));
 
 rmSync(TMP, { recursive: true, force: true });
 mkdirSync(TMP, { recursive: true });
@@ -39,7 +44,7 @@ mkdirSync(OUT, { recursive: true });
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1, locale: 'de-DE', timezoneId: 'Europe/Berlin' });
 const url = DEMO ? pathToFileURL(join(ROOT, 'demo-dashboard.html')).href + '?film=1&auto=0'
-                 : pathToFileURL(join(ROOT, 'tools', 'hero-clip', 'werbefilm.html')).href + '?auto=0';
+                 : pathToFileURL(join(ROOT, 'tools', 'hero-clip', QUELLE === 'werbung' ? 'werbefilm.html' : 'absetzung.html')).href + '?auto=0';
 await page.goto(url, { waitUntil: 'load' });
 await page.evaluate(() => document.fonts && document.fonts.ready);
 await page.waitForTimeout(400);

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<title>Praxura – „Die Absetzung" (Hero-Film)</title>
+<link rel="stylesheet" href="../../fonts/system-fonts.css" />
+<!--
+  Hero-Film „Die Absetzung" (Kemal 25.11.2026, Variante A gewählt: „kaliteli olsun").
+  Ziel: einen kalten Besucher (kennt uns nicht) in 3 Sekunden stoppen — mit einem Schmerz,
+  den jede Praxisinhaberin kennt: Geld, das die Kasse nicht zahlt. Verlustaversion zuerst,
+  dann Rückblende: am ersten Tag wäre der Fehler sichtbar gewesen → Praxura → bezahlt.
+
+  Fachlich: Behandlungsbeginn > 28 Tage nach Ausstellung → Verordnung verliert ihre
+  Gültigkeit (§ 15 Abs. 1 HeilM-RL; im Code api-backend/ai/validators/fristen.js) → die
+  ganze Verordnung wird abgesetzt. Betrag: 6 × MT 35,59 € (physio_positions.js, PREISSTAND
+  01-01-26) = 213,54 €. Kasse bewusst NEUTRAL („Ihre Krankenkasse"), kein echtes Logo.
+  Alles als „Beispiel" gekennzeichnet. Keine Kundenstimmen (es gibt noch keine), keine Preise.
+
+  Aufnahme: npm run hero-clip  (Standard-Quelle). Nicht im Web (tools/ in .vercelignore).
+-->
+<style>
+  :root {
+    --bg: #F8F3E8; --paper: #FFFEFB; --ink: #1A1611; --soft: #4A4036; --mute: #6E6458;
+    --line: rgba(26,22,17,.10); --em: #1E3D2F; --em2: #2a5240; --gold: #b1891b; --bronze: #6B5538;
+    --red: #A8322D; --ok: #2F6B4A;
+    --serif: 'Fraunces', 'Times New Roman', serif; --sans: 'Plus Jakarta Sans', system-ui, sans-serif; --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --ease: cubic-bezier(0.23, 1, 0.32, 1); --out: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; overflow: hidden; background: var(--bg); }
+  body { width: 1280px; height: 800px; font-family: var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased; }
+  .stage { position: relative; width: 1280px; height: 800px; overflow: hidden;
+    background: radial-gradient(120% 90% at 50% 40%, #FBF7EE 0%, #F3ECDC 70%, #EDE3CD 100%); }
+  .sc { position: absolute; inset: 0; opacity: 0; transition: opacity .55s var(--ease); }
+  .sc.on { opacity: 1; }
+  .sc.dark { background: #15120E; color: #F8F3E8; }
+  .a { opacity: 0; }
+  .sc.on .a { animation: up .9s var(--out) both; animation-delay: var(--d, 0s); }
+  .sc.on .a.pop { animation-name: pop; }
+  .sc.on .a.fade { animation-name: fade; }
+  @keyframes up { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+  @keyframes pop { from { opacity: 0; transform: scale(.86); } to { opacity: 1; transform: none; } }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  .center { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+  h2 { font-family: var(--serif); font-weight: 400; letter-spacing: -.035em; margin: 0; font-size: 78px; line-height: 1.04; }
+  h2 em { font-style: italic; font-weight: 300; color: var(--bronze); }
+  .dark h2 em { color: var(--gold); }
+  .sub { font-size: 23px; color: var(--soft); margin-top: 22px; line-height: 1.45; }
+  .dark .sub { color: rgba(248,243,232,.7); }
+  .tag { position: absolute; right: 30px; bottom: 24px; font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: rgba(26,22,17,.38); }
+  .dark .tag { color: rgba(248,243,232,.35); }
+
+  /* ── Szene 1: der Brief ───────────────────────────── */
+  .cam { position: absolute; inset: 0; transform-origin: 50% 62%; }
+  #s-brief.on .cam { animation: push 5.6s cubic-bezier(.33,0,.2,1) both; }
+  @keyframes push { from { transform: scale(1); } to { transform: scale(1.12); } }
+  .env { position: absolute; left: 50%; top: 540px; width: 720px; height: 260px; margin-left: -360px; border-radius: 8px;
+    background: linear-gradient(180deg, #E9DEC4, #E2D5B8); box-shadow: 0 30px 60px -30px rgba(26,22,17,.5); }
+  .env::before { content: ''; position: absolute; inset: 0; border-radius: 8px;
+    background: linear-gradient(155deg, transparent 49.6%, rgba(26,22,17,.08) 50%, transparent 50.4%), linear-gradient(25deg, transparent 49.6%, rgba(26,22,17,.08) 50%, transparent 50.4%); }
+  #s-brief.on .env { animation: envin .9s var(--out) both; }
+  @keyframes envin { from { transform: translateY(380px) rotate(-4deg); } to { transform: none; } }
+  .letter { position: absolute; left: 50%; top: 56px; width: 680px; height: 640px; margin-left: -340px; background: var(--paper);
+    border-radius: 6px; padding: 40px 52px; box-shadow: 0 2px 4px rgba(26,22,17,.05), 0 40px 80px -30px rgba(26,22,17,.45);
+    font-size: 19px; color: var(--soft); opacity: 0; }
+  #s-brief.on .letter { animation: rise 1.2s var(--out) .55s both; }
+  @keyframes rise { from { opacity: 1; transform: translateY(420px) scale(.96); } to { opacity: 1; transform: none; } }
+  .lh { display: flex; align-items: center; gap: 12px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+  .lh .logo { width: 48px; height: 48px; border-radius: 10px; background: #3E5C7A; }
+  .lh b { display: block; color: var(--ink); font-size: 20px; }
+  .lh span { font-size: 15px; color: var(--mute); }
+  .lt { font-family: var(--serif); font-size: 36px; color: var(--ink); letter-spacing: -.02em; margin: 22px 0 14px; }
+  .lrow { display: grid; grid-template-columns: 210px 1fr; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+  .lrow span:first-child { color: var(--mute); }
+  .lrow span:last-child { color: var(--ink); }
+  .lgrund { margin-top: 16px; padding: 12px 14px; border-left: 3px solid var(--red); background: rgba(168,50,45,.06); color: var(--ink); line-height: 1.45; }
+  .amt { margin-top: 22px; display: flex; justify-content: space-between; align-items: baseline; }
+  .amt span { color: var(--mute); }
+  .amt b { font-family: var(--serif); font-weight: 400; font-size: 60px; color: var(--red); letter-spacing: -.02em; }
+  .stamp { position: absolute; left: 46px; bottom: 34px; border: 5px solid var(--red); color: var(--red); border-radius: 10px; padding: 6px 16px 4px;
+    font-family: var(--mono); font-weight: 700; font-size: 44px; letter-spacing: .14em; transform: rotate(-8deg); opacity: 0; mix-blend-mode: multiply; }
+  #s-brief.on .stamp { animation: stamp .45s cubic-bezier(.2,1.6,.4,1) 2.9s both; }
+  @keyframes stamp { 0% { opacity: 0; transform: rotate(-8deg) scale(2.4); } 100% { opacity: .9; transform: rotate(-8deg) scale(1); } }
+  #s-brief.on .shake { animation: shake .35s ease 2.95s both; }
+  @keyframes shake { 0%,100% { transform: none; } 25% { transform: translate(3px,-2px); } 50% { transform: translate(-3px,2px); } 75% { transform: translate(2px,1px); } }
+
+  /* ── Szene 2/3: Wucht ─────────────────────────────── */
+  .zero { color: var(--red); }
+  .big { font-family: var(--serif); font-size: 64px; letter-spacing: -.03em; line-height: 1.25; }
+  .big .x { color: rgba(248,243,232,.45); }
+
+  /* ── Szene 4: Rückspulen ──────────────────────────── */
+  .rew { position: absolute; inset: 0; display: grid; place-items: center; }
+  .rew .dt { font-family: var(--mono); font-size: 120px; letter-spacing: -.02em; color: #F8F3E8; }
+  .rew .lbl { font-family: var(--mono); font-size: 18px; letter-spacing: .3em; text-transform: uppercase; color: var(--gold); text-align: center; margin-bottom: 16px; }
+  .scan { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 2px, transparent 2px 4px); pointer-events: none; }
+  .rew .tri { display: inline-block; margin-right: 18px; color: var(--gold); font-size: 60px; vertical-align: 18px; }
+
+  /* ── Szene 5: Empfang mit Praxura ─────────────────── */
+  .feat { position: absolute; inset: 0; display: grid; grid-template-columns: 450px 1fr; align-items: center; gap: 48px; padding: 0 60px 20px 80px; }
+  .eyebrow { font-family: var(--mono); font-size: 16px; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); margin-bottom: 18px; }
+  .feat h2 { font-size: 62px; }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 24px; padding: 26px 28px;
+    box-shadow: 0 2px 4px rgba(26,22,17,.04), 0 40px 80px -36px rgba(26,22,17,.4); }
+  .ch { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .ch .pm { width: 30px; height: 30px; border-radius: 9px; background: var(--em); color: #F1E9D6; display: grid; place-items: center; font-family: var(--serif); font-size: 18px; }
+  .ch b { font-size: 22px; }
+  .ch .ok { margin-left: auto; font-size: 14px; font-weight: 700; color: var(--ok); background: rgba(47,107,74,.1); border-radius: 999px; padding: 5px 12px; }
+  .flds { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+  .lab { font-size: 15px; color: var(--mute); margin-bottom: 3px; }
+  .fld { border: 1.5px solid rgba(47,107,74,.4); background: rgba(47,107,74,.05); border-radius: 11px; padding: 10px 14px; font-size: 22px; }
+  .chk { display: flex; gap: 12px; align-items: center; font-size: 21px; padding: 8px 0; }
+  .chk i { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-weight: 700; font-size: 13px; flex: none; background: rgba(47,107,74,.12); color: var(--ok); }
+  .alert { margin-top: 10px; display: flex; gap: 14px; align-items: flex-start; padding: 16px 18px; border-radius: 14px; background: #FFF6E0; border: 2px solid var(--gold); }
+  .alert i { width: 30px; height: 30px; border-radius: 50%; background: var(--gold); color: var(--ink); font-style: normal; font-weight: 800; display: grid; place-items: center; flex: none; }
+  .alert b { display: block; font-size: 23px; }
+  .alert span { font-size: 18px; color: var(--soft); }
+  #s-praxura.on .alert { animation: pop .7s var(--out) 1.7s both, ring 1.4s ease 2.4s 2; }
+  @keyframes ring { 0% { box-shadow: 0 0 0 0 rgba(177,137,27,.5); } 100% { box-shadow: 0 0 0 22px rgba(177,137,27,0); } }
+  .termin { margin-top: 12px; display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; background: rgba(47,107,74,.09); font-size: 20px; }
+  .termin b { font-family: var(--mono); font-weight: 600; }
+  .termin .ok { margin-left: auto; color: var(--ok); font-weight: 700; }
+
+  /* ── Szene 6: bezahlt ─────────────────────────────── */
+  .paid { font-family: var(--serif); font-size: 140px; letter-spacing: -.04em; color: var(--ok); line-height: 1; }
+  .paid small { display: block; font-family: var(--mono); font-size: 18px; letter-spacing: .3em; text-transform: uppercase; color: var(--mute); margin-bottom: 16px; }
+  .check { width: 90px; height: 90px; border-radius: 50%; background: var(--ok); margin: 0 auto 26px; display: grid; place-items: center; }
+  .check svg { width: 46px; height: 46px; fill: none; stroke: #F8F3E8; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 30; stroke-dashoffset: 30; }
+  #s-paid.on .check svg { animation: tick .5s var(--out) .45s both; }
+  @keyframes tick { to { stroke-dashoffset: 0; } }
+
+  /* ── Marke ───────────────────────────────────────── */
+  .mark { width: 92px; height: 92px; border-radius: 26px; background: var(--em); color: #F1E9D6; display: grid; place-items: center; font-family: var(--serif); font-size: 54px; margin: 0 auto 24px; box-shadow: 0 24px 50px -20px rgba(30,61,47,.6); }
+  .word { font-family: var(--serif); font-size: 92px; letter-spacing: -.04em; line-height: 1; }
+  .pills { display: flex; gap: 10px; justify-content: center; margin-top: 30px; flex-wrap: wrap; }
+  .pills span { border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; font-size: 16px; color: var(--soft); background: rgba(255,254,251,.7); }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- 1 · Der Brief -->
+  <section class="sc" id="s-brief">
+    <div class="cam"><div class="shake">
+      <div class="env"></div>
+      <div class="letter">
+        <div class="lh"><div class="logo"></div><div><b>Ihre Krankenkasse</b><span>Abrechnungsprüfung Heilmittel</span></div></div>
+        <div class="lt">Mitteilung über Rechnungskürzung</div>
+        <div class="lrow"><span>Leistungserbringer</span><span>Physiotherapie am Stadtpark</span></div>
+        <div class="lrow"><span>Versicherter</span><span>Markus B.</span></div>
+        <div class="lrow"><span>Leistung</span><span>Manuelle Therapie · 6 Behandlungen</span></div>
+        <div class="lrow"><span>Abrechnung</span><span>Januar</span></div>
+        <div class="lgrund"><b>Grund:</b> Verordnung ungültig. Behandlungsbeginn später als 28 Tage nach Ausstellung.</div>
+        <div class="amt"><span>Gekürzter Betrag</span><b>− 213,54 €</b></div>
+        <div class="stamp">ABGESETZT</div>
+      </div>
+    </div></div>
+    <div class="tag">Beispiel</div>
+  </section>
+
+  <!-- 2 · Wucht -->
+  <section class="sc dark" id="s-hit">
+    <div class="center"><div class="big">
+      <div class="a" style="--d:.1s">Sechs Behandlungen geleistet.</div>
+      <div class="a" style="--d:1.0s">Bezahlt: <span class="zero">0&nbsp;€.</span></div>
+    </div></div>
+  </section>
+
+  <!-- 3 · Das Ärgerliche -->
+  <section class="sc dark" id="s-why">
+    <div class="center"><div>
+      <h2 class="a" style="--d:.05s">Dabei war der Fehler<br><em>vom ersten Tag an sichtbar.</em></h2>
+    </div></div>
+  </section>
+
+  <!-- 4 · Zurückspulen -->
+  <section class="sc dark" id="s-rew">
+    <div class="scan"></div>
+    <div class="rew"><div>
+      <div class="lbl">Zurück zu dem Tag, an dem die Verordnung kam</div>
+      <div class="dt"><span class="tri">◀◀</span><span id="rewDate">05.01.</span></div>
+    </div></div>
+  </section>
+
+  <!-- 5 · Mit Praxura -->
+  <section class="sc" id="s-praxura">
+    <div class="feat">
+      <div>
+        <div class="eyebrow a" style="--d:0s">Mit Praxura</div>
+        <h2 class="a" style="--d:.1s">Die Frist<br><em>meldet sich selbst.</em></h2>
+        <div class="sub a" style="--d:.35s">Jede Verordnung wird beim Einlesen geprüft. Bevor die erste Behandlung stattfindet.</div>
+      </div>
+      <div class="card a pop" style="--d:.15s">
+        <div class="ch"><span class="pm">P</span><b>Verordnung eingelesen</b><span class="ok">per Barcode</span></div>
+        <div class="flds">
+          <div><div class="lab">Patient</div><div class="fld">Markus B.</div></div>
+          <div><div class="lab">Ausgestellt am</div><div class="fld">23.11.</div></div>
+        </div>
+        <div style="margin-top:10px">
+          <div class="chk a" style="--d:.7s"><i>✓</i>Diagnosegruppe passt zum Heilmittel</div>
+          <div class="chk a" style="--d:.95s"><i>✓</i>Menge und Frequenz zulässig</div>
+        </div>
+        <div class="alert"><i>!</i><div><b>Behandlungsbeginn spätestens am 21.12.</b><span>Danach verliert die Verordnung ihre Gültigkeit.</span></div></div>
+        <div class="termin a" style="--d:3.4s"><span>Erster Termin</span><b>Mi, 17.12. · 9:00</b><span class="ok">✓ rechtzeitig</span></div>
+      </div>
+    </div>
+    <div class="tag">Beispiel</div>
+  </section>
+
+  <!-- 6 · Bezahlt -->
+  <section class="sc" id="s-paid">
+    <div class="center"><div>
+      <div class="check a pop" style="--d:.1s"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+      <div class="paid a" style="--d:.3s"><small>Abrechnung Januar</small><span id="paidAmt">213,54</span>&nbsp;€</div>
+      <div class="sub a" style="--d:.9s">Gleiche Verordnung. Gleiche Arbeit. <b style="color:var(--ink)">Diesmal bezahlt.</b></div>
+    </div></div>
+    <div class="tag">Beispiel</div>
+  </section>
+
+  <!-- 7 · Botschaft -->
+  <section class="sc" id="s-msg">
+    <div class="center"><div>
+      <h2 class="a" style="--d:.05s">Praxura findet Fehler,<br><em>bevor die Kasse es tut.</em></h2>
+      <div class="sub a" style="--d:.55s">Beim Einlesen der Verordnung. Und noch einmal vor jeder Abrechnung.</div>
+    </div></div>
+  </section>
+
+  <!-- 8 · Marke -->
+  <section class="sc" id="s-end">
+    <div class="center"><div>
+      <div class="mark a pop" style="--d:0s">P</div>
+      <div class="word a" style="--d:.12s">Praxura</div>
+      <div class="sub a" style="--d:.45s;font-size:28px;color:var(--ink);font-family:var(--serif);letter-spacing:-.01em">Damit Ihre Arbeit auch bezahlt wird.</div>
+      <div class="pills">
+        <span class="a" style="--d:.8s">Physiotherapie</span><span class="a" style="--d:.9s">Ergotherapie</span>
+        <span class="a" style="--d:1.0s">Logopädie</span><span class="a" style="--d:1.1s">Podologie</span>
+      </div>
+    </div></div>
+  </section>
+</div>
+
+<script>
+(function () {
+  const $ = (s) => document.querySelector(s);
+  const HOOKS = {
+    // Datum läuft rückwärts: 05.01. → 23.11. (Tag der Ausstellung)
+    's-rew': () => {
+      const start = new Date(2027, 0, 5), end = new Date(2026, 10, 23); const n = Math.round((start - end) / 864e5);
+      const t0 = performance.now() + 150, dur = 1500;
+      const tick = (t) => {
+        const p = Math.min(Math.max((t - t0) / dur, 0), 1); const e = 1 - Math.pow(1 - p, 2.2);
+        const d = new Date(start); d.setDate(d.getDate() - Math.round(n * e));
+        $('#rewDate').textContent = String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.';
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    },
+    's-paid': () => {
+      const el = $('#paidAmt'), to = 213.54, t0 = performance.now() + 300;
+      const tick = (t) => { const p = Math.min(Math.max((t - t0) / 1100, 0), 1); const v = to * (1 - Math.pow(1 - p, 3));
+        el.textContent = v.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); if (p < 1) requestAnimationFrame(tick); };
+      requestAnimationFrame(tick);
+    }
+  };
+  // [Szene, Dauer ms]
+  const TL = [['s-brief', 5600], ['s-hit', 2900], ['s-why', 2400], ['s-rew', 2100], ['s-praxura', 5400], ['s-paid', 3200], ['s-msg', 3300], ['s-end', 3600]];
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  async function play() {
+    for (const [id, ms] of TL) {
+      document.querySelectorAll('.sc.on').forEach((s) => s.classList.remove('on'));
+      const sc = document.getElementById(id);
+      sc.querySelectorAll('*').forEach((el) => { if (el.style) { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; } });
+      sc.classList.add('on');
+      if (HOOKS[id]) HOOKS[id]();
+      await sleep(ms);
+    }
+    window.__filmDone = true;
+  }
+  window.startFilm = play;
+  if (!/auto=0/.test(location.search)) document.fonts.ready.then(play);
+})();
+</script>
+</body>
+</html>
