@@ -1,0 +1,46 @@
+{
+  "id": "20261125-quellen-6",
+  "bekci": "quellen",
+  "olusturma": "2026-11-25T12:09:54.826Z",
+  "durum": "acik",
+  "baslik": "‼️ Kaynak: ggt-secon",
+  "satirlar": [
+    "• Kaynak: ggt-secon (kritisch) · Gemeinsame Grundsätze Technik + Anlage 2/4/16/16a (Auftragsdatei, Verfahrenskennung, SECON) — feste ",
+    "  + Anlage_16a_-_Security_Schnittstelle_PQC.pdf",
+    "  + Anlage_16a_-_Security_Schnittstelle_PQC_Referenzbeispiele.zip",
+    "  ajan: etki=orta, öneri=incele, geçerlilik=2028-12-01, güven=mittel",
+    "  dosya: api-backend/billing/dta/verschluesselung.js, api-backend/billing/dta/signed-original.js, api-backend/billing/dta/empfaenger-zertifikat-pruefung.js, api-backend/billing/dta/itsg-trust-anchor.js, wissensbank/REGISTER.md",
+    "  ajan: etki=dusuk, öneri=incele, geçerlilik=2028-12-01, güven=niedrig",
+    "  dosya: api-backend/billing/dta/verschluesselung.test.js",
+    "  Kaçırılırsa: Ändert sich Auftragsdatei oder SECON, wird der Versand auf Transportebene abgewiesen — keine Rechnung geht raus."
+  ],
+  "dosyalar": [
+    "api-backend/billing/dta/verschluesselung.js",
+    "api-backend/billing/dta/signed-original.js",
+    "api-backend/billing/dta/empfaenger-zertifikat-pruefung.js",
+    "api-backend/billing/dta/itsg-trust-anchor.js",
+    "wissensbank/REGISTER.md",
+    "api-backend/billing/dta/verschluesselung.test.js"
+  ],
+  "yamaSha256": null,
+  "oneri": "Yepyeni bir belge: Anlage 16a, faturaların şifrelenmesi için kuantuma dayanıklı yeni yöntem (PQC). 01.12.2028'den itibaren kullanılabilir; bugünkü yöntem (Anlage 16) 30.11.2031'e kadar geçerli kalır, sonra kalkar. Bugün yapılacak iş yok, ama şifreleme kodumuz 2031'den önce yenilenmeli. Bizde bu belge kayıtlı değil.; Anlage 16a (yeni şifreleme yöntemi) için örnek dosyalar paketi. ZIP dosyası olduğu için içi OKUNMADI. Muhtemelen yalnız test örnekleri; yeni yönteme geçerken işe yarar.",
+  "ek": {
+    "quelleId": "ggt-secon",
+    "neu": [
+      "www.gkv-datenaustausch.de/media/dokumente/standards_und_normen/technische_spezifikationen/Anlage_16a_-_Security_Schnittstelle_PQC.pdf | Mon, 23 Nov 2026 16:51:53 +0200",
+      "www.gkv-datenaustausch.de/media/dokumente/standards_und_normen/technische_spezifikationen/Anlage_16a_-_Security_Schnittstelle_PQC_Referenzbeispiele.zip | Mon, 23 Nov 2026 16:51:51 +0200"
+    ],
+    "weg": [],
+    "iz": "f88590208a936db2",
+    "uygulanabilir": true
+  },
+  "mesajId": null,
+  "hatirlatma": 0,
+  "sonHatirlatma": null,
+  "gecmis": [
+    {
+      "zaman": "2026-11-25T12:09:54.826Z",
+      "eylem": "olusturuldu"
+    }
+  ]
+}

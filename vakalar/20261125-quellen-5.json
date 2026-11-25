@@ -1,0 +1,50 @@
+{
+  "id": "20261125-quellen-5",
+  "bekci": "quellen",
+  "olusturma": "2026-11-25T12:09:54.599Z",
+  "durum": "acik",
+  "baslik": "‼️ Kaynak: tp5-anlagen",
+  "satirlar": [
+    "• Kaynak: tp5-anlagen (kritisch) · §302 TP5 Technische Anlage 1 + 3 + Anhänge (EDIFACT, Schlüssel, KT-Dateiformat)",
+    "  + 20260923_TP5_TA3_V22.pdf",
+    "  + 20261007_TP5_TA1_Anhang3_V009.pdf",
+    "  + 20261007_TP5_TA1_Anhang3_V010.pdf",
+    "  ajan: etki=dusuk, öneri=incele, geçerlilik=2027-02-01, güven=mittel",
+    "  dosya: api-backend/billing/codes/anlage3_v22.js, wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V22_20260218.txt, wissensbank/REGISTER.md",
+    "  ajan: etki=dusuk, öneri=incele, geçerlilik=2026-06-01, güven=mittel",
+    "  dosya: api-backend/billing/kostentraeger/parser.js, wissensbank/gemeinsam/302-tp5/Anhang_03_Anlage_1_TP5_V09_20260414.txt, wissensbank/REGISTER.md",
+    "  ajan: etki=dusuk, öneri=incele, geçerlilik=2027-02-01, güven=mittel",
+    "  dosya: api-backend/billing/kostentraeger/parser.js, wissensbank/gemeinsam/302-tp5/Anhang_03_Anlage_1_TP5_V10_20260414.txt, wissensbank/REGISTER.md",
+    "  Kaçırılırsa: DTA-Datei nach alter Fassung/Revision wird bei der Annahmestelle komplett abgewiesen."
+  ],
+  "dosyalar": [
+    "api-backend/billing/codes/anlage3_v22.js",
+    "wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V22_20260218.txt",
+    "wissensbank/REGISTER.md",
+    "api-backend/billing/kostentraeger/parser.js",
+    "wissensbank/gemeinsam/302-tp5/Anhang_03_Anlage_1_TP5_V09_20260414.txt",
+    "wissensbank/gemeinsam/302-tp5/Anhang_03_Anlage_1_TP5_V10_20260414.txt"
+  ],
+  "yamaSha256": null,
+  "oneri": "Anlage 3 V22'nin yeni baskısı (Stand 23.09.2026, yine 01.02.2027'den itibaren). Bizdeki kopya 18.02.2026 baskısı. Yeni olan iki şey: kod 67 (Mobile Reha) artık 'boş' ve doğum tarihi anahtarına (8.1.16, ebe/Hebamme) 3-5 değerleri eklendi. İkisi de Heilmittel'i ilgilendirmiyor, bizim kodumuz bunları kullanmıyor. Ama anlage3_v22.js başındaki 'V21 ile V22 tek yerde farklı' notu artık eksik.; Kostenträgerdatei kuralları (Anhang 3, V09) yeni baskı: Stand 07.10.2026, bizdeki 14.04.2026. Tek değişiklik VKG satırındaki 'Unterverfahren' alanının açıklaması: artık zorunlu değil, isteğe bağlı ve yalnız ev",
+  "ek": {
+    "quelleId": "tp5-anlagen",
+    "neu": [
+      "www.gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/20260923_TP5_TA3_V22.pdf",
+      "www.gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/20261007_TP5_TA1_Anhang3_V009.pdf",
+      "www.gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/20261007_TP5_TA1_Anhang3_V010.pdf"
+    ],
+    "weg": [],
+    "iz": "69293bfb14476cab",
+    "uygulanabilir": true
+  },
+  "mesajId": null,
+  "hatirlatma": 0,
+  "sonHatirlatma": null,
+  "gecmis": [
+    {
+      "zaman": "2026-11-25T12:09:54.599Z",
+      "eylem": "olusturuldu"
+    }
+  ]
+}

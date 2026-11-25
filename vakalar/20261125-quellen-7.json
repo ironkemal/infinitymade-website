@@ -1,0 +1,49 @@
+{
+  "id": "20261125-quellen-7",
+  "bekci": "quellen",
+  "olusturma": "2026-11-25T12:09:54.827Z",
+  "durum": "acik",
+  "baslik": "Kaynak: gba-heilm-rl-beschluesse",
+  "satirlar": [
+    "• Kaynak: gba-heilm-rl-beschluesse (mittel) · G-BA HeilM-RL Beschlüsse (Frühwarnung vor Inkrafttreten)",
+    "  + 7977",
+    "  + 8129",
+    "  ajan: etki=orta, öneri=incele, geçerlilik=2027-01-01, güven=niedrig",
+    "  dosya: api-backend/ai/validators/heilmittel-catalog.json, api-backend/ai/validators/data/diagnoseliste-raw.txt, api-backend/ai/validators/blankoRules.js, wissensbank/REGISTER.md",
+    "  ajan: etki=orta, öneri=incele, geçerlilik=—, güven=niedrig",
+    "  dosya: api-backend/billing/zuzahlung/calculator.js, api-backend/billing/dta/regel-schwere.js, module/zuzahlung-rechnen.js, module/physio-katalog-migration.js, wissensbank/SPEC-RULES.md",
+    "  Kaçırılırsa: Änderung fällt erst beim Inkrafttreten auf, keine Vorbereitungszeit."
+  ],
+  "dosyalar": [
+    "api-backend/ai/validators/heilmittel-catalog.json",
+    "api-backend/ai/validators/data/diagnoseliste-raw.txt",
+    "api-backend/ai/validators/blankoRules.js",
+    "wissensbank/REGISTER.md",
+    "api-backend/billing/zuzahlung/calculator.js",
+    "api-backend/billing/dta/regel-schwere.js",
+    "module/zuzahlung-rechnen.js",
+    "module/physio-katalog-migration.js",
+    "wissensbank/SPEC-RULES.md"
+  ],
+  "yamaSha256": null,
+  "oneri": "G-BA kararı (20.08.2026): uzun süreli Heilmittel ihtiyacı (LHB) tanı listesine yeni tanılar ekleniyor (HeilM-RL Anlage 2). 01.01.2027'de yürürlüğe giriyor. Yalnız karar sayfası okundu, karar metni (PDF) indirilmedi; hangi tanıların eklendiği bilinmiyor. Bizim LHB/BVB listemiz Stand 01.01.2026, tazelenmesi gerekebilir.; G-BA kararı (19.11.2026): ZNS hastalıklarında Krankengymnastik (KG-ZNS ve KG-ZNS-Kinder) kuralları gözden geçirildi. Henüz yürürlükte değil, tarih belli değil. Yalnız karar sayfası okundu, metin indirilmedi; neyin değiştiği bilinmiyor. Physio tarafını (KG-ZNS fiyat/sertifika/Zuz",
+  "ek": {
+    "quelleId": "gba-heilm-rl-beschluesse",
+    "neu": [
+      "www.g-ba.de/beschluesse/7977/",
+      "www.g-ba.de/beschluesse/8129/"
+    ],
+    "weg": [],
+    "iz": "f58c56a58dc18452",
+    "uygulanabilir": true
+  },
+  "mesajId": null,
+  "hatirlatma": 0,
+  "sonHatirlatma": null,
+  "gecmis": [
+    {
+      "zaman": "2026-11-25T12:09:54.827Z",
+      "eylem": "olusturuldu"
+    }
+  ]
+}

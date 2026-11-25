@@ -1,0 +1,38 @@
+{
+  "id": "20261125-quellen-8",
+  "bekci": "quellen",
+  "olusturma": "2026-11-25T12:09:54.828Z",
+  "durum": "acik",
+  "baslik": "Kaynak: kbv-bfb",
+  "satirlar": [
+    "• Kaynak: kbv-bfb (mittel) · KBV Technisches Handbuch Blankoformularbedruckung (Muster-13-PDF417; fester Dateiname, Spur = Dateig",
+    "  + KBV_ITA_VGEX_Technisches_Handbuch_BFB.pdf",
+    "  ajan: etki=yok, öneri=biliniyor, geçerlilik=2027-01-01, güven=hoch",
+    "  dosya: module/rezept-barcode.js, wissensbank/REGISTER.md",
+    "  Kaçırılırsa: Neues Barcode-Layout → lokaler Barcode-Leser ordnet Felder falsch zu."
+  ],
+  "dosyalar": [
+    "module/rezept-barcode.js",
+    "wissensbank/REGISTER.md"
+  ],
+  "yamaSha256": null,
+  "oneri": "KBV barkod el kitabı yeni sürüm: 4.81 (13.11.2026), 01.01.2027'de yürürlükte. Bizdeki 4.80. Tek değişiklik Muster 64'te bir alan uzunluğu düzeltmesi. Bizim okuduğumuz Muster 13 (Heilmittel reçetesi) barkodu değişmedi. Yalnız kaydın güncellenmesi yeterli.",
+  "ek": {
+    "quelleId": "kbv-bfb",
+    "neu": [
+      "update.kbv.de/ita-update/Blankoformulare/KBV_ITA_VGEX_Technisches_Handbuch_BFB.pdf | 5341596 Bytes"
+    ],
+    "weg": [],
+    "iz": "6c59fce913448a2a",
+    "uygulanabilir": true
+  },
+  "mesajId": null,
+  "hatirlatma": 0,
+  "sonHatirlatma": null,
+  "gecmis": [
+    {
+      "zaman": "2026-11-25T12:09:54.828Z",
+      "eylem": "olusturuldu"
+    }
+  ]
+}
