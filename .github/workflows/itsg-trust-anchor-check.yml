@@ -106,7 +106,7 @@ jobs:
       - name: main-Stand ziehen, Dateien kopieren, committen und pushen (mit Retry)
         run: |
           git config user.name "praxura-trust-anchor-bot"
-          git config user.email "actions@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           # S-28: Keine Ausführung von dynamischem Code aus dem Checkout im schreibberechtigten Job.
           # Nur bash, git und Dateikopieren.

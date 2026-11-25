@@ -63,7 +63,7 @@ jobs:
         working-directory: ./api-backend
         run: |
           git config user.name "praxura-preise-bot"
-          git config user.email "actions@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           # O-98 (onprem/REGISTER.md): die Migrationsnummer wird ERST HIER, NACH
           # dem Rebase auf den aktuellsten main-Stand berechnet — nicht schon in

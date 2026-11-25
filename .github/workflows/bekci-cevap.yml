@@ -79,9 +79,11 @@ jobs:
         working-directory: vakalar
         run: |
           set -euo pipefail
+          # Vercel soll diesen Datenzweig nie bauen (sonst Fehl-Deploys, 25.11.2026)
+          [ -f vercel.json ] || echo '{"git":{"deploymentEnabled":false}}' > vercel.json
           git add -A
           if git diff --cached --quiet; then echo "keine Änderung"; exit 0; fi
-          git -c user.name="praxura-bekci" -c user.email="bekci@users.noreply.github.com" \
+          git -c user.name="praxura-bekci" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
             commit --quiet -m "bekci: Fälle aktualisiert"
           for i in 1 2 3; do git push --quiet origin HEAD:bekci-vakalar && exit 0; git pull --quiet --rebase origin bekci-vakalar || true; done
           exit 1
