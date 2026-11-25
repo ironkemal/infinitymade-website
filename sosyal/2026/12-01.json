@@ -1,69 +1,62 @@
 {
   "art": "video",
   "musik": "ruhig",
-  "stimme": "Vindemiatrix",
-  "sprechweise": "Natürliche, sanfte und warme Frauenstimme, nachdenklich und herzlich, wie in einem hochwertigen, emotionalen Werbefilm. Nicht übertrieben. Normales Sprechtempo.",
+  "stimme": "Sulafat",
+  "sprechweise": "Natürliche, warme Frauenstimme wie in einem hochwertigen Werbespot. Nahbar und ruhig, mit einem leichten Lächeln, spricht die Zuschauerin direkt an. Normales Sprechtempo.",
   "tempo": 1.05,
-  "caption": "Wofür haben Sie diesen Beruf gewählt? Für Menschen. Nicht für Papier.\n\nPraxura übernimmt die Verwaltung im Hintergrund: Termine, Verordnungen, Dokumentation. Damit mehr Zeit für die Therapie bleibt.\n\nSchicken Sie das einer Kollegin, die ihren Beruf liebt.\n\nMehr auf praxura.de\n\n(Bilder und Stimme KI-generiert)\n\n#Physiotherapie #Therapeutenleben #Praxisalltag #Heilmittel #Therapiepraxis",
+  "caption": "Kennen Sie das? Zehn Termine, eine Verordnung, und jeder Termin will einzeln eingetragen werden.\n\nPraxura legt Serientermine an, prüft die Verordnung vor der Behandlung, führt das Fahrtenbuch und sichert jede Nacht verschlüsselt. Lokal, in Ihrer Praxis.\n\nSchicken Sie das Ihrer Praxisleitung.\n\nMehr auf praxura.de\n\n(Stimme KI-generiert)\n\n#Heilmittel #Praxissoftware #Therapiepraxis #Praxisalltag #Praxisinhaber",
   "szenen": [
     {
-      "typ": "foto",
-      "dauer": 3.6,
-      "bild": "foto/test/test1.jpg",
-      "kicker": "Physiotherapie",
-      "titel": "Wofür haben Sie diesen <em>Beruf gewählt?</em>",
-      "effekt": [
-        "korn",
-        "kino"
-      ],
-      "schwenk": -30,
-      "sprecher": "Wofür haben Sie diesen Beruf gewählt?"
-    },
-    {
-      "typ": "foto",
-      "dauer": 3.4,
-      "bild": "foto/test/test1.jpg",
-      "zoom": "raus",
-      "uebergang": "schnitt",
-      "effekt": [
-        "korn",
-        "kino"
-      ],
-      "sprecher": "Für Papierstapel, Rückfragen und Fristen? Wohl kaum."
-    },
-    {
-      "typ": "foto",
-      "dauer": 3.6,
-      "bild": "foto/test/test3.jpg",
-      "titel": "Für <em>Menschen.</em>",
-      "effekt": [
-        "korn"
-      ],
-      "sprecher": "Sondern für die Menschen auf Ihrer Liege."
+      "typ": "geraet",
+      "buehne": true,
+      "dauer": 4.4,
+      "ansicht": "kalender",
+      "kicker": "Kennen Sie das?",
+      "titel": "Zehn Termine. <em>Eine Serie.</em>",
+      "kopf": "Kalender",
+      "serieLabel": "Serie",
+      "sprecher": "Kennen Sie das? Eine Verordnung, zehn Termine, und jeder will einzeln eingetragen werden."
     },
     {
       "typ": "geraet",
       "buehne": true,
       "dauer": 4.4,
-      "kicker": "Im Hintergrund",
-      "titel": "Verwaltung, <em>erledigt.</em>",
-      "kopf": "Heute",
+      "kicker": "Vor der Behandlung",
+      "titel": "Geprüft. <em>Vorher.</em>",
+      "kopf": "Verordnung",
       "schritte": [
-        "Termine geplant",
-        "Verordnungen geprüft",
-        "Dokumentation gespeichert"
+        "Barcode eingelesen",
+        "Pflichtangaben geprüft"
       ],
-      "sprecher": "Praxura erledigt die Verwaltung im Hintergrund. Leise, zuverlässig, in Ihrer Praxis."
+      "ergebnis": "Bereit zur Behandlung",
+      "sprecher": "Die Verordnung wird geprüft, bevor Sie behandeln. Nicht erst, wenn die Kasse absetzt."
     },
     {
-      "typ": "foto",
-      "dauer": 3.4,
-      "bild": "foto/test/test4.jpg",
-      "titel": "Und dann: <em>Feierabend.</em>",
-      "effekt": [
-        "korn"
+      "typ": "geraet",
+      "buehne": true,
+      "dauer": 4,
+      "kicker": "Hausbesuch",
+      "titel": "Kilometer <em>drin.</em>",
+      "kopf": "Fahrtenbuch",
+      "schritte": [
+        "Hausbesuch eingetragen",
+        "Kilometer erfasst"
       ],
-      "sprecher": "Und abends gehen Sie nach Hause. Pünktlich."
+      "sprecher": "Hausbesuch? Die Kilometer stehen im Fahrtenbuch. Nicht im Handschuhfach."
+    },
+    {
+      "typ": "geraet",
+      "buehne": true,
+      "dauer": 4.4,
+      "kicker": "Jede Nacht",
+      "titel": "Gesichert. <em>Bei Ihnen.</em>",
+      "kopf": "Sicherung",
+      "schritte": [
+        "Daten verschlüsselt",
+        "Sicherung erstellt"
+      ],
+      "ergebnis": "Ihre Daten bleiben in der Praxis",
+      "sprecher": "Und jede Nacht wird verschlüsselt gesichert. Ihre Daten bleiben in Ihrer Praxis."
     },
     {
       "typ": "outro",
@@ -71,7 +64,7 @@
       "dauer": 3.4,
       "nachlauf": 1,
       "kicker": "Praxura Lokal",
-      "titel": "Mehr Zeit für <em>Therapie.</em>",
+      "titel": "Ihre Praxis. <em>In Ruhe.</em>",
       "cta": "Mehr auf praxura.de",
       "klang": [
         {
@@ -80,8 +73,8 @@
           "laut": -3
         }
       ],
-      "sprecher": "Praxura. Mehr Zeit für das, wofür Sie da sind."
+      "sprecher": "Praxura. Die Praxissoftware, die bei Ihnen wohnt."
     }
   ],
-  "quelleMuster": "F13-beruf-gewaehlt"
+  "quelleMuster": "F10-produktfilm"
 }

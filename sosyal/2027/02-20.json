@@ -1,0 +1,38 @@
+{
+  "art": "video",
+  "caption": "Diese Verordnung kommt vom Zahnarzt. Und sie ist gültig: Auch Vertragszahnärzte können Heilmittel verordnen, nach einer eigenen Heilmittel-Richtlinie für Zahnärzte. Die HeilM-RL für Ärzte gilt dafür nicht (§ 1 Abs. 3).\n\nMehr Praxiswissen für Heilmittelpraxen: praxura.de\n\n#Heilmittel #Therapiepraxis #GKV #Praxisalltag",
+  "szenen": [
+    {
+      "typ": "hook",
+      "dauer": 2.6,
+      "kicker": "Heilmittelpraxen, aufgepasst",
+      "titel": "Diese Verordnung kommt vom <em>Zahnarzt.</em>",
+      "muster": "MUSTER 13",
+      "datum": "Dr. med. dent.",
+      "stempel": "GÜLTIG",
+      "stempelGut": true,
+      "stempelBei": 0.55
+    },
+    {
+      "typ": "aussage",
+      "dauer": 3,
+      "kicker": "Ja, das geht",
+      "titel": "Auch <em>Zahnärzte</em> verordnen Heilmittel.",
+      "quelle": "HeilM-RL § 1 Abs. 3"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 3,
+      "kicker": "Der Unterschied",
+      "titel": "Dafür gilt eine <em>eigene</em> Richtlinie.",
+      "quelle": "HeilM-RL Zahnärzte"
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.8,
+      "kicker": "Praxura Lokal",
+      "titel": "Kennt den Unterschied, <em>bevor</em> Sie behandeln.",
+      "cta": "Folgen für mehr Praxiswissen"
+    }
+  ]
+}

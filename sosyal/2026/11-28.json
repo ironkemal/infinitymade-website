@@ -1,106 +1,86 @@
 {
   "art": "video",
-  "musik": "museum",
-  "stimme": "Sadaltager",
-  "sprechweise": "Natürliche, warme Männerstimme eines professionellen Sprechers, wie ein hochwertiger Museums-Audioguide. Ruhig, menschlich und souverän, nicht theatralisch. Normales Sprechtempo.",
-  "caption": "Willkommen im Museum der Praxisgeschichte. 🏛️\n\nTerminbuch, Kilometerzettel, Karteikasten: Manches gehört ins Museum. In Praxura liegen Termine, Fahrtenbuch und Patientenakte an einem Ort, auf Ihrem eigenen Server.\n\nSchicken Sie das der Kollegin, die das Terminbuch noch verteidigt.\n\nMehr auf praxura.de\n\n(Bilder und Stimme KI-generiert)\n\n#Praxisalltag #Therapiepraxis #Heilmittel #Praxissoftware #Therapeutenleben",
+  "musik": "episch",
+  "stimme": "Laomedeia",
+  "tempo": 1.08,
+  "coverBei": 1.2,
+  "sprechweise": "Natürliche, sympathische Frauenstimme. Am Anfang feierlich wie ein Science-Fiction-Trailer, beim zweiten Satz trocken und mit Humor, danach warm und direkt. Normales Sprechtempo.",
+  "caption": "Cyber Week. Die Zukunft ist da. Naja. Fast. 🤖\n\nEchte Digitalisierung für Ihre Praxis: Termine, Akte und Abrechnungsvorbereitung an einem Ort. Zur Cyber Week bis zu −23 % auf alle Pakete, Einrichtung bis zu 300 € günstiger, und bei jährlicher Zahlung zusätzlich −10 % auf die Lizenz.\n\nMarkieren Sie, wer in Ihrer Praxis für Technik zuständig ist.\n\nAlle Preise auf praxura.de\n\nAktionspreise für Verträge mit Abschluss bis 31.12.2026, garantiert für die ersten 12 Monate. Zzgl. einmaliger Einrichtung und Serverkosten. Angebot nur für Praxen und Unternehmer (§ 14 BGB). Endpreise, gemäß § 19 UStG keine Umsatzsteuer.\n\n(Bilder und Stimme KI-generiert)\n\n#CyberWeek #Praxissoftware #Digitalisierung #Physiotherapie #Heilmittel",
   "szenen": [
     {
       "typ": "foto",
-      "dauer": 3.2,
-      "bild": "foto/museum/m1.jpg",
-      "kicker": "Museum der Praxisgeschichte",
-      "titel": "Bitte <em>nicht berühren.</em>",
-      "effekt": [
-        "staub",
-        "kino"
-      ],
-      "sprecher": "Willkommen im Museum der Praxisgeschichte."
-    },
-    {
-      "typ": "foto",
-      "dauer": 3.2,
-      "bild": "foto/museum/m2.jpg",
-      "kicker": "Exponat 1",
-      "titel": "Das <em>Terminbuch.</em>",
-      "effekt": [
-        "staub",
-        "kino"
-      ],
-      "sprecher": "Exponat eins: das Terminbuch."
-    },
-    {
-      "typ": "foto",
-      "dauer": 3.2,
-      "bild": "foto/museum/m3.jpg",
-      "kicker": "Exponat 2",
-      "titel": "Der <em>Kilometerzettel.</em>",
-      "effekt": [
-        "staub",
-        "kino"
-      ],
-      "schwenk": -30,
-      "sprecher": "Der Kilometerzettel. Bis heute nicht entziffert."
-    },
-    {
-      "typ": "foto",
       "dauer": 3,
-      "bild": "foto/museum/m4.jpg",
-      "kicker": "Exponat 3",
-      "titel": "Der <em>Karteikasten.</em>",
+      "bild": "foto/aktion/cy1.jpg",
+      "kicker": "Cyber Week",
+      "titel": "Die Zukunft <em>ist da.</em>",
       "effekt": [
-        "staub",
         "kino"
       ],
-      "nachlauf": 0.6,
-      "sprecher": "Der Karteikasten. Alphabetisch sortiert. Meistens."
+      "sprecher": "Cyber Week. Die Zukunft ist da."
     },
     {
       "typ": "foto",
-      "dauer": 3.6,
-      "bild": "foto/museum/m5.jpg",
-      "kicker": "Exponat 4 · Hauptwerk",
-      "titel": "Der <em>Verordnungsstapel.</em>",
-      "effekt": [
-        "staub",
-        "kino"
-      ],
-      "zoom": "raus",
-      "sprecher": "Das Hauptwerk: der Verordnungsstapel. Nie ganz abgearbeitet."
+      "dauer": 2.4,
+      "bild": "foto/aktion/cy2.jpg",
+      "uebergang": "schnitt",
+      "titel": "Naja. <em>Fast.</em>",
+      "sprecher": "Naja. Fast."
     },
     {
       "typ": "geraet",
-      "dauer": 4.6,
-      "kicker": "Ende des Rundgangs",
-      "titel": "Ausgang: <em>ins Heute.</em>",
+      "buehne": true,
+      "dauer": 4.4,
+      "kicker": "Echte Digitalisierung",
+      "titel": "Ihre Praxis. <em>Digital.</em>",
       "kopf": "Heute",
       "schritte": [
         "Termine und Serien",
-        "Fahrtenbuch",
         "Patientenakte",
-        "Verordnung geprüft"
+        "Abrechnung vorbereitet"
       ],
-      "ergebnis": "Alles an einem Ort",
-      "sprecher": "Der Ausgang führt ins Heute. Alles an einem Ort.",
-      "buehne": true
+      "sprecher": "Echte Digitalisierung sieht so aus: Termine, Akte und Abrechnung an einem Ort."
+    },
+    {
+      "typ": "zaehler",
+      "ton": "dunkel",
+      "dauer": 3.8,
+      "kicker": "Solo · 1 Behandler:in",
+      "praefix": "€ / Monat",
+      "von": 49,
+      "bis": 39,
+      "text": "statt 49 €. 12 Monate garantiert.",
+      "quelle": "Verträge bis 31.12.2026 · zzgl. Einrichtung",
+      "sprecher": "Wenn Sie allein behandeln: neununddreißig Euro im Monat.",
+      "nachlauf": 0.5
+    },
+    {
+      "typ": "countdown",
+      "ton": "dunkel",
+      "dauer": 5,
+      "kicker": "Cyber Week",
+      "punkte": [
+        "Bis zu <em>−23 %</em> auf alle Pakete",
+        "Einrichtung bis zu <em>300 € günstiger</em>",
+        "Jährlich zahlen: <em>noch −10 %</em>"
+      ],
+      "sprecher": "Bis zu dreiundzwanzig Prozent auf alle Pakete. Die Einrichtung günstiger. Und wer jährlich zahlt, spart noch zehn Prozent."
     },
     {
       "typ": "outro",
       "dauer": 3.4,
-      "kicker": "Praxura Lokal",
-      "titel": "Manches gehört <em>ins Museum.</em>",
-      "cta": "Ihre Praxis gehört ins Heute.",
+      "premium": true,
       "klang": [
         {
           "art": "ding",
           "bei": 0.15
         }
       ],
-      "premium": true,
-      "sprecher": "Praxura. Ihre Praxis gehört ins Heute.",
-      "nachlauf": 1
+      "cta": "Alle Preise auf praxura.de",
+      "sprecher": "Praxura. Digital, ganz ohne Roboter.",
+      "nachlauf": 1,
+      "kicker": "Cyber Week bei Praxura",
+      "titel": "Digital. <em>Ganz ohne Roboter.</em>"
     }
   ],
-  "tempo": 1.1,
-  "quelleMuster": "F7-museum"
+  "quelleMuster": "F33-cyber-week"
 }

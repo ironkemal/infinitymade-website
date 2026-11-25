@@ -1,80 +1,80 @@
 {
   "art": "video",
-  "musik": "ruhig",
-  "stimme": "Sulafat",
-  "sprechweise": "Natürliche, warme Frauenstimme wie in einem hochwertigen Werbespot. Nahbar und ruhig, mit einem leichten Lächeln, spricht die Zuschauerin direkt an. Normales Sprechtempo.",
+  "musik": "warm",
+  "stimme": "Gacrux",
   "tempo": 1.05,
-  "caption": "Kennen Sie das? Zehn Termine, eine Verordnung, und jeder Termin will einzeln eingetragen werden.\n\nPraxura legt Serientermine an, prüft die Verordnung vor der Behandlung, führt das Fahrtenbuch und sichert jede Nacht verschlüsselt. Lokal, in Ihrer Praxis.\n\nSchicken Sie das Ihrer Praxisleitung.\n\nMehr auf praxura.de\n\n(Stimme KI-generiert)\n\n#Heilmittel #Praxissoftware #Therapiepraxis #Praxisalltag #Praxisinhaber",
+  "sprechweise": "Natürliche, warme und vertrauenswürdige Frauenstimme wie in einem hochwertigen Werbespot. Ruhig, klar, mit einem leichten Lächeln. Normales Sprechtempo.",
+  "caption": "Black Friday, 17 Uhr. Alle shoppen. Sie sitzen über der Abrechnung.\n\nPraxura bereitet Ihre Abrechnung vor, zum festen Monatspreis statt Prozenten vom Umsatz. Zum Black Friday: Solo 39 €, Praxis 69 €, Team 99 €, Groß 149 € im Monat (statt 49 / 89 / 129 / 189 €).\n\nWann machen Sie freitags Feierabend? Schreiben Sie es in die Kommentare.\n\nAlle Preise auf praxura.de\n\nAktionspreise für Verträge mit Abschluss bis 31.12.2026, garantiert für die ersten 12 Monate. Zzgl. einmaliger Einrichtung und Serverkosten. Angebot nur für Praxen und Unternehmer (§ 14 BGB). Endpreise, gemäß § 19 UStG keine Umsatzsteuer.\n\n(Bilder und Stimme KI-generiert)\n\n#BlackFriday #Heilmittel #Abrechnung #Praxisalltag #Therapeutenleben",
   "szenen": [
     {
-      "typ": "geraet",
-      "buehne": true,
-      "dauer": 4.4,
-      "ansicht": "kalender",
-      "kicker": "Kennen Sie das?",
-      "titel": "Zehn Termine. <em>Eine Serie.</em>",
-      "kopf": "Kalender",
-      "serieLabel": "Serie",
-      "sprecher": "Kennen Sie das? Eine Verordnung, zehn Termine, und jeder will einzeln eingetragen werden."
+      "typ": "foto",
+      "dauer": 3.4,
+      "bild": "foto/aktion/fr1.jpg",
+      "kicker": "Black Friday, 17:00 Uhr",
+      "titel": "Alle shoppen. <em>Sie rechnen ab.</em>",
+      "sprecher": "Black Friday, siebzehn Uhr. Alle shoppen. Und Sie sitzen über der Abrechnung."
+    },
+    {
+      "typ": "aussage",
+      "ton": "dunkel",
+      "dauer": 3,
+      "uebergang": "schnitt",
+      "titel": "Manche zahlen dafür <em>Prozente vom Umsatz.</em>",
+      "sprecher": "Und manche geben dafür auch noch Prozente vom Umsatz ab."
     },
     {
       "typ": "geraet",
       "buehne": true,
       "dauer": 4.4,
-      "kicker": "Vor der Behandlung",
-      "titel": "Geprüft. <em>Vorher.</em>",
-      "kopf": "Verordnung",
+      "kicker": "Mit Praxura",
+      "titel": "Abrechnung <em>vorbereitet.</em>",
+      "kopf": "Abrechnung",
       "schritte": [
-        "Barcode eingelesen",
-        "Pflichtangaben geprüft"
+        "Verordnungen geprüft",
+        "Zuzahlungen erfasst",
+        "Abrechnung vorbereitet"
       ],
-      "ergebnis": "Bereit zur Behandlung",
-      "sprecher": "Die Verordnung wird geprüft, bevor Sie behandeln. Nicht erst, wenn die Kasse absetzt."
+      "sprecher": "Praxura bereitet Ihre Abrechnung vor. Ohne Prozente."
     },
     {
-      "typ": "geraet",
-      "buehne": true,
-      "dauer": 4,
-      "kicker": "Hausbesuch",
-      "titel": "Kilometer <em>drin.</em>",
-      "kopf": "Fahrtenbuch",
-      "schritte": [
-        "Hausbesuch eingetragen",
-        "Kilometer erfasst"
-      ],
-      "sprecher": "Hausbesuch? Die Kilometer stehen im Fahrtenbuch. Nicht im Handschuhfach."
+      "typ": "vergleich",
+      "ton": "dunkel",
+      "dauer": 5,
+      "titel": "Ihre <em>Black-Friday-Rechnung</em>",
+      "links": {
+        "label": "Prozent-Modell",
+        "text": "Gebühr wächst mit dem Umsatz",
+        "weg": true
+      },
+      "rechts": {
+        "label": "Praxura · Praxis",
+        "text": "69 € im Monat. Fest."
+      },
+      "sprecher": "Statt Prozenten ein fester Preis: für zwei bis fünf Behandler neunundsechzig Euro im Monat."
     },
     {
-      "typ": "geraet",
-      "buehne": true,
-      "dauer": 4.4,
-      "kicker": "Jede Nacht",
-      "titel": "Gesichert. <em>Bei Ihnen.</em>",
-      "kopf": "Sicherung",
-      "schritte": [
-        "Daten verschlüsselt",
-        "Sicherung erstellt"
-      ],
-      "ergebnis": "Ihre Daten bleiben in der Praxis",
-      "sprecher": "Und jede Nacht wird verschlüsselt gesichert. Ihre Daten bleiben in Ihrer Praxis."
+      "typ": "foto",
+      "dauer": 2.6,
+      "bild": "foto/aktion/fr2.jpg",
+      "titel": "17:30 Uhr. <em>Feierabend.</em>",
+      "sprecher": "Und um halb sechs: Feierabend."
     },
     {
       "typ": "outro",
-      "premium": true,
       "dauer": 3.4,
-      "nachlauf": 1,
-      "kicker": "Praxura Lokal",
-      "titel": "Ihre Praxis. <em>In Ruhe.</em>",
-      "cta": "Mehr auf praxura.de",
+      "premium": true,
       "klang": [
         {
           "art": "ding",
-          "bei": 0.15,
-          "laut": -3
+          "bei": 0.15
         }
       ],
-      "sprecher": "Praxura. Die Praxissoftware, die bei Ihnen wohnt."
+      "cta": "Alle Preise auf praxura.de",
+      "sprecher": "Praxura. Fester Preis, ab neununddreißig Euro im Monat.",
+      "nachlauf": 1,
+      "kicker": "Black Friday bei Praxura",
+      "titel": "Fester Preis. <em>Ab 39 € im Monat.</em>"
     }
   ],
-  "quelleMuster": "F10-produktfilm"
+  "quelleMuster": "F32-black-friday"
 }

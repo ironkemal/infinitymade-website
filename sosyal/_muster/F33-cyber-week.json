@@ -1,0 +1,85 @@
+{
+  "art": "video",
+  "musik": "episch",
+  "stimme": "Laomedeia",
+  "tempo": 1.08,
+  "coverBei": 1.2,
+  "sprechweise": "Natürliche, sympathische Frauenstimme. Am Anfang feierlich wie ein Science-Fiction-Trailer, beim zweiten Satz trocken und mit Humor, danach warm und direkt. Normales Sprechtempo.",
+  "caption": "Cyber Week. Die Zukunft ist da. Naja. Fast. 🤖\n\nEchte Digitalisierung für Ihre Praxis: Termine, Akte und Abrechnungsvorbereitung an einem Ort. Zur Cyber Week bis zu −23 % auf alle Pakete, Einrichtung bis zu 300 € günstiger, und bei jährlicher Zahlung zusätzlich −10 % auf die Lizenz.\n\nMarkieren Sie, wer in Ihrer Praxis für Technik zuständig ist.\n\nAlle Preise auf praxura.de\n\nAktionspreise für Verträge mit Abschluss bis 31.12.2026, garantiert für die ersten 12 Monate. Zzgl. einmaliger Einrichtung und Serverkosten. Angebot nur für Praxen und Unternehmer (§ 14 BGB). Endpreise, gemäß § 19 UStG keine Umsatzsteuer.\n\n(Bilder und Stimme KI-generiert)\n\n#CyberWeek #Praxissoftware #Digitalisierung #Physiotherapie #Heilmittel",
+  "szenen": [
+    {
+      "typ": "foto",
+      "dauer": 3,
+      "bild": "foto/aktion/cy1.jpg",
+      "kicker": "Cyber Week",
+      "titel": "Die Zukunft <em>ist da.</em>",
+      "effekt": [
+        "kino"
+      ],
+      "sprecher": "Cyber Week. Die Zukunft ist da."
+    },
+    {
+      "typ": "foto",
+      "dauer": 2.4,
+      "bild": "foto/aktion/cy2.jpg",
+      "uebergang": "schnitt",
+      "titel": "Naja. <em>Fast.</em>",
+      "sprecher": "Naja. Fast."
+    },
+    {
+      "typ": "geraet",
+      "buehne": true,
+      "dauer": 4.4,
+      "kicker": "Echte Digitalisierung",
+      "titel": "Ihre Praxis. <em>Digital.</em>",
+      "kopf": "Heute",
+      "schritte": [
+        "Termine und Serien",
+        "Patientenakte",
+        "Abrechnung vorbereitet"
+      ],
+      "sprecher": "Echte Digitalisierung sieht so aus: Termine, Akte und Abrechnung an einem Ort."
+    },
+    {
+      "typ": "zaehler",
+      "ton": "dunkel",
+      "dauer": 3.8,
+      "kicker": "Solo · 1 Behandler:in",
+      "praefix": "€ / Monat",
+      "von": 49,
+      "bis": 39,
+      "text": "statt 49 €. 12 Monate garantiert.",
+      "quelle": "Verträge bis 31.12.2026 · zzgl. Einrichtung",
+      "sprecher": "Wenn Sie allein behandeln: neununddreißig Euro im Monat.",
+      "nachlauf": 0.5
+    },
+    {
+      "typ": "countdown",
+      "ton": "dunkel",
+      "dauer": 5,
+      "kicker": "Cyber Week",
+      "punkte": [
+        "Bis zu <em>−23 %</em> auf alle Pakete",
+        "Einrichtung bis zu <em>300 € günstiger</em>",
+        "Jährlich zahlen: <em>noch −10 %</em>"
+      ],
+      "sprecher": "Bis zu dreiundzwanzig Prozent auf alle Pakete. Die Einrichtung günstiger. Und wer jährlich zahlt, spart noch zehn Prozent."
+    },
+    {
+      "typ": "outro",
+      "dauer": 3.4,
+      "premium": true,
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15
+        }
+      ],
+      "cta": "Alle Preise auf praxura.de",
+      "sprecher": "Praxura. Digital, ganz ohne Roboter.",
+      "nachlauf": 1,
+      "kicker": "Cyber Week bei Praxura",
+      "titel": "Digital. <em>Ganz ohne Roboter.</em>"
+    }
+  ]
+}

@@ -1,51 +1,69 @@
 {
   "art": "video",
-  "musik": "leicht",
-  "stimme": "Achernar",
-  "sprechweise": "Natürliche, freundliche und lebendige Frauenstimme, wie eine sympathische Kollegin in einem hochwertigen Werbespot. Leicht schmunzelnd, nicht übertrieben. Normales Sprechtempo.",
+  "musik": "ruhig",
+  "stimme": "Vindemiatrix",
+  "sprechweise": "Natürliche, sanfte und warme Frauenstimme, nachdenklich und herzlich, wie in einem hochwertigen, emotionalen Werbefilm. Nicht übertrieben. Normales Sprechtempo.",
   "tempo": 1.05,
-  "caption": "Therapiebericht angekreuzt. Und wieder alles abtippen?\n\nIn Praxura füllt sich der Bericht aus Verordnung, Behandlungen und Befund selbst. Sie schreiben nur Verlauf und Empfehlung und senden ihn an die Arztpraxis: verschlüsselt per Mail, per Fax oder gedruckt.\n\nMarkieren Sie die Kollegin, die Berichte am Wochenende schreibt.\n\nMehr auf praxura.de\n\n(Stimme KI-generiert)\n\n#Logopädie #Therapiebericht #Praxisalltag #Heilmittel #Praxissoftware",
+  "caption": "Wofür haben Sie diesen Beruf gewählt? Für Menschen. Nicht für Papier.\n\nPraxura übernimmt die Verwaltung im Hintergrund: Termine, Verordnungen, Dokumentation. Damit mehr Zeit für die Therapie bleibt.\n\nSchicken Sie das einer Kollegin, die ihren Beruf liebt.\n\nMehr auf praxura.de\n\n(Bilder und Stimme KI-generiert)\n\n#Physiotherapie #Therapeutenleben #Praxisalltag #Heilmittel #Therapiepraxis",
   "szenen": [
     {
-      "typ": "figur",
-      "dauer": 4,
-      "kicker": "Logopädie",
-      "titel": "Bericht <em>angekreuzt.</em>",
-      "person": 3,
-      "laune": "gestresst",
-      "requisit": "zettel",
-      "sprechblase": "Schon <em>wieder</em> abtippen?",
-      "sprecher": "Therapiebericht angekreuzt. Und jetzt? Alles noch mal abtippen?"
+      "typ": "foto",
+      "dauer": 3.6,
+      "bild": "foto/test/test1.jpg",
+      "kicker": "Physiotherapie",
+      "titel": "Wofür haben Sie diesen <em>Beruf gewählt?</em>",
+      "effekt": [
+        "korn",
+        "kino"
+      ],
+      "schwenk": -30,
+      "sprecher": "Wofür haben Sie diesen Beruf gewählt?"
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.4,
+      "bild": "foto/test/test1.jpg",
+      "zoom": "raus",
+      "uebergang": "schnitt",
+      "effekt": [
+        "korn",
+        "kino"
+      ],
+      "sprecher": "Für Papierstapel, Rückfragen und Fristen? Wohl kaum."
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.6,
+      "bild": "foto/test/test3.jpg",
+      "titel": "Für <em>Menschen.</em>",
+      "effekt": [
+        "korn"
+      ],
+      "sprecher": "Sondern für die Menschen auf Ihrer Liege."
     },
     {
       "typ": "geraet",
       "buehne": true,
-      "dauer": 4.8,
-      "kicker": "Mit Praxura",
-      "titel": "Der Bericht <em>füllt sich.</em>",
-      "kopf": "Therapiebericht",
+      "dauer": 4.4,
+      "kicker": "Im Hintergrund",
+      "titel": "Verwaltung, <em>erledigt.</em>",
+      "kopf": "Heute",
       "schritte": [
-        "Verordnung übernommen",
-        "Verlauf ergänzt",
-        "An den Arzt gesendet"
+        "Termine geplant",
+        "Verordnungen geprüft",
+        "Dokumentation gespeichert"
       ],
-      "ergebnis": "Per Mail, Fax oder Druck",
-      "sprecher": "Mit Praxura füllt sich der Bericht aus Verordnung und Behandlungen. Sie schreiben nur, was zählt: Verlauf und Empfehlung."
+      "sprecher": "Praxura erledigt die Verwaltung im Hintergrund. Leise, zuverlässig, in Ihrer Praxis."
     },
     {
-      "typ": "figur",
-      "dauer": 3.6,
-      "titel": "Und raus <em>damit.</em>",
-      "person": 3,
-      "laune": "gestresst",
-      "requisit": "zettel",
-      "wechsel": {
-        "bei": 0.9,
-        "laune": "entspannt",
-        "requisit": "tablet",
-        "sprechblase": "<em>Fertig.</em>"
-      },
-      "sprecher": "Dann geht er verschlüsselt an die Arztpraxis. Fertig."
+      "typ": "foto",
+      "dauer": 3.4,
+      "bild": "foto/test/test4.jpg",
+      "titel": "Und dann: <em>Feierabend.</em>",
+      "effekt": [
+        "korn"
+      ],
+      "sprecher": "Und abends gehen Sie nach Hause. Pünktlich."
     },
     {
       "typ": "outro",
@@ -53,7 +71,7 @@
       "dauer": 3.4,
       "nachlauf": 1,
       "kicker": "Praxura Lokal",
-      "titel": "Berichte, <em>die sich schreiben.</em>",
+      "titel": "Mehr Zeit für <em>Therapie.</em>",
       "cta": "Mehr auf praxura.de",
       "klang": [
         {
@@ -62,8 +80,8 @@
           "laut": -3
         }
       ],
-      "sprecher": "Praxura. Gebaut für Heilmittelpraxen."
+      "sprecher": "Praxura. Mehr Zeit für das, wofür Sie da sind."
     }
   ],
-  "quelleMuster": "F15-therapiebericht"
+  "quelleMuster": "F13-beruf-gewaehlt"
 }

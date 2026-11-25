@@ -1,0 +1,37 @@
+{
+  "art": "video",
+  "caption": "4 Angaben, ohne die keine Podologie-Behandlung beginnt.\n\nPersonalienfeld, Diagnose, konkretes Heilmittel sowie Stempel und Unterschrift der Ärztin oder des Arztes müssen auf der Verordnung stehen, sonst darf die Behandlung nicht beginnen (Podologie-Vertrag nach § 125 SGB V, Anlage 3, Ziffer 3). Prüfen Sie sie vor dem ersten Termin.\n\nMehr Praxiswissen für Podolog:innen: praxura.de\n\n#Podologie #Heilmittel #Praxisalltag #GKV",
+  "szenen": [
+    {
+      "typ": "aussage",
+      "dauer": 2.6,
+      "kicker": "Podolog:innen, aufgepasst",
+      "titel": "4 Angaben, ohne die <em>keine</em> Behandlung beginnt."
+    },
+    {
+      "typ": "countdown",
+      "dauer": 8.4,
+      "kicker": "Auf der Verordnung prüfen",
+      "punkte": [
+        "<em>Personalien</em> vollständig",
+        "Konkrete <em>Diagnose</em>",
+        "Konkretes <em>Heilmittel</em>",
+        "Stempel und <em>Unterschrift</em>"
+      ]
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.9,
+      "kicker": "Fehlt eine davon",
+      "titel": "Drohen Rückfragen und <em>Absetzung.</em>",
+      "quelle": "Podologie-Vertrag § 125 SGB V, Anlage 3"
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.8,
+      "kicker": "Praxura Lokal",
+      "titel": "Formfehler sehen, <em>bevor</em> die Kasse sie sieht.",
+      "cta": "Folgen für mehr Praxiswissen"
+    }
+  ]
+}

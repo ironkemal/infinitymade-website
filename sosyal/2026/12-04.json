@@ -1,108 +1,87 @@
 {
   "art": "video",
-  "musik": "traurig",
-  "stimme": "Aoede",
-  "sprechweise": "Leise, traurig, den Tränen nahe, wie der Monolog in einem Liebesdrama. Langsam, mit Pausen.",
-  "caption": "Elf Jahre. Es war nicht leicht. 💔📠\n\nSchick das der Kollegin, die ihr Faxgerät auch schon mal anschreien wollte.\n\nMehr auf praxura.de\n\n(Bilder und Stimme KI-generiert)\n\n#Physiotherapie #Praxisalltag #Faxgerät #Therapeutenleben #Heilmittel",
+  "musik": "doku",
+  "stimme": "Charon",
+  "sprechweise": "Natürliche, ruhige Männerstimme eines Naturfilm-Erzählers. Warm, menschlich, mit leiser Faszination, nicht übertrieben und nicht geflüstert. Normales Sprechtempo.",
+  "caption": "Die Podologin. In ihrem natürlichen Lebensraum. 🌿\n\nNach Praxisschluss beginnt ein seltenes Ritual: Verordnungen prüfen. Praxura prüft Pflichtangaben wie Ausstellungsdatum und Diagnosegruppe schon beim Einlesen, vor der ersten Behandlung.\n\nMarkieren Sie die Kollegin, die abends noch Formulare gegen das Licht hält.\n\nMehr auf praxura.de\n\n(Bilder und Stimme KI-generiert)\n\n#Podologie #Praxisalltag #Heilmittel #Verordnung #Therapeutenleben",
   "szenen": [
     {
       "typ": "foto",
-      "dauer": 3.6,
-      "bild": "foto/gekuendigt/g1.jpg",
-      "titel": "Nach elf Jahren <em>ist Schluss.</em>",
+      "dauer": 3.4,
+      "bild": "foto/doku/d1.jpg",
+      "kicker": "Folge 1 · Die Podologin",
+      "titel": "In ihrem natürlichen <em>Lebensraum.</em>",
       "effekt": [
         "korn",
         "kino"
       ],
-      "sprecher": "Nach elf Jahren … hab ich heute Schluss gemacht."
+      "schwenk": 30,
+      "sprecher": "Hier, nach Praxisschluss, beobachten wir ein seltenes Ritual."
     },
     {
       "typ": "foto",
-      "dauer": 3.6,
-      "bild": "foto/gekuendigt/g2.jpg",
+      "dauer": 3,
+      "bild": "foto/doku/d2.jpg",
       "effekt": [
         "korn",
         "kino"
       ],
-      "sprecher": "Ich konnte einfach nicht mehr. Er hat mich nie verstanden."
+      "sprecher": "Die Podologin prüft ihre Verordnungen. Jede einzelne."
     },
     {
       "typ": "foto",
-      "dauer": 3.6,
-      "bild": "foto/gekuendigt/g3.jpg",
+      "dauer": 3,
+      "bild": "foto/doku/d3.jpg",
+      "effekt": [
+        "korn",
+        "kino"
+      ],
+      "nachlauf": 0.7,
+      "sprecher": "Dann ein Fund. Die Diagnosegruppe fehlt."
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.4,
+      "bild": "foto/doku/d4.jpg",
       "effekt": [
         "korn",
         "kino"
       ],
       "zoom": "raus",
-      "sprecher": "Immer dieses Piepen. Dieses Rauschen. Mitten in der Nacht."
+      "sprecher": "Oft bemerkt es erst die Kasse."
     },
     {
-      "typ": "foto",
-      "dauer": 2.4,
-      "bild": "foto/gekuendigt/g4.jpg",
-      "effekt": [
-        "korn",
-        "kino",
-        "wackeln"
+      "typ": "geraet",
+      "dauer": 4.6,
+      "kicker": "Doch die Art passt sich an",
+      "titel": "<em>Vorher</em> geprüft.",
+      "kopf": "Verordnung",
+      "schritte": [
+        "Barcode eingelesen",
+        "Ausstellungsdatum geprüft",
+        "Diagnosegruppe geprüft"
       ],
-      "klang": [
-        {
-          "art": "whoosh",
-          "bei": 0
-        },
-        {
-          "art": "boom",
-          "bei": "nach"
-        }
-      ],
-      "nachlauf": 0.9,
-      "sprecher": "Leb wohl."
-    },
-    {
-      "typ": "foto",
-      "dauer": 4.4,
-      "bild": "foto/gekuendigt/g5.jpg",
-      "uebergang": "schnitt",
-      "musikStopp": true,
-      "position": "unten",
-      "kicker": "Eingehendes Fax",
-      "titel": "Betreff: <em>Absetzung.</em>",
-      "effekt": [
-        "korn"
-      ],
-      "klang": [
-        {
-          "art": "fax",
-          "bei": 0.2,
-          "laut": 2
-        }
-      ]
-    },
-    {
-      "typ": "foto",
-      "dauer": 2,
-      "bild": "foto/gekuendigt/g6.jpg",
-      "uebergang": "schnitt",
-      "ruck": "nach",
-      "nachlauf": 0.8,
-      "sprechweise": "Fassungslos, tonlos geflüstert.",
-      "sprecher": "… nein."
+      "ergebnis": "Hinweis vor der Behandlung",
+      "sprecher": "Doch manche haben sich angepasst. Sie sehen den Fehler vor der Behandlung.",
+      "buehne": true
     },
     {
       "typ": "outro",
-      "dauer": 3,
+      "dauer": 3.4,
       "kicker": "Praxura Lokal",
-      "titel": "Manche Trennungen <em>dauern länger.</em>",
-      "cta": "Weniger Papier. Mehr Therapie.",
+      "titel": "<em>Pünktlich</em> Feierabend.",
+      "cta": "Artgerecht arbeiten.",
       "klang": [
         {
           "art": "ding",
           "bei": 0.15
         }
-      ]
+      ],
+      "sprecher": "Und so gelingt ihr das Seltenste: pünktlich Feierabend.",
+      "premium": true,
+      "nachlauf": 1
     }
   ],
-  "tempo": 1.22,
-  "quelleMuster": "F5-gekuendigt"
+  "tempo": 1.1,
+  "quelleMuster": "F8-doku"
 }

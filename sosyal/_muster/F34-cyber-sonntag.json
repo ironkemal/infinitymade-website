@@ -1,0 +1,72 @@
+{
+  "art": "video",
+  "musik": "ruhig",
+  "stimme": "Gacrux",
+  "tempo": 1.05,
+  "sprechweise": "Natürliche, warme und vertrauenswürdige Frauenstimme, ruhig wie an einem Sonntagabend, klar und nahbar. Normales Sprechtempo.",
+  "caption": "Sonntagabend. Und Sie denken schon an Montag.\n\nWas Praxura kostet, steht offen auf unserer Seite. Zur Cyber Week im Monat: Solo 39 € statt 49 €, Praxis 69 € statt 89 €, Team 99 € statt 129 €, Groß 149 € statt 189 €. Und 60 Tage Geld zurück auf die Lizenzgebühr.\n\nSpeichern Sie das für die nächste Teambesprechung.\n\nAlle Preise auf praxura.de\n\nAktionspreise für Verträge mit Abschluss bis 31.12.2026, garantiert für die ersten 12 Monate. Zzgl. einmaliger Einrichtung und Serverkosten. Angebot nur für Praxen und Unternehmer (§ 14 BGB). Endpreise, gemäß § 19 UStG keine Umsatzsteuer. Geld zurück: Kündigung innerhalb von 60 Tagen ab Übergabe, Einrichtung und Serverkosten ausgenommen.\n\n(Bilder und Stimme KI-generiert)\n\n#CyberWeek #Praxisinhaber #Therapiepraxis #Heilmittel #Praxissoftware",
+  "szenen": [
+    {
+      "typ": "foto",
+      "dauer": 3.2,
+      "bild": "foto/aktion/cy3.jpg",
+      "kicker": "Sonntag, 20:00 Uhr",
+      "titel": "Sie denken <em>schon an Montag.</em>",
+      "sprecher": "Sonntagabend. Und Sie denken schon an Montag."
+    },
+    {
+      "typ": "frage",
+      "ton": "dunkel",
+      "dauer": 4.6,
+      "kicker": "Cyber Week",
+      "titel": "Was kostet Praxura, wenn Sie <em>allein behandeln?</em>",
+      "antwort": "39 € im Monat",
+      "antwortLabel": "Solo · statt 49 €",
+      "sprecher": "Was kostet Praxura, wenn Sie allein behandeln? Neununddreißig Euro im Monat."
+    },
+    {
+      "typ": "countdown",
+      "ton": "dunkel",
+      "dauer": 5,
+      "kicker": "Mit Team · pro Monat",
+      "punkte": [
+        "Praxis <em>69 €</em> statt 89 €",
+        "Team <em>99 €</em> statt 129 €",
+        "Groß <em>149 €</em> statt 189 €"
+      ],
+      "sprecher": "Mit Team: 69 Euro. 99 Euro. Oder 149 Euro im Monat."
+    },
+    {
+      "typ": "aussage",
+      "ton": "dunkel",
+      "dauer": 3.2,
+      "kicker": "Ohne Risiko",
+      "titel": "60 Tage <em>Geld zurück.</em>",
+      "text": "auf die Lizenzgebühr",
+      "sprecher": "Und wenn es nicht passt: sechzig Tage Geld zurück auf die Lizenz."
+    },
+    {
+      "typ": "foto",
+      "dauer": 2.6,
+      "bild": "foto/aktion/cy4.jpg",
+      "titel": "Montag. <em>Entspannt.</em>",
+      "sprecher": "Und der Montag beginnt entspannt."
+    },
+    {
+      "typ": "outro",
+      "dauer": 3.4,
+      "premium": true,
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15
+        }
+      ],
+      "cta": "Alle Preise auf praxura.de",
+      "sprecher": "Praxura. Aktionspreise für Verträge bis Jahresende.",
+      "nachlauf": 1,
+      "kicker": "Cyber Week bei Praxura",
+      "titel": "Aktionspreise <em>bis 31.12.</em>"
+    }
+  ]
+}

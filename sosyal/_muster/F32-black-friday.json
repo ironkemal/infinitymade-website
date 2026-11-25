@@ -1,0 +1,79 @@
+{
+  "art": "video",
+  "musik": "warm",
+  "stimme": "Gacrux",
+  "tempo": 1.05,
+  "sprechweise": "Natürliche, warme und vertrauenswürdige Frauenstimme wie in einem hochwertigen Werbespot. Ruhig, klar, mit einem leichten Lächeln. Normales Sprechtempo.",
+  "caption": "Black Friday, 17 Uhr. Alle shoppen. Sie sitzen über der Abrechnung.\n\nPraxura bereitet Ihre Abrechnung vor, zum festen Monatspreis statt Prozenten vom Umsatz. Zum Black Friday: Solo 39 €, Praxis 69 €, Team 99 €, Groß 149 € im Monat (statt 49 / 89 / 129 / 189 €).\n\nWann machen Sie freitags Feierabend? Schreiben Sie es in die Kommentare.\n\nAlle Preise auf praxura.de\n\nAktionspreise für Verträge mit Abschluss bis 31.12.2026, garantiert für die ersten 12 Monate. Zzgl. einmaliger Einrichtung und Serverkosten. Angebot nur für Praxen und Unternehmer (§ 14 BGB). Endpreise, gemäß § 19 UStG keine Umsatzsteuer.\n\n(Bilder und Stimme KI-generiert)\n\n#BlackFriday #Heilmittel #Abrechnung #Praxisalltag #Therapeutenleben",
+  "szenen": [
+    {
+      "typ": "foto",
+      "dauer": 3.4,
+      "bild": "foto/aktion/fr1.jpg",
+      "kicker": "Black Friday, 17:00 Uhr",
+      "titel": "Alle shoppen. <em>Sie rechnen ab.</em>",
+      "sprecher": "Black Friday, siebzehn Uhr. Alle shoppen. Und Sie sitzen über der Abrechnung."
+    },
+    {
+      "typ": "aussage",
+      "ton": "dunkel",
+      "dauer": 3,
+      "uebergang": "schnitt",
+      "titel": "Manche zahlen dafür <em>Prozente vom Umsatz.</em>",
+      "sprecher": "Und manche geben dafür auch noch Prozente vom Umsatz ab."
+    },
+    {
+      "typ": "geraet",
+      "buehne": true,
+      "dauer": 4.4,
+      "kicker": "Mit Praxura",
+      "titel": "Abrechnung <em>vorbereitet.</em>",
+      "kopf": "Abrechnung",
+      "schritte": [
+        "Verordnungen geprüft",
+        "Zuzahlungen erfasst",
+        "Abrechnung vorbereitet"
+      ],
+      "sprecher": "Praxura bereitet Ihre Abrechnung vor. Ohne Prozente."
+    },
+    {
+      "typ": "vergleich",
+      "ton": "dunkel",
+      "dauer": 5,
+      "titel": "Ihre <em>Black-Friday-Rechnung</em>",
+      "links": {
+        "label": "Prozent-Modell",
+        "text": "Gebühr wächst mit dem Umsatz",
+        "weg": true
+      },
+      "rechts": {
+        "label": "Praxura · Praxis",
+        "text": "69 € im Monat. Fest."
+      },
+      "sprecher": "Statt Prozenten ein fester Preis: für zwei bis fünf Behandler neunundsechzig Euro im Monat."
+    },
+    {
+      "typ": "foto",
+      "dauer": 2.6,
+      "bild": "foto/aktion/fr2.jpg",
+      "titel": "17:30 Uhr. <em>Feierabend.</em>",
+      "sprecher": "Und um halb sechs: Feierabend."
+    },
+    {
+      "typ": "outro",
+      "dauer": 3.4,
+      "premium": true,
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15
+        }
+      ],
+      "cta": "Alle Preise auf praxura.de",
+      "sprecher": "Praxura. Fester Preis, ab neununddreißig Euro im Monat.",
+      "nachlauf": 1,
+      "kicker": "Black Friday bei Praxura",
+      "titel": "Fester Preis. <em>Ab 39 € im Monat.</em>"
+    }
+  ]
+}

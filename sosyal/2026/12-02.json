@@ -1,139 +1,106 @@
 {
   "art": "video",
-  "musik": "warteschleife",
-  "stimme": "Kore",
-  "sprechweise": "Freundliche, völlig monotone Telefon-Bandansage einer Krankenkasse. Leicht roboterhaft, jedes Mal exakt gleich betont, ohne jede Emotion.",
-  "caption": "Nur kurz bei der Kasse anrufen. 📞💀\n\nMarkier die Kollegin, die gerade in der Warteschleife hängt.\n\nMehr auf praxura.de\n\n(Bilder und Stimmen KI-generiert)\n\n#Physiotherapie #Praxisalltag #Krankenkasse #Warteschleife #Therapeutenleben #Heilmittel",
+  "musik": "museum",
+  "stimme": "Sadaltager",
+  "sprechweise": "Natürliche, warme Männerstimme eines professionellen Sprechers, wie ein hochwertiger Museums-Audioguide. Ruhig, menschlich und souverän, nicht theatralisch. Normales Sprechtempo.",
+  "caption": "Willkommen im Museum der Praxisgeschichte. 🏛️\n\nTerminbuch, Kilometerzettel, Karteikasten: Manches gehört ins Museum. In Praxura liegen Termine, Fahrtenbuch und Patientenakte an einem Ort, lokal in Ihrer Praxis.\n\nSchicken Sie das der Kollegin, die das Terminbuch noch verteidigt.\n\nMehr auf praxura.de\n\n(Bilder und Stimme KI-generiert)\n\n#Praxisalltag #Therapiepraxis #Heilmittel #Praxissoftware #Therapeutenleben",
   "szenen": [
     {
       "typ": "foto",
-      "dauer": 3.4,
-      "bild": "foto/warteschleife/w1.jpg",
-      "kicker": "Tag 1 · 9:14 Uhr",
-      "titel": "Nur kurz bei der <em>Kasse anrufen.</em>",
+      "dauer": 3.2,
+      "bild": "foto/museum/m1.jpg",
+      "kicker": "Museum der Praxisgeschichte",
+      "titel": "Bitte <em>nicht berühren.</em>",
       "effekt": [
-        "korn"
+        "staub",
+        "kino"
       ],
-      "telefon": true,
-      "sprecher": "Ihr Anruf ist uns wichtig. Sie sind auf Platz drei."
-    },
-    {
-      "typ": "foto",
-      "dauer": 2.6,
-      "bild": "foto/warteschleife/w2.jpg",
-      "kicker": "Tag 63",
-      "effekt": [
-        "korn"
-      ],
-      "telefon": true,
-      "sprecher": "Sie sind auf Platz … zwei.",
-      "titel": "Platz <em>2.</em>",
-      "gross": true
-    },
-    {
-      "typ": "foto",
-      "dauer": 2.6,
-      "bild": "foto/warteschleife/w3.jpg",
-      "kicker": "Jahr 41",
-      "effekt": [
-        "korn"
-      ],
-      "telefon": true,
-      "sprecher": "Sie sind auf Platz … eins.",
-      "titel": "Platz <em>1.</em>",
-      "gross": true
+      "sprecher": "Willkommen im Museum der Praxisgeschichte."
     },
     {
       "typ": "foto",
       "dauer": 3.2,
-      "bild": "foto/warteschleife/w4.jpg",
-      "kicker": "Jahr 312",
+      "bild": "foto/museum/m2.jpg",
+      "kicker": "Exponat 1",
+      "titel": "Das <em>Terminbuch.</em>",
       "effekt": [
-        "korn",
-        "staub"
-      ],
-      "telefon": true,
-      "sprecher": "Sie sind auf Platz … viertausendachthundertsiebzehn.",
-      "titel": "Platz <em>4.817.</em>",
-      "gross": true
-    },
-    {
-      "typ": "foto",
-      "dauer": 2.8,
-      "bild": "foto/warteschleife/w5.jpg",
-      "kicker": "Jahr 2.740 · Ausgrabung",
-      "effekt": [
-        "korn",
-        "staub"
-      ],
-      "telefon": true,
-      "sprecher": "Bitte legen Sie nicht auf."
-    },
-    {
-      "typ": "foto",
-      "dauer": 2.8,
-      "bild": "foto/warteschleife/w6.jpg",
-      "kicker": "Jahr 5.000 · Museum",
-      "titel": "Homo <em>Warteschleifus.</em>",
-      "text": "Fundort: Empfangstresen.",
-      "effekt": [
-        "korn",
-        "kino"
-      ]
-    },
-    {
-      "typ": "foto",
-      "dauer": 2.6,
-      "bild": "foto/warteschleife/w7.jpg",
-      "uebergang": "schnitt",
-      "musikStopp": true,
-      "effekt": [
-        "korn",
+        "staub",
         "kino"
       ],
-      "klang": [
-        {
-          "art": "klick",
-          "bei": 0,
-          "laut": 3
-        }
-      ],
-      "stimme": "Leda",
-      "telefon": true,
-      "sprechweise": "Fröhlich, munter und völlig ahnungslos, wie eine Callcenter-Mitarbeiterin, die gerade gut gelaunt ihren Kaffee hingestellt hat.",
-      "sprecher": "Krankenkasse, guten Morgen! Was kann ich für Sie tun?",
-      "tempo": 1.15
+      "sprecher": "Exponat eins: das Terminbuch."
     },
     {
       "typ": "foto",
       "dauer": 3.2,
-      "bild": "foto/warteschleife/w7.jpg",
-      "uebergang": "schnitt",
-      "ruck": 0.25,
+      "bild": "foto/museum/m3.jpg",
+      "kicker": "Exponat 2",
+      "titel": "Der <em>Kilometerzettel.</em>",
       "effekt": [
-        "korn",
-        "kino",
-        "staub"
+        "staub",
+        "kino"
       ],
-      "stimme": "Gacrux",
-      "sprechweise": "Uralt, heiser und krächzend, völlig erschöpft, aber immer noch höflich, als hätte sie seit Jahrtausenden nicht gesprochen. Langsam.",
-      "sprecher": "Ja, hallo … es geht um die Absetzung von März.",
-      "tempo": 1.2
+      "schwenk": -30,
+      "sprecher": "Der Kilometerzettel. Bis heute nicht entziffert."
+    },
+    {
+      "typ": "foto",
+      "dauer": 3,
+      "bild": "foto/museum/m4.jpg",
+      "kicker": "Exponat 3",
+      "titel": "Der <em>Karteikasten.</em>",
+      "effekt": [
+        "staub",
+        "kino"
+      ],
+      "nachlauf": 0.6,
+      "sprecher": "Der Karteikasten. Alphabetisch sortiert. Meistens."
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.6,
+      "bild": "foto/museum/m5.jpg",
+      "kicker": "Exponat 4 · Hauptwerk",
+      "titel": "Der <em>Verordnungsstapel.</em>",
+      "effekt": [
+        "staub",
+        "kino"
+      ],
+      "zoom": "raus",
+      "sprecher": "Das Hauptwerk: der Verordnungsstapel. Nie ganz abgearbeitet."
+    },
+    {
+      "typ": "geraet",
+      "dauer": 4.6,
+      "kicker": "Ende des Rundgangs",
+      "titel": "Ausgang: <em>ins Heute.</em>",
+      "kopf": "Heute",
+      "schritte": [
+        "Termine und Serien",
+        "Fahrtenbuch",
+        "Patientenakte",
+        "Verordnung geprüft"
+      ],
+      "ergebnis": "Alles an einem Ort",
+      "sprecher": "Der Ausgang führt ins Heute. Alles an einem Ort.",
+      "buehne": true
     },
     {
       "typ": "outro",
-      "dauer": 3,
+      "dauer": 3.4,
       "kicker": "Praxura Lokal",
-      "titel": "Die Warteschleife können wir <em>nicht abschaffen.</em>",
-      "cta": "Die Abrechnung bereiten wir trotzdem vor.",
+      "titel": "Manches gehört <em>ins Museum.</em>",
+      "cta": "Ihre Praxis gehört ins Heute.",
       "klang": [
         {
           "art": "ding",
           "bei": 0.15
         }
-      ]
+      ],
+      "premium": true,
+      "sprecher": "Praxura. Ihre Praxis gehört ins Heute.",
+      "nachlauf": 1
     }
   ],
-  "tempo": 1.25,
-  "quelleMuster": "F4-warteschleife"
+  "tempo": 1.1,
+  "quelleMuster": "F7-museum"
 }

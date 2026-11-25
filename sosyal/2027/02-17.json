@@ -1,0 +1,33 @@
+{
+  "art": "post",
+  "caption": "5 Fragen, bevor Sie Ihre Praxissoftware wechseln.\n\nWo liegen die Patientendaten? Wer verdient an der Abrechnung? Läuft die Praxis ohne Internet weiter? Die Antworten zeigen, was eine Software wirklich leistet. Speichern Sie sich das Karussell für das nächste Gespräch mit Ihrem Anbieter.\n\nMehr auf praxura.de\n\n#Praxissoftware #PVS #Heilmittel #Praxisinhaber #Therapiepraxis",
+  "seiten": [
+    {
+      "layout": "haltung",
+      "rubrik": "Praxissoftware",
+      "seite": "1 / 3",
+      "titel": "5 Fragen, bevor Sie Ihre Praxissoftware <em>wechseln.</em>",
+      "text": "Jede lässt sich in einer Minute beantworten. Wischen Sie weiter."
+    },
+    {
+      "layout": "liste",
+      "rubrik": "Die Fragen",
+      "seite": "2 / 3",
+      "titel": "Fragen an <em>jeden</em> Anbieter.",
+      "punkte": [
+        ["Wo liegen Ihre Patientendaten?", "bei Ihnen oder beim Anbieter"],
+        ["Wer verdient an Ihrer Abrechnung?", "Prozente vom Umsatz, ja oder nein"],
+        ["Läuft die Praxis ohne Internet weiter?", "Router aus, was dann"],
+        ["Sieht die Software Fehler vorher?", "vor der Behandlung, nicht erst bei der Kasse"],
+        ["Ist sie für Heilmittel gebaut?", "oder für Arztpraxen umgebogen"]
+      ]
+    },
+    {
+      "layout": "wissen",
+      "rubrik": "Praxura Lokal",
+      "seite": "3 / 3",
+      "titel": "Unsere Antworten <em>kennen</em> Sie jetzt.",
+      "text": "Daten auf <b>Ihrem Rechner</b>. Abrechnung <b>ohne Provision</b>. Verordnung geprüft, bevor Sie behandeln. Gebaut für Physio, Ergo, Logo und Podologie."
+    }
+  ]
+}

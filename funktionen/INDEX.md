@@ -1,9 +1,9 @@
 # Funktionskarte
 
-> Üretim: 2026-11-25 · `node tools/funktionskarte.mjs`
+> Üretim: 2026-11-26 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**5623 fonksiyon** (5498 JS · 98 bash · 27 ps1) · 742 dosya · 42 sidebar modülü
+**5626 fonksiyon** (5501 JS · 98 bash · 27 ps1) · 744 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 

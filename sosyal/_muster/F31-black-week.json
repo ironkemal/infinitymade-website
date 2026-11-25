@@ -1,0 +1,79 @@
+{
+  "art": "video",
+  "musik": "episch",
+  "stimme": "Laomedeia",
+  "tempo": 1.08,
+  "coverBei": 1.2,
+  "sprechweise": "Natürliche, sympathische Frauenstimme. Am Anfang mit einem Augenzwinkern wie ein Kinotrailer, dann warm, nahbar und direkt. Normales Sprechtempo, nicht übertrieben.",
+  "caption": "Black Week. Alle rennen los. Sie nicht. 🖤\n\nPraxura gibt es jetzt zum Aktionspreis: Solo 39 € statt 49 €, Praxis 69 € statt 89 €, Team 99 € statt 129 €, Groß 149 € statt 189 € im Monat. Die Einrichtung wird bis zu 300 € günstiger.\n\nSchicken Sie das der Kollegin, die gerade über neue Praxissoftware nachdenkt.\n\nAlle Preise auf praxura.de\n\nAktionspreise für Verträge mit Abschluss bis 31.12.2026, garantiert für die ersten 12 Monate. Zzgl. einmaliger Einrichtung und Serverkosten. Angebot nur für Praxen und Unternehmer (§ 14 BGB). Endpreise, gemäß § 19 UStG keine Umsatzsteuer.\n\n(Bilder und Stimme KI-generiert)\n\n#BlackWeek #Praxissoftware #Heilmittel #Therapiepraxis #Praxisinhaber",
+  "szenen": [
+    {
+      "typ": "foto",
+      "dauer": 3.2,
+      "bild": "foto/aktion/bf1.jpg",
+      "kicker": "Black Week",
+      "titel": "Alle rennen <em>los.</em>",
+      "effekt": [
+        "kino"
+      ],
+      "sprecher": "Black Week. Alle rennen los. Fernseher, Sneaker, Kaffeemaschinen."
+    },
+    {
+      "typ": "foto",
+      "dauer": 2.8,
+      "bild": "foto/aktion/bf2.jpg",
+      "uebergang": "schnitt",
+      "titel": "Und Sie? <em>Ganz entspannt.</em>",
+      "sprecher": "Und Sie? Bleiben ganz entspannt. Ihr Angebot kommt zu Ihnen."
+    },
+    {
+      "typ": "zaehler",
+      "ton": "dunkel",
+      "dauer": 3.8,
+      "kicker": "Praxis · 2–5 Behandler:innen",
+      "praefix": "€ / Monat",
+      "von": 89,
+      "bis": 69,
+      "text": "statt 89 €. 12 Monate garantiert.",
+      "quelle": "Verträge bis 31.12.2026 · zzgl. Einrichtung",
+      "sprecher": "Praxura für zwei bis fünf Behandler: neunundsechzig Euro im Monat.",
+      "nachlauf": 0.5
+    },
+    {
+      "typ": "countdown",
+      "ton": "dunkel",
+      "dauer": 4.6,
+      "kicker": "Alle Pakete · pro Monat",
+      "punkte": [
+        "Solo <em>39 €</em> statt 49 €",
+        "Team <em>99 €</em> statt 129 €",
+        "Groß <em>149 €</em> statt 189 €"
+      ],
+      "sprecher": "Solo neununddreißig, Team neunundneunzig, Groß hundertneunundvierzig Euro. Bis zu dreiundzwanzig Prozent günstiger."
+    },
+    {
+      "typ": "foto",
+      "dauer": 2.8,
+      "bild": "foto/aktion/bf3.jpg",
+      "kicker": "Black Week",
+      "titel": "Einrichtung bis zu <em>300 € günstiger.</em>",
+      "sprecher": "Und die Einrichtung wird bis zu dreihundert Euro günstiger."
+    },
+    {
+      "typ": "outro",
+      "dauer": 3.4,
+      "premium": true,
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15
+        }
+      ],
+      "cta": "Alle Preise auf praxura.de",
+      "sprecher": "Praxura. Ruhe im Praxisalltag, zum Aktionspreis.",
+      "nachlauf": 1,
+      "kicker": "Black Week bei Praxura",
+      "titel": "Ruhe. <em>Zum Aktionspreis.</em>"
+    }
+  ]
+}

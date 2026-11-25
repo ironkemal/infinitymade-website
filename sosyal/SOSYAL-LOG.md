@@ -370,3 +370,10 @@ Her video aynı iskelet: **figür stresli → bir tıkla rahat** (`figur` + `wec
   Praxis-Cloud-Positionierung (23.11.) → neu sprechen, dann einplanen. **Offen:** 2027-02-04 (früher 11-26 „Router aus")
   hat keine Caption *und* dieselbe Offline-Aussage → vor Februar überarbeiten. F7-Caption: „lokal in Ihrer Praxis" →
   „auf Ihrem eigenen Server".
+- **26.11.2026:** Kemal: „Bis Freitag Black Week, Sa/So Cyber, danach weiter, wo es war" — ohne Freigabe einplanen, wenn QK gut. `sosyal/aktion-2026-11.mjs` → `_muster/F31–F34`, `umplanen-2026-11-26.mjs`:
+  11-26 F31 Black Week („Alle rennen los." → „Und Sie? Ganz entspannt.") · 11-27 F32 Black Friday („Alle shoppen. Sie rechnen ab.", Prozent-Modell vs. fester Preis) ·
+  11-28 F33 Cyber Week („Die Zukunft ist da." → „Naja. Fast." Saugroboter) · 11-29 F34 Cyber-Sonntag („Sie denken schon an Montag.", Preisfrage + 60 Tage Geld zurück).
+  Premium-Reihe rückt nach (11-30 F9 … 12-13 F6, 12-06 Nikolaus bleibt), alte 12-10 … 12-13 → 2027-02-17 … 02-20.
+  **Ausnahme von A3 (kein Preis) nur für diese Aktion**, Preise = Website-Aktionskarten; jede Caption mit Pflichtfuß (Verträge bis 31.12.2026, 12 Monate garantiert, zzgl. Einrichtung + Server, nur § 14 BGB, § 19 UStG).
+  Fotos `foto/aktion/` (9 Stück, agy, alle QK-ok, gleiche Hauptfigur wie `beruf/b1`). QK: Kontaktbogen + True Peak (−1,1 … −2,0 dBFS). F34-Untertitel lief beim Zählen aus dem Bild → Sprechtext mit Ziffern, neu gerendert.
+  Zaehler mit drei Ziffern (129) ragt rechts raus → nur zweistellige Zähler verwenden. Website: Black-Friday-Thema endet jetzt 27.11. statt 29.11. (Commit c533e49e). Auf merkez hochgeladen.
