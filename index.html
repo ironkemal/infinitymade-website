@@ -1164,9 +1164,77 @@
       .px-mid-cta .btn-book { width: 100%; justify-content: space-between; }
     }
   </style>
+  <!-- Aktionen (2026-11-25): Thema nach Datum, gleiche Preise, Ende 31.12.2026. Vorschau: ?aktion=bf|cyber|xmas -->
+  <script>
+  (function () {
+    var T = [['bf', '2026-11-29T23:59:59+01:00'], ['cyber', '2026-12-06T23:59:59+01:00'], ['xmas', '2026-12-31T23:59:59+01:00']];
+    var m = location.search.match(/[?&]aktion=(bf|cyber|xmas)/), now = Date.now(), a = m ? m[1] : null;
+    if (!a) for (var i = 0; i < T.length; i++) if (now <= new Date(T[i][1]).getTime()) { a = T[i][0]; break; }
+    if (!a) return;
+    var h = document.documentElement;
+    h.setAttribute('data-aktion', a);
+    try { if (sessionStorage.getItem('ak-closed') === a) h.classList.add('ak-closed'); } catch (e) {}
+  })();
+  </script>
+  <style>
+    .ak-bar, .ak-pill { display: none; }
+    html[data-aktion="bf"]    { --ak-bg: #0b0b0b; --ak-ink: #fff; --ak-acc: #FFC21A; }
+    html[data-aktion="cyber"] { --ak-bg: #111b36; --ak-ink: #e6ecff; --ak-acc: #9db7ff; }
+    html[data-aktion="xmas"]  { --ak-bg: #8a0b1f; --ak-ink: #fff8ec; --ak-acc: #f2d27a; }
+    html[data-aktion]:not(.ak-closed) .ak-bar { display: flex; }
+    .ak-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 61; height: 36px; align-items: center; background: var(--ak-bg); color: var(--ak-ink); border-bottom: 1px solid var(--ak-acc); overflow: hidden; animation: akIn 600ms 300ms var(--ease-out, ease-out) both; }
+    .ak-bar a { flex: 1; min-width: 0; height: 100%; display: flex; align-items: center; overflow: hidden; color: inherit; text-decoration: none; }
+    .ak-track { display: flex; width: max-content; animation: akRun 38s linear infinite; }
+    .ak-bar:hover .ak-track { animation-play-state: paused; }
+    .ak-track span { white-space: nowrap; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.02em; padding-right: 2.2rem; }
+    .ak-track span b { color: var(--ak-acc); font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; }
+    .ak-track span i { font-style: normal; color: var(--ak-acc); padding: 0 0.6rem; }
+    .ak-close { flex: none; width: 36px; height: 36px; border: 0; background: var(--ak-bg); color: var(--ak-ink); font-size: 1.1rem; cursor: pointer; opacity: 0.75; box-shadow: -10px 0 12px var(--ak-bg); }
+    .ak-close:hover { opacity: 1; }
+    html[data-aktion]:not(.ak-closed) .nav { top: calc(36px + 0.7rem); }
+    html[data-aktion] .ak-pill { display: inline-flex; }
+    .ak-pill { align-items: center; gap: 0.6rem; margin: 0 0 1.2rem; padding: 0.4rem 0.95rem 0.4rem 0.45rem; border-radius: 999px; background: var(--ak-bg); color: var(--ak-ink); text-decoration: none; font-size: 0.86rem; font-weight: 600; border: 1px solid var(--ak-acc); box-shadow: 0 14px 30px -18px rgba(0,0,0,0.5); animation: akPop 700ms 900ms var(--ease-spring, ease-out) both; }
+    .ak-pill-ic { width: 1.8rem; height: 1.8rem; border-radius: 50%; display: grid; place-items: center; background: var(--ak-acc); color: #111; flex: none; }
+    .ak-pill-ic svg { width: 1rem; height: 1rem; }
+    .ak-pill em { font-style: normal; color: var(--ak-acc); }
+    .ak-pill:hover { transform: translateY(-1px); }
+    .ak-pill .ak-i, .ak-pill .ak-t { display: none; }
+    html[data-aktion="bf"] .ak-i-bf, html[data-aktion="cyber"] .ak-i-cyber, html[data-aktion="xmas"] .ak-i-xmas { display: block; }
+    html[data-aktion="bf"] .ak-t-bf, html[data-aktion="cyber"] .ak-t-cyber, html[data-aktion="xmas"] .ak-t-xmas { display: inline; }
+    .px-hero .ak-pill { margin: 1rem 0 0; }
+    @keyframes akIn { from { transform: translateY(-100%); } to { transform: none; } }
+    @keyframes akRun { to { transform: translateX(-50%); } }
+    @keyframes akPop { from { opacity: 0; transform: translateY(8px) scale(0.96); } to { opacity: 1; transform: none; } }
+    @media (max-width: 640px) { .ak-bar { height: 32px; } .ak-close { width: 32px; height: 32px; } html[data-aktion]:not(.ak-closed) .nav { top: calc(32px + 0.5rem); } .ak-track span { font-size: 0.74rem; } .ak-pill { font-size: 0.8rem; } }
+    @media (prefers-reduced-motion: reduce) { .ak-track { animation-duration: 120s; } .ak-bar, .ak-pill { animation: none; } }
+  </style>
 </head>
 
 <body>
+
+<!-- Aktionsleiste (nur während einer Aktion sichtbar, Inhalt per Script) -->
+<div class="ak-bar" role="region" aria-label="Aktuelle Aktion">
+  <a href="#preise" data-cta="aktion-bar"><div class="ak-track"></div></a>
+  <button type="button" class="ak-close" aria-label="Hinweis schließen">×</button>
+</div>
+<script>
+(function () {
+  var a = document.documentElement.getAttribute('data-aktion');
+  if (!a) return;
+  var M = {
+    bf:    ['Black Friday Week', 'Bis zu −23&nbsp;% auf alle Pakete', 'Einrichtung bis zu 300&nbsp;€ günstiger', 'Aktionspreise für Verträge bis 31.12.2026', '12 Monate garantiert'],
+    cyber: ['Cyber Week', 'Bis zu −23&nbsp;% auf alle Pakete', 'Jährlich zahlen: zusätzlich −10&nbsp;%', 'Aktionspreise für Verträge bis 31.12.2026', '12 Monate garantiert'],
+    xmas:  ['Weihnachts-Aktion', 'Bis zu −23&nbsp;% auf alle Pakete', 'Einrichtung bis zu 300&nbsp;€ günstiger', 'Aktionspreise nur bis 31.12.2026', 'Start im neuen Jahr mit eigener Praxis-Cloud']
+  }[a];
+  var one = '<span><b>' + M[0] + '</b><i>•</i>' + M.slice(1).join('<i>•</i>') + '<i>•</i>Preise ansehen →</span>';
+  var tr = document.querySelector('.ak-bar .ak-track');
+  tr.innerHTML = one + one + one + one;
+  document.querySelector('.ak-close').addEventListener('click', function () {
+    document.documentElement.classList.add('ak-closed');
+    try { sessionStorage.setItem('ak-closed', a); } catch (e) {}
+  });
+})();
+</script>
 
 <!-- ────────────── Nav ────────────── -->
 <nav class="nav" id="nav" aria-label="Hauptnavigation">
@@ -1207,6 +1275,11 @@
       <span class="px-eyebrow-dot"></span>
       Praxura · PVS für Physio, Ergo, Logo &amp; Podologie
     </span>
+    <a href="#preise" class="ak-pill" data-cta="aktion-hero">
+      <span class="ak-pill-ic" aria-hidden="true"><svg class="ak-i ak-i-bf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V4.5A1.5 1.5 0 0 1 4.5 3H12l9 9-9 9Z"/><circle cx="7.5" cy="7.5" r="1.4"/><path d="m10 15 5-5"/></svg><svg class="ak-i ak-i-cyber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 2.5v3M15 2.5v3M9 18.5v3M15 18.5v3M2.5 9h3M2.5 15h3M18.5 9h3M18.5 15h3"/></svg><svg class="ak-i ak-i-xmas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="14.5" r="6.5"/><path d="M10 6.2h4v2.2h-4z"/><path d="M12 6.2V4.6a1.6 1.6 0 0 1 1.6-1.6"/><path d="M6.4 12.6c3.5 1.5 7.7 1.5 11.2 0"/></svg></span>
+      <span><span class="ak-t ak-t-bf">Black Friday Week</span><span class="ak-t ak-t-cyber">Cyber Week</span><span class="ak-t ak-t-xmas">Weihnachts-Aktion</span>: <em>bis zu −23&nbsp;%</em> auf alle Pakete</span>
+      <span aria-hidden="true">→</span>
+    </a>
     <h1 class="px-title">
       Praxissoftware für <em>Heilmittel-Praxen.</em>
     </h1>
@@ -1951,7 +2024,7 @@
        nach Fristende selbst aus (Klasse promo-on fällt weg) – kein Streichpreis bleibt stehen. */
     .pr-wrap:not(.promo-on) .promo-only { display: none !important; }
     .pr-wrap[data-theme="bf"] { --ev-bg: repeating-linear-gradient(135deg, #0b0b0b 0 22px, #141414 22px 44px); --ev-ink: #fff; --acc: #FFC21A; --acc2: #ff8a00; --c-bg: #0f0f0f; --c-ink: #fff; --c-mute: rgba(255,255,255,0.62); --c-line: rgba(255,255,255,0.14); --deal: linear-gradient(140deg, #FFD54A 0%, #FFB300 55%, #ff8a00 100%); --deal-ink: #111; --frame: linear-gradient(135deg, #FFD54A, #ff8a00, #FFD54A); --fx: #FFC21A; --glow: rgba(255,194,26,0.45); }
-    .pr-wrap[data-theme="cyber"] { --ev-bg: linear-gradient(120deg, #070b24 0%, #160a3a 55%, #070b24 100%); --ev-ink: #eaf6ff; --acc: #22e4ff; --acc2: #ff3dcb; --c-bg: #0b1030; --c-ink: #eaf6ff; --c-mute: rgba(234,246,255,0.62); --c-line: rgba(34,228,255,0.2); --deal: linear-gradient(135deg, #22e4ff 0%, #7a5cff 50%, #ff3dcb 100%); --deal-ink: #070b24; --frame: linear-gradient(90deg, #22e4ff, #ff3dcb, #7a5cff, #22e4ff); --fx: #22e4ff; --glow: rgba(255,61,203,0.42); }
+    .pr-wrap[data-theme="cyber"] { --ev-bg: linear-gradient(120deg, #101a35 0%, #1a2348 100%); --ev-ink: #e6ecff; --acc: #9db7ff; --acc2: #7f8fd6; --c-bg: #111a33; --c-ink: #e6ecff; --c-mute: rgba(230,236,255,0.6); --c-line: rgba(157,183,255,0.2); --deal: linear-gradient(150deg, #2f4a8a 0%, #3a3f86 100%); --deal-ink: #f2f5ff; --frame: linear-gradient(90deg, #5c7cc4, #8a86d0, #5c7cc4); --fx: #9db7ff; --glow: rgba(92,124,196,0.38); }
     .pr-wrap[data-theme="xmas"] { --ev-bg: radial-gradient(120% 160% at 0% 0%, #c8102e 0%, #8a0b1f 60%, #5c0714 100%); --ev-ink: #fff8ec; --acc: #f2d27a; --acc2: #c8102e; --c-bg: #0f3b2a; --c-ink: #fff8ec; --c-mute: rgba(255,248,236,0.66); --c-line: rgba(242,210,122,0.22); --deal: linear-gradient(150deg, #d4152f 0%, #a10d22 60%, #7d0819 100%); --deal-ink: #fff8ec; --frame: linear-gradient(135deg, #f2d27a, #c9a14a, #f2d27a); --fx: #fff; --glow: rgba(200,16,46,0.45); }
 
     .pr-event { position: relative; overflow: hidden; margin: 2.4rem 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.8rem; padding: 1.5rem 1.7rem; border-radius: 20px; color: var(--ev-ink); background: var(--ev-bg); border: 2px solid var(--acc); box-shadow: 0 0 0 4px rgba(0,0,0,0.04), 0 30px 60px -30px var(--glow); }
@@ -1970,8 +2043,8 @@
     .pr-fx { position: absolute; inset: 0; pointer-events: none; }
     .pr-fx i { position: absolute; top: -10%; width: 6px; height: 6px; border-radius: 50%; background: var(--fx); opacity: 0.8; animation: prFall linear infinite; }
     .pr-wrap[data-theme="bf"] .pr-fx i { border-radius: 1px; width: 5px; height: 9px; }
-    .pr-wrap[data-theme="cyber"] .pr-fx i { width: 2px; height: 14px; border-radius: 2px; box-shadow: 0 0 8px var(--fx); }
-    .pr-wrap[data-theme="cyber"] .pr-event::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(34,228,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(34,228,255,0.08) 1px, transparent 1px); background-size: 26px 26px; pointer-events: none; }
+    .pr-wrap[data-theme="cyber"] .pr-fx i { width: 2px; height: 12px; border-radius: 2px; opacity: 0.5; }
+    .pr-wrap[data-theme="cyber"] .pr-event::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(157,183,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(157,183,255,0.05) 1px, transparent 1px); background-size: 26px 26px; pointer-events: none; }
     .pr-fx i:nth-child(1) { left: 6%;  animation-duration: 9s;  animation-delay: -2s; }
     .pr-fx i:nth-child(2) { left: 17%; animation-duration: 12s; animation-delay: -7s; }
     .pr-fx i:nth-child(3) { left: 29%; animation-duration: 10s; animation-delay: -4s; }
@@ -1986,6 +2059,55 @@
     @keyframes prFrame { to { background-position: 300% 0; } }
     @keyframes prPulse { 0%, 100% { box-shadow: 0 30px 60px -28px var(--glow); } 50% { box-shadow: 0 30px 70px -18px var(--glow); } }
 
+    /* Themen-Icons (SVG statt Emoji) und große Figuren, die vom Seitenrand hinter die Karten kommen */
+    .pr-event-ic svg { width: 1.5rem; height: 1.5rem; display: none; }
+    .pr-wrap[data-theme="bf"] .pr-event-ic .ic-bf, .pr-wrap[data-theme="cyber"] .pr-event-ic .ic-cyber, .pr-wrap[data-theme="xmas"] .pr-event-ic .ic-xmas { display: block; }
+    html[data-aktion] body { overflow-x: clip; }
+    .pr-stage { position: relative; }
+    .pr-stage > .pr-event, .pr-stage > .pr-pick, .pr-stage > .pr-grid { position: relative; z-index: 2; }
+    /* Bühne für die Figuren: volle Fensterbreite, unten weich ausgeblendet */
+    .pr-chars { position: absolute; z-index: 1; pointer-events: none; top: -4rem; bottom: 0; left: calc((100% - 100vw) / 2); right: calc((100% - 100vw) / 2); overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 3rem, #000 78%, transparent); mask-image: linear-gradient(to bottom, transparent 0, #000 3rem, #000 78%, transparent); }
+    .pr-stage .pr-pick-label { background: var(--bg, #F8F3E8); padding: 0.35rem 0.8rem; border-radius: 999px; box-shadow: 0 6px 18px -10px rgba(0,0,0,0.25); }
+    .pr-char { position: absolute; width: clamp(300px, 34vw, 600px); display: none; opacity: 0; transition: transform 1.4s cubic-bezier(.2,1.1,.3,1), opacity 0.7s ease; }
+    .pr-char svg { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 30px 30px rgba(0,0,0,0.22)); }
+    .pr-wrap[data-theme="bf"] .ch-bf, .pr-wrap[data-theme="cyber"] .ch-cyber, .pr-wrap[data-theme="xmas"] .ch-xmas { display: block; }
+    .pr-char--l { left: -110px; top: 3rem; transform: translateX(-75%) rotate(-14deg); }
+    .pr-char--r { right: -110px; top: 9rem; transform: translateX(75%) rotate(14deg); }
+    .ch-cyber.pr-char--l { top: 1rem; }
+    .ch-xmas.pr-char--l { top: 0; }
+    .pr-stage.chars-in .pr-char { opacity: 1; transform: none; }
+    .pr-stage.chars-in .pr-char--r { transition-delay: 0.3s; }
+    @media (max-width: 700px) {
+      .pr-chars { top: -3.5rem; }
+      .pr-char { width: 190px; }
+      .pr-char--l { left: -64px; top: 0.5rem !important; }
+      .pr-char--r { right: -64px; top: 0.5rem; }
+    }
+    /* Bewegungen */
+    .tg { transform-box: fill-box; transform-origin: center; animation: chFloat 3.6s ease-in-out infinite; }
+    .tg2 { animation-delay: -1.2s; } .tg3 { animation-delay: -2.1s; }
+    .ch-bf.pr-char--r svg { animation: chBounce 2.6s ease-in-out infinite; transform-origin: 50% 100%; }
+    .dr-prop { transform-box: fill-box; transform-origin: center; animation: chProp 0.16s linear infinite; }
+    .cy-drone { animation: chFloat 3.2s ease-in-out infinite; }
+    .dr-eye { animation: chScan 2.8s ease-in-out infinite; }
+    .dr-flag { transform-box: fill-box; transform-origin: 50% 0; animation: chSwing 2.6s ease-in-out infinite; }
+    .rb-all { animation: chBob 2.4s ease-in-out infinite; }
+    .rb-arm { transform-box: fill-box; transform-origin: 30% 95%; animation: chWave 1.6s ease-in-out infinite; }
+    .rb-eyes { transform-box: fill-box; transform-origin: center; animation: chBlink 4s infinite; }
+    .rb-ant { animation: chGlow 1.4s ease-in-out infinite; }
+    .sk-swing { transform-origin: 150px 72px; animation: chSwing 3.4s ease-in-out infinite; }
+    .tr-lights circle { animation: chGlow 1.6s ease-in-out infinite; }
+    .tr-lights circle:nth-child(2n) { animation-delay: -0.5s; } .tr-lights circle:nth-child(3n) { animation-delay: -1s; }
+    @keyframes chFloat { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-12px) rotate(2deg); } }
+    @keyframes chBounce { 0%, 100% { transform: translateY(0) scaleY(1); } 45%, 55% { transform: translateY(-14px); } 90% { transform: translateY(0) scaleY(0.97); } }
+    @keyframes chProp { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(0.2); } }
+    @keyframes chScan { 0%, 100% { transform: translateX(-8px); } 50% { transform: translateX(8px); } }
+    @keyframes chBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    @keyframes chWave { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(18deg); } }
+    @keyframes chBlink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+    @keyframes chGlow { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+    @keyframes chSwing { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+    @media (prefers-reduced-motion: reduce) { .pr-char { transition: none; } .pr-char *, .pr-char svg { animation: none !important; } }
     .pr-bill { display: inline-flex; align-items: center; gap: 0.6rem; margin-left: auto; }
     .pr-bill .pr-pick-opts button em { font-style: normal; font-size: 0.74rem; font-weight: 700; color: #8a6a12; margin-left: 0.3rem; }
     .pr-bill .pr-pick-opts button[aria-pressed="true"] em { color: #e2c46a; }
@@ -1994,8 +2116,8 @@
     .pr-deal { display: flex; flex-direction: column; margin-top: 1rem; }
     .promo-on .pr-card { background: linear-gradient(var(--c-bg), var(--c-bg)) padding-box, var(--frame) border-box; border: 2px solid transparent; color: var(--c-ink); overflow: hidden; padding-top: 1.9rem; }
     .promo-on .pr-card.is-match { border-width: 3px; box-shadow: 0 30px 60px -28px var(--glow); transform: translateY(-6px) scale(1.02); animation: prPulse 2.6s ease-in-out infinite; }
-    .pr-wrap[data-theme="cyber"].promo-on .pr-card { background: linear-gradient(var(--c-bg), var(--c-bg)) padding-box, var(--frame) 0 0 / 300% 100% border-box; animation: prFrame 6s linear infinite; }
-    .pr-wrap[data-theme="cyber"].promo-on .pr-card.is-match { animation: prFrame 6s linear infinite, prPulse 2.6s ease-in-out infinite; }
+    .pr-wrap[data-theme="cyber"].promo-on .pr-card { background: linear-gradient(var(--c-bg), var(--c-bg)) padding-box, var(--frame) 0 0 / 300% 100% border-box; animation: prFrame 16s linear infinite; }
+    .pr-wrap[data-theme="cyber"].promo-on .pr-card.is-match { animation: prFrame 16s linear infinite, prPulse 2.6s ease-in-out infinite; }
     .promo-on .pr-card .pr-name { color: var(--c-ink); }
     .promo-on .pr-card .pr-size { color: var(--c-mute); }
     .promo-on .pr-card .pr-badge { background: var(--acc); color: #111; top: 0.7rem; left: 1.1rem; }
@@ -2020,6 +2142,7 @@
     .pr-setup s { opacity: 0.6; margin-right: 0.25rem; }
     .pr-save { font-size: 0.82rem; font-weight: 800; margin-top: 0.6rem; padding: 0.35rem 0.6rem; border-radius: 8px; background: rgba(0,0,0,0.82); color: var(--acc); align-self: flex-start; }
     .pr-wrap[data-theme="xmas"] .pr-save { background: #0f3b2a; color: #f2d27a; }
+    .pr-wrap[data-theme="cyber"] .pr-save { background: #0b1226; color: #9db7ff; }
     .promo-on .pr-big { background: var(--ev-bg); color: var(--ev-ink); border: 2px solid var(--acc); }
     .promo-on .pr-big p, .promo-on .pr-big strong, .promo-on .pr-big a { color: var(--ev-ink); }
     @media (prefers-reduced-motion: reduce) { .pr-fx { display: none; } .pr-price strong.is-pop, .promo-on .pr-card, .promo-on .pr-card.is-match { animation: none !important; } }
@@ -2048,9 +2171,173 @@
       </div>
     </div>
 
+    <div class="pr-stage">
+      <div class="pr-chars promo-only" aria-hidden="true">
+        <!-- Black Friday: Preisschilder (links), Einkaufstasche (rechts) -->
+        <div class="pr-char pr-char--l ch-bf">
+          <svg viewBox="0 0 300 420">
+            <defs>
+              <linearGradient id="tgG1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE07A"/><stop offset="1" stop-color="#FFB300"/></linearGradient>
+              <linearGradient id="tgG2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a2a2a"/><stop offset="1" stop-color="#050505"/></linearGradient>
+              <linearGradient id="tgG3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset="1" stop-color="#ff7a00"/></linearGradient>
+            </defs>
+            <path d="M40 0C60 40 30 70 70 96" fill="none" stroke="#111" stroke-width="3"/>
+            <g class="tg tg1" transform="rotate(-14 150 110)">
+              <path d="M78 70h170a12 12 0 0 1 12 12v66a12 12 0 0 1-12 12H78l-40-45Z" fill="url(#tgG1)" stroke="#111" stroke-width="5" stroke-linejoin="round"/>
+              <circle cx="72" cy="115" r="10" fill="#111"/><circle cx="72" cy="115" r="5" fill="#FFE07A"/>
+              <path d="M96 84h146" stroke="#fff" stroke-width="4" opacity="0.45" stroke-linecap="round"/>
+              <text x="168" y="132" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="900" font-size="46" fill="#111">−20%</text>
+            </g>
+            <path d="M20 150C50 190 10 230 60 250" fill="none" stroke="#FFC21A" stroke-width="3"/>
+            <g class="tg tg2" transform="rotate(8 160 260)">
+              <path d="M84 215h176a12 12 0 0 1 12 12v66a12 12 0 0 1-12 12H84l-40-45Z" fill="url(#tgG2)" stroke="#FFC21A" stroke-width="5" stroke-linejoin="round"/>
+              <circle cx="78" cy="260" r="10" fill="#FFC21A"/><circle cx="78" cy="260" r="5" fill="#111"/>
+              <text x="176" y="278" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="900" font-size="46" fill="#FFC21A">−23%</text>
+            </g>
+            <g class="tg tg3" transform="rotate(-6 130 370)">
+              <path d="M70 340h130a10 10 0 0 1 10 10v44a10 10 0 0 1-10 10H70l-30-32Z" fill="url(#tgG3)" stroke="#111" stroke-width="4" stroke-linejoin="round"/>
+              <circle cx="66" cy="372" r="7" fill="#111"/>
+              <text x="140" y="385" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="900" font-size="32" fill="#111" letter-spacing="2">SALE</text>
+            </g>
+          </svg>
+        </div>
+        <div class="pr-char pr-char--r ch-bf">
+          <svg viewBox="0 0 300 390">
+            <defs>
+              <linearGradient id="bgF" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#262626"/><stop offset="1" stop-color="#050505"/></linearGradient>
+              <linearGradient id="bgGold" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFE07A"/><stop offset="1" stop-color="#FFB300"/></linearGradient>
+            </defs>
+            <ellipse cx="150" cy="378" rx="120" ry="10" fill="#000" opacity="0.12"/>
+            <path d="M78 122 100 60l26 62Z" fill="#ff8a00"/><path d="M118 122l32-78 30 78Z" fill="#FFD54A"/><path d="M168 122l30-58 22 58Z" fill="#FFB300"/>
+            <path d="M230 120 266 142 274 342 248 360Z" fill="#1a1a1a" stroke="#FFC21A" stroke-width="4" stroke-linejoin="round"/>
+            <path d="M48 120h182l18 240H30Z" fill="url(#bgF)" stroke="#FFC21A" stroke-width="5" stroke-linejoin="round"/>
+            <path d="M48 120 30 360" stroke="#fff" stroke-width="3" opacity="0.12"/>
+            <path d="M96 130V96a44 44 0 0 1 88 0v34" fill="none" stroke="url(#bgGold)" stroke-width="11" stroke-linecap="round"/>
+            <circle cx="96" cy="134" r="7" fill="#FFC21A"/><circle cx="184" cy="134" r="7" fill="#FFC21A"/>
+            <text x="139" y="222" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="900" font-size="50" fill="#FFC21A">BLACK</text>
+            <text x="139" y="266" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="900" font-size="38" fill="#fff" letter-spacing="3">FRIDAY</text>
+            <path d="M74 286h130" stroke="#FFC21A" stroke-width="3"/>
+            <text x="139" y="322" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="800" font-size="24" fill="#FFC21A">bis zu −23%</text>
+            <g class="tg">
+              <path d="M184 134C214 150 226 176 238 196" fill="none" stroke="#FFC21A" stroke-width="2.5"/>
+              <path d="M232 192h52a6 6 0 0 1 6 6v30a6 6 0 0 1-6 6h-52l-14-21Z" fill="#FFC21A" stroke="#111" stroke-width="3"/>
+              <text x="258" y="220" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="900" font-size="16" fill="#111">%</text>
+            </g>
+          </svg>
+        </div>
+        <!-- Cyber Week: Drohne (links), Roboter (rechts) -->
+        <div class="pr-char pr-char--l ch-cyber">
+          <svg viewBox="0 0 320 320" class="cy-drone">
+            <defs>
+              <linearGradient id="drB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f7ff"/><stop offset="1" stop-color="#c3cff0"/></linearGradient>
+              <radialGradient id="drL" cx="0.35" cy="0.35" r="0.7"><stop offset="0" stop-color="#2b3d75"/><stop offset="1" stop-color="#0b1430"/></radialGradient>
+            </defs>
+            <path d="M110 112 52 64M210 112l58-48" stroke="#2f4a8a" stroke-width="12" stroke-linecap="round"/>
+            <g class="dr-prop"><ellipse cx="52" cy="54" rx="50" ry="7" fill="#9db7ff" opacity="0.85"/><ellipse cx="268" cy="54" rx="50" ry="7" fill="#9db7ff" opacity="0.85"/></g>
+            <circle cx="52" cy="58" r="10" fill="#2f4a8a"/><circle cx="268" cy="58" r="10" fill="#2f4a8a"/>
+            <rect x="86" y="90" width="148" height="84" rx="42" fill="url(#drB)" stroke="#2f4a8a" stroke-width="5"/>
+            <path d="M106 108q54-16 108 0" fill="none" stroke="#fff" stroke-width="5" opacity="0.7" stroke-linecap="round"/>
+            <circle class="rb-ant" cx="112" cy="140" r="6" fill="#ff8fb8"/><circle class="rb-ant" cx="208" cy="140" r="6" fill="#7ee0a8" style="animation-delay:-0.7s"/>
+            <circle cx="160" cy="184" r="34" fill="url(#drL)" stroke="#2f4a8a" stroke-width="5"/>
+            <g class="dr-eye"><circle cx="160" cy="184" r="14" fill="#9db7ff"/><circle cx="154" cy="178" r="4" fill="#fff"/></g>
+            <g class="dr-flag">
+              <path d="M118 210 102 246M202 210l16 36" stroke="#2f4a8a" stroke-width="3"/>
+              <rect x="72" y="244" width="176" height="58" rx="12" fill="#3a3f86" stroke="#2f4a8a" stroke-width="4"/>
+              <text x="160" y="283" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="900" font-size="26" fill="#fff" letter-spacing="2">CYBER WEEK</text>
+            </g>
+          </svg>
+        </div>
+        <div class="pr-char pr-char--r ch-cyber">
+          <svg viewBox="0 0 300 430" class="cy-robot">
+            <defs>
+              <linearGradient id="rbB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6f8ff"/><stop offset="1" stop-color="#c3cff0"/></linearGradient>
+              <linearGradient id="rbD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22336a"/><stop offset="1" stop-color="#0b1430"/></linearGradient>
+            </defs>
+            <ellipse cx="150" cy="418" rx="96" ry="10" fill="#000" opacity="0.12"/>
+            <g class="rb-all">
+              <rect x="100" y="320" width="36" height="72" rx="14" fill="url(#rbB)" stroke="#2f4a8a" stroke-width="5"/>
+              <rect x="164" y="320" width="36" height="72" rx="14" fill="url(#rbB)" stroke="#2f4a8a" stroke-width="5"/>
+              <rect x="86" y="382" width="62" height="26" rx="13" fill="#2f4a8a"/><rect x="152" y="382" width="62" height="26" rx="13" fill="#2f4a8a"/>
+              <circle cx="66" cy="232" r="17" fill="#2f4a8a"/>
+              <rect x="40" y="230" width="32" height="92" rx="16" fill="url(#rbB)" stroke="#2f4a8a" stroke-width="5"/>
+              <circle cx="56" cy="330" r="19" fill="#2f4a8a"/>
+              <rect x="70" y="206" width="160" height="130" rx="38" fill="url(#rbB)" stroke="#2f4a8a" stroke-width="5"/>
+              <rect x="100" y="232" width="100" height="66" rx="16" fill="url(#rbD)"/>
+              <text x="150" y="276" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="900" font-size="32" fill="#9db7ff">−23%</text>
+              <rect x="108" y="306" width="22" height="7" rx="3.5" fill="#7ee0a8"/><rect x="138" y="306" width="22" height="7" rx="3.5" fill="#9db7ff"/><rect x="168" y="306" width="22" height="7" rx="3.5" fill="#ff8fb8"/>
+              <circle cx="86" cy="222" r="5" fill="#8fa3d6"/><circle cx="214" cy="222" r="5" fill="#8fa3d6"/><circle cx="86" cy="320" r="5" fill="#8fa3d6"/><circle cx="214" cy="320" r="5" fill="#8fa3d6"/>
+              <g class="rb-arm">
+                <circle cx="234" cy="232" r="17" fill="#2f4a8a"/>
+                <rect x="228" y="140" width="32" height="98" rx="16" fill="url(#rbB)" stroke="#2f4a8a" stroke-width="5"/>
+                <path d="M228 140c-6-22 6-36 16-38m16 38c6-22-6-36-16-38" fill="none" stroke="#2f4a8a" stroke-width="8" stroke-linecap="round"/>
+              </g>
+              <rect x="132" y="188" width="36" height="22" fill="#2f4a8a"/><path d="M132 196h36M132 203h36" stroke="#5c7cc4" stroke-width="2"/>
+              <rect x="40" y="100" width="26" height="54" rx="10" fill="#2f4a8a"/><rect x="234" y="100" width="26" height="54" rx="10" fill="#2f4a8a"/>
+              <rect x="58" y="58" width="184" height="134" rx="46" fill="url(#rbB)" stroke="#2f4a8a" stroke-width="5"/>
+              <path d="M84 78q30-14 70-12" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity="0.8"/>
+              <rect x="82" y="86" width="136" height="82" rx="32" fill="url(#rbD)"/>
+              <g class="rb-eyes"><rect x="110" y="108" width="24" height="32" rx="12" fill="#9db7ff"/><rect x="166" y="108" width="24" height="32" rx="12" fill="#9db7ff"/><circle cx="127" cy="116" r="4" fill="#fff"/><circle cx="183" cy="116" r="4" fill="#fff"/></g>
+              <path d="M128 150q22 14 44 0" fill="none" stroke="#9db7ff" stroke-width="5" stroke-linecap="round"/>
+              <circle cx="102" cy="152" r="7" fill="#ff8fb8" opacity="0.45"/><circle cx="198" cy="152" r="7" fill="#ff8fb8" opacity="0.45"/>
+              <path d="M150 58V24" stroke="#2f4a8a" stroke-width="6"/>
+              <circle cx="150" cy="18" r="20" fill="#9db7ff" opacity="0.25" class="rb-ant"/><circle class="rb-ant" cx="150" cy="18" r="11" fill="#9db7ff"/>
+            </g>
+          </svg>
+        </div>
+        <!-- Weihnachten: Strumpf (links), Tannenbaum (rechts) -->
+        <div class="pr-char pr-char--l ch-xmas">
+          <svg viewBox="0 0 300 470">
+            <defs>
+              <linearGradient id="skR" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e01b3a"/><stop offset="1" stop-color="#8a0b1f"/></linearGradient>
+            </defs>
+            <line x1="150" y1="0" x2="150" y2="72" stroke="#c9a14a" stroke-width="3"/>
+            <g class="sk-swing">
+              <path d="M140 40v-24a16 16 0 0 1 32 0" fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round"/>
+              <path d="M140 40v-24a16 16 0 0 1 32 0" fill="none" stroke="#d4152f" stroke-width="13" stroke-dasharray="9 9" stroke-linecap="butt"/>
+              <g transform="rotate(12 196 54)"><rect x="174" y="22" width="46" height="56" rx="5" fill="#1f6b45" stroke="#0f3b2a" stroke-width="3"/><path d="M197 22v56M174 46h46" stroke="#f2d27a" stroke-width="6"/><path d="M197 22c-14-14-24-2-12 4m12-4c14-14 24-2 12 4" fill="none" stroke="#f2d27a" stroke-width="5" stroke-linecap="round"/></g>
+              <path d="M95 112h110v186c0 18 6 28 20 38l28 22c32 26 14 72-26 70-12 0-22-4-32-12l-80-64c-14-12-20-26-20-44Z" fill="url(#skR)" stroke="#6d0614" stroke-width="5" stroke-linejoin="round"/>
+              <path d="M95 182l11-10 11 10 11-10 11 10 11-10 11 10 11-10 11 10 11-10 11 10M95 248l11-10 11 10 11-10 11 10 11-10 11 10 11-10 11 10 11-10 11 10" fill="none" stroke="#fff8ec" stroke-width="7" stroke-linejoin="round" opacity="0.92"/>
+              <path d="M228 340c34 22 46 52 30 76-12 18-34 22-52 14 18-24 26-56 22-90Z" fill="#fff8ec" opacity="0.92"/>
+              <path d="M98 318c10 30 30 44 54 50-16 12-42 10-56-10-8-12-6-28 2-40Z" fill="#fff8ec" opacity="0.92"/>
+              <circle cx="150" cy="212" r="4" fill="#fff8ec"/><circle cx="124" cy="282" r="4" fill="#fff8ec"/><circle cx="178" cy="290" r="4" fill="#fff8ec"/><circle cx="196" cy="214" r="4" fill="#fff8ec"/>
+              <rect x="80" y="76" width="140" height="54" rx="20" fill="#fff8ec" stroke="#e7dccb" stroke-width="3"/>
+              <g fill="#fff8ec" stroke="#e7dccb" stroke-width="2"><circle cx="92" cy="130" r="10"/><circle cx="114" cy="134" r="10"/><circle cx="138" cy="134" r="10"/><circle cx="162" cy="134" r="10"/><circle cx="186" cy="134" r="10"/><circle cx="208" cy="130" r="10"/></g>
+            </g>
+          </svg>
+        </div>
+        <div class="pr-char pr-char--r ch-xmas">
+          <svg viewBox="0 0 320 450">
+            <defs>
+              <radialGradient id="orR" cx="0.3" cy="0.3" r="0.7"><stop offset="0" stop-color="#ff6b7d"/><stop offset="1" stop-color="#a10d22"/></radialGradient>
+              <radialGradient id="orG" cx="0.3" cy="0.3" r="0.7"><stop offset="0" stop-color="#fff0b8"/><stop offset="1" stop-color="#c9a14a"/></radialGradient>
+              <radialGradient id="orB" cx="0.3" cy="0.3" r="0.7"><stop offset="0" stop-color="#cfeaff"/><stop offset="1" stop-color="#3d7fbf"/></radialGradient>
+            </defs>
+            <ellipse cx="160" cy="438" rx="130" ry="10" fill="#000" opacity="0.12"/>
+            <rect x="140" y="372" width="40" height="44" rx="6" fill="#7a4a24"/>
+            <path d="M160 232 26 382q134 36 268 0Z" fill="#0f4229"/>
+            <path d="M160 162 46 306q114 32 228 0Z" fill="#155336"/>
+            <path d="M160 98 68 226q92 26 184 0Z" fill="#1c6643"/>
+            <path d="M160 44 96 142q64 20 128 0Z" fill="#257a50"/>
+            <path d="M122 134q38 18 76 0M96 218q64 26 128 0M70 296q90 30 180 0M44 372q116 34 232 0" fill="none" stroke="#f2d27a" stroke-width="4" opacity="0.85"/>
+            <path d="M160 44 96 142q20 6 40 9Z" fill="#fff" opacity="0.08"/>
+            <g class="tr-lights">
+              <circle cx="132" cy="112" r="5" fill="#ffe27a"/><circle cx="190" cy="120" r="5" fill="#ff8a9a"/>
+              <circle cx="110" cy="196" r="5" fill="#9fd8ff"/><circle cx="214" cy="200" r="5" fill="#ffe27a"/><circle cx="160" cy="206" r="5" fill="#ff8a9a"/>
+              <circle cx="84" cy="276" r="5" fill="#ffe27a"/><circle cx="236" cy="282" r="5" fill="#9fd8ff"/><circle cx="130" cy="290" r="5" fill="#ff8a9a"/><circle cx="192" cy="292" r="5" fill="#ffe27a"/>
+              <circle cx="66" cy="356" r="5" fill="#9fd8ff"/><circle cx="254" cy="360" r="5" fill="#ff8a9a"/><circle cx="160" cy="372" r="5" fill="#ffe27a"/>
+            </g>
+            <circle cx="166" cy="150" r="12" fill="url(#orR)"/><circle cx="128" cy="236" r="13" fill="url(#orG)"/><circle cx="200" cy="246" r="13" fill="url(#orB)"/>
+            <circle cx="106" cy="318" r="14" fill="url(#orR)"/><circle cx="220" cy="322" r="14" fill="url(#orG)"/><circle cx="160" cy="332" r="12" fill="url(#orB)"/>
+            <circle cx="160" cy="36" r="16" fill="url(#orG)"/><rect x="154" y="16" width="12" height="7" rx="2" fill="#c9a14a"/>
+            <rect x="34" y="384" width="80" height="54" rx="6" fill="#c8102e"/><path d="M74 384v54M34 408h80" stroke="#f2d27a" stroke-width="7"/>
+            <path d="M74 384c-18-18-30-2-14 4m14-4c18-18 30-2 14 4" fill="none" stroke="#f2d27a" stroke-width="6" stroke-linecap="round"/>
+            <rect x="214" y="396" width="66" height="42" rx="6" fill="#1f6b45"/><path d="M247 396v42" stroke="#fff8ec" stroke-width="6"/>
+          </svg>
+        </div>
+      </div>
     <div class="pr-event promo-only" role="note" aria-label="Aktion">
       <div class="pr-fx" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-      <span class="pr-event-ic" aria-hidden="true" data-ev="icon">%</span>
+      <span class="pr-event-ic" aria-hidden="true"><svg class="ic-bf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V4.5A1.5 1.5 0 0 1 4.5 3H12l9 9-9 9Z"/><circle cx="7.5" cy="7.5" r="1.4"/><path d="m10 15 5-5"/></svg><svg class="ic-cyber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 2.5v3M15 2.5v3M9 18.5v3M15 18.5v3M2.5 9h3M2.5 15h3M18.5 9h3M18.5 15h3"/></svg><svg class="ic-xmas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="14.5" r="6.5"/><path d="M10 6.2h4v2.2h-4z"/><path d="M12 6.2V4.6a1.6 1.6 0 0 1 1.6-1.6"/><path d="M6.4 12.6c3.5 1.5 7.7 1.5 11.2 0"/></svg></span>
       <div class="pr-event-txt">
         <span class="pr-event-kicker" data-ev="kicker">Nur für kurze Zeit</span>
         <strong data-ev="title">Black <em>Friday</em> Week</strong>
@@ -2142,6 +2429,8 @@
       </div>
     </div>
 
+    </div><!-- /pr-stage -->
+
     <ul class="pr-terms">
       <li class="promo-only"><strong>Aktionspreise</strong> für Verträge mit Abschluss bis 31.12.2026 – Aktionspreis garantiert für die ersten 12 Monate</li>
       <li><strong>60 Tage Geld-zurück</strong> auf die Lizenzgebühr: Kündigen Sie innerhalb von 60 Tagen ab Übergabe, endet der Vertrag sofort und wir erstatten die gezahlten Lizenzgebühren. Einrichtungspaket und Serverkosten sind ausgenommen.</li>
@@ -2215,12 +2504,11 @@
       cyber: { bis: '2026-12-06T23:59:59+01:00', icon: '⚡', kicker: 'Online-Deal',        title: 'Cyber <em>Week</em>',         ribbon: 'Cyber Week',   tag: 'Cyber-Week-Preis' },
       xmas:  { bis: '2026-12-31T23:59:59+01:00', icon: '★',  kicker: 'Zum Jahresende',     title: 'Weihnachts-<em>Aktion</em>',  ribbon: 'Weihnachten',  tag: 'Weihnachtspreis' }
     };
-    var wahl = (location.search.match(/[?&]aktion=(bf|cyber|xmas)/) || [])[1];
-    if (wahl) promo = true;
-    else { wahl = 'xmas'; for (var k in THEMEN) { if (Date.now() <= new Date(THEMEN[k].bis).getTime()) { wahl = k; break; } } }
+    var wahl = document.documentElement.getAttribute('data-aktion');
+    promo = !!wahl;
+    if (!wahl) wahl = 'xmas';
     var th = THEMEN[wahl];
     wrap.setAttribute('data-theme', wahl);
-    root.querySelector('[data-ev="icon"]').textContent = th.icon;
     root.querySelector('[data-ev="kicker"]').textContent = th.kicker;
     root.querySelector('[data-ev="title"]').innerHTML = th.title;
     root.querySelectorAll('[data-ev="ribbon"]').forEach(function (n) { n.textContent = th.ribbon; });
@@ -2264,6 +2552,12 @@
       });
     });
     render(false);
+
+    var stage = root.querySelector('.pr-stage');
+    if (promo && stage && 'IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (en) { if (en[0].isIntersecting) { stage.classList.add('chars-in'); io.disconnect(); } }, { threshold: 0.25 });
+      io.observe(stage);
+    } else if (stage) stage.classList.add('chars-in');
 
     if (promo) {
       var cd = { d: root.querySelector('[data-cd="d"]'), h: root.querySelector('[data-cd="h"]'), m: root.querySelector('[data-cd="m"]') };
