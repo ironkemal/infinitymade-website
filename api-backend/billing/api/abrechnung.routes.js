@@ -18,6 +18,7 @@ import { createHash, X509Certificate, randomUUID } from 'node:crypto';
 import { bereinigeUnveroeffentlichtenEntwurf } from './entwurf-bereinigung.js';
 import { createClient } from '@supabase/supabase-js';
 import { buildDtaFile } from '../dta/builder.js';
+import { aktualisiereAuftragsdateiFuerVerschluesselung } from '../dta/auftragsdatei.js';
 import { leitsymptomatikAlsBitmaske } from '../dta/leitsymptomatik.js';
 import { befundpauschaleRegeln } from '../dta/befundpauschale-regeln.js';
 import { hausbesuchRegeln } from '../dta/hausbesuch-regeln.js';
@@ -1737,12 +1738,47 @@ async function berechneVerschluesselung({
       };
     }
 
+    // F2 (GGT Anlage 2 §2.1): Auftragsdatei nach erfolgreicher Verschlüsselung auf 03/03
+    // und die verschlüsselte Bytegröße (encryptedBytes.length) neu erzeugen.
+    let auftragsdateiPath = null;
+    let auftragsdateiSize = null;
+    let auftragsdateiSha256 = null;
+    if (vorher.auftragsdatei_path && typeof db?.storage?.from === 'function') {
+      try {
+        const dlAuf = await db.storage.from('abrechnungen').download(vorher.auftragsdatei_path);
+        if (dlAuf?.data && !dlAuf.error) {
+          const alteAufBuf = Buffer.from(await dlAuf.data.arrayBuffer());
+          const neueAufStr = aktualisiereAuftragsdateiFuerVerschluesselung(alteAufBuf, encryptedBytes.length);
+          const neueAufBuf = Buffer.from(neueAufStr, 'latin1');
+          const neuerAufPfad = artefaktVersuchPfad({
+            ownerId: vorher.owner_id,
+            abrechnungId,
+            kind: 'auftrag',
+          });
+          const upAuf = await db.storage.from('abrechnungen').upload(neuerAufPfad, neueAufBuf, {
+            contentType: 'application/octet-stream',
+            upsert: false,
+          });
+          if (!upAuf?.error) {
+            auftragsdateiPath = neuerAufPfad;
+            auftragsdateiSize = neueAufBuf.length;
+            auftragsdateiSha256 = sha256Hex(neueAufBuf);
+          } else {
+            console.error(`[abrechnung/upload-signed] Aktualisierte Auftragsdatei (03/03) Upload fehlgeschlagen (Abrechnung ${abrechnungId}):`, upAuf.error.message);
+          }
+        }
+      } catch (aufErr) {
+        console.error(`[abrechnung/upload-signed] Aktualisierung der Auftragsdatei (03/03) fehlgeschlagen (Abrechnung ${abrechnungId}):`, aufErr instanceof Error ? aufErr.message : String(aufErr));
+      }
+    }
+
     return {
       verschluesselt: true,
       encryptedPath,
       encryptedSha256: reg.sha256,
       registryId: reg.registryId,
       empfaengerFingerprint: empfZert.fingerprint_sha256 || null,
+      ...(auftragsdateiPath ? { auftragsdateiPath, auftragsdateiSize, auftragsdateiSha256 } : {}),
     };
   } catch (outerErr) {
     console.error(`[abrechnung/upload-signed] Unerwarteter Fehler bei der Verschlüsselung (Abrechnung ${abrechnungId}):`, outerErr.message);
@@ -1810,8 +1846,15 @@ export async function verarbeiteVerschluesselungsSchritt({
     verschluessele,
   });
 
-  // empfaengerFingerprint und registryId sind nur fuer die Persistenz gedacht, nicht Teil des HTTP-Response-Vertrags.
-  const { empfaengerFingerprint, registryId, ...oeffentlichesErgebnis } = ergebnis;
+  // empfaengerFingerprint, registryId und Auftragsdatei-Interna sind nur fuer die Persistenz gedacht, nicht Teil des HTTP-Response-Vertrags.
+  const {
+    empfaengerFingerprint,
+    registryId,
+    auftragsdateiPath,
+    auftragsdateiSize,
+    auftragsdateiSha256,
+    ...oeffentlichesErgebnis
+  } = ergebnis;
 
   const patch = {
     encrypted_storage_path:          ergebnis.verschluesselt ? ergebnis.encryptedPath : null,
@@ -1819,12 +1862,25 @@ export async function verarbeiteVerschluesselungsSchritt({
     verschluesselt_am:               ergebnis.verschluesselt ? new Date().toISOString() : null,
     verschluesselt_fuer_fingerprint: ergebnis.verschluesselt ? (ergebnis.empfaengerFingerprint || null) : null,
     verschluesselung_hinweis:        ergebnis.verschluesselt ? null : (ergebnis.verschluesselungHinweis || null),
+    ...(ergebnis.verschluesselt && auftragsdateiPath ? {
+      auftragsdatei_path:   auftragsdateiPath,
+      auftragsdatei_size:   auftragsdateiSize,
+      auftragsdatei_sha256: auftragsdateiSha256,
+    } : {}),
   };
 
   let version;
   try {
     if (ergebnis.verschluesselt && registryId) {
       await veroeffentliche({ db, ownerId: vorher.owner_id, registryId, vorher, patch });
+      if (auftragsdateiPath && auftragsdateiSha256) {
+        await registriereVeroeffentlicht({
+          db,
+          ownerId: vorher.owner_id,
+          abrechnungId,
+          dateien: [{ pfad: auftragsdateiPath, role: 'auftrag', sha256: auftragsdateiSha256 }],
+        });
+      }
       const { data: neu, error: neuErr } = await db
         .from('abrechnung')
         .select(ABRECHNUNG_VERSION_FELDER)

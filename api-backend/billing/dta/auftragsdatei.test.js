@@ -8,7 +8,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildAuftragsdatei } from './auftragsdatei.js';
+import { buildAuftragsdatei, aktualisiereAuftragsdateiFuerVerschluesselung } from './auftragsdatei.js';
 import { buildPhysikalischerDateiname } from './filename.js';
 import { buildDtaFile } from './builder.js';
 import { physioFixture, podoFixture } from './fixtures.js';
@@ -236,4 +236,39 @@ test('buildDtaFile() mit transfernummer 0 erzeugt TSOL0000 bzw. ESOL0000', () =>
 test('buildDtaFile() mit transfernummer 1000 oder -1 wirft', () => {
   assert.throws(() => buildDtaFile(asDta({ ...physioFixture, transfernummer: 1000 })), /transfernummer must be an integer in \[0, 999\]/);
   assert.throws(() => buildDtaFile(asDta({ ...physioFixture, transfernummer: -1 })), /transfernummer must be an integer in \[0, 999\]/);
+});
+
+// --- F2: Verschlüsselt + signiert (03/03) -----------------------------------
+
+test('F2: buildAuftragsdatei mit 03/03 und verschlüsselter Übertragungsgröße', () => {
+  const satz = buildAuftragsdatei({
+    ...BASIS,
+    nutzdateiByteLength: 1234,
+    uebertragungByteLength: 4567,
+    verschluesselungsart: '03',
+    elektronischeUnterschrift: '03',
+  });
+  assert.equal(satz.length, 348);
+  assert.equal(feld(satz, 179, 190), '000000001234');
+  assert.equal(feld(satz, 191, 202), '000000004567');
+  assert.equal(feld(satz, 207, 210), '0303');
+});
+
+test('F2: buildAuftragsdatei lehnt unzulässige Kombinationen 00/03 und 03/00 ab', () => {
+  assert.throws(() => buildAuftragsdatei({ ...BASIS, verschluesselungsart: '03', elektronischeUnterschrift: '00' }), /00\/00 oder 03\/03/);
+  assert.throws(() => buildAuftragsdatei({ ...BASIS, verschluesselungsart: '00', elektronischeUnterschrift: '03' }), /00\/00 oder 03\/03/);
+});
+
+test('F2: aktualisiereAuftragsdateiFuerVerschluesselung setzt 0303 und verschlüsselte Größe byte-exakt', () => {
+  const basis = buildAuftragsdatei({ ...BASIS, nutzdateiByteLength: 1234 });
+  assert.equal(feld(basis, 207, 210), '0000');
+  assert.equal(feld(basis, 191, 202), '000000001234');
+
+  const neu = aktualisiereAuftragsdateiFuerVerschluesselung(Buffer.from(basis, 'latin1'), 9876);
+  assert.equal(neu.length, 348);
+  assert.equal(feld(neu, 179, 190), '000000001234'); // Rohgröße unverändert
+  assert.equal(feld(neu, 191, 202), '000000009876'); // verschlüsselte Größe
+  assert.equal(feld(neu, 207, 210), '0303');         // VERSCHLÜSSELUNGSART + ELEKTRONISCHE_UNTERSCHRIFT
+  assert.equal(neu.slice(0, 190), basis.slice(0, 190));
+  assert.equal(neu.slice(210), basis.slice(210));
 });

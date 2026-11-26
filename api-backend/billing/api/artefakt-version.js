@@ -248,10 +248,10 @@ export async function aktualisiereArtefaktVersion({ db, vorher, patch }) {
 /**
  * Erzeugt einen eindeutigen Speicherpfad für einen Artefakt-Versuch.
  * Schreibt nicht ins Dateisystem oder in den Storage.
- * @param {{ ownerId: string, abrechnungId: string, kind: 'unsigned' | 'signed' | 'encrypted' }} opts
+ * @param {{ ownerId: string, abrechnungId: string, kind: 'unsigned' | 'signed' | 'encrypted' | 'auftrag' }} opts
  */
 export function artefaktVersuchPfad({ ownerId, abrechnungId, kind }) {
-  if (kind !== 'unsigned' && kind !== 'signed' && kind !== 'encrypted') {
+  if (kind !== 'unsigned' && kind !== 'signed' && kind !== 'encrypted' && kind !== 'auftrag') {
     throw new Error('Ungültiger Artefakt-Typ.');
   }
 
@@ -271,7 +271,9 @@ export function artefaktVersuchPfad({ ownerId, abrechnungId, kind }) {
       ? 'payload.p7m'
       : kind === 'encrypted'
         ? 'payload.dta.enc.p7m'
-        : 'payload.dta';
+        : kind === 'auftrag'
+          ? 'payload.auf'
+          : 'payload.dta';
 
   return `${ownerId}/${abrechnungId}/versuche/${randomUUID()}/${dateiname}`;
 }

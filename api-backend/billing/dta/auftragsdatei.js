@@ -131,8 +131,10 @@ function fmtDateTime14(d) {
  *   filename.js/builder.js — 'erprobung' zählt wie 'test' als Testdaten ("T"),
  *   die Unterscheidung Test/Erprobung steckt im UNB-Testindikator, nicht hier.
  * @param {number} [opts.uebertragungByteLength]  Byte-Länge NACH
- *   Verschlüsselung/Signatur/Komprimierung. Default = nutzdateiByteLength,
- *   weil heute keine dieser drei Transformationen angewendet wird.
+ *   Verschlüsselung/Signatur/Komprimierung. Default = nutzdateiByteLength.
+ * @param {'00'|'03'} [opts.verschluesselungsart='00']  Feld 25 (Stellen 207–208).
+ * @param {'00'|'03'} [opts.elektronischeUnterschrift='00']  Feld 26 (Stellen 209–210).
+ *   Laut GGT Anlage 2 §2.1 sind nur '00'+'00' oder '03'+'03' zulässig.
  * @returns {string} exakt 348 Zeichen, ISO 8859-1.
  */
 export function buildAuftragsdatei({
@@ -144,6 +146,8 @@ export function buildAuftragsdatei({
   nutzdateiByteLength,
   kind = 'echt',
   uebertragungByteLength,
+  verschluesselungsart = '00',
+  elektronischeUnterschrift = '00',
 }) {
   if (!/^\d{9}$/.test(String(absenderIk || ''))) {
     throw new Error('absenderIk must be a 9-digit Institutionskennzeichen');
@@ -173,6 +177,11 @@ export function buildAuftragsdatei({
     : Number(uebertragungByteLength);
   if (!Number.isInteger(groesseUebertragung) || groesseUebertragung < 0) {
     throw new Error('uebertragungByteLength must be a non-negative integer');
+  }
+  const vArt = String(verschluesselungsart);
+  const eUnt = String(elektronischeUnterschrift);
+  if ((vArt !== '00' && vArt !== '03') || (eUnt !== '00' && eUnt !== '03') || vArt !== eUnt) {
+    throw new Error(`Unzulässige Kombination VERSCHLÜSSELUNGSART/ELEKTRONISCHE_UNTERSCHRIFT (${vArt}/${eUnt}) — laut GGT Anlage 2 §2.1 nur 00/00 oder 03/03 zulässig`);
   }
 
   // Stelle 20: 'E' nur für Echtdaten. 'erprobung' zählt wie 'test' als 'T'
@@ -206,8 +215,8 @@ export function buildAuftragsdatei({
     n(String(groesseUebertragung), 12),              // 22 DATEIGRÖSSE_ÜBERTRAGUNG 191-202
     an(ISO_8859_1_KENNUNG, 2),                       // 23 ZEICHENSATZ          203-204
     an('00', 2),                                     // 24 KOMPRIMIERUNG        205-206 (keine)
-    an('00', 2),                                     // 25 VERSCHLÜSSELUNGSART  207-208 (keine — Kapsam dışı, s. o.)
-    an('00', 2),                                     // 26 ELEKTRONISCHE_UNTERSCHRIFT 209-210 (keine — nur 00+00 oder 03+03 zulässig)
+    an(vArt, 2),                                     // 25 VERSCHLÜSSELUNGSART  207-208 (00 oder 03)
+    an(eUnt, 2),                                     // 26 ELEKTRONISCHE_UNTERSCHRIFT 209-210 (nur 00+00 oder 03+03 zulässig)
     leer(3),                                         // 27 SATZFORMAT           211-213 (DFÜ: Leerzeichen)
     an('00000', 5),                                  // 28 SATZLÄNGE            214-218 (DFÜ: Konstante)
     an('00000000', 8),                               // 29 BLOCKLÄNGE           219-226 (DFÜ: Konstante)
@@ -228,4 +237,39 @@ export function buildAuftragsdatei({
     throw new Error(`internal error: Auftragssatz length ${satz.length} !== 348`);
   }
   return satz;
+}
+
+/**
+ * Aktualisiert eine bestehende 348-Byte-Auftragsdatei nach erfolgreicher Signatur &
+ * Verschlüsselung (F2, GGT Anlage 2 §2.1): setzt DATEIGRÖSSE_ÜBERTRAGUNG (Stellen 191–202)
+ * auf die Bytegröße der verschlüsselten Datei und VERSCHLÜSSELUNGSART/ELEKTRONISCHE_UNTERSCHRIFT
+ * (Stellen 207–210) auf '0303'. Alle übrigen Felder (u. a. Transfernummer, logischer Dateiname,
+ * Nutzdateigröße, Erstellungsdatum) bleiben byte-identisch erhalten.
+ *
+ * @param {string | Buffer} alteAuftragsdatei
+ * @param {number} encryptedByteLength
+ * @returns {string} exakt 348 Zeichen, ISO 8859-1.
+ */
+export function aktualisiereAuftragsdateiFuerVerschluesselung(alteAuftragsdatei, encryptedByteLength) {
+  const satz = Buffer.isBuffer(alteAuftragsdatei)
+    ? alteAuftragsdatei.toString('latin1')
+    : String(alteAuftragsdatei || '');
+  if (satz.length !== 348 || !satz.startsWith('500000')) {
+    throw new Error(`Ungültige Basis-Auftragsdatei (Länge ${satz.length}, erwartet 348 mit Kennung 500000)`);
+  }
+  const groesse = Number(encryptedByteLength);
+  if (!Number.isInteger(groesse) || groesse <= 0) {
+    throw new Error('encryptedByteLength must be a positive integer');
+  }
+  const neu =
+    satz.slice(0, 190) +
+    n(String(groesse), 12) + // Stellen 191–202: DATEIGRÖSSE_ÜBERTRAGUNG
+    satz.slice(202, 206) +   // Stellen 203–206: ZEICHENSATZ + KOMPRIMIERUNG unverändert
+    '03' +                   // Stellen 207–208: VERSCHLÜSSELUNGSART
+    '03' +                   // Stellen 209–210: ELEKTRONISCHE_UNTERSCHRIFT
+    satz.slice(210);         // Stellen 211–348 unverändert
+  if (neu.length !== 348) {
+    throw new Error(`internal error: aktualisierter Auftragssatz length ${neu.length} !== 348`);
+  }
+  return neu;
 }
