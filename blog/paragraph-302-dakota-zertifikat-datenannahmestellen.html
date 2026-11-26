@@ -99,8 +99,8 @@
       { "@type": "Question", "name": "Was ist ein Dakota-Zertifikat?", "acceptedAnswer": { "@type": "Answer", "text": "Ein digitales X.509-Zertifikat der ITSG, das Ihre Praxis als zugelassenen §302-Selbstabrechner identifiziert. Voraussetzung, um signierte Abrechnungsdaten an Datenannahmestellen zu senden." } },
       { "@type": "Question", "name": "Was kostet das Dakota-Zertifikat?", "acceptedAnswer": { "@type": "Answer", "text": "79 € zzgl. MwSt. beim Erstantrag, 49 € zzgl. MwSt. bei Online-Folgeanträgen — jeweils für 1 Jahr Laufzeit (seit 01.01.2026). Bearbeitungszeit der Erstausstellung 2–4 Wochen über die ITSG." } },
       { "@type": "Question", "name": "Was ist DAVASO?", "acceptedAnswer": { "@type": "Answer", "text": "Datenannahmestelle der AOK-Familie. Andere Kassengruppen haben eigene Annahmestellen wie vdek, BITMARCK/GWQ (BKK), IKK-Annahmestelle, Knappschaft, SVLFG." } },
-      { "@type": "Question", "name": "Wie viele Datenannahmestellen muss ich bedienen?", "acceptedAnswer": { "@type": "Answer", "text": "In der Praxis 6–9 unterschiedliche Annahmestellen. Eine moderne §302-Software routet die Abrechnung automatisch — Sie senden eine Datei und erhalten je Annahmestelle eine Empfangsbestätigung." } },
-      { "@type": "Question", "name": "Lohnt sich §302-Selbstabrechnung?", "acceptedAnswer": { "@type": "Answer", "text": "Ab ca. 8.000–10.000 € Quartalsumsatz lohnt sich die Selbstabrechnung — die gesparte Kommission (1,5–4 %) übersteigt die Software- und Zertifikatskosten deutlich. Details im Vergleichsartikel." } }
+      { "@type": "Question", "name": "Wie viele Datenannahmestellen muss ich bedienen?", "acceptedAnswer": { "@type": "Answer", "text": "In der Praxis 6–9 unterschiedliche Annahmestellen. Wie die Dateien den Annahmestellen zugeordnet und eingereicht werden, hängt von Ihrer Software und Ihrem Vorgehen ab. In Praxura reichen Sie die Abrechnung selbst ein." } },
+      { "@type": "Question", "name": "Lohnt sich §302-Selbstabrechnung?", "acceptedAnswer": { "@type": "Answer", "text": "Ob sich die Selbstabrechnung lohnt, hängt vom Quartalsumsatz, den Konditionen Ihres Abrechnungszentrums (Beispielwerte 1,5–4 % Kommission, je nach Anbieter) und den Software- und Zertifikatskosten ab. Details im Vergleichsartikel." } }
     ]
   }
   </script>
@@ -131,7 +131,7 @@
     <span class="hero-title-soft">Dakota-Zertifikat, DAVASO &amp; alle Datenannahmestellen im Überblick</span>
   </h1>
   <p class="hero-lede" data-reveal>
-    Wer als Heilmittel-Praxis selbst abrechnet, spart die Kommission des Abrechnungszentrums (typisch 1,5–4&nbsp;%) — übernimmt aber die technische Verantwortung: Dakota-Zertifikat, Anbindung an Datenannahmestellen, sauberer Quartalsabschluss. Dieser Leitfaden zeigt jeden Schritt — und ab welcher Praxisgröße sich der Aufwand wirklich rechnet.
+    Wer als Heilmittel-Praxis selbst abrechnet, spart die Kommission des Abrechnungszentrums (Beispielwerte 1,5–4&nbsp;%, je nach Anbieter) — übernimmt aber die technische Verantwortung: Dakota-Zertifikat, Anbindung an Datenannahmestellen, sauberer Quartalsabschluss. Dieser Leitfaden zeigt jeden Schritt — und wovon es abhängt, ob sich der Aufwand für Ihre Praxis rechnet.
   </p>
 
   <div data-reveal style="margin-top: 2rem; padding: 1.5rem 1.75rem; border-left: 3px solid var(--ink); background: var(--surface); border-radius: 0 12px 12px 0;">
@@ -194,7 +194,7 @@
         </div>
         <div class="step-block" data-reveal>
           <span class="step-block-label">Schritt 2: CSR generieren</span>
-          <p class="step-block-text">Ihre Software erstellt einen Certificate Signing Request mit Ihrem öffentlichen Schlüssel. In Praxura ist das ein Klick.</p>
+          <p class="step-block-text">Ihre Software erstellt einen Certificate Signing Request mit Ihrem öffentlichen Schlüssel.</p>
         </div>
         <div class="step-block" data-reveal>
           <span class="step-block-label">Schritt 3: Zertifikat importieren</span>
@@ -239,7 +239,7 @@
       </div>
 
       <p data-reveal>
-        Insgesamt 6–9 unterschiedliche Datenannahmestellen — abhängig vom regionalen Patientenmix. Eine moderne Software erkennt aus dem Versicherten-Status (IK-Nummer) automatisch die zuständige Annahmestelle und routet die Datei korrekt.
+        Insgesamt 6–9 unterschiedliche Datenannahmestellen — abhängig vom regionalen Patientenmix. Die zuständige Annahmestelle ergibt sich aus der Kasse des Versicherten (IK-Nummer).
       </p>
     </article>
 
@@ -253,7 +253,7 @@
       <div class="step-grid">
         <div class="step-block" data-reveal>
           <span class="step-block-label">1. Rezepte abschließen</span>
-          <p class="step-block-text">Verordnungen mit vollständig abgeschlossener Behandlungsserie als "abrechnungsbereit" markieren. Praxura macht das automatisch nach dem letzten Termin.</p>
+          <p class="step-block-text">Verordnungen mit vollständig abgeschlossener Behandlungsserie als "abrechnungsbereit" markieren.</p>
         </div>
         <div class="step-block" data-reveal>
           <span class="step-block-label">2. Vorprüfung</span>
@@ -269,7 +269,7 @@
         </div>
         <div class="step-block" data-reveal>
           <span class="step-block-label">5. Versand</span>
-          <p class="step-block-text">Per sFTP oder Web-Upload an die Annahmestelle. Sie erhalten eine Empfangsquittung mit Sendungs-ID — revisionssicher archivieren.</p>
+          <p class="step-block-text">Per sFTP oder Web-Upload an die Annahmestelle. Sie erhalten eine Empfangsquittung mit Sendungs-ID, die Sie sorgfältig archivieren sollten.</p>
         </div>
         <div class="step-block" data-reveal>
           <span class="step-block-label">6. Absetzungen prüfen</span>
@@ -278,35 +278,16 @@
       </div>
 
       <p data-reveal>
-        <strong>Tipp:</strong> Häufigste Absetzungsgründe sind formale Fehler (fehlende ICD-10-Codes, falsche IK-Nummer, fehlende Heilmittelposition). Mit der eVO und KI-gestützter Vorprüfung sinkt die Quote dramatisch — viele Praxen kommen unter 0,5&nbsp;% Absetzungsquote.
+        <strong>Tipp:</strong> Häufigste Absetzungsgründe sind formale Fehler (fehlende ICD-10-Codes, falsche IK-Nummer, fehlende Heilmittelposition). Eine sorgfältige Prüfung vor dem Versand kann die Quote senken.
       </p>
     </article>
 
     <article class="step" id="step-5">
       <div class="step-num-row" data-reveal><span class="step-num">05 / 05</span><span class="step-num-line"></span><span class="step-tag">Praxura</span></div>
-      <h2 class="step-title" data-reveal>So macht Praxura §302-Selbstabrechnung einfach</h2>
+      <h2 class="step-title" data-reveal>Praxura und die §302-Selbstabrechnung</h2>
       <p class="step-lede" data-reveal>
-        Selbstabrechnung scheitert in der Praxis selten an der Theorie, sondern am Detail-Aufwand: ein neues IK kommt dazu, ein Zertifikat läuft ab, eine Annahmestelle hat Wartung. Praxura nimmt die meisten dieser Reibungspunkte ab.
+        Praxura unterstützt die Selbstabrechnung bei der Vorbereitung der §302-Dateien. Die Einreichung bei den Datenannahmestellen und die Verwaltung Ihres Zertifikats erledigt die Praxis selbst.
       </p>
-
-      <div class="step-grid">
-        <div class="step-block" data-reveal>
-          <span class="step-block-label">Zertifikats-Wächter</span>
-          <p class="step-block-text">Praxura überwacht das Ablaufdatum Ihres Dakota-Zertifikats und erinnert 6 Wochen vorher mit einem konkreten Verlängerungslink. Kein blockierter Quartalsabschluss mehr.</p>
-        </div>
-        <div class="step-block" data-reveal>
-          <span class="step-block-label">Auto-Routing</span>
-          <p class="step-block-text">Aus IK-Nummer und Versicherten-Status erkennt Praxura automatisch die zuständige Annahmestelle. Sie klicken "Versenden" — die Software routet je Kasse korrekt.</p>
-        </div>
-        <div class="step-block" data-reveal>
-          <span class="step-block-label">KI-Vorprüfung</span>
-          <p class="step-block-text">Vor dem Versand prüft Praxura jeden Datensatz gegen die HMR-Regeln und die häufigsten Absetzungsgründe. Auffällige Datensätze werden vor dem Versand markiert.</p>
-        </div>
-        <div class="step-block" data-reveal>
-          <span class="step-block-label">RDA-Analyse</span>
-          <p class="step-block-text">Eingehende Antwort-Dateien werden automatisch importiert, abgesetzte Positionen pro Diagnose und Kasse analysiert — Sie sehen sofort, welche Fehler-Muster sich häufen.</p>
-        </div>
-      </div>
     </article>
   </div>
 </section>
@@ -320,10 +301,10 @@
 
 <section class="cta-section" data-reveal>
   <div class="cta">
-    <div class="cta-label">§302-Selbstabrechnung ohne Kopfschmerz</div>
-    <h3 class="cta-title">Praxura kombiniert Zertifikats-Management, Annahmestellen-Routing und Verordnungsprüfung.</h3>
+    <div class="cta-label">Praxura kennenlernen</div>
+    <h3 class="cta-title">Praxura unterstützt bei der Vorbereitung der §302-Abrechnung.</h3>
     <p class="cta-text">
-      Lassen Sie sich in einer kostenlosen Demo zeigen, wie der Quartalsabschluss in Praxura abläuft — vom Rezept-Status über die Verordnungsprüfung bis zur fertigen DTA-Datei.
+      Lassen Sie sich in einer kostenlosen Demo zeigen, wie Praxura bei der Vorbereitung des Quartalsabschlusses unterstützt.
     </p>
     <div class="cta-actions">
       <a href="/demo-booking.html" class="btn-primary">Demo vereinbaren<span class="btn-primary-arrow" aria-hidden="true">↗</span></a>
@@ -362,7 +343,7 @@
         <svg class="faq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
       </button>
       <div class="faq-body"><div class="faq-body-inner">
-        Datenannahmestelle der AOK-Familie. Andere Kassengruppen haben eigene Annahmestellen (vdek, BITMARCK/GWQ, IKK, Knappschaft, SVLFG). Eine moderne Software adressiert alle automatisch.
+        Datenannahmestelle der AOK-Familie. Andere Kassengruppen haben eigene Annahmestellen (vdek, BITMARCK/GWQ, IKK, Knappschaft, SVLFG). Welche Annahmestelle zuständig ist, richtet sich nach der Kasse.
       </div></div>
     </div>
     <div class="faq">
@@ -371,7 +352,7 @@
         <svg class="faq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
       </button>
       <div class="faq-body"><div class="faq-body-inner">
-        In der Praxis 6–9 unterschiedliche Annahmestellen. Praxura routet die Abrechnung automatisch — Sie senden eine Datei und erhalten je Annahmestelle eine Empfangsbestätigung.
+        In der Praxis 6–9 unterschiedliche Annahmestellen. Wie die Dateien den Annahmestellen zugeordnet und eingereicht werden, hängt von Ihrer Software und Ihrem Vorgehen ab. In Praxura reichen Sie die Abrechnung selbst ein.
       </div></div>
     </div>
     <div class="faq">
@@ -380,7 +361,7 @@
         <svg class="faq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
       </button>
       <div class="faq-body"><div class="faq-body-inner">
-        Ab ca. 8.000–10.000&nbsp;€ Quartalsumsatz lohnt sich die Selbstabrechnung — die gesparte Kommission (1,5–4&nbsp;%) übersteigt die Software- und Zertifikatskosten deutlich. Vollständiger Vergleich: <a href="/blog/heilmittel-selbst-abrechnen-vs-abrechnungszentrum.html">Selbst abrechnen vs. Abrechnungszentrum</a>.
+        Ob sich die Selbstabrechnung lohnt, hängt vom Quartalsumsatz, den Konditionen Ihres Abrechnungszentrums (Beispielwerte 1,5–4&nbsp;% Kommission, je nach Anbieter) und den Software- und Zertifikatskosten ab. Vollständiger Vergleich: <a href="/blog/heilmittel-selbst-abrechnen-vs-abrechnungszentrum.html">Selbst abrechnen vs. Abrechnungszentrum</a>.
       </div></div>
     </div>
   </div>

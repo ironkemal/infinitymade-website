@@ -109,7 +109,7 @@
       {
         "@type": "Question",
         "name": "Wer bietet KIM-Postfächer an?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Zugelassene KIM-Anbieter sind unter anderem die Bundesdruckerei (D-Trust), CompuGroup Medical (CGM KIM), arvato systems, Akquinet und TI-Trust. Die meisten TI-as-a-Service-Pakete enthalten ein KIM-Postfach. Bei Praxura ist die KIM-Adresse Teil des TI-Moduls." }
+        "acceptedAnswer": { "@type": "Answer", "text": "Zugelassene KIM-Anbieter sind unter anderem die Bundesdruckerei (D-Trust), CompuGroup Medical (CGM KIM), arvato systems, Akquinet und TI-Trust. Die meisten TI-as-a-Service-Pakete enthalten ein KIM-Postfach." }
       },
       {
         "@type": "Question",
@@ -118,8 +118,8 @@
       },
       {
         "@type": "Question",
-        "name": "Wie nutze ich KIM in Praxura?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Praxura bindet das KIM-Postfach direkt an den Therapiebericht-Workflow an: Bericht erstellen, mit eHBA signieren, an KIM-Adresse der Arztpraxis senden — alles in einer Maske, ohne separates KIM-Clientprogramm." }
+        "name": "Unterstützt Praxura KIM?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Eine KIM-Anbindung ist in Praxura heute noch nicht enthalten. Sie ist geplant, ein Termin steht nicht fest. In der Praxissoftware lässt sich lediglich die KIM-Adresse der Praxis hinterlegen." }
       }
     ]
   }
@@ -169,7 +169,7 @@
     <button class="progress-item" data-target="step-2"><span class="progress-num">2</span><span>Wofür brauche ich KIM?</span></button>
     <button class="progress-item" data-target="step-3"><span class="progress-num">3</span><span>Anbieter &amp; Kosten</span></button>
     <button class="progress-item" data-target="step-4"><span class="progress-num">4</span><span>Einrichtung</span></button>
-    <button class="progress-item" data-target="step-5"><span class="progress-num">5</span><span>KIM in Praxura</span></button>
+    <button class="progress-item" data-target="step-5"><span class="progress-num">5</span><span>Praxura und KIM</span></button>
   </aside>
 
   <div class="steps">
@@ -328,7 +328,7 @@
         <div class="step-block" data-reveal>
           <span class="step-block-label">Schritt 3: Praxissoftware verbinden</span>
           <p class="step-block-text">
-            Hinterlegen Sie KIM-Adresse und Zugangsdaten in der Praxissoftware. In Praxura erfolgt das einmalig in den TI-Einstellungen — danach taucht KIM überall dort auf, wo es relevant ist (Therapiebericht, Rückfrage).
+            Hinterlegen Sie KIM-Adresse und Zugangsdaten in der Praxissoftware, sofern diese das unterstützt.
           </p>
         </div>
         <div class="step-block" data-reveal>
@@ -346,37 +346,10 @@
         <span class="step-num-line"></span>
         <span class="step-tag">Praxura</span>
       </div>
-      <h2 class="step-title" data-reveal>So nutzen Sie KIM in Praxura — ohne Medienbruch</h2>
+      <h2 class="step-title" data-reveal>Praxura und KIM</h2>
       <p class="step-lede" data-reveal>
-        Klassisch arbeiten viele Praxen mit einem separaten KIM-Client (eine Art Spezial-E-Mail-Programm). Das funktioniert, ist aber ineffizient: Sie müssen Befunde herunterladen, in die Akte hochladen, signieren, zurücksenden. Praxura integriert KIM direkt in die Patientenakte und in den Therapiebericht-Workflow.
+        Eine KIM-Anbindung ist in Praxura heute noch nicht enthalten. Sie ist geplant, ein Termin steht nicht fest. In Praxura lässt sich bisher nur die KIM-Adresse der Praxis hinterlegen. Für den KIM-Versand nutzen Sie bis dahin den Client Ihres KIM-Anbieters.
       </p>
-
-      <div class="step-grid">
-        <div class="step-block" data-reveal>
-          <span class="step-block-label">Therapiebericht aus der Akte</span>
-          <p class="step-block-text">
-            Im Patientendossier klicken Sie "Therapiebericht erstellen", füllen die Anlage-4-Vorlage aus, signieren mit <a href="/blog/ehba-beantragen-therapeuten-anleitung.html">eHBA</a> und versenden direkt an die KIM-Adresse der überweisenden Arztpraxis — die Empfangsbestätigung landet wieder in der Akte.
-          </p>
-        </div>
-        <div class="step-block" data-reveal>
-          <span class="step-block-label">Eingehende KIM in der Akte</span>
-          <p class="step-block-text">
-            Sendet eine Arztpraxis Ihnen einen Befund oder eine Verordnungs-Rückfrage, ordnet Praxura die Nachricht automatisch dem passenden Patienten zu (über Telematik-ID und Patientendaten). Sie sehen die Nachricht direkt in der Akte — kein separates Postfach-Tool.
-          </p>
-        </div>
-        <div class="step-block" data-reveal>
-          <span class="step-block-label">Versand-Audit-Trail</span>
-          <p class="step-block-text">
-            Jede ausgehende KIM-Nachricht wird mit Zeitstempel, Empfänger und signierender Person revisionssicher protokolliert. Bei Kassen-Plausibilitätsprüfungen können Sie nachweisen, dass und wann ein Therapiebericht verschickt wurde.
-          </p>
-        </div>
-        <div class="step-block" data-reveal>
-          <span class="step-block-label">Verknüpft mit Praxura-Funktionen</span>
-          <p class="step-block-text">
-            KIM-Aktivitäten erscheinen im Patientendossier neben Terminhistorie, <a href="/blog/elektronisches-fahrtenbuch-therapeuten-wegegeld.html">Fahrtenbuch-Einträgen</a> bei Hausbesuchen und offenen Posten aus dem <a href="/blog/mahnwesen-zuzahlung-heilmittelpraxis.html">Mahnwesen</a>. Eine Patientenakte, alle Informationen.
-          </p>
-        </div>
-      </div>
     </article>
   </div>
 </section>
@@ -390,10 +363,10 @@
 
 <section class="cta-section" data-reveal>
   <div class="cta">
-    <div class="cta-label">KIM integriert statt KIM nebenher</div>
-    <h3 class="cta-title">Praxura macht KIM zum natürlichen Teil Ihrer Akte.</h3>
+    <div class="cta-label">Praxura kennenlernen</div>
+    <h3 class="cta-title">Praxura unterstützt Heilmittelpraxen bei der digitalen Praxisführung.</h3>
     <p class="cta-text">
-      Sehen Sie in einer kostenlosen Demo, wie Therapieberichte aus der Akte signiert und versendet werden, wie eingehende Nachrichten automatisch dem Patienten zugeordnet werden und wie das Audit-Log Sie bei Plausibilitätsprüfungen schützt.
+      Lassen Sie sich in einer kostenlosen Demo zeigen, wie Praxura Heilmittelpraxen im Alltag unterstützt.
     </p>
     <div class="cta-actions">
       <a href="/demo-booking.html" class="btn-primary">
@@ -449,11 +422,11 @@
     </div>
     <div class="faq">
       <button class="faq-btn" aria-expanded="false">
-        <span>Wie nutze ich KIM in Praxura?</span>
+        <span>Unterstützt Praxura KIM?</span>
         <svg class="faq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
       </button>
       <div class="faq-body"><div class="faq-body-inner">
-        KIM ist direkt in die Patientenakte integriert: Therapiebericht erstellen, mit eHBA signieren, an KIM-Adresse senden — ohne separates KIM-Programm. Eingehende Nachrichten werden automatisch dem passenden Patienten zugeordnet.
+        Eine KIM-Anbindung ist in Praxura heute noch nicht enthalten. Sie ist geplant, ein Termin steht nicht fest.
       </div></div>
     </div>
   </div>
