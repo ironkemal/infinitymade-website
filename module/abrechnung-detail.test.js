@@ -26,12 +26,12 @@ test('zeitraumAusZeilen: fehlende Daten werden ausgelassen, nicht ersetzt', () =
   assert.deepEqual(zeitraumAusZeilen(null), { von: null, bis: null });
 });
 
-test('faelligkeit: Einreichung + 28 Tage', () => {
+test('faelligkeit: Einreichung + 21 Kalendertage (F9, § 18 Vertrag)', () => {
   const heute = new Date('2026-09-09T12:00:00Z');
   const f = faelligkeit({ zaa_uploaded_at: '2026-09-01T08:00:00Z', betriebsart: 'echt', status: 'gesendet' }, heute);
-  assert.equal(f.am, '2026-09-29');
+  assert.equal(f.am, '2026-09-22');
   assert.equal(f.ueberfaellig, false);
-  assert.equal(f.tageRest, 20);
+  assert.equal(f.tageRest, 13);
 });
 
 test('faelligkeit: Testdatei, abgelehnte und verworfene Datei haben keine Zahlungsfrist (Live-QA C-6)', () => {

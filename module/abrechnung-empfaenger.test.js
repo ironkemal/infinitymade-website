@@ -189,27 +189,27 @@ test('Owner-Ablaufbanner: Ungültiges Datum -> Banner bleibt versteckt', async (
   assert.equal(bannerEl.hidden, true);
 });
 
-test('Owner-Ablaufbanner: 30-Tage-Grenze (31 Tage -> verborgen; 30 Tage -> sichtbar)', async () => {
+test('Owner-Ablaufbanner: 45-Tage-Grenze (F10: 46 Tage -> verborgen; 45 & 30 Tage -> sichtbar)', async () => {
   const { doc } = createMockDoc();
   const bannerEl = doc.getElementById('cert-expiry-banner');
   const now = new Date('2026-10-01T12:00:00.000Z').getTime();
 
-  // 31 Tage verbleibend: kein Banner (Frisch-Zustand)
-  const date31 = new Date(now + 31 * 86400000).toISOString();
+  // 46 Tage verbleibend: kein Banner (Frisch-Zustand)
+  const date46 = new Date(now + 46 * 86400000).toISOString();
   let supabase = {
-    from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { cert_valid_to: date31 } }) }) }) }),
+    from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { cert_valid_to: date46 } }) }) }) }),
   };
   await renderOwnerCertExpiryBanner({ currentProfile: { id: 'owner-1', role: 'owner' }, supabase, doc, now });
-  assert.equal(bannerEl.hidden, true, 'Bei >30 Tagen darf kein Banner angezeigt werden');
+  assert.equal(bannerEl.hidden, true, 'Bei >45 Tagen darf kein Banner angezeigt werden');
 
-  // Genau 30 Tage verbleibend: Banner wird sichtbar
-  const date30 = new Date(now + 30 * 86400000).toISOString();
+  // Genau 45 Tage verbleibend: Banner wird sichtbar
+  const date45 = new Date(now + 45 * 86400000).toISOString();
   supabase = {
-    from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { cert_valid_to: date30 } }) }) }) }),
+    from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { cert_valid_to: date45 } }) }) }) }),
   };
   await renderOwnerCertExpiryBanner({ currentProfile: { id: 'owner-1', role: 'owner' }, supabase, doc, now });
-  assert.equal(bannerEl.hidden, false, 'Bei 30 Tagen muss Banner sichtbar sein');
-  assert.match(bannerEl.innerHTML, /30 Tage/);
+  assert.equal(bannerEl.hidden, false, 'Bei 45 Tagen muss Banner sichtbar sein');
+  assert.match(bannerEl.innerHTML, /45 Tage/);
   assert.match(bannerEl.innerHTML, /var\(--warning-text/);
 });
 

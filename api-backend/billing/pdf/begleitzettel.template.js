@@ -248,8 +248,9 @@ function renderBlatt({ praxis = {}, abrechnung = {}, belege = [], blatt = null, 
       <li>Alle ${escapeHtml(String(belege.length))} Original-Verordnungen dieser Gesamtrechnung liegen in der angegebenen Reihenfolge bei.</li>
       <li>Jede Verordnung ist von der/dem Versicherten an jeder Behandlung mit Datum und Unterschrift quittiert.</li>
       <li>Bei Hausbesuch-Pauschalen (X9922/X9950/X9951) ist der Hausbesuchsnachweis beigefügt.</li>
-      <li>DTA-Datei <strong>${escapeHtml(abrechnung.dateiname || '')}</strong> wurde im Portal der Datenannahmestelle hochgeladen.</li>
-      <li>Belege sind nach Belegnummer aufsteigend sortiert.</li>
+      <li>Verschlüsselte DTA-Datei <strong>${escapeHtml(abrechnung.dateiname || '')}</strong> und Auftragsdatei <strong>${escapeHtml(abrechnung.dateiname ? `${abrechnung.dateiname}.AUF` : '')}</strong> wurden per E-Mail an die Datenannahmestelle übermittelt.</li>
+      <li>Belege sind nach Belegnummer aufsteigend sortiert (Rechnungs-/Belegnummern gemäß Tabelle oben).</li>
+      <li><strong>Versandhinweis (F11):</strong> Urbelege per <strong>Einwurfeinschreiben</strong> versenden (Nachweis für die 9-Monate-Ausschlussfrist nach Vertrag § 18 Abs. 5 ab Ende des Leistungsmonats).</li>
       ${papierannahmestelle !== undefined
         ? `<li>Diesen Umschlag mit Original-Verordnungen an die <strong>Papierannahmestelle</strong> schicken (s. Adressblock oben) — NICHT an die Datenannahmestelle.</li>`
         : ''}

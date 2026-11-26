@@ -122,18 +122,19 @@ export async function renderOwnerCertExpiryBanner({
   if (isNaN(validTo.getTime())) return; // Ungültiges Datum abfangen
 
   const daysLeft = Math.ceil((validTo.getTime() - now) / 86400000);
-  if (daysLeft > 30) return; // Noch mehr als 30 Tage gültig -> kein Banner
+  // F10: Frühzeitige Warnung ab 45 Tagen (Stufen: <=45 Hinweis, <=30 Warnung, <=14/<=0 dringend)
+  if (daysLeft > 45) return;
 
   if (!el) return;
   const formatted = validTo.toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'Europe/Berlin' });
-  const isDanger = daysLeft <= 0;
+  const isDanger = daysLeft <= 14;
   const color = isDanger ? 'var(--danger)' : 'var(--warning-text)';
   const bg = isDanger ? 'var(--danger-dim)' : 'var(--warning-dim)';
   const border = isDanger ? 'var(--danger)' : 'var(--warning)';
   el.innerHTML = `
     <div style="margin:8px 0;padding:12px 14px;border-radius:8px;background:${bg};border:1px solid ${border};font-size:13px;line-height:1.5;color:var(--text-main);">
-      <strong style="color:${color};">⚠ ITSG-Zertifikat</strong> — läuft ${isDanger ? `<strong>abgelaufen (${formatted})</strong>` : `am <strong>${formatted}</strong> ab (${daysLeft} Tag${daysLeft === 1 ? '' : 'e'})`}.
-      Bitte frühzeitig über Ihre KV/ITSG erneuern.
+      <strong style="color:${color};">⚠ ITSG-Zertifikat</strong> — ${daysLeft <= 0 ? `<strong>abgelaufen (${formatted})</strong>` : `läuft am <strong>${formatted}</strong> ab (${daysLeft} Tag${daysLeft === 1 ? '' : 'e'})`}.
+      Bitte frühzeitig über die ITSG erneuern (Bearbeitungszeit ca. 1–2 Wochen).
     </div>`;
   el.hidden = false;
 }
@@ -141,6 +142,27 @@ export async function renderOwnerCertExpiryBanner({
 // ---------------------------------------------------------------------------
 // DAS-Guide Generation & Lebenszyklus-Controller
 // ---------------------------------------------------------------------------
+
+// F6: Aktive Heilmittel-DAS E-Mail-Adressen (DFU Protokoll 070, Kostenträgerdatei Q4/2026).
+// Dient als sofortige Offline-/Vorab-Auflösung, bis Migration 0135 (kostentraeger.dfu_email) live ist.
+const DAS_DFU_EMAIL_FALLBACK = {
+  '107436557': 'inbox@tp5.arz-emmendingen.de',
+  '661430035': 'edi302@iqvia-hss.de',
+  '661430046': 'da302@iqvia-hss.de',
+  '660510336': 'dta302@ddg-online.de',
+  '660500300': 'dta302@ddg-online.de',
+  '105810615': 'da@dta.aok.de',
+  '107299005': 'da@dta.aok.de',
+  '108018007': 'da@dta.aok.de',
+  '102114819': 'da@dta.aok.de',
+  '103119199': 'da@dta.aok.de',
+  '104212505': 'da@dta.aok.de',
+  '109777509': 'da@dta.aok.de',
+  '661430013': 'le@bitmarck-daten.de',
+  '661430024': 'le@bitmarck-daten.de',
+  '109900019': 'da@kbs.de',
+  '103500706': 'da@svlfg.de',
+};
 
 let _activeGuideGen = 0;
 let _isGuideModalOpen = false;
@@ -340,6 +362,7 @@ export async function openDasGuideModalController({
   apiBase,
   state,
   kkMap,
+  profile,
   escapeHtml,
   dgStatusToStep,
   dgRender,
@@ -381,7 +404,7 @@ export async function openDasGuideModalController({
   try {
     const { data, error } = await supabase
       .from('abrechnung')
-      .select('id, dateiname, status, storage_path, signed_storage_path, signed_sha256, signed_at, encrypted_storage_path, encrypted_sha256, verschluesselt_am, verschluesselung_hinweis, zaa_uploaded_at, kostentraeger_ik, empfaenger_ik, prescription_count')
+      .select('id, dateiname, status, storage_path, auftragsdatei_path, signed_storage_path, signed_sha256, signed_at, encrypted_storage_path, encrypted_sha256, verschluesselt_am, verschluesselung_hinweis, zaa_uploaded_at, kostentraeger_ik, empfaenger_ik, prescription_count')
       .eq('id', abrechnungId)
       .maybeSingle();
     if (error) throw error;
@@ -412,6 +435,39 @@ export async function openDasGuideModalController({
     const esc = typeof escapeHtml === 'function' ? escapeHtml : (/** @type {any} */ s) => String(s || '');
     header.innerHTML = `<strong>${esc(ab.dateiname || abrechnungId)}</strong> · ${esc(kk)} · ${ab.prescription_count || 0} Rezepte`;
   }
+
+  // F6: E-Mail-Zieladresse der DAS (DFU Protokoll 070) + Betreff (9-stellige Absender-IK) befüllen
+  const emailEl = doc?.getElementById('dgEmailTarget');
+  const subjEl = doc?.getElementById('dgEmailSubject');
+  const mailtoEl = doc?.getElementById('dgMailtoLink');
+  const absenderIk = String((typeof profile === 'function' ? profile()?.ik_number : profile?.ik_number) || '').replace(/\D/g, '');
+  if (subjEl) subjEl.textContent = absenderIk || 'Ihre 9-stellige Praxis-IK';
+  if (emailEl) {
+    const dasEmail = ab.empfaenger_ik ? (DAS_DFU_EMAIL_FALLBACK[String(ab.empfaenger_ik)] || null) : null;
+    emailEl.textContent = dasEmail || `Adresse der DAS (IK ${ab.empfaenger_ik || '—'}) bitte Kostenträgerdatei entnehmen`;
+    if (mailtoEl) {
+      if (dasEmail) {
+        const href = `mailto:${encodeURIComponent(dasEmail)}?subject=${encodeURIComponent(absenderIk)}`;
+        if (typeof mailtoEl.setAttribute === 'function') mailtoEl.setAttribute('href', href);
+        else mailtoEl.href = href;
+        if (mailtoEl.style) mailtoEl.style.display = 'inline-flex';
+      } else if (mailtoEl.style) {
+        mailtoEl.style.display = 'none';
+      }
+    }
+  }
+  const bindCopy = (/** @type {string} */ btnId, /** @type {HTMLElement | null | undefined} */ srcEl) => {
+    const b = doc?.getElementById(btnId);
+    if (!b || !srcEl) return;
+    b.onclick = () => {
+      const txt = srcEl.textContent?.trim() || '';
+      if (txt && typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(txt).catch(() => {});
+      }
+    };
+  };
+  bindCopy('dgCopyEmailBtn', emailEl);
+  bindCopy('dgCopySubjectBtn', subjEl);
 
   const step = forceStep || (typeof dgStatusToStep === 'function' ? dgStatusToStep(ab) : 1);
   if (typeof dgRender === 'function') {

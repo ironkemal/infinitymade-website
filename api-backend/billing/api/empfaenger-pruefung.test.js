@@ -332,7 +332,7 @@ test('Tenant-Guard: Mitarbeiter-Rolle löst korrekt auf Inhaber auf', async () =
 
   assert.equal(res.statusCode, 200);
   assert.equal(queriedIk, '661430035');
-  assert.equal(res.data?.empfCert?.status, 'fehlend');
+  assert.equal(res.data?.empfCert?.status, 'geprueft');
 });
 
 // -------------------------------------------------------------
@@ -448,7 +448,7 @@ test('Ziel-IK: Fragt exakt ab.empfaenger_ik ab, NICHT kostentraeger_ik und NICHT
   assert.equal(res.data.blockiert, true, 'Bestehende blockiert-Semantik bleibt unverändert');
   assert.equal(res.data.heuteIk, '999999999');
   assert.equal(res.data.gespeichertIk, '661430035');
-  assert.equal(res.data.empfCert.status, 'fehlend');
+  assert.equal(res.data.empfCert.status, 'geprueft');
   assert.equal(res.data.empfCert.ik, '661430035');
 });
 

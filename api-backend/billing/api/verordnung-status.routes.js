@@ -387,6 +387,41 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (/** @type {import('expr
       .eq('id', v.id).eq('owner_id', tenantId).eq('therapie_bereich', 'podo');
     if (upErr) return res.status(500).json({ error: upErr.message });
 
+    // F7: Absetzung / Teilabsetzung auch auf `abrechnung_zeile` synchronisieren,
+    // damit die Korrekturrechnung (VKZ 04) die Zeile direkt als abgesetzt/teilabgesetzt erkennt.
+    if ((ziel === 'teilabsetzung' || ziel === 'abgesetzt') && v.abrechnung_id) {
+      try {
+        const { data: zeile } = await supabase
+          .from('abrechnung_zeile')
+          .select('id, netto_eur')
+          .eq('abrechnung_id', v.abrechnung_id)
+          .eq('prescription_id', v.id)
+          .maybeSingle();
+        if (zeile?.id) {
+          const netto = Number(zeile.netto_eur);
+          const rawBetrag = patch.absetzung_betrag != null
+            ? Number(patch.absetzung_betrag)
+            : (Number.isFinite(netto) && netto > 0 ? netto : 0);
+          const absetzungEur = (Number.isFinite(netto) && netto > 0)
+            ? +Math.min(Math.max(0, rawBetrag), netto).toFixed(2)
+            : +Math.max(0, rawBetrag).toFixed(2);
+          const zeilePatch = {
+            status: ziel === 'teilabsetzung' ? 'teilabgesetzt' : 'abgesetzt',
+            absetzung_eur: absetzungEur,
+            absetzung_grund: patch.absetzung_grund,
+            absetzung_am: patch.absetzung_am,
+          };
+          const { error: zErr } = await supabase
+            .from('abrechnung_zeile')
+            .update(zeilePatch)
+            .eq('id', zeile.id);
+          if (zErr) console.error('[verordnung/abrechnungsstatus] abrechnung_zeile Sync fehlgeschlagen:', zErr.message);
+        }
+      } catch (syncErr) {
+        console.error('[verordnung/abrechnungsstatus] abrechnung_zeile Sync Fehler:', syncErr instanceof Error ? syncErr.message : String(syncErr));
+      }
+    }
+
     if (offenBestaetigt.length) {
       const { error: protErr } = await supabase.from('prescription_validations').insert(
         protokollZeilen(offenBestaetigt, { aktion: 'bereit', userId: auth.user.id }));

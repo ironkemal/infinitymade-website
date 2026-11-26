@@ -95,7 +95,8 @@ export function faelligkeit(abrechnung, heute = new Date()) {
   if (!abrechnung?.zaa_uploaded_at) return null;
   // Keine Zahlungsfrist bei Testdateien, abgelehnten und verworfenen Dateien — dort wird nichts bezahlt (Live-QA C-6).
   if (istTestDatei(abrechnung) || abrechnung.status === 'rejected' || istVerworfen(abrechnung)) return null;
-  const faellig = new Date(new Date(abrechnung.zaa_uploaded_at).getTime() + 28 * 864e5);
+  // F9: Podologie-Vertrag §18 Abs. 14 & Physio-Vertrag §18 Abs. 12: 21 Kalendertage ab Eingang vollständiger Unterlagen
+  const faellig = new Date(new Date(abrechnung.zaa_uploaded_at).getTime() + 21 * 864e5);
   return {
     // Lokales Datum, nicht UTC: um 00:00–02:00 Berlin lag das Fälligkeitsdatum
     // sonst einen Tag zu früh (wie d92e422/6b853ea, datum.js).
@@ -489,30 +490,21 @@ function leerHtml(ab) {
 
 function aktionenHtml(ab) {
   const k = [];
-  if (ab.storage_path)       k.push(`<button class="btn-ghost btn-sm" data-ab-akt="dta">DTA herunterladen</button>`);
-  // Die Auftragsdatei gehört zur Nutzdatei wie der Umschlag zum Brief: die
-  // Datenannahmestelle prüft in Stufe 1, ob beide PAARWEISE ankommen (Anhang 2
-  // zur Anlage 1 TP5, Kap. 9 § 3.1). Fehlt sie, wird abgewiesen, ohne dass
-  // jemand den Inhalt gelesen hat — deshalb steht der Knopf direkt neben der
-  // DTA und nicht irgendwo weiter unten.
-  if (ab.auftragsdatei_path) k.push(`<button class="btn-ghost btn-sm" data-ab-akt="auftrag" title="Gehört zwingend zusammen mit der DTA-Datei übermittelt">Auftragsdatei</button>`);
-  if (ab.begleitzettel_path) k.push(`<button class="btn-ghost btn-sm" data-ab-akt="begleit">Begleitzettel</button>`);
-  if (ab.signed_storage_path) k.push(`<button class="btn-ghost btn-sm" data-ab-akt="p7m">Signierte Datei (unverschlüsselt)</button>`);
-  else if (ab.storage_path)   k.push(`<button class="btn-primary btn-sm" data-ab-akt="signieren">✍ Signieren</button>`);
-  // Für den Versand an die Kasse ist NUR die verschlüsselte Datei zulässig
-  // (GGT Anlage 16 SECON, CMS EnvelopedData) — bis O-131 (22.09.2026) gab es
-  // dafür weder einen Button noch eine sichtbare Fehlermeldung, wenn die
-  // Verschlüsselung fehlgeschlagen war (fehlendes Empfängerzertifikat/
-  // Trust-Anchor). Jetzt: eigener Button bei Erfolg, sichtbarer Hinweis bei
-  // Fehlschlag statt stillem Nichts.
+  const archiv = [];
+  // Primäre Versand-Aktionen (F6): nur verschlüsselte Datei + Auftragsdatei (.AUF) gehören in die E-Mail an die DAS.
+  if (!ab.signed_storage_path && ab.storage_path) {
+    k.push(`<button class="btn-primary btn-sm" data-ab-akt="signieren">✍ Signieren</button>`);
+  }
   if (ab.encrypted_storage_path) {
-    k.push(`<button class="btn-primary btn-sm" data-ab-akt="enc" title="Für den Versand an die Kasse — CMS EnvelopedData nach GGT Anlage 16">🔒 Verschlüsselte Datei (Versand)</button>`);
+    k.push(`<button class="btn-primary btn-sm" data-ab-akt="enc" title="Verschlüsselte Nutzdatei (${esc(ab.dateiname || 'ESOL0nnn')}, ohne Endung) für den E-Mail-Versand">🔒 1. Verschlüsselte Datei</button>`);
   } else if (ab.signed_storage_path) {
-    // O-131-Nachaudit (22.09.2026): auch OHNE expliziten Hinweis anzeigen —
-    // signiert-aber-nie-verschlüsselt (z. B. Altdaten von vor der Verschlüsselungs-
-    // Anbindung) darf nicht wie "alles in Ordnung" aussehen.
     k.push(`<span class="btn-ghost btn-sm" style="color:#ea580c;cursor:default;" title="${esc(ab.verschluesselung_hinweis || 'Verschlüsselung noch nicht durchgeführt.')}">⚠️ Nicht verschlüsselt</span>`);
   }
+  if (ab.auftragsdatei_path) {
+    k.push(`<button class="${ab.encrypted_storage_path ? 'btn-primary' : 'btn-ghost'} btn-sm" data-ab-akt="auftrag" title="Zweiter Pflicht-Anhang (${esc(ab.dateiname ? ab.dateiname + '.AUF' : 'Auftragsdatei')})">📄 2. Auftragsdatei (.AUF)</button>`);
+  }
+  k.push(`<button class="btn-ghost btn-sm" data-ab-akt="anleitung">✉ E-Mail-Versand</button>`);
+  if (ab.begleitzettel_path) k.push(`<button class="btn-ghost btn-sm" data-ab-akt="begleit">Begleitzettel</button>`);
   if (etikettFuer(ab).zahlungKnoepfe) {
     k.push(`<button class="btn-ghost btn-sm" data-ab-akt="zaa">📨 ZAA hochladen</button>`);
   }
@@ -520,21 +512,21 @@ function aktionenHtml(ab) {
     k.push(`<button class="btn-ghost btn-sm" data-ab-akt="fehler">🔍 ZAA-Fehler</button>`);
   }
   if (ab.storage_path || ab.signed_storage_path) k.push(`<button class="btn-ghost btn-sm" data-ab-akt="versionen">Dateiversionen</button>`);
-  k.push(`<button class="btn-ghost btn-sm" data-ab-akt="anleitung">Anleitung</button>`);
 
-  // ⚠️ „Korrigieren & erneut vorbereiten" fehlt hier absichtlich — der alte,
-  // stille Ein-Klick-Retry ist entfernt (Veto V1). Der richtige Weg steht
-  // stattdessen im Korrektur-Panel: korrekturHtml()/vkz01AusnahmeHtml() oben,
-  // sichtbar am Kopf des Inhalts, nicht in dieser Aktionsleiste.
-  // Verworfene Abrechnungen bieten kein ZAA-Hochladen an, da mangels Dateierzeugung nichts eingereicht wurde.
-  // Ohne Datenannahmestelle (empfaenger_ik) laesst sich weder pruefen noch verschluesseln —
-  // das darf nicht erst beim Klick auffallen (Live-QA 05.10.2026, Befund 5).
+  // Unverschlüsselte Dateien ins zugeklappte Archiv (Verwechslungsgefahr beim E-Mail-Versand ausschließen, F6)
+  if (ab.storage_path)        archiv.push(`<button class="btn-ghost btn-sm" data-ab-akt="dta">DTA-Rohdatei (unverschlüsselt)</button>`);
+  if (ab.signed_storage_path) archiv.push(`<button class="btn-ghost btn-sm" data-ab-akt="p7m">Signierte Datei (unverschlüsselt)</button>`);
+
+  const archivHtml = archiv.length
+    ? `<details style="margin-top:8px;font-size:12px;color:var(--text-muted);"><summary style="cursor:pointer;">Archiv (unverschlüsselt — nicht an die Kasse senden)</summary><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">${archiv.join('')}</div></details>`
+    : '';
+
   const empfaengerHinweis = (!ab.empfaenger_ik && ab.status !== 'verworfen')
     ? `<div style="margin-top:12px;font-size:12px;color:var(--text-muted);">Hinweis: Dieser Abrechnung ist keine Datenannahmestelle zugeordnet (empfaenger_ik fehlt). Ohne sie kann die Datei nicht für den Versand verschlüsselt werden.</div>`
     : '';
   return `${empfaengerHinweis}<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
     ${k.join('')}
-  </div>`;
+  </div>${archivHtml}`;
 }
 
 function _verdrahteAktionen(ab, gruppen = []) {

@@ -42,9 +42,9 @@ import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freig
 import { fmtEur } from './module/geld.js?v=20260909';
 import { zeigeAbrechnungAnsicht, wireAbrechnungAnsicht, aktuelleAbrechnungAnsicht } from './module/abrechnung-ansicht.js?v=20261009rs';
 import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20261101u';
-import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20261004m116';
-import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261005g';
-import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261004m116'; import { entschluesseleP12UndSigniere, base64ToUint8 } from './module/dta-signatur.js?v=20261126f1';
+import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20261126f9';
+import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261126f6';
+import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261126f6'; import { entschluesseleP12UndSigniere, base64ToUint8 } from './module/dta-signatur.js?v=20261126f1';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261118v914'; import { pruefePatientPflicht, patientKontaktFehler } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { ladeUeberblickAnsicht, fokussiereUeberblickBereich } from './module/ueberblick-ansicht.js?v=20261124st2'; import { aktivitaetZeileHtml } from './module/aktivitaet-zeile.js?v=20261119start1'; import { rezKpiAuswerten } from './module/ueberblick-listen.js?v=20261124oa'; import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_KPI } from './module/verordnung-fristen-laden.js?v=20261124oa1'; import { erstelleLaufWaechter, tagVerschiebenDatum } from './module/tageszentrale-logik.js?v=20261121f06'; import { berechneRasterScrollTop, scrollRasterSichtbar, verdrahteRasterSlot } from './module/tageszentrale-raster.js?v=20261121f04'; import { erstellePanelVerlauf } from './module/panel-verlauf.js?v=20261123en2';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
 import { ladeStatusJePatient, oeffneStatusDialogFuer, verordnungStatusInfo } from './module/abrechnungsstatus.js?v=20261117f2';
@@ -11320,7 +11320,7 @@ async function openDasGuideModal(abrechnungId, forceStep) {
     supabase,
     apiBase: API,
     state: _dasGuideState,
-    kkMap: _abState.kkMap,
+    kkMap: _abState.kkMap, profile: () => currentProfile,
     escapeHtml,
     dgStatusToStep: _dgStatusToStep,
     dgRender: _dgRender,
@@ -11337,7 +11337,7 @@ document.getElementById('dgSignBtn')?.addEventListener('click', () => {
 });
 
 // Logik in module/abrechnung-detail.js (dasGuideVersandKlick) — Platzgrund, s. dort.
-document.getElementById('dgDownloadBtn')?.addEventListener('click', () => dasGuideVersandKlick(_dasGuideState.abrechnung));
+document.getElementById('dgDownloadBtn')?.addEventListener('click', () => dasGuideVersandKlick(_dasGuideState.abrechnung)); document.getElementById('dgDownloadAufBtn')?.addEventListener('click', () => { const a = _dasGuideState.abrechnung; if (a?.auftragsdatei_path) downloadAbrechnungFile(a.auftragsdatei_path, null, 'begleit', a.dateiname ? `${a.dateiname}.AUF` : undefined); });
 document.getElementById('dgMarkSentBtn')?.addEventListener('click', async () => {
   const id = _dasGuideState.abrechnungId;
   if (!id) return;
@@ -14681,7 +14681,7 @@ async function runSignAbrechnung() {
     // O-131 (22.09.2026): Toast spiegelt jetzt das echte Verschlüsselungsergebnis,
     // statt immer pauschal zum .p7m-Upload aufzufordern.
     showToast(upJson.verschluesselt
-      ? 'Signiert & verschlüsselt ✓ Laden Sie die verschlüsselte Datei jetzt im DAS-Portal hoch.'
+      ? 'Signiert & verschlüsselt ✓ Senden Sie jetzt beide Dateien per E-Mail an die Datenannahmestelle.'
       : 'Signiert ✓ — ' + (upJson.verschluesselungHinweis || 'Verschlüsselung noch nicht abgeschlossen, bitte Datei-Status prüfen.'),
       upJson.verschluesselt ? 'success' : 'warning');
     closeModal('signModal');

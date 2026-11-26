@@ -105,12 +105,12 @@ test('sortiereVerlauf fasst die Eingabe nicht an', () => {
   assert.deepEqual(zeilen.map(z => z.id), vorher);
 });
 
-test('istUeberfaellig: 4 Wochen ab Einreichung, und nur wenn Geld offen ist', () => {
+test('istUeberfaellig: 21 Kalendertage ab Einreichung (F9), und nur wenn Geld offen ist', () => {
   const heute = new Date('2026-09-09T12:00:00Z');
   const eingereicht = (tageVorher) =>
     new Date(heute.getTime() - tageVorher * 864e5).toISOString();
 
-  assert.equal(istUeberfaellig({ zaa_uploaded_at: eingereicht(30), offen: 100 }, heute), true);
+  assert.equal(istUeberfaellig({ zaa_uploaded_at: eingereicht(22), offen: 100 }, heute), true);
   assert.equal(istUeberfaellig({ zaa_uploaded_at: eingereicht(20), offen: 100 }, heute), false);
   // Bezahlt ist nicht ueberfaellig, egal wie alt.
   assert.equal(istUeberfaellig({ zaa_uploaded_at: eingereicht(90), offen: 0 }, heute), false);

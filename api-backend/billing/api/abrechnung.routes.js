@@ -1949,6 +1949,16 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
     if (!signedBase64 || typeof signedBase64 !== 'string') {
       return res.status(400).json({ error: 'signedBase64 required' });
     }
+    // F10: Backend blockiert abgelaufene Zertifikate explizit (nicht nur der Browser)
+    if (certValidTo) {
+      const validToDate = new Date(certValidTo);
+      if (!isNaN(validToDate.getTime()) && validToDate.getTime() < Date.now()) {
+        return res.status(422).json({
+          error: `Zertifikat ist abgelaufen (${validToDate.toLocaleDateString('de-DE')}) und kann nicht mehr zum Signieren verwendet werden.`,
+          code: 'CERT_EXPIRED',
+        });
+      }
+    }
     const signedBytes = Buffer.from(signedBase64, 'base64');
     if (signedBytes.length < 64) {
       return res.status(400).json({ error: 'Signiertes Payload zu klein — Signierung fehlgeschlagen?' });

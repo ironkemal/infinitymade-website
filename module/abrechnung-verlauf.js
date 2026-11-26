@@ -265,7 +265,7 @@ function zeichneVerlauf() {
     const offenZelle = verworfen
       ? `<td style="text-align:right;white-space:nowrap;color:var(--text-muted);">—</td>`
       : `<td style="text-align:right;white-space:nowrap;color:${a.offen > 0.005 ? 'var(--text-main)' : 'var(--text-muted)'};">
-        ${esc(fmtEur(a.offen))}${ueber ? ` <span title="Zahlungsfrist von 4 Wochen überschritten (Richtlinien § 7 Abs. 2)" style="color:#ea580c;">⏰</span>` : ''}
+        ${esc(fmtEur(a.offen))}${ueber ? ` <span title="Zahlungsfrist von 21 Kalendertagen überschritten (§ 18 Vertrag)" style="color:#ea580c;">⏰</span>` : ''}
       </td>`;
 
     return `<tr class="ab-verlauf-row${gewaehlt ? ' ab-verlauf-gewaehlt' : ''}" data-id="${esc(a.id)}"
@@ -283,11 +283,11 @@ function zeichneVerlauf() {
   tbody.dataset.geladen = '1';
 }
 
-/** Eingereicht + 28 Tage, und es ist noch Geld offen. */
+/** Eingereicht + 21 Kalendertage (F9, § 18 Vertrag Podologie/Physio), und es ist noch Geld offen. */
 export function istUeberfaellig(a, heute = new Date()) {
   if (!a?.zaa_uploaded_at) return false;
   if (!(Number(a.offen) > 0.005)) return false;
-  return heute.getTime() - new Date(a.zaa_uploaded_at).getTime() > 28 * 864e5;
+  return heute.getTime() - new Date(a.zaa_uploaded_at).getTime() > 21 * 864e5;
 }
 
 /**

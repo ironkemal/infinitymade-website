@@ -191,6 +191,7 @@ export function parseKostentraegerDatei(text) {
           contacts:    [],
           anschriften: [],          // ANS-Segmente dieses Eintrags (Anhang 03 V10 §7)
           datenannahmestellen: [],
+          dfu_email:   null,        // DFU Protokoll 070 (Internet E-Mail, F6)
         };
         break;
       case 'VDT':
@@ -258,7 +259,18 @@ export function parseKostentraegerDatei(text) {
       case 'KTO':
         if (current) current.contacts.push(seg.fields.flat().filter(Boolean));
         break;
-      // UEM, DFU, FKT — ignored for Faz A2
+      case 'DFU':
+        // DFU+<lfdNr>+<protokoll>+<benutzerkennung>+<von>+<bis>+<uebertragungstage>+<adresse>
+        // Protokoll 070 = Internet E-Mail (Anhang 03 Anlage 1 TP5 §8.3, F6)
+        if (current && String(seg.fields[1] ?? '').trim() === '070') {
+          const rawMail = Array.isArray(seg.fields[6]) ? seg.fields[6].join(':') : String(seg.fields[6] ?? '');
+          const cleanMail = rawMail.trim().toLowerCase();
+          if (cleanMail.includes('@') && !current.dfu_email) {
+            current.dfu_email = cleanMail;
+          }
+        }
+        break;
+      // UEM, FKT — ignored for Faz A2
     }
   }
   if (current) records.push(current);

@@ -4625,18 +4625,22 @@
           <li class="dg-step" data-step="2" style="display:flex;gap:12px;padding:10px;border-radius:6px;margin-bottom:6px;">
             <div class="dg-marker">2</div>
             <div style="flex:1;">
-              <div class="dg-title" style="font-weight:600;">Signierte Datei (.p7m) im DAS-Portal hochladen</div>
+              <div class="dg-title" style="font-weight:600;">Beide Dateien per E-Mail an die Datenannahmestelle senden</div>
               <div class="dg-body" style="font-size:13px;color:var(--text-muted);margin-top:4px;">
-                Laden Sie die <code>.p7m</code>-Datei herunter und im Portal der Datenannahmestelle Ihrer Krankenkasse hoch. Häufig genutzt:
-                <span style="display:block;margin-top:4px;">
-                  <a href="https://www.davaso.de/das" target="_blank" rel="noopener">Davaso (AOK, IKK, BKK)</a> ·
-                  <a href="https://www.ddg-online.de/" target="_blank" rel="noopener">DDG (TK, Barmer)</a> ·
-                  <a href="https://www.bitmarck.de/" target="_blank" rel="noopener">BITMARCK</a>
-                </span>
+                Senden Sie die verschlüsselte Nutzdatei (ohne Endung) und die Auftragsdatei (<code>.AUF</code>) direkt aus Ihrem eigenen E-Mail-Postfach:
+                <div id="dgEmailInfo" style="margin-top:8px;padding:8px 10px;border-radius:6px;background:var(--bg-card-solid);border:1px solid var(--border);font-size:12.5px;color:var(--text-main);line-height:1.6;">
+                  <div><strong>Empfänger-E-Mail:</strong> <code id="dgEmailTarget">—</code> <button type="button" class="btn-ghost btn-sm" id="dgCopyEmailBtn" style="padding:1px 6px;font-size:11px;">Kopieren</button></div>
+                  <div><strong>Betreff (nur Ihre 9-stellige IK):</strong> <code id="dgEmailSubject">—</code> <button type="button" class="btn-ghost btn-sm" id="dgCopySubjectBtn" style="padding:1px 6px;font-size:11px;">Kopieren</button></div>
+                </div>
+                <div style="margin-top:6px;font-size:12px;color:var(--danger, #b91c1c);font-weight:600;">
+                  Wichtig: Genau diese 2 Dateien als getrennte Anhänge senden — kein ZIP, keine E-Mail-Signatur-Grafik, keine vCard, keinen Zusatztext im Betreff!
+                </div>
               </div>
-              <div class="dg-actions" style="margin-top:6px;display:none;">
-                <button class="btn-primary btn-sm" id="dgDownloadBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> .p7m herunterladen</button>
-                <button class="btn-ghost btn-sm" id="dgMarkSentBtn">✓ Bereits hochgeladen</button>
+              <div class="dg-actions" style="margin-top:8px;display:none;flex-wrap:wrap;gap:6px;">
+                <button class="btn-primary btn-sm" id="dgDownloadBtn">1. Verschlüsselte Datei</button>
+                <button class="btn-primary btn-sm" id="dgDownloadAufBtn">2. Auftragsdatei (.AUF)</button>
+                <a class="btn-ghost btn-sm" id="dgMailtoLink" href="#" style="display:none;text-decoration:none;">✉ E-Mail öffnen</a>
+                <button class="btn-ghost btn-sm" id="dgMarkSentBtn">✓ Per E-Mail versendet</button>
               </div>
             </div>
           </li>
