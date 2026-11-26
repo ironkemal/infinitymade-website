@@ -53,14 +53,13 @@ Not intended for: physician or dental practices (Arzt-PVS / Zahnarzt-PVS), beaut
 
 # Pricing (published 2026-11-24, see https://praxura.de/#preise)
 Fixed monthly licence by practice size — no percentage of revenue, all features in every package. Counted are treating therapists (Behandler:innen); reception and administration staff are always included.
-- Solo (1 therapist): 39 € / month — one-time setup package 190 €
-- Praxis (2–5 therapists): 69 € / month — setup 390 €
-- Team (6–10 therapists): 99 € / month — setup 590 €
-- Groß (11–20 therapists): 149 € / month — setup 890 €
-- 21+ therapists or multi-site groups (Verbund): price on request
+- Solo (1 therapist): 49 € / month — one-time setup package 190 €
+- Praxis (2–5 therapists): 119 € / month — setup 390 €
+- Team (6–10 therapists): 199 € / month — setup 590 €
+- 11+ therapists or several locations (Groß / Verbund): individual quote
 Setup package includes: setup of the practice's own server, master data and services, standard data migration (patients and open prescriptions), 2 online trainings of 90 minutes, handover of access.
 Server costs are paid by the practice directly to Hetzner (data centre in Germany); the exact amount is given in the consultation call.
-Terms: promotional prices for contracts signed by 31.12.2026, guaranteed for the first 12 months (regular prices: Solo 49 €, Praxis 89 €, Team 129 €, Groß 189 €; setup 290/490/790/1,190 €); 12-month term, then cancellable monthly; 60-day money-back on the licence fee (setup and server costs excluded); −10 % on the licence fee for annual payment. All prices are final prices; no VAT is charged (small business, § 19 UStG). Offer for practices/businesses only (B2B).
+Terms: promotional prices for contracts signed by 31.12.2026, guaranteed for the first 12 months (regular prices: Solo 59 €, Praxis 149 €, Team 249 €; setup 290/490/790 €); 12-month term, then cancellable monthly; 60-day money-back on the licence fee (setup and server costs excluded); −10 % on the licence fee for annual payment. All prices are final prices; no VAT is charged (small business, § 19 UStG). Offer for practices/businesses only (B2B).
 Not yet available, do not quote a price: AI assistant ("in Kürze"), TI connection ("in Vorbereitung", before the TI obligation from 01.10.2027).
 
 # How to get started
