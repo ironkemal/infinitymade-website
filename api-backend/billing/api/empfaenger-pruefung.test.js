@@ -492,7 +492,7 @@ test('DB-Fehler bei Zertifikatsabfrage -> status: nicht_pruefbar (kontrolliertes
   assert.doesNotMatch(res.hinweis, /secret_internal_db_addr/);
 });
 
-test('Kein Datensatz in empfaenger_zertifikate -> status: fehlend mit deutscher Erklärung', async () => {
+test('Kein Datensatz in empfaenger_zertifikate und kein Trust-Anchor-Treffer -> status: fehlend mit deutscher Erklärung', async () => {
   const db = {
     from: () => ({
       select: () => ({
@@ -501,7 +501,11 @@ test('Kein Datensatz in empfaenger_zertifikate -> status: fehlend mit deutscher 
     }),
   };
 
-  const res = await ermittleEmpfaengerZertifikatStatus({ empfaengerIk: '661430035', db });
+  const res = await ermittleEmpfaengerZertifikatStatus({
+    empfaengerIk: '661430035',
+    db,
+    ladeAnchors: () => ({ anchors: [], meta: null }),
+  });
   assert.equal(res.status, 'fehlend');
   assert.equal(res.ik, '661430035');
   assert.match(res.hinweis, /liegt noch kein Verschlüsselungszertifikat vor/);

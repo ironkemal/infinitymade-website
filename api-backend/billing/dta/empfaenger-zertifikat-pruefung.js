@@ -121,33 +121,33 @@ export function pruefeEmpfaengerZertifikat({
     }
   }
 
-  // --- KONTROLLE 3: KeyUsage enthält 'keyEncipherment' (Bit 2) ---
-  // Extension id-ce-keyUsage (OID: 2.5.29.15)
+  // --- KONTROLLE 3: KeyUsage enthält 'keyEncipherment' (Bit 2), sofern Extension vorhanden ---
+  // Extension id-ce-keyUsage (OID: 2.5.29.15).
+  // Echte ITSG-DAS-Blattzertifikate aus `annahme-rsa4096.key` (60/60 Stand 2026) tragen
+  // keine keyUsage-Extension (nur AuthorityKeyIdentifier); gemäß RFC 5280 §4.2.1.3 schränkt
+  // das Fehlen der Extension die Schlüsselverwendung nicht ein. Ist sie jedoch vorhanden
+  // (z. B. bei CA- oder reinen Signaturzertifikaten), MUSS Bit 2 (keyEncipherment) gesetzt sein.
   const keyUsageExt = (pkiCert.extensions || []).find(ext => ext.extnID === '2.5.29.15');
-  if (!keyUsageExt) {
-    throw new Error(
-      'Empfängerzertifikat verfehlt KeyUsage: Extension 2.5.29.15 (keyUsage) nicht vorhanden.'
-    );
-  }
+  if (keyUsageExt) {
+    // parsedValue ist ein asn1js.BitString
+    const bitStringBlock = keyUsageExt.parsedValue;
+    const bitBytes = bitStringBlock?.valueBlock?.valueHexView;
+    if (!bitBytes || bitBytes.length === 0) {
+      throw new Error('Empfängerzertifikat verfehlt KeyUsage: BitString-Wert ist leer.');
+    }
 
-  // parsedValue ist ein asn1js.BitString
-  const bitStringBlock = keyUsageExt.parsedValue;
-  const bitBytes = bitStringBlock?.valueBlock?.valueHexView;
-  if (!bitBytes || bitBytes.length === 0) {
-    throw new Error('Empfängerzertifikat verfehlt KeyUsage: BitString-Wert ist leer.');
-  }
+    // Gemäß RFC 5280 §4.2.1.3:
+    // Bit 0: digitalSignature (0x80)
+    // Bit 1: nonRepudiation   (0x40)
+    // Bit 2: keyEncipherment  (0x20)
+    const firstByte = bitBytes[0];
+    const hasKeyEncipherment = (firstByte & 0x20) !== 0;
 
-  // Gemäß RFC 5280 §4.2.1.3:
-  // Bit 0: digitalSignature (0x80)
-  // Bit 1: nonRepudiation   (0x40)
-  // Bit 2: keyEncipherment  (0x20)
-  const firstByte = bitBytes[0];
-  const hasKeyEncipherment = (firstByte & 0x20) !== 0;
-
-  if (!hasKeyEncipherment) {
-    throw new Error(
-      'Empfängerzertifikat verfehlt KeyUsage: Bit 2 (keyEncipherment) ist nicht gesetzt.'
-    );
+    if (!hasKeyEncipherment) {
+      throw new Error(
+        'Empfängerzertifikat verfehlt KeyUsage: Bit 2 (keyEncipherment) ist nicht gesetzt.'
+      );
+    }
   }
 
   // --- KONTROLLE 4: Subject / IK stimmt mit erwarteter IK überein ---

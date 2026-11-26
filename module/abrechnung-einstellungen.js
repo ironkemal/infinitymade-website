@@ -1,3 +1,5 @@
+import { mountItsgZertifikatAssistent } from './itsg-zertifikat-assistent.js?v=20261126f4';
+
 /**
  * abrechnung-einstellungen.js — §302-Betriebsart (test / erprobung / echt) und
  * IK-Einstellung in den Einstellungen.
@@ -153,6 +155,24 @@ export async function renderAbrechnungSettings(deps) {
     const mount = document.getElementById('betriebsartMount');
     if (mount) mount.innerHTML = '';
     return;
+  }
+
+  // F4: ITSG-Zertifikatsantrag-Assistent (.p10 erzeugen, .p7c → .p12) unterhalb des Zertifikatsstatus einhängen
+  if (statusEl && typeof deps.loadForge === 'function') {
+    let assistentHost = document.getElementById('itsgAssistentMount');
+    if (!assistentHost) {
+      assistentHost = document.createElement('div');
+      assistentHost.id = 'itsgAssistentMount';
+      statusEl.insertAdjacentElement('afterend', assistentHost);
+    }
+    const prof = deps.profile() || {};
+    mountItsgZertifikatAssistent(assistentHost, {
+      defaultPraxisName: prof.business_name || prof.company_name || '',
+      defaultIk: data?.ik_nummer || prof.ik_number || '',
+      defaultAnsprechpartner: prof.full_name || prof.name || '',
+      loadForge: deps.loadForge,
+      showToast: deps.showToast,
+    });
   }
 
   // Spalten fehlen (Migration 0028 noch nicht eingespielt): Schalter ausblenden,
