@@ -8,6 +8,9 @@ const BUCKET_NAME = 'abrechnungen';
 
 const OID_SIGNED_DATA = '1.2.840.113549.1.7.2';
 const OID_ID_DATA = '1.2.840.113549.1.7.1';
+const OID_RSASSA_PSS = '1.2.840.113549.1.1.10';
+const OID_SHA256 = '2.16.840.1.101.3.4.2.1';
+const OID_MGF1 = '1.2.840.113549.1.1.8';
 
 /**
  * Fehlerklasse für Validierungs- und Verarbeitungsfehler im DTA-Signaturprozess.
@@ -249,6 +252,55 @@ export async function pruefeSignedDta({ signedBytes, expectedDtaSha256, expected
   }
 
   const signer = signedData.signerInfos[0];
+
+  // SECON (GGT Anlage 16, Stand 02.09.2025, §1.1 & §2.1.2, verbindlich ab 01.01.2026):
+  // Nur RSASSA-PSS (1.2.840.113549.1.1.10) mit SHA-256, MGF1-SHA256 und saltLength = 32.
+  if (signer.digestAlgorithm?.algorithmId !== OID_SHA256) {
+    throw new DtaVerificationError(
+      'Digest-Algorithmus muss SHA-256 (SECON) sein',
+      422,
+      'INVALID_DIGEST_ALGORITHM'
+    );
+  }
+  if (signer.signatureAlgorithm?.algorithmId !== OID_RSASSA_PSS) {
+    throw new DtaVerificationError(
+      'Signatur-Algorithmus muss RSASSA-PSS (SECON ab 2026) sein — PKCS#1 v1.5 wird nicht mehr akzeptiert',
+      422,
+      'INVALID_SIGNATURE_ALGORITHM'
+    );
+  }
+  if (signer.signatureAlgorithm.algorithmParams) {
+    let pssParams;
+    try {
+      pssParams = new pkijs.RSASSAPSSParams({ schema: signer.signatureAlgorithm.algorithmParams });
+    } catch {
+      throw new DtaVerificationError('Ungültige RSASSA-PSS-Parameter in Signatur', 422, 'INVALID_PSS_PARAMS');
+    }
+    const pssHashOid = pssParams.hashAlgorithm?.algorithmId;
+    const mgfOid = pssParams.maskGenAlgorithm?.algorithmId;
+    let mgfHashOid = null;
+    if (pssParams.maskGenAlgorithm?.algorithmParams) {
+      try {
+        mgfHashOid = new pkijs.AlgorithmIdentifier({ schema: pssParams.maskGenAlgorithm.algorithmParams }).algorithmId;
+      } catch {
+        mgfHashOid = null;
+      }
+    }
+    if (pssHashOid !== OID_SHA256 || mgfOid !== OID_MGF1 || mgfHashOid !== OID_SHA256 || pssParams.saltLength !== 32) {
+      throw new DtaVerificationError(
+        'RSASSA-PSS-Parameter entsprechen nicht SECON (erwartet SHA-256, MGF1-SHA256, saltLength 32)',
+        422,
+        'INVALID_PSS_PARAMS'
+      );
+    }
+  } else {
+    throw new DtaVerificationError(
+      'RSASSA-PSS-Parameter fehlen (SECON verlangt explizit SHA-256, MGF1-SHA256, saltLength 32)',
+      422,
+      'INVALID_PSS_PARAMS'
+    );
+  }
+
   if (signer.signedAttrs) {
     const attrs = signer.signedAttrs.attributes || [];
     const ctAttrs = attrs.filter((a) => a.type === '1.2.840.113549.1.9.3');

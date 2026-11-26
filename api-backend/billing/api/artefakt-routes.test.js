@@ -12,6 +12,7 @@ import {
   artefaktVersuchPfad,
 } from './artefakt-version.js';
 import { pruefeSignedDta } from '../dta/signed-original.js';
+import { createPssSignedCmsSync } from '../dta/test-pss-cms.js';
 import { reserviereUndLadeHoch, veroeffentliche } from './artefakt-registry.js';
 import { erzeugeRegistryFake, blobAusUploads } from './artefakt-registry-fake.js';
 
@@ -39,21 +40,11 @@ const certThumbprint = crypto.createHash('sha256').update(Buffer.from(certDerByt
 
 /** @param {Buffer} rawPayload */
 function createSignedCms(rawPayload) {
-  const p7 = forge.pkcs7.createSignedData();
-  p7.content = forge.util.createBuffer(rawPayload.toString('binary'));
-  p7.addCertificate(synthCert);
-  p7.addSigner({
-    key: privKey,
-    certificate: synthCert,
-    digestAlgorithm: forge.pki.oids.sha256,
-    authenticatedAttributes: [
-      { type: forge.pki.oids.contentType, value: forge.pki.oids.data },
-      { type: forge.pki.oids.messageDigest },
-      { type: forge.pki.oids.signingTime, value: new Date() },
-    ],
+  return createPssSignedCmsSync({
+    payload: rawPayload,
+    privateKey: privKey,
+    cert: synthCert,
   });
-  p7.sign();
-  return Buffer.from(forge.asn1.toDer(p7.toAsn1()).getBytes(), 'binary');
 }
 
 // --- Extract Route Handlers from on-disk abrechnung.routes.js ---

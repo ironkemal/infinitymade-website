@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import crypto from 'node:crypto';
 import forge from 'node-forge';
 import { pruefeSignedDta } from '../dta/signed-original.js';
+import { createPssSignedCmsSync } from '../dta/test-pss-cms.js';
 import { ABRECHNUNG_VERSION_FELDER, pruefeEntwurfsVersion, aktualisiereArtefaktVersion, artefaktVersuchPfad } from './artefakt-version.js';
 import { reserviereUndLadeHoch, veroeffentliche } from './artefakt-registry.js';
 import { erzeugeRegistryFake, blobAusUploads } from './artefakt-registry-fake.js';
@@ -111,32 +112,12 @@ const expectedDtaSha256 = crypto.createHash('sha256').update(rawPayloadBuffer).d
 // Real CMS binary signature generator with authenticatedAttributes
 /** @param {Buffer} payloadBuf @param {{ detached?: boolean }} [options] */
 function createCmsSignedData(payloadBuf, options = {}) {
-  const p7 = forge.pkcs7.createSignedData();
-  const binaryPayload = payloadBuf.toString('binary');
-  p7.content = forge.util.createBuffer(binaryPayload, 'raw');
-  p7.addCertificate(cert);
-  p7.addSigner({
-    key: keypair.privateKey,
-    certificate: cert,
-    digestAlgorithm: forge.pki.oids.sha256,
-    authenticatedAttributes: [
-      {
-        type: forge.pki.oids.contentType,
-        value: forge.pki.oids.data,
-      },
-      {
-        type: forge.pki.oids.messageDigest,
-      },
-      {
-        type: forge.pki.oids.signingTime,
-        value: new Date(),
-      },
-    ],
+  return createPssSignedCmsSync({
+    payload: payloadBuf,
+    privateKey: keypair.privateKey,
+    cert,
+    detached: !!options.detached,
   });
-  p7.sign({ detached: !!options.detached });
-  const asn1 = p7.toAsn1();
-  const der = forge.asn1.toDer(asn1).getBytes();
-  return Buffer.from(der, 'binary');
 }
 
 const validSignedBytes = createCmsSignedData(rawPayloadBuffer);

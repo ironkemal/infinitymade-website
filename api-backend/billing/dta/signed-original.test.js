@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import forge from 'node-forge';
 import { pruefeSignedDta, ladeDtaOriginalbytes } from './signed-original.js';
+import { createPssSignedCmsSync } from './test-pss-cms.js';
 
 // Module-scope synthetic 2048-bit RSA keypair & self-signed cert (no real keys/CA trust)
 const keys = forge.pki.rsa.generateKeyPair({ bits: 2048 });
@@ -24,21 +25,31 @@ const sha256Hex = (buf) => createHash('sha256').update(buf).digest('hex');
  * @param {{ detached?: boolean, signers?: number, contentType?: string }} [opts]
  */
 function createSigned(payload, { detached = false, signers = 1, contentType = forge.pki.oids.data } = {}) {
+  return createPssSignedCmsSync({
+    payload,
+    privateKey: keys.privateKey,
+    cert,
+    detached,
+    signers,
+    contentType,
+  });
+}
+
+/** @param {Buffer} payload */
+function createLegacyPkcs1v15Signed(payload) {
   const p7 = forge.pkcs7.createSignedData();
   p7.content = forge.util.createBuffer(payload.toString('binary'));
   p7.addCertificate(cert);
-  for (let i = 0; i < signers; i++) {
-    p7.addSigner({
-      key: keys.privateKey,
-      certificate: cert,
-      digestAlgorithm: forge.pki.oids.sha256,
-      authenticatedAttributes: [
-        { type: forge.pki.oids.contentType, value: contentType },
-        { type: forge.pki.oids.messageDigest }
-      ]
-    });
-  }
-  p7.sign({ detached });
+  p7.addSigner({
+    key: keys.privateKey,
+    certificate: cert,
+    digestAlgorithm: forge.pki.oids.sha256,
+    authenticatedAttributes: [
+      { type: forge.pki.oids.contentType, value: forge.pki.oids.data },
+      { type: forge.pki.oids.messageDigest },
+    ],
+  });
+  p7.sign({ detached: false });
   return Buffer.from(forge.asn1.toDer(p7.toAsn1()).getBytes(), 'binary');
 }
 
@@ -171,6 +182,14 @@ describe('pruefeSignedDta', () => {
   it('rejects CMS container with 2 signers', async () => {
     const twoSigners = createSigned(syntheticOriginal, { signers: 2 });
     await assert.rejects(async () => pruefeSignedDta({ signedBytes: twoSigners, expectedDtaSha256: validDtaHash }));
+  });
+
+  it('rejects legacy PKCS#1 v1.5 signature with INVALID_SIGNATURE_ALGORITHM (SECON F1)', async () => {
+    const legacySigned = createLegacyPkcs1v15Signed(syntheticOriginal);
+    await assert.rejects(
+      async () => pruefeSignedDta({ signedBytes: legacySigned, expectedDtaSha256: validDtaHash }),
+      (/** @type {any} */ err) => err?.code === 'INVALID_SIGNATURE_ALGORITHM' && err?.status === 422
+    );
   });
 
   it('rejects trailing bytes appended to DER', async () => {

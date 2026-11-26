@@ -44,7 +44,7 @@ import { zeigeAbrechnungAnsicht, wireAbrechnungAnsicht, aktuelleAbrechnungAnsich
 import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20261101u';
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20261004m116';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261005g';
-import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261004m116';
+import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261004m116'; import { entschluesseleP12UndSigniere, base64ToUint8 } from './module/dta-signatur.js?v=20261126f1';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261118v914'; import { pruefePatientPflicht, patientKontaktFehler } from './module/patient-pflichtfelder.js?v=20261117f1'; import { dbg } from './module/debug-log.js?v=20261117f10'; import { ladeUeberblickAnsicht, fokussiereUeberblickBereich } from './module/ueberblick-ansicht.js?v=20261124st2'; import { aktivitaetZeileHtml } from './module/aktivitaet-zeile.js?v=20261119start1'; import { rezKpiAuswerten } from './module/ueberblick-listen.js?v=20261124oa'; import { ladeOffeneVerordnungenPaginiert, RX_FRISTEN_SELECT_KPI } from './module/verordnung-fristen-laden.js?v=20261124oa1'; import { erstelleLaufWaechter, tagVerschiebenDatum } from './module/tageszentrale-logik.js?v=20261121f06'; import { berechneRasterScrollTop, scrollRasterSichtbar, verdrahteRasterSlot } from './module/tageszentrale-raster.js?v=20261121f04'; import { erstellePanelVerlauf } from './module/panel-verlauf.js?v=20261123en2';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
 import { ladeStatusJePatient, oeffneStatusDialogFuer, verordnungStatusInfo } from './module/abrechnungsstatus.js?v=20261117f2';
@@ -14646,56 +14646,20 @@ async function runSignAbrechnung() {
     stat.textContent = 'Lade Krypto-Bibliothek…';
     const forge = await loadForge();
 
-    stat.textContent = 'Entschlüssele Zertifikat…';
+    stat.textContent = 'Entschlüssele Zertifikat & signiere (RSASSA-PSS)…';
     const p12Ab = await file.arrayBuffer();
-    const p12BinStr = _u8ToBinStr(new Uint8Array(p12Ab));
-    let p12;
-    try { p12 = forge.pkcs12.pkcs12FromAsn1(forge.asn1.fromDer(p12BinStr), false, pin); }
-    catch (e) {
-      throw new Error('Ungültige .p12-Datei oder falsche PIN. Bitte Zertifikatsdatei und PIN prüfen.');
-    }
-
-    const keyBagSets = p12.getBags({ bagType: forge.pki.oids.pkcs8ShroudedKeyBag });
-    const certBagSets = p12.getBags({ bagType: forge.pki.oids.certBag });
-    const keyBag = keyBagSets[forge.pki.oids.pkcs8ShroudedKeyBag]?.[0]
-      || p12.getBags({ bagType: forge.pki.oids.keyBag })[forge.pki.oids.keyBag]?.[0];
-    const certBag = certBagSets[forge.pki.oids.certBag]?.[0];
-    if (!keyBag?.key) throw new Error('Privater Schlüssel im Zertifikat nicht gefunden.');
-    if (!certBag?.cert) throw new Error('Zertifikat-Bag nicht gefunden.');
-
-    const cert = certBag.cert;
-    const privateKey = keyBag.key;
-
-    const certDer = forge.asn1.toDer(forge.pki.certificateToAsn1(cert)).getBytes();
-    const md = forge.md.sha1.create(); md.update(certDer); const certThumbprint = md.digest().toHex();
-    const subjectAttrs = (cert.subject?.attributes || []).map(a => `${a.shortName || a.name}=${a.value}`).join(', ');
-    const notAfter = cert.validity?.notAfter ? new Date(cert.validity.notAfter).toISOString() : null;
-    const certSerial = cert.serialNumber || null;
-
-    if (cert.validity?.notAfter && cert.validity.notAfter < new Date()) {
-      throw new Error(`Zertifikat abgelaufen (${cert.validity.notAfter.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}).`);
-    }
-
-    stat.textContent = 'Erzeuge PKCS#7 SignedData…';
-    const dtaBytes = atob(dtaJson.contentBase64);
-
-    const p7 = forge.pkcs7.createSignedData();
-    p7.content = forge.util.createBuffer(dtaBytes, 'binary');
-    p7.addCertificate(cert);
-    p7.addSigner({
-      key: privateKey,
-      certificate: cert,
-      digestAlgorithm: forge.pki.oids.sha256,
-      authenticatedAttributes: [
-        { type: forge.pki.oids.contentType, value: forge.pki.oids.data },
-        { type: forge.pki.oids.messageDigest },
-        { type: forge.pki.oids.signingTime, value: new Date() },
-      ],
+    const {
+      signedBase64,
+      certSubject: subjectAttrs,
+      certValidTo: notAfter,
+      certThumbprint,
+      certSerial,
+    } = await entschluesseleP12UndSigniere({
+      p12Bytes: new Uint8Array(p12Ab),
+      pin,
+      dtaBytes: base64ToUint8(dtaJson.contentBase64),
+      forge,
     });
-    p7.sign({ detached: false });
-
-    const p7DerBin = forge.asn1.toDer(p7.toAsn1()).getBytes();
-    const signedBase64 = forge.util.encode64(p7DerBin);
 
     stat.textContent = 'Lade signierte Datei hoch…';
     const upRes = await fetch(`${API}/billing/abrechnung/${abrechnungId}/upload-signed`, {

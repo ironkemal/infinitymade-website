@@ -2391,19 +2391,14 @@ test('40. VKZ03 verwendet kryptografisch geprüfte eingebettete Originaldaten oh
   cert.setSubject(attrs); cert.setIssuer(attrs);
   cert.sign(keys.privateKey, forge.md.sha256.create());
 
+  const { createPssSignedCmsSync } = await import('../dta/test-pss-cms.js');
   const baseData = erstelleTestDta({ claim20: true });
-  const p7 = forge.pkcs7.createSignedData();
-  p7.content = forge.util.createBuffer(baseData.buf.toString('binary'));
-  p7.addCertificate(cert);
-  p7.addSigner({
-    key: keys.privateKey, certificate: cert, digestAlgorithm: forge.pki.oids.sha256,
-    authenticatedAttributes: [
-      { type: forge.pki.oids.contentType, value: forge.pki.oids.data },
-      { type: forge.pki.oids.messageDigest },
-    ],
+  const signedDERBuffer = createPssSignedCmsSync({
+    payload: baseData.buf,
+    privateKey: keys.privateKey,
+    cert,
+    detached: false,
   });
-  p7.sign({ detached: false });
-  const signedDERBuffer = Buffer.from(forge.asn1.toDer(p7.toAsn1()).getBytes(), 'binary');
 
   const expectedSignedPath = `${baseData.ownerId}/synthetic/source.p7m`;
   const makeTestData = (override = {}) => {
