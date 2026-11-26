@@ -95,12 +95,56 @@ function eingabeHtml(f, opt) {
   }
 }
 
+/**
+ * Berechnet den Ausfüllfortschritt einer dynamischen Anamnese (rein, testbar).
+ * Zählt nur im aktuellen Zustand sichtbare Felder.
+ */
+export function berechneAnamneseFortschritt(def, roh = {}, { kiosk = false } = {}) {
+  const gruppen = {};
+  let gesamt = 0;
+  let beantwortet = 0;
+  let pflichtGesamt = 0;
+  let pflichtAusgefuellt = 0;
+
+  for (const g of def.gruppen || []) {
+    gruppen[g.id] = { beantwortet: 0, gesamt: 0, pflichtOffen: 0 };
+  }
+
+  for (const f of def.felder || []) {
+    if (kiosk && f.nurPraxis) continue;
+    if (!istSichtbar(f, roh, { kiosk })) continue;
+    const w = roh[f.id];
+    const hatWert = f.typ === 'mehrfach'
+      ? Array.isArray(w) && w.length > 0
+      : f.typ === 'arzt'
+        ? Boolean(w?.name?.trim() || w?.telefon?.trim())
+        : w != null && String(w).trim() !== '';
+
+    const pflicht = istPflicht(f, roh);
+    gesamt++;
+    if (hatWert) beantwortet++;
+    if (pflicht) {
+      pflichtGesamt++;
+      if (hatWert) pflichtAusgefuellt++;
+    }
+    const gr = gruppen[f.gruppe];
+    if (gr) {
+      gr.gesamt++;
+      if (hatWert) gr.beantwortet++;
+      if (pflicht && !hatWert) gr.pflichtOffen++;
+    }
+  }
+
+  const prozent = gesamt > 0 ? Math.round((beantwortet / gesamt) * 100) : 0;
+  return { pflichtGesamt, pflichtAusgefuellt, beantwortet, gesamt, prozent, gruppen };
+}
+
 /** HTML des Formulars. Alle Felder sind im Markup, bedingte per `hidden` (siehe `aktualisiereSichtbarkeit`). */
 export function formHtml(def, { kiosk = false } = {}) {
   const sicht = def.felder.filter((f) => !(kiosk && f.nurPraxis));
-  const gruppen = def.gruppen.map((g) => {
+  const sichtbareGruppen = def.gruppen.filter((g) => sicht.some((f) => f.gruppe === g.id));
+  const gruppen = sichtbareGruppen.map((g) => {
     const fs = sicht.filter((f) => f.gruppe === g.id);
-    if (!fs.length) return '';
     const felder = fs.map((f) => {
       const hinweis = [f.hinweis, kiosk ? kioskHinweis(f) : ''].filter(Boolean).map((h) => `<div class="anf-hinweis">${esc(h)}</div>`).join('');
       return `<div class="anf-feld${f.unter ? ' anf-unter' : ''}" data-anf-feld="${esc(f.id)}">
@@ -111,10 +155,29 @@ export function formHtml(def, { kiosk = false } = {}) {
         <div class="anf-fehler" role="alert" hidden></div>
       </div>`;
     }).join('');
-    return `<div class="card anam-gruppe" data-gruppe="${esc(g.id)}" style="margin-bottom:16px;"><h3 style="font-size:15px;font-weight:600;margin-bottom:12px;">${esc(g.titel)}</h3>${felder}</div>`;
+    return `<details open class="card anam-gruppe" data-gruppe="${esc(g.id)}" style="margin-bottom:14px;">
+      <summary class="anam-gruppe-kopf">
+        <span class="anam-gruppe-titel">${esc(g.titel)}</span>
+        <span class="anam-gruppe-badge" data-gruppe-badge="${esc(g.id)}">0 / ${fs.length}</span>
+      </summary>
+      <div class="anam-gruppe-inhalt">${felder}</div>
+    </details>`;
   }).join('');
   const entwurf = def.entwurf ? `<div class="anam-entwurf" role="note">${esc(ENTWURF_HINWEIS)}</div>` : '';
-  return `${entwurf}<div class="anam-dyn" data-fachbereich="${esc(def.fachbereich)}">${gruppen}</div>`;
+  const navPills = sichtbareGruppen.map((g) =>
+    `<button type="button" class="anam-jump-pill" data-anam-jump="${esc(g.id)}">${esc(g.titel)}</button>`
+  ).join('');
+  const fortschritt = `
+    <div class="anam-fortschritt" data-anam-fortschritt>
+      <div class="anam-fortschritt-zeile">
+        <span class="anam-fortschritt-text" data-anam-fortschritt-text>Ausgefüllt: 0 %</span>
+        <span class="anam-fortschritt-pflicht" data-anam-fortschritt-pflicht></span>
+        ${!kiosk ? '<button type="button" class="btn-ghost btn-sm" data-anam-toggle-all="zu">Alle einklappen</button>' : ''}
+      </div>
+      <div class="anam-progress-track" aria-hidden="true"><div class="anam-progress-fill" data-anam-progress-fill style="width:0%"></div></div>
+      ${sichtbareGruppen.length > 1 ? `<div class="anam-jump-pills" role="navigation" aria-label="Anamnese-Abschnitte">${navPills}</div>` : ''}
+    </div>`;
+  return `${entwurf}${fortschritt}<div class="anam-dyn" data-fachbereich="${esc(def.fachbereich)}">${gruppen}</div>`;
 }
 
 /** Rohantworten aus dem Formular lesen (Strings / String[]); Gegenstück: `schreibeForm`. */
@@ -171,6 +234,33 @@ function aktualisiereSichtbarkeit(root, def, kiosk) {
     const stern = el.querySelector('.anf-stern');
     if (stern) stern.hidden = !(istPflicht(f, roh) && !el.hidden);
   }
+  const f = berechneAnamneseFortschritt(def, roh, { kiosk });
+  const textEl = root.querySelector('[data-anam-fortschritt-text]');
+  if (textEl) textEl.textContent = `${f.beantwortet} von ${f.gesamt} Feldern ausgefüllt (${f.prozent} %)`;
+  const pflichtEl = root.querySelector('[data-anam-fortschritt-pflicht]');
+  if (pflichtEl) {
+    const offen = f.pflichtGesamt - f.pflichtAusgefuellt;
+    pflichtEl.textContent = f.pflichtGesamt === 0
+      ? ''
+      : offen === 0
+        ? `✓ Alle ${f.pflichtGesamt} Pflichtfelder vollständig`
+        : `${offen} Pflichtfeld${offen === 1 ? '' : 'er'} offen`;
+    pflichtEl.classList.toggle('is-ok', offen === 0 && f.pflichtGesamt > 0);
+  }
+  const fillEl = root.querySelector('[data-anam-progress-fill]');
+  if (fillEl) fillEl.style.width = `${f.prozent}%`;
+  for (const [gid, info] of Object.entries(f.gruppen)) {
+    const badge = root.querySelector(`[data-gruppe-badge="${gid}"]`);
+    if (badge) {
+      badge.textContent = info.pflichtOffen > 0
+        ? `${info.beantwortet}/${info.gesamt} · ${info.pflichtOffen} Pflicht`
+        : `${info.beantwortet}/${info.gesamt}`;
+      badge.classList.toggle('is-warn', info.pflichtOffen > 0);
+      badge.classList.toggle('is-done', info.pflichtOffen === 0 && info.beantwortet > 0 && info.beantwortet === info.gesamt);
+    }
+    const pill = root.querySelector(`[data-anam-jump="${gid}"]`);
+    if (pill) pill.classList.toggle('has-pflicht', info.pflichtOffen > 0);
+  }
 }
 
 function verdrahteForm(root, def, kiosk) {
@@ -186,6 +276,20 @@ function verdrahteForm(root, def, kiosk) {
   });
   root.addEventListener('input', () => aktualisiereSichtbarkeit(root, def, kiosk));
   root.addEventListener('click', (e) => {
+    const jump = e.target?.closest?.('[data-anam-jump]');
+    if (jump) {
+      const sec = root.querySelector(`details[data-gruppe="${jump.dataset.anamJump}"]`);
+      if (sec) { sec.open = true; sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      return;
+    }
+    const toggleAll = e.target?.closest?.('[data-anam-toggle-all]');
+    if (toggleAll) {
+      const sollZu = toggleAll.dataset.anamToggleAll === 'zu';
+      root.querySelectorAll('details.anam-gruppe').forEach((el) => { el.open = !sollZu; });
+      toggleAll.dataset.anamToggleAll = sollZu ? 'auf' : 'zu';
+      toggleAll.textContent = sollZu ? 'Alle aufklappen' : 'Alle einklappen';
+      return;
+    }
     const b = e.target?.closest?.('[data-anf-uebernehmen]');
     if (!b) return;
     const id = b.dataset.anfUebernehmen; const v = vorschlaege[id];

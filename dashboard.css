@@ -8422,6 +8422,73 @@ textarea:focus-visible,
   background: var(--bg-card-solid); color: var(--text-main); font-size: 13px;
 }
 .anam-kopf-aktionen { display: inline-flex; flex-wrap: wrap; gap: 8px; }
+.anam-fortschritt {
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+.anam-fortschritt-zeile {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+.anam-fortschritt-text { font-weight: 600; color: var(--text-main); }
+.anam-fortschritt-pflicht { font-size: 12px; font-weight: 600; color: var(--warning-text, var(--warning)); margin-right: auto; }
+.anam-fortschritt-pflicht.is-ok { color: var(--success); }
+.anam-progress-track {
+  height: 6px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.anam-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width 0.2s ease;
+}
+.anam-jump-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.anam-jump-pill {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.anam-jump-pill:hover { border-color: var(--accent); color: var(--text-main); }
+.anam-jump-pill.has-pflicht { border-color: var(--warning); color: var(--warning-text, var(--warning)); }
+.anam-gruppe-kopf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+.anam-gruppe-kopf::-webkit-details-marker { display: none; }
+.anam-gruppe-titel { font-size: 15px; font-weight: 600; color: var(--text-main); }
+.anam-gruppe-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+.anam-gruppe-badge.is-warn { color: var(--warning-text, var(--warning)); border-color: var(--warning); }
+.anam-gruppe-badge.is-done { color: var(--success); border-color: var(--success); }
+.anam-gruppe-inhalt { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
 .anam-dyn .anf-feld { margin-top: 14px; }
 .anam-dyn .anf-feld:first-child { margin-top: 0; }
 .anam-dyn .anf-unter { margin-left: 16px; padding-left: 12px; border-left: 2px solid var(--border); }

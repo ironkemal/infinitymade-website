@@ -3,7 +3,7 @@
 > Üretim: 2026-11-27 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**5634 fonksiyon** (5509 JS · 98 bash · 27 ps1) · 745 dosya · 42 sidebar modülü
+**5635 fonksiyon** (5510 JS · 98 bash · 27 ps1) · 745 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -618,7 +618,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `fmt` — api-backend/setup/router.js:136 · dashboard.js:1131 · dashboard.js:6994 · dashboard.js:8745 · dashboard.js:9014 · dashboard.js:12086 · dashboard.js:16717 · module/kalender-raster.js:76 · module/rechnung-ansicht.js:234 · module/rezeptinfo-geld.js:71 · module/tageszentrale-ansicht.js:610
 - `g` — dashboard.js:12996 · dashboard.js:13009 · dashboard.js:13182 · module/heilmittel-zeilen-ui.js:262 · module/rezept-barcode-bestaetigung.js:15 · module/rezept-barcode-dialog.js:6 · module/rezept-in-maske.js:40 · module/rezept-patientenkopf.js:7 · module/verordnung-anlegen.js:32 · module/verordnung-maske.js:460 · module/verordnung-nachweis.js:29
 - `r2` — api-backend/billing/api/abrechnung.routes.js:2543 · api-backend/billing/api/statistik.routes.js:267 · api-backend/billing/api/zuzahlung.routes.js:47 · api-backend/billing/dta/builder.js:138 · api-backend/billing/dta/preflight.js:1113 · api-backend/billing/preise/resolver.js:44 · api-backend/billing/utils/abrechnung-zeilen.js:39 · api-backend/billing/zuzahlung/calculator.js:78 · api-backend/billing/zuzahlung/korrektur.js:17 · module/abrechnung-verlauf.js:128 · module/zuzahlung-rechnen.js:42
-- `t` — api-backend/lib/rechnung-pdf.js:120 · api-backend/lib/rechnung-snapshot.js:15 · api-backend/lib/therapiebericht.js:123 · api-backend/server.js:4046 · dashboard.js:526 · module/anamnese.js:394 · module/bg-angaben.js:36 · module/branding.js:28 · module/kiosk.js:58 · module/termin-rechtstexte.js:20 · tools/redesign-shots.mjs:111
+- `t` — api-backend/lib/rechnung-pdf.js:120 · api-backend/lib/rechnung-snapshot.js:15 · api-backend/lib/therapiebericht.js:123 · api-backend/server.js:4046 · dashboard.js:526 · module/anamnese.js:498 · module/bg-angaben.js:36 · module/branding.js:28 · module/kiosk.js:58 · module/termin-rechtstexte.js:20 · tools/redesign-shots.mjs:111
 - `fmtDate` — api-backend/billing/dta/encoding.js:107 · api-backend/billing/pdf/ausfallrechnung.template.js:24 · api-backend/billing/pdf/begleitzettel.template.js:34 · api-backend/billing/pdf/mahnung.template.js:11 · api-backend/billing/pdf/rechnung.template.js:16 · api-backend/billing/pdf/rezeptvorderseite.template.js:15 · api-backend/billing/pdf/rzg-quittung.template.js:14 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:19 · dashboard.js:992 · ops/app.js:84
 - `lesen` — cookie-consent.js:101 · module/einstellungen-nav.js:26 · module/mail-signatur-editor.js:24 · module/raum-tagesansicht.js:138 · module/rezept-barcode-scan.js:117 · module/startseite-handlungsbedarf-karte.js:40 · module/startseite-handlungsbedarf-laden.js:123 · tools/box-abnahme-mail/smtp-sink.mjs:26 · tools/browser-probe/p02-rechte.mjs:6 · tools/browser-probe/v303-emoji.mjs:14
 - `zeile` — api-backend/lib/therapiebericht.js:420 · module/branding-ui.js:39 · module/fax-deckblatt.js:54 · module/rechnung-druck.js:34 · module/verordnung-detail.js:293 · module/verordnung-detail.js:428 · module/verordnung-detail.js:496 · module/verordnung-pruefen-knopf.js:122 · tools/box-abnahme-mail/smtp-sink.mjs:14 · tools/browser-probe/layout-probe.mjs:52

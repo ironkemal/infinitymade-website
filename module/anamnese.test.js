@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { formHtml, rohAusRow } from './anamnese.js';
+import { formHtml, rohAusRow, berechneAnamneseFortschritt } from './anamnese.js';
 import { FORMULARE, ENTWURF_HINWEIS } from './anamnese-formulare.js';
 
 test('Podo-Formular: alle Felder im Markup, Infektion im Kiosk NICHT', () => {
@@ -48,4 +48,28 @@ test('rohAusRow: felder + feste Spalten (Hausarzt) → Formularwerte', () => {
   assert.deepEqual(roh.hausarzt, { name: 'Dr. A', telefon: '1' });
   assert.deepEqual(roh.gerinnung, []);
   assert.equal(roh.ulkus, null);
+});
+
+test('berechneAnamneseFortschritt zaehlt sichtbare Felder und Pflichtfelder korrekt', () => {
+  const leer = berechneAnamneseFortschritt(FORMULARE.podo, {}, { kiosk: false });
+  assert.ok(leer.gesamt > 0);
+  assert.equal(leer.beantwortet, 0);
+  assert.ok(leer.pflichtGesamt >= 3);
+  assert.equal(leer.pflichtAusgefuellt, 0);
+
+  const teilweise = berechneAnamneseFortschritt(FORMULARE.podo, {
+    diabetes: 'nein',
+    gerinnung: ['nein'],
+    allergien: ['keine'],
+  }, { kiosk: false });
+  assert.equal(teilweise.pflichtAusgefuellt, teilweise.pflichtGesamt);
+  assert.equal(teilweise.gruppen.A.pflichtOffen, 0);
+  assert.ok(teilweise.prozent > 0);
+});
+
+test('formHtml rendert Fortschrittsleiste, Sprung-Navigation und einklappbare Abschnitte', () => {
+  const h = formHtml(FORMULARE.podo, { kiosk: false });
+  assert.match(h, /data-anam-fortschritt/);
+  assert.match(h, /data-anam-jump="A"/);
+  assert.match(h, /<details open class="card anam-gruppe"/);
 });
