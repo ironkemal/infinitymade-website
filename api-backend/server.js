@@ -4351,6 +4351,51 @@ async function anfrageKorrekturenPruefen(body, ownerId) {
   return { aenderungen };
 }
 
+// POST /api/booking-request/update — auth required (owner), ändert offene Anfrage ohne sie sofort zu bestätigen
+app.post('/api/booking-request/update', requireAuthAI, bookingRequestApprovalLimiter, async (req, res) => {
+  const userId = req.auth.userId;
+  const { request_id, owner_id, employee_id: overrideEmployee } = req.body || {};
+  if (!request_id || !owner_id) return res.status(400).json({ error: 'request_id und owner_id required' });
+  try {
+    const { data: profile } = await supabase.from('profiles').select('id').eq('id', userId).maybeSingle();
+    if (profile?.id !== owner_id) return res.status(403).json({ error: 'Nur der Praxisinhaber kann Anfragen bearbeiten' });
+
+    const { data: bookReq, error: reqErr } = await supabase.from('booking_requests')
+      .select('id, status, employee_id')
+      .eq('id', request_id).eq('owner_id', owner_id).maybeSingle();
+    if (reqErr || !bookReq) return res.status(404).json({ error: 'Anfrage nicht gefunden' });
+    if (bookReq.status !== 'pending') return res.status(409).json({ error: 'Anfrage wurde bereits bearbeitet' });
+
+    const { aenderungen, fehler } = await anfrageKorrekturenPruefen(req.body || {}, owner_id);
+    if (fehler) return res.status(400).json({ error: fehler });
+
+    if (overrideEmployee !== undefined) {
+      if (overrideEmployee === null || overrideEmployee === '') {
+        aenderungen.employee_id = null;
+      } else {
+        if (!await gehoertZurPraxis(overrideEmployee, owner_id)) {
+          return res.status(400).json({ error: 'Dieser Therapeut gehört nicht zu Ihrer Praxis' });
+        }
+        aenderungen.employee_id = overrideEmployee;
+      }
+    }
+
+    if (!Object.keys(aenderungen).length) {
+      return res.json({ ok: true, updated: false });
+    }
+
+    const { error: updErr } = await supabase.from('booking_requests')
+      .update({ ...aenderungen, updated_at: new Date().toISOString() })
+      .eq('id', request_id).eq('owner_id', owner_id).eq('status', 'pending');
+    if (updErr) throw updErr;
+
+    res.json({ ok: true, updated: true });
+  } catch (e) {
+    console.error('[booking-request/update]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // POST /api/booking-request/approve — auth required (owner)
 app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLimiter, async (req, res) => {
   const userId = req.auth.userId;

@@ -51,6 +51,9 @@ const state = {
   employee_id: null,
   preferred_date: null,
   preferred_time: null,
+  preferred_days: [],       // ['Mo', 'Di', ...] oder ['Flexibel']
+  preferred_daytime: 'Flexibel',
+  preferred_urgency: 'So bald wie möglich',
   // GKV
   krankenkasse: null,
   arzt_name: null,
@@ -636,13 +639,71 @@ function validateStep2() {
   return true;
 }
 
-// ─── Step 3: Therapeut + Datum + Uhrzeit ──────────────────────────────────
+// ─── Step 3: Therapeut + Bevorzugte Wochentage & Tageszeit ──────────────────
 
 function initStep3() {
   document.getElementById('step3Back').addEventListener('click', prevStep);
   document.getElementById('step3Next').addEventListener('click', nextStep);
-  document.getElementById('calPrev').addEventListener('click', () => { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(); });
-  document.getElementById('calNext').addEventListener('click', () => { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); });
+
+  // Bevorzugte Wochentage (Mehrfachauswahl; "Flexibel" schließt einzelne Tage aus und umgekehrt)
+  const dayBtns = Array.from(document.querySelectorAll('#prefDaysGrid .br-day-chip'));
+  dayBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val = btn.dataset.day;
+      if (val === 'Flexibel') {
+        const aktiv = btn.classList.toggle('selected');
+        dayBtns.forEach(b => { if (b !== btn) b.classList.remove('selected'); });
+        state.preferred_days = aktiv ? ['Flexibel'] : [];
+      } else {
+        const flexBtn = dayBtns.find(b => b.dataset.day === 'Flexibel');
+        if (flexBtn) flexBtn.classList.remove('selected');
+        btn.classList.toggle('selected');
+        state.preferred_days = dayBtns
+          .filter(b => b.dataset.day !== 'Flexibel' && b.classList.contains('selected'))
+          .map(b => b.dataset.day);
+      }
+      clearFieldError('schedulerError');
+    });
+  });
+
+  // Bevorzugte Tageszeit (Einzelauswahl)
+  const dtBtns = Array.from(document.querySelectorAll('#prefDaytimeGrid .br-day-chip'));
+  dtBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      dtBtns.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      state.preferred_daytime = btn.dataset.daytime || 'Flexibel';
+      clearFieldError('schedulerError');
+    });
+  });
+
+  // Dringlichkeit (Einzelauswahl)
+  const urgBtns = Array.from(document.querySelectorAll('#prefUrgencyGrid .br-day-chip'));
+  urgBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      urgBtns.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      state.preferred_urgency = btn.dataset.urgency || 'So bald wie möglich';
+    });
+  });
+}
+
+function formatWunschTageText() {
+  if (!state.preferred_days || !state.preferred_days.length) return '–';
+  const tage = state.preferred_days.includes('Flexibel')
+    ? 'Flexibel (alle Tage)'
+    : state.preferred_days.join(', ');
+  const tageszeit = state.preferred_daytime || 'Flexibel';
+  return `${tage} · ${tageszeit}`;
+}
+
+function baueZeitwunschNotiz(basisNotiz) {
+  const zeilen = [
+    `Zeit: ${formatWunschTageText()}`,
+    state.preferred_urgency ? `Wie bald: ${state.preferred_urgency}` : '',
+    basisNotiz ? String(basisNotiz).trim() : '',
+  ].filter(Boolean);
+  return zeilen.join('\n').substring(0, 500);
 }
 
 async function loadTeam() {
@@ -687,8 +748,6 @@ function buildTeamButton(id, name, generic) {
     document.querySelectorAll('.br-team-member').forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
     state.employee_id = id || null;
-    // Reload slots if a date is already selected
-    if (state.preferred_date) fetchAndRenderSlots(state.preferred_date);
   });
 
   return btn;
@@ -867,17 +926,12 @@ function renderSlots(slots, date) {
 }
 
 function validateStep3() {
-  let ok = true;
-  if (!state.preferred_date) {
-    showFieldError('schedulerError', 'Bitte ein Datum auswählen.');
+  if (!state.preferred_days || !state.preferred_days.length) {
+    showFieldError('schedulerError', 'Bitte mindestens einen bevorzugten Wochentag oder „Flexibel“ auswählen.');
     document.getElementById('schedulerError').style.display = 'block';
-    ok = false;
-  } else if (!state.preferred_time) {
-    showFieldError('schedulerError', 'Bitte eine Uhrzeit auswählen.');
-    document.getElementById('schedulerError').style.display = 'block';
-    ok = false;
+    return false;
   }
-  return ok;
+  return true;
 }
 
 // ─── Step 4: Zusatzinfos ────────────────────────────────────────────────────
@@ -1174,7 +1228,8 @@ function buildSummary() {
     { label: 'Zahlungsart', value: payLabels[state.payment_type] || state.payment_type },
     { label: 'Leistung', value: state.service ? state.service.name : '–' },
     { label: 'Sitzungen', value: (state.payment_type === 'gkv' || state.payment_type === 'bg') ? (state.verordnung_sitzungen || state.bg_anzahl || '–') : state.session_count },
-    { label: 'Wunschtermin', value: state.preferred_date ? `${formatDateDE(state.preferred_date)} um ${(state.preferred_time || '').substring(0, 5)} Uhr` : '–' },
+    { label: 'Bevorzugte Tage', value: formatWunschTageText() },
+    ...(state.preferred_urgency ? [{ label: 'Wie bald', value: state.preferred_urgency }] : []),
     { label: 'Therapeut', value: state.employee_id ? (teamMembers.find(m => (m.id || m.user_id) === state.employee_id) || {}).full_name || 'Gewählt' : 'Keine Präferenz' },
   ];
 
@@ -1250,7 +1305,7 @@ async function handleSubmit() {
     // common
     // Anliegen (Podologie) steht als erste Zeile in notizen — booking_requests hat
     // keine eigene Spalte; die Praxis sieht die Zeile im Anfragen-Detail.
-    notizen: state.anliegenAktiv ? anliegenNotiz(state.anliegen, { hausbesuch: state.hausbesuch, adresse: state.hausbesuch_adresse, hbAufRezept: state.hb_auf_rezept }, state.notizen) : (state.notizen || null),
+    notizen: baueZeitwunschNotiz(state.anliegenAktiv ? anliegenNotiz(state.anliegen, { hausbesuch: state.hausbesuch, adresse: state.hausbesuch_adresse, hbAufRezept: state.hb_auf_rezept }, state.notizen) : (state.notizen || '')),
     // Nur noch für ältere Backends (Pflichtfeld bis K2b.15); das neue Backend ignoriert es
     // und speichert keine Einwilligung mehr (legal-de 09.10.2026). Entfällt mit :stable.
     dsgvo_consent: true,
@@ -1387,7 +1442,6 @@ function onStepEnter(logicalStep) {
       break;
     case 3:
       loadTeam();
-      initCalendar();
       break;
     case 4:
       showStep4Fields();

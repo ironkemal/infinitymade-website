@@ -166,8 +166,13 @@ function formularHtml(req, team, leistungen) {
     <input id="anfSitzungen" class="form-input" type="number" min="1" max="99" step="1"
            style="width:100%" value="${sitzungen}">
 
-    <label class="form-label" for="anfNotiz" style="margin-top:12px">Interne Notiz</label>
-    <textarea id="anfNotiz" class="form-input" rows="2" maxlength="500" style="width:100%;resize:vertical">${escapeHtml(req.notizen || '')}</textarea>
+    <label class="form-label" for="anfNotiz" style="margin-top:12px">Interne Notiz / Zeitwunsch</label>
+    <textarea id="anfNotiz" class="form-input" rows="3" maxlength="500" style="width:100%;resize:vertical">${escapeHtml(req.notizen || '')}</textarea>
+
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:12px;color:var(--text-sub)">Nur Daten korrigieren, ohne den Termin jetzt schon fest zu buchen?</span>
+      <button type="button" id="anfNurSpeichernBtn" class="btn-secondary btn-sm">Änderungen speichern</button>
+    </div>
   `;
 }
 
@@ -250,9 +255,51 @@ export async function oeffneAnfrageBearbeiten(req) {
   }
 
   showHtmlModal({
-    title: 'Anfrage prüfen und bestätigen',
+    title: 'Anfrage bearbeiten und bestätigen',
     confirmText: 'Termin bestätigen',
     html: formularHtml(req, stamm.team, stamm.leistungen),
+    afterRender: () => {
+      const saveBtn = document.getElementById('anfNurSpeichernBtn');
+      if (!saveBtn) return;
+      saveBtn.addEventListener('click', async () => {
+        const sitzungen = Number(document.getElementById('anfSitzungen')?.value);
+        if (!Number.isInteger(sitzungen) || sitzungen < 1 || sitzungen > 99) {
+          fehlerZeigen('Sitzungszahl muss zwischen 1 und 99 liegen.');
+          return;
+        }
+        const empId = document.getElementById('anfEmp')?.value || null;
+        const koerper = {
+          request_id: req.id,
+          owner_id: ownerId,
+          ...aenderungenSammeln(req),
+        };
+        if ((empId || '') !== (req.employee_id || '')) koerper.employee_id = empId;
+
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Speichert…';
+        try {
+          const session = await getSession();
+          const r = await fetch(`${API}/booking-request/update`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+            body: JSON.stringify(koerper),
+          });
+          const json = await r.json();
+          if (!r.ok) {
+            fehlerZeigen(json.error || 'Speichern fehlgeschlagen.');
+            return;
+          }
+          showToast('Anfrage aktualisiert ✓', 'success');
+          globalThis.closeHtmlModal?.();
+          onFertig?.();
+        } catch (e) {
+          fehlerZeigen(e.message || 'Speichern fehlgeschlagen.');
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Änderungen speichern';
+        }
+      });
+    },
     onConfirm: async () => {
       const empId = document.getElementById('anfEmp')?.value;
       if (!empId) { fehlerZeigen('Bitte einen Therapeuten wählen.'); return false; }

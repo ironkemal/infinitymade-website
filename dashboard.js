@@ -35,7 +35,8 @@ import { attachLeadKartenIk, pruefeLeadKartenIk } from './module/lead-karten-ik.
 import { renderPatientenkarte } from './module/patientenkarte.js?v=20261121pag1';
 import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from './module/lead-felder.js?v=20260929a';
 import { ermittleSitzungKuerzel, kuerzelAusKatalog } from './module/heilmittel-kuerzel.js?v=20261103q';
-import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten, ladeAnfragenDaten } from './module/anfrage-bearbeiten.js?v=20261118s1';
+import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten, ladeAnfragenDaten } from './module/anfrage-bearbeiten.js?v=20261126p2';
+import { oeffneAnfrageNachricht } from './module/anfrage-nachricht.js?v=20261126p2';
 import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
 // §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche (archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1). fmtEur kommt ab jetzt aus module/geld.js — die lokale Kopie hier ist mit dem alten Assistenten entfallen.
 import { fmtEur } from './module/geld.js?v=20260909';
@@ -293,13 +294,13 @@ const T = {
     nav_anfragen: 'Termin-Anfragen',
     anfragen_sub: 'Eingehende Patientenanfragen',
     anfragen_open: 'Offen', anfragen_approved: 'Bestätigt', anfragen_declined: 'Abgelehnt',
-    anfragen_annehmen: 'Annehmen', anfragen_ablehnen: 'Ablehnen',
+    anfragen_annehmen: 'Annehmen', anfragen_ablehnen: 'Anderer Termin',
     anfragen_empty: 'Keine Anfragen.',
     anfragen_auto_accept: 'Automatisch akzeptieren',
     anfragen_auto_accept_sub: 'Anfragen werden sofort bestätigt',
     anfragen_auto_types: 'Automatisch akzeptieren für:',
     anfragen_gkv_warning: 'GKV- und BG-Patienten müssen manuell bestätigt werden (Verordnungsprüfung erforderlich).',
-    anfragen_decline_reason: 'Ablehnungsgrund (optional)',
+    anfragen_decline_reason: 'Nachricht / Grund (optional)',
     anfragen_confirm_approve: 'Termin bestätigen',
     anfragen_select_employee: 'Therapeuten wählen',
     anfragen_detail_title: 'Anfrage-Details',
@@ -308,7 +309,7 @@ const T = {
     anfragen_sessions: 'Sitzungen', anfragen_notizen: 'Notizen',
     anfragen_link_title: 'Buchungslink', anfragen_link_sub: 'Teilen Sie diesen Link mit Ihren Patienten',
     anfragen_copy_link: 'Link kopieren',
-    anfragen_absage_senden: 'Absage senden',
+    anfragen_absage_senden: 'Rückmeldung senden',
     anfragen_nachricht: 'Nachricht an Patient',
     anfragen_nachricht_senden: 'Nachricht senden',
     anfragen_nachricht_hint: 'Geht als E-Mail an den Patienten. Antworten landen direkt in Ihrem Postfach.',
@@ -17242,40 +17243,9 @@ async function approveAnfrage(requestId) {
   if (req) await oeffneAnfrageBearbeiten(req);
 }
 
-/**
- * Freitext-Nachricht an den Patienten — nur per E-Mail, kein Chat in der App.
- * Der Patient antwortet per Reply direkt an die Praxis.
- */
 function nachrichtAnPatient(requestId) {
-  const tl = T.de;
-  const ownerId = currentProfile?.id;
-
-  showHtmlModal({
-    title: tl.anfragen_nachricht,
-    confirmText: tl.anfragen_nachricht_senden,
-    html: `
-      <p style="font-size:12px;color:var(--text-sub);margin-bottom:8px">${tl.anfragen_nachricht_hint}</p>
-      <textarea id="patNachrichtInput" class="form-input" maxlength="2000" style="width:100%;height:120px;resize:vertical"></textarea>`,
-    onConfirm: async () => {
-      const text = document.getElementById('patNachrichtInput')?.value?.trim() || '';
-      if (!text) { showToast(tl.anfragen_nachricht_leer, 'error'); return false; }
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const token = session?.access_token;
-        const r = await fetch(`${API}/booking-request/message`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ request_id: requestId, owner_id: ownerId, text }),
-        });
-        const json = await r.json();
-        if (!r.ok) throw new Error(json.error || 'Fehler');
-        if (globalThis.mailEntwurfOeffnen?.(json.mailEntwurf)) showToast('Mail-Entwurf im Mailprogramm geöffnet — bitte dort senden. Direkt versenden: Einstellungen → E-Mail-Versand.', 'info'); else showToast(tl.anfragen_nachricht_ok, 'success'); // Box: K2b.15
-      } catch (e) {
-        showToast(e.message || 'Fehler beim Senden', 'error');
-        return false;
-      }
-    },
-  });
+  const req = anfragenCurrentRequests.find(r => r.id === requestId);
+  oeffneAnfrageNachricht({ requestId, req, tl: T.de, API, supabase, currentProfile, escapeHtml, showHtmlModal, showToast });
 }
 
 /**

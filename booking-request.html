@@ -236,16 +236,16 @@
       </section>
 
       <!-- ═══════════════════════════════════════════════
-           STEP 3 — Therapeut + Datum + Uhrzeit
+           STEP 3 — Therapeut + Bevorzugte Tage & Tageszeit
       ══════════════════════════════════════════════════ -->
       <section class="br-step" id="step-3">
         <div class="br-step-header">
           <span class="br-step-tag">Schritt 4 von 7</span>
-          <h2>Wann möchten Sie kommen?</h2>
-          <p>Wählen Sie Ihren Wunschtherapeuten, ein Datum und eine Uhrzeit.</p>
+          <h2>Wann passt es Ihnen am besten?</h2>
+          <p>Wählen Sie Ihren Wunschtherapeuten sowie Ihre bevorzugten Wochentage und Tageszeiten. Wir schlagen Ihnen den nächsten passenden Termin vor.</p>
         </div>
 
-        <div class="br-scheduler">
+        <div class="br-scheduler br-scheduler-prefs">
           <!-- Team column -->
           <div class="br-scheduler-col">
             <h3>Therapeut</h3>
@@ -254,29 +254,38 @@
             </div>
           </div>
 
-          <!-- Calendar column -->
+          <!-- Preferred weekdays column -->
           <div class="br-scheduler-col">
-            <h3>Datum</h3>
-            <div class="br-calendar" id="calendar">
-              <div class="br-cal-header">
-                <button class="br-cal-nav" id="calPrev">&#8249;</button>
-                <span id="calMonthYear"></span>
-                <button class="br-cal-nav" id="calNext">&#8250;</button>
-              </div>
-              <div class="br-cal-weekdays">
-                <span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span>
-              </div>
-              <div class="br-cal-grid" id="calGrid"></div>
+            <h3>Bevorzugte Wochentage</h3>
+            <p class="br-pref-hint">Mehrfachauswahl möglich</p>
+            <div id="prefDaysGrid" class="br-day-chips" role="group" aria-label="Bevorzugte Wochentage">
+              <button type="button" class="br-day-chip" data-day="Mo">Montag</button>
+              <button type="button" class="br-day-chip" data-day="Di">Dienstag</button>
+              <button type="button" class="br-day-chip" data-day="Mi">Mittwoch</button>
+              <button type="button" class="br-day-chip" data-day="Do">Donnerstag</button>
+              <button type="button" class="br-day-chip" data-day="Fr">Freitag</button>
+              <button type="button" class="br-day-chip" data-day="Sa">Samstag</button>
+              <button type="button" class="br-day-chip br-day-chip-flex" data-day="Flexibel">Flexibel (alle Tage)</button>
             </div>
           </div>
 
-          <!-- Slots column -->
+          <!-- Preferred daytime & urgency column -->
           <div class="br-scheduler-col">
-            <h3>Uhrzeit</h3>
-            <div id="slotsList" class="br-slots">
-              <p class="br-slots-empty">Bitte zuerst einen Tag auswählen.</p>
+            <h3>Bevorzugte Tageszeit</h3>
+            <div id="prefDaytimeGrid" class="br-day-chips br-daytime-chips" role="group" aria-label="Bevorzugte Tageszeit">
+              <button type="button" class="br-day-chip" data-daytime="Vormittag">Vormittags (08–12 Uhr)</button>
+              <button type="button" class="br-day-chip" data-daytime="Mittag">Mittags (12–15 Uhr)</button>
+              <button type="button" class="br-day-chip" data-daytime="Nachmittag">Nachmittags (15–19 Uhr)</button>
+              <button type="button" class="br-day-chip br-day-chip-flex selected" data-daytime="Flexibel">Flexibel</button>
             </div>
-            <p class="br-slots-hint">Die Uhrzeit ist ein Richtwert. Bitte planen Sie 5–10 Minuten Puffer ein.</p>
+
+            <h3 style="margin-top:1.25rem;">Wie bald?</h3>
+            <div id="prefUrgencyGrid" class="br-day-chips br-daytime-chips" role="group" aria-label="Dringlichkeit">
+              <button type="button" class="br-day-chip selected" data-urgency="So bald wie möglich">So bald wie möglich</button>
+              <button type="button" class="br-day-chip" data-urgency="Diese / nächste Woche">Diese / nächste Woche</button>
+              <button type="button" class="br-day-chip" data-urgency="Flexibel">Flexibel</button>
+            </div>
+            <p class="br-slots-hint">Kein festes Datum nötig — die Praxis meldet sich mit einem konkreten Terminvorschlag.</p>
           </div>
         </div>
 
