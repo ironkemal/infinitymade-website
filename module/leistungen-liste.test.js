@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { kostentraegerTyp, gruppiereLeistungen, TYP_GRUPPEN, normalisiereTyp, ABRECHENBARE_TYPEN } from './leistungen-liste.js';
+import { kostentraegerTyp, gruppiereLeistungen, filtereLeistungen, TYP_GRUPPEN, normalisiereTyp, ABRECHENBARE_TYPEN } from './leistungen-liste.js';
 
 test('gepflegte Spalte gewinnt', () => {
   assert.equal(kostentraegerTyp({ kostentraeger_typ: 'bg', gkv_position_nr: 'X0501' }), 'bg');
@@ -131,4 +131,22 @@ test('die <option>-Liste in dashboard.html deckt sich mit ABRECHENBARE_TYPEN', (
 
   assert.deepEqual(werte, ['', ...ABRECHENBARE_TYPEN],
     'erste Option ist "automatisch" (leer), danach exakt die abrechenbaren Typen');
+});
+
+test('filtereLeistungen filtert nach Suchbegriff und Kostentraegertyp', () => {
+  const liste = [
+    { id: '1', title: 'Podologische Komplexbehandlung', code: 'PKB', gkv_position_nr: '78902' },
+    { id: '2', title: 'Medizinische Fußpflege', code: 'MFP', kostentraeger_typ: 'selbstzahler' },
+    { id: '3', title: 'Manuelle Therapie', code: 'MT', gkv_position_nr: 'X1201' },
+  ];
+  assert.equal(filtereLeistungen(liste, { suche: '', typ: 'alle' }).length, 3);
+  assert.deepEqual(filtereLeistungen(liste, { suche: '78902' }).map(l => l.id), ['1']);
+  assert.deepEqual(filtereLeistungen(liste, { suche: 'mfp' }).map(l => l.id), ['2']);
+  assert.deepEqual(filtereLeistungen(liste, { typ: 'gkv' }).map(l => l.id), ['1', '3']);
+  assert.deepEqual(filtereLeistungen(liste, { suche: 'fuß', typ: 'selbstzahler' }).map(l => l.id), ['2']);
+});
+
+test('dashboard.html enthaelt kein tuerkisches "Hepsi" im Leistungsformular', () => {
+  const html = readFileSync(new URL('../dashboard.html', import.meta.url), 'utf8');
+  assert.equal(html.includes('>Hepsi<'), false, 'Hepsi muss durch Alle ersetzt sein');
 });

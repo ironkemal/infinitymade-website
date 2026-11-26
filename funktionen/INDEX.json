@@ -1,7 +1,7 @@
 {
- "erzeugt": "2026-11-26",
+ "erzeugt": "2026-11-27",
  "dateien": 744,
- "funktionen": 5626,
+ "funktionen": 5628,
  "module": [
   "abrechnung",
   "anamnese",
@@ -784,6 +784,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -30257,6 +30258,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -30779,6 +30781,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -31875,6 +31878,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -32352,6 +32356,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -32708,6 +32713,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -33161,6 +33167,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -69280,6 +69287,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -115720,6 +115728,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -118743,6 +118752,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -128209,6 +128219,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -132399,6 +132410,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -132819,6 +132831,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -139228,6 +139241,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -140922,6 +140936,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -147772,6 +147787,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -150473,6 +150489,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -151579,6 +151596,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -153711,6 +153729,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -161572,7 +161591,8 @@
     "teilA",
     "verdrahteFlyout",
     "verdrahteKontextmenue",
-    "verordnungenListeLaden"
+    "verordnungenListeLaden",
+    "zeichneGruppen"
    ],
    "modules": [
     "abrechnung",
@@ -162177,6 +162197,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -163045,6 +163066,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -169028,7 +169050,8 @@
     "teilA",
     "verdrahteFlyout",
     "verdrahteKontextmenue",
-    "verordnungenListeLaden"
+    "verordnungenListeLaden",
+    "zeichneGruppen"
    ],
    "modules": [
     "abrechnung",
@@ -173661,7 +173684,8 @@
     "teilA",
     "verdrahteFlyout",
     "verdrahteKontextmenue",
-    "verordnungenListeLaden"
+    "verordnungenListeLaden",
+    "zeichneGruppen"
    ],
    "modules": [
     "abrechnung",
@@ -174149,6 +174173,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -174596,6 +174621,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -174678,8 +174704,10 @@
    "calledBy": [
     "(datei) module/kostentraeger-spalte.js",
     "(datei) module/leistungen-liste.js",
+    "filtereLeistungen",
     "gruppiereLeistungen",
     "patientenLeistungen",
+    "renderLeistungenListe",
     "renderServices"
    ],
    "modules": [
@@ -174750,7 +174778,8 @@
     "push"
    ],
    "calledBy": [
-    "renderLeistungenListe"
+    "renderLeistungenListe",
+    "zeichneGruppen"
    ],
    "modules": [
     "abrechnung",
@@ -174818,7 +174847,8 @@
     "formatEur"
    ],
    "calledBy": [
-    "renderLeistungenListe"
+    "renderLeistungenListe",
+    "zeichneGruppen"
    ],
    "modules": [
     "abrechnung",
@@ -174887,7 +174917,77 @@
     "find"
    ],
    "calledBy": [
-    "renderLeistungenListe"
+    "renderLeistungenListe",
+    "zeichneGruppen"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "filtereLeistungen",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/leistungen-liste.js",
+   "start": 113,
+   "end": 122,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "kostentraegerTyp"
+   ],
+   "calledBy": [
+    "renderLeistungenListe",
+    "zeichneGruppen"
    ],
    "modules": [
     "abrechnung",
@@ -174939,9 +175039,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/leistungen-liste.js",
-   "start": 121,
-   "end": 208,
-   "lines": 88,
+   "start": 136,
+   "end": 300,
+   "lines": 165,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -174949,19 +175049,102 @@
    "endpoints": [],
    "storage": [],
    "domIds": [
-    "srvNeuBtn"
+    "panelServicesNeuBtn",
+    "srvCancelBtn",
+    "srvFormCloseBtn",
+    "srvGruppenHost",
+    "srvListeAnzahl",
+    "srvNeuBtn",
+    "srvSucheInput"
    ],
    "domRenderIds": [],
    "domRender": false,
    "calls": [
     "dauerZelle",
     "escapeHtml",
+    "filtereLeistungen",
+    "gruppiereLeistungen",
+    "kostentraegerTyp",
+    "mitarbeiterZelle",
+    "oeffne",
+    "toggle",
+    "zeichneGruppen"
+   ],
+   "calledBy": [
+    "renderServices"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "zeichneGruppen",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/leistungen-liste.js",
+   "start": 205,
+   "end": 284,
+   "lines": 80,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "dauerZelle",
+    "escapeHtml",
+    "filtereLeistungen",
     "gruppiereLeistungen",
     "mitarbeiterZelle",
     "oeffne"
    ],
    "calledBy": [
-    "renderServices"
+    "renderLeistungenListe"
    ],
    "modules": [
     "abrechnung",
@@ -175013,8 +175196,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/leistungen-liste.js",
-   "start": 190,
-   "end": 193,
+   "start": 259,
+   "end": 262,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -175045,7 +175228,8 @@
     "teilA",
     "verdrahteFlyout",
     "verdrahteKontextmenue",
-    "verordnungenListeLaden"
+    "verordnungenListeLaden",
+    "zeichneGruppen"
    ],
    "modules": [
     "abrechnung",
@@ -175097,8 +175281,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/leistungen-liste.js",
-   "start": 229,
-   "end": 308,
+   "start": 321,
+   "end": 400,
    "lines": 80,
    "spiegelHinweis": null,
    "tables": [],
@@ -175167,8 +175351,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/leistungen-liste.js",
-   "start": 330,
-   "end": 333,
+   "start": 422,
+   "end": 425,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -183651,6 +183835,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -185141,6 +185326,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -192186,6 +192372,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -210307,6 +210494,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -212227,6 +212415,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -227595,6 +227784,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -232966,6 +233156,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -233489,6 +233680,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -235427,6 +235619,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -242219,6 +242412,7 @@
     "renderDeadlines",
     "renderHours",
     "renderLeads",
+    "renderLeistungenListe",
     "renderPhysioServiceCards",
     "renderPlan",
     "renderScopeToggle",
@@ -250739,6 +250933,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -252809,6 +253004,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -258394,6 +258590,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -276538,7 +276735,8 @@
     "teilA",
     "verdrahteFlyout",
     "verdrahteKontextmenue",
-    "verordnungenListeLaden"
+    "verordnungenListeLaden",
+    "zeichneGruppen"
    ],
    "modules": [
     "abrechnung",
@@ -287124,6 +287322,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -287662,6 +287861,7 @@
     "zahlartChipsHtml",
     "zeheZeilen",
     "zeichneAnamnese",
+    "zeichneGruppen",
     "zeichneKraftZeilen",
     "zeichnePatientAbzeichen",
     "zeichneRegionenBereich",
@@ -321513,7 +321713,8 @@
     "teilA",
     "verdrahteFlyout",
     "verdrahteKontextmenue",
-    "verordnungenListeLaden"
+    "verordnungenListeLaden",
+    "zeichneGruppen"
    ],
    "modules": [
     "abrechnung",
@@ -321814,7 +322015,8 @@
     "teilA",
     "verdrahteFlyout",
     "verdrahteKontextmenue",
-    "verordnungenListeLaden"
+    "verordnungenListeLaden",
+    "zeichneGruppen"
    ],
    "modules": [
     "abrechnung",
@@ -322911,7 +323113,8 @@
     "teilA",
     "verdrahteFlyout",
     "verdrahteKontextmenue",
-    "verordnungenListeLaden"
+    "verordnungenListeLaden",
+    "zeichneGruppen"
    ],
    "modules": [
     "abrechnung",
@@ -323022,7 +323225,8 @@
     "teilA",
     "verdrahteFlyout",
     "verdrahteKontextmenue",
-    "verordnungenListeLaden"
+    "verordnungenListeLaden",
+    "zeichneGruppen"
    ],
    "modules": [
     "abrechnung",
@@ -323409,7 +323613,8 @@
     "teilA",
     "verdrahteFlyout",
     "verdrahteKontextmenue",
-    "verordnungenListeLaden"
+    "verordnungenListeLaden",
+    "zeichneGruppen"
    ],
    "modules": [
     "abrechnung",
@@ -324786,7 +324991,8 @@
     "teilA",
     "verdrahteFlyout",
     "verdrahteKontextmenue",
-    "verordnungenListeLaden"
+    "verordnungenListeLaden",
+    "zeichneGruppen"
    ],
    "modules": [
     "abrechnung",
@@ -337503,7 +337709,8 @@
     "teilA",
     "verdrahteFlyout",
     "verdrahteKontextmenue",
-    "verordnungenListeLaden"
+    "verordnungenListeLaden",
+    "zeichneGruppen"
    ],
    "modules": [
     "abrechnung",
@@ -350846,7 +351053,7 @@
     "module/kalender-kontextmenue.js:122",
     "module/kopf-suche-ansicht.js:122",
     "module/leiste-flyout.js:64",
-    "module/leistungen-liste.js:190",
+    "module/leistungen-liste.js:259",
     "module/verordnung-liste.js:253",
     "tools/browser-probe/v303-emoji.mjs:8",
     "tools/browser-probe/v402-abschnitte.mjs:8",
@@ -353257,7 +353464,7 @@
    "name": "normalisiereTyp",
    "orte": [
     "api-backend/lib/physio-befund-bericht.js:75",
-    "module/leistungen-liste.js:330"
+    "module/leistungen-liste.js:422"
    ],
    "aynalar": []
   },

@@ -107,6 +107,21 @@ function mitarbeiterZelle(l, teamMembers) {
 }
 
 /**
+ * Filtert Leistungen nach Suchbegriff (Name, Kürzel, GKV-Position) und
+ * optionalem Kostenträgertyp ('alle' lässt alle durch).
+ */
+export function filtereLeistungen(leistungen = [], { suche = '', typ = 'alle' } = {}) {
+  const q = String(suche || '').trim().toLowerCase();
+  const t = String(typ || 'alle').trim().toLowerCase();
+  return (leistungen || []).filter(l => {
+    if (t && t !== 'alle' && kostentraegerTyp(l) !== t) return false;
+    if (!q) return true;
+    const felder = [l.title, l.code, l.gkv_position_nr];
+    return felder.some(f => f && String(f).toLowerCase().includes(q));
+  });
+}
+
+/**
  * Zeichnet die Übersicht.
  *
  * @param {object} o
@@ -129,6 +144,19 @@ export function renderLeistungenListe({
 }) {
   if (!container) return;
 
+  // Kopf-Knopf und Formular-Schließen-Knopf einmalig anbinden, ohne dashboard.js zu vergrößern.
+  const panelNeuBtn = typeof document !== 'undefined' ? document.getElementById('panelServicesNeuBtn') : null;
+  if (panelNeuBtn) {
+    panelNeuBtn.onclick = () => onNeu && onNeu();
+  }
+  const formCloseBtn = typeof document !== 'undefined' ? document.getElementById('srvFormCloseBtn') : null;
+  if (formCloseBtn && !formCloseBtn.dataset.bound) {
+    formCloseBtn.dataset.bound = '1';
+    formCloseBtn.addEventListener('click', () => {
+      document.getElementById('srvCancelBtn')?.click();
+    });
+  }
+
   const neuKnopf = '<button type="button" class="btn-primary btn-sm" id="srvNeuBtn">+ Neue Leistung</button>';
 
   if (!leistungen.length) {
@@ -137,14 +165,57 @@ export function renderLeistungenListe({
     return;
   }
 
-  const gruppen = gruppiereLeistungen(leistungen);
+  const verfuegbareTypen = TYP_GRUPPEN.filter(g => leistungen.some(l => kostentraegerTyp(l) === g.typ));
+  let aktiverTyp = 'alle';
+  let suchText = '';
+
+  const chipKurzLabel = {
+    gkv: 'GKV',
+    privat: 'Privat',
+    selbstzahler: 'Selbstzahler',
+    bg: 'BG',
+    intern: 'Intern',
+  };
 
   container.innerHTML = `
     <div class="srv-liste-kopf">
-      <span class="srv-liste-anzahl">${leistungen.length} Leistungen</span>
+      <span class="srv-liste-anzahl" id="srvListeAnzahl">${leistungen.length} Leistungen</span>
       ${neuKnopf}
     </div>
-    ${gruppen.map(g => `
+    <div class="srv-toolbar">
+      <input type="search" class="form-input srv-suche" id="srvSucheInput" placeholder="Leistung, Kürzel oder Position suchen…" aria-label="Leistungen durchsuchen" />
+      ${verfuegbareTypen.length > 1 ? `
+        <div class="srv-filter-chips" role="group" aria-label="Nach Abrechnungsart filtern">
+          <button type="button" class="srv-filter-chip is-active" data-srv-typ="alle">Alle (${leistungen.length})</button>
+          ${verfuegbareTypen.map(g => {
+            const count = leistungen.filter(l => kostentraegerTyp(l) === g.typ).length;
+            return `<button type="button" class="srv-filter-chip" data-srv-typ="${g.typ}">${escapeHtml(chipKurzLabel[g.typ] || g.label)} (${count})</button>`;
+          }).join('')}
+        </div>
+      ` : ''}
+    </div>
+    <div id="srvGruppenHost"></div>
+  `;
+
+  container.querySelector('#srvNeuBtn')?.addEventListener('click', () => onNeu && onNeu());
+
+  const host = container.querySelector('#srvGruppenHost');
+  const anzahlEl = container.querySelector('#srvListeAnzahl');
+
+  function zeichneGruppen() {
+    const gefiltert = filtereLeistungen(leistungen, { suche: suchText, typ: aktiverTyp });
+    if (anzahlEl) {
+      anzahlEl.textContent = gefiltert.length === leistungen.length
+        ? `${leistungen.length} Leistungen`
+        : `${gefiltert.length} von ${leistungen.length} Leistungen`;
+    }
+    if (!gefiltert.length) {
+      host.innerHTML = `<div class="srv-leer">Keine passenden Leistungen gefunden.</div>`;
+      return;
+    }
+
+    const gruppen = gruppiereLeistungen(gefiltert);
+    host.innerHTML = gruppen.map(g => `
       <section class="srv-gruppe" data-typ="${g.typ}">
         <header class="srv-gruppe-kopf">
           <h4>${escapeHtml(g.label)}</h4>
@@ -174,6 +245,7 @@ export function renderLeistungenListe({
                 <td>${dauerZelle(l, formatEur)}</td>
                 <td class="srv-td-emp">${mitarbeiterZelle(l, teamMembers)}</td>
                 <td class="srv-td-akt">
+                  <button type="button" class="srv-edit-btn" data-srv-edit="${escapeHtml(l.id)}" title="Bearbeiten" aria-label="Bearbeiten">Bearbeiten</button>
                   <button type="button" class="srv-del-btn" data-srv-del="${escapeHtml(l.id)}" title="Löschen" aria-label="Löschen">✕</button>
                 </td>
               </tr>
@@ -181,30 +253,50 @@ export function renderLeistungenListe({
           </tbody>
         </table>
       </section>
-    `).join('')}
-  `;
+    `).join('');
 
-  container.querySelector('#srvNeuBtn')?.addEventListener('click', () => onNeu && onNeu());
+    host.querySelectorAll('tr[data-srv-id]').forEach(zeile => {
+      const oeffne = (ev) => {
+        if (ev.target.closest('[data-srv-del]')) return;
+        if (onBearbeiten) onBearbeiten(zeile.dataset.srvId);
+      };
+      zeile.addEventListener('click', oeffne);
+      // Eine Tabellenzeile ist kein Knopf — ohne das käme man mit der Tastatur
+      // nicht in die Bearbeitung.
+      zeile.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); oeffne(ev); }
+      });
+    });
 
-  container.querySelectorAll('tr[data-srv-id]').forEach(zeile => {
-    const oeffne = (ev) => {
-      if (ev.target.closest('[data-srv-del]')) return;
-      if (onBearbeiten) onBearbeiten(zeile.dataset.srvId);
-    };
-    zeile.addEventListener('click', oeffne);
-    // Eine Tabellenzeile ist kein Knopf — ohne das käme man mit der Tastatur
-    // nicht in die Bearbeitung.
-    zeile.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); oeffne(ev); }
+    host.querySelectorAll('[data-srv-edit]').forEach(knopf => {
+      knopf.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        if (onBearbeiten) onBearbeiten(knopf.dataset.srvEdit);
+      });
+    });
+
+    host.querySelectorAll('[data-srv-del]').forEach(knopf => {
+      knopf.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        if (onLoeschen) onLoeschen(knopf.dataset.srvDel);
+      });
+    });
+  }
+
+  container.querySelector('#srvSucheInput')?.addEventListener('input', (ev) => {
+    suchText = ev.target.value || '';
+    zeichneGruppen();
+  });
+
+  container.querySelectorAll('[data-srv-typ]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      aktiverTyp = btn.dataset.srvTyp || 'alle';
+      container.querySelectorAll('[data-srv-typ]').forEach(b => b.classList.toggle('is-active', b === btn));
+      zeichneGruppen();
     });
   });
 
-  container.querySelectorAll('[data-srv-del]').forEach(knopf => {
-    knopf.addEventListener('click', (ev) => {
-      ev.stopPropagation();
-      if (onLoeschen) onLoeschen(knopf.dataset.srvDel);
-    });
-  });
+  zeichneGruppen();
 }
 
 /**

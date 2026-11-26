@@ -1,9 +1,9 @@
 # Funktionskarte
 
-> Üretim: 2026-11-26 · `node tools/funktionskarte.mjs`
+> Üretim: 2026-11-27 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**5626 fonksiyon** (5501 JS · 98 bash · 27 ps1) · 744 dosya · 42 sidebar modülü
+**5628 fonksiyon** (5503 JS · 98 bash · 27 ps1) · 744 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -613,7 +613,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `render` — calendar-widget.js:127 · dashboard.js:11643 · dashboard.js:16532 · module/abwesenheit-termine.js:371 · module/app-start.js:36 · module/ki-einstellungen.js:16 · module/mail-signatur-editor.js:41 · ops/board.js:206 · ops/decisions.js:14 · ops/files.js:52 · ops/finance.js:959 · ops/meetings.js:23 · ops/wissen.js:66 · patient-suche.js:116
 - `handler` — api/admin/data.js:37 · api/admin/feedbacks.js:8 · api/apify/search.js:10 · api/config.js:6 · api/contact.js:33 · api/demo-booking.js:430 · api/onboarding/check-email.js:12 · api/onboarding/pending.js:13 · api/stripe/create-checkout-session.js:17 · api/stripe/portal-session.js:15 · api/stripe/webhook.js:98 · module/arztangaben-banner.js:104
 - `lauf` — api-backend/lib/status.js:119 · module/verordnung-detail.js:1052 · module/verordnung-podo.js:1151 · sosyal/erzeuge.mjs:68 · tools/browser-probe/v205-leiste.mjs:17 · tools/browser-probe/v209b-dokumente.mjs:14 · tools/browser-probe/v212b-suche.mjs:8 · tools/browser-probe/v505-kalender.mjs:13 · tools/browser-probe/v602-handlungsbedarf.mjs:8 · tools/browser-probe/v6b03-geld.mjs:7 · tools/kostentraeger-check.mjs:247 · tools/quellen-waechter.mjs:233
-- `oeffne` — module/kalender-kontextmenue.js:122 · module/kopf-suche-ansicht.js:122 · module/leiste-flyout.js:64 · module/leistungen-liste.js:190 · module/verordnung-liste.js:253 · tools/browser-probe/v303-emoji.mjs:8 · tools/browser-probe/v402-abschnitte.mjs:8 · tools/browser-probe/v701-rechte.mjs:7 · tools/browser-probe/v702-akte.mjs:7 · tools/browser-probe/v703-abschluss.mjs:29 · tools/browser-probe/widget-probe.mjs:53 · tools/redesign-smoke.mjs:62
+- `oeffne` — module/kalender-kontextmenue.js:122 · module/kopf-suche-ansicht.js:122 · module/leiste-flyout.js:64 · module/leistungen-liste.js:259 · module/verordnung-liste.js:253 · tools/browser-probe/v303-emoji.mjs:8 · tools/browser-probe/v402-abschnitte.mjs:8 · tools/browser-probe/v701-rechte.mjs:7 · tools/browser-probe/v702-akte.mjs:7 · tools/browser-probe/v703-abschluss.mjs:29 · tools/browser-probe/widget-probe.mjs:53 · tools/redesign-smoke.mjs:62
 - `arg` — api-backend/tools/lizenzen-erzeugen.mjs:246 · ops/tools/ingest.mjs:63 · tools/bekci-ajan/gonder-vaka.mjs:104 · tools/browser-probe/v805-fingerziele.mjs:28 · tools/kostentraeger-check.mjs:314 · tools/quellen-waechter.mjs:445 · tools/redesign-geometrie.mjs:24 · tools/redesign-kontaktbogen.mjs:25 · tools/redesign-shots.mjs:33 · tools/redesign-smoke.mjs:33 · tools/redesign-zustaende.mjs:26
 - `fmt` — api-backend/setup/router.js:136 · dashboard.js:1130 · dashboard.js:6993 · dashboard.js:8744 · dashboard.js:9013 · dashboard.js:12085 · dashboard.js:16716 · module/kalender-raster.js:76 · module/rechnung-ansicht.js:234 · module/rezeptinfo-geld.js:71 · module/tageszentrale-ansicht.js:610
 - `g` — dashboard.js:12995 · dashboard.js:13008 · dashboard.js:13181 · module/heilmittel-zeilen-ui.js:262 · module/rezept-barcode-bestaetigung.js:15 · module/rezept-barcode-dialog.js:6 · module/rezept-in-maske.js:40 · module/rezept-patientenkopf.js:7 · module/verordnung-anlegen.js:32 · module/verordnung-maske.js:460 · module/verordnung-nachweis.js:29
