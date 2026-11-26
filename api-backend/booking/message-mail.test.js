@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { meldeVerbindungsfehler } from '../lib/mail.js';
+import { renderePraxuraMail, baueMailOptionen } from '../lib/mail-vorlage.js';
 
 const source = readFileSync(new URL('../server.js', import.meta.url), 'utf8');
 const start = source.indexOf("app.post('/api/booking-request/message'");
@@ -32,7 +33,7 @@ for (const quelle of ['db', 'env']) {
       app: { post(/** @type {any} */ _path, /** @type {any[]} */ ...args) { handler = args.at(-1); } },
       requireAuthAI() {}, bookingRequestApprovalLimiter() {}, supabase,
       mailKanal: async () => kanal, mailEntwurfStattVersand: () => false,
-      meldeVerbindungsfehler, escHtml: (/** @type {any} */ s) => s,
+      meldeVerbindungsfehler, renderePraxuraMail, baueMailOptionen, escHtml: (/** @type {any} */ s) => s,
       console: { error: (/** @type {any[]} */ ...args) => logs.push(args.join(' ')) },
     });
     const res = { code: 200, body: /** @type {any} */ (undefined), status(/** @type {number} */ code) { this.code = code; return this; }, json(/** @type {any} */ body) { this.body = body; return this; } };

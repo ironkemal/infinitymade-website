@@ -23,7 +23,7 @@ export function mailtoLink({ to, subject, text } = {}) {
   return `mailto:${encodeURIComponent(to || '').replace(/%40/g, '@')}${teile.length ? `?${teile.join('&')}` : ''}`;
 }
 
-/** Öffnet den Entwurf im Mailprogramm. true = geöffnet (Aufrufer zeigt dann keinen „gesendet"-Toast). */
+/** Öffnet den Entwurf im Browser-Dialog (mit Kopieren + mailto) oder direkt per mailto. */
 export function mailEntwurfOeffnen(entwurf, win = globalThis) {
   if (!entwurf?.to) return false;
   const doc = win.document;
@@ -38,7 +38,56 @@ export function mailEntwurfOeffnen(entwurf, win = globalThis) {
     const liste = doc.getElementById('anfragenList');
     if (liste && anfragen.contains(liste)) liste.before(hinweis); else anfragen.append(hinweis);
   }
-  win.location.href = mailtoLink(entwurf);
+
+  const linkHref = mailtoLink(entwurf);
+  if (typeof win.showHtmlModal === 'function' && doc?.getElementById?.('htmlModal')) {
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    win.showHtmlModal({
+      title: 'E-Mail senden (Browser / Mailprogramm)',
+      confirmText: 'Im Mailprogramm öffnen',
+      html: `
+        <p style="font-size:12.5px;color:var(--text-sub);margin:0 0 10px;line-height:1.45">
+          Direktversand ist noch nicht eingerichtet. Sie können die Mail im Mailprogramm öffnen oder direkt für Webmail (z. B. Gmail, IONOS, Outlook im Browser) kopieren.
+        </p>
+        <div class="form-group" style="margin-bottom:8px">
+          <label class="form-label">Empfänger</label>
+          <input type="text" class="form-input" readonly value="${esc(entwurf.to)}" />
+        </div>
+        <div class="form-group" style="margin-bottom:8px">
+          <label class="form-label">Betreff</label>
+          <input type="text" class="form-input" readonly value="${esc(entwurf.subject || '')}" />
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <label class="form-label">Nachricht</label>
+          <textarea class="form-input" id="mailEntwurfCopyText" rows="6" readonly style="width:100%;resize:vertical">${esc(entwurf.text || '')}</textarea>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button type="button" class="btn-secondary btn-sm" id="mailEntwurfCopyBtn">Text kopieren</button>
+          <a href="${esc(linkHref)}" class="btn-ghost btn-sm" style="text-decoration:none">mailto-Link öffnen ↗</a>
+        </div>
+      `,
+      afterRender: () => {
+        const copyBtn = doc.getElementById('mailEntwurfCopyBtn');
+        copyBtn?.addEventListener('click', async () => {
+          const voll = `An: ${entwurf.to}\nBetreff: ${entwurf.subject || ''}\n\n${entwurf.text || ''}`;
+          try {
+            await win.navigator?.clipboard?.writeText(voll);
+            copyBtn.textContent = '✓ Kopiert';
+          } catch {
+            const ta = doc.getElementById('mailEntwurfCopyText');
+            ta?.select?.();
+            copyBtn.textContent = 'Markiert — Strg+C / ⌘C';
+          }
+        });
+      },
+      onConfirm: () => {
+        win.location.href = linkHref;
+      },
+    });
+    return true;
+  }
+
+  win.location.href = linkHref;
   return true;
 }
 

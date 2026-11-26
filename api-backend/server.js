@@ -70,6 +70,7 @@ import crypto from 'crypto';
 import { resolveOrCreateArzt } from './lib/arzt-registry.js';
 import { normalisiereGeschlecht } from './lib/geschlecht.js';
 import { mailKanal, speichereGmailMailversand, meldeVerbindungsfehler } from './lib/mail.js';
+import { renderePraxuraMail, baueMailOptionen } from './lib/mail-vorlage.js';
 import { terminPlanungHandler, planungLaden } from './booking/termin-planung.js';
 import { arbeitsfenster, terminPruefen } from './booking/termin-pruefung.js';
 import { raumFelderFuerTermin } from './lib/raum-zuordnung.js';
@@ -4493,13 +4494,29 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
       const cancelToken = crypto.createHmac('sha256', process.env.SUPABASE_SERVICE_ROLE_KEY)
         .update(`${request_id}:${bookReq.patient_id}`).digest('hex').substring(0, 32);
       const t = kanal.transport();
-      t.sendMail({
+      const { html, text } = renderePraxuraMail({
+        praxis: ownerP?.business_name || 'Praxura',
+        titel: 'Termin bestätigt ✓',
+        anrede: `Hallo ${bookReq.patients.vorname || ''},`.replace(' ,', ','),
+        absaetze: ['Ihr Termin wurde erfolgreich bestätigt.'],
+        boxZeilen: [
+          { label: 'Praxis', wert: ownerP?.business_name || 'Praxura' },
+          ...(anfrage.preferred_date ? [{ label: 'Datum', wert: new Date(anfrage.preferred_date).toLocaleDateString('de-DE') }] : []),
+          ...(anfrage.preferred_time ? [{ label: 'Uhrzeit', wert: `${anfrage.preferred_time} Uhr` }] : []),
+          ...(empName ? [{ label: 'Therapeut', wert: empName }] : []),
+        ],
+        aktionen: [{ label: 'Termin stornieren', href: `${appBaseUrl()}/booking-request.html?cancel=${encodeURIComponent(request_id)}&token=${cancelToken}`, stil: 'link' }],
+        hinweis: 'Die Uhrzeit ist ein Richtwert – bitte planen Sie 5–10 Minuten Puffer ein.',
+      });
+      t.sendMail(baueMailOptionen({
         from: kanal.from(ownerP?.business_name),
         replyTo: ownerP?.email || undefined,
         to: bookReq.patients.email,
         subject: `Ihr Termin wurde bestätigt – ${ownerP?.business_name || 'Praxura'}`,
-        html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="color:#b1891b">Termin bestätigt ✓</h2><p>Hallo ${escHtml(bookReq.patients.vorname)},</p><p>Ihr Termin wurde bestätigt.</p><div style="background:#f9f6f0;border-radius:8px;padding:16px;margin:16px 0"><p style="margin:4px 0"><strong>Praxis:</strong> ${ownerP?.business_name || 'Praxura'}</p>${anfrage.preferred_date ? `<p style="margin:4px 0"><strong>Datum:</strong> ${new Date(anfrage.preferred_date).toLocaleDateString('de-DE')}</p>` : ''}${anfrage.preferred_time ? `<p style="margin:4px 0"><strong>Uhrzeit:</strong> ${anfrage.preferred_time} Uhr</p>` : ''}${empName ? `<p style="margin:4px 0"><strong>Therapeut:</strong> ${escHtml(empName)}</p>` : ''}</div><p style="font-size:13px;color:#666">Die Uhrzeit ist ein Richtwert &ndash; bitte planen Sie 5&ndash;10 Minuten Puffer ein.</p><p><a href="${appBaseUrl()}/booking-request.html?cancel=${encodeURIComponent(request_id)}&token=${cancelToken}" style="color:#b1891b">Termin stornieren</a></p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
-      }).catch(async e => { console.error('[booking-request/approve] email', e.code || 'VERSAND_FEHLER'); await meldeVerbindungsfehler(supabase, owner_id, kanal, e); });
+        html,
+        text,
+        autoSubmitted: true,
+      })).catch(async e => { console.error('[booking-request/approve] email', e.code || 'VERSAND_FEHLER'); await meldeVerbindungsfehler(supabase, owner_id, kanal, e); });
     }
 
     return res.json(result);
@@ -4539,13 +4556,26 @@ app.post('/api/booking-request/decline', requireAuthAI, bookingRequestApprovalLi
     if (bookReq.patients?.email && kanal.weg === 'smtp') {
       const { data: ownerP } = await supabase.from('profiles').select('business_name, email').eq('id', owner_id).maybeSingle();
       const t = kanal.transport();
-      t.sendMail({
+      const { html, text } = renderePraxuraMail({
+        praxis: ownerP?.business_name || 'Praxura',
+        titel: 'Rückmeldung zu Ihrer Terminanfrage',
+        anrede: `Hallo ${bookReq.patients.vorname || ''},`.replace(' ,', ','),
+        absaetze: [
+          'Leider können wir Ihren angefragten Zeitraum aktuell nicht direkt bestätigen.',
+          ...(reason ? [`Hinweis der Praxis: ${reason}`] : []),
+          'Bitte rufen Sie uns gerne an oder senden Sie uns eine neue Anfrage mit alternativen Tagen.',
+        ],
+        hinweis: 'Sie können auf diese E-Mail direkt antworten.',
+      });
+      t.sendMail(baueMailOptionen({
         from: kanal.from(ownerP?.business_name),
         replyTo: ownerP?.email || undefined,
         to: bookReq.patients.email,
-        subject: 'Terminanfrage – Leider nicht möglich',
-        html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2>Terminanfrage leider nicht möglich</h2><p>Hallo ${escHtml(bookReq.patients.vorname)},</p><p>Leider können wir Ihren Wunschtermin nicht bestätigen.</p>${reason ? `<p><strong>Grund:</strong> ${escHtml(reason)}</p>` : ''}<p>Bitte rufen Sie uns an oder stellen Sie eine neue Anfrage.</p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
-      }).catch(async e => { console.error('[booking-request/decline] email', e.code || 'VERSAND_FEHLER'); await meldeVerbindungsfehler(supabase, owner_id, kanal, e); });
+        subject: `Rückmeldung zu Ihrer Terminanfrage – ${ownerP?.business_name || 'Praxura'}`,
+        html,
+        text,
+        autoSubmitted: true,
+      })).catch(async e => { console.error('[booking-request/decline] email', e.code || 'VERSAND_FEHLER'); await meldeVerbindungsfehler(supabase, owner_id, kanal, e); });
     }
     return res.json({ ok: true });
   } catch (e) {
@@ -4642,22 +4672,35 @@ app.post('/api/booking-request/offer', requireAuthAI, bookingRequestApprovalLimi
     if (kanal?.weg === 'smtp') {
       const { data: ownerP } = await supabase.from('profiles')
         .select('business_name, email').eq('id', owner_id).maybeSingle();
-      const zeilen = gespeichert.map((a, i) => {
+      const aktionen = gespeichert.map((a, i) => {
         const token = alternativToken(request_id, bookReq.patient_id, i, angebotenAt);
         const link = `${appBaseUrl()}/booking-request.html?accept=${encodeURIComponent(request_id)}&slot=${i}&token=${token}`;
         const datum = new Date(`${a.date}T12:00:00`).toLocaleDateString('de-DE', {
           weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric',
         });
-        return `<p style="margin:10px 0"><a href="${link}" style="display:inline-block;background:#b1891b;color:#fff;padding:10px 18px;text-decoration:none;border-radius:6px">${datum} um ${a.time} Uhr annehmen</a></p>`;
-      }).join('');
+        return { label: `${datum} um ${a.time} Uhr annehmen`, href: link, stil: 'primary' };
+      });
+      const { html, text } = renderePraxuraMail({
+        praxis: ownerP?.business_name || 'Praxura',
+        titel: 'Terminvorschlag für Sie',
+        anrede: `Hallo ${bookReq.patients.vorname || ''},`.replace(' ,', ','),
+        absaetze: [
+          `Wir schlagen Ihnen gerne einen der folgenden freien Termine vor.${reason ? ` (${reason})` : ''}`,
+          'Ein Klick genügt, um den passenden Termin direkt zu bestätigen:',
+        ],
+        aktionen,
+        hinweis: 'Die Uhrzeit ist ein Richtwert – bitte planen Sie 5–10 Minuten Puffer ein. Es gilt, was zuerst angenommen wird; passt nichts davon, rufen Sie uns gerne an.',
+      });
       const t = kanal.transport();
-      t.sendMail({
+      t.sendMail(baueMailOptionen({
         from: kanal.from(ownerP?.business_name),
         replyTo: ownerP?.email || undefined,
         to: bookReq.patients.email,
         subject: `Terminvorschlag – ${ownerP?.business_name || 'Praxura'}`,
-        html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="color:#b1891b">Ihr Wunschtermin ist leider belegt</h2><p>Hallo ${escHtml(bookReq.patients.vorname)},</p><p>Ihren Wunschtermin können wir leider nicht anbieten.${reason ? ` <strong>${escHtml(reason)}</strong>` : ''}</p><p>Diese Zeiten hätten wir frei — ein Klick genügt:</p>${zeilen}<p style="font-size:13px;color:#666">Die Uhrzeit ist ein Richtwert &ndash; bitte planen Sie 5&ndash;10 Minuten Puffer ein. Es gilt, was zuerst angenommen wird; passt nichts davon, rufen Sie uns gerne an.</p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
-      }).catch(async e => { console.error('[booking-request/offer] email', e.code || 'VERSAND_FEHLER'); await meldeVerbindungsfehler(supabase, owner_id, kanal, e); });
+        html,
+        text,
+        autoSubmitted: true,
+      })).catch(async e => { console.error('[booking-request/offer] email', e.code || 'VERSAND_FEHLER'); await meldeVerbindungsfehler(supabase, owner_id, kanal, e); });
     }
 
     return res.json({ ok: true, angeboten: gespeichert.length });
@@ -4698,20 +4741,24 @@ app.post('/api/booking-request/message', requireAuthAI, bookingRequestApprovalLi
 
     const { data: ownerP } = await supabase.from('profiles')
       .select('business_name, email').eq('id', owner_id).maybeSingle();
-    // Der Text kommt aus einem Eingabefeld und landet in HTML — maskieren, sonst
-    // koennte ein Praxismitarbeiter (versehentlich) Markup in die Mail schreiben.
-    const sicher = nachricht
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/\n/g, '<br>');
+    const { html, text } = renderePraxuraMail({
+      praxis: ownerP?.business_name || 'Ihrer Praxis',
+      titel: 'Nachricht zu Ihrer Terminanfrage',
+      anrede: `Hallo ${bookReq.patients.vorname || ''},`.replace(' ,', ','),
+      absaetze: [nachricht],
+      hinweis: 'Sie können auf diese E-Mail direkt antworten.',
+    });
 
     const t = kanal.transport();
-    await t.sendMail({
+    await t.sendMail(baueMailOptionen({
       from: kanal.from(ownerP?.business_name),
       replyTo: ownerP?.email || undefined,
       to: bookReq.patients.email,
       subject: `Nachricht von ${ownerP?.business_name || 'Ihrer Praxis'}`,
-      html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="color:#b1891b">Nachricht zu Ihrer Terminanfrage</h2><p>Hallo ${escHtml(bookReq.patients.vorname)},</p><p>${sicher}</p><p style="font-size:13px;color:#666">Sie können auf diese E-Mail direkt antworten.</p><hr><p style="font-size:12px;color:#888">${ownerP?.business_name || 'Praxura'} · praxura.de</p></div>`,
-    }).catch(async e => { await meldeVerbindungsfehler(supabase, owner_id, kanal, e); throw e; });
+      html,
+      text,
+      autoSubmitted: false,
+    })).catch(async e => { await meldeVerbindungsfehler(supabase, owner_id, kanal, e); throw e; });
 
     return res.json({ ok: true });
   } catch (e) {
