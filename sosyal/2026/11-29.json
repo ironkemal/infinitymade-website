@@ -4,7 +4,7 @@
   "stimme": "Gacrux",
   "tempo": 1.05,
   "sprechweise": "Natürliche, warme und vertrauenswürdige Frauenstimme, ruhig wie an einem Sonntagabend, klar und nahbar. Normales Sprechtempo.",
-  "caption": "Sonntagabend. Und Sie denken schon an Montag.\n\nWas Praxura kostet, steht offen auf unserer Seite. Zur Cyber Week im Monat: Solo 39 € statt 49 €, Praxis 69 € statt 89 €, Team 99 € statt 129 €, Groß 149 € statt 189 €. Und 60 Tage Geld zurück auf die Lizenzgebühr.\n\nSpeichern Sie das für die nächste Teambesprechung.\n\nAlle Preise auf praxura.de\n\nAktionspreise für Verträge mit Abschluss bis 31.12.2026, garantiert für die ersten 12 Monate. Zzgl. einmaliger Einrichtung und Serverkosten. Angebot nur für Praxen und Unternehmer (§ 14 BGB). Endpreise, gemäß § 19 UStG keine Umsatzsteuer. Geld zurück: Kündigung innerhalb von 60 Tagen ab Übergabe, Einrichtung und Serverkosten ausgenommen.\n\n(Bilder und Stimme KI-generiert)\n\n#CyberWeek #Praxisinhaber #Therapiepraxis #Heilmittel #Praxissoftware",
+  "caption": "Sonntagabend. Und Sie denken schon an Montag.\n\nWas Praxura kostet, steht offen auf unserer Seite. Zur Cyber Week im Monat: Solo 49 € statt 59 €, Praxis 119 € statt 149 €, Team 199 € statt 249 €. Ab 11 Behandler:innen gibt es ein individuelles Angebot. Und 60 Tage Geld zurück auf die Lizenzgebühr.\n\nSpeichern Sie das für die nächste Teambesprechung.\n\nAlle Preise auf praxura.de\n\nAktionspreise für Verträge mit Abschluss bis 31.12.2026, garantiert für die ersten 12 Monate. Zzgl. einmaliger Einrichtung und Serverkosten. Angebot nur für Praxen und Unternehmer (§ 14 BGB). Endpreise, gemäß § 19 UStG keine Umsatzsteuer. Geld zurück: Kündigung innerhalb von 60 Tagen ab Übergabe, Einrichtung und Serverkosten ausgenommen.\n\n(Bilder und Stimme KI-generiert)\n\n#CyberWeek #Praxisinhaber #Therapiepraxis #Heilmittel #Praxissoftware",
   "szenen": [
     {
       "typ": "foto",
@@ -20,9 +20,9 @@
       "dauer": 4.6,
       "kicker": "Cyber Week",
       "titel": "Was kostet Praxura, wenn Sie <em>allein behandeln?</em>",
-      "antwort": "39 € im Monat",
-      "antwortLabel": "Solo · statt 49 €",
-      "sprecher": "Was kostet Praxura, wenn Sie allein behandeln? Neununddreißig Euro im Monat."
+      "antwort": "49 € im Monat",
+      "antwortLabel": "Solo · statt 59 €",
+      "sprecher": "Was kostet Praxura, wenn Sie allein behandeln? Neunundvierzig Euro im Monat."
     },
     {
       "typ": "countdown",
@@ -30,11 +30,11 @@
       "dauer": 5,
       "kicker": "Mit Team · pro Monat",
       "punkte": [
-        "Praxis <em>69 €</em> statt 89 €",
-        "Team <em>99 €</em> statt 129 €",
-        "Groß <em>149 €</em> statt 189 €"
+        "Praxis <em>119 €</em> statt 149 €",
+        "Team <em>199 €</em> statt 249 €",
+        "Ab 11 Behandler:innen: <em>Angebot</em>"
       ],
-      "sprecher": "Mit Team: 69 Euro. 99 Euro. Oder 149 Euro im Monat."
+      "sprecher": "Mit Team: 119 Euro oder 199 Euro im Monat. Größere Praxen bekommen ein eigenes Angebot."
     },
     {
       "typ": "aussage",

@@ -4,7 +4,7 @@
   "stimme": "Gacrux",
   "tempo": 1.05,
   "sprechweise": "Natürliche, warme und vertrauenswürdige Frauenstimme wie in einem hochwertigen Werbespot. Ruhig, klar, mit einem leichten Lächeln. Normales Sprechtempo.",
-  "caption": "Black Friday, 17 Uhr. Alle shoppen. Sie sitzen über der Abrechnung.\n\nPraxura bereitet Ihre Abrechnung vor, zum festen Monatspreis statt Prozenten vom Umsatz. Zum Black Friday: Solo 39 €, Praxis 69 €, Team 99 €, Groß 149 € im Monat (statt 49 / 89 / 129 / 189 €).\n\nWann machen Sie freitags Feierabend? Schreiben Sie es in die Kommentare.\n\nAlle Preise auf praxura.de\n\nAktionspreise für Verträge mit Abschluss bis 31.12.2026, garantiert für die ersten 12 Monate. Zzgl. einmaliger Einrichtung und Serverkosten. Angebot nur für Praxen und Unternehmer (§ 14 BGB). Endpreise, gemäß § 19 UStG keine Umsatzsteuer.\n\n(Bilder und Stimme KI-generiert)\n\n#BlackFriday #Heilmittel #Abrechnung #Praxisalltag #Therapeutenleben",
+  "caption": "Black Friday, 17 Uhr. Alle shoppen. Sie sitzen über der Abrechnung.\n\nPraxura bereitet Ihre Abrechnung vor, zum festen Monatspreis statt Prozenten vom Umsatz. Zum Black Friday: Solo 49 €, Praxis 119 €, Team 199 € im Monat (statt 59 / 149 / 249 €). Ab 11 Behandler:innen gibt es ein individuelles Angebot.\n\nWann machen Sie freitags Feierabend? Schreiben Sie es in die Kommentare.\n\nAlle Preise auf praxura.de\n\nAktionspreise für Verträge mit Abschluss bis 31.12.2026, garantiert für die ersten 12 Monate. Zzgl. einmaliger Einrichtung und Serverkosten. Angebot nur für Praxen und Unternehmer (§ 14 BGB). Endpreise, gemäß § 19 UStG keine Umsatzsteuer.\n\n(Bilder und Stimme KI-generiert)\n\n#BlackFriday #Heilmittel #Abrechnung #Praxisalltag #Therapeutenleben",
   "szenen": [
     {
       "typ": "foto",
@@ -48,9 +48,9 @@
       },
       "rechts": {
         "label": "Praxura · Praxis",
-        "text": "69 € im Monat. Fest."
+        "text": "119 € im Monat. Fest."
       },
-      "sprecher": "Statt Prozenten ein fester Preis: für zwei bis fünf Behandler neunundsechzig Euro im Monat."
+      "sprecher": "Statt Prozenten ein fester Preis: für zwei bis fünf Behandler hundertneunzehn Euro im Monat."
     },
     {
       "typ": "foto",
@@ -70,10 +70,10 @@
         }
       ],
       "cta": "Alle Preise auf praxura.de",
-      "sprecher": "Praxura. Fester Preis, ab neununddreißig Euro im Monat.",
+      "sprecher": "Praxura. Fester Preis, ab neunundvierzig Euro im Monat.",
       "nachlauf": 1,
       "kicker": "Black Friday bei Praxura",
-      "titel": "Fester Preis. <em>Ab 39 € im Monat.</em>"
+      "titel": "Fester Preis. <em>Ab 49 € im Monat.</em>"
     }
   ],
   "quelleMuster": "F32-black-friday"
