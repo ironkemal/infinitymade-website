@@ -292,6 +292,82 @@ export function ladeItsgTrustAnchors({ verzeichnis = DEFAULT_TRUST_ANCHORS_DIR }
 }
 
 /**
+ * Sucht das Empfänger-Verschlüsselungszertifikat einer Datenannahmestelle (IK)
+ * direkt in der gebündelten ITSG-Trust-Anchor-Liste (F3 Variante b / O-132).
+ *
+ * Iteriert gezielt über `meta.zertifikate` (nicht `readdir`), filtert nach `OU=IK<9-stellig>`
+ * und wählt bei Überlappung zweier Zertifikate derselben IK das zum Prüfzeitpunkt gültige
+ * mit dem spätesten `notAfter`.
+ *
+ * @param {string} empfaengerIk
+ * @param {{
+ *   verzeichnis?: string,
+ *   ladeAnchors?: () => { anchors: Buffer[], meta: any },
+ *   jetzt?: Date,
+ * }} [opts]
+ * @returns {{ zertifikat_der: Buffer, fingerprint_sha256: string, quelle: 'trust-anchors' } | null}
+ */
+export function findeEmpfaengerZertifikatInTrustAnchors(
+  empfaengerIk,
+  { verzeichnis = DEFAULT_TRUST_ANCHORS_DIR, ladeAnchors, jetzt = new Date() } = {}
+) {
+  const ik = String(empfaengerIk || '').trim();
+  if (!/^\d{9}$/.test(ik)) return null;
+
+  const { anchors, meta } = typeof ladeAnchors === 'function'
+    ? ladeAnchors()
+    : ladeItsgTrustAnchors({ verzeichnis });
+
+  const entries = meta?.zertifikate;
+  if (!Array.isArray(entries) || entries.length === 0 || !Array.isArray(anchors) || anchors.length === 0) {
+    return null;
+  }
+
+  const ikMuster = new RegExp(`(^|\\n|,)\\s*OU=IK${ik}(\\s*$|\\n|,)`, 'i');
+  const pruefMs = (jetzt instanceof Date ? jetzt : new Date(jetzt)).getTime();
+
+  /** @type {Array<{ der: Buffer, fingerprint: string, notAfterMs: number, gueltigJetzt: boolean }>} */
+  const treffer = [];
+
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
+    const subject = String(entry?.subject || '');
+    if (!ikMuster.test(subject)) continue;
+
+    // Zuordnung zum Buffer: entweder über die Datei in `verzeichnis` oder positions-/fingerprint-basiert aus `anchors`
+    let der = null;
+    if (entry?.datei && verzeichnis && fs.existsSync(path.join(verzeichnis, entry.datei))) {
+      der = fs.readFileSync(path.join(verzeichnis, entry.datei));
+    } else if (anchors[i]) {
+      der = anchors[i];
+    }
+    if (!der) continue;
+
+    const notBeforeMs = entry?.notBefore ? Date.parse(entry.notBefore) : -Infinity;
+    const notAfterMs = entry?.notAfter ? Date.parse(entry.notAfter) : 0;
+    const gueltigJetzt = pruefMs >= notBeforeMs && pruefMs <= notAfterMs;
+    const fingerprint = typeof entry?.fingerprint_sha256 === 'string' && entry.fingerprint_sha256
+      ? entry.fingerprint_sha256
+      : crypto.createHash('sha256').update(der).digest('hex');
+
+    treffer.push({ der, fingerprint, notAfterMs, gueltigJetzt });
+  }
+
+  if (treffer.length === 0) return null;
+
+  treffer.sort((a, b) => {
+    if (a.gueltigJetzt !== b.gueltigJetzt) return a.gueltigJetzt ? -1 : 1;
+    return b.notAfterMs - a.notAfterMs;
+  });
+
+  return {
+    zertifikat_der: treffer[0].der,
+    fingerprint_sha256: treffer[0].fingerprint,
+    quelle: 'trust-anchors',
+  };
+}
+
+/**
  * Frische-Prüfung: prüft den Gültigkeitszeitraum des gesamten Trust-Anchor-Stores.
  *
  * Harter Stopp NUR, wenn der GESAMTE Trust Store abgelaufen ist (jedes einzelne

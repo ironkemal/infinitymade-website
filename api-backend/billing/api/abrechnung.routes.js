@@ -71,7 +71,7 @@ import { verworfeneNummerFesthalten } from './verworfen.js';
 // § 302-Echtbetrieb, Schritt 1.3 D — CMS EnvelopedData Verschlüsselung & Trust Anchors.
 import { buildEncryptedFilename } from '../dta/filename.js';
 import { verschluesseleFuerEmpfaenger } from '../dta/verschluesselung.js';
-import { ladeItsgTrustAnchors, pruefeTrustAnchorFrische } from '../dta/itsg-trust-anchor.js';
+import { ladeItsgTrustAnchors, pruefeTrustAnchorFrische, findeEmpfaengerZertifikatInTrustAnchors } from '../dta/itsg-trust-anchor.js';
 import { pruefeEmpfaengerZertifikat } from '../dta/empfaenger-zertifikat-pruefung.js';
 import { icdOhneStrich, icdFuerDta, icdAbfrageKodes, icdTerminalMap } from '../utils/icd-code.js';
 import { mountZuzahlungsforderungRoutes } from './zuzahlungsforderung.routes.js';
@@ -1623,6 +1623,25 @@ router.get('/abrechnung/:id/artefakte/:versionId/download', async (req, res) => 
  * @param {Function} opts.verschluessele
  * @returns {Promise<{ verschluesselt: boolean, verschluesselungHinweis?: string, encryptedPath?: string, encryptedSha256?: string, empfaengerFingerprint?: string }>}
  */
+/**
+ * F3 (Variante b / O-132): Gemeinsamer Empfängerzertifikat-Resolver für Verschlüsselung
+ * und Statusprüfung. Prüft zuerst `empfaenger_zertifikate` (optionaler DB-Override),
+ * und fällt nahtlos auf die gebündelten ITSG-Trust-Anchors (`trust-anchors/`) zurück.
+ */
+async function ladeEmpfaengerZertifikat({ db, empfaengerIk, ladeAnchors, jetzt = new Date() }) {
+  const { data: empfZert, error: certErr } = await db
+    .from('empfaenger_zertifikate')
+    .select('zertifikat_der, fingerprint_sha256')
+    .eq('ik', empfaengerIk)
+    .maybeSingle();
+
+  if (certErr) return { data: null, error: certErr };
+  if (empfZert && empfZert.zertifikat_der) return { data: empfZert, error: null };
+
+  const ausAnchors = findeEmpfaengerZertifikatInTrustAnchors(empfaengerIk, { ladeAnchors, jetzt });
+  return { data: ausAnchors, error: null };
+}
+
 async function berechneVerschluesselung({
   vorher,
   abrechnungId,
@@ -1642,11 +1661,11 @@ async function berechneVerschluesselung({
       };
     }
 
-    const { data: empfZert, error: certErr } = await db
-      .from('empfaenger_zertifikate')
-      .select('zertifikat_der, fingerprint_sha256')
-      .eq('ik', empfaengerIk)
-      .maybeSingle();
+    const { data: empfZert, error: certErr } = await ladeEmpfaengerZertifikat({
+      db,
+      empfaengerIk,
+      ladeAnchors,
+    });
 
     if (certErr) {
       console.error(`[abrechnung/upload-signed] Fehler beim Laden des Empfängerzertifikats für IK ${empfaengerIk} (Abrechnung ${abrechnungId}):`, certErr.message);
@@ -2199,11 +2218,12 @@ export async function ermittleEmpfaengerZertifikatStatus({
     };
   }
 
-  const { data: empfZert, error: certErr } = await db
-    .from('empfaenger_zertifikate')
-    .select('zertifikat_der, fingerprint_sha256')
-    .eq('ik', empfaengerIk)
-    .maybeSingle();
+  const { data: empfZert, error: certErr } = await ladeEmpfaengerZertifikat({
+    db,
+    empfaengerIk,
+    ladeAnchors,
+    jetzt: pruefzeit,
+  });
 
   if (certErr) {
     return {
