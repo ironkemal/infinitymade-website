@@ -154,8 +154,17 @@ async function downloadBlob(db, path) {
  * @param {Buffer | Uint8Array} opts.signedBytes
  * @param {string} opts.expectedDtaSha256
  * @param {string} [opts.expectedSignedSha256]
+ * @param {boolean} [opts.checkCertValidity=false]  F10: im Live-Upload-Pfad (`upload-signed`) auf `true` setzen,
+ *   um `notBefore <= now <= notAfter` direkt gegen das echte X.509-Zertifikat im CMS zu prüfen.
+ * @param {Date} [opts.now]
  */
-export async function pruefeSignedDta({ signedBytes, expectedDtaSha256, expectedSignedSha256 }) {
+export async function pruefeSignedDta({
+  signedBytes,
+  expectedDtaSha256,
+  expectedSignedSha256,
+  checkCertValidity = false,
+  now = new Date(),
+}) {
   const buf = Buffer.isBuffer(signedBytes)
     ? signedBytes
     : (signedBytes instanceof Uint8Array
@@ -301,6 +310,10 @@ export async function pruefeSignedDta({ signedBytes, expectedDtaSha256, expected
     );
   }
 
+  if (!signer.signedAttrs) {
+    throw new DtaVerificationError('Signatur muss signierte Attribute (contentType, messageDigest) enthalten', 422, 'INVALID_SIGNED_ATTRIBUTES');
+  }
+
   if (signer.signedAttrs) {
     const attrs = signer.signedAttrs.attributes || [];
     const ctAttrs = attrs.filter((a) => a.type === '1.2.840.113549.1.9.3');
@@ -351,6 +364,47 @@ export async function pruefeSignedDta({ signedBytes, expectedDtaSha256, expected
 
   if (!verifyResult || verifyResult.signatureVerified !== true) {
     throw new DtaVerificationError('Kryptografische Signatur ist ungültig', 422, 'INVALID_SIGNATURE');
+  }
+
+  // F10: Serverseitige Gültigkeitsprüfung direkt gegen das echte X.509-Signaturzertifikat im CMS
+  // (nicht nur gegen client-übermitteltes req.body.certValidTo).
+  if (checkCertValidity) {
+    const certs = Array.isArray(signedData.certificates) ? signedData.certificates : [];
+    const signerCert = certs.find((c) => {
+      if (!(c instanceof pkijs.Certificate)) return false;
+      const sid = signer.sid;
+      if (sid instanceof pkijs.IssuerAndSerialNumber) {
+        try {
+          const certSerialHex = Buffer.from(c.serialNumber.valueBlock.valueHexView).toString('hex');
+          const sidSerialHex = Buffer.from(sid.serialNumber.valueBlock.valueHexView).toString('hex');
+          return certSerialHex === sidSerialHex;
+        } catch {
+          return false;
+        }
+      }
+      return false;
+    }) || certs.find((c) => c instanceof pkijs.Certificate);
+
+    if (!signerCert || !(signerCert instanceof pkijs.Certificate)) {
+      throw new DtaVerificationError('Signaturzertifikat im CMS SignedData fehlt', 422, 'MISSING_SIGNER_CERT');
+    }
+    const pruefMs = (now instanceof Date ? now : new Date(now)).getTime();
+    const notBefore = signerCert.notBefore?.value instanceof Date ? signerCert.notBefore.value : null;
+    const notAfter = signerCert.notAfter?.value instanceof Date ? signerCert.notAfter.value : null;
+    if (notAfter && notAfter.getTime() < pruefMs) {
+      throw new DtaVerificationError(
+        `Signaturzertifikat ist abgelaufen (${notAfter.toLocaleDateString('de-DE')}) und kann nicht mehr verwendet werden.`,
+        422,
+        'CERT_EXPIRED'
+      );
+    }
+    if (notBefore && notBefore.getTime() > pruefMs) {
+      throw new DtaVerificationError(
+        `Signaturzertifikat ist noch nicht gültig (ab ${notBefore.toLocaleDateString('de-DE')}).`,
+        422,
+        'CERT_NOT_YET_VALID'
+      );
+    }
   }
 
   const originalDtaBuffer = Buffer.from(rawOriginalBytes);

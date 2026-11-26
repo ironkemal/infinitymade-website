@@ -121,12 +121,17 @@ export function pruefeEmpfaengerZertifikat({
     }
   }
 
-  // --- KONTROLLE 3: KeyUsage enthält 'keyEncipherment' (Bit 2), sofern Extension vorhanden ---
+  // --- KONTROLLE 3: Kein CA-Zertifikat & KeyUsage (sofern vorhanden) enthält 'keyEncipherment' ---
+  // CA-Zertifikate (basicConstraints CA:TRUE) dürfen niemals als Empfänger-Blattzertifikat dienen.
+  if (x509Cert.ca) {
+    throw new Error('Empfängerzertifikat darf kein CA-Zertifikat sein (basicConstraints CA:TRUE).');
+  }
   // Extension id-ce-keyUsage (OID: 2.5.29.15).
   // Echte ITSG-DAS-Blattzertifikate aus `annahme-rsa4096.key` (60/60 Stand 2026) tragen
   // keine keyUsage-Extension (nur AuthorityKeyIdentifier); gemäß RFC 5280 §4.2.1.3 schränkt
   // das Fehlen der Extension die Schlüsselverwendung nicht ein. Ist sie jedoch vorhanden
-  // (z. B. bei CA- oder reinen Signaturzertifikaten), MUSS Bit 2 (keyEncipherment) gesetzt sein.
+  // (z. B. bei CA- oder reinen Signaturzertifikaten), MUSS Bit 2 (keyEncipherment) gesetzt
+  // und Bit 5 (keyCertSign) NICHT gesetzt sein.
   const keyUsageExt = (pkiCert.extensions || []).find(ext => ext.extnID === '2.5.29.15');
   if (keyUsageExt) {
     // parsedValue ist ein asn1js.BitString
@@ -140,7 +145,11 @@ export function pruefeEmpfaengerZertifikat({
     // Bit 0: digitalSignature (0x80)
     // Bit 1: nonRepudiation   (0x40)
     // Bit 2: keyEncipherment  (0x20)
+    // Bit 5: keyCertSign      (0x04)
     const firstByte = bitBytes[0];
+    if ((firstByte & 0x04) !== 0) {
+      throw new Error('Empfängerzertifikat verfehlt KeyUsage: keyCertSign (CA-Zertifikat) ist unzulässig.');
+    }
     const hasKeyEncipherment = (firstByte & 0x20) !== 0;
 
     if (!hasKeyEncipherment) {

@@ -229,8 +229,61 @@ export async function erzeugeItsgAntragP10({
 // ── Schritt 2: .p7c (ITSG-Antwort) + privater Schlüssel → .p12 ──────────────
 
 /**
+ * Extrahiert alle X.509-Zertifikate als unveränderte Roh-DER-Bytes direkt aus einer
+ * DER-kodierten PKCS#7 / CMS SignedData-Datei (.p7c), ohne node-forge-Reserialisierung
+ * (schützt echte ITSG RSASSA-PSS-Zertifikate vor CA-Signatur-Bruch).
+ *
+ * @param {Uint8Array} p7cBytes
+ * @returns {Uint8Array[]}
+ */
+export function extrahiereRohCertsAusP7c(p7cBytes) {
+  const readTlv = (/** @type {Uint8Array} */ buf, /** @type {number} */ off) => {
+    const tag = buf[off];
+    let p = off + 1;
+    const f = buf[p++];
+    let len = f;
+    if (f >= 0x80) {
+      const cnt = f & 0x7f;
+      if (cnt === 0 || cnt > 4) throw new Error('Indefinite/ungültige DER-Länge in .p7c');
+      len = 0;
+      for (let i = 0; i < cnt; i++) len = (len << 8) | buf[p++];
+    }
+    return { tag, valueStart: p, valueEnd: p + len, totalEnd: p + len, raw: buf.subarray(off, p + len) };
+  };
+
+  // ContentInfo ::= SEQUENCE { contentType OID, [0] EXPLICIT SignedData }
+  const ci = readTlv(p7cBytes, 0);
+  if (ci.tag !== 0x30) throw new Error('Ungültige .p7c ContentInfo-Struktur');
+  const ctOid = readTlv(p7cBytes, ci.valueStart);
+  const contentCtx = readTlv(p7cBytes, ctOid.totalEnd);
+  if (contentCtx.tag !== 0xa0) throw new Error('SignedData-Inhalt in .p7c nicht gefunden');
+
+  // SignedData ::= SEQUENCE { version, digestAlgorithms, encapContentInfo, [0] IMPLICIT certificates?, ... }
+  const sd = readTlv(p7cBytes, contentCtx.valueStart);
+  if (sd.tag !== 0x30) throw new Error('SignedData ist keine SEQUENCE');
+
+  let pos = sd.valueStart;
+  const certs = [];
+  while (pos < sd.valueEnd) {
+    const el = readTlv(p7cBytes, pos);
+    if (el.tag === 0xa0) {
+      let cPos = el.valueStart;
+      while (cPos < el.valueEnd) {
+        const cEl = readTlv(p7cBytes, cPos);
+        if (cEl.tag === 0x30) certs.push(cEl.raw);
+        cPos = cEl.totalEnd;
+      }
+      break;
+    }
+    pos = el.totalEnd;
+  }
+  return certs;
+}
+
+/**
  * Bündelt die von der ITSG gelieferte .p7c-Zertifikatskette (degeneriertes CMS SignedData, DER)
  * mit dem lokal gesicherten privaten Schlüssel (.key.pem) zu einer fertigen .p12-Datei.
+ * Bewahrt alle X.509-Zertifikate 100 % byte-identisch (kein Reserialisieren von RSASSA-PSS-Certs).
  *
  * @param {{
  *   p7cBytes: Uint8Array,
@@ -268,33 +321,47 @@ export function buendleP7cZuP12({
     throw new Error('Schlüsseldatei konnte nicht entschlüsselt werden — bitte Schlüsseldatei und Passwort prüfen.');
   }
 
-  let certs = [];
+  /** @type {Array<{ cert: any, rawAsn1: any }>} */
+  let certItems = [];
   try {
-    const p7cBin = uint8ToBinStr(p7cBytes);
-    const asn1 = forge.asn1.fromDer(p7cBin);
-    const p7 = forge.pkcs7.messageFromAsn1(asn1);
-    certs = Array.isArray(p7?.certificates) ? p7.certificates : [];
+    const rawCerts = extrahiereRohCertsAusP7c(p7cBytes);
+    if (rawCerts.length > 0) {
+      certItems = rawCerts.map((rawDer) => {
+        const rawAsn1 = forge.asn1.fromDer(uint8ToBinStr(rawDer));
+        const cert = forge.pki.certificateFromAsn1(rawAsn1);
+        return { cert, rawAsn1 };
+      });
+    } else {
+      // Fallback für nicht-DER (z. B. indefinite-length BER)
+      const p7 = forge.pkcs7.messageFromAsn1(forge.asn1.fromDer(uint8ToBinStr(p7cBytes)));
+      certItems = (Array.isArray(p7?.certificates) ? p7.certificates : []).map((/** @type {any} */ c) => ({
+        cert: c,
+        rawAsn1: null,
+      }));
+    }
   } catch {
     throw new Error('Die .p7c-Datei konnte nicht als gültige PKCS#7-Zertifikatskette gelesen werden.');
   }
 
-  if (certs.length === 0) {
+  if (certItems.length === 0) {
     throw new Error('Die .p7c-Datei enthält keine Zertifikate.');
   }
 
   // Passendes End-Entity-Zertifikat zum privaten Schlüssel über RSA-Modulus n finden
   const privModHex = privateKey.n?.toString(16);
-  const matchIdx = certs.findIndex((/** @type {any} */ c) => c?.publicKey?.n?.toString(16) === privModHex);
+  const matchIdx = certItems.findIndex((item) => item.cert?.publicKey?.n?.toString(16) === privModHex);
   if (matchIdx === -1) {
     throw new Error(
       'Keines der Zertifikate in der .p7c-Datei passt zu diesem privaten Schlüssel. Bitte prüfen, ob die richtige .key.pem-Datei gewählt wurde.'
     );
   }
 
-  const orderedCerts = [
-    certs[matchIdx],
-    ...certs.filter((/** @type {any} */ _, /** @type {number} */ idx) => idx !== matchIdx),
+  const orderedItems = [
+    certItems[matchIdx],
+    ...certItems.filter((_, idx) => idx !== matchIdx),
   ];
+  const orderedCerts = orderedItems.map((i) => i.cert);
+  const rawAsn1ByCert = new Map(orderedItems.filter((i) => i.rawAsn1).map((i) => [i.cert, i.rawAsn1]));
 
   const leafCert = orderedCerts[0];
   const subjectText = (leafCert.subject?.attributes || [])
@@ -303,10 +370,18 @@ export function buendleP7cZuP12({
   const ikMatch = subjectText.match(/OU=IK(\d{9})/i);
   const dateiPrefix = ikMatch ? ikMatch[1] : 'itsg-zertifikat';
 
-  const p12Asn1 = forge.pkcs12.toPkcs12Asn1(privateKey, orderedCerts, p12Pin, {
-    algorithm: '3des',
-    friendlyName: `ITSG ${dateiPrefix}`,
-  });
+  // Bewahrt Original-DER beim PKCS#12-Bau (verhindert forge-RSASSA-PSS-Reserialisierungsbug)
+  const origCertToAsn1 = forge.pki.certificateToAsn1;
+  let p12Asn1;
+  try {
+    forge.pki.certificateToAsn1 = (/** @type {any} */ c) => rawAsn1ByCert.get(c) || origCertToAsn1(c);
+    p12Asn1 = forge.pkcs12.toPkcs12Asn1(privateKey, orderedCerts, p12Pin, {
+      algorithm: '3des',
+      friendlyName: `ITSG ${dateiPrefix}`,
+    });
+  } finally {
+    forge.pki.certificateToAsn1 = origCertToAsn1;
+  }
   const p12Bin = forge.asn1.toDer(p12Asn1).getBytes();
   const p12Bytes = binStrToUint8(p12Bin);
 

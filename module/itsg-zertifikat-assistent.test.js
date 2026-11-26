@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import forge from 'node-forge';
@@ -10,8 +10,13 @@ import {
   baueItsgSubjectDn,
   erzeugeItsgAntragP10,
   buendleP7cZuP12,
+  extrahiereRohCertsAusP7c,
 } from './itsg-zertifikat-assistent.js';
-import { entschluesseleP12UndSigniere } from './dta-signatur.js';
+import {
+  entschluesseleP12UndSigniere,
+  extrahiereRohCertDerAusForgeBag,
+  uint8ToBinStr,
+} from './dta-signatur.js';
 
 describe('module/itsg-zertifikat-assistent.js (F4)', () => {
   it('transliteriert Umlaute und erlaubt nur SECON §4.4.4 PrintableString-Zeichen', () => {
@@ -109,5 +114,17 @@ describe('module/itsg-zertifikat-assistent.js (F4)', () => {
     });
     assert.ok(sigRes.signedBytes.length > 200);
     assert.ok(sigRes.certSubject.includes('IK590537440'));
+  });
+
+  it('bewahrt echte ITSG RSASSA-PSS-Zertifikate 100 % byte-identisch (kein forge-CA-Signaturbruch)', () => {
+    const azeDer = new Uint8Array(readFileSync('api-backend/billing/dta/trust-anchors/anchor-dc5d1604b7f639e5.der'));
+    const rawAsn1 = forge.asn1.fromDer(uint8ToBinStr(azeDer));
+    const cert = forge.pki.certificateFromAsn1(rawAsn1);
+
+    // Simuliere .p12-Bag mit Original-ASN.1 und prüfe Byte-Identität via extrahiereRohCertDerAusForgeBag
+    const bag = { cert, asn1: rawAsn1 };
+    const roundtrip = extrahiereRohCertDerAusForgeBag(bag, forge);
+    assert.deepEqual(roundtrip, azeDer, 'Echtes ITSG RSASSA-PSS-Zertifikat muss 100 % byte-identisch bleiben');
+    assert.equal(typeof extrahiereRohCertsAusP7c, 'function');
   });
 });

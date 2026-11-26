@@ -333,7 +333,7 @@ export async function signiereDtaMitPss({
     derInt(1), // version = 1
     derSet(sha256AlgId), // digestAlgorithms
     encapContentInfo,
-    derCtx(0, true, ...certChainDer), // certificates [0] IMPLICIT (inkl. Kette)
+    derCtx(0, true, ...[...certChainDer].sort(compareBytesLex)), // certificates [0] IMPLICIT (DER SET OF sortiert)
     derSet(signerInfo) // signerInfos
   );
 
@@ -341,6 +341,28 @@ export async function signiereDtaMitPss({
     derOid(OID_SIGNED_DATA),
     derCtx(0, true, signedData)
   );
+}
+
+/**
+ * Extrahiert die unveränderten Roh-DER-Bytes eines X.509-Zertifikats direkt aus einem
+ * node-forge certBag (`bag.asn1`), ohne `forge.pki.certificateToAsn1` (das bei echten
+ * ITSG RSASSA-PSS-Zertifikaten `ASN.1 NULL` in `signatureAlgorithm` ergänzt und damit
+ * die CA-Signatur zerstört).
+ *
+ * @param {any} bag
+ * @param {any} forge
+ * @returns {Uint8Array}
+ */
+export function extrahiereRohCertDerAusForgeBag(bag, forge) {
+  if (bag?.asn1) {
+    // Im PKCS#12 certBag speichert node-forge das geparste Zertifikat-ASN.1 (SEQUENCE, Typ 16)
+    // direkt auf `bag.asn1`; `asn1.toDer(bag.asn1)` reproduziert die unveränderten Originalbytes.
+    const bin = forge.asn1.toDer(bag.asn1).getBytes();
+    if (bin && bin.length > 64 && (bin.charCodeAt(0) & 0xff) === 0x30) {
+      return binStrToUint8(bin);
+    }
+  }
+  return binStrToUint8(forge.asn1.toDer(forge.pki.certificateToAsn1(bag.cert)).getBytes());
 }
 
 /**
@@ -389,19 +411,20 @@ export async function entschluesseleP12UndSigniere({
   let signerIdx = 0;
   if (privModHex) {
     const matchIdx = certBags.findIndex((/** @type {any} */ b) => b.cert?.publicKey?.n?.toString(16) === privModHex);
-    if (matchIdx >= 0) signerIdx = matchIdx;
+    if (matchIdx === -1) {
+      throw new Error('Keines der Zertifikate in der .p12-Datei passt zum privaten Schlüssel.');
+    }
+    signerIdx = matchIdx;
   }
-  const orderedCerts = [
-    certBags[signerIdx].cert,
-    ...certBags.filter((/** @type {any} */ _, /** @type {number} */ idx) => idx !== signerIdx).map((/** @type {any} */ b) => b.cert),
+  const orderedBags = [
+    certBags[signerIdx],
+    ...certBags.filter((/** @type {any} */ _, /** @type {number} */ idx) => idx !== signerIdx),
   ];
 
-  const cert = orderedCerts[0];
-  const certChainDer = orderedCerts.map((/** @type {any} */ c) =>
-    binStrToUint8(forge.asn1.toDer(forge.pki.certificateToAsn1(c)).getBytes())
-  );
+  const cert = orderedBags[0].cert;
+  const certChainDer = orderedBags.map((/** @type {any} */ b) => extrahiereRohCertDerAusForgeBag(b, forge));
 
-  const certDerBin = forge.asn1.toDer(forge.pki.certificateToAsn1(cert)).getBytes();
+  const certDerBin = uint8ToBinStr(certChainDer[0]);
   const md = forge.md.sha1.create();
   md.update(certDerBin);
   const certThumbprint = md.digest().toHex();

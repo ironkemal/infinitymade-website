@@ -43,7 +43,7 @@
  * ZAA-Datei selbst trägt nie einen Betrag, nur den Fehlergrund.
  */
 
-import { empfaengerVorabPruefen } from './abrechnung-empfaenger.js?v=20261004m116';
+import { empfaengerVorabPruefen } from './abrechnung-empfaenger.js?v=20261126f6';
 import { fmtEur } from './geld.js?v=20260909';
 import { dateiStatusBadge, aggregierterDateiStatus, dateiStatusInfo, istVerworfen } from './abrechnung-status.js?v=20260920b';
 import { ladeDateieinheiten, dateieinheitVon } from './podologie-dateieinheit.js?v=20260907';
@@ -278,7 +278,7 @@ function kopfHtml(ab, zeilen, geld) {
     ${dateiStatusBadge(status)}
     ${et.istTest ? '<span title="Testdatei — löst keine Zahlung aus" style="font-size:11px;font-weight:600;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:0 6px;">Test</span>' : ''}
     ${f ? `<span style="font-size:12px;color:${f.ueberfaellig ? '#ea580c' : 'var(--text-muted)'};"
-       title="4 Wochen ab Eingang der vollständigen Unterlagen (Richtlinien-Text 20.11.2006 § 7 Abs. 2)">
+       title="21 Kalendertage ab Eingang der vollständigen Unterlagen (§ 18 Vertrag Podologie/Physio)">
        ${f.ueberfaellig ? `überfällig seit ${Math.abs(f.tageRest)} Tag${Math.abs(f.tageRest) === 1 ? '' : 'en'}` : `fällig in ${f.tageRest} Tag${f.tageRest === 1 ? '' : 'en'}`}
      </span>` : ''}
   </div>

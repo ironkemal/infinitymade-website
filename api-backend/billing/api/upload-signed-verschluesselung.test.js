@@ -189,6 +189,7 @@ test('Fall A: Kein Empfängerzertifikat in empfaenger_zertifikate hinterlegt -> 
     basePath: 'tenant1/test-ab-2/payload',
     signedBytes: DUMMY_SIGNED_BYTES,
     db: createMockDb({ certRow: null }),
+    ladeAnchors: () => ({ anchors: [], meta: null }),
   });
 
   assert.equal(res.verschluesselt, false);

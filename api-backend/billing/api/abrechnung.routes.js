@@ -1757,7 +1757,7 @@ async function berechneVerschluesselung({
       };
     }
 
-    // F2 (GGT Anlage 2 §2.1): Auftragsdatei nach erfolgreicher Verschlüsselung auf 03/03
+    // F2 (GGT Anlage 2 §2.1): Auftragsdatei nach erfolgreicher Verschlüsselung fail-closed auf 03/03
     // und die verschlüsselte Bytegröße (encryptedBytes.length) neu erzeugen.
     let auftragsdateiPath = null;
     let auftragsdateiSize = null;
@@ -1765,29 +1765,34 @@ async function berechneVerschluesselung({
     if (vorher.auftragsdatei_path && typeof db?.storage?.from === 'function') {
       try {
         const dlAuf = await db.storage.from('abrechnungen').download(vorher.auftragsdatei_path);
-        if (dlAuf?.data && !dlAuf.error) {
-          const alteAufBuf = Buffer.from(await dlAuf.data.arrayBuffer());
-          const neueAufStr = aktualisiereAuftragsdateiFuerVerschluesselung(alteAufBuf, encryptedBytes.length);
-          const neueAufBuf = Buffer.from(neueAufStr, 'latin1');
-          const neuerAufPfad = artefaktVersuchPfad({
-            ownerId: vorher.owner_id,
-            abrechnungId,
-            kind: 'auftrag',
-          });
-          const upAuf = await db.storage.from('abrechnungen').upload(neuerAufPfad, neueAufBuf, {
-            contentType: 'application/octet-stream',
-            upsert: false,
-          });
-          if (!upAuf?.error) {
-            auftragsdateiPath = neuerAufPfad;
-            auftragsdateiSize = neueAufBuf.length;
-            auftragsdateiSha256 = sha256Hex(neueAufBuf);
-          } else {
-            console.error(`[abrechnung/upload-signed] Aktualisierte Auftragsdatei (03/03) Upload fehlgeschlagen (Abrechnung ${abrechnungId}):`, upAuf.error.message);
-          }
+        if (!dlAuf?.data || dlAuf.error) {
+          throw new Error(dlAuf?.error?.message || 'Bisherige Auftragsdatei konnte nicht geladen werden');
         }
+        const alteAufBuf = Buffer.from(await dlAuf.data.arrayBuffer());
+        const neueAufStr = aktualisiereAuftragsdateiFuerVerschluesselung(alteAufBuf, encryptedBytes.length);
+        const neueAufBuf = Buffer.from(neueAufStr, 'latin1');
+        const neuerAufPfad = artefaktVersuchPfad({
+          ownerId: vorher.owner_id,
+          abrechnungId,
+          kind: 'auftrag',
+        });
+        const upAuf = await db.storage.from('abrechnungen').upload(neuerAufPfad, neueAufBuf, {
+          contentType: 'application/octet-stream',
+          upsert: false,
+        });
+        if (upAuf?.error) {
+          throw new Error(upAuf.error.message || 'Upload der aktualisierten Auftragsdatei fehlgeschlagen');
+        }
+        auftragsdateiPath = neuerAufPfad;
+        auftragsdateiSize = neueAufBuf.length;
+        auftragsdateiSha256 = sha256Hex(neueAufBuf);
       } catch (aufErr) {
-        console.error(`[abrechnung/upload-signed] Aktualisierung der Auftragsdatei (03/03) fehlgeschlagen (Abrechnung ${abrechnungId}):`, aufErr instanceof Error ? aufErr.message : String(aufErr));
+        const msg = aufErr instanceof Error ? aufErr.message : String(aufErr);
+        console.error(`[abrechnung/upload-signed] Aktualisierung der Auftragsdatei (03/03) fehlgeschlagen (Abrechnung ${abrechnungId}):`, msg);
+        return {
+          verschluesselt: false,
+          verschluesselungHinweis: 'Verschlüsselung erfolgreich, aber die Auftragsdatei (03/03) konnte nicht aktualisiert werden: ' + msg,
+        };
       }
     }
 
@@ -2007,7 +2012,7 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
 
     pruefeEntwurfsVersion(ab);
 
-    await pruefeSignedDta({ signedBytes, expectedDtaSha256: ab.dta_sha256 });
+    await pruefeSignedDta({ signedBytes, expectedDtaSha256: ab.dta_sha256, checkCertValidity: true });
 
     // Stichtag-Prüfung am Übermittlungstag (§ 302, Quartalswechsel)
     let stichtagPruefung = null;
@@ -2640,10 +2645,9 @@ function geldstand(abrechnung, zeilen, zahlungen) {
   return {
     eingereicht, abgesetzt, bezahlt,
     offen: r2(eingereicht - abgesetzt - bezahlt),
-    // 4 Wochen ab Eingang der vollständigen Unterlagen (Richtlinien-Text
-    // 20.11.2006 § 7 Abs. 2), sofern der Vertrag nichts anderes sagt.
+    // F9: 21 Kalendertage ab Eingang der vollständigen Unterlagen (§ 18 Vertrag Podologie/Physio).
     faelligAm: abrechnung.zaa_uploaded_at
-      ? new Date(new Date(abrechnung.zaa_uploaded_at).getTime() + 28 * 864e5).toISOString().slice(0, 10)
+      ? new Date(new Date(abrechnung.zaa_uploaded_at).getTime() + 21 * 864e5).toISOString().slice(0, 10)
       : null,
   };
 }

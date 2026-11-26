@@ -143,25 +143,44 @@ export async function renderOwnerCertExpiryBanner({
 // DAS-Guide Generation & Lebenszyklus-Controller
 // ---------------------------------------------------------------------------
 
-// F6: Aktive Heilmittel-DAS E-Mail-Adressen (DFU Protokoll 070, Kostenträgerdatei Q4/2026).
-// Dient als sofortige Offline-/Vorab-Auflösung, bis Migration 0135 (kostentraeger.dfu_email) live ist.
+// F6: Vollständige, deterministisch aus den Q4/2026-Kostenträgerdateien (DFU Protokoll 070)
+// erzeugte DAS-E-Mail-Zuordnung (identisch zu db/entwuerfe/0135_kostentraeger_dfu_email.sql).
 const DAS_DFU_EMAIL_FALLBACK = {
+  '100295017': 'da@dta.aok.de',
+  '100395611': 'da@dta.aok.de',
+  '100696012': 'da@dta.aok.de',
+  '100696023': 'da@dta.aok.de',
+  '101097008': 'da@dta.aok.de',
+  '101317004': 'da@dta.aok.de',
+  '101519213': 'da@dta.aok.de',
+  '101575519': 'dav001@vdek-dav.de',
+  '102110939': 'da@dta.aok.de',
+  '102193212': 'dav@mobil-isc.de',
+  '103119199': 'da@dta.aok.de',
+  '103411401': 'da@dta.aok.de',
+  '103511264': 'da@dta.aok.de',
+  '104027544': 'le@bitmarck-daten.de',
+  '104212516': 'da@dta.aok.de',
+  '104593971': 'le-ek@bitmarck-daten.de',
+  '104940005': 'dav-le@vdek-dav.de',
+  '105810615': 'da@dta.aok.de',
+  '106198626': 'da@dta.aok.de',
+  '107299005': 'da@dta.aok.de',
+  '107310373': 'da@dta.aok.de',
   '107436557': 'inbox@tp5.arz-emmendingen.de',
+  '108018007': 'da@dta.aok.de',
+  '108310400': 'da@dta.aok.de',
+  '109519005': 'da@dta.aok.de',
+  '109900019': 'le@bitmarck-daten.de',
+  '590301867': 'dta302@convema.com',
+  '590311426': 'dta@kv-service-plus-gmbh.de',
+  '660510336': 'dta302@ddg-online.de',
+  '661400051': 'da302@iqvia-hss.de',
+  '661400073': 'dta302@condatesta.de',
+  '661400233': 'edi302@iqvia-hss.de',
+  '661420011': 'datenservice@gfs-web.de',
   '661430035': 'edi302@iqvia-hss.de',
   '661430046': 'da302@iqvia-hss.de',
-  '660510336': 'dta302@ddg-online.de',
-  '660500300': 'dta302@ddg-online.de',
-  '105810615': 'da@dta.aok.de',
-  '107299005': 'da@dta.aok.de',
-  '108018007': 'da@dta.aok.de',
-  '102114819': 'da@dta.aok.de',
-  '103119199': 'da@dta.aok.de',
-  '104212505': 'da@dta.aok.de',
-  '109777509': 'da@dta.aok.de',
-  '661430013': 'le@bitmarck-daten.de',
-  '661430024': 'le@bitmarck-daten.de',
-  '109900019': 'da@kbs.de',
-  '103500706': 'da@svlfg.de',
 };
 
 let _activeGuideGen = 0;

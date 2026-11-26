@@ -314,13 +314,23 @@ export function findeEmpfaengerZertifikatInTrustAnchors(
   const ik = String(empfaengerIk || '').trim();
   if (!/^\d{9}$/.test(ik)) return null;
 
-  const { anchors, meta } = typeof ladeAnchors === 'function'
+  const hatCustomLoader = typeof ladeAnchors === 'function';
+  const { anchors, meta } = hatCustomLoader
     ? ladeAnchors()
     : ladeItsgTrustAnchors({ verzeichnis });
 
   const entries = meta?.zertifikate;
   if (!Array.isArray(entries) || entries.length === 0 || !Array.isArray(anchors) || anchors.length === 0) {
     return null;
+  }
+
+  // Zuordnung über SHA-256-Fingerprint statt Array-Index (verhindert Indexversatz bei ausgelassenen Dateien)
+  /** @type {Map<string, Buffer>} */
+  const anchorBySha256 = new Map();
+  for (const buf of anchors) {
+    if (Buffer.isBuffer(buf)) {
+      anchorBySha256.set(crypto.createHash('sha256').update(buf).digest('hex'), buf);
+    }
   }
 
   const ikMuster = new RegExp(`(^|\\n|,)\\s*OU=IK${ik}(\\s*$|\\n|,)`, 'i');
@@ -334,9 +344,10 @@ export function findeEmpfaengerZertifikatInTrustAnchors(
     const subject = String(entry?.subject || '');
     if (!ikMuster.test(subject)) continue;
 
-    // Zuordnung zum Buffer: entweder über die Datei in `verzeichnis` oder positions-/fingerprint-basiert aus `anchors`
     let der = null;
-    if (entry?.datei && verzeichnis && fs.existsSync(path.join(verzeichnis, entry.datei))) {
+    if (typeof entry?.fingerprint_sha256 === 'string' && anchorBySha256.has(entry.fingerprint_sha256)) {
+      der = anchorBySha256.get(entry.fingerprint_sha256) || null;
+    } else if (!hatCustomLoader && entry?.datei && verzeichnis && fs.existsSync(path.join(verzeichnis, entry.datei))) {
       der = fs.readFileSync(path.join(verzeichnis, entry.datei));
     } else if (anchors[i]) {
       der = anchors[i];
