@@ -108,6 +108,11 @@ Germany (nationwide). Operator based in Siegburg, NRW.
 /blog/heilmittel-preisliste-verguetung-2026.html           — 2026 Heilmittel price list / remuneration
 /blog/elektronisches-fahrtenbuch-therapeuten-wegegeld.html  — digital trip log and Wegegeld
 /blog/praxissoftware-vergleich-physiotherapie-2026.html     — practice software comparison 2026
+/blog/podologie-verordnung-gueltigkeit-fristen.html — Podologie prescription validity: start deadlines, 12-week interruption rule, frequency, maximum units
+/blog/podologie-verordnung-diagnosen-icd-10.html — Podologie diagnosis groups DF/NF/QF/UI1/UI2, ICD-10 codes, who may correct what
+/blog/nagelspangenbehandlung-abrechnen-podologie.html — Nail brace (Nagelspange) billing: positions 78610/78620 from 01.10.2025, photo documentation, limits
+/blog/podologie-abrechnen-krankenkasse-302.html — Billing Podologie with statutory health insurers (§302): requirements, deadlines, typical rejections
+/blog/zuzahlung-podologie.html — Patient co-payment (Zuzahlung) in Podologie: amount, exemption, annual limit
 
 # Last updated
-2026-11-24
+2026-11-26

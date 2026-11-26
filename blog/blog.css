@@ -683,7 +683,7 @@ footer {
   }
 
   .steps-section {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr); /* 1fr allein lässt Tabellen die Spalte über die Bildschirmbreite drücken */
     gap: 2.5rem;
     padding: 2rem 1rem 4rem;
   }
