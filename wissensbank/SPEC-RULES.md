@@ -1027,6 +1027,27 @@
   Heilmittel
 
 
+### Podologie: Zwischenrechnung nach 3 Behandlungseinheiten erlaubt (Vertrag § 18 Abs. 12a)
+- **Kural:** Podolojide bir Verordnung için **3 Behandlungseinheit erbracht edildikten sonra** bir Zwischenrechnung
+  verilebilir: Original-VO + Leistungsbestätigungen, VO üzerinde „Zwischenrechnung" notu; seri bitince kalan
+  birimler **VO kopyası** (kalan orijinal bestätigungen üzerinde) ile faturalanır, önceden faturalanan Leistungen
+  kopyada işaretlenir ve tekrar istenemez; yalnız zugelassener Leistungserbringer adına. Praxisübernahme /
+  LE-Wechsel hâlinde Teilabrechnung **yok** (§ 18 Abs. 13). Bu, yukarıdaki „Abrechnung Verordnung bittikten
+  sonra" kuralının belirsiz bıraktığı „soweit in Verträgen nichts anderes geregelt ist" (RL 302 § 7 Abs. 1)
+  istisnasıdır — o kuralın „⚠️ Açık: ana metin arşivde yok" notu W-11 (21.10.2026) ile aşıldı. VKZ 02 kuralı
+  değişmez: Zwischenrechnung VKZ 02 Nachforderung değildir, sözleşmesel ayrı yoldur.
+- **Kaynak:** Vertrag nach § 125 Abs. 1 SGB V Podologie i. d. F. 30.11.2020 einschl. Änderungen bis 16.06.2025
+  (`wissensbank/podologie/20250617_Podologie_Vertrag-Lesefassung.txt`, § 18 Abs. 12a + Abs. 13, S. 22–23) —
+  *„Bei der Erbringung von podologischen Leistungen kann pro Heilmittelverordnung nach Erbringung von drei
+  Behandlungseinheiten eine Zwischenrechnung … eingereicht werden. Auf dem Original ist dies mit dem Vermerk
+  ‚Zwischenrechnung' kenntlich zu machen."* · ayrıca § 18 Abs. 4: Rechnungsstellung *„bis zu 2-mal je Monat"*
+  (RL 302 § 7 Abs. 1 „einmal monatlich"ya sözleşmesel istisna) · § 18 Abs. 14: Zahlung 21 Kalendertage.
+  gkv-302, 26.11.2026 orijinal .txt'e karşı okundu.
+- **Geçerlilik:** Vertrag-Stand 16.06.2025 (in Kraft 01.07.2025)
+- **Kodda:** uygulanmamış — repo genelinde „Zwischenrechnung" 0 eşleşme (26.11.2026, `*.js/*.mjs/*.md`).
+  Ürün kararı (yazılım bu yolu sunsun mu) ayrı; teknik etkisi Urbeleg akışında (orijinal + sonra kopya).
+- **Kapsam:** Podologie, tüm Diagnosegruppen, standart Verordnung
+
 ### Abrechnungscode 71 = Podologen (72 = med. Fußpfleger)
 - **Kural:** Podoloji Verordnung/DTA ekranlarında görünen sabit **„71"** Anlage 3'ün
   **Abrechnungscode**'udur: `71 = Podologen`, `72 = Med. Fußpfleger (gemäß § 10 Abs. 4 bis 6 PodG)`.
