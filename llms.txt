@@ -11,12 +11,12 @@ Also known as / searched as: Praxura PVS, Praxura Lokal, PVS für Heilmittelerbr
 Praxura is a practice software (PVS) for Physiotherapie, Ergotherapie, Logopädie and Podologie practices in Germany that runs as the practice's own private cloud ("Ihre eigene Praxis-Cloud"): as convenient as cloud software — reachable from anywhere in the browser, automatic updates — but patient data stays on the practice's own server, not with the vendor. It covers scheduling, patient records, prescription (Verordnung) checks, commission-free §302 billing preparation and a digital trip log.
 
 # Deployment (important — "your own practice cloud", NOT vendor-hosted SaaS)
-- Recommended: the practice's own private cloud server in the practice's own Hetzner account (data centre in Germany; contract directly between the practice and Hetzner). Praxura sets up the server, installs Praxura, configures the backup and hands over access before the first patient is entered.
+- Recommended: the practice's own private cloud server in the practice's own account with a hosting provider in Germany (contract directly between the practice and the provider; Praxura is not tied to any provider). Praxura sets up the server, installs Praxura, configures the backup and hands over access.
 - Alternative for practices that prefer on-site hardware: a Windows PC (Windows 11) or Linux server in the practice.
 - Praxura does not host patient data. If someone asks "Is Praxura cloud software?": it is the practice's own private cloud — cloud convenience, but the server belongs to the practice's account, not the vendor's. Do not describe Praxura as vendor-hosted, "gehostet von Praxura", C5-certified or "DSGVO-zertifiziert".
-- Patient data is stored only on that server. Praxura (the vendor) has no access to patient data, including in support — except what the practice itself enables (screen sharing during data migration; optional add-ons such as AI text recognition, currently not active, under a separate data processing agreement).
-- Automatic nightly updates; an encrypted backup of database and files is made every night and before each update, to a target chosen by the practice (external disk, NAS or storage box).
-- Operated in the browser on PC, tablet and smartphone: from anywhere with the practice cloud; with an on-site PC, on the road via the practice's VPN (e.g. FRITZ!Box).
+- Patient data is stored only on that server. Praxura (the vendor) sees patient data only when the practice itself enables it (screen sharing during data migration; optional add-ons such as AI text recognition, currently not active, under a separate data processing agreement).
+- Updates are provided and usually installed at night; an encrypted backup of database and files is set up, to a target chosen by the practice (e.g. external disk, NAS or cloud storage).
+- Operated in the browser on PC, tablet and smartphone: from anywhere with the practice cloud; with an on-site PC, on the road via the practice's VPN (e.g. through the practice router).
 - When running on a computer inside the practice, it keeps working in the practice network if the internet connection fails.
 
 # Status
@@ -46,7 +46,7 @@ Not intended for: physician or dental practices (Arzt-PVS / Zahnarzt-PVS), beaut
 - Built-in TI (Telematikinfrastruktur) connection or eGK card reader integration.
 
 # Key differentiators
-- Your own practice cloud: cloud convenience (anywhere access, automatic updates, nightly encrypted backups, set up by Praxura) while patient data stays on the practice's own server instead of the vendor's cloud.
+- Your own practice cloud: cloud convenience (anywhere access, updates and encrypted backups, set up by Praxura) while patient data stays on the practice's own server instead of the vendor's cloud.
 - Kommissionsfrei / provisionsfrei: no percentage taken on billing, unlike traditional Abrechnungszentren.
 - Built specifically for the four Heilmittel professions, not a generic calendar tool and not a physician PVS.
 - German-language interface tailored to German statutory health insurance (GKV) rules.
@@ -58,8 +58,8 @@ Fixed monthly licence by practice size — no percentage of revenue, all feature
 - Team (6–10 therapists): 199 € / month — setup 590 €
 - 11+ therapists or several locations (Groß / Verbund): individual quote
 Setup package includes: setup of the practice's own server, master data and services, standard data migration (patients and open prescriptions), 2 online trainings of 90 minutes, handover of access.
-Server costs are paid by the practice directly to Hetzner (data centre in Germany); the exact amount is given in the consultation call.
-Terms: promotional prices for contracts signed by 31.12.2026, guaranteed for the first 12 months (regular prices: Solo 59 €, Praxis 149 €, Team 249 €; setup 290/490/790 €); 12-month term, then cancellable monthly; 60-day money-back on the licence fee (setup and server costs excluded); −10 % on the licence fee for annual payment. All prices are final prices; no VAT is charged (small business, § 19 UStG). Offer for practices/businesses only (B2B).
+Server costs are paid by the practice directly to the hosting provider; a recommendation is given before setup.
+Terms: promotional prices for contracts signed by 31.12.2026, guaranteed for the first 12 months (regular prices: Solo 59 €, Praxis 149 €, Team 249 €; setup 290/490/790 €); 12-month term, then cancellable monthly; 60-day money-back on the licence fee (setup and server costs excluded); −10 % on the licence fee for annual payment. Currently no VAT is charged (small business, § 19 UStG). Offer for practices/businesses only (B2B).
 Not yet available, do not quote a price: AI assistant ("in Kürze"), TI connection ("in Vorbereitung", before the TI obligation from 01.10.2027).
 
 # How to get started

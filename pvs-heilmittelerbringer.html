@@ -82,7 +82,7 @@
   "applicationSubCategory": "Praxisverwaltungssystem (PVS) für Heilmittelerbringer",
   "operatingSystem": "Windows 11, Linux",
   "url": "https://praxura.de/pvs-heilmittelerbringer.html",
-  "description": "Praxisverwaltungssystem (PVS) für Heilmittelerbringer – Physiotherapie, Ergotherapie, Logopädie und Podologie. Läuft als eigene Praxis-Cloud im Hetzner-Konto der Praxis (von Praxura eingerichtet) oder auf einem Windows-PC bzw. Linux-Server in der Praxis; Patientendaten werden ausschließlich dort gespeichert.",
+  "description": "Praxisverwaltungssystem (PVS) für Heilmittelerbringer – Physiotherapie, Ergotherapie, Logopädie und Podologie. Läuft als eigene Praxis-Cloud im eigenen Konto der Praxis bei einem Hosting-Anbieter in Deutschland (von Praxura eingerichtet) oder auf einem Windows-PC bzw. Linux-Server in der Praxis; Patientendaten werden ausschließlich dort gespeichert.",
   "publisher": {
     "@id": "https://praxura.de/#organization"
   },
@@ -93,7 +93,7 @@
     "Vorbereitung der Abrechnung nach §302 SGB V, provisionsfrei",
     "Elektronisches Fahrtenbuch",
     "Eigene Praxis-Cloud: Patientendaten auf dem Server der Praxis, nicht beim Hersteller",
-    "Nächtliche verschlüsselte Sicherung und automatische Updates"
+    "Verschlüsselte Sicherung und Updates"
   ]
 }
   </script>
@@ -145,7 +145,7 @@
       "name": "Ist Praxura ein Cloud-PVS?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Praxura ist Ihre eigene Praxis-Cloud – so bequem wie ein Cloud-PVS, aber Ihre Patientendaten bleiben auf Ihrem eigenen Server, nicht bei uns. Wir richten den Server in Ihrem eigenen Hetzner-Konto ein (Rechenzentrum in Deutschland, Vertrag direkt zwischen Ihnen und Hetzner), installieren Praxura und übergeben Ihnen den Zugang, bevor Sie den ersten Patienten anlegen. Bedient wird Praxura im Browser – am PC, Tablet und Smartphone, von überall. Praxura hat keinen Zugang zu Ihren Patientendaten, auch nicht im Support (ausgenommen nur, was Sie selbst freigeben, z. B. die Bildschirmfreigabe bei der Datenübernahme). Wenn Sie es lieber im Haus haben, läuft Praxura auch auf einem Windows-PC oder Linux-Server in Ihrer Praxis."
+        "text": "Praxura ist Ihre eigene Praxis-Cloud – so bequem wie ein Cloud-PVS, aber Ihre Patientendaten bleiben auf Ihrem eigenen Server, nicht bei uns. Wir richten den Server in Ihrem eigenen Konto bei einem Hosting-Anbieter in Deutschland ein (Vertrag direkt zwischen Ihnen und dem Anbieter), installieren Praxura und übergeben Ihnen den Zugang. Bedient wird Praxura im Browser – am PC, Tablet und Smartphone, von überall. Einblick in Ihre Patientendaten erhalten wir nur, wenn Sie ihn selbst freigeben (z. B. Bildschirmfreigabe bei der Datenübernahme). Wenn Sie es lieber im Haus haben, läuft Praxura auch auf einem Windows-PC oder Linux-Server in Ihrer Praxis."
       }
     },
     {
@@ -161,7 +161,7 @@
       "name": "Wie werden Updates und Datensicherung erledigt?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Automatisch: Praxura aktualisiert sich jede Nacht selbst und legt vorher eine verschlüsselte Sicherung von Datenbank und Dateien an. Das Sicherungsziel wählen Sie selbst – z. B. eine externe Festplatte, ein NAS oder eine Storage Box."
+        "text": "Automatisch: Praxura spielt Updates in der Regel nachts selbst ein und legt vorher eine verschlüsselte Sicherung von Datenbank und Dateien an. Das Sicherungsziel wählen Sie selbst – z. B. eine externe Festplatte, ein NAS oder einen Cloud-Speicher."
       }
     },
     {
@@ -169,7 +169,7 @@
       "name": "Wie lange dauert die Einrichtung?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Praxura wird mit einem Befehl und Ihrem persönlichen Einrichtungscode installiert, in der Regel in 20–40 Minuten. Voraussetzung auf Windows: Windows 11 (ab 22H2), 8 GB Arbeitsspeicher, ein PC mit Intel- oder AMD-Prozessor, der eingeschaltet bleibt."
+        "text": "Die Einrichtung übernehmen wir für Sie; alternativ installieren Sie Praxura selbst mit einem Befehl und Ihrem persönlichen Einrichtungscode. Voraussetzung auf Windows: Windows 11 (ab 22H2), 8 GB Arbeitsspeicher, ein PC mit Intel- oder AMD-Prozessor, der eingeschaltet bleibt."
       }
     },
     {
@@ -193,7 +193,7 @@
       "name": "Was kostet Praxura?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Die Preise sind noch nicht veröffentlicht. Praxura befindet sich in der Pilotphase mit ausgewählten Praxen. Schreiben Sie uns an kontakt@praxura.de – wir melden uns mit einem Vorschlag für Ihre Praxis."
+        "text": "Praxura kostet einen festen Monatspreis nach Anzahl der Behandler:innen, ohne Prozent vom Umsatz. Die aktuellen Pakete finden Sie auf unserer Startseite; ein festes Angebot erhalten Sie nach dem Analysegespräch."
       }
     }
   ]
@@ -842,13 +842,13 @@
     <div class="px-hero-card-row">
       <div>
         <div class="px-hero-card-title">Patientendaten bleiben bei Ihnen</div>
-        <div class="px-hero-card-sub">Gespeichert nur auf Ihrem eigenen Server – kein Zugang durch uns, auch nicht im Support (ausgenommen nur, was Sie selbst freigeben, z. B. die Bildschirmfreigabe bei der Datenübernahme).</div>
+        <div class="px-hero-card-sub">Gespeichert nur auf Ihrem eigenen Server – Einblick durch uns nur mit Ihrer Freigabe (z. B. Bildschirmfreigabe bei der Datenübernahme).</div>
       </div>
     </div>
     <div class="px-hero-card-row">
       <div>
-        <div class="px-hero-card-title">Updates & Sicherung automatisch</div>
-        <div class="px-hero-card-sub">Jede Nacht ein Update – vorher immer eine verschlüsselte Sicherung.</div>
+        <div class="px-hero-card-title">Updates & Sicherung eingerichtet</div>
+        <div class="px-hero-card-sub">Regelmäßige Updates – vorher eine verschlüsselte Sicherung.</div>
       </div>
     </div>
     <div class="px-hero-card-row">
@@ -946,28 +946,28 @@
         <span class="px-why-num">01</span>
         <div>
           <div class="px-why-h">Eingerichtet <em>von uns</em></div>
-          <div class="px-why-p">Wir legen den Server in Ihrem eigenen Hetzner-Konto an (Rechenzentrum in Deutschland, Vertrag direkt zwischen Ihnen und Hetzner), installieren Praxura, richten die Sicherung ein und übergeben Ihnen den Zugang – bevor Sie den ersten Patienten anlegen.</div>
+          <div class="px-why-p">Wir legen den Server in Ihrem eigenen Konto bei einem Hosting-Anbieter in Deutschland an (Vertrag direkt zwischen Ihnen und dem Anbieter), installieren Praxura, richten die Sicherung ein und übergeben Ihnen den Zugang .</div>
         </div>
       </li>
       <li class="px-why-item">
         <span class="px-why-num">02</span>
         <div>
           <div class="px-why-h">Ihre Daten, <em>Ihre Hand</em></div>
-          <div class="px-why-p">Patientendaten werden nur auf Ihrem Server gespeichert. Praxura hat keinen Zugang dazu – auch nicht im Support (ausgenommen nur, was Sie selbst freigeben, z. B. die Bildschirmfreigabe bei der Datenübernahme).</div>
+          <div class="px-why-p">Patientendaten werden nur auf Ihrem Server gespeichert. Einblick erhalten wir nur, wenn Sie ihn selbst freigeben (z. B. Bildschirmfreigabe bei der Datenübernahme).</div>
         </div>
       </li>
       <li class="px-why-item">
         <span class="px-why-num">03</span>
         <div>
           <div class="px-why-h">Updates & Sicherung <em>automatisch</em></div>
-          <div class="px-why-p">Jede Nacht ein Update, vorher immer eine verschlüsselte Sicherung von Datenbank und Dateien – auf ein Ziel Ihrer Wahl.</div>
+          <div class="px-why-p">Updates werden in der Regel nachts eingespielt, vorher entsteht eine verschlüsselte Sicherung von Datenbank und Dateien – auf ein Ziel Ihrer Wahl.</div>
         </div>
       </li>
       <li class="px-why-item">
         <span class="px-why-num">04</span>
         <div>
           <div class="px-why-h">Lieber <em>im eigenen Haus?</em></div>
-          <div class="px-why-p">Praxura läuft auch auf einem Windows-PC oder Linux-Server in Ihrer Praxis. Dann arbeiten Sie bei Internetausfall im Praxisnetz weiter; unterwegs erreichen Sie Praxura über das VPN Ihrer Praxis, z. B. per FRITZ!Box.</div>
+          <div class="px-why-p">Praxura läuft auch auf einem Windows-PC oder Linux-Server in Ihrer Praxis. Dann arbeiten Sie bei Internetausfall im Praxisnetz weiter; unterwegs erreichen Sie Praxura über das VPN Ihrer Praxis, z. B. über Ihren Router.</div>
         </div>
       </li>
     </ul>
@@ -1048,7 +1048,7 @@
         <span class="px-faq-toggle" aria-hidden="true">+</span>
       </summary>
       <div class="px-faq-body">
-        Praxura ist Ihre eigene Praxis-Cloud – so bequem wie ein Cloud-PVS, aber Ihre Patientendaten bleiben auf Ihrem eigenen Server, nicht bei uns. Wir richten den Server in Ihrem eigenen Hetzner-Konto ein (Rechenzentrum in Deutschland, Vertrag direkt zwischen Ihnen und Hetzner), installieren Praxura und übergeben Ihnen den Zugang, bevor Sie den ersten Patienten anlegen. Bedient wird Praxura im Browser – am PC, Tablet und Smartphone, von überall. Praxura hat keinen Zugang zu Ihren Patientendaten, auch nicht im Support (ausgenommen nur, was Sie selbst freigeben, z. B. die Bildschirmfreigabe bei der Datenübernahme). Wenn Sie es lieber im Haus haben, läuft Praxura auch auf einem Windows-PC oder Linux-Server in Ihrer Praxis.
+        Praxura ist Ihre eigene Praxis-Cloud – so bequem wie ein Cloud-PVS, aber Ihre Patientendaten bleiben auf Ihrem eigenen Server, nicht bei uns. Wir richten den Server in Ihrem eigenen Konto bei einem Hosting-Anbieter in Deutschland ein (Vertrag direkt zwischen Ihnen und dem Anbieter), installieren Praxura und übergeben Ihnen den Zugang. Bedient wird Praxura im Browser – am PC, Tablet und Smartphone, von überall. Einblick in Ihre Patientendaten erhalten wir nur, wenn Sie ihn selbst freigeben (z. B. Bildschirmfreigabe bei der Datenübernahme). Wenn Sie es lieber im Haus haben, läuft Praxura auch auf einem Windows-PC oder Linux-Server in Ihrer Praxis.
       </div>
     </details>
     <details>
@@ -1066,7 +1066,7 @@
         <span class="px-faq-toggle" aria-hidden="true">+</span>
       </summary>
       <div class="px-faq-body">
-        Automatisch: Praxura aktualisiert sich jede Nacht selbst und legt vorher eine verschlüsselte Sicherung von Datenbank und Dateien an. Das Sicherungsziel wählen Sie selbst – z. B. eine externe Festplatte, ein NAS oder eine Storage Box.
+        Automatisch: Praxura spielt Updates in der Regel nachts selbst ein und legt vorher eine verschlüsselte Sicherung von Datenbank und Dateien an. Das Sicherungsziel wählen Sie selbst – z. B. eine externe Festplatte, ein NAS oder einen Cloud-Speicher.
       </div>
     </details>
     <details>
@@ -1075,7 +1075,7 @@
         <span class="px-faq-toggle" aria-hidden="true">+</span>
       </summary>
       <div class="px-faq-body">
-        Praxura wird mit einem Befehl und Ihrem persönlichen Einrichtungscode installiert, in der Regel in 20–40 Minuten. Voraussetzung auf Windows: Windows 11 (ab 22H2), 8 GB Arbeitsspeicher, ein PC mit Intel- oder AMD-Prozessor, der eingeschaltet bleibt.
+        Die Einrichtung übernehmen wir für Sie; alternativ installieren Sie Praxura selbst mit einem Befehl und Ihrem persönlichen Einrichtungscode. Voraussetzung auf Windows: Windows 11 (ab 22H2), 8 GB Arbeitsspeicher, ein PC mit Intel- oder AMD-Prozessor, der eingeschaltet bleibt.
       </div>
     </details>
     <details>
@@ -1102,7 +1102,7 @@
         <span class="px-faq-toggle" aria-hidden="true">+</span>
       </summary>
       <div class="px-faq-body">
-        Die Preise sind noch nicht veröffentlicht. Praxura befindet sich in der Pilotphase mit ausgewählten Praxen. Schreiben Sie uns an kontakt@praxura.de – wir melden uns mit einem Vorschlag für Ihre Praxis.
+        Praxura kostet einen festen Monatspreis nach Anzahl der Behandler:innen, ohne Prozent vom Umsatz. Die aktuellen Pakete finden Sie auf unserer Startseite; ein festes Angebot erhalten Sie nach dem Analysegespräch.
       </div>
     </details>
   </div>
@@ -1116,7 +1116,7 @@
         Sehen, ob Praxura zu Ihrer <em>Praxis passt.</em>
       </h2>
       <p class="px-closing-text">
-        In 45 Minuten zeigen wir Ihnen Praxura, klären die Einrichtung auf Ihrem Rechner oder Server und besprechen, welche Daten aus Ihrem bisherigen System übernommen werden können. Unverbindlich.
+        Im Gespräch zeigen wir Ihnen Praxura, klären die Einrichtung auf Ihrem Rechner oder Server und besprechen, welche Daten aus Ihrem bisherigen System übernommen werden können. Unverbindlich.
       </p>
     </div>
     <div class="px-closing-side">
