@@ -39,6 +39,7 @@ export const ERLAUBT = {
   'admin.praxura.de': { klasse: 'verweis', grund: 'Admin-Link, in der Box ausgeblendet (dashboard.js !IST_KUTU); CORS-Ursprung' },
   'app.praxura.de': { klasse: 'verweis', grund: 'Fallback-Basis, wenn window.location.origin fehlt; CORS-Ursprung' },
   'www.trustcenter.itsg.de': { klasse: 'verweis', grund: 'Link in Einstellungen → Datenquellen' },
+  'www.itsg-trust.de': { klasse: 'verweis', grund: 'Klickbarer Link zum ITSG-ZAP-Upload-Portal (.p10-Antrag, F4), lädt nicht automatisch' },
   'www.davaso.de': { klasse: 'verweis', grund: 'Link in Einstellungen → Datenquellen' },
   'www.ddg-online.de': { klasse: 'verweis', grund: 'Link in Einstellungen → Datenquellen' },
   'www.bitmarck.de': { klasse: 'verweis', grund: 'Link in Einstellungen → Datenquellen' },
