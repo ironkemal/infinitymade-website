@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kontakt — Praxura</title>
-  <meta name="description" content="Schreiben Sie uns — wir antworten in der Regel innerhalb eines Werktags." />
+  <meta name="description" content="Schreiben Sie uns — wir melden uns zeitnah." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://praxura.de/kontakt.html" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -332,7 +332,7 @@
         Schreiben Sie <em>uns.</em>
       </h1>
       <p class="kx-lede">
-        Fragen zur Software, zum Onboarding oder zur §302-Abrechnung — wir antworten in der Regel innerhalb eines Werktags.
+        Fragen zur Software, zum Onboarding oder zur §302-Abrechnung — wir melden uns zeitnah.
       </p>
 
       <div class="kx-meta-row">
@@ -357,7 +357,7 @@
         </div>
         <div>
           <div class="kx-meta-label">Antwortzeit</div>
-          <div class="kx-meta-val">In der Regel 1 Werktag</div>
+          <div class="kx-meta-val">Zeitnah, werktags</div>
         </div>
       </div>
 
@@ -535,7 +535,7 @@ form.addEventListener('submit', async function(e) {
     const data = await res.json();
 
     if (res.ok && data.ok) {
-      showNotice('success', 'Vielen Dank! Ihre Nachricht wurde gesendet. Wir melden uns innerhalb eines Werktages.');
+      showNotice('success', 'Vielen Dank! Ihre Nachricht wurde gesendet. Wir melden uns zeitnah.');
       form.reset();
     } else {
       showNotice('error', data.error || 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
