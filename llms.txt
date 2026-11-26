@@ -51,15 +51,15 @@ Not intended for: physician or dental practices (Arzt-PVS / Zahnarzt-PVS), beaut
 - Built specifically for the four Heilmittel professions, not a generic calendar tool and not a physician PVS.
 - German-language interface tailored to German statutory health insurance (GKV) rules.
 
-# Pricing (published 2026-11-24, see https://praxura.de/#preise)
+# Pricing (updated 2026-11-26, see https://praxura.de/#preise)
 Fixed monthly licence by practice size — no percentage of revenue, all features in every package. Counted are treating therapists (Behandler:innen); reception and administration staff are always included.
-- Solo (1 therapist): 49 € / month — one-time setup package 190 €
-- Praxis (2–5 therapists): 119 € / month — setup 390 €
-- Team (6–10 therapists): 199 € / month — setup 590 €
+- Solo (1 therapist): 59 € / month — one-time setup package 290 €
+- Praxis (2–5 therapists): 149 € / month — setup 490 €
+- Team (6–10 therapists): 249 € / month — setup 790 €
 - 11+ therapists or several locations (Groß / Verbund): individual quote
 Setup package includes: setup of the practice's own server, master data and services, standard data migration (patients and open prescriptions), 2 online trainings, handover of access.
 Server costs are paid by the practice directly to the hosting provider; a recommendation is given before setup.
-Terms: promotional prices for contracts signed by 31.12.2026, guaranteed for the first 12 months (regular prices: Solo 59 €, Praxis 149 €, Team 249 €; setup 290/490/790 €); 12-month term, then cancellable monthly; 60-day money-back on the licence fee (excluded: setup package, server costs and separately ordered additional services; once per practice); −10 % on the licence fee for annual payment. All prices are net. Currently no VAT is charged (small business, § 19 UStG); if that rule no longer applies, statutory VAT is added, including on promotional prices. Offer for practices/businesses only (B2B).
+Terms: 12-month term, then cancellable monthly; 60-day money-back on the licence fee (excluded: setup package, server costs and separately ordered additional services; once per practice); −10 % on the licence fee for annual payment. All prices are net. Currently no VAT is charged (small business, § 19 UStG); if that rule no longer applies, statutory VAT is added. Offer for practices/businesses only (B2B).
 Not yet available, do not quote a price: AI assistant (not active), TI connection (not included at present; an optional add-on via a certified TI provider is planned, no date).
 
 # How to get started
