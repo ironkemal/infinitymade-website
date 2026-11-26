@@ -5,7 +5,7 @@
   "tempo": 1.08,
   "coverBei": 1.2,
   "sprechweise": "Natürliche, sympathische Frauenstimme. Am Anfang feierlich wie ein Science-Fiction-Trailer, beim zweiten Satz trocken und mit Humor, danach warm und direkt. Normales Sprechtempo.",
-  "caption": "Cyber Week. Die Zukunft ist da. Naja. Fast. 🤖\n\nEchte Digitalisierung für Ihre Praxis: Termine, Akte und Abrechnungsvorbereitung an einem Ort. Zur Cyber Week bis zu −23 % auf alle Pakete, Einrichtung bis zu 300 € günstiger, und bei jährlicher Zahlung zusätzlich −10 % auf die Lizenz.\n\nMarkieren Sie, wer in Ihrer Praxis für Technik zuständig ist.\n\nAlle Preise auf praxura.de\n\nAktionspreise für Verträge mit Abschluss bis 31.12.2026, garantiert für die ersten 12 Monate. Zzgl. einmaliger Einrichtung und Serverkosten. Angebot nur für Praxen und Unternehmer (§ 14 BGB). Endpreise, gemäß § 19 UStG keine Umsatzsteuer.\n\n(Bilder und Stimme KI-generiert)\n\n#CyberWeek #Praxissoftware #Digitalisierung #Physiotherapie #Heilmittel",
+  "caption": "Cyber Week. Die Zukunft ist da. Naja. Fast. 🤖\n\nEchte Digitalisierung für Ihre Praxis: Termine, Akte und Abrechnungsvorbereitung an einem Ort. Zur Cyber Week bis zu −20 % auf alle Pakete, Einrichtung bis zu 200 € günstiger, und bei jährlicher Zahlung zusätzlich −10 % auf die Lizenz.\n\nMarkieren Sie, wer in Ihrer Praxis für Technik zuständig ist.\n\nAlle Preise auf praxura.de\n\nAktionspreise für Verträge mit Abschluss bis 31.12.2026, garantiert für die ersten 12 Monate. Zzgl. einmaliger Einrichtung und Serverkosten. Angebot nur für Praxen und Unternehmer (§ 14 BGB). Endpreise, gemäß § 19 UStG keine Umsatzsteuer.\n\n(Bilder und Stimme KI-generiert)\n\n#CyberWeek #Praxissoftware #Digitalisierung #Physiotherapie #Heilmittel",
   "szenen": [
     {
       "typ": "foto",
@@ -46,11 +46,11 @@
       "dauer": 3.8,
       "kicker": "Solo · 1 Behandler:in",
       "praefix": "€ / Monat",
-      "von": 49,
-      "bis": 39,
-      "text": "statt 49 €. 12 Monate garantiert.",
+      "von": 59,
+      "bis": 49,
+      "text": "statt 59 €. 12 Monate garantiert.",
       "quelle": "Verträge bis 31.12.2026 · zzgl. Einrichtung",
-      "sprecher": "Wenn Sie allein behandeln: neununddreißig Euro im Monat.",
+      "sprecher": "Wenn Sie allein behandeln: neunundvierzig Euro im Monat.",
       "nachlauf": 0.5
     },
     {
@@ -59,11 +59,11 @@
       "dauer": 5,
       "kicker": "Cyber Week",
       "punkte": [
-        "Bis zu <em>−23 %</em> auf alle Pakete",
-        "Einrichtung bis zu <em>300 € günstiger</em>",
+        "Bis zu <em>−20 %</em> auf alle Pakete",
+        "Einrichtung bis zu <em>200 € günstiger</em>",
         "Jährlich zahlen: <em>noch −10 %</em>"
       ],
-      "sprecher": "Bis zu dreiundzwanzig Prozent auf alle Pakete. Die Einrichtung günstiger. Und wer jährlich zahlt, spart noch zehn Prozent."
+      "sprecher": "Bis zu zwanzig Prozent auf alle Pakete. Die Einrichtung günstiger. Und wer jährlich zahlt, spart noch zehn Prozent."
     },
     {
       "typ": "outro",
