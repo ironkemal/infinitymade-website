@@ -81,7 +81,7 @@ test('Fremder Owner: 403, unbekannte Abrechnung: 404', async () => {
 
 test('Dateinamen je Rolle: unterscheidbar, SECON-konform (verschluesselt ohne Endung), sicher', () => {
   assert.equal(dateinameFuer('dta', 'TSOL0004'), 'TSOL0004.dta');
-  assert.equal(dateinameFuer('auftrag', 'TSOL0004'), 'TSOL0004.auf');
+  assert.equal(dateinameFuer('auftrag', 'TSOL0004'), 'TSOL0004.AUF');
   assert.equal(dateinameFuer('begleit', 'TSOL0004'), 'Begleitzettel_TSOL0004.html');
   assert.equal(dateinameFuer('signed', 'TSOL0004'), 'TSOL0004.p7m');
   assert.equal(dateinameFuer('encrypted', 'TSOL0004'), 'TSOL0004');

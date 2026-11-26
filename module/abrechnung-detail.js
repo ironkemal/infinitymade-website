@@ -548,7 +548,7 @@ function _verdrahteAktionen(ab, gruppen = []) {
         case 'enc':        return downloadAbrechnungFile(ab.encrypted_storage_path, ab.id, 'dta', ab.dateiname);
         // Kein Statuswechsel: „heruntergeladen" meint die Nutzdatei. Wer nur
         // den Umschlag holt, hat noch nichts eingereicht.
-        case 'auftrag':    return downloadAbrechnungFile(ab.auftragsdatei_path, null, 'begleit');
+        case 'auftrag':    return downloadAbrechnungFile(ab.auftragsdatei_path, null, 'begleit', ab.dateiname ? `${ab.dateiname}.AUF` : undefined);
         case 'begleit':    return downloadAbrechnungFile(ab.begleitzettel_path, null, 'begleit');
         // Dateinamen sind je Datenannahmestelle nicht eindeutig (mehrere TSOL0003): Rechnungsnummer im Titel (Live-QA 05.10.2026).
         case 'signieren':  return ctx.aktionen?.signieren?.(ab.id, [ab.dateiname, ab.rechnungsnummer].filter(Boolean).join(' \u00b7 '));

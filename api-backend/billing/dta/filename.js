@@ -98,3 +98,25 @@ export function buildEncryptedFilename(base) {
   const stamm = base.replace(/\.dta$/i, '');
   return `${stamm}.dta.enc.p7m`;
 }
+
+/**
+ * Liefert die verbindlichen Versand-Dateinamen für die Übermittlung an die
+ * Datenannahmestelle (F5, SECON §3.2.3.1 & Anhang 1 §4.3):
+ * - verschlüsselte Nutzdatei: exakt 8 Zeichen ohne Endung (`ESOL0nnn` / `TSOL0nnn`)
+ * - Auftragsdatei: gleicher Stamm + `.AUF`
+ *
+ * @param {string} physikalischerName
+ * @returns {{ nutzdatei: string, auftragsdatei: string }}
+ */
+export function buildVersandDateinamen(physikalischerName) {
+  const stamm = String(physikalischerName || '')
+    .trim()
+    .replace(/\.(dta\.enc\.p7m|dta|p7m|auf)$/i, '');
+  if (!/^[ET]SOL0\d{3}$/.test(stamm)) {
+    throw new Error(`Ungültiger physikalischer Dateiname für Versand: "${physikalischerName}"`);
+  }
+  return {
+    nutzdatei: stamm,
+    auftragsdatei: `${stamm}.AUF`,
+  };
+}

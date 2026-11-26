@@ -19,7 +19,7 @@ export function dateinameFuer(role, dateiname) {
   const basis = String(dateiname || 'abrechnung').replace(/[^A-Za-z0-9._-]/g, '_') || 'abrechnung';
   switch (role) {
     case 'dta':       return `${basis}.dta`;
-    case 'auftrag':   return `${basis}.auf`;
+    case 'auftrag':   return `${basis}.AUF`;
     case 'begleit':   return `Begleitzettel_${basis}.html`;
     case 'signed':    return `${basis}.p7m`;
     // SECON § 3.2.3.1: die verschluesselte Nutzdatei traegt keine Dateiendung — der physische Name ist `dateiname`.
