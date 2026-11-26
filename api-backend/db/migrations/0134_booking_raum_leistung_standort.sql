@@ -1,7 +1,6 @@
--- ENTWURF — NICHT aktiv, nicht in api-backend/db/migrations, nicht live angewandt (GO nötig).
--- Maßgabe onprem O-129 / G7: gemeinsame Triggerfunktion `public.booking_raum_automatisch()`
--- darf erst NACH Live-Ausführung auf SaaS (und ggf. Box) in `api-backend/db/migrations/`
--- übernommen werden; bis dahin kein Eintrag in erwartete-zaehler.json.
+-- SaaS: angewandt 26.11.2026 (Supabase-Migration 20261126205803 0134_booking_raum_leistung_standort, Melih-GO; Probelauf mit ROLLBACK vorab, Live-ACL service_role-only geprüft).
+-- Maßgabe onprem O-129 / G7: erst nach Live-SaaS-Ausführung aus db/entwuerfe/ in die Kette übernommen.
+-- ZAEHLER: alle zehn unverändert (CREATE OR REPLACE gleicher Signatur & ACLs).
 --
 -- Ursache (Live-QA-Befund BOX-P0-01 vom 25.11.2026):
 --   0129_raum_einzelbelegung.sql prüfte `leistung.business_id IS DISTINCT FROM NEW.business_id`.

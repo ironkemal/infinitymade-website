@@ -3,9 +3,9 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261124212000 0131_datenschutz_rechte_und_audit
--- EXPORTED AT:        2026-11-24T21:19:52.912Z
--- ERZEUGT AM:         2026-11-24
+-- LAST MIGRATION:     20261126205803 0134_booking_raum_leistung_standort
+-- EXPORTED AT:        2026-11-26T20:58:05.654Z
+-- ERZEUGT AM:         2026-11-26
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
@@ -32,7 +32,7 @@
 -- ----------------------------------------------------------------------------
 -- PUBLICATIONS:
 --   Publication: "supabase_realtime" (all_tables: false, tables: [public.bookings])
---   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_11_21, realtime.messages_2026_11_22, realtime.messages_2026_11_23, realtime.messages_2026_11_24, realtime.messages_2026_11_25, realtime.messages_2026_11_26, realtime.messages_2026_11_27])
+--   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_11_22, realtime.messages_2026_11_23, realtime.messages_2026_11_24, realtime.messages_2026_11_25, realtime.messages_2026_11_26, realtime.messages_2026_11_27, realtime.messages_2026_11_28])
 
 -- AUTH NON-INTERNAL TRIGGERS (OUTSIDE PUBLIC INVENTORY — REFERENCE ONLY):
 --   Trigger: "on_auth_user_created" ON auth."users" (enabled: O)
@@ -3080,8 +3080,17 @@ BEGIN
       UNION SELECT bl.service_id FROM public.booking_leistungen bl WHERE bl.booking_id = NEW.id AND NEW.raum_service_ids IS NULL
     ) ids LEFT JOIN public.services s ON s.id = ids.id
   LOOP
-    IF leistung.id IS NULL OR COALESCE(leistung.owner_id, leistung.user_id) IS DISTINCT FROM NEW.owner_id
-       OR leistung.business_id IS DISTINCT FROM NEW.business_id THEN
+    IF leistung.id IS NULL
+       OR COALESCE(leistung.owner_id, leistung.user_id) IS DISTINCT FROM NEW.owner_id
+       OR (
+         leistung.business_id IS NOT NULL
+         AND NEW.business_id IS NOT NULL
+         AND leistung.business_id <> NEW.business_id
+         AND NOT EXISTS (
+           SELECT 1 FROM public.data_sharing_settings dss
+           WHERE dss.owner_id = NEW.owner_id AND dss.services IS TRUE
+         )
+       ) THEN
       RAISE EXCEPTION 'Leistung gehört nicht zu diesem Mandanten oder Standort.' USING ERRCODE = '23514';
     END IF;
     erforderlich := erforderlich || leistung.raum_ausstattung;

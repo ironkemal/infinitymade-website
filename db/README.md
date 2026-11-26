@@ -15,7 +15,7 @@
 > **Neue Tabelle → Eintrag in `REGISTER.md`, im selben Commit.** Der pre-commit-Hook
 > (`tools/check-tabellen-register.sh`) bricht sonst ab. Gepflegt vom Agenten `db-ustasi`.
 
-**Exportstand:** `2026-11-24T21:19:52.912Z`, SaaS-Supabase nach `20261124212000 0131_datenschutz_rechte_und_audit` (davor `20261123151007 0130_mitarbeiter_standort_zuordnung`; `0131` ergänzt `team_abwesenheiten()` + `audit_rechte_log()` (+2 Funktionen), 3 Audit-Trigger (+3 Trigger) sowie R6-Modulrecht `abrechnung` auf den 5 §302-Tabellen (Policies netto +0)). Beide Dateien wurden vollständig aus dem Strukturkatalog erzeugt. Gemessen wurden 110 Tabellen, 161 Funktionen, 188 Trigger, 197 RLS-Policies und 1596 Tabellenspalten. Export mit `tools/schema-export-katalog.sql` und `tools/schema-dokumente.mjs`. Freigaben und Tabellenhistorie stehen in `REGISTER.md`. Migration `0110` bleibt Box-only.
+**Exportstand:** `2026-11-26T20:58:05.654Z`, SaaS-Supabase nach `20261126205803 0134_booking_raum_leistung_standort` (ersetzt `public.booking_raum_automatisch()` signatur- und zählerneutral für globale/geteilte Leistungen; davor `20261124212000 0131_datenschutz_rechte_und_audit` und `20261123151007 0130_mitarbeiter_standort_zuordnung`). Beide Dateien wurden vollständig aus dem Strukturkatalog erzeugt. Gemessen wurden 110 Tabellen, 161 Funktionen, 188 Trigger, 197 RLS-Policies und 1596 Tabellenspalten. Export mit `tools/schema-export-katalog.sql` und `tools/schema-dokumente.mjs`. Freigaben und Tabellenhistorie stehen in `REGISTER.md`. Migration `0110` bleibt Box-only.
 **Projekt:** Supabase `njvuclullotbksskpwgk` (Produkt).
 Das Ops-Dashboard liegt in einem **anderen** Projekt (`farkaejociddtgqkusvm`) — nicht verwechseln.
 
