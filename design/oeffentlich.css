@@ -34,17 +34,33 @@
 
   /* Gemeinsame Form: ruhige Fläche, runde Karten, deutlicher Fokus, Felder mit 3:1-Rand */
   [data-design="neu"] body { background: var(--bg); color: var(--ink, #0B0F17); }
+  [data-design="neu"] body::before { display: none; }
   [data-design="neu"] :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]) {
     border-color: #8A93A0; border-radius: 12px; background: #FFFFFF;
   }
   [data-design="neu"] :is(input, select, textarea, button, a):focus-visible {
     outline: 2px solid #2563EB; outline-offset: 2px; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.22);
   }
-  [data-design="neu"] :is(.login-card, .signup-card, .step) { border-radius: 18px; border-color: #E6E9EE; box-shadow: 0 6px 18px rgba(16, 24, 40, 0.08); }
-  [data-design="neu"] :is(h1, h2, h3) { font-family: var(--sans); font-weight: 500; letter-spacing: -0.015em; }
-  [data-design="neu"] :is(.btn-primary, button[type="submit"]) { border-radius: 12px; min-height: 44px; }
-  [data-design="neu"] :is(.brand, .ob-brand, h1, h2) em { font-style: normal; color: #2563EB; }
-  [data-design="neu"] .ob-topbar { background: rgba(255, 255, 255, 0.92); border-bottom-color: #E6E9EE; }
+  [data-design="neu"] :is(.login-card, .signup-card, .setup-card, .step, .card, .br-card, .vr-card) {
+    background: #FFFFFF;
+    border-radius: 18px;
+    border-color: #E6E9EE;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 12px 32px rgba(16, 24, 40, 0.06);
+  }
+  [data-design="neu"] :is(h1, h2, h3) { font-family: var(--sans); font-weight: 600; letter-spacing: -0.02em; }
+  [data-design="neu"] :is(.btn-primary, button[type="submit"]) {
+    background: #0B0F17; color: #FFFFFF; border-radius: 12px; min-height: 44px;
+  }
+  [data-design="neu"] :is(.btn-primary, button[type="submit"]):hover { background: #1F2633; }
+  [data-design="neu"] :is(.brand, .ob-brand, .br-brand, h1, h2) em { font-style: normal; color: #2563EB; }
+  [data-design="neu"] .ob-topbar,
+  [data-design="neu"] .br-header { background: rgba(255, 255, 255, 0.94); border-bottom-color: #E6E9EE; }
+  [data-design="neu"] .br-day-chip.selected,
+  [data-design="neu"] .br-slot.selected { background: #0B0F17; border-color: #0B0F17; color: #FFFFFF; box-shadow: 0 2px 8px rgba(11, 15, 23, 0.16); }
+  [data-design="neu"] .br-day-chip:hover,
+  [data-design="neu"] .br-slot:hover { border-color: #2563EB; color: #2563EB; }
+  [data-design="neu"] .vr-badge { background: #EFF4FF; border-color: #D1E0FF; color: #1D4ED8; }
+  [data-design="neu"] .vr-badge-dot { background: #2563EB; }
   /* Beschriftungen: normale Schrift statt Mono-Großbuchstaben */
   [data-design="neu"] form label { font-family: var(--sans); font-size: 0.85rem; letter-spacing: normal; text-transform: none; color: #344054; }
   [data-design="neu"] a:not([class]) { color: #2563EB; }

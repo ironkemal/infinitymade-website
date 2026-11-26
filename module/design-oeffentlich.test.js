@@ -13,11 +13,11 @@ test('Wunsch: Query vor Speicher, Fehler = kein Wunsch', () => {
   assert.equal(leseWunsch('?design=quatsch', null), null);
 });
 
-test('Anwenden: nur mit designVorschau UND Wunsch neu; sonst Alt (SaaS/Box)', () => {
+test('Anwenden: Standard ist neu; ?design=alt schaltet gezielt auf Alt zurueck', () => {
   let w = wurzel();
-  assert.equal(wendeAn({ vorschau: true, suche: '?design=neu', speicher: speicher(null), wurzel: w }), 'neu'); assert.equal(w.get('data-design'), 'neu');
-  w = wurzel(); w.setAttribute('data-design', 'neu');
-  assert.equal(wendeAn({ vorschau: false, suche: '?design=neu', speicher: speicher('neu'), wurzel: w }), 'alt'); assert.equal(w.get('data-design'), undefined);
-  assert.equal(wendeAn({ vorschau: undefined, suche: '?design=neu', speicher: speicher('neu'), wurzel: w }), 'alt');
-  assert.equal(wendeAn({ vorschau: true, suche: '?design=alt', speicher: speicher('neu'), wurzel: w }), 'alt');
+  assert.equal(wendeAn({ vorschau: true, suche: '', speicher: speicher(null), wurzel: w }), 'neu'); assert.equal(w.get('data-design'), 'neu');
+  w = wurzel();
+  assert.equal(wendeAn({ vorschau: false, suche: '', speicher: speicher(null), wurzel: w }), 'neu'); assert.equal(w.get('data-design'), 'neu');
+  assert.equal(wendeAn({ vorschau: undefined, suche: '?design=neu', speicher: speicher('neu'), wurzel: w }), 'neu');
+  assert.equal(wendeAn({ vorschau: true, suche: '?design=alt', speicher: speicher('neu'), wurzel: w }), 'alt'); assert.equal(w.get('data-design'), undefined);
 });

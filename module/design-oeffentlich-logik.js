@@ -14,12 +14,14 @@ export function leseWunsch(suche = '', speicher = null) {
 }
 
 /**
- * Neu nur bei `vorschau === true` UND Wunsch „neu“. Setzt/entfernt data-design, gibt 'neu' | 'alt' zurück.
- * @param {{ vorschau: boolean | undefined, suche?: string | URLSearchParams, speicher?: Pick<Storage, 'getItem'> | null, wurzel?: { setAttribute(k: string, v: string): void, removeAttribute(k: string): void } | null }} opts
+ * Standard ist seit 26.11.2026 „neu“ auf allen öffentlichen Seiten (Buchung, Anfrage,
+ * Login, Registrierung, Onboarding). `?design=alt` bleibt als expliziter Rückfall erhalten.
+ * @param {{ vorschau?: boolean | undefined, suche?: string | URLSearchParams, speicher?: Pick<Storage, 'getItem'> | null, wurzel?: { setAttribute(k: string, v: string): void, removeAttribute(k: string): void } | null }} opts
  * @returns {'neu' | 'alt'}
  */
-export function wendeAn({ vorschau, suche, speicher, wurzel }) {
-  const neu = vorschau === true && leseWunsch(suche, speicher) === 'neu';
+export function wendeAn({ suche, speicher, wurzel } = {}) {
+  const wunsch = leseWunsch(suche, speicher);
+  const neu = wunsch !== 'alt';
   if (wurzel) { if (neu) wurzel.setAttribute('data-design', 'neu'); else wurzel.removeAttribute('data-design'); }
   return neu ? 'neu' : 'alt';
 }
