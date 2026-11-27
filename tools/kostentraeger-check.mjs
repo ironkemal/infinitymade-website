@@ -84,7 +84,7 @@ export function rssParsen(xml) {
 }
 
 /** Bekannte Ausgaben: ausgaben-Liste (JSON/Array) + wissensbank-Dateinamen.
- * @param {{ ausgaben?: Array<{ datei?: string, name?: string, gueltigAb: string }>, ladeText?: string | null, wbNamen?: string[] }} opts
+ * @param {{ ausgaben?: Array<{ datei?: string, name?: string, gueltigAb: string }> | null, ladeText?: string | null, wbNamen?: string[] }} opts
  */
 export function bekannteAusgaben({ ausgaben = null, ladeText = null, wbNamen = [] }) {
   /** @type {KtAusgabeInfo[]} */

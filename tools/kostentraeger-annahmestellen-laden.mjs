@@ -37,18 +37,21 @@ const ERLAUBTE_TABELLEN = new Set([
 
 const DATUM_SPALTEN = new Set(['valid_from', 'valid_to', 'quelle_stand']);
 
+/** @param {string} tabelle */
 function pruefeTabelle(tabelle) {
   if (!ERLAUBTE_TABELLEN.has(tabelle)) {
     throw new Error(`Unerlaubte Tabelle: ${tabelle}`);
   }
 }
 
+/** @param {unknown} spalte */
 function pruefeSpalte(spalte) {
   if (typeof spalte !== 'string' || !/^[a-z_]+$/.test(spalte)) {
     throw new Error(`Ungültiger Spaltenname: ${spalte}`);
   }
 }
 
+/** @param {Record<string, unknown>} row */
 function formatiereZeile(row) {
   if (!row) return row;
   const neu = { ...row };
