@@ -33,6 +33,18 @@ const GLOBAL_FEHLER_SPERRE = 20;  // Register-Fehlversuche/h insgesamt → Alarm
 const DNS_TTL_A = 3600;
 const DNS_TTL_CNAME = 600;
 
+/**
+ * O-260: optionale Zusatzfelder der Jeton-Antwort — eigene Transkriptions-Ressource und Modellfamilie.
+ * Alte Box-Images ignorieren unbekannte Felder (Transkription ginge dort an die Text-Ressource).
+ * @param {{ endpointTranscribe?: string|null, regionTranscribe?: string|null, modelFamily?: string|null }} ki
+ */
+function kiZusatz(ki) {
+  return {
+    ...(ki.endpointTranscribe ? { endpointTranscribe: ki.endpointTranscribe, regionTranscribe: ki.regionTranscribe } : {}),
+    ...(ki.modelFamily ? { modelFamily: ki.modelFamily } : {}),
+  };
+}
+
 export function erstelleApp({ db, cloudflare, acmedns, config, kiEntra = null, jetzt = Date.now, log = console }) {
   const { boxDomain, acmeDnsUrl, hostErwartet = null, trustProxy = false } = config;
   const accountPraefix = config.accountPraefix || 'https://acme-v02.api.letsencrypt.org/acme/acct/';
@@ -346,6 +358,7 @@ export function erstelleApp({ db, cloudflare, acmedns, config, kiEntra = null, j
         endpoint: config.ki.endpoint,
         deployment: config.ki.deployment,
         ...(config.ki.deploymentTranscribe ? { deploymentTranscribe: config.ki.deploymentTranscribe } : {}),
+        ...kiZusatz(config.ki),
         region: config.ki.region,
         apiVersion: config.ki.apiVersion,
         ...(ack ? { acknowledgedReportId: ack } : {}),
@@ -383,6 +396,7 @@ export function erstelleApp({ db, cloudflare, acmedns, config, kiEntra = null, j
       endpoint: config.ki.endpoint,
       deployment: config.ki.deployment,
       ...(config.ki.deploymentTranscribe ? { deploymentTranscribe: config.ki.deploymentTranscribe } : {}),
+      ...kiZusatz(config.ki),
       region: config.ki.region,
       apiVersion: config.ki.apiVersion,
       ...(ack ? { acknowledgedReportId: ack } : {}),

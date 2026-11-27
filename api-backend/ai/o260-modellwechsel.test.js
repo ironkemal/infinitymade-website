@@ -101,3 +101,56 @@ test('Transkription falsch konfiguriert: nur Transkription aus, Text-Assistent b
     assert.equal(calls.length, 0, 'kein Netzwerk bei Fehlkonfiguration');
   }
 });
+
+// ── Jeton-Weg (Box): Zentrum schickt Transkriptions-Ressource + Modellfamilie mit ──
+import { createJetonClient } from './ki-jeton.js';
+const HOSTS = ['praxura-ai-resource.cognitiveservices.azure.com', 'kemal-mul58wcs-swedencentral.cognitiveservices.azure.com'];
+const NOW = Date.now(); // azureClient prüft die Restlaufzeit gegen die echte Uhr
+function jetonPayload(extra = {}) {
+  return {
+    token: 'sample-valid-token-value-12345', // secret-scan: ignore
+    exp: Math.floor(NOW / 1000) + 1800, endpoint: TEXT, deployment: 'gpt-5-mini',
+    deploymentTranscribe: 'gpt-4o-transcribe', region: 'germanywestcentral', apiVersion: '2025-03-01-preview', ...extra
+  };
+}
+function jetonClient(payload) {
+  return createJetonClient({
+    config: createAiConfig({ AI_MODE: 'jeton', AI_ACTIVATION_READY: '1', AI_REGION: 'germanywestcentral' }, { allowedHosts: HOSTS }),
+    merkezFetchImpl: async () => ({ status: 200, ok: true, json: payload }), now: () => NOW, allowedHosts: HOSTS
+  });
+}
+
+test('Jeton: endpointTranscribe/regionTranscribe/modelFamily optional — altes Zentrum bleibt kompatibel', async () => {
+  const alt = await jetonClient(jetonPayload()).getToken();
+  assert.equal(alt.endpointTranscribe, null);
+  assert.equal(alt.modelFamily, null);
+  const neu = await jetonClient(jetonPayload({ endpointTranscribe: SE, regionTranscribe: 'swedencentral', modelFamily: 'reasoning' })).getToken();
+  assert.equal(neu.endpointTranscribe, 'https://kemal-mul58wcs-swedencentral.cognitiveservices.azure.com');
+  assert.equal(neu.regionTranscribe, 'swedencentral');
+  assert.equal(neu.modelFamily, 'reasoning');
+});
+
+test('Jeton: fremder Transkriptions-Host, Nicht-EU-Region, unbekannte Familie → fail-closed', async () => {
+  for (const [extra, code] of [
+    [{ endpointTranscribe: 'https://boese.openai.azure.com/', regionTranscribe: 'swedencentral' }, 'AI_HOST_NOT_ALLOWED'],
+    [{ endpointTranscribe: SE, regionTranscribe: 'eastus' }, 'AI_INVALID_REGION'],
+    [{ endpointTranscribe: SE }, 'AI_INVALID_REGION'],
+    [{ modelFamily: 'gpt5' }, 'AI_MODEL_FAMILY_INVALID']
+  ]) {
+    await assert.rejects(jetonClient(jetonPayload(extra)).getToken(), (e) => e.code === code, JSON.stringify(extra));
+  }
+});
+
+test('Jeton: Chat nimmt Familie vom Zentrum, Transkription geht an die eigene Ressource', async () => {
+  const cfg = createAiConfig({ AI_MODE: 'jeton', AI_ACTIVATION_READY: '1', AI_REGION: 'germanywestcentral' }, { allowedHosts: HOSTS });
+  const jc = jetonClient(jetonPayload({ endpointTranscribe: SE, regionTranscribe: 'swedencentral', modelFamily: 'reasoning' }));
+  const calls = [];
+  await chat({ messages: [{ role: 'user', content: 'Hi' }], config: cfg, jetonClient: jc, fetchImpl: fakeFetch(okChat, calls) });
+  const body = JSON.parse(calls[0].init.body);
+  assert.equal('temperature' in body, false);
+  assert.ok(body.max_completion_tokens > 0);
+  assert.match(calls[0].url, /^https:\/\/praxura-ai-resource\./);
+  await transcribe({ audioBuffer: Buffer.from('x'), config: cfg, jetonClient: jc, fetchImpl: fakeFetch({ text: 'ok' }, calls) });
+  assert.match(calls[1].url, /^https:\/\/kemal-mul58wcs-swedencentral\..*gpt-4o-transcribe\/audio\/transcriptions/);
+  assert.match(calls[1].init.headers.Authorization, /^Bearer /);
+});

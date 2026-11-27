@@ -32,7 +32,10 @@ Dieselbe Identität gilt später für Postfach-Abruf (Y3) und KI-Jeton (3b.4).
 | `KI_ENTRA_CLIENT_SECRET` | Secret dieser App — **nur** in der Merkez-Umgebung (O-169 (8), G2), nie in einer Box, nie im Log |
 | `KI_ENDPOINT` | `https://<host>/` — nur Host, Port 443, kein Pfad/Query |
 | `KI_DEPLOYMENT`, `KI_REGION` | Deployment-Name (`[a-zA-Z0-9_-]{1,64}`); Region aus der EU-Liste von `ai/ki-config.js` |
-| `KI_API_VERSION` | Standard `2024-10-21` |
+| `KI_API_VERSION` | Standard `2024-10-21` (gpt-5 / gpt-4o-transcribe: `2025-03-01-preview`) |
+| `KI_DEPLOYMENT_TRANSCRIBE` | optional: Diktat-Deployment (z. B. `gpt-4o-transcribe`) |
+| `KI_ENDPOINT_TRANSCRIBE`, `KI_REGION_TRANSCRIBE` | optional (O-260): eigene Transkriptions-Ressource; Region dann Pflicht, nie vom Text geerbt. Host muss in `VERIFIED_AZURE_HOSTS` des Box-Images stehen |
+| `KI_MODEL_FAMILY` | optional (O-260): `standard` (gpt-4o/4.1) oder `reasoning` (gpt-5) — geht mit dem Jeton an die Box |
 | `KI_MONATS_LIMIT` | Standard-Kontingent je Box und Berliner Kalendermonat (Standard `600`); je Box übersteuerbar per CLI |
 
 Der Reverse-Proxy muss Pfad und Query **unverändert** durchreichen (sie sind Teil der Signatur)

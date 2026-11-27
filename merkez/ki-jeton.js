@@ -13,6 +13,22 @@ const RE_DEPLOYMENT = RE_SAFE_SEGMENT;
 const RE_API_VERSION = /^\d{4}-\d{2}-\d{2}(-preview)?$/;
 const RE_CONTROL_CHARS = /[\r\n\x00-\x1f\x7f]/;
 
+/**
+ * https://<host>/ — nur Host, Port 443, kein Pfad/Query/Userinfo. Sonst null.
+ * @param {unknown} raw
+ */
+function nurHostUrl(raw) {
+  const str = String(raw);
+  if (RE_CONTROL_CHARS.test(str)) return null;
+  let u;
+  try { u = new URL(str); } catch { return null; }
+  if (
+    u.protocol !== 'https:' || u.username || u.password || (u.port && u.port !== '443') ||
+    u.search || u.hash || (u.pathname !== '' && u.pathname !== '/') || !u.hostname
+  ) return null;
+  return `https://${u.hostname.toLowerCase()}/`;
+}
+
 function baueConfig({
   gueltig = false,
   grund = null,
@@ -22,6 +38,9 @@ function baueConfig({
   endpoint = null,
   deployment = null,
   deploymentTranscribe = null,
+  endpointTranscribe = null,
+  regionTranscribe = null,
+  modelFamily = null,
   region = null,
   apiVersion = null,
   monatsLimit = null,
@@ -34,6 +53,9 @@ function baueConfig({
     endpoint,
     deployment,
     deploymentTranscribe,
+    endpointTranscribe,
+    regionTranscribe,
+    modelFamily,
     region,
     apiVersion,
     monatsLimit,
@@ -71,28 +93,8 @@ export function kiConfigAusEnv(env = process.env) {
 
     const rawEndpoint = e.KI_ENDPOINT;
     if (!rawEndpoint) return baueConfig({ grund: 'fehlt:KI_ENDPOINT' });
-    if (RE_CONTROL_CHARS.test(rawEndpoint)) return baueConfig({ grund: 'ungueltig:KI_ENDPOINT' });
-
-    let parsedEndpoint;
-    try {
-      parsedEndpoint = new URL(rawEndpoint);
-    } catch {
-      return baueConfig({ grund: 'ungueltig:KI_ENDPOINT' });
-    }
-
-    if (
-      parsedEndpoint.protocol !== 'https:' ||
-      parsedEndpoint.username ||
-      parsedEndpoint.password ||
-      (parsedEndpoint.port && parsedEndpoint.port !== '443') ||
-      parsedEndpoint.search ||
-      parsedEndpoint.hash ||
-      (parsedEndpoint.pathname !== '' && parsedEndpoint.pathname !== '/') ||
-      !parsedEndpoint.hostname
-    ) {
-      return baueConfig({ grund: 'ungueltig:KI_ENDPOINT' });
-    }
-    const endpoint = `https://${parsedEndpoint.hostname.toLowerCase()}/`;
+    const endpoint = nurHostUrl(rawEndpoint);
+    if (!endpoint) return baueConfig({ grund: 'ungueltig:KI_ENDPOINT' });
 
     const deployment = e.KI_DEPLOYMENT;
     if (!deployment) return baueConfig({ grund: 'fehlt:KI_DEPLOYMENT' });
@@ -109,6 +111,25 @@ export function kiConfigAusEnv(env = process.env) {
     if (!rawRegion) return baueConfig({ grund: 'fehlt:KI_REGION' });
     const region = String(rawRegion).toLowerCase();
     if (!EU_DATA_BOUNDARY_REGIONS.includes(region)) return baueConfig({ grund: 'ungueltig:KI_REGION' });
+
+    // O-260: optional eigene Transkriptions-Ressource; Region dann Pflicht (nie vom Text geerbt).
+    let endpointTranscribe = null;
+    let regionTranscribe = null;
+    if (e.KI_ENDPOINT_TRANSCRIBE !== undefined && e.KI_ENDPOINT_TRANSCRIBE !== '') {
+      endpointTranscribe = nurHostUrl(e.KI_ENDPOINT_TRANSCRIBE);
+      if (!endpointTranscribe) return baueConfig({ grund: 'ungueltig:KI_ENDPOINT_TRANSCRIBE' });
+      const rT = String(e.KI_REGION_TRANSCRIBE || '').toLowerCase();
+      if (!EU_DATA_BOUNDARY_REGIONS.includes(rT)) return baueConfig({ grund: 'ungueltig:KI_REGION_TRANSCRIBE' });
+      regionTranscribe = rT;
+    }
+
+    // O-260: Parameterfamilie des Text-Deployments (standard = gpt-4o/4.1, reasoning = gpt-5).
+    let modelFamily = null;
+    if (e.KI_MODEL_FAMILY !== undefined && e.KI_MODEL_FAMILY !== '') {
+      const f = String(e.KI_MODEL_FAMILY).trim().toLowerCase();
+      if (f !== 'standard' && f !== 'reasoning') return baueConfig({ grund: 'ungueltig:KI_MODEL_FAMILY' });
+      modelFamily = f;
+    }
 
     let apiVersion = '2024-10-21';
     if (e.KI_API_VERSION !== undefined && e.KI_API_VERSION !== '') {
@@ -140,6 +161,9 @@ export function kiConfigAusEnv(env = process.env) {
       endpoint,
       deployment,
       deploymentTranscribe,
+      endpointTranscribe,
+      regionTranscribe,
+      modelFamily,
       region,
       apiVersion,
       monatsLimit,

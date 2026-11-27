@@ -387,3 +387,21 @@ test('kiConfigAusEnv: Deployment mit Punkt gültig, ".." / führender Punkt / Sl
     assert.equal(kiConfigAusEnv({ ...GUELTIGE_ENV, KI_DEPLOYMENT: schlecht }).grund, 'ungueltig:KI_DEPLOYMENT', schlecht);
   }
 });
+
+// O-260 (27.11.2026): eigene Transkriptions-Ressource + Modellfamilie
+test('O-260: KI_ENDPOINT_TRANSCRIBE + KI_REGION_TRANSCRIBE + KI_MODEL_FAMILY optional und streng', () => {
+  const ohne = kiConfigAusEnv(GUELTIGE_ENV);
+  assert.equal(ohne.gueltig, true);
+  assert.equal(ohne.endpointTranscribe, null);
+  assert.equal(ohne.modelFamily, null);
+  const mit = kiConfigAusEnv({ ...GUELTIGE_ENV, KI_ENDPOINT_TRANSCRIBE: 'https://Andere-Ressource.cognitiveservices.azure.com/', KI_REGION_TRANSCRIBE: 'SwedenCentral', KI_MODEL_FAMILY: 'reasoning' });
+  assert.equal(mit.gueltig, true);
+  assert.equal(mit.endpointTranscribe, 'https://andere-ressource.cognitiveservices.azure.com/');
+  assert.equal(mit.regionTranscribe, 'swedencentral');
+  assert.equal(mit.modelFamily, 'reasoning');
+  assert.equal(kiConfigAusEnv({ ...GUELTIGE_ENV, KI_ENDPOINT_TRANSCRIBE: 'https://x.openai.azure.com/' }).grund, 'ungueltig:KI_REGION_TRANSCRIBE');
+  assert.equal(kiConfigAusEnv({ ...GUELTIGE_ENV, KI_ENDPOINT_TRANSCRIBE: 'https://x.openai.azure.com/pfad', KI_REGION_TRANSCRIBE: 'swedencentral' }).grund, 'ungueltig:KI_ENDPOINT_TRANSCRIBE');
+  assert.equal(kiConfigAusEnv({ ...GUELTIGE_ENV, KI_ENDPOINT_TRANSCRIBE: 'https://x.openai.azure.com/', KI_REGION_TRANSCRIBE: 'eastus' }).grund, 'ungueltig:KI_REGION_TRANSCRIBE');
+  assert.equal(kiConfigAusEnv({ ...GUELTIGE_ENV, KI_MODEL_FAMILY: 'gpt5' }).grund, 'ungueltig:KI_MODEL_FAMILY');
+  assert.equal(JSON.stringify(mit).includes('super-secret'), false);
+});

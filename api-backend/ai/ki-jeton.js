@@ -58,6 +58,9 @@ const BERICHT_FEHLER = Object.freeze({
  *   endpoint: string,
  *   deployment: string,
  *   deploymentTranscribe: string | null,
+ *   endpointTranscribe: string | null,
+ *   regionTranscribe: string | null,
+ *   modelFamily: 'standard' | 'reasoning' | null,
  *   region: string,
  *   apiVersion: string
  * }} JetonToken
@@ -244,7 +247,7 @@ export function createJetonClient(options = {}) {
       throw makeJetonError('KI-Jeton-Antwort ungültig', 'AI_TOKEN_RESPONSE_INVALID');
     }
 
-    const { token, exp, endpoint, deployment, deploymentTranscribe, region, apiVersion } = /** @type {Record<string, unknown>} */ (payload);
+    const { token, exp, endpoint, deployment, deploymentTranscribe, endpointTranscribe, regionTranscribe, modelFamily, region, apiVersion } = /** @type {Record<string, unknown>} */ (payload);
 
     // Token string check (reject control characters / CRLF)
     if (
@@ -299,12 +302,43 @@ export function createJetonClient(options = {}) {
       throw makeJetonError('KI-Jeton-API-Version ungültig', 'AI_API_VERSION_INVALID');
     }
 
+    // O-260: optional separate transcription resource. Same image allowlist (a compromised centre
+    // cannot redirect audio elsewhere); region never inherited from the text resource.
+    /** @type {string | null} */
+    let cleanTranscribeEndpoint = null;
+    /** @type {string | null} */
+    let normalizedRegionTranscribe = null;
+    if (endpointTranscribe !== undefined && endpointTranscribe !== null) {
+      const tVal = validateEndpointUrl(/** @type {string} */ (endpointTranscribe), /** @type {string[] | undefined} */ (allowedHosts));
+      if (!tVal.ok || !tVal.cleanEndpoint) {
+        throw makeJetonError('KI-Jeton-Endpunkt Transkription unzulässig', 'AI_HOST_NOT_ALLOWED');
+      }
+      const rT = (typeof regionTranscribe === 'string' ? regionTranscribe : '').toLowerCase();
+      if (!(/** @type {readonly string[]} */ (EU_DATA_BOUNDARY_REGIONS)).includes(rT)) {
+        throw makeJetonError('KI-Jeton-Region Transkription liegt nicht in EU Data Boundary', 'AI_INVALID_REGION');
+      }
+      cleanTranscribeEndpoint = tVal.cleanEndpoint;
+      normalizedRegionTranscribe = rT;
+    }
+
+    /** @type {'standard' | 'reasoning' | null} */
+    let family = null;
+    if (modelFamily !== undefined && modelFamily !== null) {
+      if (modelFamily !== 'standard' && modelFamily !== 'reasoning') {
+        throw makeJetonError('KI-Jeton-Modellfamilie ungültig', 'AI_MODEL_FAMILY_INVALID');
+      }
+      family = modelFamily;
+    }
+
     return {
       token,
       exp,
       endpoint: epVal.cleanEndpoint,
       deployment,
       deploymentTranscribe: typeof deploymentTranscribe === 'string' ? deploymentTranscribe : null,
+      endpointTranscribe: cleanTranscribeEndpoint,
+      regionTranscribe: normalizedRegionTranscribe,
+      modelFamily: family,
       region: normalizedRegion,
       apiVersion
     };

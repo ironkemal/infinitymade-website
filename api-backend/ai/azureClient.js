@@ -477,7 +477,9 @@ async function executeTransport({
     const url = `${target.endpoint.replace(/\/+$/, '')}/openai/deployments/${encodeURIComponent(target.deployment)}/chat/completions?api-version=${target.apiVersion}`;
     // gpt-5 family (O-260): no temperature, max_completion_tokens instead of max_tokens. Hidden
     // reasoning tokens count against that budget, so add headroom or short answers come back empty.
-    const payload = cfg.modelFamily === 'reasoning'
+    // Jeton mode: the centre picks the deployment, so it also names the family (else box env).
+    const family = (cfg.mode === 'jeton' && /** @type {JetonAuthToken | null} */ (jetonAuth)?.modelFamily) || cfg.modelFamily;
+    const payload = family === 'reasoning'
       ? {
         messages,
         max_completion_tokens: Math.min(16384, maxTokens + REASONING_HEADROOM_TOKENS),
@@ -887,9 +889,14 @@ async function executeTranscribeTransport({
         throw makeClientError('Token ungültig', 'AI_AUTH_INVALID', 503);
       }
 
-      const epVal = validateEndpointUrl(jetonAuth.endpoint, cfg.allowedHosts);
+      // O-260: separate transcription resource if the centre sends one, else the text resource.
+      const epVal = validateEndpointUrl(jetonAuth.endpointTranscribe || jetonAuth.endpoint, cfg.allowedHosts);
       if (!epVal.ok || !epVal.cleanEndpoint) {
         throw makeClientError('Jeton-Endpunkt unzulässig', 'AI_HOST_NOT_ALLOWED', 503);
+      }
+      const tRegion = String(jetonAuth.endpointTranscribe ? jetonAuth.regionTranscribe : jetonAuth.region || '').toLowerCase();
+      if (!(/** @type {readonly string[]} */ (EU_DATA_BOUNDARY_REGIONS)).includes(tRegion)) {
+        throw makeClientError('Region ungültig', 'AI_INVALID_REGION', 503);
       }
 
       const targetDeployment = jetonAuth.deploymentTranscribe;
