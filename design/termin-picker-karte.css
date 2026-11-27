@@ -1,0 +1,515 @@
+/* ============================================================================
+   design/termin-picker-karte.css — 3-Spalten-Terminkarte (Praxura)
+   ============================================================================
+   Ruhige Drei-Spalten-Struktur für Terminwahl und Verfügbarkeit:
+     Links  : Kontext (Name/Rolle, Leistung, Dauer, Standort — ohne Fotos)
+     Mitte  : Monatskalender (MO–SO, verfügbare Tage dezent hinterlegt)
+     Rechts : Freie 24-Stunden-Zeitslots für den gewählten Tag
+
+   Nutzt bestehende Praxura-Tokens (--bg-card-solid, --border, --text-main,
+   --text-muted, --primary) mit sicheren Hell-Fallbacks, sodass die Karte im
+   Dashboard (Light & Dark Mode) wie auch auf öffentlichen Seiten funktioniert.
+   ========================================================================== */
+
+.tpk-card {
+  --tpk-surface: var(--bg-card-solid, var(--card, #FFFFFF));
+  --tpk-subtle: var(--bg-hover, var(--panel, #F2F4F7));
+  --tpk-border: var(--border, #E6E9EE);
+  --tpk-text: var(--text-main, var(--text, #0B0F17));
+  --tpk-muted: var(--text-muted, var(--muted, #475467));
+  --tpk-accent: var(--tpk-accent-override, #0B0F17);
+  --tpk-accent-fg: var(--tpk-accent-fg-override, #FFFFFF);
+  --tpk-accent-hover: #1F2633;
+  --tpk-focus: #2563EB;
+  --tpk-avail-bg: #EAECF0;
+  --tpk-avail-hover: #DCE1E8;
+  --tpk-dot-open: #16A34A;
+  --tpk-dot-closed: #DC2626;
+  --tpk-dot-holiday: #D97706;
+  --tpk-dot-special: #2563EB;
+
+  display: grid;
+  grid-template-columns: minmax(210px, 250px) minmax(290px, 1fr) minmax(190px, 230px);
+  background: var(--tpk-surface);
+  color: var(--tpk-text);
+  border: 1px solid var(--tpk-border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 12px 32px rgba(16, 24, 40, 0.06);
+  font-family: var(--sans, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif);
+}
+
+/* Dark-Mode-Anpassung im Dashboard */
+[data-theme="dark"] .tpk-card,
+body.dark-mode .tpk-card {
+  --tpk-surface: var(--bg-card-solid, #141821);
+  --tpk-subtle: rgba(255, 255, 255, 0.05);
+  --tpk-border: var(--border, rgba(255, 255, 255, 0.1));
+  --tpk-text: var(--text-main, #F1F5F9);
+  --tpk-muted: var(--text-muted, #94A3B8);
+  --tpk-accent: #F8FAFC;
+  --tpk-accent-fg: #0B0F17;
+  --tpk-accent-hover: #E2E8F0;
+  --tpk-avail-bg: rgba(255, 255, 255, 0.08);
+  --tpk-avail-hover: rgba(255, 255, 255, 0.14);
+}
+
+.tpk-card *,
+.tpk-card *::before,
+.tpk-card *::after {
+  box-sizing: border-box;
+}
+
+/* Kompakt-Variante für Modals mit etwas engerer Breite */
+.tpk-card--kompakt {
+  grid-template-columns: minmax(200px, 235px) minmax(260px, 1fr) minmax(165px, 195px);
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+/* ── Spalte 1: Kontext (links, ohne Fotos) ── */
+.tpk-col-info {
+  padding: 24px 22px;
+  border-right: 1px solid var(--tpk-border);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.tpk-card--kompakt .tpk-col-info {
+  padding: 18px 16px;
+  gap: 10px;
+}
+
+.tpk-monogram {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--tpk-subtle);
+  border: 1px solid var(--tpk-border);
+  color: var(--tpk-text);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tpk-kicker {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tpk-text);
+  line-height: 1.35;
+}
+
+.tpk-subtitle {
+  font-size: 12px;
+  color: var(--tpk-muted);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+.tpk-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  color: var(--tpk-text);
+}
+
+.tpk-card--kompakt .tpk-title {
+  font-size: 16px;
+}
+
+.tpk-desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--tpk-muted);
+}
+
+.tpk-meta-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.tpk-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--tpk-muted);
+  line-height: 1.4;
+}
+
+.tpk-meta-item svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  color: var(--tpk-muted);
+}
+
+.tpk-info-extra {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.tpk-info-extra:empty {
+  display: none;
+}
+
+/* ── Spalte 2: Monatskalender (Mitte) ── */
+.tpk-col-cal {
+  padding: 24px 22px;
+  border-right: 1px solid var(--tpk-border);
+  min-width: 0;
+}
+
+.tpk-card--kompakt .tpk-col-cal {
+  padding: 18px 16px;
+}
+
+.tpk-cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.tpk-cal-month {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--tpk-text);
+  letter-spacing: -0.01em;
+}
+
+.tpk-cal-month span {
+  font-weight: 400;
+  color: var(--tpk-muted);
+  margin-left: 4px;
+}
+
+.tpk-cal-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tpk-nav-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--tpk-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+}
+
+.tpk-nav-btn:hover:not(:disabled) {
+  background: var(--tpk-subtle);
+  color: var(--tpk-text);
+}
+
+.tpk-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.tpk-nav-btn:focus-visible,
+.tpk-day:focus-visible,
+.tpk-slot:focus-visible {
+  outline: 2px solid var(--tpk-focus);
+  outline-offset: 2px;
+}
+
+.tpk-dow {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.tpk-dow span {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--tpk-muted);
+  padding: 4px 0;
+}
+
+.tpk-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.tpk-card--kompakt .tpk-grid {
+  gap: 4px;
+}
+
+.tpk-day {
+  position: relative;
+  aspect-ratio: 1;
+  min-height: 36px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--tpk-muted);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+}
+
+.tpk-day.is-empty {
+  pointer-events: none;
+  cursor: default;
+}
+
+.tpk-day.is-avail {
+  background: var(--tpk-avail-bg);
+  color: var(--tpk-text);
+  font-weight: 600;
+}
+
+.tpk-day.is-avail:hover:not(:disabled) {
+  background: var(--tpk-avail-hover);
+  border-color: var(--tpk-border);
+}
+
+.tpk-day.is-past,
+.tpk-day.is-off {
+  background: transparent;
+  color: var(--tpk-muted);
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.tpk-day.is-today::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--tpk-focus);
+}
+
+.tpk-day.is-selected {
+  background: var(--tpk-accent);
+  color: var(--tpk-accent-fg);
+  font-weight: 700;
+  border-color: var(--tpk-accent);
+}
+
+.tpk-day.is-selected:hover {
+  background: var(--tpk-accent-hover);
+}
+
+.tpk-day.is-selected.is-today::after {
+  background: var(--tpk-accent-fg);
+}
+
+/* Status-Marker (z. B. Sondertage: offen, geschlossen, Feiertag, Sondertermin) */
+.tpk-day-dot {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+.tpk-day-dot--open { background: var(--tpk-dot-open); }
+.tpk-day-dot--closed { background: var(--tpk-dot-closed); }
+.tpk-day-dot--holiday { background: var(--tpk-dot-holiday); }
+.tpk-day-dot--special { background: var(--tpk-dot-special); }
+.tpk-day.is-selected .tpk-day-dot { background: var(--tpk-accent-fg); }
+
+.tpk-cal-footer {
+  margin-top: 14px;
+}
+
+.tpk-cal-footer:empty {
+  display: none;
+}
+
+/* ── Spalte 3: Zeitslots / Tagesdetails (rechts, immer 24 Std.) ── */
+.tpk-col-slots {
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  max-height: 440px;
+}
+
+.tpk-card--kompakt .tpk-col-slots {
+  padding: 18px 16px;
+  max-height: 390px;
+}
+
+.tpk-slots-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-shrink: 0;
+}
+
+.tpk-slots-day {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--tpk-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.tpk-slots-day span {
+  font-weight: 400;
+  color: var(--tpk-muted);
+  margin-left: 3px;
+}
+
+.tpk-slots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  padding-right: 2px;
+  flex: 1;
+  min-height: 0;
+}
+
+.tpk-slot {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--tpk-border);
+  background: var(--tpk-surface);
+  color: var(--tpk-text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  transition: border-color 0.14s ease, background-color 0.14s ease, color 0.14s ease;
+}
+
+.tpk-slot:hover:not(:disabled) {
+  border-color: var(--tpk-accent);
+  background: var(--tpk-subtle);
+}
+
+.tpk-slot.is-picked {
+  background: var(--tpk-accent);
+  border-color: var(--tpk-accent);
+  color: var(--tpk-accent-fg);
+}
+
+.tpk-slot-meta {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--tpk-muted);
+}
+
+.tpk-slot.is-picked .tpk-slot-meta {
+  color: var(--tpk-accent-fg);
+  opacity: 0.85;
+}
+
+.tpk-slots-state {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--tpk-muted);
+  padding: 12px 4px;
+}
+
+.tpk-slots-hint {
+  margin: 12px 0 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--tpk-muted);
+  flex-shrink: 0;
+}
+
+.tpk-slots-hint:empty {
+  display: none;
+}
+
+/* ── Responsive: Tablet & Mobil ── */
+@media (max-width: 860px) {
+  .tpk-card,
+  .tpk-card--kompakt {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tpk-col-info,
+  .tpk-col-cal {
+    border-right: none;
+    border-bottom: 1px solid var(--tpk-border);
+  }
+
+  .tpk-col-slots {
+    max-height: none;
+  }
+
+  .tpk-slots-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+    gap: 8px;
+    overflow-y: visible;
+  }
+}
+
+@media (max-width: 420px) {
+  .tpk-col-info,
+  .tpk-col-cal,
+  .tpk-col-slots {
+    padding: 16px 14px;
+  }
+
+  .tpk-grid {
+    gap: 4px;
+  }
+
+  .tpk-day {
+    min-height: 36px;
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tpk-card *,
+  .tpk-card *::before,
+  .tpk-card *::after {
+    transition: none !important;
+  }
+}
