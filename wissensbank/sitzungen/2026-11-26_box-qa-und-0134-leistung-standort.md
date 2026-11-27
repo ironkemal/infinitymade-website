@@ -36,9 +36,17 @@ Systematische A–Z-Live-Prüfung einer laufenden On-Premise Praxura-Box (`istKu
   - Live-Katalog bestätigt: `acl = {postgres=X/postgres,service_role=X/postgres}`, alle Zähler unverändert (`110` Tabellen, `197` Policies, `161` Funktionen, `188` Trigger, `380` Indizes, `1.596` Spalten).
   - `db/SCHEMA.sql`, `db/SCHEMA-RLS.sql`, `db/README.md` und `api-backend/db/erwartete-zaehler.json` (`bis_version: "0134"`) aktualisiert; `check-onprem.sh`, `check-select-spalten.sh`, `check-tabellen-register.sh` (`110/110`) grün.
 
-[Tagesprotokoll 2026-11-26](../../fortschritte/2026-11-26.md)
+## Live-Abnahme auf der On-Premise-Box (26.11.2026, nach `praxura-update.service`)
+
+- **Systemstatus (`#settings`):** Version **`0.7.1+2f478d7`** (Image `17001e8c3a15`), **Schema `0134`** aktiv (`PASS`).
+- **`BOX-P0-01` Live-Beweis (`#calendar`):** Termin mit globaler Leistung (`business_id IS NULL`) bei aktivem Standort sofort ohne Fehler gespeichert und im Kalender sichtbar (`PASS`).
+- **Detailpanel, Verschieben, Dashboard & Überblick (`F-11`, `F-06`, `N-3`):** Detailpanel inkl. Verordnungsentwurf, Verschieben (`11:00 → 12:00`), Dashboard (`1 Termin`, Singular) und Überblick (`Termine heute 0 · 1 in 7 T.`, Wochenleiste `1`) alle konsistent (`PASS`).
+- **Aufräumen:** Test-Termin über „Termin absagen“ sauber storniert (`0 in 7 T.`), Oberfläche im Light Mode auf `#overview` wiederhergestellt (`PASS`).
+
+Damit sind alle **23/23 Module**, Einstellungen, Infrastruktur, Responsive und Migration `0134` live auf SaaS und Box vollständig bestanden.
+
+[Tagesprotokoll 2026-11-26](../../fortschritte/2026-11-26.md) · [Tagesprotokoll 2026-11-27](../../fortschritte/2026-11-27.md)
 
 ## Offen
 
-- **Box-Update ausführen:** Nach Abschluss des GitHub-Actions-Container-Builds `bash update.sh --jetzt` auf dem Box-Server laufen lassen, damit Migration `0134` auch auf der On-Premise-Box eingespielt wird, und kurz eine Terminanlage mit globaler Leistung gegenchecken.
-- **Test-Reste auf der Test-Box (optional):** 2 leere Test-Patienten und 1 Entwurf-Verordnung (`QA-Test-20261125*`, ohne UI-Löschbutton wegen GoBD) können bei Bedarf per DSGVO-Weg entfernt werden.
+- **Test-Reste auf der Test-Box (optional):** 2 leere Test-Patienten und 1 Entwurf-Verordnung (`QA-Test-20261125*`, ohne UI-Löschbutton wegen GoBD/Aufbewahrungspflicht) können bei Bedarf per DSGVO-Weg entfernt werden.
