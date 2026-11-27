@@ -7,10 +7,14 @@ import {
   EU_DATA_BOUNDARY_REGIONS
 } from './ki-config.js';
 
-test('import-safe: VERIFIED_AZURE_HOSTS is frozen, exact hosts in Sweden Central, no wildcard', () => {
+test('import-safe: VERIFIED_AZURE_HOSTS is frozen, exact Praxura hosts, no wildcard', () => {
   assert.ok(Object.isFrozen(VERIFIED_AZURE_HOSTS));
-  assert.ok(VERIFIED_AZURE_HOSTS.length >= 1);
-  for (const host of VERIFIED_AZURE_HOSTS) assert.match(host, /^[a-z0-9-]+-swedencentral\.cognitiveservices\.azure\.com$/);
+  // O-260: Sweden Central (Transkription) + praxura-ai-resource (Germany West Central, Text). Exakt, kein Wildcard.
+  assert.deepEqual([...VERIFIED_AZURE_HOSTS].sort(), [
+    'kemal-mul58wcs-swedencentral.cognitiveservices.azure.com',
+    'praxura-ai-resource.cognitiveservices.azure.com'
+  ]);
+  for (const host of VERIFIED_AZURE_HOSTS) assert.match(host, /^[a-z0-9-]+\.cognitiveservices\.azure\.com$/);
   assert.ok(Array.isArray(EU_DATA_BOUNDARY_REGIONS));
   assert.ok(EU_DATA_BOUNDARY_REGIONS.includes('germanywestcentral'));
 });

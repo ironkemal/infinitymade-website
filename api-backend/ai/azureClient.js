@@ -26,6 +26,15 @@ const MAX_429_RETRIES = 2;
 const MAX_RETRY_AFTER_MS = 10_000;
 const MIN_RETRY_AFTER_MS = 500;
 const DEFAULT_TIMEOUT_MS = 45_000;
+const REASONING_HEADROOM_TOKENS = 2048;
+/** Known model ids for logs; Azure answers with a dated id (gpt-5-mini-2025-08-07), the date is dropped. */
+export const KNOWN_MODELS = Object.freeze(['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-5', 'gpt-5-mini', 'gpt-5-nano']);
+/** @param {unknown} m @returns {string | null} */
+export function knownModel(m) {
+  if (typeof m !== 'string') return null;
+  const base = m.replace(/-\d{4}-\d{2}-\d{2}$/, '');
+  return (/** @type {readonly string[]} */ (KNOWN_MODELS)).includes(base) ? base : null;
+}
 
 let active429Waiters = 0;
 /** @type {ReturnType<typeof createJetonClient> | null} */
@@ -466,13 +475,23 @@ async function executeTransport({
     }
 
     const url = `${target.endpoint.replace(/\/+$/, '')}/openai/deployments/${encodeURIComponent(target.deployment)}/chat/completions?api-version=${target.apiVersion}`;
-    const payload = {
-      messages,
-      temperature,
-      max_tokens: maxTokens,
-      store: false,
-      ...(responseFormat ? { response_format: responseFormat } : {})
-    };
+    // gpt-5 family (O-260): no temperature, max_completion_tokens instead of max_tokens. Hidden
+    // reasoning tokens count against that budget, so add headroom or short answers come back empty.
+    const payload = cfg.modelFamily === 'reasoning'
+      ? {
+        messages,
+        max_completion_tokens: Math.min(16384, maxTokens + REASONING_HEADROOM_TOKENS),
+        reasoning_effort: cfg.reasoningEffort || 'low',
+        store: false,
+        ...(responseFormat ? { response_format: responseFormat } : {})
+      }
+      : {
+        messages,
+        temperature,
+        max_tokens: maxTokens,
+        store: false,
+        ...(responseFormat ? { response_format: responseFormat } : {})
+      };
 
     // Recheck consent after token acquisition and every retry wait. Keep this
     // outside the communication catch so the gateway's safe denial survives.
@@ -606,8 +625,9 @@ async function executeTransport({
     };
 
     let safeModel = target.deployment;
-    if (typeof json?.model === 'string' && ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini'].includes(json.model)) {
-      safeModel = json.model;
+    const bekannt = knownModel(json?.model);
+    if (bekannt) {
+      safeModel = bekannt;
     }
 
     return {
@@ -894,8 +914,13 @@ async function executeTranscribeTransport({
       };
     }
 
-    // Direct mode
-    const epVal = validateEndpointUrl(cfg.endpoint, cfg.allowedHosts);
+    // Direct mode — optional separate transcription resource (O-260)
+    if (cfg.transcribeCode && cfg.transcribeCode !== 'OK') {
+      throw makeClientError('Transkription ist nicht korrekt eingerichtet', cfg.transcribeCode, 503);
+    }
+    const tEndpoint = cfg.transcribeEndpoint || cfg.endpoint;
+    const tKey = cfg.transcribeApiKey || cfg.apiKey;
+    const epVal = validateEndpointUrl(tEndpoint, cfg.transcribeAllowedHosts || cfg.allowedHosts);
     if (!epVal.ok || !epVal.cleanEndpoint) {
       throw makeClientError('Endpunkt unzulässig', epVal.code || 'AI_HOST_NOT_ALLOWED', 503);
     }
@@ -908,7 +933,7 @@ async function executeTranscribeTransport({
       throw makeClientError('Deploymentname ist ungültig', 'AI_DEPLOYMENT_INVALID', 503);
     }
 
-    if (RE_CONTROL_CHARS.test(cfg.apiKey)) {
+    if (RE_CONTROL_CHARS.test(tKey)) {
       throw makeClientError('API-Key enthält unzulässige Steuerzeichen', 'AI_AUTH_INVALID', 503);
     }
 
@@ -917,7 +942,7 @@ async function executeTranscribeTransport({
       deployment: targetDeployment,
       apiVersion: cfg.apiVersion,
       headers: {
-        'api-key': cfg.apiKey
+        'api-key': tKey
       }
     };
   }

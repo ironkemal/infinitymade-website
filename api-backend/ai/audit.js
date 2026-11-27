@@ -94,7 +94,7 @@ export async function logCall({
     }
 
     const safeTask = typeof task === 'string' && KNOWN_AI_TASKS.has(task) ? task : 'unknown';
-    const safeModel = typeof model === 'string' && ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'whisper'].includes(model) ? model : null;
+    const safeModel = typeof model === 'string' && ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-5', 'gpt-5-mini', 'gpt-5-nano', 'whisper', 'gpt-4o-transcribe', 'gpt-4o-mini-transcribe'].includes(model) ? model : null;
     const currentCfg = createAiConfig();
     const safeDeployment = (deployment === currentCfg.deployment || (currentCfg.transcribeDeployment && deployment === currentCfg.transcribeDeployment)) ? deployment : null;
     const safeStatus = typeof status === 'string' && ['ok', 'success', 'error', 'blocked'].includes(status) ? status : 'unknown';

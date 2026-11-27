@@ -15,11 +15,23 @@
 /**
  * Verified Azure host allowlist (O-169 condition 3): exact host names, no wildcard, no env
  * override — a compromised centre must not be able to redirect masked text elsewhere.
- * The single Praxura resource in Sweden Central (K-20). A new host needs a new image.
+ * Praxura resources (K-20). A new host needs a new image.
+ * O-260 (27.11.2026): text/vision moved to `praxura-ai-resource` (Germany West Central, Data Zone EUR,
+ * gpt-5-mini); transcription stays in Sweden Central (gpt-4o-transcribe has no Data Zone in Germany).
  */
 export const VERIFIED_AZURE_HOSTS = Object.freeze([
-  'kemal-mul58wcs-swedencentral.cognitiveservices.azure.com'
+  'kemal-mul58wcs-swedencentral.cognitiveservices.azure.com',
+  'praxura-ai-resource.cognitiveservices.azure.com'
 ]);
+
+/**
+ * Parameter family of the text deployment. The deployment name says nothing about the model
+ * (BYOK: a practice's own gpt-4o deployment may be called anything), so it is an explicit setting:
+ * - 'standard'  → temperature + max_tokens (gpt-4o / gpt-4.1 family) — default, today's behaviour
+ * - 'reasoning' → max_completion_tokens + reasoning_effort, no temperature (gpt-5 family)
+ */
+export const MODEL_FAMILIES = Object.freeze(['standard', 'reasoning']);
+export const REASONING_EFFORTS = Object.freeze(['minimal', 'low', 'medium', 'high']);
 
 /**
  * EU Data Boundary regions.
@@ -170,7 +182,14 @@ export function validateEndpointUrl(endpoint, allowedHosts = []) {
  *   activationReady: boolean,
  *   mailReady: boolean,
  *   allowFreeText: boolean,
- *   allowedHosts: ReadonlyArray<string>
+ *   allowedHosts: ReadonlyArray<string>,
+ *   modelFamily?: 'standard' | 'reasoning',
+ *   reasoningEffort?: string,
+ *   transcribeEndpoint?: string,
+ *   transcribeApiKey?: string,
+ *   transcribeRegion?: string,
+ *   transcribeAllowedHosts?: ReadonlyArray<string>,
+ *   transcribeCode?: string
  * }} AiConfig
  */
 
@@ -208,6 +227,12 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
   const apiVersion = getEnvOverride(safeEnv, 'AI_API_VERSION', 'AZURE_OPENAI_API_VERSION', '2024-10-21');
   let region = getEnvOverride(safeEnv, 'AI_REGION', 'AZURE_OPENAI_REGION', '').trim().toLowerCase();
   const regionAusEnv = region;
+  const modelFamilyRaw = String(safeEnv.AI_MODEL_FAMILY || '').trim().toLowerCase() || 'standard';
+  const reasoningEffortRaw = String(safeEnv.AI_REASONING_EFFORT || '').trim().toLowerCase() || 'low';
+  // Optional separate transcription resource (O-260). Empty → same resource as text (previous behaviour).
+  const transcribeEndpointRaw = String(safeEnv.AI_TRANSCRIBE_ENDPOINT || '').trim();
+  const transcribeApiKeyRaw = String(safeEnv.AI_TRANSCRIBE_API_KEY || '');
+  const transcribeRegionRaw = String(safeEnv.AI_TRANSCRIBE_REGION || '').trim().toLowerCase();
 
   // Mode resolution
   /** @type {AiMode} */
@@ -374,6 +399,30 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
     };
   }
 
+  const familieUngueltig = !(/** @type {readonly string[]} */ (MODEL_FAMILIES)).includes(modelFamilyRaw);
+  const effortUngueltig = !(/** @type {readonly string[]} */ (REASONING_EFFORTS)).includes(reasoningEffortRaw);
+  if (familieUngueltig || effortUngueltig) {
+    return {
+      valid: false,
+      code: familieUngueltig ? 'AI_MODEL_FAMILY_INVALID' : 'AI_REASONING_EFFORT_INVALID',
+      mode,
+      provider,
+      endpoint,
+      apiKey,
+      deployment,
+      visionDeployment,
+      transcribeDeployment,
+      apiVersion,
+      region,
+      activationReady,
+      mailReady,
+      allowFreeText,
+      allowedHosts: normalizedHosts
+    };
+  }
+  const modelFamily = /** @type {'standard' | 'reasoning'} */ (modelFamilyRaw);
+  const reasoningEffort = reasoningEffortRaw;
+
   // Jeton mode validation (endpoint/apiKey are supplied dynamically by token issuer)
   if (mode === 'jeton') {
     if (region && !EU_DATA_BOUNDARY_REGIONS.includes(region)) {
@@ -411,7 +460,9 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
       activationReady,
       mailReady,
       allowFreeText,
-      allowedHosts: normalizedHosts
+      allowedHosts: normalizedHosts,
+      modelFamily,
+      reasoningEffort
     };
   }
 
@@ -502,6 +553,42 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
     };
   }
 
+  // Transcription target (O-260). Errors here only disable transcription (transcribeCode),
+  // never the text assistant — a typo in the audio key must not take the mail assistant down.
+  let transcribeEndpoint = /** @type {string} */ (endpointVal.cleanEndpoint);
+  let transcribeApiKey = apiKey;
+  let transcribeRegion = region;
+  /** @type {ReadonlyArray<string>} */
+  let transcribeAllowedHosts = byokHost ? [...normalizedHosts, byokHost] : normalizedHosts;
+  let transcribeCode = 'OK';
+  if (transcribeEndpointRaw) {
+    let tHost = '';
+    try { tHost = new URL(transcribeEndpointRaw).hostname.toLowerCase(); } catch { /* validateEndpointUrl meldet */ }
+    const tByok = Boolean(byokHost) && tHost && !normalizedHosts.some((x) => String(x).toLowerCase() === tHost) && byokHostErlaubt(tHost);
+    const tHosts = tByok ? [...normalizedHosts, tHost] : normalizedHosts;
+    const tVal = validateEndpointUrl(transcribeEndpointRaw, tHosts);
+    // Region never inherited from the text resource: explicit, else read from the host name (not for BYOK).
+    let tRegion = transcribeRegionRaw;
+    if (!tRegion && !tByok) tRegion = EU_DATA_BOUNDARY_REGIONS.find((r) => tHost.includes(r)) || '';
+    if (!tVal.ok) {
+      transcribeCode = tVal.code || 'AI_HOST_NOT_ALLOWED';
+    } else if (!transcribeApiKeyRaw || RE_CONTROL_CHARS.test(transcribeApiKeyRaw)) {
+      transcribeCode = 'AI_TRANSCRIBE_KEY_INVALID';
+    } else if (!tRegion || !(/** @type {readonly string[]} */ (EU_DATA_BOUNDARY_REGIONS)).includes(tRegion)) {
+      transcribeCode = 'AI_INVALID_REGION';
+    } else {
+      transcribeEndpoint = /** @type {string} */ (tVal.cleanEndpoint);
+      transcribeApiKey = transcribeApiKeyRaw;
+      transcribeRegion = tRegion;
+      transcribeAllowedHosts = tHosts;
+    }
+    if (transcribeCode !== 'OK') {
+      transcribeEndpoint = '';
+      transcribeApiKey = '';
+      transcribeRegion = '';
+    }
+  }
+
   return {
     valid: true,
     code: 'OK',
@@ -517,7 +604,14 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
     activationReady,
     mailReady,
       allowFreeText,
-    allowedHosts: normalizedHosts
+    allowedHosts: normalizedHosts,
+    modelFamily,
+    reasoningEffort,
+    transcribeEndpoint,
+    transcribeApiKey,
+    transcribeRegion,
+    transcribeAllowedHosts,
+    transcribeCode
   };
 }
 /**
@@ -541,6 +635,6 @@ export function healthSummary(customConfig) {
     provider: cfg.provider,
     activationReady: cfg.activationReady,
     mailReady: cfg.mailReady,
-    transcribeReady: Boolean(cfg.transcribeDeployment)
+    transcribeReady: Boolean(cfg.transcribeDeployment) && (cfg.transcribeCode === undefined || cfg.transcribeCode === 'OK')
   };
 }
