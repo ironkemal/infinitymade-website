@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, rmSync, readFileSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -312,7 +312,9 @@ test('sonrakiNumara: en büyük migration numarasının bir fazlasını 4 basama
     rmSync(dir, { recursive: true, force: true });
   }
 
-  // Gerçek depoda mevcut en büyük 0132 -> sıradaki 0133
-  const reelNext = sonrakiNumara();
-  assert.equal(reelNext, '0133');
+  const migrationDir = new URL('../api-backend/db/migrations/', import.meta.url);
+  const versions = readdirSync(migrationDir).filter(name => /^\d{4}_.*\.sql$/.test(name))
+    .map(name => Number(name.slice(0, 4)));
+  assert.ok(versions.length > 0);
+  assert.equal(sonrakiNumara(), String(Math.max(...versions) + 1).padStart(4, '0'));
 });
