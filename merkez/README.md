@@ -37,6 +37,7 @@ Dieselbe Identität gilt später für Postfach-Abruf (Y3) und KI-Jeton (3b.4).
 | `KI_ENDPOINT_TRANSCRIBE`, `KI_REGION_TRANSCRIBE` | optional (O-260): eigene Transkriptions-Ressource; Region dann Pflicht, nie vom Text geerbt. Host muss in `VERIFIED_AZURE_HOSTS` des Box-Images stehen |
 | `KI_MODEL_FAMILY` | optional (O-260): `standard` (gpt-4o/4.1) oder `reasoning` (gpt-5) — geht mit dem Jeton an die Box |
 | `KI_MONATS_LIMIT` | Standard-Kontingent je Box und Berliner Kalendermonat (Standard `600`); je Box übersteuerbar per CLI |
+| `MERKEZ_ADMIN_PUBKEY`, `MERKEZ_ADMIN_ALLOWED_IPS` | interne Admin-Bridge: Ed25519-Prüfschlüssel (SPKI/Base64URL) und kommagetrennte erlaubte Quell-IPs für signierte Ops-Brückenanfragen |
 
 Der Reverse-Proxy muss Pfad und Query **unverändert** durchreichen (sie sind Teil der Signatur)
 und TLS terminieren. Node ≥ 22.13 (`node:sqlite`).
@@ -64,7 +65,23 @@ Bestehende Boxen sind nach dem Update `aus` (Opt-in, K-20); der globale Schalter
 Exit **0** = im Rahmen · **2** = überschritten · **1** = ungültige Eingabe (nie still „ok"). `--abschalten` setzt dann
 `ki_global=aus` (Akteur `ki-abgleich-auto`), nie `an` — **erst nach O-186** (Box meldet den letzten Tagesstand nicht
 nach). Azure-Zahl nur aus der Box-eigenen Ressource (S-55 A/B); Timer 02–03 UTC für den Vortag, Optionen in der
-Unit-Datei im Repo (keine Env, Drift). Azure-Leser + Timer: nach T23/ORG.
+Unit-Datei im Repo (keine Env, Drift).
+
+**Automatisierter Dual-Resource-Läufer (`ki-abgleich-nacht.js`):**
+`node ki-abgleich-nacht.js [JJJJ-MM-TT] [--abschalten] [--toleranz-prozent=N] [--toleranz-tokens=N] [--toleranz-audio-sek=N]`
+— Prüft automatisch den abgeschlossenen Vortag (UTC) getrennt für **DE Text** (Standardtoleranz +10 % +20 000 Tokens) und **SE Audio** (Standardtoleranz +10 % +180 s), zieht bei gesetztem `SAAS_ABGLEICH_URL` verifizierte SaaS-Summen ab, schätzt die EUR-Kosten über `api-backend/ai/ki-preise.js`, protokolliert in `adminlog` (`ki-abgleich-nacht` / `ki-abgleich-fehler`) und sendet bei Überschreitung oder Abruffehler eine Alarm-Mail (ohne PHI/Secrets). Vorübergehende Azure-/Abruffehler schalten `ki_global` **nie** automatisch aus.
+
+| Variable (`abgleich.env`) | Zweck |
+|---|---|
+| `AZURE_MONITOR_TENANT_ID`, `AZURE_MONITOR_CLIENT_ID`, `AZURE_MONITOR_CLIENT_SECRET` | Entra-App (Reader) für `management.azure.com/.default` (Fallback: `AZURE_TENANT_ID`/`KI_ENTRA_*`) |
+| `AZURE_TEXT_RESOURCE_ID` | vollständige ARM-Ressourcen-ID der DE-Text-Ressource (Pflicht) |
+| `AZURE_TEXT_METRICS`, `AZURE_TEXT_DEPLOYMENT`, `AZURE_TEXT_MODEL` | Metriknamen (Standard `ProcessedPromptTokens,GeneratedTokens`), optionaler Deployment-Filter, Modellname (Standard `gpt-5-mini`) |
+| `AZURE_AUDIO_RESOURCE_ID`, `AZURE_AUDIO_METRICS`, `AZURE_AUDIO_DEPLOYMENT`, `AZURE_AUDIO_MODEL` | optional: ARM-Ressourcen-ID der SE-Audio-Ressource, Metriknamen (Standard `ProcessedAudioSeconds`), Filter, Modellname (Standard `gpt-4o-transcribe`) |
+| `SAAS_ABGLEICH_URL`, `SAAS_ABGLEICH_SECRET` | optional: HTTPS-Endpunkt für verifizierte SaaS-Tagessummen `{ textTokens, audioSeconds }` bei geteilter Ressource |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `ALERT_EMAIL_TO` | SMTP-Versand und Empfängeradresse für Überschreitungs-/Fehler-Alarme |
+
+Systemd-Vorlagen unter `merkez/systemd/`: `praxura-ki-abgleich.service` (`Type=oneshot`, `EnvironmentFile=/etc/praxura-merkez/abgleich.env`, Härtungsdirektiven, `--abschalten` standardmäßig auskommentiert) und `praxura-ki-abgleich.timer` (`OnCalendar=*-*-* 02:30:00 UTC`, `RandomizedDelaySec=120`, `Persistent=true`).
+Für den SMTP-Versand ist `nodemailer` direkt in `merkez/package.json` enthalten (`cd merkez && npm install`).
 
 ## Lokal
 

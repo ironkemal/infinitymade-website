@@ -1,7 +1,7 @@
 // Praxura Cockpit — Kommandozentrale / Cockpit Home
-import { sb, state, $, esc, toast, fail, fmtDate, showView, myRole } from './app.js?v=20261127a';
-import { t, onLangChange } from './i18n.js?v=20261127a';
-import { getOverview, currentMonthUtc } from './cockpit-api.js?v=20261127a';
+import { sb, state, $, esc, toast, fail, fmtDate, showView, myRole } from './app.js?v=20261127c';
+import { t, onLangChange } from './i18n.js?v=20261127c';
+import { getOverview, currentMonthUtc } from './cockpit-api.js?v=20261127c';
 
 let lastData = null;
 let unsubLang = null;
@@ -252,6 +252,7 @@ function renderHome() {
         </div>
         <div class="ck-quick-list">
           <button class="btn btn-primary" id="ckQuickNewPractice">${esc(t('home.quick.newPractice'))}</button>
+          ${canSeeKiCosts ? `<button class="btn" id="ckQuickNewBoxCode">${esc(t('home.quick.newBoxCode'))}</button>` : ''}
           <button class="btn" id="ckQuickTickets">${esc(t('home.quick.openTickets'))}</button>
           ${canSeeKiCosts ? `<button class="btn" id="ckQuickKi">${esc(t('home.quick.checkKi'))}</button>` : ''}
           <button class="btn" id="ckQuickTask">${esc(t('home.quick.newTask'))}</button>
@@ -275,6 +276,10 @@ function renderHome() {
   $('#ckQuickNewPractice', root)?.addEventListener('click', () => {
     showView('customers');
     setTimeout(() => window.__praxuraOpenNewPractice?.(), 60);
+  });
+  $('#ckQuickNewBoxCode', root)?.addEventListener('click', () => {
+    showView('boxes');
+    setTimeout(() => window.__praxuraNewBoxCode?.(), 60);
   });
   $('#ckQuickTickets', root)?.addEventListener('click', () => showView('tickets'));
   $('#ckQuickKi', root)?.addEventListener('click', () => showView('ki-costs'));

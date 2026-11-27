@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Praxura Cockpit</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🗂️</text></svg>">
-<link rel="stylesheet" href="app.css?v=20261127a">
+<link rel="stylesheet" href="app.css?v=20261127c">
 </head>
 <body>
 
@@ -62,6 +62,10 @@
         <button class="nav-item" data-view="tickets">
           <span class="nav-ico" aria-hidden="true">🎫</span>
           <span data-i18n="nav.tickets">Tickets</span>
+        </button>
+        <button class="nav-item" data-view="boxes">
+          <span class="nav-ico" aria-hidden="true">📦</span>
+          <span data-i18n="nav.boxes">Boxen & KI-Fabrik</span>
         </button>
         <button class="nav-item" data-view="ki-costs">
           <span class="nav-ico" aria-hidden="true">⚡</span>
@@ -130,6 +134,9 @@
 
       <!-- ── Support-Tickets ────────────────────────────────────────── -->
       <section class="view" id="view-tickets" hidden></section>
+
+      <!-- ── Boxen & KI-Fabrik ──────────────────────────────────────── -->
+      <section class="view" id="view-boxes" hidden></section>
 
       <!-- ── KI & Kosten ────────────────────────────────────────────── -->
       <section class="view" id="view-ki-costs" hidden></section>
@@ -287,6 +294,6 @@
 
 <div class="toast" id="toast" hidden></div>
 
-<script type="module" src="app.js?v=20261127a"></script>
+<script type="module" src="app.js?v=20261127c"></script>
 </body>
 </html>

@@ -1,0 +1,29 @@
+[Unit]
+Description=Praxura Merkez — Nächtlicher KI-Abgleich (O-169 Bedingung 7, DE Text + SE Audio)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# Muss zum Service-Benutzer von praxura-merkez passen, damit SQLite-WAL-Dateien denselben Besitzer behalten.
+User=praxura-merkez
+Group=praxura-merkez
+WorkingDirectory=/opt/praxura-merkez/merkez
+EnvironmentFile=/etc/praxura-merkez/abgleich.env
+
+# Standard: Nur Bericht + SMTP-Alarm bei Überschreitung (Exit 2), keine automatische Abschaltung.
+# Opt-in für automatisches Ausschalten (`ki_global=aus`) erst nach O-186 + ORG-Freigabe:
+# ExecStart=/usr/bin/node /opt/praxura-merkez/merkez/ki-abgleich-nacht.js --abschalten
+ExecStart=/usr/bin/node /opt/praxura-merkez/merkez/ki-abgleich-nacht.js
+
+# Systemd-Härtung (G2 / Least Privilege)
+NoNewPrivileges=true
+ProtectSystem=strict
+PrivateTmp=true
+ProtectHome=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+ReadWritePaths=/opt/praxura-merkez/merkez -/var/lib/praxura-merkez

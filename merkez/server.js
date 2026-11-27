@@ -24,6 +24,7 @@ import {
   kiConfigAusEnv, erstelleKiEntra, monatsSchluessel, naechsterMonatsanfangBerlin, tokenFingerabdruck,
 } from './ki-jeton.js';
 import { pruefeKiBericht, kiBerichtHash, RE_REPORT_ID } from '../api-backend/merkez-istemci/ki-bericht-schema.js';
+import { erstelleAdminBridge } from './admin-bridge.js';
 
 const RESERVIERUNG_SEK = 600;     // Namensvorschlag gilt 10 min
 const MAX_VORSCHLAEGE = 20;       // pro Code
@@ -45,7 +46,7 @@ function kiZusatz(ki) {
   };
 }
 
-export function erstelleApp({ db, cloudflare, acmedns, config, kiEntra = null, jetzt = Date.now, log = console }) {
+export function erstelleApp({ db, cloudflare, acmedns, config, kiEntra = null, jetzt = Date.now, log = console, env = process.env }) {
   const { boxDomain, acmeDnsUrl, hostErwartet = null, trustProxy = false } = config;
   const accountPraefix = config.accountPraefix || 'https://acme-v02.api.letsencrypt.org/acme/acct/';
   if (!boxDomain) throw new Error('BOX_DOMAIN ist Pflicht');
@@ -55,6 +56,21 @@ export function erstelleApp({ db, cloudflare, acmedns, config, kiEntra = null, j
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', trustProxy);
+
+  const adminBridge = erstelleAdminBridge({
+    db,
+    cf: cloudflare,
+    env: config.env ?? env,
+    jetztFn: jetzt,
+    boxDomain,
+    hostErwartet,
+    kiStandardLimit: config.ki?.monatsLimit ?? null,
+    rateLimitMax: config.limitAdmin,
+    log,
+  });
+  if (adminBridge) {
+    app.use('/internal/admin', adminBridge);
+  }
 
   // IPv6-Clients erhalten ein /64 als gemeinsamen Schlüssel (sonst umgeht man das Limit mit jeder Adresse des Präfixes).
   const limitOpt = { standardHeaders: 'draft-7', legacyHeaders: false, keyGenerator: (req) => ratenSchluessel(req.ip) };
@@ -455,7 +471,7 @@ export function baueAusEnv(env = process.env) {
     console.warn('[merkez] KI-Jeton-Ausgabe aus (' + ki.grund + ')');
   }
   const kiEntra = ki.gueltig ? erstelleKiEntra({ config: ki }) : null;
-  return { db, cloudflare, acmedns, config: { ...config, ki }, kiEntra };
+  return { db, cloudflare, acmedns, config: { ...config, ki }, kiEntra, env };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

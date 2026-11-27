@@ -1,7 +1,7 @@
 // Praxura Ops-Dashboard / Cockpit — Shell: Auth, RBAC, Router, i18n, gemeinsame Helfer
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20261127a';
-import { t, setLang, onLangChange, applyI18n, registerLangSync, LANGS } from './i18n.js?v=20261127a';
+import { t, setLang, onLangChange, applyI18n, registerLangSync, LANGS } from './i18n.js?v=20261127c';
 
 const AUTH_STORAGE_KEY = 'praxura-ops-auth';
 const VALID_ROLES = ['founder', 'tech', 'support', 'sales'];
@@ -10,6 +10,7 @@ const VIEW_ROLES = {
   cockpit:     ['founder', 'tech', 'support', 'sales'],
   customers:   ['founder', 'tech', 'support', 'sales'],
   tickets:     ['founder', 'tech', 'support', 'sales'],
+  boxes:       ['founder', 'tech'],
   'ki-costs':  ['founder', 'tech'],
   todo:        ['founder', 'tech', 'support', 'sales'],
   ausgaben:    ['founder'],
@@ -24,6 +25,7 @@ const VIEW_I18N = {
   cockpit:     'nav.cockpit',
   customers:   'nav.customers',
   tickets:     'nav.tickets',
+  boxes:       'nav.boxes',
   'ki-costs':  'nav.kiCosts',
   todo:        'nav.todo',
   ausgaben:    'nav.ausgaben',
@@ -358,10 +360,11 @@ const withTimeout = (p, ms) =>
 
 async function showApp() {
   const modules = [
-    ['cockpit',     './cockpit-home.js?v=20261127b', 'mountCockpit'],
-    ['customers',   './customers.js?v=20261127a',    'mountCustomers'],
-    ['tickets',     './tickets.js?v=20261127b',      'mountTickets'],
-    ['ki-costs',    './ki-costs.js?v=20261127a',     'mountKiCosts'],
+    ['cockpit',     './cockpit-home.js?v=20261127c', 'mountCockpit'],
+    ['customers',   './customers.js?v=20261127c',    'mountCustomers'],
+    ['tickets',     './tickets.js?v=20261127c',      'mountTickets'],
+    ['boxes',       './boxes.js?v=20261127c',        'mountBoxes'],
+    ['ki-costs',    './ki-costs.js?v=20261127c',     'mountKiCosts'],
     ['todo',        './board.js?v=20261023blocker1', 'mountTodo'],
     ['wissen',      './wissen.js?v=20260811a',       'mountWissen'],
     ['decisions',   './decisions.js?v=20260811a',    'mountDecisions'],

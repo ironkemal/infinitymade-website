@@ -13,6 +13,7 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { createClient } from '@supabase/supabase-js';
+import { createCockpitMerkezRouter } from './cockpit-merkez.js';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -531,7 +532,13 @@ function aggregateAuditRows(rows, pricingApi) {
  * @param {any} [deps.opsSupabase]      Ops-Supabase-Client (optional für Tests)
  * @param {any} [deps.pricing]          KI-Preismodul (optional für Tests)
  */
-export function createCockpitRouter({ supabase, opsSupabase = null, pricing = null } = {}) {
+export function createCockpitRouter({
+  supabase,
+  opsSupabase = null,
+  pricing = null,
+  merkezEnv = process.env,
+  merkezFetch = globalThis.fetch,
+} = {}) {
   const router = Router();
   const getOpsSupabase = opsSupabase ? () => opsSupabase : getOpsSupabaseFromEnv;
 
@@ -544,8 +551,16 @@ export function createCockpitRouter({ supabase, opsSupabase = null, pricing = nu
   });
   router.use(limiter);
 
-  const authAll = requireCockpitRole(['founder', 'tech', 'support', 'sales'], { getOpsSupabase });
-  const authKi = requireCockpitRole(['founder', 'tech', 'support'], { getOpsSupabase });
+  const requireRole = (roles) => requireCockpitRole(roles, { getOpsSupabase });
+  const authAll = requireRole(['founder', 'tech', 'support', 'sales']);
+  const authKi = requireRole(['founder', 'tech', 'support']);
+
+  // ── Merkez Admin-Bridge Proxy (/api/cockpit/merkez/*) ────────────────────
+  router.use('/merkez', createCockpitMerkezRouter({
+    requireCockpitRole: requireRole,
+    env: merkezEnv,
+    fetchImpl: merkezFetch,
+  }));
 
   // ── GET /api/cockpit/overview?month=YYYY-MM ──────────────────────────────
   router.get('/overview', authAll, async (req, res) => {

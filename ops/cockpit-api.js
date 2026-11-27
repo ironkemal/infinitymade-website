@@ -1,6 +1,6 @@
 // Praxura Cockpit — Client für /api/cockpit/* (SaaS-Backend)
 import { COCKPIT_API_URL } from './config.js?v=20261127a';
-import { sb } from './app.js?v=20261127a';
+import { sb } from './app.js?v=20261127c';
 
 export function currentMonthUtc() {
   return new Date().toISOString().slice(0, 7);
@@ -62,7 +62,7 @@ export async function cockpitFetch(path, { method = 'GET', query = {}, body } = 
         ok: false,
         offline: res.status >= 500,
         status: res.status,
-        reason: parsed?.error || res.statusText || `HTTP_${res.status}`,
+        reason: parsed?.error || parsed?.fehler || res.statusText || `HTTP_${res.status}`,
         data: parsed,
       };
     }
@@ -96,5 +96,44 @@ export function replySupportTicket(ticketId, payload) {
   return cockpitFetch(`/api/support/cockpit/tickets/${encodeURIComponent(ticketId)}/reply`, {
     method: 'POST',
     body: payload,
+  });
+}
+
+export function merkezStatus() {
+  return cockpitFetch('/api/cockpit/merkez/status');
+}
+
+export function merkezNewCode() {
+  return cockpitFetch('/api/cockpit/merkez/codes/new', {
+    method: 'POST',
+    body: {},
+  });
+}
+
+export function merkezRebindCode(name) {
+  return cockpitFetch('/api/cockpit/merkez/codes/rebind', {
+    method: 'POST',
+    body: { name },
+  });
+}
+
+export function merkezUpdateBoxKi(name, payload) {
+  return cockpitFetch(`/api/cockpit/merkez/boxes/${encodeURIComponent(name)}/ki`, {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export function merkezSetKiGlobal(wert, confirmPhrase) {
+  return cockpitFetch('/api/cockpit/merkez/ki-global', {
+    method: 'POST',
+    body: { wert, confirmPhrase },
+  });
+}
+
+export function merkezIptalBox(name, confirmPhrase) {
+  return cockpitFetch(`/api/cockpit/merkez/boxes/${encodeURIComponent(name)}/iptal`, {
+    method: 'POST',
+    body: { confirmPhrase },
   });
 }

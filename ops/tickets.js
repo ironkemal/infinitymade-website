@@ -1,7 +1,7 @@
 // Praxura Cockpit — Support-Tickets Desk (SaaS + Box + Manuell)
-import { sb, state, $, esc, toast, fail, fmtDate, fmtDateTime, openModal, confirmDialog, showView, memberById, myRole } from './app.js?v=20261127a';
-import { t, onLangChange } from './i18n.js?v=20261127a';
-import { cockpitApi } from './cockpit-api.js?v=20261127a';
+import { sb, state, $, esc, toast, fail, fmtDate, fmtDateTime, openModal, confirmDialog, showView, memberById, myRole } from './app.js?v=20261127c';
+import { t, onLangChange } from './i18n.js?v=20261127c';
+import { cockpitApi } from './cockpit-api.js?v=20261127c';
 
 const STATUSES = ['neu', 'in_arbeit', 'wartet', 'geloest'];
 const PRIORITIES = ['kritisch', 'hoch', 'normal', 'niedrig'];
