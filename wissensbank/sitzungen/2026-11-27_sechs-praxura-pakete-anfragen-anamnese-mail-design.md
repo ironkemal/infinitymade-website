@@ -44,5 +44,6 @@ Handschriftliche Praxura-Offenliste vom 26.11.2026 mit 6 Schwerpunkt-Paketen:
 - **Verifikation:** Unit-Tests (`46/46` Frontend + `22/22` Backend + Gesamtlauf `2.304/2.312` mit `0 fail`), `POST /api/booking-request/update` (`6/6` Edge-Cases), Playwright-Probes (`leistungen`, `mailversand`, `setup`, `termin-anfrage-bis-liste`, 8 öffentliche Seiten 1280/390px) und interaktive Flow-Tests alle bestanden.
 
 ## Offen (nach Push)
-- **Live-Sichtprüfung** nach Vercel-/Watchtower-Deploy auf `app.praxura.de` (öffentliche Buchungs-/Anfrage-/Login-Seiten, Leistungen, Anamnese, Anfragen-Karte).
-- **On-Premise-Box:** `bash update.sh --jetzt` sobald das neue Image gebaut ist; optional `.env`-Variablen gemäß `docs/ki-byok-einrichtung.md` setzen und unter Einstellungen → KI-Unterstützung „Verbindung testen“ ausführen.
+- **Live-Sichtprüfung** nach Vercel-/Watchtower-Deploy auf `app.praxura.de` — am 27.11.2026 bestanden (`HTTP 200`, `data-design="neu"`, `0` Fehler).
+- **On-Premise-Box:** `bash update.sh --jetzt` auf Haupt-Testbox am 27.11.2026 bestanden (`sonuç: ok`, 8/8 Container gesund); Melih aktualisiert seinen neuen Testserver selbst.
+- **Azure-KI-Zugang (BYOK Option D):** Übernimmt **Kemal** — Melih später bei Gelegenheit daran erinnern / nachhaken (`docs/ki-byok-einrichtung.md`).
