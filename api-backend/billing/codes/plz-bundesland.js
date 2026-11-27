@@ -54,6 +54,27 @@ export const BUNDESLAENDER = Object.freeze([
 ]);
 
 /**
+ * Amtlicher 2-stelliger Bundesland-Schlüssel für das VKG-Segment (Anhang 3 zu Anlage 1 TP5 § 8.4).
+ * Dient ausschließlich der Datenannahmestellen-/Papierannahmestellen-Auswahl (`waehleAnnahmestelle`),
+ * niemals dem Tarifkennzeichen (LEGS).
+ */
+export const BUNDESLAND_ZU_VKG = Object.freeze({
+  SH: '01', HH: '02', NI: '03', HB: '04', NW: '05', HE: '06', RP: '07', BW: '08',
+  BY: '09', SL: '10', BE: '11', BB: '12', MV: '13', SN: '14', ST: '15', TH: '16',
+});
+
+/**
+ * Liefert den 2-stelligen VKG-Bundeslandschlüssel ('01'..'16') für eine eindeutige deutsche PLZ,
+ * oder null bei unbekannter / grenzüberschreitender PLZ (bewusst kein geratener Default).
+ * @param {unknown} plz
+ * @returns {string|null}
+ */
+export function bundeslandVkgFuerPlz(plz) {
+  const kuerzel = bundeslandFuerPlz(plz);
+  return kuerzel ? (BUNDESLAND_ZU_VKG[/** @type {keyof typeof BUNDESLAND_ZU_VKG} */ (kuerzel)] || null) : null;
+}
+
+/**
  * Alle Bundesländer, die zu einer PLZ passen.
  * @param {unknown} plz
  * @returns {string[]} 0 = unbekannte PLZ · 1 = eindeutig · 2 = Grenzfall

@@ -306,7 +306,75 @@ export function renderBegleitzettel(opts) {
 }
 
 /**
- * Mehrere Gesamtrechnungen einer Datei — ein Blatt je Gesamtrechnung.
+ * F11: Druckbare Umschlag-Übersichtsliste über alle Gesamtrechnungen einer DTA-Datei
+ * („welche Verordnung bekommt welche Rechnungs-/Belegnummer, in welchen Umschlag“).
+ *
+ * @param {BegleitzettelOpts[]} blaetter
+ * @param {string} dateiname
+ * @returns {string}
+ */
+export function renderUmschlagListe(blaetter, dateiname = '') {
+  const zeilen = blaetter.map((b, i) => {
+    const ab = b.abrechnung || {};
+    const papier = b.papierannahmestelle;
+    const empfaenger = papier
+      ? `${escapeHtml(papier.name || '')} (IK ${escapeHtml(papier.ik || '')})`
+      : `${escapeHtml(ab.krankenkasse_name || ab.krankenkasse_ik || '—')}`;
+    const belege = Array.isArray(b.belege) ? b.belege : [];
+    const belegListe = belege
+      .map(el => {
+        const patName = [el.patient_nachname, el.patient_vorname].filter(Boolean).join(', ') || '—';
+        return `${escapeHtml(el.belegnummer || '—')} (${escapeHtml(patName)})`;
+      })
+      .join(', ');
+    return `
+      <tr>
+        <td class="num"><strong>Umschlag ${i + 1} / ${blaetter.length}</strong></td>
+        <td class="num">${escapeHtml(ab.rechnungsnummer || '—')}</td>
+        <td>${empfaenger}</td>
+        <td>${belegListe || '—'}</td>
+        <td class="num">${belege.length}</td>
+      </tr>`;
+  }).join('');
+
+  return `
+  <section class="blatt">
+    <header>
+      <div>
+        <h1>Umschlag- &amp; Belegübersicht (Urbelege)</h1>
+        <div class="sub">DTA-Datei ${escapeHtml(dateiname || '—')} · ${blaetter.length} Umschläge (je Gesamtrechnung 1 Umschlag)</div>
+      </div>
+    </header>
+    <div class="meta">
+      <div class="item"><div class="label">DTA-Datei</div><div class="value">${escapeHtml(dateiname || '—')}</div></div>
+      <div class="item"><div class="label">Umschläge</div><div class="value">${blaetter.length}</div></div>
+      <div class="item"><div class="label">Versandart</div><div class="value">Einwurfeinschreiben</div></div>
+      <div class="item"><div class="label">Ausschlussfrist</div><div class="value">9 Kalendermonate (§ 18 Abs. 5)</div></div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Umschlag</th>
+          <th>Gesamtrechnung</th>
+          <th>Papierannahmestelle / Kasse</th>
+          <th>Belegnummern &amp; Patienten</th>
+          <th class="num">Verordnungen</th>
+        </tr>
+      </thead>
+      <tbody>${zeilen}</tbody>
+    </table>
+    <div class="checklist">
+      <h3>Packhinweis</h3>
+      <ul>
+        <li>Jede Zeile entspricht genau <strong>einem eigenen Postumschlag</strong> (Begleitzettel + zugehörige Original-Verordnungen nach Belegnummer sortiert).</li>
+        <li>Versand per <strong>Einwurfeinschreiben</strong> an die jeweilige Papierannahmestelle dokumentiert den fristgerechten Eingang.</li>
+      </ul>
+    </div>
+  </section>`;
+}
+
+/**
+ * Mehrere Gesamtrechnungen einer Datei — Umschlag-Übersichtsliste + ein Blatt je Gesamtrechnung.
  * @param {object} opts
  * @param {BegleitzettelOpts[]} [opts.blaetter]  je Eintrag ein renderBlatt()-opts (ohne `blatt`)
  * @param {string} [opts.dateiname]
@@ -315,9 +383,12 @@ export function renderBegleitzettelBundle({ blaetter = [], dateiname = '' }) {
   if (blaetter.length === 1) return renderBegleitzettel(blaetter[0]);
   return huelle({
     titel:   `Begleitzettel — ${dateiname} (${blaetter.length} Gesamtrechnungen)`,
-    blaetter: blaetter.map((b, i) =>
-      renderBlatt({ ...b, blatt: { nummer: i + 1, von: blaetter.length } })),
-    hinweis: `${blaetter.length} Gesamtrechnungen — jede Seite geh&ouml;rt in einen eigenen Umschlag. ` +
+    blaetter: [
+      ...(blaetter.length > 1 ? [renderUmschlagListe(blaetter, dateiname)] : []),
+      ...blaetter.map((b, i) =>
+        renderBlatt({ ...b, blatt: { nummer: i + 1, von: blaetter.length } })),
+    ],
+    hinweis: `${blaetter.length} Gesamtrechnungen — Seite 1 ist die Umschlag-Übersicht; jedes Folgeblatt geh&ouml;rt in einen eigenen Umschlag. ` +
              'Im Druckdialog &bdquo;Ziel &rarr; Als PDF speichern&ldquo; w&auml;hlen.',
   });
 }

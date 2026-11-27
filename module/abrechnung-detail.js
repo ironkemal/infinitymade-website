@@ -508,6 +508,9 @@ function aktionenHtml(ab) {
   if (etikettFuer(ab).zahlungKnoepfe) {
     k.push(`<button class="btn-ghost btn-sm" data-ab-akt="zaa">📨 ZAA hochladen</button>`);
   }
+  if (ab.status === 'gesendet' || ab.status === 'heruntergeladen') {
+    k.push(`<button class="btn-primary btn-sm" data-ab-akt="annahme-bestaetigen" title="Fehlerfreie Eingangsquittung der Kasse bestätigen und 21-Tage-Zahlungsfrist starten">✓ Annahme bestätigt</button>`);
+  }
   if (ab.status === 'rejected' || ab.status === 'accepted') {
     k.push(`<button class="btn-ghost btn-sm" data-ab-akt="fehler">🔍 ZAA-Fehler</button>`);
   }
@@ -552,6 +555,7 @@ function _verdrahteAktionen(ab, gruppen = []) {
         case 'vkz01-ausnahme':    return _vkz01Ausnahme(btn, ab);
         case 'zahlung-erfassen':  return _erfasseZahlung(ab, gruppen);
         case 'absetzung-erfassen': return _erfasseAbsetzung(btn, ab);
+        case 'annahme-bestaetigen': return _bestaetigeAnnahme(btn, ab);
       }
     });
   }
@@ -766,6 +770,28 @@ function _erfasseAbsetzung(btn, ab) {
  *   Storage-Pfad bleibt bewusst `*.dta.enc.p7m` (O-131-Kollisionsschutz,
  *   filename.js) — nur der lokale Download-Name muss normgerecht sein.
  */
+async function _bestaetigeAnnahme(btn, ab) {
+  if (!ab?.id) return;
+  btn.disabled = true;
+  try {
+    const { data: { session } } = await ctx.supabase.auth.getSession();
+    if (!session?.access_token) throw new Error('Nicht angemeldet');
+    const res = await fetch(`${ctx.apiBase}/billing/abrechnung/${ab.id}/annahme-bestaetigen`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + session.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
+    ctx.showToast?.('Annahme bestätigt — 21-Tage-Zahlungsfrist gestartet.', 'success');
+    await ctx.nachDownload?.();
+    await zeigeAbrechnungDetail(ab.id);
+  } catch (e) {
+    ctx.showToast?.(e instanceof Error ? e.message : 'Annahme konnte nicht bestätigt werden.', 'error');
+    btn.disabled = false;
+  }
+}
+
 export async function downloadAbrechnungFile(path, abrechnungId, kind, downloadName) {
   if (!path) return;
   try {

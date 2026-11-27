@@ -31,6 +31,7 @@ import { podoPositionsnummer } from '../codes/podo_positionsnummer.js';
 import { getPodologiePositionenFuerDiagnosegruppe } from '../codes/podologie_positions.js';
 import { renderBegleitzettelBundle } from '../pdf/begleitzettel.template.js';
 import { ladeAnnahmestelle, annahmestelleFehlt, ladePapierannahmestelle } from '../kostentraeger/annahmestelle.js';
+import { bundeslandVkgFuerPlz } from '../codes/plz-bundesland.js';
 import { berlinHeute, berlinTagesgrenzen } from '../../lib/berlin-tag.js';
 import { nichtGkvAbrechenbarMeldung } from '../../lib/rezept-felder.js';
 import { praxisKopf } from '../../lib/rechnung-snapshot.js';
@@ -198,6 +199,27 @@ function isoWeek(d) {
 
 function buildSammelRechnungsnummer(year, week, seq) {
   return `R${year}-W${String(week).padStart(2, '0')}-${String(seq).padStart(3, '0')}`;
+}
+
+// F6: 2-stelligen VKG-Bundeslandschlüssel ('01'..'16') aus Praxis-PLZ ermitteln (Anhang 3 § 8.4),
+// damit landesspezifische Datenannahmestellen (z. B. AOK 105810615) eindeutig aufgelöst werden.
+function praxisBundeslandVkg(obj) {
+  const plz = obj?.zip || obj?.plz || (String(obj?.plz_ort || '').trim().match(/^(\d{5})/)?.[1]) || null;
+  return plz ? bundeslandVkgFuerPlz(plz) : null;
+}
+
+async function ladePraxisBundeslandVkg(tenantId) {
+  if (!tenantId) return null;
+  try {
+    const { data } = await supabase
+      .from('profiles')
+      .select('zip, plz')
+      .eq('id', tenantId)
+      .maybeSingle();
+    return praxisBundeslandVkg(data);
+  } catch {
+    return null;
+  }
 }
 
 function nameParts(lead) {
@@ -372,6 +394,7 @@ async function baueBegleitzettel({
         kostentraegerIk:       ktIk,
         bereich,
         eigenerAbrechnungscode,
+        bundeslandVkg:         praxisBundeslandVkg(praxis),
       });
       if (r.ok) {
         // Schritt 1.4 (20.09.2026): die Anschrift kommt jetzt mit — aus
@@ -773,10 +796,11 @@ router.post('/abrechnung/annahmestellen', async (req, res) => {
     const eigenerAbrechnungscode = abrechnungscodeFuer(sector);
     const bereich = sector === 'podologie' ? 'podologie' : sector;
 
+    const bundeslandVkg = await ladePraxisBundeslandVkg(tenantId);
     const ergebnis = {};
     for (const ik of iks) {
       const das = await ladeAnnahmestelle(supabase, {
-        kostentraegerIk: ik, bereich, eigenerAbrechnungscode,
+        kostentraegerIk: ik, bereich, eigenerAbrechnungscode, bundeslandVkg,
       });
       ergebnis[ik] = das.ok
         ? {
@@ -1038,6 +1062,7 @@ router.post('/abrechnung/create', async (req, res) => {
       kostentraegerIk,
       bereich:                tenantSector,
       eigenerAbrechnungscode: abrechnungscodeFuer(tenantSector),
+      bundeslandVkg:          await ladePraxisBundeslandVkg(tenantId),
     });
     if (!das.ok) return annahmestelleFehlt(res, { ik: kostentraegerIk, name: kk.name });
     const dasIk   = das.ik;
@@ -2584,6 +2609,73 @@ router.post('/abrechnung/:id/mark-sent', async (req, res) => {
   }
 });
 
+// F8: Fehlerfreie Eingangsquittung manuell bestätigen („Annahme bestätigt“) —
+// setzt Status auf 'accepted' und startet die 21-Tage-Zahlungsfrist ab Bestätigung.
+router.post('/abrechnung/:id/annahme-bestaetigen', async (req, res) => {
+  try {
+    const wer = await nurInhaber(req, res);
+    if (!wer) return;
+    const { tenantId } = wer;
+
+    const { data: abrech, error } = await supabase
+      .from('abrechnung')
+      .select(ABRECHNUNG_VERSION_FELDER)
+      .eq('id', req.params.id)
+      .maybeSingle();
+    if (error || !abrech) return res.status(404).json({ error: 'Abrechnung nicht gefunden' });
+    if (abrech.owner_id !== tenantId) return res.status(403).json({ error: 'Forbidden' });
+
+    if (abrech.status === 'accepted') {
+      return res.json({ ok: true, status: 'accepted', zaa_uploaded_at: abrech.zaa_uploaded_at || null });
+    }
+    if (!['gesendet', 'heruntergeladen'].includes(abrech.status)) {
+      return res.status(409).json({
+        error: `Annahme kann nur für gesendete Abrechnungen bestätigt werden (aktuell: ${abrech.status}).`,
+        code: 'INVALID_STATUS_FOR_ACCEPTANCE',
+      });
+    }
+
+    let eingangIso = new Date().toISOString();
+    if (req.body?.eingangAm !== undefined && req.body?.eingangAm !== null && req.body?.eingangAm !== '') {
+      if (typeof req.body.eingangAm !== 'string') {
+        return res.status(400).json({ error: 'Ungültiges Eingangsdatum (erwartet ISO-Datum).' });
+      }
+      const eingangDatum = new Date(req.body.eingangAm);
+      if (isNaN(eingangDatum.getTime()) || eingangDatum.getTime() > Date.now() + 86400000) {
+        return res.status(400).json({ error: 'Ungültiges Eingangsdatum (nicht in der Zukunft).' });
+      }
+      eingangIso = eingangDatum.toISOString();
+    }
+
+    // Direkter atomarer CAS (nicht aktualisiereArtefaktVersion, da das nur Entwürfe mit zaa_uploaded_at === null zulässt)
+    const { data: updated, error: upErr } = await supabase
+      .from('abrechnung')
+      .update({
+        status: 'accepted',
+        zaa_uploaded_at: eingangIso,
+      })
+      .eq('id', abrech.id)
+      .eq('owner_id', tenantId)
+      .eq('updated_at', abrech.updated_at)
+      .eq('status', abrech.status)
+      .select('id, status, zaa_uploaded_at')
+      .maybeSingle();
+
+    if (upErr) return res.status(500).json({ error: upErr.message });
+    if (!updated) {
+      return res.status(409).json({
+        error: 'Die Abrechnung wurde zwischenzeitlich geändert. Bitte Seite neu laden.',
+        code: 'ABRECHNUNG_VERSION_CONFLICT',
+      });
+    }
+
+    return res.json({ ok: true, status: 'accepted', zaa_uploaded_at: updated.zaa_uploaded_at });
+  } catch (e) {
+    console.error('[abrechnung/annahme-bestaetigen]', e);
+    return res.status(e.status || 500).json({ error: e.message, ...(e.code ? { code: e.code } : {}) });
+  }
+});
+
 // ---------- §302-Bildschirm: Zeilen und Geldeingang ----------
 //
 // Die untere Hälfte des Archivs (archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 2.4).
@@ -3969,6 +4061,7 @@ router.post('/abrechnung/preflight', async (req, res) => {
       kostentraegerIk,
       bereich:                tenantSector,
       eigenerAbrechnungscode: abrechnungscodeFuer(tenantSector),
+      bundeslandVkg:          await ladePraxisBundeslandVkg(tenantId),
     });
     if (!das.ok) return annahmestelleFehlt(res, { ik: kostentraegerIk, name: kk.name });
     const dasIk   = das.ik;
@@ -4267,6 +4360,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       kostentraegerIk,
       bereich:                'podologie',
       eigenerAbrechnungscode: '71',
+      bundeslandVkg:          await ladePraxisBundeslandVkg(tenantId),
     });
     if (!das.ok) return annahmestelleFehlt(res, { ik: kostentraegerIk, name: kk.name });
     const dasIk   = das.ik;
@@ -5093,6 +5187,7 @@ router.post('/abrechnung/korrektur', async (req, res) => {
     const das = await ladeAnnahmestelle(supabase, {
       kostentraegerIk, bereich,
       eigenerAbrechnungscode: istPodo ? '71' : abrechnungscodeFuer(tenantSector),
+      bundeslandVkg: await ladePraxisBundeslandVkg(tenantId),
     });
     if (!das.ok) return annahmestelleFehlt(res, { ik: kostentraegerIk, name: kk.name });
 
