@@ -35,7 +35,7 @@ import { attachLeadKartenIk, pruefeLeadKartenIk } from './module/lead-karten-ik.
 import { renderPatientenkarte } from './module/patientenkarte.js?v=20261121pag1';
 import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from './module/lead-felder.js?v=20260929a';
 import { ermittleSitzungKuerzel, kuerzelAusKatalog } from './module/heilmittel-kuerzel.js?v=20261103q';
-import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten, ladeAnfragenDaten } from './module/anfrage-bearbeiten.js?v=20261126p2';
+import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten, ladeAnfragenDaten, zeitwunschAus } from './module/anfrage-bearbeiten.js?v=20261126p2';
 import { oeffneAnfrageNachricht } from './module/anfrage-nachricht.js?v=20261126p2';
 import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
 // §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche (archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1). fmtEur kommt ab jetzt aus module/geld.js — die lokale Kopie hier ist mit dem alten Assistenten entfallen.
@@ -17137,7 +17137,7 @@ function renderAnfragenList(requests) {
     const svcName = escapeHtml(req.services?.title || '—');
     const badge = escapeHtml(paymentBadge[req.payment_type] || req.payment_type?.toUpperCase() || '');
     const badgeColor = paymentColor[req.payment_type] || '#6b7280';
-    const prefDate = req.preferred_date ? datumDe(req.preferred_date) : '—';
+    const prefDate = req.preferred_date ? datumDe(req.preferred_date) : escapeHtml(zeitwunschAus(req.notizen).split('\n')[0]?.replace(/^Zeit:\s*/, '') || '—');
     const prefTime = req.preferred_time ? req.preferred_time.substring(0,5) + ' Uhr' : '';
     const createdAt = new Date(req.created_at).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'2-digit' });
 

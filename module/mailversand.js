@@ -221,7 +221,7 @@ export function renderMailversandSettings(deps, doc = document) {
     const det = el(doc, 'details', { class: 'mv-karte', id: 'mvSpamSchutz' });
     det.append(
       el(doc, 'summary', { class: 'mv-titel', style: 'cursor:pointer', text: 'Zustellbarkeit & Spam-Schutz (Empfehlungen)' }),
-      el(doc, 'ul', { class: 'mv-schritte', style: 'margin-top:10px' }, [
+      el(doc, 'ul', { class: 'mv-hinweis-liste', style: 'margin:10px 0 0 18px;padding:0;font-size:13px;line-height:1.55;color:var(--text-muted)' }, [
         el(doc, 'li', { text: 'Absenderadresse = Postfach-Adresse: Verwenden Sie genau die E-Mail-Adresse, mit der Sie sich am SMTP-Server anmelden.' }),
         el(doc, 'li', { text: 'Eigene Praxis-Domain (IONOS, Strato, 1&1): Aktivieren Sie im Kundenmenü SPF, DKIM und DMARC, damit Gmail/GMX/Web.de Ihre Mails direkt im Posteingang zustellen.' }),
         el(doc, 'li', { text: 'Praxura sendet automatisch HTML + Klartext (multipart/alternative) mit passender Domain-Message-ID.' }),

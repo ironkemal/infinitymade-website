@@ -224,8 +224,9 @@ async function durchFormular(page, person) {
   await page.locator('#sessionPlus').click();
   await page.locator('#step2Next').click();
   await page.getByRole('button', { name: /Synthetische Behandlerin/ }).click();
-  await page.locator('#step-3').getByRole('button', { name: '20', exact: true }).click();
-  await page.getByRole('button', { name: termin.uhrzeit, exact: true }).click();
+  await page.locator('#step-3').getByRole('button', { name: 'Montag', exact: true }).click();
+  await page.locator('#step-3').getByRole('button', { name: 'Mittwoch', exact: true }).click();
+  await page.locator('#step-3').getByRole('button', { name: 'Vormittags (08–12 Uhr)', exact: true }).click();
   await page.locator('#step3Next').click();
   await page.locator('#patVorname').fill(person.vorname);
   await page.locator('#patNachname').fill(person.nachname);
@@ -268,9 +269,9 @@ try {
   assert.equal(daten.booking_requests.length, 1);
   const [eintrag] = daten.booking_requests;
   assert.equal(eintrag.status, 'pending');
-  assert.equal(eintrag.notizen, `Anliegen: Ohne Rezept – Fußpflege / Beratung\n${probe.notiz}`);
-  assert.equal(eintrag.preferred_date, termin.datum);
-  assert.equal(eintrag.preferred_time, termin.uhrzeit);
+  assert.equal(eintrag.notizen, `Zeit: Mo, Mi · Vormittag\nWie bald: So bald wie möglich\nAnliegen: Ohne Rezept – Fußpflege / Beratung\n${probe.notiz}`);
+  assert.equal(eintrag.preferred_date, null);
+  assert.equal(eintrag.preferred_time, null);
 
   const offen = praxis.getByRole('button', { name: 'Offen', exact: true });
   const karten = liste.locator('.anfragen-card');
@@ -281,10 +282,11 @@ try {
   assert.equal(await karten.count(), 1);
   assert.equal(await karten.locator('.anfragen-badge').innerText(), 'SZ');
   assert.deepEqual(await karten.locator('.anfragen-card-info span').allInnerTexts(), [
-    `${leistung.title} · 2 Sitzung(en)`, `20.11.2026 · ${termin.uhrzeit} Uhr`,
+    `${leistung.title} · 2 Sitzung(en)`, 'Mo, Mi · Vormittag',
   ]);
   assert.equal(await praxis.locator('#anfragenNavBadge').innerText(), '1');
   await karten.getByRole('button', { name: 'Annehmen', exact: true }).waitFor();
+  await karten.getByRole('button', { name: 'Anderer Termin', exact: true }).waitFor();
 
   await oeffentlich.getByRole('button', { name: 'Neue Anfrage stellen', exact: true }).click();
   await durchFormular(oeffentlich, fehlerProbe);
