@@ -1,7 +1,7 @@
 // Praxura Cockpit — Kommandozentrale / Cockpit Home
-import { sb, state, $, esc, toast, fail, fmtDate, showView, myRole } from './app.js?v=20261127c';
-import { t, onLangChange } from './i18n.js?v=20261127c';
-import { getOverview, currentMonthUtc } from './cockpit-api.js?v=20261127c';
+import { sb, state, $, esc, toast, fail, fmtDate, showView, myRole } from './app.js?v=20261127d';
+import { t, onLangChange } from './i18n.js?v=20261127d';
+import { getOverview, currentMonthUtc } from './cockpit-api.js?v=20261127d';
 
 let lastData = null;
 let unsubLang = null;
@@ -181,7 +181,10 @@ function renderHome() {
       <section class="ck-panel">
         <div class="ck-panel-head">
           <h3>${esc(t('home.action.title'))}</h3>
-          <span class="pill ${actionCount > 0 ? 'ck-pill-red' : 'ck-pill-green'}">${esc(actionCount)}</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button type="button" class="btn btn-ghost ck-btn-sm" data-goto="radar">${esc(t('home.action.openRadar'))} →</button>
+            <span class="pill ${actionCount > 0 ? 'ck-pill-red' : 'ck-pill-green'}">${esc(actionCount)}</span>
+          </div>
         </div>
         <div class="ck-action-list">
           ${actionCount === 0 ? `<p class="empty">${esc(t('home.action.empty'))}</p>` : ''}
@@ -254,6 +257,7 @@ function renderHome() {
           <button class="btn btn-primary" id="ckQuickNewPractice">${esc(t('home.quick.newPractice'))}</button>
           ${canSeeKiCosts ? `<button class="btn" id="ckQuickNewBoxCode">${esc(t('home.quick.newBoxCode'))}</button>` : ''}
           <button class="btn" id="ckQuickTickets">${esc(t('home.quick.openTickets'))}</button>
+          <button class="btn" id="ckQuickRadar">${esc(t('home.quick.radar'))}</button>
           ${canSeeKiCosts ? `<button class="btn" id="ckQuickKi">${esc(t('home.quick.checkKi'))}</button>` : ''}
           <button class="btn" id="ckQuickTask">${esc(t('home.quick.newTask'))}</button>
         </div>
@@ -282,6 +286,7 @@ function renderHome() {
     setTimeout(() => window.__praxuraNewBoxCode?.(), 60);
   });
   $('#ckQuickTickets', root)?.addEventListener('click', () => showView('tickets'));
+  $('#ckQuickRadar', root)?.addEventListener('click', () => showView('radar'));
   $('#ckQuickKi', root)?.addEventListener('click', () => showView('ki-costs'));
   $('#ckQuickTask', root)?.addEventListener('click', () => showView('todo'));
 

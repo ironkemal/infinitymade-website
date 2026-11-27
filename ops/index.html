@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Praxura Cockpit</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🗂️</text></svg>">
-<link rel="stylesheet" href="app.css?v=20261127c">
+<link rel="stylesheet" href="app.css?v=20261127d">
 </head>
 <body>
 
@@ -71,6 +71,10 @@
           <span class="nav-ico" aria-hidden="true">⚡</span>
           <span data-i18n="nav.kiCosts">KI & Kosten</span>
         </button>
+        <button class="nav-item" data-view="radar">
+          <span class="nav-ico" aria-hidden="true">📡</span>
+          <span data-i18n="nav.radar">Onboarding & Fristen</span>
+        </button>
       </div>
 
       <div class="nav-group">
@@ -102,6 +106,10 @@
         <button class="nav-item" data-view="files">
           <span class="nav-ico" aria-hidden="true">📁</span>
           <span data-i18n="nav.files">Dateien</span>
+        </button>
+        <button class="nav-item" data-view="team" data-roles="founder">
+          <span class="nav-ico" aria-hidden="true">👥</span>
+          <span data-i18n="nav.team">Team & Rollen</span>
         </button>
       </div>
     </nav>
@@ -140,6 +148,9 @@
 
       <!-- ── KI & Kosten ────────────────────────────────────────────── -->
       <section class="view" id="view-ki-costs" hidden></section>
+
+      <!-- ── Onboarding & Fristen-Radar ────────────────────────────── -->
+      <section class="view" id="view-radar" hidden></section>
 
       <!-- ── Aufgaben ───────────────────────────────────────────────── -->
       <section class="view" id="view-todo" hidden>
@@ -245,6 +256,7 @@
           <a class="btn btn-ghost" id="financeDriveLink" target="_blank" rel="noopener" hidden>Belegordner ↗</a>
         </div>
 
+        <div id="financeUnitEconomics"></div>
         <div class="f-kpi-grid" id="financeKPIs"></div>
         <div id="financeFixcostDetail" hidden></div>
         <div id="financeAICopilot"></div>
@@ -276,6 +288,9 @@
       <!-- ── Fahrtenbuch ───────────────────────────────────────────── -->
       <section id="view-fahrtenbuch" class="view" hidden></section>
 
+      <!-- ── Team & Rollen ─────────────────────────────────────────── -->
+      <section class="view" id="view-team" hidden></section>
+
     </main>
   </div>
 </div>
@@ -294,6 +309,6 @@
 
 <div class="toast" id="toast" hidden></div>
 
-<script type="module" src="app.js?v=20261127c"></script>
+<script type="module" src="app.js?v=20261127d"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 // Praxura Cockpit — KI-Nutzung & Azure-Kosten (nur EK-Kalkulation)
-import { $, esc } from './app.js?v=20261127c';
-import { t, onLangChange } from './i18n.js?v=20261127c';
-import { getKiUsage, currentMonthUtc } from './cockpit-api.js?v=20261127c';
+import { $, esc } from './app.js?v=20261127d';
+import { t, onLangChange } from './i18n.js?v=20261127d';
+import { getKiUsage, currentMonthUtc } from './cockpit-api.js?v=20261127d';
 
 let selectedMonth = currentMonthUtc();
 let sortCol = 'costEur';

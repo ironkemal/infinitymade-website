@@ -1,7 +1,7 @@
 // Praxura Cockpit — Kunden 360° (SaaS + On-Prem Boxen)
-import { sb, $, esc, toast, fail, fmtDate, openModal, confirmDialog, myRole } from './app.js?v=20261127c';
-import { t, onLangChange } from './i18n.js?v=20261127c';
-import { getCustomers, getKiUsage, currentMonthUtc } from './cockpit-api.js?v=20261127c';
+import { sb, $, esc, toast, fail, fmtDate, openModal, confirmDialog, myRole } from './app.js?v=20261127d';
+import { t, onLangChange } from './i18n.js?v=20261127d';
+import { getCustomers, getKiUsage, currentMonthUtc } from './cockpit-api.js?v=20261127d';
 
 const FACHBEREICHE = ['podologie', 'physiotherapie', 'ergotherapie', 'logopaedie', 'interdisziplinaer'];
 

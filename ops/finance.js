@@ -1,7 +1,9 @@
 // Praxura Ops-Dashboard — Finanzen, Anlage EÜR & GoBD Modul v2.0
 // Rechtsträger: Einzelunternehmen Yavuz Kemal Demir (EÜR nach § 4 Abs. 3 EStG)
-import { sb, state, $, $$, esc, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260811a';
+import { sb, state, $, $$, esc, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20261127d';
 import { INVOICE_FOLDER_URL } from './config.js?v=20260811a';
+import { t as tr, onLangChange } from './i18n.js?v=20261127d';
+import { getOverview, currentMonthUtc } from './cockpit-api.js?v=20261127d';
 
 let expenses = [];
 let query = '';
@@ -13,6 +15,163 @@ let selectedVatFilter = 'all';
 let selectedVendor = 'all';
 let onlyRecurring = false;
 let channel = null;
+
+// Unit Economics & Monatsmarge (Cockpit) — liest Fixkosten aus renderKPIs ohne EÜR-Logik zu duplizieren
+let unitEconExpanded = true;
+let unitEconLangUnsub = null;
+let latestMonthlyRecurringEst = 0;
+let latestRecurringCount = 0;
+let unitEconState = {
+  loading: false,
+  loaded: false,
+  billingRows: [],
+  billingSchemaMissing: false,
+  overviewRes: null,
+  month: currentMonthUtc(),
+};
+
+function isUnitMissingTableError(err) {
+  if (!err) return false;
+  return err.code === '42P01' || err.code === 'PGRST205' || /does not exist|could not find the table/i.test(err.message || '');
+}
+
+async function loadUnitEconomics() {
+  const month = currentMonthUtc();
+  unitEconState.loading = true;
+  unitEconState.month = month;
+  renderUnitEconomics();
+
+  const [billingRes, overviewRes] = await Promise.all([
+    sb.from('ops_customer_billing').select('contract_monthly_eur, payment_status, billing_mode'),
+    getOverview(month),
+  ]);
+
+  const billingSchemaMissing = isUnitMissingTableError(billingRes.error);
+  if (billingRes.error && !billingSchemaMissing && billingRes.error.code !== '42501') {
+    console.warn('[ops:unit-econ] Billing:', billingRes.error);
+  }
+
+  unitEconState = {
+    loading: false,
+    loaded: true,
+    billingRows: billingRes.data || [],
+    billingSchemaMissing,
+    overviewRes: overviewRes || { ok: false, data: null },
+    month,
+  };
+
+  renderUnitEconomics();
+}
+
+function renderUnitEconomics() {
+  const container = $('#financeUnitEconomics');
+  if (!container) return;
+
+  const { billingRows, billingSchemaMissing, overviewRes, month, loading, loaded } = unitEconState;
+  const okRows = billingRows.filter((b) => b.payment_status === 'ok');
+  const payingCount = okRows.filter((b) => Number(b.contract_monthly_eur) > 0).length;
+  const monthlyRevenue = okRows.reduce((sum, b) => sum + (Number(b.contract_monthly_eur) || 0), 0);
+
+  const kiData = overviewRes?.ok ? overviewRes.data?.ki : null;
+  const hasKi = kiData && Number.isFinite(Number(kiData.totalCostEur));
+  const kiCostEur = hasKi ? Number(kiData.totalCostEur) : null;
+  const kiCalls = hasKi ? Math.round(Number(kiData.calls) || 0).toLocaleString('de-DE') : null;
+
+  const fixCostEur = latestMonthlyRecurringEst;
+  const marginEur = billingSchemaMissing
+    ? null
+    : monthlyRevenue - (kiCostEur ?? 0) - fixCostEur;
+  const kiSharePct = !billingSchemaMissing && hasKi && monthlyRevenue > 0
+    ? ((kiCostEur / monthlyRevenue) * 100).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+    : null;
+
+  let hintBanner = '';
+  if (loaded && billingSchemaMissing) {
+    hintBanner += `<div class="ck-banner ck-banner-warn" style="margin-bottom:10px">${esc(tr('common.schemaPending'))}</div>`;
+  }
+  if (loaded && overviewRes && !overviewRes.ok) {
+    const apiMsg = overviewRes.reason === 'NOT_CONFIGURED'
+      ? tr('common.apiNotConfigured')
+      : tr('common.apiOffline', { reason: overviewRes.reason || 'offline' });
+    hintBanner += `<div class="ck-banner ck-banner-info" style="margin-bottom:10px">${esc(apiMsg)}</div>`;
+  }
+
+  const marginSub = billingSchemaMissing
+    ? tr('fin.unit.schemaHint')
+    : hasKi
+      ? tr('fin.unit.marginSub', { pct: kiSharePct ?? '—' })
+      : tr('fin.unit.marginNoKi');
+
+  container.innerHTML = `
+    <section class="unit-econ-card">
+      <div class="unit-econ-head">
+        <div>
+          <div class="unit-econ-title-row">
+            <h3 class="unit-econ-title">${esc(tr('fin.unit.title'))}</h3>
+            <span class="ck-badge">${esc(month)}</span>
+          </div>
+          <p class="unit-econ-sub">${esc(tr('fin.unit.subtitle'))}</p>
+        </div>
+        <div class="unit-econ-actions">
+          <button type="button" class="btn btn-ghost ck-btn-sm" id="unitEconRefreshBtn" ${loading ? 'disabled' : ''}>
+            ${esc(tr('common.refresh'))}
+          </button>
+          <button type="button" class="btn btn-ghost ck-btn-sm" id="unitEconToggleBtn" aria-expanded="${unitEconExpanded ? 'true' : 'false'}">
+            ${esc(unitEconExpanded ? tr('fin.unit.collapse') : tr('fin.unit.expand'))}
+          </button>
+        </div>
+      </div>
+
+      ${unitEconExpanded ? `
+        <div class="unit-econ-body">
+          ${hintBanner}
+          <div class="unit-econ-grid">
+            <div class="unit-econ-kpi">
+              <span class="unit-econ-kpi-label">${esc(tr('fin.unit.kpi.revenue'))}</span>
+              <strong class="unit-econ-kpi-val">${billingSchemaMissing ? '—' : esc(fmtEuro(monthlyRevenue))}</strong>
+              <span class="unit-econ-kpi-sub">${billingSchemaMissing
+                ? esc(tr('fin.unit.schemaHint'))
+                : esc(tr('fin.unit.kpi.revenueSub', { count: payingCount }))}</span>
+            </div>
+
+            <div class="unit-econ-kpi">
+              <span class="unit-econ-kpi-label">${esc(tr('fin.unit.kpi.ki'))}</span>
+              <strong class="unit-econ-kpi-val">${hasKi ? esc(fmtEuro(kiCostEur)) : '—'}</strong>
+              <span class="unit-econ-kpi-sub">${hasKi
+                ? esc(tr('fin.unit.kpi.kiSub', { month, calls: kiCalls }))
+                : esc(tr('fin.unit.kiOffline'))}</span>
+            </div>
+
+            <div class="unit-econ-kpi">
+              <span class="unit-econ-kpi-label">${esc(tr('fin.unit.kpi.fix'))}</span>
+              <strong class="unit-econ-kpi-val">${esc(fmtEuro(fixCostEur))}</strong>
+              <span class="unit-econ-kpi-sub">${esc(tr('fin.unit.kpi.fixSub', { count: latestRecurringCount }))}</span>
+            </div>
+
+            <div class="unit-econ-kpi ${marginEur !== null ? (marginEur >= 0 ? 'is-pos' : 'is-neg') : ''}">
+              <span class="unit-econ-kpi-label">${esc(tr('fin.unit.kpi.margin'))}</span>
+              <strong class="unit-econ-kpi-val ${marginEur !== null ? (marginEur >= 0 ? 'unit-pos' : 'unit-neg') : ''}">
+                ${marginEur !== null ? esc(fmtEuro(marginEur)) : '—'}
+              </strong>
+              <span class="unit-econ-kpi-sub">${esc(marginSub)}</span>
+            </div>
+          </div>
+
+          <div class="unit-econ-foot">${esc(tr('fin.unit.disclaimer'))}</div>
+        </div>
+      ` : ''}
+    </section>
+  `;
+
+  $('#unitEconToggleBtn', container)?.addEventListener('click', () => {
+    unitEconExpanded = !unitEconExpanded;
+    renderUnitEconomics();
+  });
+
+  $('#unitEconRefreshBtn', container)?.addEventListener('click', () => {
+    loadUnitEconomics();
+  });
+}
 
 export function normalizeVendor(rawName) {
   const s = String(rawName || '').trim();
@@ -634,6 +793,8 @@ function renderKPIs(list) {
     if (item.recurring_interval === 'quarterly') return sum + (gross / 3);
     return sum + gross;
   }, 0);
+  latestMonthlyRecurringEst = monthlyRecurringEst;
+  latestRecurringCount = recurringItems.length;
 
   // Review & Plausibility Metrics
   const reviewNeeded = list.filter(i => i.status === 'review_needed' || i.needs_review).length;
@@ -704,6 +865,7 @@ function renderKPIs(list) {
   });
 
   renderFixcostDetail(recurringItems, monthlyRecurringEst);
+  renderUnitEconomics();
 }
 
 function renderCategoryBreakdown(list) {
@@ -1604,5 +1766,12 @@ export function mountFinance() {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'ops_finance_expenses' }, reload)
     .subscribe();
 
+  if (!unitEconLangUnsub) {
+    unitEconLangUnsub = onLangChange(() => {
+      if (!$('#view-ausgaben')?.hidden) renderUnitEconomics();
+    });
+  }
+
   loadExpenses();
+  loadUnitEconomics();
 }

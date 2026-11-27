@@ -1,6 +1,6 @@
 // Praxura Cockpit — Boxen & KI-Fabrik (Merkez Admin-Bridge UI)
-import { $, esc, toast, fail, fmtDateTime, openModal, myRole } from './app.js?v=20261127c';
-import { t, onLangChange } from './i18n.js?v=20261127c';
+import { $, esc, toast, fail, fmtDateTime, openModal, myRole } from './app.js?v=20261127d';
+import { t, onLangChange } from './i18n.js?v=20261127d';
 import {
   merkezStatus,
   merkezNewCode,
@@ -8,7 +8,7 @@ import {
   merkezUpdateBoxKi,
   merkezSetKiGlobal,
   merkezIptalBox,
-} from './cockpit-api.js?v=20261127c';
+} from './cockpit-api.js?v=20261127d';
 
 const SILENT_THRESHOLD_SEC = 24 * 3600;
 

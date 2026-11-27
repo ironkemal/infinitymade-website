@@ -2009,5 +2009,427 @@ a { color: var(--blue); }
   content: '▴';
 }
 
+/* ── Onboarding & Fristen-Radar ──────────────────────────────────────── */
+.radar-tabs {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.radar-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-dim);
+  padding: 7px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.radar-tab:hover {
+  color: var(--text);
+  background: var(--card);
+}
+.radar-tab.is-active {
+  color: var(--text);
+  background: var(--card-hi);
+  border-color: var(--gold);
+}
+
+.radar-stage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.radar-stage-kpi {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  text-align: left;
+  cursor: pointer;
+  display: grid;
+  gap: 2px;
+  transition: border-color .12s, background .12s;
+}
+.radar-stage-kpi:hover {
+  background: var(--card-hi);
+}
+.radar-stage-kpi.is-active {
+  border-color: var(--gold);
+  background: rgba(201, 162, 39, .08);
+}
+.radar-stage-kpi.stage-aktiv      { border-left: 3px solid var(--green); }
+.radar-stage-kpi.stage-risiko     { border-left: 3px solid var(--red); }
+.radar-stage-kpi.stage-onboarding { border-left: 3px solid var(--blue); }
+.radar-stage-kpi.stage-demo,
+.radar-stage-kpi.stage-lead       { border-left: 3px solid var(--gold); }
+.radar-stage-kpi.stage-gekuendigt { border-left: 3px solid var(--text-mute); }
+
+.radar-stage-label {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.radar-stage-val {
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.radar-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.radar-stage-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.radar-stage-pills .btn.is-active {
+  border-color: var(--gold);
+  background: rgba(201, 162, 39, .12);
+  color: var(--gold);
+}
+
+.radar-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 12px;
+}
+
+.radar-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.radar-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.radar-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.radar-card-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.radar-progress-wrap {
+  display: grid;
+  gap: 5px;
+}
+
+.radar-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.radar-progress-meta strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.radar-progress-track {
+  height: 7px;
+  border-radius: 999px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.radar-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--blue);
+  transition: width .18s ease;
+}
+.radar-progress-fill.is-complete {
+  background: var(--green);
+}
+
+.radar-checklist {
+  display: grid;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.radar-chk-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+.radar-chk-item.is-done span {
+  color: var(--text-dim);
+}
+.radar-chk-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--green);
+  cursor: pointer;
+}
+.radar-chk-item input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+  opacity: .65;
+}
+
+.radar-row-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* ── Team & Rollen ───────────────────────────────────────────────────── */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.team-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: grid;
+  gap: 12px;
+}
+.team-card.is-inactive {
+  opacity: .68;
+  border-style: dashed;
+}
+
+.team-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.team-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.team-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex: none;
+  border: 1px solid var(--line);
+}
+
+.team-name {
+  font-weight: 600;
+  font-size: 14.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.team-email {
+  font-size: 12px;
+  color: var(--text-mute);
+  overflow-wrap: anywhere;
+}
+
+.team-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.team-meta {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-dim);
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+}
+.team-meta strong {
+  color: var(--text);
+}
+
+.team-controls {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.team-toggle-wrap {
+  display: grid;
+  gap: 6px;
+}
+.team-toggle-wrap > span {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.team-bottom-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.team-guide-steps {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+/* ── Unit Economics & Monatsmarge Card (Finanzen) ────────────────────── */
+.unit-econ-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+
+.unit-econ-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.unit-econ-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.unit-econ-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.unit-econ-sub {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+
+.unit-econ-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.unit-econ-body {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.unit-econ-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.unit-econ-kpi {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 11px 13px;
+  display: grid;
+  gap: 3px;
+}
+.unit-econ-kpi.is-pos { border-left: 3px solid var(--green); }
+.unit-econ-kpi.is-neg { border-left: 3px solid var(--red); }
+
+.unit-econ-kpi-label {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.unit-econ-kpi-val {
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.unit-econ-kpi-val.unit-pos { color: var(--green); }
+.unit-econ-kpi-val.unit-neg { color: var(--red); }
+
+.unit-econ-kpi-sub {
+  font-size: 11.5px;
+  color: var(--text-mute);
+}
+
+.unit-econ-foot {
+  margin-top: 10px;
+  font-size: 11.5px;
+  color: var(--text-mute);
+}
+
+@media (max-width: 960px) {
+  .team-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .radar-cards,
+  .team-grid {
+    grid-template-columns: 1fr;
+  }
+  .team-controls {
+    grid-template-columns: 1fr;
+  }
+}
+
+
 
 

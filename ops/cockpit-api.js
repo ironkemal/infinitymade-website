@@ -1,6 +1,6 @@
 // Praxura Cockpit — Client für /api/cockpit/* (SaaS-Backend)
 import { COCKPIT_API_URL } from './config.js?v=20261127a';
-import { sb } from './app.js?v=20261127c';
+import { sb } from './app.js?v=20261127d';
 
 export function currentMonthUtc() {
   return new Date().toISOString().slice(0, 7);

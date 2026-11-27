@@ -1,7 +1,7 @@
 // Praxura Ops-Dashboard / Cockpit — Shell: Auth, RBAC, Router, i18n, gemeinsame Helfer
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20261127a';
-import { t, setLang, onLangChange, applyI18n, registerLangSync, LANGS } from './i18n.js?v=20261127c';
+import { t, setLang, onLangChange, applyI18n, registerLangSync, LANGS } from './i18n.js?v=20261127d';
 
 const AUTH_STORAGE_KEY = 'praxura-ops-auth';
 const VALID_ROLES = ['founder', 'tech', 'support', 'sales'];
@@ -12,6 +12,7 @@ const VIEW_ROLES = {
   tickets:     ['founder', 'tech', 'support', 'sales'],
   boxes:       ['founder', 'tech'],
   'ki-costs':  ['founder', 'tech'],
+  radar:       ['founder', 'tech', 'support', 'sales'],
   todo:        ['founder', 'tech', 'support', 'sales'],
   ausgaben:    ['founder'],
   meetings:    ['founder', 'tech', 'support', 'sales'],
@@ -19,6 +20,7 @@ const VIEW_ROLES = {
   wissen:      ['founder', 'tech', 'support', 'sales'],
   fahrtenbuch: ['founder'],
   files:       ['founder', 'tech', 'support', 'sales'],
+  team:        ['founder'],
 };
 
 const VIEW_I18N = {
@@ -27,6 +29,7 @@ const VIEW_I18N = {
   tickets:     'nav.tickets',
   boxes:       'nav.boxes',
   'ki-costs':  'nav.kiCosts',
+  radar:       'nav.radar',
   todo:        'nav.todo',
   ausgaben:    'nav.ausgaben',
   meetings:    'nav.meetings',
@@ -34,6 +37,7 @@ const VIEW_I18N = {
   wissen:      'nav.wissen',
   fahrtenbuch: 'nav.fahrtenbuch',
   files:       'nav.files',
+  team:        'nav.team',
 };
 
 async function boundedLock(name, acquireTimeout, fn) {
@@ -360,18 +364,20 @@ const withTimeout = (p, ms) =>
 
 async function showApp() {
   const modules = [
-    ['cockpit',     './cockpit-home.js?v=20261127c', 'mountCockpit'],
-    ['customers',   './customers.js?v=20261127c',    'mountCustomers'],
-    ['tickets',     './tickets.js?v=20261127c',      'mountTickets'],
-    ['boxes',       './boxes.js?v=20261127c',        'mountBoxes'],
-    ['ki-costs',    './ki-costs.js?v=20261127c',     'mountKiCosts'],
+    ['cockpit',     './cockpit-home.js?v=20261127d', 'mountCockpit'],
+    ['customers',   './customers.js?v=20261127d',    'mountCustomers'],
+    ['tickets',     './tickets.js?v=20261127d',      'mountTickets'],
+    ['boxes',       './boxes.js?v=20261127d',        'mountBoxes'],
+    ['ki-costs',    './ki-costs.js?v=20261127d',     'mountKiCosts'],
+    ['radar',       './radar.js?v=20261127d',        'mountRadar'],
     ['todo',        './board.js?v=20261023blocker1', 'mountTodo'],
     ['wissen',      './wissen.js?v=20260811a',       'mountWissen'],
     ['decisions',   './decisions.js?v=20260811a',    'mountDecisions'],
     ['meetings',    './meetings.js?v=20260811a',     'mountMeetings'],
-    ['ausgaben',    './finance.js?v=20260816j',      'mountFinance'],
+    ['ausgaben',    './finance.js?v=20261127d',      'mountFinance'],
     ['fahrtenbuch', './fahrtenbuch.js?v=20260816b',  'mountFahrtenbuch'],
     ['files',       './files.js?v=20260811a',        'mountFiles'],
+    ['team',        './team.js?v=20261127d',         'mountTeam'],
   ];
 
   const broken = [];
