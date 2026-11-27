@@ -8,6 +8,8 @@ Die Antigravity-Sitzung meldete die Nachbesserung `cb02a883`. Der Commit liegt a
 
 **Offener Befund:** In `verwaisteTeamfotoPfade` steht vor `jpg` ein ungefiltertes Regex-Metazeichen. Im synthetischen Gegenversuch gelangte dadurch auch `123Xjpg` in den Löschauftrag. Es wurden keine echten Dateien gelöscht. Die Ordnerliste ist außerdem auf 100 Einträge begrenzt, weitere Seiten werden nicht gelesen. Eine vollständige Altbestandsbereinigung ist damit nicht belegt.
 
+Der parallel dokumentierte [[2026-11-27_profilfoto-live-nachtest]] bestätigt fünf erfolgreiche Live-Löschungen mit synthetischen QA-Konten und beschreibt zwei weitere Randfälle bei Listenfehlern und Wiederholungsversuchen.
+
 ## Arbeitszeitbericht – Screenshot vom 27.11.2026
 
 Der Text entsteht im Dashboard beim Aufruf von `GET /api/attendance/report`. `module/api-sitzung.js` zeigt die Meldung bei HTTP 503 oder Fehlercode `AUTH_UNAVAILABLE`. Ein erneuter Aufruf ohne Anmeldung lieferte auf dem öffentlichen Backend HTTP 401. Das belegt Erreichbarkeit zum Prüfzeitpunkt. HTTP-Status, Ursache und Erfolg eines angemeldeten Abrufs auf der betroffenen Installation sind offen.
