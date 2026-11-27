@@ -9,6 +9,8 @@ tags: [sitzung, uebersicht]
 
 **Bei „Was ist noch offen?“:** [[2026-11-11_offene-punkte-wiederaufnahme]] zuerst lesen, dann neuere Belege und führende Restmatrix abgleichen. Enthält Restpunkte, Zuständigkeiten, externe Mitwirkung und Rückstellungen.
 
+Aktuelle Ergänzung (27.11.): [[2026-11-27_profilfoto-und-zeitbericht]] — Gemini-Fotofix nachgeprüft, Dateifilter-Befund und Einordnung der Fehlermeldung im Arbeitszeitbericht.
+
 Aktuelle Ergänzung (27.11.): [[2026-11-27_sechs-praxura-pakete-anfragen-anamnese-mail-design]] — Alle 6 Praxura-Pakete aus der Offenliste umgesetzt, tief per Unit-Tests & Playwright geprüft und auf `origin/main` gepusht: Leistungen (`Hepsi` → `Alle`, Suche/Filter, Formularstruktur), Anfrage-Seite auf bevorzugte Wochentage/Tageszeit statt Datum + `POST /api/booking-request/update` + `Anderer Termin` + KI-Nachricht (`/api/ai/b2c-draft`), KI-BYOK Option-D-Anleitung (`docs/ki-byok-einrichtung.md`), Anamnese-Fortschrittsleiste & einklappbare Bereiche, Anti-Spam-Mailvorlagen (`multipart/alternative` + Domain-Message-ID) & Browser-Versanddialog, sowie aktuelles Praxura-Design (`data-design="neu"`) auf allen 8 öffentlichen Buchungs-/Auth-Seiten. Offen: Live-Sichtprüfung nach Deploy und Box-Update.
 
 Aktuelle Ergänzung (26.11.): [[2026-11-26_kemal-uebergabe-302-emailweg-ohne-dakota]] — Grundsatzentscheidung §302-Abrechnung per Praxis-E-Mail ohne dakota.le (nur ITSG-Zertifikat, 28/28 Heilmittel-DAS akzeptieren E-Mail), Fix-Paket F1–F11 (`origin/main:ABRECHNUNG_EMAILWEG_FIXPAKET.md`, Commit `98da5452`), Abgleich mit bisherigen AZE-Tests (`590537440`, `TSOL0101–0105` am 19.11. formal angenommen) sowie Aufgabenverteilung Agent vs. Melih dokumentiert. Umsetzung noch nicht gestartet (lokaler `main` noch `ahead 1, behind 15`).
