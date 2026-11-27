@@ -4,7 +4,7 @@ import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
 import { planungVerdrahten, raumFelder, sondertagGesperrt, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261121f11';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
-import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261124by1'; import { mountSystemstatus } from './module/systemstatus.js?v=20261124st1'; import { kanalStatusBehandler } from './module/realtime-status.js?v=20261123rt1';
+import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261127kn1'; import { mountSystemstatus } from './module/systemstatus.js?v=20261124st1'; import { kanalStatusBehandler } from './module/realtime-status.js?v=20261123rt1';
 import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261124by1';
 import { zeigeKiRueckfrageDialog } from './module/ki-rueckfrage.js?v=20261124by1';
 import { dsgvoVerdrahten } from './module/dsgvo-client.js?v=20261002';
@@ -18,7 +18,7 @@ import { erstelleUeberweisungUpload } from './module/patient-ueberweisung-upload
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE, IST_KUTU, DESIGN_VORSCHAU } from './supabase-config.js';
 import { initLeadSuche } from './module/lead-suche.js?v=20261030k4';
-import { holeFahrzeitBeimSpeichern } from './module/hausbesuch-route.js?v=20261021r'; import './module/support-kontakt.js?v=20261007a'; import './module/mail-entwurf.js?v=20261103mail1'; // Box-Anpassungen (K2b.15)
+import { holeFahrzeitBeimSpeichern } from './module/hausbesuch-route.js?v=20261021r'; import './module/support-kontakt.js?v=20261127sk1'; import './module/mail-entwurf.js?v=20261103mail1'; // Box-Anpassungen (K2b.15)
 import { attachDiagnoseSearch, attachHeilmittelSearch } from './katalog-suche.js?v=20261001a';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20261003m16';
 import { attachPatientSearch } from './patient-suche.js?v=20260906';

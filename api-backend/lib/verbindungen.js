@@ -60,6 +60,13 @@ export function verbindungenListe(env = process.env, postfach = null) {
       "Box-Kennung (signiert), die interne IP-Adresse der Box und die Kennung ihres Let's-Encrypt-Kontos — keine Patientendaten");
   }
 
+  const supportHost = host(env.SUPPORT_API_URL || '');
+  if (supportHost) {
+    add(supportHost, 'Praxura Support-Tickets (optional, ohne Patientendaten)',
+      'nur wenn die Praxis eine Support-Anfrage öffnet oder aktualisiert',
+      'Box-Kennung (signiert), Ticket-Betreff, Beschreibung und technischer Kontext — keine Patientendaten');
+  }
+
   const modus = env.CADDY_TLS_MODUS || '';
   const tlsArg = env.CADDY_TLS_ARG || 'internal';
   if (modus === 'acmedns') {

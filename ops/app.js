@@ -9,6 +9,7 @@ const VALID_ROLES = ['founder', 'tech', 'support', 'sales'];
 const VIEW_ROLES = {
   cockpit:     ['founder', 'tech', 'support', 'sales'],
   customers:   ['founder', 'tech', 'support', 'sales'],
+  tickets:     ['founder', 'tech', 'support', 'sales'],
   'ki-costs':  ['founder', 'tech'],
   todo:        ['founder', 'tech', 'support', 'sales'],
   ausgaben:    ['founder'],
@@ -22,6 +23,7 @@ const VIEW_ROLES = {
 const VIEW_I18N = {
   cockpit:     'nav.cockpit',
   customers:   'nav.customers',
+  tickets:     'nav.tickets',
   'ki-costs':  'nav.kiCosts',
   todo:        'nav.todo',
   ausgaben:    'nav.ausgaben',
@@ -356,8 +358,9 @@ const withTimeout = (p, ms) =>
 
 async function showApp() {
   const modules = [
-    ['cockpit',     './cockpit-home.js?v=20261127a', 'mountCockpit'],
+    ['cockpit',     './cockpit-home.js?v=20261127b', 'mountCockpit'],
     ['customers',   './customers.js?v=20261127a',    'mountCustomers'],
+    ['tickets',     './tickets.js?v=20261127b',      'mountTickets'],
     ['ki-costs',    './ki-costs.js?v=20261127a',     'mountKiCosts'],
     ['todo',        './board.js?v=20261023blocker1', 'mountTodo'],
     ['wissen',      './wissen.js?v=20260811a',       'mountWissen'],

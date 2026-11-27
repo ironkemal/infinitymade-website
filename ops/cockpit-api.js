@@ -10,7 +10,7 @@ export function currentMonthUtc() {
  * Ruft einen Cockpit-Endpunkt mit aktuellem Ops-Supabase-Bearer-Token auf.
  * Liefert immer ein strukturiertes Ergebnis `{ ok, offline, status?, reason?, data? }`.
  */
-export async function cockpitFetch(path, { method = 'GET', query = {} } = {}) {
+export async function cockpitFetch(path, { method = 'GET', query = {}, body } = {}) {
   const base = String(COCKPIT_API_URL || '').trim().replace(/\/+$/, '');
   if (!base) {
     return { ok: false, offline: true, reason: 'NOT_CONFIGURED' };
@@ -36,30 +36,38 @@ export async function cockpitFetch(path, { method = 'GET', query = {} } = {}) {
   const qs = params.toString();
   const url = `${base}${path}${qs ? `?${qs}` : ''}`;
 
+  const headers = {
+    Authorization: `Bearer ${accessToken}`,
+    Accept: 'application/json',
+  };
+  let payload;
+  if (body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+    payload = JSON.stringify(body);
+  }
+
   try {
     const res = await fetch(url, {
       method,
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: 'application/json',
-      },
+      headers,
+      ...(payload !== undefined ? { body: payload } : {}),
       signal: globalThis.AbortSignal?.timeout ? AbortSignal.timeout(12000) : undefined,
     });
 
-    let body = null;
-    try { body = await res.json(); } catch { body = null; }
+    let parsed = null;
+    try { parsed = await res.json(); } catch { parsed = null; }
 
     if (!res.ok) {
       return {
         ok: false,
         offline: res.status >= 500,
         status: res.status,
-        reason: body?.error || res.statusText || `HTTP_${res.status}`,
-        data: body,
+        reason: parsed?.error || res.statusText || `HTTP_${res.status}`,
+        data: parsed,
       };
     }
 
-    return { ok: true, offline: false, status: res.status, data: body };
+    return { ok: true, offline: false, status: res.status, data: parsed };
   } catch (err) {
     return {
       ok: false,
@@ -69,6 +77,8 @@ export async function cockpitFetch(path, { method = 'GET', query = {} } = {}) {
     };
   }
 }
+
+export const cockpitApi = cockpitFetch;
 
 export function getOverview(month = currentMonthUtc()) {
   return cockpitFetch('/api/cockpit/overview', { query: { month } });
@@ -80,4 +90,11 @@ export function getCustomers(month = currentMonthUtc()) {
 
 export function getKiUsage(month = currentMonthUtc(), tenantId = '') {
   return cockpitFetch('/api/cockpit/ki-usage', { query: { month, tenantId } });
+}
+
+export function replySupportTicket(ticketId, payload) {
+  return cockpitFetch(`/api/support/cockpit/tickets/${encodeURIComponent(ticketId)}/reply`, {
+    method: 'POST',
+    body: payload,
+  });
 }

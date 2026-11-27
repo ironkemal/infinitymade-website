@@ -42,6 +42,7 @@ import { createSondertagMitteilungRouter } from './routes/sondertag-mitteilung.j
 import { createMailversandRouter } from './routes/mailversand.js';
 import { createFormularSignierenRouter } from './routes/formular-signieren.js';
 import { createCockpitRouter } from './routes/cockpit.js';
+import { createSupportRouter } from './routes/support.js';
 import { istKutu, appBaseUrl } from './lib/dagitim.js';
 import { mailEntwurfStattVersand, entwurfBestaetigt, entwurfAbgelehnt, entwurfGegenangebot, entwurfNachricht } from './lib/mail-entwurf.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
@@ -172,10 +173,13 @@ const handleAiParsing = (req, res, next) => {
 // 2. Default JSON Parser for everything else (billing, booking, etc.) + 6mb for formular-signieren
 const defaultParser = express.json({ limit: '256kb' });
 const signierenParser = express.json({ limit: '6mb' });
+const supportBoxParser = express.raw({ type: () => true, limit: '64kb' });
 
 app.use((req, res, next) => {
   if (req.path === '/api/dokument/formular-signieren') {
     signierenParser(req, res, next);
+  } else if (req.path.toLowerCase().startsWith('/api/support/box')) {
+    supportBoxParser(req, res, next);
   } else if (req.path.startsWith('/api/ai/') || req.path.startsWith('/api/rezept/')) {
     handleAiParsing(req, res, next);
   } else {
@@ -670,6 +674,8 @@ app.use('/api', createFormularSignierenRouter({ supabase }));
 if (!istKutu()) {
   app.use('/api/cockpit', createCockpitRouter({ supabase }));
 }
+// Hybrides Support-Ticket-System (SaaS zentral, Box per signiertem Relay).
+app.use('/api/support', createSupportRouter({ supabase }));
 
 app.post('/api/booking/:id/sitzung-abschliessen', requireAuthAI, createSitzungsabschluss({
   clientFuerToken: token => createClient(supabaseUrl, supabaseKey, {

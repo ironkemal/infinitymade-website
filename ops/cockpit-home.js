@@ -36,7 +36,7 @@ async function fetchHomeData() {
   const canSeeBilling = role === 'founder' || role === 'sales';
   const canSeeAlertsTable = role === 'founder' || role === 'tech' || role === 'support';
 
-  const [custRes, billingRes, alertsRes, apiRes] = await Promise.all([
+  const [custRes, billingRes, alertsRes, ticketsRes, apiRes] = await Promise.all([
     sb.from('ops_customers').select('id, display_name, lifecycle_stage, deployment_mode, itsg_cert_expires_at, avv_signed'),
     canSeeBilling
       ? sb.from('ops_customer_billing').select('customer_id, payment_status')
@@ -44,6 +44,7 @@ async function fetchHomeData() {
     canSeeAlertsTable
       ? sb.from('ops_alerts').select('*').is('resolved_at', null).order('created_at', { ascending: false })
       : Promise.resolve({ data: [], error: null }),
+    sb.from('ops_tickets').select('id, ticket_no, subject, practice_name, priority, status, created_at').neq('status', 'geloest').order('created_at', { ascending: false }),
     getOverview(month),
   ]);
 
@@ -55,6 +56,7 @@ async function fetchHomeData() {
   if (custRes.error && !isMissingTableError(custRes.error)) fail('Cockpit Kunden', custRes.error);
   if (billingRes.error && !isMissingTableError(billingRes.error)) fail('Cockpit Billing', billingRes.error);
   if (alertsRes.error && !isMissingTableError(alertsRes.error)) fail('Cockpit Alerts', alertsRes.error);
+  if (ticketsRes.error && !isMissingTableError(ticketsRes.error)) fail('Cockpit Tickets', ticketsRes.error);
 
   return {
     role,
@@ -63,6 +65,7 @@ async function fetchHomeData() {
     customers: custRes.data || [],
     billing: billingRes.data || [],
     alerts: alertsRes.data || [],
+    openTickets: ticketsRes.data || [],
     api: apiRes,
   };
 }
@@ -71,7 +74,7 @@ function renderHome() {
   const root = $('#view-cockpit');
   if (!root || !lastData) return;
 
-  const { role, month, schemaMissing, customers, billing, alerts, api } = lastData;
+  const { role, month, schemaMissing, customers, billing, alerts, openTickets = [], api } = lastData;
   const canSeeBilling = role === 'founder' || role === 'sales';
   const canSeeKiCosts = role === 'founder' || role === 'tech';
   const overview = api.ok ? api.data : null;
@@ -94,7 +97,18 @@ function renderHome() {
   const sevRank = { critical: 0, warn: 1, info: 2 };
   const sortedAlerts = [...alerts].sort((a, b) => (sevRank[a.severity] ?? 9) - (sevRank[b.severity] ?? 9));
 
-  const actionCount = sortedAlerts.length + expiringCerts.length + retirements.length;
+  const alertTicketIds = new Set(
+    sortedAlerts
+      .filter((a) => a.kind === 'ticket_urgent' && a.details?.ticket_id)
+      .map((a) => a.details.ticket_id)
+  );
+  const urgentTickets = openTickets.filter(
+    (tkt) => (tkt.priority === 'kritisch' || tkt.priority === 'hoch') && !alertTicketIds.has(tkt.id)
+  );
+  const newTicketsCount = openTickets.filter((tkt) => tkt.status === 'neu').length;
+  const allUrgentCount = openTickets.filter((tkt) => tkt.priority === 'kritisch' || tkt.priority === 'hoch').length;
+
+  const actionCount = sortedAlerts.length + expiringCerts.length + retirements.length + urgentTickets.length;
 
   let statusBanner = '';
   if (schemaMissing) {
@@ -145,6 +159,12 @@ function renderHome() {
             : esc(t('cust.noKiData'))}</div>
         </div>
       ` : ''}
+
+      <div class="ck-kpi ${allUrgentCount > 0 ? 'is-warn' : ''}" style="cursor:pointer;" data-goto="tickets">
+        <div class="ck-kpi-label">${esc(t('home.kpi.openTickets'))}</div>
+        <div class="ck-kpi-val">${esc(openTickets.length)}</div>
+        <div class="ck-kpi-sub">${esc(t('home.kpi.openTicketsSub', { neu: newTicketsCount, urgent: allUrgentCount }))}</div>
+      </div>
 
       <div class="ck-kpi ${actionCount > 0 ? 'is-alert' : 'is-ok'}">
         <div class="ck-kpi-label">${esc(t('home.kpi.openAlerts'))}</div>
@@ -209,6 +229,20 @@ function renderHome() {
               <button class="btn btn-ghost ck-btn-sm" data-goto="ki-costs">${esc(t('nav.kiCosts'))}</button>
             </div>
           `).join('')}
+
+          ${urgentTickets.map((tkt) => `
+            <div class="ck-action-item sev-${tkt.priority === 'kritisch' ? 'critical' : 'warn'}">
+              <div class="ck-action-main">
+                <div class="ck-action-top">
+                  <span class="ck-badge sev-${tkt.priority === 'kritisch' ? 'critical' : 'warn'}">${esc(t(`tkt.prio.${tkt.priority}`).toUpperCase())}</span>
+                  <span class="ck-badge">TICKET</span>
+                  <span class="hint">${esc(fmtDate(tkt.created_at))}</span>
+                </div>
+                <div class="ck-action-title">${esc(t('home.action.ticketUrgent', { no: tkt.ticket_no, subject: tkt.subject, practice: tkt.practice_name || '—' }))}</div>
+              </div>
+              <button class="btn btn-ghost ck-btn-sm" data-open-ticket-id="${esc(tkt.id)}">${esc(t('nav.tickets'))}</button>
+            </div>
+          `).join('')}
         </div>
       </section>
 
@@ -218,6 +252,7 @@ function renderHome() {
         </div>
         <div class="ck-quick-list">
           <button class="btn btn-primary" id="ckQuickNewPractice">${esc(t('home.quick.newPractice'))}</button>
+          <button class="btn" id="ckQuickTickets">${esc(t('home.quick.openTickets'))}</button>
           ${canSeeKiCosts ? `<button class="btn" id="ckQuickKi">${esc(t('home.quick.checkKi'))}</button>` : ''}
           <button class="btn" id="ckQuickTask">${esc(t('home.quick.newTask'))}</button>
         </div>
@@ -241,8 +276,17 @@ function renderHome() {
     showView('customers');
     setTimeout(() => window.__praxuraOpenNewPractice?.(), 60);
   });
+  $('#ckQuickTickets', root)?.addEventListener('click', () => showView('tickets'));
   $('#ckQuickKi', root)?.addEventListener('click', () => showView('ki-costs'));
   $('#ckQuickTask', root)?.addEventListener('click', () => showView('todo'));
+
+  root.querySelectorAll('[data-open-ticket-id]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-open-ticket-id');
+      if (window.__praxuraOpenTicket) window.__praxuraOpenTicket(id);
+      else showView('tickets');
+    });
+  });
 
   root.querySelectorAll('[data-goto]').forEach((btn) => {
     btn.addEventListener('click', () => showView(btn.getAttribute('data-goto')));

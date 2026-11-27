@@ -785,7 +785,7 @@ a { color: var(--blue); }
 .fb-sub-tabs {
   display: flex;
   gap: 6px;
-  background: var(--bg-1);
+  background: var(--bg-2);
   padding: 4px;
   border-radius: 8px;
   border: 1px solid var(--line);
@@ -823,7 +823,7 @@ a { color: var(--blue); }
   gap: 12px;
   margin-bottom: 14px;
   padding: 10px 14px;
-  background: var(--bg-1);
+  background: var(--bg-2);
   border-radius: 8px;
   border: 1px solid var(--line);
 }
@@ -1811,6 +1811,124 @@ a { color: var(--blue); }
   .ck-home-grid,
   .ck-two-col,
   .ck-kv-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Support Tickets Desk ────────────────────────────────────────────── */
+.tkt-drawer {
+  width: min(640px, 100vw);
+}
+
+.tkt-tech-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.tkt-controls-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.tkt-meta-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.tkt-timeline {
+  display: grid;
+  gap: 10px;
+}
+
+.tkt-msg {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+  border-left: 3px solid var(--line);
+}
+
+.tkt-msg.msg-praxis {
+  border-left-color: var(--blue);
+}
+
+.tkt-msg.msg-staff {
+  border-left-color: var(--green);
+}
+
+.tkt-msg.msg-internal {
+  border-left-color: var(--gold);
+  border-color: rgba(201, 162, 39, .4);
+  background: rgba(201, 162, 39, .08);
+}
+
+.tkt-msg-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.tkt-msg-who {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+
+.tkt-msg-body {
+  font-size: 13.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--text);
+}
+
+.tkt-mode-switch {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.tkt-reply-box {
+  display: grid;
+  gap: 10px;
+}
+
+.tkt-reply-box textarea {
+  width: 100%;
+  resize: vertical;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  font: inherit;
+}
+
+.tkt-reply-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 720px) {
+  .tkt-controls-grid {
     grid-template-columns: 1fr;
   }
 }

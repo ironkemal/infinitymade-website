@@ -13,7 +13,7 @@
 
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import { requireAuth } from './auth.js';
+import { requireAuth, requireOwner } from './auth.js';
 import { logCall, hashRequest, getAiSupabaseClient } from './audit.js';
 import { safeAiError } from './ki-privacy.js';
 import { createAiConfig, healthSummary, EU_DATA_BOUNDARY_REGIONS, VERIFIED_AZURE_HOSTS } from './ki-config.js';
@@ -85,6 +85,118 @@ function validChallenge(err) {
  * @typedef {import('./ki-einwilligung.js').OwnerDecisionStore} RouterOwnerDecisionStore
  * @typedef {(payload: any, context?: any) => Promise<Record<string, any>>} RouterTaskHandler
  */
+
+const NUTZUNG_MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
+const NUTZUNG_PAGE_SIZE = 1000;
+const NUTZUNG_MAX_PAGES = 20;
+const NUTZUNG_EXTENDED_SELECT = 'id, task, prompt_tokens, completion_tokens, total_tokens, reasoning_tokens, audio_seconds, status, dry_run';
+const NUTZUNG_LEGACY_SELECT = 'id, task, prompt_tokens, completion_tokens, total_tokens, status, dry_run';
+
+/**
+ * Erkennt Postgres-Fehler `42703` (`undefined_column`) falls `reasoning_tokens` / `audio_seconds` noch nicht migriert sind.
+ * @param {unknown} err
+ * @returns {boolean}
+ */
+function isUndefinedNutzungColumnError(err) {
+  if (!err || typeof err !== 'object') return false;
+  const record = /** @type {{ code?: unknown, message?: unknown, details?: unknown, hint?: unknown }} */ (err);
+  if (record.code === '42703') return true;
+  const text = [record.message, record.details, record.hint]
+    .filter((v) => typeof v === 'string')
+    .join(' ')
+    .toLowerCase();
+  return text.includes('reasoning_tokens') || text.includes('audio_seconds') || text.includes('does not exist');
+}
+
+/**
+ * Berechnet Start/Ende des UTC-Monats als ISO-Strings `[startIso, endIso)`.
+ * @param {string} month
+ * @returns {{ startIso: string, endIso: string }}
+ */
+function utcMonthBounds(month) {
+  const [yStr, mStr] = month.split('-');
+  const year = Number(yStr);
+  const monthIdx = Number(mStr) - 1;
+  return {
+    startIso: new Date(Date.UTC(year, monthIdx, 1, 0, 0, 0, 0)).toISOString(),
+    endIso: new Date(Date.UTC(year, monthIdx + 1, 1, 0, 0, 0, 0)).toISOString()
+  };
+}
+
+/**
+ * Aggregiert `ai_audit_log`-Zeilen zu reinen Nutzungszählern (ohne EUR-Preise, ohne PHI).
+ * @param {Array<Record<string, unknown>>} rows
+ * @param {boolean} extendedColumnsAvailable
+ */
+function aggregateNutzungRows(rows, extendedColumnsAvailable) {
+  let totalCalls = 0;
+  let okCalls = 0;
+  let errorCalls = 0;
+  let dryRunCalls = 0;
+  let promptTokens = 0;
+  let completionTokens = 0;
+  let totalTokens = 0;
+  let reasoningTokens = 0;
+  let audioSeconds = 0;
+
+  /** @type {Map<string, { task: string, calls: number, totalTokens: number, audioSeconds: number }>} */
+  const byTaskMap = new Map();
+
+  for (const row of rows) {
+    if (!row || typeof row !== 'object') continue;
+    if (row.dry_run === true) {
+      dryRunCalls += 1;
+      continue;
+    }
+
+    totalCalls += 1;
+    const status = String(row.status || 'ok');
+    if (status === 'error' || status === 'blocked') {
+      errorCalls += 1;
+    } else if (status === 'ok' || status === 'success') {
+      okCalls += 1;
+    }
+
+    const pt = Math.max(0, Number(row.prompt_tokens) || 0);
+    const ct = Math.max(0, Number(row.completion_tokens) || 0);
+    const tt = row.total_tokens != null ? Math.max(0, Number(row.total_tokens) || 0) : (pt + ct);
+    const rt = extendedColumnsAvailable ? Math.max(0, Number(row.reasoning_tokens) || 0) : 0;
+    const as = extendedColumnsAvailable ? Math.max(0, Number(row.audio_seconds) || 0) : 0;
+
+    promptTokens += pt;
+    completionTokens += ct;
+    totalTokens += tt;
+    reasoningTokens += rt;
+    audioSeconds += as;
+
+    const task = typeof row.task === 'string' && row.task ? row.task : 'unknown';
+    let bucket = byTaskMap.get(task);
+    if (!bucket) {
+      bucket = { task, calls: 0, totalTokens: 0, audioSeconds: 0 };
+      byTaskMap.set(task, bucket);
+    }
+    bucket.calls += 1;
+    bucket.totalTokens += tt;
+    bucket.audioSeconds += as;
+  }
+
+  const byTask = [...byTaskMap.values()].sort((a, b) => (b.calls - a.calls) || a.task.localeCompare(b.task));
+  const audioMinutes = Math.round((audioSeconds / 60) * 10) / 10;
+
+  return {
+    totalCalls,
+    okCalls,
+    errorCalls,
+    dryRunCalls,
+    promptTokens,
+    completionTokens,
+    totalTokens,
+    reasoningTokens,
+    audioSeconds,
+    audioMinutes,
+    byTask
+  };
+}
 
 /**
  * Creates the AI router instance with dependency injection for testing.
@@ -331,6 +443,96 @@ export function createAiRouter({
     } catch (err) {
       const code = /** @type {any} */ (err)?.code;
       return res.json({ success: true, ok: false, code: typeof code === 'string' && /^[A-Z][A-Z0-9_]{2,60}$/.test(code) ? code : 'AI_VERBINDUNG_FEHLGESCHLAGEN' });
+    }
+  });
+
+  // GET /_nutzung: Praxisinhaber-Monatsübersicht aus ai_audit_log (nur Zähler, keine EUR-Preise, kein PHI).
+  router.get('/_nutzung', authMiddleware, einstLimiter, /** @type {import('express').RequestHandler} */ (/** @type {unknown} */ (requireOwner)), async (/** @type {import('express').Request} */ req, /** @type {import('express').Response} */ res) => {
+    const rawMonth = req.query?.month;
+    /** @type {string} */
+    let month;
+    if (rawMonth === undefined) {
+      const now = new Date();
+      month = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
+    } else if (typeof rawMonth === 'string' && NUTZUNG_MONTH_RE.test(rawMonth)) {
+      month = rawMonth;
+    } else {
+      return res.status(400).json({
+        success: false,
+        error: 'Ungültiger Monat. Erwartet wird JJJJ-MM.'
+      });
+    }
+
+    const sb = supabase || getAiSupabaseClient();
+    if (!sb || typeof sb.from !== 'function') {
+      return res.status(500).json({
+        success: false,
+        error: 'Nutzungsdaten konnten nicht geladen werden.'
+      });
+    }
+
+    try {
+      const { startIso, endIso } = utcMonthBounds(month);
+      const tenantId = /** @type {string} */ (req.auth?.tenantId);
+
+      /** @param {string} cols */
+      const fetchMonthPages = async (cols) => {
+        /** @type {Array<Record<string, unknown>>} */
+        const allRows = [];
+        let truncated = false;
+        for (let page = 0; page < NUTZUNG_MAX_PAGES; page += 1) {
+          const from = page * NUTZUNG_PAGE_SIZE;
+          const to = from + NUTZUNG_PAGE_SIZE - 1;
+          let query = sb
+            .from('ai_audit_log')
+            .select(cols)
+            .eq('tenant_id', tenantId)
+            .gte('created_at', startIso)
+            .lt('created_at', endIso)
+            .order('id', { ascending: true });
+          if (typeof query.range === 'function') {
+            query = query.range(from, to);
+          }
+          const { data, error } = await query;
+          if (error) return { data: null, error, truncated: false };
+          const batch = Array.isArray(data) ? data : [];
+          allRows.push(...batch);
+          if (typeof query.range !== 'function' || batch.length < NUTZUNG_PAGE_SIZE) break;
+          if (page === NUTZUNG_MAX_PAGES - 1 && batch.length === NUTZUNG_PAGE_SIZE) {
+            truncated = true;
+          }
+        }
+        return { data: allRows, error: null, truncated };
+      };
+
+      let extendedColumnsAvailable = true;
+      let result = await fetchMonthPages(NUTZUNG_EXTENDED_SELECT);
+      if (result.error && isUndefinedNutzungColumnError(result.error)) {
+        extendedColumnsAvailable = false;
+        result = await fetchMonthPages(NUTZUNG_LEGACY_SELECT);
+      }
+      if (result.error) {
+        throw result.error;
+      }
+
+      const cfg = typeof configProvider === 'function' ? configProvider() : createAiConfig();
+      const aiMode = ['aus', 'direkt', 'jeton'].includes(cfg?.mode) ? cfg.mode : 'aus';
+      const summary = aggregateNutzungRows(result.data || [], extendedColumnsAvailable);
+
+      res.set('Cache-Control', 'no-store');
+      return res.json({
+        success: true,
+        month,
+        aiMode,
+        ...summary,
+        truncated: Boolean(result.truncated)
+      });
+    } catch {
+      console.error('[ai/nutzung] NUTZUNG_LOAD_FAILED');
+      return res.status(500).json({
+        success: false,
+        error: 'Nutzungsdaten konnten nicht geladen werden.'
+      });
     }
   });
 

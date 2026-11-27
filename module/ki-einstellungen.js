@@ -1,4 +1,5 @@
 import { getKiConfig, updateOwnerOptIn, setzeKiAufgaben, testeKiVerbindung, verbindungstestText, CURRENT_EINWILLIGUNG_VERSION, refreshKiControls } from './ki-client.js?v=20261124by1';
+import { mountKiNutzung } from './ki-nutzung.js?v=20261127kn1';
 
 /** @param {unknown} t */
 const escapeText = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] || c));
@@ -149,6 +150,7 @@ export async function mountKiEinstellungen(container, deps = {}) {
           Es existiert <strong>keine Garantie vollständiger Anonymität</strong> und <strong>kein zentrales Relay</strong>.
           KI-Vorschläge sind Entwürfe — bitte vor Verwendung prüfen. Manuelle Praxisfunktionen bleiben unabhängig nutzbar. Ihre Freischaltung ersetzt keine technische Freigabe. Die regelbasierte Rezeptprüfung nutzt keine KI. Bildübertragung zur KI ist gesperrt.
         </div>
+        ${isOwner ? '<div id="kiNutzungMount"></div>' : ''}
       </div>
     `;
 
@@ -203,6 +205,15 @@ export async function mountKiEinstellungen(container, deps = {}) {
           await render();
           await refreshKiControls({apiBase:deps.apiBase,getToken:deps.getSessionToken,isOwner:()=>isOwner,fetchImpl:deps.fetchImpl});
         }
+      });
+    }
+
+    const nutzungMount = container.querySelector('#kiNutzungMount');
+    if (isOwner && nutzungMount) {
+      await mountKiNutzung(nutzungMount, {
+        apiBase: deps.apiBase,
+        getToken: deps.getSessionToken,
+        fetchImpl: deps.fetchImpl
       });
     }
   }

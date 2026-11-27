@@ -60,3 +60,12 @@ test('Postfach der Praxis (Einstellungen) hat Vorrang vor SMTP_* und wird ohne Z
   const aus = verbindungenListe({ SMTP_HOST: 'smtp.env.invalid' }, { modus: 'aus' }).verbindungen;
   assert.ok(aus.some((x) => x.ziel === 'smtp.env.invalid:587'));
 });
+
+test('SUPPORT_API_URL erscheint nur wenn konfiguriert (O-178 Transparenz)', () => {
+  assert.ok(!ziele({}).some((z) => /support/i.test(z)));
+  const mitSupport = verbindungenListe({ SUPPORT_API_URL: 'https://support.praxura.invalid' }).verbindungen;
+  const eintrag = mitSupport.find((x) => x.ziel === 'support.praxura.invalid');
+  assert.ok(eintrag);
+  assert.match(eintrag.zweck, /Support-Tickets.*ohne Patientendaten/);
+  assert.match(eintrag.inhalt, /keine Patientendaten/);
+});

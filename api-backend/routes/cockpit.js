@@ -110,7 +110,7 @@ function isUndefinedColumnError(error) {
  */
 let cachedEnvOpsSupabase = null;
 let cachedEnvOpsKey = '';
-function getOpsSupabaseFromEnv() {
+export function getOpsSupabaseFromEnv() {
   const url = (process.env.OPS_SUPABASE_URL || '').trim();
   const key = (process.env.OPS_SUPABASE_SERVICE_ROLE_KEY || '').trim();
   if (!url || !key) return null;

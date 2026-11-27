@@ -500,6 +500,10 @@ services:
       # mit der Kutu-Identität aus dem kimlik-Volume. Leer = Box ohne Namensdienst.
       MERKEZ_URL: ${MERKEZ_URL:-}
 
+      # Optionales Praxura Support-Ticket-Relay (ohne Patientendaten). Leer = deaktiviert
+      # (Dashboard zeigt mailto:support@praxura.de als Rückfall).
+      SUPPORT_API_URL: ${SUPPORT_API_URL:-}
+
       # O-178 / K2b.16: nur Anzeige — ueber.html listet die Außenverbindungen aus
       # der echten Einstellung (Let's Encrypt ja/nein). api ruft damit nichts auf.
       # Dieselben Defaults wie beim caddy-Dienst unten.
