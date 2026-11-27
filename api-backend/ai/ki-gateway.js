@@ -318,6 +318,9 @@ export async function executeKiTask({
     if (Number.isFinite(duration) && duration > 180) {
       throw createGatewayError('Audiodauer überschreitet das Limit von 3 Minuten', 413, 'AI_PAYLOAD_TOO_LARGE');
     }
+    const validAudioSeconds = Number.isFinite(duration) && duration >= 0 && duration <= 180
+      ? Math.round(duration)
+      : undefined;
 
     if (cfg.mode === 'direkt' && !cfg.transcribeDeployment) {
       throw createGatewayError('Transkription ist nicht eingerichtet', 503, 'AI_TRANSKRIPTION_NICHT_EINGERICHTET');
@@ -348,6 +351,7 @@ export async function executeKiTask({
     const transportRes = await transport({
       audioBuffer,
       mimeType: payload.mimeType || 'audio/webm',
+      ...(validAudioSeconds !== undefined ? { audioSeconds: validAudioSeconds } : {}),
       config: freshCfg,
       jetonClient: injectedJetonClient,
       beforeSend: async () => {
@@ -360,12 +364,17 @@ export async function executeKiTask({
       }
     });
 
+    const usage = transportRes.usage ? { ...transportRes.usage } : {};
+    if (usage.audio_seconds === undefined && validAudioSeconds !== undefined) {
+      usage.audio_seconds = validAudioSeconds;
+    }
+
     return {
       output: { text: transportRes.text || '' },
       meta: {
         model: transportRes.model || 'whisper',
         deployment: transportRes.deployment,
-        usage: transportRes.usage || {},
+        usage,
         dry_run: !!transportRes.dry_run,
         latency_ms: transportRes.latency_ms
       }

@@ -90,6 +90,7 @@ const BERICHT_AUFBEWAHRUNG_SEK = 90 * 86400;
 
 
 const KI_METRIKEN = ['calls', 'prompt_tokens', 'completion_tokens', 'total_tokens'];
+const KI_OPTIONALE_METRIKEN = ['reasoning_tokens', 'audio_seconds'];
 
 /** true, wenn jeder Zähler jeder bisherigen Aufgabe im neuen Stand ≥ alt ist (O-183). */
 function berichtWaechst(altJson, neuJson) {
@@ -100,6 +101,7 @@ function berichtWaechst(altJson, neuJson) {
     const n = neu[task];
     if (!n) return false;
     for (const k of KI_METRIKEN) if (!(Number(n[k]) >= Number(m[k]))) return false;
+    for (const k of KI_OPTIONALE_METRIKEN) if (!(Number(n[k] ?? 0) >= Number(m[k] ?? 0))) return false;
   }
   return true;
 }

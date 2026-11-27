@@ -31,7 +31,14 @@ export const KI_TASKS = Object.freeze([
 /** @type {Set<string>} */
 const ERLAUBTE_TASKS_SET = new Set(KI_TASKS);
 const ERLAUBTE_TOP_FELDER = new Set(['reportId', 'windowStart', 'windowEnd', 'taskTotals']);
-const ERLAUBTE_METRIK_FELDER = new Set(['calls', 'prompt_tokens', 'completion_tokens', 'total_tokens']);
+const ERLAUBTE_METRIK_FELDER = new Set([
+  'calls',
+  'prompt_tokens',
+  'completion_tokens',
+  'total_tokens',
+  'reasoning_tokens',
+  'audio_seconds'
+]);
 
 /**
  * @typedef {object} KiTaskMetrik
@@ -39,6 +46,8 @@ const ERLAUBTE_METRIK_FELDER = new Set(['calls', 'prompt_tokens', 'completion_to
  * @property {number} prompt_tokens
  * @property {number} completion_tokens
  * @property {number} total_tokens
+ * @property {number} [reasoning_tokens]
+ * @property {number} [audio_seconds]
  */
 
 /**
@@ -178,7 +187,7 @@ export function pruefeKiBericht(obj) {
         return { ok: false, grund: 'zusatzfeld' };
       }
 
-      const { calls, prompt_tokens, completion_tokens, total_tokens } = m;
+      const { calls, prompt_tokens, completion_tokens, total_tokens, reasoning_tokens, audio_seconds } = m;
       if (
         !Number.isSafeInteger(calls) || calls < 0 ||
         !Number.isSafeInteger(prompt_tokens) || prompt_tokens < 0 ||
@@ -187,14 +196,24 @@ export function pruefeKiBericht(obj) {
       ) {
         return { ok: false, grund: 'metrik' };
       }
+      if (reasoning_tokens !== undefined && (!Number.isSafeInteger(reasoning_tokens) || reasoning_tokens < 0)) {
+        return { ok: false, grund: 'metrik' };
+      }
+      if (audio_seconds !== undefined && (!Number.isSafeInteger(audio_seconds) || audio_seconds < 0)) {
+        return { ok: false, grund: 'metrik' };
+      }
 
       // Feste Reihenfolge der Metrikfelder für Kanonisierung
-      sanitizedTotals[task] = {
+      /** @type {KiTaskMetrik} */
+      const sanitizedMetric = {
         calls,
         prompt_tokens,
         completion_tokens,
         total_tokens
       };
+      if (reasoning_tokens !== undefined) sanitizedMetric.reasoning_tokens = reasoning_tokens;
+      if (audio_seconds !== undefined) sanitizedMetric.audio_seconds = audio_seconds;
+      sanitizedTotals[task] = sanitizedMetric;
     }
 
     // Frisches normalisiertes Objekt ohne Referenzen auf das Eingabeobjekt
@@ -238,12 +257,16 @@ export function kiBerichtHash(bericht) {
   for (const t of sortedTaskKeys) {
     const m = rawTotals[t];
     if (m && typeof m === 'object' && !Array.isArray(m)) {
-      canonicalTotals[t] = {
+      /** @type {Record<string, any>} */
+      const canon = {
         calls: m.calls,
         prompt_tokens: m.prompt_tokens,
         completion_tokens: m.completion_tokens,
         total_tokens: m.total_tokens
       };
+      if (m.reasoning_tokens !== undefined) canon.reasoning_tokens = m.reasoning_tokens;
+      if (m.audio_seconds !== undefined) canon.audio_seconds = m.audio_seconds;
+      canonicalTotals[t] = canon;
     } else {
       canonicalTotals[t] = m;
     }

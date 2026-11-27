@@ -1253,10 +1253,11 @@ Heilmittel-Richtlinie …).
 - **Achtung — `user_id` ist NULL, wenn der Backend mit service_role schreibt** (kein JWT-`sub`). Das ist die Trennlinie, kein Defekt: `user_id` gefüllt = der Browser des Behandlers hat direkt geschrieben; leer + `method='DB'` = es kam über den Backend. `owner_id`/`resource_id` stehen in beiden Fällen.
 
 ### `ai_audit_log`
-- **Warum:** Protokoll jedes KI-Aufrufs (Rezept-OCR, Entwürfe): Modell, Kosten, Ergebnis. Nachweis gegenüber dem EU AI Act und Kostenkontrolle.
-- **Seit:** 16.05.2026 · `v9_ai_audit_log`
+- **Warum:** Protokoll jedes KI-Aufrufs (Rezept-OCR, Entwürfe, Diktat-Transkription): Modell, Kosten, Ergebnis. Nachweis gegenüber dem EU AI Act und Kostenkontrolle.
+- **Seit:** 16.05.2026 · `v9_ai_audit_log` (Erweiterung um `reasoning_tokens` und `audio_seconds`: Entwurf 0136 (`db/entwuerfe/0136_ai_audit_reasoning_and_audio.sql`, noch nicht live angewandt))
 - **Status:** aktiv
 - **Wer:** `api-backend/ai/audit.js` schreibt, `api/admin/data.js` liest.
+- **Spaltenhinweis (`Entwurf 0136`):** `reasoning_tokens` (Teilmenge von `completion_tokens`, nie doppelt bepreist) und `audio_seconds` (abrechenbare Transkriptionsdauer in Sekunden), beide nullable `>= 0`.
 - **Achtung:** PII wird vorher maskiert (`api-backend/ai/pii-mask.js`) — beim Erweitern nicht daran vorbeischreiben.
 
 ### `email_logs`

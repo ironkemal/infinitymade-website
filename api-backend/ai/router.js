@@ -361,6 +361,8 @@ export function createAiRouter({
     let errorMsg = null;
     /** @type {{ model?: string | null, deployment?: string | null, usage?: Record<string, unknown>, dry_run?: boolean, latency_ms?: number }} */
     let meta = {};
+    /** @type {number | undefined} */
+    let validDuration;
 
     const context = {
       req,
@@ -388,7 +390,8 @@ export function createAiRouter({
         });
       }
 
-      const duration = Number(req.headers['x-audio-duration'] || req.query?.duration);
+      const rawDuration = req.headers['x-audio-duration'] ?? req.query?.duration;
+      const duration = rawDuration !== undefined && rawDuration !== '' ? Number(rawDuration) : NaN;
       if (Number.isFinite(duration) && duration > 180) {
         return res.status(413).json({
           success: false,
@@ -396,13 +399,16 @@ export function createAiRouter({
           error: 'Audiodauer überschreitet das Limit von 3 Minuten'
         });
       }
+      if (Number.isFinite(duration) && duration >= 0 && duration <= 180) {
+        validDuration = Math.round(duration);
+      }
 
       const handler = Object.hasOwn(tasks, 'transkribieren') ? tasks['transkribieren'] : transkribieren;
       const rawContentType = req.headers['content-type'];
       const result = await handler({
         audioBuffer: req.body,
         mimeType: Array.isArray(rawContentType) ? rawContentType[0] : rawContentType,
-        duration
+        ...(validDuration !== undefined ? { duration: validDuration } : {})
       }, context);
 
       if (!result || typeof result !== 'object') throw new Error('Invalid task result');
@@ -420,13 +426,17 @@ export function createAiRouter({
         error: safe.message
       });
     } finally {
+      const auditUsage = meta.usage ? { ...meta.usage } : {};
+      if (status === 'ok' && validDuration !== undefined && auditUsage.audio_seconds === undefined) {
+        auditUsage.audio_seconds = validDuration;
+      }
       logCall({
         tenantId: req.auth?.tenantId,
         userId: req.auth?.userId,
         task: 'transkribieren',
         model: meta.model,
         deployment: meta.deployment,
-        usage: meta.usage || {},
+        usage: auditUsage,
         latencyMs: meta.latency_ms ?? (Date.now() - t0),
         status,
         error: errorMsg,

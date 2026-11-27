@@ -27,3 +27,6 @@ export const INVOICE_FOLDER_URL = 'https://drive.google.com/drive/folders/1WaSt_
 // Bitmiş görevler kaç gün sonra arşive gizlensin
 export const DONE_ARCHIVE_DAYS = 7;
 
+// Cockpit Backend API URL (z. B. 'https://api.praxura.de' — leer lassen, bis live geschaltet)
+export const COCKPIT_API_URL = '';
+

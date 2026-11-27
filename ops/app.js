@@ -1,17 +1,37 @@
-// Praxura Ops-Dashboard — Shell: Auth, Router, gemeinsame Helfer
-// Sürüm sabitlenmiş: "@2" yazmak, CDN'in bir gün yeni bir küçük sürümü sessizce
-// göndermesi ve oturum davranışının bizden habersiz değişmesi demekti.
+// Praxura Ops-Dashboard / Cockpit — Shell: Auth, RBAC, Router, i18n, gemeinsame Helfer
 import { createClient } from './vendor/supabase-js.js?v=20260813';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260811a';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20261127a';
+import { t, setLang, onLangChange, applyI18n, registerLangSync, LANGS } from './i18n.js?v=20261127a';
 
 const AUTH_STORAGE_KEY = 'praxura-ops-auth';
+const VALID_ROLES = ['founder', 'tech', 'support', 'sales'];
 
-/** Web Locks: supabase oturum yenilemeyi sekmeler arasında kilitle sıraya sokar.
- *  Kilidi tutan sekme onu bırakmazsa (asılı bir istek, uyuyan sekme, çöken kod),
- *  diğer sekme AÇILIŞTA sonsuza kadar bekler — ekran bomboş kalır ve ancak
- *  çıkış+giriş sonrası düzelir. Bu yüzden kilidi süreli alıyoruz: alınamazsa iş
- *  kilitsiz yürür. En kötü ihtimalle iki sekme aynı anda belirteç yeniler —
- *  sonsuza kadar beklemekten iyidir. */
+const VIEW_ROLES = {
+  cockpit:     ['founder', 'tech', 'support', 'sales'],
+  customers:   ['founder', 'tech', 'support', 'sales'],
+  'ki-costs':  ['founder', 'tech'],
+  todo:        ['founder', 'tech', 'support', 'sales'],
+  ausgaben:    ['founder'],
+  meetings:    ['founder', 'tech', 'support', 'sales'],
+  decisions:   ['founder', 'tech', 'support', 'sales'],
+  wissen:      ['founder', 'tech', 'support', 'sales'],
+  fahrtenbuch: ['founder'],
+  files:       ['founder', 'tech', 'support', 'sales'],
+};
+
+const VIEW_I18N = {
+  cockpit:     'nav.cockpit',
+  customers:   'nav.customers',
+  'ki-costs':  'nav.kiCosts',
+  todo:        'nav.todo',
+  ausgaben:    'nav.ausgaben',
+  meetings:    'nav.meetings',
+  decisions:   'nav.decisions',
+  wissen:      'nav.wissen',
+  fahrtenbuch: 'nav.fahrtenbuch',
+  files:       'nav.files',
+};
+
 async function boundedLock(name, acquireTimeout, fn) {
   if (!globalThis.navigator?.locks || !globalThis.AbortSignal?.timeout) return fn();
   try {
@@ -26,22 +46,36 @@ async function boundedLock(name, acquireTimeout, fn) {
   }
 }
 
-export const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+export const sb = (globalThis.__praxuraOpsSb ??= createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     storageKey: AUTH_STORAGE_KEY,
     lock: boundedLock
   }
+}));
+
+// ── Zustand (geteilt über evtl. abweichende Modul-Query-Versionen) ─────
+export const state = (globalThis.__praxuraOpsState ??= {
+  me: null,            // ops_members satırı
+  members: [],         // tüm üyeler
+  schemaHasRole: true, // nur false nach explizitem 42703-Fallback in loadMe()
 });
 
-// ── Zustand ────────────────────────────────────────────────────────────
-export const state = {
-  me: null,          // ops_members satırı
-  members: [],       // tüm üyeler
-};
-
 export const memberById = (id) => state.members.find(m => m.id === id) || null;
+
+export function myRole() {
+  const r = state.me?.role;
+  if (VALID_ROLES.includes(r)) return r;
+  if (state.schemaHasRole === false) return 'founder';
+  return 'support';
+}
+
+export function canAccessView(name, role = myRole()) {
+  const allowed = VIEW_ROLES[name];
+  if (!allowed) return false;
+  return allowed.includes(role);
+}
 
 // ── Helfer ─────────────────────────────────────────────────────────────
 
@@ -55,6 +89,7 @@ export function esc(s) {
 
 export function toast(msg, isErr = false) {
   const el = $('#toast');
+  if (!el) return;
   el.textContent = msg;
   el.classList.toggle('err', isErr);
   el.hidden = false;
@@ -62,8 +97,6 @@ export function toast(msg, isErr = false) {
   toast._t = setTimeout(() => { el.hidden = true; }, isErr ? 5000 : 2600);
 }
 
-// Yakalanmamış hata sessizce yutulmasın — ekranda görelim ki teşhis edilebilsin.
-// Re-entrancy koruması: toast'ın kendisi patlarsa hata→toast→hata döngüsüne girmeyelim.
 let reporting = false;
 function report(label, err) {
   console.error(`[ops:${label}]`, err);
@@ -72,10 +105,7 @@ function report(label, err) {
   try { toast('Fehler: ' + (err?.message || err), true); } catch {}
   setTimeout(() => { reporting = false; }, 1000);
 }
-window.addEventListener('error', (e) => report('uncaught', e.error || e.message));
-window.addEventListener('unhandledrejection', (e) => report('promise', e.reason));
 
-/** Supabase hatasını yut ve göster — her çağrıyı sarmalıyoruz ki UI sessizce ölmesin. */
 export function fail(where, error) {
   console.error(`[ops:${where}]`, error);
   toast(`${where}: ${error?.message || 'Fehler'}`, true);
@@ -89,7 +119,6 @@ export const fmtDateTime = (d) => d
   ? new Date(d).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })
   : '';
 
-/** Çok küçük markdown — başlık, kalın, kod, liste, link. Kütüphane yüklemeye değmez. */
 export function md(src) {
   const lines = String(src ?? '').split('\n');
   let out = '', inList = false, inCode = false;
@@ -128,8 +157,6 @@ export function md(src) {
 }
 
 // ── Modal ──────────────────────────────────────────────────────────────
-// openModal({ title, body, actions }) → actions: [{label, kind, onClick}]
-// onClick true dönerse (veya Promise<true>) modal kapanır.
 
 let modalEsc = null;
 
@@ -170,88 +197,148 @@ export function confirmDialog(title, text, onYes) {
     title,
     bodyHTML: `<p style="margin:0;color:var(--text-dim)">${esc(text)}</p>`,
     actions: [
-      { label: 'Abbrechen', onClick: () => true },
-      { label: 'Löschen', kind: 'primary', onClick: onYes }
+      { label: t('common.cancel'), onClick: () => true },
+      { label: t('common.delete'), kind: 'primary', onClick: onYes }
     ]
   });
 }
 
+// ── Sidebar & Mobile Drawer ────────────────────────────────────────────
+
+function setSidebarOpen(open) {
+  const sidebar = $('#sidebar');
+  const backdrop = $('#sidebarBackdrop');
+  if (sidebar) sidebar.classList.toggle('is-open', open);
+  if (backdrop) backdrop.hidden = !open;
+}
+
+function applyRoleGating() {
+  const role = myRole();
+  $$('.nav-item[data-view]').forEach((el) => {
+    el.hidden = !canAccessView(el.dataset.view, role);
+  });
+  $$('.nav-group').forEach((grp) => {
+    const visible = $$('.nav-item[data-view]', grp).some((el) => !el.hidden);
+    grp.hidden = !visible;
+  });
+}
+
+function updateUserBadge() {
+  if (!state.me) return;
+  const role = myRole();
+  const who = $('#who');
+  const pill = $('#rolePill');
+  if (who) who.textContent = state.me.display_name;
+  if (pill) {
+    pill.textContent = t(`role.${role}`);
+    pill.className = `role-pill role-${role}`;
+  }
+}
+
 // ── Router ─────────────────────────────────────────────────────────────
 
-const views = {};   // name → { mount(), mounted }
+const views = (globalThis.__praxuraOpsViews ??= {});
+let activeViewName = 'cockpit';
 
 export function registerView(name, mount) { views[name] = { mount, mounted: false }; }
 
 export function showView(name) {
   if (name === 'finance' || name === 'finanzen') name = 'ausgaben';
-  if (!views[name]) name = 'todo';
-  $$('.tab').forEach(t => t.classList.toggle('is-active', t.dataset.view === name));
+  const role = myRole();
+  if (!canAccessView(name, role) || !views[name]) {
+    name = canAccessView('cockpit', role) && views.cockpit ? 'cockpit' : 'todo';
+  }
+  activeViewName = name;
+
+  $$('.nav-item[data-view], .tab[data-view]').forEach(el =>
+    el.classList.toggle('is-active', el.dataset.view === name));
   $$('.view').forEach(v => { v.hidden = v.id !== `view-${name}`; });
+
+  const titleEl = $('#viewTitle');
+  if (titleEl) titleEl.textContent = t(VIEW_I18N[name] || 'nav.cockpit');
+
+  setSidebarOpen(false);
   if (location.hash.replace('#', '') !== name) location.hash = name;
 
   const v = views[name];
-  if (!v) return;                 // görünüm yüklenememiş — çökme yerine boş sekme
+  if (!v) return;
   if (v.mounted) return;
-  // mounted'ı ancak başarıdan SONRA işaretle: mount patlarsa sekme kalıcı olarak
-  // ölü kalmasın, bir sonraki tıklamada yeniden denensin.
   try { v.mount(); v.mounted = true; }
   catch (e) { fail('Ansicht ' + name, e); }
 }
 
-/** Görünür sekmeyi baştan kurmaya zorla — oturum tazelendikten sonra kullanılır. */
 export function remountCurrent() {
-  const name = location.hash.replace('#', '') || 'todo';
-  if (views[name]) { views[name].mounted = false; showView(name); }
+  const name = location.hash.replace('#', '') || 'cockpit';
+  const target = views[name] ? name : 'cockpit';
+  if (views[target]) { views[target].mounted = false; showView(target); }
 }
 
 // ── Auth ───────────────────────────────────────────────────────────────
 
-/** Gerçekten "bu oturum geçersiz" mi, yoksa sadece ağ mı takıldı?
- *  Ağ hatasında oturumu SİLMEK, geçici bir aksaklığı zorunlu yeniden girişe
- *  çeviriyordu — sadece sunucu açıkça reddettiğinde çıkış yapıyoruz. */
 const isAuthRejection = (err) =>
   err?.status === 401 || err?.status === 403 ||
   /invalid|expired|not_?found|jwt|token/i.test(err?.code || err?.name || '');
 
-/** "Hiç oturum yok" — bir arıza değil, sadece giriş yapılmamış demek.
- *  supabase bunu duruma göre bazen döndürür bazen fırlatır; ikisini de aynı sayıyoruz. */
 const isSessionMissing = (err) =>
   err?.name === 'AuthSessionMissingError' || /session missing/i.test(err?.message || '');
 
+const isUndefinedColumnError = (err) =>
+  Boolean(err && (err.code === '42703' || /column\s+.*\s+does not exist/i.test(String(err.message || ''))));
+
 async function loadMe() {
-  // getSession() yalnızca yereldeki kaydı okur — süresi dolmuş bir belirteci de
-  // "geçerli" diye döndürür. getUser() sunucuya sorar; böylece ölü oturumu burada
-  // yakalarız, sorgular 401 döndürüp uygulama sessizce boş kalmaz.
   let user = null, authErr = null;
   try {
     ({ data: { user } = {}, error: authErr } = await sb.auth.getUser());
   } catch (e) {
-    // ⚠️ Oturum yokken getUser() hata DÖNDÜRMEZ, hata FIRLATIR (AuthSessionMissingError).
-    // Bu, en tepedeki await'i düşürüyordu: ne showApp ne showLogin çalışıyor, sayfa
-    // bomboş kalıyordu — ve yalnızca Abmelden+yeniden giriş kurtarıyordu, çünkü
-    // signOut() olayı showLogin'i tetikliyordu. Burada sessizce "giriş yapılmamış"a çeviriyoruz.
     if (isSessionMissing(e)) return null;
     throw e;
   }
   if (authErr || !user) {
-    if (isSessionMissing(authErr)) return null;               // sadece giriş yapılmamış
+    if (isSessionMissing(authErr)) return null;
     if (authErr && isAuthRejection(authErr)) await sb.auth.signOut().catch(() => {});
-    else if (authErr) throw authErr;          // ağ sorunu → başlangıç bunu ayrı ele alır
+    else if (authErr) throw authErr;
     return null;
   }
 
-  const { data, error } = await sb.from('ops_members').select('*').order('display_name');
+  let { data, error } = await sb
+    .from('ops_members')
+    .select('id, email, display_name, color, role, is_active, preferred_lang')
+    .order('display_name');
+
+  if (error && isUndefinedColumnError(error)) {
+    state.schemaHasRole = false;
+    ({ data, error } = await sb
+      .from('ops_members')
+      .select('id, email, display_name, color, created_at')
+      .order('display_name'));
+  } else if (!error) {
+    state.schemaHasRole = true;
+  }
+
   if (error) { fail('Mitglieder', error); return null; }
 
   state.members = data || [];
   state.me = state.members.find(m => m.id === user.id) || null;
 
   if (!state.me) {
-    // Oturum var ama üye kaydı yok → RLS hiçbir şey göstermez, boş ekran yerine açıkça söyle.
     await sb.auth.signOut();
     showLogin('Dieser Account ist kein Ops-Mitglied. Bitte in ops_members eintragen.');
     return null;
   }
+  if (state.me.is_active === false) {
+    await sb.auth.signOut();
+    showLogin('Dieser Ops-Account ist deaktiviert.');
+    return null;
+  }
+
+  // Gespeicherte Sprache aus ops_members übernehmen, falls lokal noch nicht gesetzt
+  try {
+    const localSaved = localStorage.getItem('praxura-ops-lang');
+    if (!localSaved && state.me.preferred_lang && LANGS.includes(state.me.preferred_lang)) {
+      setLang(state.me.preferred_lang, { syncDb: false });
+    }
+  } catch { /* ignore */ }
+
   return state.me;
 }
 
@@ -263,22 +350,24 @@ function showLogin(msg) {
   if (msg) { err.textContent = msg; err.hidden = false; } else { err.hidden = true; }
 }
 
+const TIMEOUT = Symbol('timeout');
+const withTimeout = (p, ms) =>
+  Promise.race([p, new Promise(r => setTimeout(() => r(TIMEOUT), ms))]);
+
 async function showApp() {
-  // Görünümler yüklenmeden kabuğu AÇMA. Aksi hâlde import takılırsa kullanıcı
-  // üst çubuğu görür, panoyu göremez ve sekmeler ölü olur — teşhis edilemeyen
-  // bir "boş uygulama" hâli. Önce yükle, sonra göster.
   const modules = [
-    ['todo',      './board.js?v=20261023blocker1', 'mountTodo'],
-    ['wissen',    './wissen.js?v=20260811a',    'mountWissen'],
-    ['decisions', './decisions.js?v=20260811a', 'mountDecisions'],
-    ['meetings',  './meetings.js?v=20260811a',  'mountMeetings'],
-    ['ausgaben',  './finance.js?v=20260816j',   'mountFinance'],
-    ['fahrtenbuch', './fahrtenbuch.js?v=20260816b', 'mountFahrtenbuch'],
-    ['files',     './files.js?v=20260811a',     'mountFiles']
+    ['cockpit',     './cockpit-home.js?v=20261127a', 'mountCockpit'],
+    ['customers',   './customers.js?v=20261127a',    'mountCustomers'],
+    ['ki-costs',    './ki-costs.js?v=20261127a',     'mountKiCosts'],
+    ['todo',        './board.js?v=20261023blocker1', 'mountTodo'],
+    ['wissen',      './wissen.js?v=20260811a',       'mountWissen'],
+    ['decisions',   './decisions.js?v=20260811a',    'mountDecisions'],
+    ['meetings',    './meetings.js?v=20260811a',     'mountMeetings'],
+    ['ausgaben',    './finance.js?v=20260816j',      'mountFinance'],
+    ['fahrtenbuch', './fahrtenbuch.js?v=20260816b',  'mountFahrtenbuch'],
+    ['files',       './files.js?v=20260811a',        'mountFiles'],
   ];
 
-  // Her görünüm tek tek ve süreli yüklenir: biri patlar ya da asılırsa
-  // diğerleri çalışmaya devam etsin, uygulama sessizce ölmesin.
   const broken = [];
   await Promise.all(modules.map(async ([name, path, fn]) => {
     const mod = await withTimeout(import(path).catch(e => ({ __err: e })), 15000);
@@ -293,117 +382,117 @@ async function showApp() {
   $('#boot').hidden = true;
   $('#login').hidden = true;
   $('#app').hidden = false;
-  $('#who').textContent = state.me.display_name;
+
+  applyRoleGating();
+  updateUserBadge();
+  applyI18n(document);
 
   if (broken.length) toast('Ansicht nicht geladen: ' + broken.join(', '), true);
 
-  showView(location.hash.replace('#', '') || 'todo');
+  showView(location.hash.replace('#', '') || 'cockpit');
 }
 
-// ── Start ──────────────────────────────────────────────────────────────
+function bindShellEvents() {
+  window.addEventListener('error', (e) => report('uncaught', e.error || e.message));
+  window.addEventListener('unhandledrejection', (e) => report('promise', e.reason));
 
-$('#loginForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const btn = $('#loginBtn');
-  btn.disabled = true; btn.textContent = 'Anmelden …';
-  const { error } = await sb.auth.signInWithPassword({
-    email: $('#loginEmail').value.trim(),
-    password: $('#loginPass').value
+  registerLangSync(async (lang) => {
+    if (!state.me?.id) return;
+    if (!('preferred_lang' in state.me)) return;
+    const { error } = await sb.from('ops_members').update({ preferred_lang: lang }).eq('id', state.me.id);
+    if (!error) state.me.preferred_lang = lang;
   });
-  btn.disabled = false; btn.textContent = 'Anmelden';
-  if (error) { showLogin('Anmeldung fehlgeschlagen: ' + error.message); return; }
-  try { if (await loadMe()) await showApp(); }
-  catch (e) { console.error('[ops:login]', e); showLogin('Laden fehlgeschlagen: ' + (e?.message || e)); }
-});
 
-$('#logoutBtn').addEventListener('click', async () => {
-  await sb.auth.signOut();
-  location.reload();
-});
+  onLangChange(() => {
+    updateUserBadge();
+    const titleEl = $('#viewTitle');
+    if (titleEl) titleEl.textContent = t(VIEW_I18N[activeViewName] || 'nav.cockpit');
+  });
 
-$('#tabs').addEventListener('click', (e) => {
-  const t = e.target.closest('.tab');
-  if (t) showView(t.dataset.view);
-});
-
-$('#modalClose').addEventListener('click', closeModal);
-// Backdrop-Klick zum Schließen absichtlich deaktiviert, um versehentlichen Datenverlust bei Formulareingaben zu verhindern
-window.addEventListener('hashchange', () => showView(location.hash.replace('#', '')));
-
-// ── Oturum dayanıklılığı ───────────────────────────────────────────────
-// Belirti: sekme uzun süre açık kalınca pano boşalıyor, ancak çıkış+giriş
-// yapınca düzeliyordu. Sebebi: erişim belirteci sessizce ölüyor, sorgular
-// 401 dönüyor ve ekranda hiçbir şey söylenmiyordu.
-
-sb.auth.onAuthStateChange((event) => {
-  if (event === 'SIGNED_OUT') {
-    showLogin('Sitzung beendet — bitte neu anmelden.');
-  } else if (event === 'TOKEN_REFRESHED' && state.me) {
-    // Yeni belirteçle veriyi tazele; realtime soketi de yeni belirteci alsın.
-    remountCurrent();
-  }
-});
-
-// Sekmeye geri dönüldüğünde oturumu doğrula ve veriyi tazele.
-document.addEventListener('visibilitychange', async () => {
-  if (document.visibilityState !== 'visible' || !state.me) return;
-  let user = null, error = null;
-  try { ({ data: { user }, error } = await sb.auth.getUser()); }
-  catch (e) { console.warn('[ops:auth] getUser beim Tabwechsel', e); return; }  // ağ: dokunma
-  if (error || !user) {
-    if (error && !isAuthRejection(error)) return;   // ağ sorunu → oturuma dokunma
-    const { error: refreshErr } = await sb.auth.refreshSession();
-    if (refreshErr) {
-      await sb.auth.signOut().catch(() => {});
-      showLogin('Sitzung abgelaufen — bitte neu anmelden.');
+  document.addEventListener('click', (e) => {
+    const langBtn = e.target.closest('.lang-btn[data-lang]');
+    if (langBtn) {
+      setLang(langBtn.dataset.lang);
       return;
     }
-  }
-  remountCurrent();
-});
+    const navBtn = e.target.closest('.nav-item[data-view], .tab[data-view]');
+    if (navBtn) {
+      showView(navBtn.dataset.view);
+    }
+  });
 
-// ── Başlangıç ──────────────────────────────────────────────────────────
-// Kural: bu blok NE OLURSA OLSUN bir şey göstermek zorunda. Eskiden oturum
-// kontrolü takılırsa (kilit, ağ, CDN) ne uygulama ne giriş ekranı açılıyordu;
-// sayfa bomboş kalıyor ve ancak Abmelden + yeniden giriş kurtarıyordu.
+  $('#menuBtn')?.addEventListener('click', () => setSidebarOpen(true));
+  $('#sidebarClose')?.addEventListener('click', () => setSidebarOpen(false));
+  $('#sidebarBackdrop')?.addEventListener('click', () => setSidebarOpen(false));
 
-const boot = $('#boot'), bootMsg = $('#bootMsg'), bootReload = $('#bootReload');
-bootReload.onclick = () => location.reload();
-const slow = setTimeout(() => {
-  bootMsg.textContent = 'Dauert ungewöhnlich lange …';
-  bootReload.hidden = false;
-}, 5000);
+  $('#loginForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = $('#loginBtn');
+    btn.disabled = true; btn.textContent = 'Anmelden …';
+    const { error } = await sb.auth.signInWithPassword({
+      email: $('#loginEmail').value.trim(),
+      password: $('#loginPass').value
+    });
+    btn.disabled = false; btn.textContent = t('auth.login');
+    if (error) { showLogin('Anmeldung fehlgeschlagen: ' + error.message); return; }
+    try { if (await loadMe()) await showApp(); }
+    catch (err) { console.error('[ops:login]', err); showLogin('Laden fehlgeschlagen: ' + (err?.message || err)); }
+  });
 
-/** Yerelde kayıtlı bir oturum var mı — ağa çıkmadan, asılı kalmadan. */
+  $('#logoutBtn')?.addEventListener('click', async () => {
+    await sb.auth.signOut();
+    location.reload();
+  });
+
+  $('#modalClose')?.addEventListener('click', closeModal);
+  window.addEventListener('hashchange', () => showView(location.hash.replace('#', '')));
+
+  sb.auth.onAuthStateChange((event) => {
+    if (event === 'SIGNED_OUT') {
+      showLogin('Sitzung beendet — bitte neu anmelden.');
+    } else if (event === 'TOKEN_REFRESHED' && state.me) {
+      remountCurrent();
+    }
+  });
+
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState !== 'visible' || !state.me) return;
+    let user = null, error = null;
+    try { ({ data: { user }, error } = await sb.auth.getUser()); }
+    catch (e) { console.warn('[ops:auth] getUser beim Tabwechsel', e); return; }
+    if (error || !user) {
+      if (error && !isAuthRejection(error)) return;
+      const { error: refreshErr } = await sb.auth.refreshSession();
+      if (refreshErr) {
+        await sb.auth.signOut().catch(() => {});
+        showLogin('Sitzung abgelaufen — bitte neu anmelden.');
+        return;
+      }
+    }
+    remountCurrent();
+  });
+}
+
 function hasStoredSession() {
   try { return !!localStorage.getItem(AUTH_STORAGE_KEY); } catch { return false; }
 }
 
-const TIMEOUT = Symbol('timeout');
-const withTimeout = (p, ms) =>
-  Promise.race([p, new Promise(r => setTimeout(() => r(TIMEOUT), ms))]);
-
-/** ⚠️ BU FONKSİYON MODÜL GÖVDESİNDE `await` EDİLMEZ — sebebi hayati:
- *
- *  showApp() görünümleri `import('./board.js')` ile yüklüyor. board.js de bu
- *  dosyayı (`app.js`) import ediyor. Eğer start() en tepede await edilirse,
- *  app.js "hâlâ çalışıyor" durumunda kalır; board.js app.js'in bitmesini bekler,
- *  app.js de board.js'in gelmesini → KARŞILIKLI KİLİT. Hata yok, konsol boş,
- *  sonsuza kadar bekler.
- *
- *  Belirtisi tam olarak şuydu: sayfa yenilenince üst çubuk geliyor ama pano boş
- *  kalıyor ve hiçbir sekme açılmıyordu; çıkış+giriş düzeltiyordu, çünkü orada
- *  showApp() bir tıklama olayından çağrılıyor ve app.js çoktan bitmiş oluyor.
- *
- *  Await etmeden çağırınca modül değerlendirmesi hemen biter, dinamik import
- *  çözülür, döngü kurulmaz. */
 async function start() {
+  const boot = $('#boot'), bootMsg = $('#bootMsg'), bootReload = $('#bootReload');
+  if (bootReload) bootReload.onclick = () => location.reload();
+  const slow = setTimeout(() => {
+    if (bootMsg) bootMsg.textContent = 'Dauert ungewöhnlich lange …';
+    if (bootReload) bootReload.hidden = false;
+  }, 5000);
+
+  applyI18n(document);
+  bindShellEvents();
+
   try {
     if (SUPABASE_URL.includes('PROJE_REF')) {
       showLogin('config.js noch nicht ausgefüllt — Supabase-URL und Anon-Key eintragen (siehe SETUP.md).');
       return;
     }
-    // 12 sn: yavaş bağlantıya yeter, sonsuz beklemeye izin vermez.
     const me = await withTimeout(loadMe(), 12000);
     if (me === TIMEOUT) {
       showLogin(hasStoredSession()
@@ -415,13 +504,15 @@ async function start() {
       showLogin();
     }
   } catch (e) {
-    // Ağ/CDN/beklenmedik hata: oturumu SİLMEDEN giriş ekranını göster.
     console.error('[ops:start]', e);
     showLogin('Start fehlgeschlagen: ' + (e?.message || e) + ' — bitte neu laden.');
   } finally {
     clearTimeout(slow);
-    boot.hidden = true;
+    if (boot) boot.hidden = true;
   }
 }
 
-start();   // ← await YOK. Yukarıdaki açıklamayı okumadan await ekleme.
+if (!globalThis.__praxuraOpsBooted) {
+  globalThis.__praxuraOpsBooted = true;
+  start();
+}

@@ -13,11 +13,46 @@ import { createClient } from '@supabase/supabase-js';
 import crypto from 'node:crypto';
 import { createAiConfig } from './ki-config.js';
 import { hashRequest, safeAiError, KNOWN_AI_TASKS } from './ki-privacy.js';
+import { normalisiereKiModell } from './ki-preise.js';
 
 export { hashRequest, safeAiError };
 
+const ALLOWED_AUDIT_MODELS = new Set([
+  'gpt-4o',
+  'gpt-4o-mini',
+  'gpt-4.1',
+  'gpt-4.1-mini',
+  'gpt-5',
+  'gpt-5-mini',
+  'gpt-5-nano',
+  'whisper',
+  'gpt-4o-transcribe',
+  'gpt-4o-mini-transcribe',
+]);
+const ALLOWED_AUDIT_STATUSES = new Set(['ok', 'success', 'error', 'blocked', 'rueckfrage']);
+const EXTENDED_AUDIT_SELECT = 'task, prompt_tokens, completion_tokens, total_tokens, reasoning_tokens, audio_seconds';
+const LEGACY_AUDIT_SELECT = 'task, prompt_tokens, completion_tokens, total_tokens';
+
 /**
- * @typedef {{ prompt_tokens?: number | null, completion_tokens?: number | null, total_tokens?: number | null }} AiTokenUsage
+ * Detects Postgres `42703` (`undefined_column`) or schema-cache errors when
+ * Entwurf 0136 (`reasoning_tokens`, `audio_seconds`) has not yet been applied.
+ *
+ * @param {unknown} err
+ * @returns {boolean}
+ */
+function isUndefinedAuditColumnError(err) {
+  if (!err || typeof err !== 'object') return false;
+  const record = /** @type {{ code?: unknown, message?: unknown, details?: unknown, hint?: unknown }} */ (err);
+  if (record.code === '42703') return true;
+  const text = [record.message, record.details, record.hint]
+    .filter((v) => typeof v === 'string')
+    .join(' ')
+    .toLowerCase();
+  return text.includes('reasoning_tokens') || text.includes('audio_seconds') || text.includes('does not exist');
+}
+
+/**
+ * @typedef {{ prompt_tokens?: number | null, completion_tokens?: number | null, total_tokens?: number | null, reasoning_tokens?: number | null, audio_seconds?: number | null }} AiTokenUsage
  * @typedef {{
  *   tenantId?: string | null,
  *   userId?: string | null,
@@ -31,7 +66,7 @@ export { hashRequest, safeAiError };
  *   dryRun?: boolean,
  *   requestHash?: string | null
  * }} LogCallInput
- * @typedef {{ calls: number, prompt_tokens: number, completion_tokens: number, total_tokens: number }} TaskAggregate
+ * @typedef {{ calls: number, prompt_tokens: number, completion_tokens: number, total_tokens: number, reasoning_tokens?: number, audio_seconds?: number }} TaskAggregate
  * @typedef {{
  *   now?: number | Date | (() => number | Date),
  *   boxId?: string,
@@ -94,19 +129,22 @@ export async function logCall({
     }
 
     const safeTask = typeof task === 'string' && KNOWN_AI_TASKS.has(task) ? task : 'unknown';
-    const safeModel = typeof model === 'string' && ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-5', 'gpt-5-mini', 'gpt-5-nano', 'whisper', 'gpt-4o-transcribe', 'gpt-4o-mini-transcribe'].includes(model) ? model : null;
+    const normalizedModel = normalisiereKiModell(model);
+    const safeModel = normalizedModel && ALLOWED_AUDIT_MODELS.has(normalizedModel) ? normalizedModel : null;
     const currentCfg = createAiConfig();
     const safeDeployment = (deployment === currentCfg.deployment || (currentCfg.transcribeDeployment && deployment === currentCfg.transcribeDeployment)) ? deployment : null;
-    const safeStatus = typeof status === 'string' && ['ok', 'success', 'error', 'blocked'].includes(status) ? status : 'unknown';
+    const safeStatus = typeof status === 'string' && ALLOWED_AUDIT_STATUSES.has(status) ? status : 'unknown';
 
     const pt = Number.isSafeInteger(usage?.prompt_tokens) && typeof usage?.prompt_tokens === 'number' && usage.prompt_tokens >= 0 ? usage.prompt_tokens : null;
     const ct = Number.isSafeInteger(usage?.completion_tokens) && typeof usage?.completion_tokens === 'number' && usage.completion_tokens >= 0 ? usage.completion_tokens : null;
     const tt = Number.isSafeInteger(usage?.total_tokens) && typeof usage?.total_tokens === 'number' && usage.total_tokens >= 0 ? usage.total_tokens : null;
+    const rt = Number.isSafeInteger(usage?.reasoning_tokens) && typeof usage?.reasoning_tokens === 'number' && usage.reasoning_tokens >= 0 ? usage.reasoning_tokens : null;
+    const as = Number.isSafeInteger(usage?.audio_seconds) && typeof usage?.audio_seconds === 'number' && usage.audio_seconds >= 0 ? usage.audio_seconds : null;
 
     const lat = Number.isInteger(latencyMs) ? latencyMs : null;
     const safeErrorCode = error ? safeAiError(error).code : null;
 
-    const { error: insErr } = await supabase.from('ai_audit_log').insert({
+    const legacyRow = {
       tenant_id: tenantId,
       user_id: userId,
       task: safeTask,
@@ -120,7 +158,15 @@ export async function logCall({
       error: safeErrorCode,
       dry_run: !!dryRun,
       request_hash: typeof requestHash === 'string' && /^[a-f0-9]{64}$/i.test(requestHash) ? requestHash : null
+    };
+    let { error: insErr } = await supabase.from('ai_audit_log').insert({
+      ...legacyRow,
+      reasoning_tokens: rt,
+      audio_seconds: as,
     });
+    if (insErr && isUndefinedAuditColumnError(insErr)) {
+      ({ error: insErr } = await supabase.from('ai_audit_log').insert(legacyRow));
+    }
     if (insErr) {
       console.error('[ai/audit] AUDIT_INSERT_FAILED');
     }
@@ -187,6 +233,7 @@ export function makeUsageAggregateSupplier(supabase, tenantId, options = {}) {
     const taskTotals = {};
     let pageIndex = 0;
     let hasMore = true;
+    let selectCols = EXTENDED_AUDIT_SELECT;
 
     while (hasMore) {
       if (pageIndex >= maxPages) {
@@ -196,19 +243,28 @@ export function makeUsageAggregateSupplier(supabase, tenantId, options = {}) {
       const from = pageIndex * pageSize;
       const to = from + pageSize - 1;
 
-      let query = supabase
-        .from('ai_audit_log')
-        .select('task, prompt_tokens, completion_tokens, total_tokens')
-        .eq('tenant_id', tenantId)
-        .eq('dry_run', false)
-        .gte('created_at', windowStart)
-        .lt('created_at', windowEnd); // exclusive next midnight
+      /** @param {string} cols */
+      const runPageQuery = (cols) => {
+        let query = supabase
+          .from('ai_audit_log')
+          .select(cols)
+          .eq('tenant_id', tenantId)
+          .eq('dry_run', false)
+          .gte('created_at', windowStart)
+          .lt('created_at', windowEnd); // exclusive next midnight
 
-      if (typeof query.order === 'function') {
-        query = query.order('id', { ascending: true });
+        if (typeof query.order === 'function') {
+          query = query.order('id', { ascending: true });
+        }
+
+        return query.range(from, to);
+      };
+
+      let { data, error } = await runPageQuery(selectCols);
+      if (error && selectCols === EXTENDED_AUDIT_SELECT && isUndefinedAuditColumnError(error)) {
+        selectCols = LEGACY_AUDIT_SELECT;
+        ({ data, error } = await runPageQuery(selectCols));
       }
-
-      const { data, error } = await query.range(from, to);
 
       if (error) {
         throw createAuditError('Datenbankabfrage für Nutzungsaggregat fehlgeschlagen', 'AI_AGGREGATE_QUERY_FAILED');
@@ -232,11 +288,15 @@ export function makeUsageAggregateSupplier(supabase, tenantId, options = {}) {
         const pt = row.prompt_tokens == null ? 0 : Number(row.prompt_tokens);
         const ct = row.completion_tokens == null ? 0 : Number(row.completion_tokens);
         const tt = row.total_tokens == null ? 0 : Number(row.total_tokens);
+        const rt = row.reasoning_tokens == null ? 0 : Number(row.reasoning_tokens);
+        const as = row.audio_seconds == null ? 0 : Number(row.audio_seconds);
 
         if (
           !Number.isInteger(pt) || pt < 0 ||
           !Number.isInteger(ct) || ct < 0 ||
-          !Number.isInteger(tt) || tt < 0
+          !Number.isInteger(tt) || tt < 0 ||
+          !Number.isInteger(rt) || rt < 0 ||
+          !Number.isInteger(as) || as < 0
         ) {
           throw createAuditError('Ungültige Token-Metriken im Audit-Log', 'AI_AGGREGATE_MALFORMED_METRIC');
         }
@@ -253,8 +313,16 @@ export function makeUsageAggregateSupplier(supabase, tenantId, options = {}) {
         const nextPt = taskTotals[task].prompt_tokens + pt;
         const nextCt = taskTotals[task].completion_tokens + ct;
         const nextTt = taskTotals[task].total_tokens + tt;
+        const nextRt = (taskTotals[task].reasoning_tokens || 0) + rt;
+        const nextAs = (taskTotals[task].audio_seconds || 0) + as;
 
-        if (nextPt > Number.MAX_SAFE_INTEGER || nextCt > Number.MAX_SAFE_INTEGER || nextTt > Number.MAX_SAFE_INTEGER) {
+        if (
+          nextPt > Number.MAX_SAFE_INTEGER ||
+          nextCt > Number.MAX_SAFE_INTEGER ||
+          nextTt > Number.MAX_SAFE_INTEGER ||
+          nextRt > Number.MAX_SAFE_INTEGER ||
+          nextAs > Number.MAX_SAFE_INTEGER
+        ) {
           throw createAuditError('Token overflow', 'AI_AGGREGATE_OVERFLOW');
         }
 
@@ -262,6 +330,8 @@ export function makeUsageAggregateSupplier(supabase, tenantId, options = {}) {
         taskTotals[task].prompt_tokens = nextPt;
         taskTotals[task].completion_tokens = nextCt;
         taskTotals[task].total_tokens = nextTt;
+        if (nextRt > 0) taskTotals[task].reasoning_tokens = nextRt;
+        if (nextAs > 0) taskTotals[task].audio_seconds = nextAs;
       }
 
       if (data.length < pageSize) {

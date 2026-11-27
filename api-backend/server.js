@@ -41,6 +41,7 @@ import { createDokumentMailRouter } from './routes/dokument-mail.js';
 import { createSondertagMitteilungRouter } from './routes/sondertag-mitteilung.js';
 import { createMailversandRouter } from './routes/mailversand.js';
 import { createFormularSignierenRouter } from './routes/formular-signieren.js';
+import { createCockpitRouter } from './routes/cockpit.js';
 import { istKutu, appBaseUrl } from './lib/dagitim.js';
 import { mailEntwurfStattVersand, entwurfBestaetigt, entwurfAbgelehnt, entwurfGegenangebot, entwurfNachricht } from './lib/mail-entwurf.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
@@ -100,6 +101,21 @@ const ALLOWED_ORIGINS = [
   'https://app.infinitymade.de',
   'https://admin.infinitymade.de',
 ];
+if (!istKutu() && process.env.COCKPIT_ORIGIN) {
+  for (const rawOrigin of process.env.COCKPIT_ORIGIN.split(',')) {
+    const trimmed = rawOrigin.trim();
+    if (!trimmed) continue;
+    const cockpitOrigin = new URL(trimmed);
+    const isHttps = cockpitOrigin.protocol === 'https:';
+    const isLocalhost = cockpitOrigin.protocol === 'http:' && cockpitOrigin.hostname === 'localhost';
+    if (!isHttps && !isLocalhost) {
+      throw new Error('COCKPIT_ORIGIN must use https:// or http://localhost');
+    }
+    if (!ALLOWED_ORIGINS.includes(cockpitOrigin.origin)) {
+      ALLOWED_ORIGINS.push(cockpitOrigin.origin);
+    }
+  }
+}
 // O-105 (14.09.2026): on-prem-Kutu addiert ihre eigene Adresse — der Browser
 // sendet den Origin-Header auch bei gleich-Origin-POST/PATCH/DELETE, ohne
 // diese Zeile lehnt server.js jede Schreibaktion der eigenen Box ab. Auf SaaS
@@ -650,6 +666,10 @@ app.use('/api', createMailversandRouter({ supabase, googleVerfuegbar: GOOGLE_KON
 // M6b/S8: Terminabsage per Mail bei geschlossenem Sondertag — nie automatisch, Vorschau -> Freigabe -> Versand.
 app.use('/api', createSondertagMitteilungRouter({ supabase, gmail: { newOAuthClient, fetchWithTimeout } }));
 app.use('/api', createFormularSignierenRouter({ supabase }));
+// Praxura Cockpit (SaaS-only, niemals auf Kundenbox). Auth über separates Ops-Supabase.
+if (!istKutu()) {
+  app.use('/api/cockpit', createCockpitRouter({ supabase }));
+}
 
 app.post('/api/booking/:id/sitzung-abschliessen', requireAuthAI, createSitzungsabschluss({
   clientFuerToken: token => createClient(supabaseUrl, supabaseKey, {

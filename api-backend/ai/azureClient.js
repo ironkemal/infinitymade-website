@@ -75,6 +75,7 @@ function getGlobalJetonClient() {
  * @typedef {{
  *   audioBuffer?: Buffer | Uint8Array,
  *   mimeType?: string,
+ *   audioSeconds?: number,
  *   deployment?: string,
  *   mock?: boolean,
  *   mockFn?: (opts: { audioBuffer?: Buffer | Uint8Array, mimeType?: string }) => unknown,
@@ -169,7 +170,7 @@ function sleepWithSignal(ms, signal) {
  * Call Azure OpenAI / KI Chat Completions.
  *
  * @param {ChatOptions} [opts]
- * @returns {Promise<{content:string, usage:{prompt_tokens:number,completion_tokens:number,total_tokens:number}, model:string, deployment:string, dry_run:boolean, latency_ms:number}>}
+ * @returns {Promise<{content:string, usage:{prompt_tokens:number,completion_tokens:number,total_tokens:number,reasoning_tokens?:number}, model:string, deployment:string, dry_run:boolean, latency_ms:number}>}
  */
 export async function chat(opts = {}) {
   const {
@@ -620,11 +621,16 @@ async function executeTransport({
       throw makeClientError('KI-Antwort enthält ungültige Nutzungsdaten', 'AI_RESPONSE_MALFORMED', 503);
     }
 
+    const rawReasoning = rawUsage.completion_tokens_details?.reasoning_tokens;
+    /** @type {{ prompt_tokens: number, completion_tokens: number, total_tokens: number, reasoning_tokens?: number }} */
     const usage = {
       prompt_tokens: pt,
       completion_tokens: ct,
       total_tokens: tt
     };
+    if (typeof rawReasoning === 'number' && Number.isInteger(rawReasoning) && rawReasoning >= 0) {
+      usage.reasoning_tokens = rawReasoning;
+    }
 
     let safeModel = target.deployment;
     const bekannt = knownModel(json?.model);
@@ -715,12 +721,13 @@ export function configSummary(customConfig) {
  * Call Azure OpenAI audio transcription service.
  *
  * @param {TranscribeOptions} [opts]
- * @returns {Promise<{text: string, usage: {prompt_tokens: number, completion_tokens: number, total_tokens: number}, model: string, deployment: string, dry_run: boolean, latency_ms: number}>}
+ * @returns {Promise<{text: string, usage: {prompt_tokens: number, completion_tokens: number, total_tokens: number, audio_seconds?: number}, model: string, deployment: string, dry_run: boolean, latency_ms: number}>}
  */
 export async function transcribe(opts = {}) {
   const {
     audioBuffer,
     mimeType = 'audio/webm',
+    audioSeconds,
     deployment: deploymentOverride,
     mock = false,
     mockFn,
@@ -742,9 +749,14 @@ export async function transcribe(opts = {}) {
     }
     const res = /** @type {any} */ (mockFn({ audioBuffer, mimeType }));
     const textStr = typeof res === 'string' ? res : (typeof res?.text === 'string' ? res.text : '');
+    /** @type {{ prompt_tokens: number, completion_tokens: number, total_tokens: number, audio_seconds?: number }} */
+    const mockUsage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+    if (typeof audioSeconds === 'number' && Number.isFinite(audioSeconds) && audioSeconds >= 0) {
+      mockUsage.audio_seconds = Math.max(0, Math.round(audioSeconds));
+    }
     return {
       text: textStr,
-      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+      usage: mockUsage,
       model: deploymentOverride || 'whisper',
       deployment: deploymentOverride || 'whisper',
       dry_run: true,
@@ -821,6 +833,7 @@ export async function transcribe(opts = {}) {
       cfg,
       audioBuffer,
       mimeType,
+      audioSeconds,
       deploymentOverride,
       fetchImpl,
       jetonClient: jClient,
@@ -851,6 +864,7 @@ export async function transcribe(opts = {}) {
  *   cfg: Record<string, any>,
  *   audioBuffer: Buffer | Uint8Array,
  *   mimeType: string,
+ *   audioSeconds?: number,
  *   deploymentOverride: string | undefined,
  *   fetchImpl: (url: string, init: Record<string, any>) => Promise<any>,
  *   jetonClient: JetonClientLike | null,
@@ -863,6 +877,7 @@ async function executeTranscribeTransport({
   cfg,
   audioBuffer,
   mimeType,
+  audioSeconds,
   deploymentOverride,
   fetchImpl,
   jetonClient,
@@ -1040,18 +1055,36 @@ async function executeTranscribeTransport({
     }
 
     let parsedText = '';
+    /** @type {number | undefined} */
+    let parsedUsageSeconds;
     try {
       const json = JSON.parse(rawText);
       parsedText = typeof json?.text === 'string' ? json.text : (typeof json === 'string' ? json : rawText);
+      const rawSec = json?.usage?.seconds;
+      if (typeof rawSec === 'number' && Number.isFinite(rawSec) && rawSec >= 0) {
+        parsedUsageSeconds = Math.max(0, Math.round(rawSec));
+      }
     } catch {
       parsedText = rawText;
+    }
+
+    const resolvedAudioSeconds = parsedUsageSeconds !== undefined
+      ? parsedUsageSeconds
+      : (typeof audioSeconds === 'number' && Number.isFinite(audioSeconds) && audioSeconds >= 0
+          ? Math.max(0, Math.round(audioSeconds))
+          : undefined);
+
+    /** @type {{ prompt_tokens: number, completion_tokens: number, total_tokens: number, audio_seconds?: number }} */
+    const usage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+    if (resolvedAudioSeconds !== undefined) {
+      usage.audio_seconds = resolvedAudioSeconds;
     }
 
     return {
       text: parsedText.trim(),
       model: target.deployment,
       deployment: target.deployment,
-      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+      usage,
       dry_run: false,
       latency_ms: Date.now() - t0
     };

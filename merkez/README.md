@@ -7,7 +7,7 @@ Verzeichnisse einzeln) und nicht ins Web (`.vercelignore`).
 
 **Auf der VPS (07.10.2026):** Sparse-Checkout reicht mit `/merkez/` allein NICHT — `server.js`/`admin.js`
 importieren zwei Dateien aus `api-backend/`. Muster (`git sparse-checkout set --no-cone`):
-`/merkez/` · `/api-backend/routes/mitarbeiter-zugang-code.js` · `/api-backend/merkez-istemci/signatur.js` · `/api-backend/merkez-istemci/ki-bericht-schema.js` · `/api-backend/lib/berlin-tag.js` · `/api-backend/ai/ki-config.js` (KI-Jeton, 3b.4).
+`/merkez/` · `/api-backend/routes/mitarbeiter-zugang-code.js` · `/api-backend/merkez-istemci/signatur.js` · `/api-backend/merkez-istemci/ki-bericht-schema.js` · `/api-backend/lib/berlin-tag.js` · `/api-backend/ai/ki-config.js` (KI-Jeton, 3b.4) · `/api-backend/ai/ki-preise.js`.
 Kommt ein neuer `../api-backend/`-Import dazu, muss das Muster auf der VPS mitwachsen.
 
 Was es tut: Einrichtungscode → zufälliger Name (`wort-wort-NN`) → DNS-Einträge bei Cloudflare

@@ -4,20 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>Praxura Ops</title>
+<title>Praxura Cockpit</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🗂️</text></svg>">
-<link rel="stylesheet" href="app.css?v=20260816j">
+<link rel="stylesheet" href="app.css?v=20261127a">
 </head>
 <body>
 
-<!-- ── Start ──────────────────────────────────────────────────────────────
-     Sichtbar, bis der Start entschieden ist (App oder Login). Ohne diesen
-     Zwischenschritt wäre die Seite bei jedem hängenden Start einfach leer. -->
+<!-- ── Start ────────────────────────────────────────────────────────────── -->
 <div id="boot" class="login">
   <div class="login-card" style="text-align:center">
     <div class="login-mark">Prax<em>ura</em></div>
-    <p class="login-sub" id="bootMsg">Laden …</p>
-    <button class="btn btn-ghost" id="bootReload" hidden>Neu laden</button>
+    <p class="login-sub" id="bootMsg" data-i18n="auth.loading">Laden …</p>
+    <button class="btn btn-ghost" id="bootReload" data-i18n="auth.reload" hidden>Neu laden</button>
   </div>
 </div>
 
@@ -25,191 +23,250 @@
 <div id="login" class="login" hidden>
   <form class="login-card" id="loginForm">
     <div class="login-mark">Prax<em>ura</em></div>
-    <p class="login-sub">Ops-Dashboard — intern</p>
+    <p class="login-sub" data-i18n="auth.loginTitle">Cockpit — intern</p>
     <label class="fld">
-      <span>E-Mail</span>
+      <span data-i18n="auth.email">E-Mail</span>
       <input type="email" id="loginEmail" autocomplete="username" required>
     </label>
     <label class="fld">
-      <span>Passwort</span>
+      <span data-i18n="auth.password">Passwort</span>
       <input type="password" id="loginPass" autocomplete="current-password" required>
     </label>
-    <button class="btn btn-primary" type="submit" id="loginBtn">Anmelden</button>
+    <button class="btn btn-primary" type="submit" id="loginBtn" data-i18n="auth.login">Anmelden</button>
     <p class="login-err" id="loginErr" hidden></p>
   </form>
 </div>
 
-<!-- ── App ────────────────────────────────────────────────────────────── -->
-<div id="app" class="app" hidden>
+<!-- ── App Shell (Sidebar + Topbar + Views) ───────────────────────────── -->
+<div id="app" class="app shell" hidden>
 
-  <header class="top">
-    <div class="brand">Prax<em>ura</em> <span class="brand-tag">Ops</span></div>
-    <nav class="tabs" id="tabs">
-      <button class="tab is-active" data-view="todo">Aufgaben</button>
-      <button class="tab" data-view="wissen">Wissensbank</button>
-      <button class="tab" data-view="decisions">Entscheidungen</button>
-      <button class="tab" data-view="meetings">Meetings</button>
-      <button class="tab" data-view="ausgaben">Finanzen 💶</button>
-      <button class="tab" data-view="fahrtenbuch">Fahrtenbuch</button>
-      <button class="tab" data-view="files">Dateien</button>
-    </nav>
-    <div class="top-right">
-      <span class="who" id="who"></span>
-      <button class="btn btn-ghost" id="logoutBtn" title="Abmelden">Abmelden</button>
+  <div class="sidebar-backdrop" id="sidebarBackdrop" hidden></div>
+
+  <aside class="sidebar" id="sidebar" aria-label="Navigation">
+    <div class="sidebar-head">
+      <div class="brand">Prax<em>ura</em> <span class="brand-tag">Cockpit</span></div>
+      <button class="btn btn-icon sidebar-close" id="sidebarClose" aria-label="Close">×</button>
     </div>
-  </header>
 
-  <main class="main">
-
-    <!-- ── Aufgaben ─────────────────────────────────────────────────── -->
-    <section class="view" id="view-todo">
-      <div class="view-bar">
-        <button class="btn btn-primary" id="addTodoBtn">+ Aufgabe</button>
-        <div class="spacer"></div>
-        <label class="chk-inline">
-          <input type="checkbox" id="showArchived">
-          <span>Archiv zeigen</span>
-        </label>
-        <span class="hint" id="boardHint"></span>
-      </div>
-      <div class="tagbar" id="catBar"></div>
-      <div class="board" id="board"><!-- kolonlar JS ile --></div>
-    </section>
-
-    <!-- ── Wissensbank ──────────────────────────────────────────────── -->
-    <section class="view" id="view-wissen" hidden>
-      <div class="view-bar">
-        <button class="btn btn-primary" id="addWissenBtn">+ Eintrag</button>
-        <input class="search" id="wissenSearch" type="search" placeholder="Suchen … (Titel, Inhalt, #tag)">
-        <div class="spacer"></div>
-        <span class="hint" id="wissenCount"></span>
-      </div>
-      <div class="tagbar" id="wissenTags"></div>
-      <div class="cards" id="wissenList"></div>
-    </section>
-
-    <!-- ── Entscheidungen ───────────────────────────────────────────── -->
-    <section class="view" id="view-decisions" hidden>
-      <div class="view-bar">
-        <button class="btn btn-primary" id="addDecisionBtn">+ Entscheidung</button>
-        <input class="search" id="decisionSearch" type="search" placeholder="Suchen …">
-        <div class="spacer"></div>
-        <span class="hint">Warum haben wir das so gemacht</span>
-      </div>
-      <div class="timeline" id="decisionList"></div>
-    </section>
-
-    <!-- ── Meetings ─────────────────────────────────────────────────── -->
-    <section class="view" id="view-meetings" hidden>
-      <div class="view-bar">
-        <button class="btn btn-primary" id="addMeetingBtn">+ Meeting</button>
-        <div class="spacer"></div>
-        <span class="hint">Notiz einfügen → Claude macht Aufgaben daraus</span>
-      </div>
-      <div class="cards" id="meetingList"></div>
-    </section>
-
-    <!-- ── Ausgaben (Finanzen & EÜR) ──────────────────────────────────── -->
-    <section class="view" id="view-ausgaben" hidden>
-      <div class="view-bar">
-        <button class="btn btn-primary" id="addExpenseBtn">+ Ausgabe</button>
-        <select class="search f-filter-select" id="fYearFilter" style="max-width:130px">
-          <option value="all">Alle Jahre</option>
-        </select>
-        <select class="search f-filter-select" id="fCatFilter" style="max-width:210px">
-          <option value="all">Alle Steuerkategorien</option>
-          <option value="software_cloud">☁️ Software & Cloud</option>
-          <option value="telecom_internet">📱 Telekom & Internet</option>
-          <option value="office_supplies">📎 Büromaterial</option>
-          <option value="gwg_assets">💻 GWG (≤ 800 €)</option>
-          <option value="digital_assets_afa">🖥️ Digital (Sofort-AfA)</option>
-          <option value="travel_mobility">🚆 Reise- & Fahrtkosten</option>
-          <option value="education_training">📚 Fortbildung</option>
-          <option value="marketing_sales">📣 Marketing & Ads</option>
-          <option value="bank_fees">💳 Bankgebühren</option>
-          <option value="rent_lease">🏢 Miete & Raumkosten</option>
-          <option value="insurance">🛡️ Versicherungen</option>
-          <option value="professional_services">🤝 Fremdleistungen</option>
-          <option value="legal_tax_advisory">⚖️ Rechts- & Steuerberatung</option>
-          <option value="repairs_maintenance">🔧 Reparaturen</option>
-          <option value="business_meals">🍽️ Bewirtung</option>
-          <option value="post_shipping">📦 Porto & Versand</option>
-          <option value="other_operational">🏷️ Sonstige Betriebsausgaben</option>
-          <option value="private_expense">🚫 Privat (Nicht in EÜR)</option>
-        </select>
-        <select class="search f-filter-select" id="fPaidByFilter" style="max-width:170px">
-          <option value="all">Alle Zahlungskonten</option>
-          <option value="euer_only">Nur EÜR-Ausgaben (Kemal)</option>
-          <option value="kemal_business">Geschäftskonto Kemal</option>
-          <option value="melih_private">Melih privat (Nicht in EÜR)</option>
-        </select>
-        <select class="search f-filter-select" id="fVatFilter" style="max-width:160px">
-          <option value="all">Alle USt-Arten</option>
-          <option value="standard">Nur Inland (§15 Vorsteuer)</option>
-          <option value="reverse_charge">Nur § 13b Reverse Charge</option>
-        </select>
-        <select class="search f-filter-select" id="fStatusFilter" style="max-width:130px">
-          <option value="all">Alle Status</option>
-          <option value="processed">Verarbeitet</option>
-          <option value="review_needed">Prüfung nötig</option>
-          <option value="archived">Archiviert</option>
-        </select>
-        <label class="chk-inline">
-          <input type="checkbox" id="fOnlyRecurring">
-          <span>Nur Abos</span>
-        </label>
-        <input class="search" id="financeSearch" type="search" placeholder="Suchen … (Lieferant, Land, USt-ID, Text)">
-        <div class="spacer"></div>
-        <button class="btn btn-ghost" id="exportCsvBtn" title="Anlage EÜR CSV für Elster exportieren">📊 EÜR CSV</button>
-        <button class="btn btn-ghost" id="exportJsonBtn" title="Anlage EÜR JSON exportieren">JSON</button>
-        <a class="btn btn-ghost" id="financeDriveLink" target="_blank" rel="noopener" hidden>Belegordner ↗</a>
+    <nav class="sidebar-nav" id="tabs">
+      <div class="nav-group">
+        <div class="nav-group-label" data-i18n="nav.group.ops">Betrieb</div>
+        <button class="nav-item is-active" data-view="cockpit">
+          <span class="nav-ico" aria-hidden="true">◎</span>
+          <span data-i18n="nav.cockpit">Cockpit</span>
+        </button>
+        <button class="nav-item" data-view="customers">
+          <span class="nav-ico" aria-hidden="true">🏥</span>
+          <span data-i18n="nav.customers">Kunden 360°</span>
+        </button>
+        <button class="nav-item" data-view="ki-costs">
+          <span class="nav-ico" aria-hidden="true">⚡</span>
+          <span data-i18n="nav.kiCosts">KI & Kosten</span>
+        </button>
       </div>
 
-      <!-- KPI Summary Cards -->
-      <div class="f-kpi-grid" id="financeKPIs"></div>
-
-      <!-- Interactive Fixcost & Recurring Subscriptions Breakdown Panel -->
-      <div id="financeFixcostDetail" hidden></div>
-
-      <!-- AI Finance Copilot & Assistant Chatbot -->
-      <div id="financeAICopilot"></div>
-
-      <!-- Vendor Portfolio & Spend Breakdown (Firma Firma Label & Filter) -->
-      <div id="financeVendorPortfolio"></div>
-
-      <!-- EÜR Tax Category Breakdown -->
-      <div id="financeBreakdown"></div>
-
-      <!-- Expense Invoices Table & Summary -->
-      <div class="f-list-head">
-        <h3 style="margin:0;font-size:15px">Buchungen & Belege (Finanzen)</h3>
-        <span class="hint" id="financeCount"></span>
+      <div class="nav-group">
+        <div class="nav-group-label" data-i18n="nav.group.internal">Intern</div>
+        <button class="nav-item" data-view="todo">
+          <span class="nav-ico" aria-hidden="true">✓</span>
+          <span data-i18n="nav.todo">Aufgaben</span>
+        </button>
+        <button class="nav-item" data-view="ausgaben">
+          <span class="nav-ico" aria-hidden="true">💶</span>
+          <span data-i18n="nav.ausgaben">Finanzen</span>
+        </button>
+        <button class="nav-item" data-view="meetings">
+          <span class="nav-ico" aria-hidden="true">🗒️</span>
+          <span data-i18n="nav.meetings">Meetings</span>
+        </button>
+        <button class="nav-item" data-view="decisions">
+          <span class="nav-ico" aria-hidden="true">⚖️</span>
+          <span data-i18n="nav.decisions">Entscheidungen</span>
+        </button>
+        <button class="nav-item" data-view="wissen">
+          <span class="nav-ico" aria-hidden="true">📚</span>
+          <span data-i18n="nav.wissen">Wissensbank</span>
+        </button>
+        <button class="nav-item" data-view="fahrtenbuch">
+          <span class="nav-ico" aria-hidden="true">🚗</span>
+          <span data-i18n="nav.fahrtenbuch">Fahrtenbuch</span>
+        </button>
+        <button class="nav-item" data-view="files">
+          <span class="nav-ico" aria-hidden="true">📁</span>
+          <span data-i18n="nav.files">Dateien</span>
+        </button>
       </div>
-      <div id="financeList"></div>
-    </section>
+    </nav>
+  </aside>
 
-    <!-- ── Dateien ──────────────────────────────────────────────────── -->
-    <section class="view" id="view-files" hidden>
-      <div class="view-bar">
-        <div class="crumbs" id="fileCrumbs"></div>
-        <div class="spacer"></div>
-        <a class="btn btn-ghost" id="driveLink" target="_blank" rel="noopener" hidden>Geteilter Ordner ↗</a>
-      </div>
-      <div class="files-split">
-        <div class="filetree" id="fileTree"></div>
-        <div class="fileview" id="fileView">
-          <p class="empty">Links eine Datei wählen.</p>
+  <div class="workspace">
+    <header class="top">
+      <button class="btn btn-icon menu-btn" id="menuBtn" aria-label="Menu">☰</button>
+      <div class="top-title" id="viewTitle" data-i18n="nav.cockpit">Cockpit</div>
+
+      <div class="top-right">
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button type="button" class="lang-btn" data-lang="de">DE</button>
+          <button type="button" class="lang-btn" data-lang="tr">TR</button>
+          <button type="button" class="lang-btn" data-lang="en">EN</button>
         </div>
+        <span class="who" id="who"></span>
+        <span class="role-pill" id="rolePill"></span>
+        <button class="btn btn-ghost" id="logoutBtn" data-i18n="auth.logout">Abmelden</button>
       </div>
-    </section>
+    </header>
 
-    <!-- ── Fahrtenbuch ─────────────────────────────────────────────── -->
-    <section id="view-fahrtenbuch" class="view" hidden></section>
+    <main class="main">
 
-  </main>
+      <!-- ── Cockpit Home ───────────────────────────────────────────── -->
+      <section class="view" id="view-cockpit"></section>
+
+      <!-- ── Kunden 360° ────────────────────────────────────────────── -->
+      <section class="view" id="view-customers" hidden></section>
+
+      <!-- ── KI & Kosten ────────────────────────────────────────────── -->
+      <section class="view" id="view-ki-costs" hidden></section>
+
+      <!-- ── Aufgaben ───────────────────────────────────────────────── -->
+      <section class="view" id="view-todo" hidden>
+        <div class="view-bar">
+          <button class="btn btn-primary" id="addTodoBtn">+ Aufgabe</button>
+          <div class="spacer"></div>
+          <label class="chk-inline">
+            <input type="checkbox" id="showArchived">
+            <span>Archiv zeigen</span>
+          </label>
+          <span class="hint" id="boardHint"></span>
+        </div>
+        <div class="tagbar" id="catBar"></div>
+        <div class="board" id="board"><!-- kolonlar JS ile --></div>
+      </section>
+
+      <!-- ── Wissensbank ────────────────────────────────────────────── -->
+      <section class="view" id="view-wissen" hidden>
+        <div class="view-bar">
+          <button class="btn btn-primary" id="addWissenBtn">+ Eintrag</button>
+          <input class="search" id="wissenSearch" type="search" placeholder="Suchen … (Titel, Inhalt, #tag)">
+          <div class="spacer"></div>
+          <span class="hint" id="wissenCount"></span>
+        </div>
+        <div class="tagbar" id="wissenTags"></div>
+        <div class="cards" id="wissenList"></div>
+      </section>
+
+      <!-- ── Entscheidungen ─────────────────────────────────────────── -->
+      <section class="view" id="view-decisions" hidden>
+        <div class="view-bar">
+          <button class="btn btn-primary" id="addDecisionBtn">+ Entscheidung</button>
+          <input class="search" id="decisionSearch" type="search" placeholder="Suchen …">
+          <div class="spacer"></div>
+          <span class="hint">Warum haben wir das so gemacht</span>
+        </div>
+        <div class="timeline" id="decisionList"></div>
+      </section>
+
+      <!-- ── Meetings ───────────────────────────────────────────────── -->
+      <section class="view" id="view-meetings" hidden>
+        <div class="view-bar">
+          <button class="btn btn-primary" id="addMeetingBtn">+ Meeting</button>
+          <div class="spacer"></div>
+          <span class="hint">Notiz einfügen → Claude macht Aufgaben daraus</span>
+        </div>
+        <div class="cards" id="meetingList"></div>
+      </section>
+
+      <!-- ── Ausgaben (Finanzen & EÜR) ────────────────────────────────── -->
+      <section class="view" id="view-ausgaben" hidden>
+        <div class="view-bar">
+          <button class="btn btn-primary" id="addExpenseBtn">+ Ausgabe</button>
+          <select class="search f-filter-select" id="fYearFilter" style="max-width:130px">
+            <option value="all">Alle Jahre</option>
+          </select>
+          <select class="search f-filter-select" id="fCatFilter" style="max-width:210px">
+            <option value="all">Alle Steuerkategorien</option>
+            <option value="software_cloud">☁️ Software & Cloud</option>
+            <option value="telecom_internet">📱 Telekom & Internet</option>
+            <option value="office_supplies">📎 Büromaterial</option>
+            <option value="gwg_assets">💻 GWG (≤ 800 €)</option>
+            <option value="digital_assets_afa">🖥️ Digital (Sofort-AfA)</option>
+            <option value="travel_mobility">🚆 Reise- & Fahrtkosten</option>
+            <option value="education_training">📚 Fortbildung</option>
+            <option value="marketing_sales">📣 Marketing & Ads</option>
+            <option value="bank_fees">💳 Bankgebühren</option>
+            <option value="rent_lease">🏢 Miete & Raumkosten</option>
+            <option value="insurance">🛡️ Versicherungen</option>
+            <option value="professional_services">🤝 Fremdleistungen</option>
+            <option value="legal_tax_advisory">⚖️ Rechts- & Steuerberatung</option>
+            <option value="repairs_maintenance">🔧 Reparaturen</option>
+            <option value="business_meals">🍽️ Bewirtung</option>
+            <option value="post_shipping">📦 Porto & Versand</option>
+            <option value="other_operational">🏷️ Sonstige Betriebsausgaben</option>
+            <option value="private_expense">🚫 Privat (Nicht in EÜR)</option>
+          </select>
+          <select class="search f-filter-select" id="fPaidByFilter" style="max-width:170px">
+            <option value="all">Alle Zahlungskonten</option>
+            <option value="euer_only">Nur EÜR-Ausgaben (Kemal)</option>
+            <option value="kemal_business">Geschäftskonto Kemal</option>
+            <option value="melih_private">Melih privat (Nicht in EÜR)</option>
+          </select>
+          <select class="search f-filter-select" id="fVatFilter" style="max-width:160px">
+            <option value="all">Alle USt-Arten</option>
+            <option value="standard">Nur Inland (§15 Vorsteuer)</option>
+            <option value="reverse_charge">Nur § 13b Reverse Charge</option>
+          </select>
+          <select class="search f-filter-select" id="fStatusFilter" style="max-width:130px">
+            <option value="all">Alle Status</option>
+            <option value="processed">Verarbeitet</option>
+            <option value="review_needed">Prüfung nötig</option>
+            <option value="archived">Archiviert</option>
+          </select>
+          <label class="chk-inline">
+            <input type="checkbox" id="fOnlyRecurring">
+            <span>Nur Abos</span>
+          </label>
+          <input class="search" id="financeSearch" type="search" placeholder="Suchen … (Lieferant, Land, USt-ID, Text)">
+          <div class="spacer"></div>
+          <button class="btn btn-ghost" id="exportCsvBtn" title="Anlage EÜR CSV für Elster exportieren">📊 EÜR CSV</button>
+          <button class="btn btn-ghost" id="exportJsonBtn" title="Anlage EÜR JSON exportieren">JSON</button>
+          <a class="btn btn-ghost" id="financeDriveLink" target="_blank" rel="noopener" hidden>Belegordner ↗</a>
+        </div>
+
+        <div class="f-kpi-grid" id="financeKPIs"></div>
+        <div id="financeFixcostDetail" hidden></div>
+        <div id="financeAICopilot"></div>
+        <div id="financeVendorPortfolio"></div>
+        <div id="financeBreakdown"></div>
+
+        <div class="f-list-head">
+          <h3 style="margin:0;font-size:15px">Buchungen & Belege (Finanzen)</h3>
+          <span class="hint" id="financeCount"></span>
+        </div>
+        <div id="financeList"></div>
+      </section>
+
+      <!-- ── Dateien ────────────────────────────────────────────────── -->
+      <section class="view" id="view-files" hidden>
+        <div class="view-bar">
+          <div class="crumbs" id="fileCrumbs"></div>
+          <div class="spacer"></div>
+          <a class="btn btn-ghost" id="driveLink" target="_blank" rel="noopener" hidden>Geteilter Ordner ↗</a>
+        </div>
+        <div class="files-split">
+          <div class="filetree" id="fileTree"></div>
+          <div class="fileview" id="fileView">
+            <p class="empty">Links eine Datei wählen.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Fahrtenbuch ───────────────────────────────────────────── -->
+      <section id="view-fahrtenbuch" class="view" hidden></section>
+
+    </main>
+  </div>
 </div>
 
-<!-- ── Modal (tüm formlar burada render edilir) ────────────────────────── -->
+<!-- ── Modal ────────────────────────────────────────────────────────────── -->
 <div class="modal-back" id="modalBack" hidden>
   <div class="modal" role="dialog" aria-modal="true">
     <header class="modal-top">
@@ -223,6 +280,6 @@
 
 <div class="toast" id="toast" hidden></div>
 
-<script type="module" src="app.js?v=20261023blocker1"></script>
+<script type="module" src="app.js?v=20261127a"></script>
 </body>
 </html>

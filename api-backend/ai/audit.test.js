@@ -239,7 +239,7 @@ test('makeUsageAggregateSupplier: aggregates cumulative tokens and calls by know
   assert.ok(report.reportId.includes('20261008'));
 
   // Validate minimal selected fields (no PHI, no user_id, no request timestamps)
-  assert.equal(selectedFields, 'task, prompt_tokens, completion_tokens, total_tokens');
+  assert.equal(selectedFields, 'task, prompt_tokens, completion_tokens, total_tokens, reasoning_tokens, audio_seconds');
 
   // Validate filter assertions: tenant-filtered and dry_run=false
   assert.ok(capturedFilters.some(f => f.op === 'eq' && f.col === 'tenant_id' && f.val === testTenant));
