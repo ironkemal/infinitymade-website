@@ -113,6 +113,9 @@ Germany (nationwide). Operator based in Siegburg, NRW.
 /blog/nagelspangenbehandlung-abrechnen-podologie.html — Nail brace (Nagelspange) billing: positions 78610/78620 from 01.10.2025, photo documentation, limits
 /blog/podologie-abrechnen-krankenkasse-302.html — Billing Podologie with statutory health insurers (§302): requirements, deadlines, typical rejections
 /blog/zuzahlung-podologie.html — Patient co-payment (Zuzahlung) in Podologie: amount, exemption, annual limit
+/blog/praxissoftware-podologie-vergleich-2026.html — Podologie practice software comparison 2026 (Pododesk, thevea, podoClient, THEORG, Praxura)
+/blog/theorg-thevea-alternative-heilmittel.html — Honest comparison of THEORG, thevea and Praxura + switching checklist
+/pricing.md — Machine-readable pricing breakdown (Solo 59 €, Praxis 149 €, Team 249 € net/month)
 
 # Last updated
-2026-11-26
+2026-11-27

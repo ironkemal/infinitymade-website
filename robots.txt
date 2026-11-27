@@ -9,41 +9,118 @@ Disallow: /onboarding.html
 Disallow: /login.html
 Disallow: /supabase-config.js
 
-# AI / LLM crawlers — explicitly allowed
+# AI / LLM crawlers — explicitly allowed for search discovery & grounding
+# Private app/API paths remain disallowed consistently.
 User-agent: GPTBot
 Allow: /
+Disallow: /api/
+Disallow: /dashboard.html
+Disallow: /onboarding.html
+Disallow: /login.html
+Disallow: /supabase-config.js
 
 User-agent: OAI-SearchBot
 Allow: /
+Disallow: /api/
+Disallow: /dashboard.html
+Disallow: /onboarding.html
+Disallow: /login.html
+Disallow: /supabase-config.js
 
 User-agent: ChatGPT-User
 Allow: /
+Disallow: /api/
+Disallow: /dashboard.html
+Disallow: /onboarding.html
+Disallow: /login.html
+Disallow: /supabase-config.js
 
 User-agent: ClaudeBot
 Allow: /
+Disallow: /api/
+Disallow: /dashboard.html
+Disallow: /onboarding.html
+Disallow: /login.html
+Disallow: /supabase-config.js
+
+User-agent: Claude-SearchBot
+Allow: /
+Disallow: /api/
+Disallow: /dashboard.html
+Disallow: /onboarding.html
+Disallow: /login.html
+Disallow: /supabase-config.js
 
 User-agent: Claude-User
 Allow: /
+Disallow: /api/
+Disallow: /dashboard.html
+Disallow: /onboarding.html
+Disallow: /login.html
+Disallow: /supabase-config.js
 
 User-agent: anthropic-ai
 Allow: /
+Disallow: /api/
+Disallow: /dashboard.html
+Disallow: /onboarding.html
+Disallow: /login.html
+Disallow: /supabase-config.js
 
 User-agent: PerplexityBot
 Allow: /
+Disallow: /api/
+Disallow: /dashboard.html
+Disallow: /onboarding.html
+Disallow: /login.html
+Disallow: /supabase-config.js
 
 User-agent: Perplexity-User
 Allow: /
+Disallow: /api/
+Disallow: /dashboard.html
+Disallow: /onboarding.html
+Disallow: /login.html
+Disallow: /supabase-config.js
+
+User-agent: meta-webindexer
+Allow: /
+Disallow: /api/
+Disallow: /dashboard.html
+Disallow: /onboarding.html
+Disallow: /login.html
+Disallow: /supabase-config.js
 
 User-agent: Google-Extended
 Allow: /
+Disallow: /api/
+Disallow: /dashboard.html
+Disallow: /onboarding.html
+Disallow: /login.html
+Disallow: /supabase-config.js
 
 User-agent: Applebot-Extended
 Allow: /
+Disallow: /api/
+Disallow: /dashboard.html
+Disallow: /onboarding.html
+Disallow: /login.html
+Disallow: /supabase-config.js
 
 User-agent: CCBot
 Allow: /
+Disallow: /api/
+Disallow: /dashboard.html
+Disallow: /onboarding.html
+Disallow: /login.html
+Disallow: /supabase-config.js
 
 User-agent: Bingbot
 Allow: /
+Disallow: /api/
+Disallow: /dashboard.html
+Disallow: /onboarding.html
+Disallow: /login.html
+Disallow: /supabase-config.js
 
 Sitemap: https://praxura.de/sitemap.xml
