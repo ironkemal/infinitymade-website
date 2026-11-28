@@ -53,6 +53,8 @@ test('T12: die Zahl der Blaetter entspricht der Zahl der Gesamtrechnungen', () =
       blattFuer(i + 1, `10100000${i}`, 100, [beleg(`000001${i}`, 'Schulz')]));
     const html = renderBegleitzettelBundle({ blaetter, dateiname: 'EHK5678900000024' });
 
+    assert.equal(zaehle(html, /<section class="blatt umschlag-uebersicht">/g), anzahl > 1 ? 1 : 0,
+      `${anzahl} Gesamtrechnungen brauchen ${anzahl > 1 ? 'genau eine' : 'keine'} Umschlag-Uebersicht`);
     assert.equal(zaehle(html, /<section class="blatt">/g), anzahl,
       `${anzahl} Gesamtrechnungen muessen ${anzahl} Blaetter ergeben`);
     assert.equal(zaehle(html, /Begleitzettel zur Gesamtrechnung/g), anzahl);
@@ -79,6 +81,7 @@ test('T12b: jedes Blatt traegt SEINE Karten-IK und SEINE Rechnungsnummer', () =>
   // Der eigentliche Punkt: kein Blatt darf die IK, die Nummer oder den Beleg
   // des anderen tragen. Ein Zettel, der beide nennt, macht die Zuordnung
   // kaputt, fuer die er da ist.
+  assert.equal(zaehle(html, /<section class="blatt umschlag-uebersicht">/g), 1);
   const blaetter = html.split('<section class="blatt">').slice(1);
   assert.equal(blaetter.length, 2);
 
@@ -159,6 +162,7 @@ test('T12f: dta.gruppen speist die Blaetter eins zu eins', () => {
   const html = renderBegleitzettelBundle({ blaetter, dateiname: dta.filename });
 
   assert.equal(dta.gruppen.length, 2);
+  assert.equal(zaehle(html, /<section class="blatt umschlag-uebersicht">/g), 1);
   assert.equal(zaehle(html, /<section class="blatt">/g), 2);
 
   const teile = html.split('<section class="blatt">').slice(1);

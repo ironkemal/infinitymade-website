@@ -51,7 +51,8 @@ for(const route of ['/abrechnung/create','/abrechnung/create-podologie']) {
   test(`${route}: draft rejected before validation overrides, DTA, or writes`,async()=>{
     const f=fixture();
     const fn=handler('./abrechnung.routes.js','post',route,{supabase:f.db,console:f.console,
-      ladeAnnahmestelle:async()=>({ok:true,ik:'987654321'}),abrechnungscodeFuer:()=> '21'});
+      ladeAnnahmestelle:async()=>({ok:true,ik:'987654321'}),abrechnungscodeFuer:()=> '21',
+      ladePraxisBundeslandVkg:async()=>null});
     await fn({headers:{authorization:'Bearer synthetic'},body:{kostentraegerIk:'987654321',
       prescriptionIds:['synthetic-rx'],verordnungIds:['synthetic-rx'],sperrenIgnoriert:['synthetic-rx'],sperrenGrund:'Override'}},f.res);
     assert.deepEqual(f.errors,[]);assert.equal(f.res.statusCode,409);

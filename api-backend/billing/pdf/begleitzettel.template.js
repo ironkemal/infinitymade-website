@@ -338,7 +338,7 @@ export function renderUmschlagListe(blaetter, dateiname = '') {
   }).join('');
 
   return `
-  <section class="blatt">
+  <section class="blatt umschlag-uebersicht">
     <header>
       <div>
         <h1>Umschlag- &amp; Belegübersicht (Urbelege)</h1>
