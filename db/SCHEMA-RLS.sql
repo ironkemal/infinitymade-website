@@ -3,14 +3,14 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261126205803 0134_booking_raum_leistung_standort
--- EXPORTED AT:        2026-11-26T20:58:05.654Z
--- ERZEUGT AM:         2026-11-26
+-- LAST MIGRATION:     0136_ai_audit_reasoning_and_audio
+-- EXPORTED AT:        2026-11-28T00:11:56.772Z
+-- ERZEUGT AM:         2026-11-28
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       110
---   table_columns:       1596
+--   table_columns:       1599
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        197
@@ -32,7 +32,7 @@
 -- ----------------------------------------------------------------------------
 -- PUBLICATIONS:
 --   Publication: "supabase_realtime" (all_tables: false, tables: [public.bookings])
---   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_11_22, realtime.messages_2026_11_23, realtime.messages_2026_11_24, realtime.messages_2026_11_25, realtime.messages_2026_11_26, realtime.messages_2026_11_27, realtime.messages_2026_11_28])
+--   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_11_24, realtime.messages_2026_11_25, realtime.messages_2026_11_26, realtime.messages_2026_11_27, realtime.messages_2026_11_28, realtime.messages_2026_11_29, realtime.messages_2026_11_30])
 
 -- AUTH NON-INTERNAL TRIGGERS (OUTSIDE PUBLIC INVENTORY — REFERENCE ONLY):
 --   Trigger: "on_auth_user_created" ON auth."users" (enabled: O)

@@ -3,14 +3,14 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261126205803 0134_booking_raum_leistung_standort
--- EXPORTED AT:        2026-11-26T20:58:05.654Z
--- ERZEUGT AM:         2026-11-26
+-- LAST MIGRATION:     0136_ai_audit_reasoning_and_audio
+-- EXPORTED AT:        2026-11-28T00:11:56.772Z
+-- ERZEUGT AM:         2026-11-28
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       110
---   table_columns:       1596
+--   table_columns:       1599
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        197
@@ -577,14 +577,24 @@ CREATE TABLE public.ai_audit_log (
   error text,
   dry_run boolean DEFAULT false,
   request_hash text,
-  created_at timestamp with time zone DEFAULT now()
+  created_at timestamp with time zone DEFAULT now(),
+  reasoning_tokens integer,
+  audio_seconds integer
 );
 --   FK tenant_id -> auth.users(id)
 --   FK user_id -> auth.users(id)
 ALTER TABLE ONLY public.ai_audit_log OWNER TO postgres;
+COMMENT ON COLUMN public.ai_audit_log.reasoning_tokens IS 'Hidden reasoning token count (subset of completion_tokens; never billed twice — Azure bills reasoning tokens as completion tokens).';
+COMMENT ON COLUMN public.ai_audit_log.audio_seconds IS 'Billable audio transcription duration in seconds for audio models (e.g. gpt-4o-transcribe, whisper).';
+
+ALTER TABLE ONLY public.ai_audit_log
+  ADD CONSTRAINT ai_audit_log_audio_seconds_check CHECK (audio_seconds IS NULL OR audio_seconds >= 0);
 
 ALTER TABLE ONLY public.ai_audit_log
   ADD CONSTRAINT ai_audit_log_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.ai_audit_log
+  ADD CONSTRAINT ai_audit_log_reasoning_tokens_check CHECK (reasoning_tokens IS NULL OR reasoning_tokens >= 0);
 
 ALTER TABLE ONLY public.ai_audit_log
   ADD CONSTRAINT ai_audit_log_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES auth.users(id) ON DELETE CASCADE;
@@ -2176,7 +2186,8 @@ CREATE TABLE public.kostentraeger (
   ist_abrechnender_kt boolean DEFAULT false,
   quelle text,
   quelle_stand date,
-  datensatz_status text DEFAULT 'echt'::text
+  datensatz_status text DEFAULT 'echt'::text,
+  dfu_email text
 );
 ALTER TABLE ONLY public.kostentraeger OWNER TO postgres;
 COMMENT ON COLUMN public.kostentraeger.das_ik IS 'VERALTET - nicht mehr lesen. Eine einzelne DAS-IK ist fachlich falsch: die Datenannahmestelle haengt von Abrechnungscode UND Bundesland ab. Quelle ist kostentraeger_annahmestellen.';

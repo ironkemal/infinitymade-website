@@ -10,7 +10,7 @@ steht in keinem Schema und lässt sich aus keinem Code herauslesen. Wenn es nich
 aufgeschrieben wird, ist es in sechs Monaten weg, und dann steht jemand vor einer
 Tabelle und fragt „brauchen wir die noch?" — ohne Antwort.
 
-**Stand:** 2026-11-24 · 102/102 Tabellen erfasst (Kette bis `0130_mitarbeiter_standort_zuordnung`; Live-Abgleich 0103–0105 und 0124–0129 siehe `onprem/REGISTER.md` O-129) · Projekt `njvuclullotbksskpwgk`
+**Stand:** 2026-11-28 · 102/102 Tabellen erfasst (Kette bis `0136_ai_audit_reasoning_and_audio`; Live-Abgleich 0103–0105 und 0124–0129 siehe `onprem/REGISTER.md` O-129) · Projekt `njvuclullotbksskpwgk`
 (das Ops-Dashboard liegt in einem **anderen** Projekt, `farkaejociddtgqkusvm`, und ist
 hier **nicht** erfasst).
 
@@ -1254,10 +1254,10 @@ Heilmittel-Richtlinie …).
 
 ### `ai_audit_log`
 - **Warum:** Protokoll jedes KI-Aufrufs (Rezept-OCR, Entwürfe, Diktat-Transkription): Modell, Kosten, Ergebnis. Nachweis gegenüber dem EU AI Act und Kostenkontrolle.
-- **Seit:** 16.05.2026 · `v9_ai_audit_log` (Erweiterung um `reasoning_tokens` und `audio_seconds`: Entwurf 0136 (`db/entwuerfe/0136_ai_audit_reasoning_and_audio.sql`, noch nicht live angewandt))
+- **Seit:** 16.05.2026 · `v9_ai_audit_log` (Erweiterung um `reasoning_tokens` und `audio_seconds`: `0136_ai_audit_reasoning_and_audio` — ✅ **am 28.11.2026 live angewandt**, Management-API, Ledger `20261128011200`)
 - **Status:** aktiv
 - **Wer:** `api-backend/ai/audit.js` schreibt, `api/admin/data.js` liest.
-- **Spaltenhinweis (`Entwurf 0136`):** `reasoning_tokens` (Teilmenge von `completion_tokens`, nie doppelt bepreist) und `audio_seconds` (abrechenbare Transkriptionsdauer in Sekunden), beide nullable `>= 0`.
+- **Spaltenhinweis (`0136_ai_audit_reasoning_and_audio`, live seit 28.11.2026):** `reasoning_tokens` (Teilmenge von `completion_tokens`, nie doppelt bepreist) und `audio_seconds` (abrechenbare Transkriptionsdauer in Sekunden), beide nullable `>= 0`.
 - **Achtung:** PII wird vorher maskiert (`api-backend/ai/pii-mask.js`) — beim Erweitern nicht daran vorbeischreiben.
 
 ### `email_logs`

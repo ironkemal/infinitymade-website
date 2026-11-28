@@ -1,8 +1,8 @@
 {
- "erzeugt": "2026-11-24",
+ "erzeugt": "2026-11-28",
  "quellen": {
-  "schema": "db/SCHEMA.sql (Stand 2026-11-24)",
-  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-11-24)",
+  "schema": "db/SCHEMA.sql (Stand 2026-11-28)",
+  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-11-27)",
   "register": "db/REGISTER.md"
  },
  "anzahl": 110,
@@ -40,12 +40,15 @@
     "api-backend/lib/modulrecht.test.js",
     "api-backend/routes/dokument-mail.js",
     "api-backend/routes/dokument-mail.test.js",
+    "api-backend/routes/support.js",
     "dashboard.js",
+    "demo-dashboard.html",
     "module/abrechnung-artefakte.js",
     "module/app-start.test.js",
     "module/einstellungen-nav.test.js",
     "module/leiste-zuordnung.test.js",
     "module/nav-registry.test.js",
+    "module/support-kontakt.js",
     "module/ueberblick-ansicht.js",
     "module/ueberblick-listen.js",
     "module/ueberblick-listen.test.js",
@@ -69,7 +72,7 @@
     {
      "name": "handleEmpfaengerPruefung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 2327,
+     "start": 2443,
      "module": [],
      "uiPfad": []
     },
@@ -114,10 +117,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -130,21 +134,21 @@
     {
      "name": "ladeKopfStand",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 912,
+     "start": 937,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "mandantUndAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 2511,
+     "start": 2694,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "openDasGuideModalController",
      "file": "module/abrechnung-empfaenger.js",
-     "start": 336,
+     "start": 377,
      "module": [
       "abrechnung",
       "anamnese",
@@ -182,23 +186,24 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "physioPublikationV1Create",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 805,
+     "start": 830,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "verarbeiteVerschluesselungsSchritt",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1768,
+     "start": 1853,
      "module": [],
      "uiPfad": []
     }
@@ -228,7 +233,7 @@
     {
      "name": "downloadAbrechnungFile",
      "file": "module/abrechnung-detail.js",
-     "start": 777,
+     "start": 795,
      "module": [
       "abrechnung",
       "anamnese",
@@ -266,10 +271,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -334,7 +340,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 100,
    "codeStumm": false
@@ -543,10 +550,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -593,7 +601,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 49,
    "codeStumm": false
@@ -626,7 +635,7 @@
     {
      "name": "bereichFuerAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 281,
+     "start": 304,
      "module": [],
      "uiPfad": []
     },
@@ -671,10 +680,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -718,10 +728,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -739,6 +750,7 @@
    ],
    "dateien": [
     "api-backend/billing/api/abrechnung.routes.js",
+    "api-backend/billing/api/verordnung-status.routes.js",
     "api-backend/billing/api/zuzahlungsforderung.routes.js",
     "module/abrechnung-verlauf.js",
     "module/podologie-abrechnung.js"
@@ -780,7 +792,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 59,
    "codeStumm": false
@@ -831,7 +844,7 @@
     {
      "name": "init",
      "file": "dashboard.js",
-     "start": 13898,
+     "start": 13894,
      "module": [],
      "uiPfad": []
     },
@@ -876,10 +889,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -923,10 +937,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -939,7 +954,7 @@
     {
      "name": "neuerBkKanal",
      "file": "dashboard.js",
-     "start": 13947,
+     "start": 13943,
      "module": [],
      "uiPfad": []
     }
@@ -989,7 +1004,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 39,
    "codeStumm": false
@@ -1084,16 +1100,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadAerzte",
      "file": "dashboard.js",
-     "start": 12874,
+     "start": 12870,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1131,10 +1148,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -1178,10 +1196,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -1189,7 +1208,7 @@
     {
      "name": "deleteAerzte",
      "file": "dashboard.js",
-     "start": 12933,
+     "start": 12929,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1199,7 +1218,7 @@
     {
      "name": "editAerzte",
      "file": "dashboard.js",
-     "start": 12942,
+     "start": 12938,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1264,14 +1283,15 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 63,
    "codeStumm": false
   },
   {
    "name": "ai_audit_log",
-   "spalten": 15,
+   "spalten": 17,
    "fkRaus": [
     "auth.users"
    ],
@@ -1280,22 +1300,46 @@
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
     "api-backend/ai/audit.test.js",
+    "api-backend/ai/ki-nutzung.test.js",
+    "api-backend/ai/ki-tracking.test.js",
     "api-backend/ai/m4-privacy-regression.test.js",
     "api-backend/ai/router.test.js",
     "api-backend/ai/tasks/transkribieren.test.js",
     "api-backend/dsgvo/klassifikation.js",
-    "api-backend/dsgvo/loeschen.js"
+    "api-backend/dsgvo/loeschen.js",
+    "api-backend/routes/cockpit.test.js"
    ],
    "register": true,
    "status": "aktiv",
-   "warum": "Protokoll jedes KI-Aufrufs (Rezept-OCR, Entwürfe): Modell, Kosten, Ergebnis. Nachweis gegenüber dem EU AI Act und Kostenkontrolle.",
-   "seit": "16.05.2026 · `v9_ai_audit_log`",
+   "warum": "Protokoll jedes KI-Aufrufs (Rezept-OCR, Entwürfe, Diktat-Transkription): Modell, Kosten, Ergebnis. Nachweis gegenüber dem EU AI Act und Kostenkontrolle.",
+   "seit": "16.05.2026 · `v9_ai_audit_log` (Erweiterung um `reasoning_tokens` und `audio_seconds`: `0136_ai_audit_reasoning_and_audio` — ✅ **am 28.11.2026 live angewandt**, Management-API, Ledger `20261128011200`)",
    "ungeklaert": false,
    "leser": [
     {
+     "name": "createAiRouter",
+     "file": "api-backend/ai/router.js",
+     "start": 219,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "fetchAuditLogsForMonth",
+     "file": "api-backend/routes/cockpit.js",
+     "start": 188,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "fetchMonthPages",
+     "file": "api-backend/ai/router.js",
+     "start": 479,
+     "module": [],
+     "uiPfad": []
+    },
+    {
      "name": "makeUsageAggregateSupplier",
      "file": "api-backend/ai/audit.js",
-     "start": 138,
+     "start": 184,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1333,18 +1377,74 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "runPageQuery",
+     "file": "api-backend/ai/audit.js",
+     "start": 247,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "runQuery",
+     "file": "api-backend/routes/cockpit.js",
+     "start": 192,
+     "module": [],
+     "uiPfad": []
     }
    ],
    "schreiber": [
     {
      "name": "logCall",
      "file": "api-backend/ai/audit.js",
-     "start": 76,
+     "start": 111,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1354,6 +1454,8 @@
    ],
    "dateien": [
     "api-backend/ai/audit.js",
+    "api-backend/ai/router.js",
+    "api-backend/routes/cockpit.js",
     "api/admin/data.js"
    ],
    "module": [
@@ -1393,7 +1495,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 40,
    "codeStumm": false
@@ -1414,7 +1517,6 @@
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/dsgvo/loeschen.js",
     "dashboard.html",
-    "index.html",
     "module/akte-aktionen.js",
     "module/akte-aktionen.test.js",
     "module/akte-podo.js",
@@ -1482,10 +1584,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -1529,16 +1632,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2356,
+     "start": 2357,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1576,10 +1680,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -1623,10 +1728,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -1672,10 +1778,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -1722,10 +1829,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -1774,7 +1882,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 59,
    "codeStumm": false
@@ -1844,7 +1953,7 @@
     {
      "name": "schliesse",
      "file": "api-backend/server.js",
-     "start": 3833,
+     "start": 3860,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1882,10 +1991,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -1934,7 +2044,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 48,
    "codeStumm": false
@@ -2044,7 +2155,7 @@
     {
      "name": "loadB2B",
      "file": "dashboard.js",
-     "start": 9898,
+     "start": 9894,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2082,10 +2193,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -2093,7 +2205,7 @@
     {
      "name": "renderB2B",
      "file": "dashboard.js",
-     "start": 9905,
+     "start": 9901,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2131,10 +2243,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -2182,7 +2295,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 43,
    "codeStumm": false
@@ -2277,16 +2391,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 6730,
+     "start": 6731,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2324,10 +2439,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -2340,7 +2456,7 @@
     {
      "name": "storniereZuzahlung",
      "file": "dashboard.js",
-     "start": 5895,
+     "start": 5896,
      "module": [],
      "uiPfad": []
     }
@@ -2394,7 +2510,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 56,
    "codeStumm": false
@@ -2423,7 +2540,7 @@
     {
      "name": "_renderAusnahmenBlock",
      "file": "module/abrechnung-einstellungen.js",
-     "start": 700,
+     "start": 720,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2461,10 +2578,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -2479,7 +2597,7 @@
     {
      "name": "_speichereAusnahme",
      "file": "module/abrechnung-einstellungen.js",
-     "start": 835,
+     "start": 855,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -2489,7 +2607,7 @@
     {
      "name": "wireAbrechnungSettings",
      "file": "module/abrechnung-einstellungen.js",
-     "start": 271,
+     "start": 291,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -2538,7 +2656,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 45,
    "codeStumm": false
@@ -2605,10 +2724,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -2659,10 +2779,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -2721,7 +2842,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 47,
    "codeStumm": false
@@ -2800,10 +2922,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -2854,16 +2977,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "unbekannt",
      "file": "api-backend/server.js",
-     "start": 4009,
+     "start": 4036,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2901,10 +3025,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -2963,7 +3088,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 42,
    "codeStumm": false
@@ -3112,10 +3238,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3159,10 +3286,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3206,10 +3334,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3229,7 +3358,7 @@
     {
      "name": "calculateSessionInfo",
      "file": "dashboard.js",
-     "start": 2323,
+     "start": 2324,
      "module": [],
      "uiPfad": []
     },
@@ -3281,10 +3410,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3328,10 +3458,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3375,16 +3506,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 828,
+     "start": 855,
      "module": [],
      "uiPfad": []
     },
@@ -3429,10 +3561,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3476,16 +3609,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1764,
+     "start": 1791,
      "module": [],
      "uiPfad": []
     },
@@ -3530,10 +3664,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3577,10 +3712,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3624,10 +3760,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3671,10 +3808,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3725,10 +3863,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3779,10 +3918,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3826,10 +3966,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3873,10 +4014,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3920,10 +4062,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3967,10 +4110,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4014,10 +4158,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4061,10 +4206,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4108,10 +4254,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4155,16 +4302,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1466,
+     "start": 1467,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4202,16 +4350,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadEmpDaySchedule",
      "file": "dashboard.js",
-     "start": 9586,
+     "start": 9582,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4249,16 +4398,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadLeads",
      "file": "dashboard.js",
-     "start": 6559,
+     "start": 6560,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4296,16 +4446,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadScheduleBookings",
      "file": "dashboard.js",
-     "start": 1222,
+     "start": 1223,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4343,10 +4494,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4418,10 +4570,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4479,10 +4632,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4526,10 +4680,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4573,10 +4728,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4620,10 +4776,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4667,10 +4824,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4714,10 +4872,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4761,10 +4920,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4808,10 +4968,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4862,10 +5023,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4923,10 +5085,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4939,7 +5102,7 @@
     {
      "name": "renderDayView",
      "file": "dashboard.js",
-     "start": 1831,
+     "start": 1832,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4977,16 +5140,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1145,
+     "start": 1146,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5024,10 +5188,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -5071,16 +5236,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderOverviewMonthly",
      "file": "dashboard.js",
-     "start": 12149,
+     "start": 12145,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5118,16 +5284,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderOverviewWeekly",
      "file": "dashboard.js",
-     "start": 12054,
+     "start": 12050,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5165,10 +5332,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -5212,10 +5380,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -5259,10 +5428,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -5306,10 +5476,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -5367,16 +5538,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "unbekannt",
      "file": "api-backend/server.js",
-     "start": 4009,
+     "start": 4036,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5414,10 +5586,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -5461,10 +5634,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -5515,10 +5689,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -5562,10 +5737,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -5609,10 +5785,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -5656,10 +5833,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -5703,10 +5881,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -5750,10 +5929,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -5799,10 +5979,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -5831,7 +6012,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 2849,
+     "start": 2850,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5869,10 +6050,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -5881,7 +6063,7 @@
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 3302,
+     "start": 3303,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5891,7 +6073,7 @@
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 3791,
+     "start": 3792,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5929,10 +6111,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -5971,7 +6154,7 @@
     {
      "name": "loadGroupParticipants",
      "file": "dashboard.js",
-     "start": 3676,
+     "start": 3677,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6009,10 +6192,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -6059,10 +6243,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -6071,7 +6256,7 @@
     {
      "name": "markArrivedHandler",
      "file": "dashboard.js",
-     "start": 3168,
+     "start": 3169,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6139,10 +6324,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -6151,7 +6337,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2356,
+     "start": 2357,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6189,10 +6375,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -6239,10 +6426,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -6251,7 +6439,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3212,
+     "start": 3213,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6261,7 +6449,7 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 3090,
+     "start": 3091,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6309,10 +6497,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -6414,7 +6603,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 112,
    "codeStumm": false
@@ -6443,7 +6633,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1764,
+     "start": 1791,
      "module": [],
      "uiPfad": []
     },
@@ -6495,10 +6685,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -6506,7 +6697,7 @@
     {
      "name": "loadEmpHours",
      "file": "dashboard.js",
-     "start": 9646,
+     "start": 9642,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6544,10 +6735,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -6557,7 +6749,7 @@
     {
      "name": "renderHoursGrid",
      "file": "dashboard.js",
-     "start": 8482,
+     "start": 8483,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6595,10 +6787,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -6648,7 +6841,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 46,
    "codeStumm": false
@@ -6666,6 +6860,7 @@
     "api-backend/attendance-report.test.js",
     "api-backend/billing/api/ausfall-atomar.test.js",
     "api-backend/dsgvo/klassifikation.js",
+    "api-backend/routes/cockpit.test.js",
     "api-backend/setup/standard-standort.test.js",
     "module/termin-rechtstexte.test.js",
     "tools/box-standort-abnahme.test.js",
@@ -6684,7 +6879,7 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 13423,
+     "start": 13419,
      "module": [],
      "uiPfad": []
     },
@@ -6696,9 +6891,16 @@
      "uiPfad": []
     },
     {
+     "name": "fetchBusinessesMeta",
+     "file": "api-backend/routes/cockpit.js",
+     "start": 259,
+     "module": [],
+     "uiPfad": []
+    },
+    {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 828,
+     "start": 855,
      "module": [],
      "uiPfad": []
     },
@@ -6785,11 +6987,19 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "resolvePracticeMeta",
+     "file": "api-backend/routes/support.js",
+     "start": 196,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "scope",
@@ -6832,10 +7042,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -6854,7 +7065,7 @@
     {
      "name": "deleteBusiness",
      "file": "dashboard.js",
-     "start": 13756,
+     "start": 13752,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6892,10 +7103,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -6972,10 +7184,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -6984,7 +7197,7 @@
     {
      "name": "toggleStandortDay",
      "file": "dashboard.js",
-     "start": 8458,
+     "start": 8459,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7022,10 +7235,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -7034,7 +7248,7 @@
     {
      "name": "wireBusinessModal",
      "file": "dashboard.js",
-     "start": 13673,
+     "start": 13669,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7072,10 +7286,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert",
@@ -7091,7 +7306,9 @@
     "api-backend/booking/termin-planung.js",
     "api-backend/dsgvo/loeschen.js",
     "api-backend/lib/terminerinnerung-job.js",
+    "api-backend/routes/cockpit.js",
     "api-backend/routes/mitarbeiter-zugang.js",
+    "api-backend/routes/support.js",
     "api-backend/server.js",
     "api-backend/setup/standard-standort.js",
     "api/stripe/webhook.js",
@@ -7140,7 +7357,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 88,
    "codeStumm": false
@@ -7168,14 +7386,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 828,
+     "start": 855,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 9356,
+     "start": 9357,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7213,10 +7431,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -7224,7 +7443,7 @@
     {
      "name": "loadSettings",
      "file": "dashboard.js",
-     "start": 10360,
+     "start": 10356,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7262,10 +7481,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -7315,7 +7535,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 42,
    "codeStumm": false
@@ -7400,7 +7621,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1764,
+     "start": 1791,
      "module": [],
      "uiPfad": []
     },
@@ -7452,10 +7673,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -7468,7 +7690,7 @@
     {
      "name": "renderHoursMiniCal",
      "file": "dashboard.js",
-     "start": 8575,
+     "start": 8576,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7506,10 +7728,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -7553,10 +7776,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -7602,10 +7826,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -7614,7 +7839,7 @@
     {
      "name": "saveSpecialDays",
      "file": "dashboard.js",
-     "start": 8678,
+     "start": 8679,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7667,7 +7892,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 46,
    "codeStumm": false
@@ -7756,7 +7982,7 @@
     {
      "name": "loadDataSharing",
      "file": "dashboard.js",
-     "start": 13877,
+     "start": 13873,
      "module": [],
      "uiPfad": []
     }
@@ -7765,7 +7991,7 @@
     {
      "name": "saveDataSharing",
      "file": "dashboard.js",
-     "start": 13519,
+     "start": 13515,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7777,7 +8003,7 @@
     "dashboard.js"
    ],
    "module": [],
-   "sqlTreffer": 40,
+   "sqlTreffer": 41,
    "codeStumm": false
   },
   {
@@ -7838,6 +8064,7 @@
    "erwaehnt": [
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/sync_heilmittel_katalog.js",
+    "module/verordnung-pruefung.test.js",
     "tools/seed-generieren.mjs"
    ],
    "register": true,
@@ -7887,10 +8114,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -7934,16 +8162,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "regelsatzLaden",
      "file": "module/verordnung-regelsatz-cache.js",
-     "start": 30,
+     "start": 40,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7981,10 +8210,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -8043,7 +8273,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 47,
    "codeStumm": false
@@ -8072,7 +8303,7 @@
     {
      "name": "loadVorlagenPanel",
      "file": "dashboard.js",
-     "start": 10625,
+     "start": 10621,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8110,16 +8341,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "openVorlagenEdit",
      "file": "dashboard.js",
-     "start": 11068,
+     "start": 11064,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8157,10 +8389,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -8168,7 +8401,7 @@
     {
      "name": "_enterAnsichtEditMode",
      "file": "dashboard.js",
-     "start": 10986,
+     "start": 10982,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8206,10 +8439,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -8218,7 +8452,7 @@
     {
      "name": "commit",
      "file": "dashboard.js",
-     "start": 11218,
+     "start": 11214,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8256,10 +8490,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -8268,7 +8503,7 @@
     {
      "name": "deleteVorlage",
      "file": "dashboard.js",
-     "start": 11186,
+     "start": 11182,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8306,10 +8541,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -8318,7 +8554,7 @@
     {
      "name": "duplicateVorlage",
      "file": "dashboard.js",
-     "start": 11195,
+     "start": 11191,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8356,10 +8592,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -8368,7 +8605,7 @@
     {
      "name": "openVorlagenAnsicht",
      "file": "dashboard.js",
-     "start": 10896,
+     "start": 10892,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8406,10 +8643,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -8418,7 +8656,7 @@
     {
      "name": "saveVorlage",
      "file": "dashboard.js",
-     "start": 11156,
+     "start": 11152,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -8429,7 +8667,7 @@
     {
      "name": "seedDefaultVorlagen",
      "file": "dashboard.js",
-     "start": 11242,
+     "start": 11238,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -8477,10 +8715,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -8489,7 +8728,7 @@
     {
      "name": "startVorlagenInlineRename",
      "file": "dashboard.js",
-     "start": 11211,
+     "start": 11207,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8527,10 +8766,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -8580,7 +8820,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 39,
    "codeStumm": false
@@ -8660,7 +8901,7 @@
     {
      "name": "loadPatientDetailMails",
      "file": "dashboard.js",
-     "start": 7297,
+     "start": 7298,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8698,10 +8939,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -8749,7 +8991,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 45,
    "codeStumm": false
@@ -8773,16 +9016,9 @@
    "ungeklaert": false,
    "leser": [
     {
-     "name": "berechneVerschluesselung",
+     "name": "ladeEmpfaengerZertifikat",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1625,
-     "module": [],
-     "uiPfad": []
-    },
-    {
-     "name": "ermittleEmpfaengerZertifikatStatus",
-     "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 2123,
+     "start": 1656,
      "module": [],
      "uiPfad": []
     }
@@ -8822,7 +9058,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 828,
+     "start": 855,
      "module": [],
      "uiPfad": []
     },
@@ -8843,7 +9079,7 @@
     {
      "name": "loadEmpPermissions",
      "file": "dashboard.js",
-     "start": 9160,
+     "start": 9161,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8881,16 +9117,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 8781,
+     "start": 8782,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8928,10 +9165,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -9003,10 +9241,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -9031,7 +9270,7 @@
     {
      "name": "renderEmpStandortList",
      "file": "dashboard.js",
-     "start": 9202,
+     "start": 9203,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9069,10 +9308,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -9082,7 +9322,7 @@
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 9055,
+     "start": 9056,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9120,10 +9360,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -9132,7 +9373,7 @@
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 9303,
+     "start": 9304,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9170,10 +9411,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -9230,7 +9472,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 59,
    "codeStumm": false
@@ -9256,7 +9499,7 @@
     {
      "name": "loadEmpPermissions",
      "file": "dashboard.js",
-     "start": 9160,
+     "start": 9161,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9294,16 +9537,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderEmpStandortList",
      "file": "dashboard.js",
-     "start": 9202,
+     "start": 9203,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9341,16 +9585,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 9055,
+     "start": 9056,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9388,10 +9633,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -9449,7 +9695,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 53,
    "codeStumm": false
@@ -9476,7 +9723,7 @@
     {
      "name": "renderEmpPermGrid",
      "file": "dashboard.js",
-     "start": 9269,
+     "start": 9270,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9514,10 +9761,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -9535,7 +9783,7 @@
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 9303,
+     "start": 9304,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9573,10 +9821,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -9625,7 +9874,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 50,
    "codeStumm": false
@@ -9691,10 +9941,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -9738,16 +9989,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "openBookingFromRxPreset",
      "file": "dashboard.js",
-     "start": 14187,
+     "start": 14183,
      "module": [],
      "uiPfad": []
     }
@@ -9766,7 +10018,7 @@
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 9738,
+     "start": 9734,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9804,10 +10056,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -9881,7 +10134,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 49,
    "codeStumm": false
@@ -9951,10 +10205,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -9998,10 +10253,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -10045,10 +10301,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -10094,10 +10351,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -10146,10 +10404,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -10211,7 +10470,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 45,
    "codeStumm": false
@@ -10233,7 +10493,6 @@
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/dsgvo/loeschen.js",
     "dashboard.html",
-    "demo-dashboard.html",
     "module/fahrt-abschluss-referenz.test.js",
     "module/fahrt-km.js",
     "tools/browser-probe/p02-rechte.mjs",
@@ -10249,7 +10508,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1466,
+     "start": 1467,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10287,16 +10546,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadFbFahrten",
      "file": "dashboard.js",
-     "start": 14860,
+     "start": 14820,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10334,10 +10594,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -10345,7 +10606,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3212,
+     "start": 3213,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -10355,7 +10616,7 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 3090,
+     "start": 3091,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -10403,7 +10664,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 53,
    "codeStumm": false
@@ -10480,7 +10742,7 @@
     {
      "name": "loadFeedbacks",
      "file": "dashboard.js",
-     "start": 12306,
+     "start": 12302,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10519,10 +10781,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
+      "ortak yardımcı — 39 modülden çağrılıyor"
      ]
     }
    ],
@@ -10569,7 +10832,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 44,
    "codeStumm": false
@@ -10595,7 +10859,7 @@
     {
      "name": "renderEmpPermGrid",
      "file": "dashboard.js",
-     "start": 9269,
+     "start": 9270,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10633,16 +10897,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 9303,
+     "start": 9304,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10680,10 +10945,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -10740,7 +11006,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 51,
    "codeStumm": false
@@ -10913,7 +11180,6 @@
    "erwaehnt": [
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/dsgvo/loeschen.js",
-    "index.html",
     "module/rechnung-zahlung.test.js",
     "module/rechnung-zur-verordnung.test.js",
     "module/selbstzahler-stufen.test.js",
@@ -11005,10 +11271,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11052,10 +11319,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11099,16 +11367,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1466,
+     "start": 1467,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11146,16 +11415,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatientDetailRechnungen",
      "file": "dashboard.js",
-     "start": 7359,
+     "start": 7360,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11193,16 +11463,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadRechnungen",
      "file": "dashboard.js",
-     "start": 12378,
+     "start": 12374,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11240,10 +11511,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11287,10 +11559,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11341,10 +11614,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11388,10 +11662,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -11437,10 +11712,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -11487,10 +11763,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -11499,7 +11776,7 @@
     {
      "name": "saveInvoice",
      "file": "dashboard.js",
-     "start": 12545,
+     "start": 12541,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -11561,7 +11838,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 64,
    "codeStumm": false
@@ -11595,7 +11873,7 @@
   },
   {
    "name": "kostentraeger",
-   "spalten": 15,
+   "spalten": 16,
    "fkRaus": [],
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
@@ -11614,8 +11892,15 @@
     "module/krankenkasse-suche.js",
     "module/krankenkasse-suche.test.js",
     "module/patienten-import.js",
+    "tools/bekci-ajan/cli.mjs",
+    "tools/bekci-ajan/cli.test.js",
+    "tools/bekci-ajan/gonder-vaka.test.js",
+    "tools/bekci-ajan/kostentraeger-bewerten.mjs",
     "tools/kostentraeger-annahmestellen-laden.mjs",
-    "tools/kostentraeger-check.mjs"
+    "tools/kostentraeger-check.mjs",
+    "tools/kostentraeger-kutu-seed.mjs",
+    "tools/kostentraeger-kutu-seed.test.js",
+    "tools/kostentraeger-laden.test.js"
    ],
    "register": true,
    "status": "aktiv — **Echtdaten**, seit 02.10.2026 ohne Mock-Reste (`0056_db_aufraeumen`, siehe unten; live 11.10.2026: 1.043 Zeilen)",
@@ -11626,7 +11911,7 @@
     {
      "name": "_loeseEmpfaengerNameAuf",
      "file": "module/abrechnung-einstellungen.js",
-     "start": 653,
+     "start": 673,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11664,16 +11949,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "baueBegleitzettel",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 346,
+     "start": 369,
      "module": [],
      "uiPfad": []
     },
@@ -11701,7 +11987,7 @@
     {
      "name": "ladeKostentraegerNamen",
      "file": "dashboard.js",
-     "start": 14438,
+     "start": 14434,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11739,10 +12025,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11799,7 +12086,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 45,
    "codeStumm": false
@@ -11817,7 +12105,10 @@
     "api-backend/billing/kostentraeger/annahmestelle.test.js",
     "api-backend/billing/kostentraeger/stichtag-pruefung.test.js",
     "api-backend/dsgvo/klassifikation.js",
+    "tools/bekci-ajan/kostentraeger-bewerten.mjs",
     "tools/kostentraeger-annahmestellen-laden.mjs",
+    "tools/kostentraeger-kutu-seed.mjs",
+    "tools/kostentraeger-laden.test.js",
     "tools/seed-generieren.test.js"
    ],
    "register": true,
@@ -11829,7 +12120,7 @@
     {
      "name": "_loeseEmpfaengerNameAuf",
      "file": "module/abrechnung-einstellungen.js",
-     "start": 653,
+     "start": 673,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11867,10 +12158,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11930,7 +12222,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 45,
    "codeStumm": false
@@ -11948,7 +12241,9 @@
     "api-backend/billing/kostentraeger/annahmestelle.test.js",
     "api-backend/billing/kostentraeger/stichtag-pruefung.test.js",
     "api-backend/dsgvo/klassifikation.js",
+    "tools/bekci-ajan/kostentraeger-bewerten.mjs",
     "tools/kostentraeger-annahmestellen-laden.mjs",
+    "tools/kostentraeger-kutu-seed.mjs",
     "tools/seed-generieren.test.js"
    ],
    "register": true,
@@ -12032,16 +12327,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadKkList",
      "file": "dashboard.js",
-     "start": 14323,
+     "start": 14319,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12079,10 +12375,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -12130,7 +12427,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 41,
    "codeStumm": false
@@ -12217,10 +12515,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -12306,10 +12605,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -12322,7 +12622,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 2849,
+     "start": 2850,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12360,10 +12660,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -12376,7 +12677,7 @@
     {
      "name": "initBkCustomerAutocomplete",
      "file": "dashboard.js",
-     "start": 4005,
+     "start": 4006,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12414,16 +12715,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 3791,
+     "start": 3792,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12461,16 +12763,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "initCalRightPanel",
      "file": "dashboard.js",
-     "start": 2756,
+     "start": 2757,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12508,16 +12811,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "initWlPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 16090,
+     "start": 16050,
      "module": [],
      "uiPfad": []
     },
@@ -12562,10 +12866,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -12609,10 +12914,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -12656,10 +12962,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -12703,10 +13010,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -12757,10 +13065,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -12804,10 +13113,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -12851,10 +13161,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -12905,10 +13216,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -12952,10 +13264,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -12999,10 +13312,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -13053,10 +13367,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -13100,16 +13415,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1466,
+     "start": 1467,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13147,16 +13463,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadAnamnese",
      "file": "module/anamnese.js",
-     "start": 280,
+     "start": 384,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13194,16 +13511,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadB2C",
      "file": "dashboard.js",
-     "start": 9988,
+     "start": 9984,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13241,16 +13559,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadBkLeads",
      "file": "dashboard.js",
-     "start": 4015,
+     "start": 4016,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13288,16 +13607,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadInvPatients",
      "file": "dashboard.js",
-     "start": 12407,
+     "start": 12403,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13335,16 +13655,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadLeads",
      "file": "dashboard.js",
-     "start": 6559,
+     "start": 6560,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13382,16 +13703,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadNotizen",
      "file": "dashboard.js",
-     "start": 11677,
+     "start": 11673,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13429,16 +13751,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatientDetailMails",
      "file": "dashboard.js",
-     "start": 7297,
+     "start": 7298,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13476,10 +13799,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -13530,10 +13854,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -13591,10 +13916,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -13638,16 +13964,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2356,
+     "start": 2357,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13685,16 +14012,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "openBookingModal",
      "file": "dashboard.js",
-     "start": 3915,
+     "start": 3916,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13732,10 +14060,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -13779,10 +14108,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -13826,23 +14156,24 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "pruefeLeadId",
      "file": "api-backend/server.js",
-     "start": 1381,
+     "start": 1408,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderBkActionFahrtState",
      "file": "dashboard.js",
-     "start": 2947,
+     "start": 2948,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13880,16 +14211,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3212,
+     "start": 3213,
      "module": [],
      "uiPfad": []
     },
@@ -13934,10 +14266,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -13981,10 +14314,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -14061,10 +14395,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -14073,7 +14408,7 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 3425,
+     "start": 3426,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -14121,10 +14456,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -14133,7 +14469,7 @@
     {
      "name": "initSchnellerfassung",
      "file": "dashboard.js",
-     "start": 15801,
+     "start": 15761,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -14164,7 +14500,7 @@
     {
      "name": "maybeOfferAppointmentConfirmEmail",
      "file": "dashboard.js",
-     "start": 6074,
+     "start": 6075,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -14212,10 +14548,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -14273,10 +14610,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -14323,10 +14661,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -14414,7 +14753,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 79,
    "codeStumm": false
@@ -14535,10 +14875,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -14582,10 +14923,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -14629,10 +14971,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -14640,7 +14983,7 @@
     {
      "name": "refreshMessreihen",
      "file": "dashboard.js",
-     "start": 7089,
+     "start": 7090,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14678,10 +15021,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -14728,10 +15072,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -14740,7 +15085,7 @@
     {
      "name": "saveMessung",
      "file": "dashboard.js",
-     "start": 7213,
+     "start": 7214,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14778,10 +15123,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -14828,10 +15174,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -14878,10 +15225,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -14930,7 +15278,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 44,
    "codeStumm": false
@@ -14999,10 +15348,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -15068,10 +15418,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -15120,7 +15471,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 39,
    "codeStumm": false
@@ -15147,7 +15499,7 @@
     {
      "name": "loadVisibilityMatrix",
      "file": "dashboard.js",
-     "start": 589,
+     "start": 590,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15185,10 +15537,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -15255,7 +15608,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 41,
    "codeStumm": false
@@ -15347,10 +15701,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -15394,10 +15749,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -15441,10 +15797,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -15488,10 +15845,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -15542,10 +15900,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -15589,10 +15948,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -15636,10 +15996,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -15683,10 +16044,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -15732,10 +16094,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -15782,10 +16145,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -15838,7 +16202,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 47,
    "codeStumm": false
@@ -15908,10 +16273,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -15969,10 +16335,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -16038,10 +16405,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -16088,10 +16456,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -16141,7 +16510,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 48,
    "codeStumm": false
@@ -16285,16 +16655,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1466,
+     "start": 1467,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16332,16 +16703,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatientDetailNotes",
      "file": "dashboard.js",
-     "start": 7272,
+     "start": 7273,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16379,16 +16751,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2356,
+     "start": 2357,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16426,10 +16799,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -16486,10 +16860,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert",
@@ -16538,7 +16913,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 46,
    "codeStumm": false
@@ -16557,7 +16933,7 @@
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/dsgvo/loeschen.js",
     "dashboard.js",
-    "index.html",
+    "demo-dashboard.html",
     "module/anamnese.js",
     "module/fussbefund.js",
     "module/patient-dublette.js",
@@ -16700,10 +17076,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -16749,10 +17126,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -16799,10 +17177,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -16850,7 +17229,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 56,
    "codeStumm": false
@@ -16963,10 +17343,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17010,10 +17391,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17057,10 +17439,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17104,10 +17487,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17158,10 +17542,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17212,10 +17597,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17259,10 +17645,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17306,10 +17693,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17353,10 +17741,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17400,10 +17789,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17447,10 +17837,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17494,10 +17885,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17541,10 +17933,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17588,10 +17981,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17668,10 +18062,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -17718,10 +18113,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -17787,7 +18183,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 48,
    "codeStumm": false
@@ -17902,10 +18299,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17949,10 +18347,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17996,10 +18395,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -18045,10 +18445,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -18148,7 +18549,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 41,
    "codeStumm": false
@@ -18389,7 +18791,7 @@
     {
      "name": "kutuInEinrichtung",
      "file": "api-backend/server.js",
-     "start": 568,
+     "start": 589,
      "module": [],
      "uiPfad": []
     },
@@ -18557,7 +18959,7 @@
     {
      "name": "decorateBookingTitleWithSession",
      "file": "dashboard.js",
-     "start": 5965,
+     "start": 5966,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18595,10 +18997,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -18642,10 +19045,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -18696,16 +19100,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 4968,
+     "start": 4969,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18743,10 +19148,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -18790,10 +19196,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -18837,10 +19244,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -18919,10 +19327,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -18966,10 +19375,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -19015,10 +19425,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -19085,10 +19496,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -19097,7 +19509,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 2849,
+     "start": 2850,
      "module": [
       "abrechnung",
       "anamnese",
@@ -19135,10 +19547,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -19157,7 +19570,7 @@
     {
      "name": "linkBookingsToPrescriptionSessions",
      "file": "dashboard.js",
-     "start": 5978,
+     "start": 5979,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -19255,7 +19668,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 80,
    "codeStumm": false
@@ -19323,10 +19737,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -19374,7 +19789,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 40,
    "codeStumm": false
@@ -19479,10 +19895,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -19502,7 +19919,7 @@
     {
      "name": "bereichFuerAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 281,
+     "start": 304,
      "module": [],
      "uiPfad": []
     },
@@ -19568,10 +19985,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -19629,10 +20047,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -19676,10 +20095,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -19723,10 +20143,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -19770,10 +20191,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -19817,10 +20239,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -19871,10 +20294,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -19918,10 +20342,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -19965,10 +20390,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -20012,10 +20438,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -20059,23 +20486,24 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "ladeRx",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1063,
+     "start": 1089,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "ladeRxKontext",
      "file": "module/anamnese.js",
-     "start": 408,
+     "start": 512,
      "module": [
       "abrechnung",
       "anamnese",
@@ -20113,10 +20541,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -20167,10 +20596,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -20214,10 +20644,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -20261,10 +20692,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -20308,10 +20740,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -20355,23 +20788,24 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "linkBookingsToPrescriptionSessions",
      "file": "dashboard.js",
-     "start": 5978,
+     "start": 5979,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 6730,
+     "start": 6731,
      "module": [
       "abrechnung",
       "anamnese",
@@ -20409,16 +20843,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatRxTable",
      "file": "dashboard.js",
-     "start": 16685,
+     "start": 16645,
      "module": [
       "abrechnung",
       "anamnese",
@@ -20456,16 +20891,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 4968,
+     "start": 4969,
      "module": [
       "abrechnung",
       "anamnese",
@@ -20503,10 +20939,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -20550,10 +20987,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -20597,10 +21035,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -20644,16 +21083,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "oeffneZaaVerordnung",
      "file": "dashboard.js",
-     "start": 14559,
+     "start": 14555,
      "module": [],
      "uiPfad": []
     },
@@ -20698,16 +21138,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2356,
+     "start": 2357,
      "module": [
       "abrechnung",
       "anamnese",
@@ -20745,10 +21186,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -20792,10 +21234,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -20839,10 +21282,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -20914,10 +21358,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -20961,16 +21406,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "therapeutName",
      "file": "dashboard.js",
-     "start": 6350,
+     "start": 6351,
      "module": [],
      "uiPfad": []
     },
@@ -21015,16 +21461,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "verordnenderArzt",
      "file": "module/anamnese.js",
-     "start": 442,
+     "start": 546,
      "module": [
       "abrechnung",
       "anamnese",
@@ -21062,10 +21509,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -21116,10 +21564,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -21163,10 +21612,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -21217,10 +21667,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -21266,10 +21717,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -21298,7 +21750,7 @@
     {
      "name": "flipAbrechnungStatus",
      "file": "dashboard.js",
-     "start": 6951,
+     "start": 6952,
      "module": [
       "abrechnung",
       "anamnese",
@@ -21336,10 +21788,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -21348,7 +21801,7 @@
     {
      "name": "kassiereZuzahlung",
      "file": "dashboard.js",
-     "start": 5820,
+     "start": 5821,
      "module": [
       "abrechnung",
       "anamnese",
@@ -21386,10 +21839,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -21456,10 +21910,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -21516,10 +21971,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -21566,10 +22022,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -21578,7 +22035,7 @@
     {
      "name": "storniereZuzahlung",
      "file": "dashboard.js",
-     "start": 5895,
+     "start": 5896,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -21588,7 +22045,7 @@
     {
      "name": "triggerStorno",
      "file": "dashboard.js",
-     "start": 15252,
+     "start": 15212,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -21636,10 +22093,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -21686,10 +22144,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -21785,7 +22244,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 121,
    "codeStumm": false
@@ -21821,6 +22281,8 @@
     "api-backend/dsgvo/artefakt-schutz.test.js",
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/lib/therapiebericht.test.js",
+    "api-backend/routes/cockpit.test.js",
+    "api-backend/routes/support.test.js",
     "module/stempel.test.js",
     "module/terminerinnerung-einstellung.test.js",
     "tools/browser-probe/anwesenheit-probe.mjs",
@@ -21841,14 +22303,14 @@
     {
      "name": "_speichereBetriebsart",
      "file": "module/abrechnung-einstellungen.js",
-     "start": 510,
+     "start": 530,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "bereichFuerAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 281,
+     "start": 304,
      "module": [],
      "uiPfad": []
     },
@@ -21895,16 +22357,23 @@
      "uiPfad": []
     },
     {
+     "name": "fetchOwnerProfiles",
+     "file": "api-backend/routes/cockpit.js",
+     "start": 246,
+     "module": [],
+     "uiPfad": []
+    },
+    {
      "name": "gehoertZurPraxis",
      "file": "api-backend/server.js",
-     "start": 3984,
+     "start": 4011,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 828,
+     "start": 855,
      "module": [],
      "uiPfad": []
     },
@@ -21918,14 +22387,14 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 3425,
+     "start": 3426,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "handleEmpfaengerPruefung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 2327,
+     "start": 2443,
      "module": [],
      "uiPfad": []
     },
@@ -21977,10 +22446,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -22024,10 +22494,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -22078,10 +22549,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -22098,7 +22570,7 @@
     {
      "name": "ladePatientenAnamnese",
      "file": "module/anamnese.js",
-     "start": 592,
+     "start": 696,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22136,10 +22608,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -22183,11 +22656,19 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "ladePraxisBundeslandVkg",
+     "file": "api-backend/billing/api/abrechnung.routes.js",
+     "start": 211,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "ladeProfil",
@@ -22206,14 +22687,14 @@
     {
      "name": "loadAusfallConfig",
      "file": "dashboard.js",
-     "start": 511,
+     "start": 512,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadFahrtenbuchPanel",
      "file": "dashboard.js",
-     "start": 14808,
+     "start": 14768,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22251,16 +22732,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadFbFahrten",
      "file": "dashboard.js",
-     "start": 14860,
+     "start": 14820,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22298,16 +22780,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadFbReports",
      "file": "dashboard.js",
-     "start": 15162,
+     "start": 15122,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22345,16 +22828,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadHoursPanel",
      "file": "dashboard.js",
-     "start": 8373,
+     "start": 8374,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22392,10 +22876,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -22408,7 +22893,7 @@
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 8781,
+     "start": 8782,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22446,10 +22931,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -22493,10 +22979,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -22509,7 +22996,7 @@
     {
      "name": "mandantUndAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 2511,
+     "start": 2694,
      "module": [],
      "uiPfad": []
     },
@@ -22523,7 +23010,7 @@
     {
      "name": "nurInhaber",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1470,
+     "start": 1496,
      "module": [],
      "uiPfad": []
     },
@@ -22568,10 +23055,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -22615,10 +23103,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -22631,7 +23120,7 @@
     {
      "name": "proceedToOwnerCheck",
      "file": "dashboard.js",
-     "start": 3458,
+     "start": 3459,
      "module": [],
      "uiPfad": []
     },
@@ -22652,7 +23141,7 @@
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 9055,
+     "start": 9056,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22690,10 +23179,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -22706,7 +23196,7 @@
     {
      "name": "renderSidebar",
      "file": "dashboard.js",
-     "start": 632,
+     "start": 633,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22744,10 +23234,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -22814,6 +23305,13 @@
      "uiPfad": []
     },
     {
+     "name": "resolvePracticeMeta",
+     "file": "api-backend/routes/support.js",
+     "start": 196,
+     "module": [],
+     "uiPfad": []
+    },
+    {
      "name": "rlsNegativTest",
      "file": "api-backend/setup/pruefungen.js",
      "start": 48,
@@ -22823,7 +23321,7 @@
     {
      "name": "saveEmployee",
      "file": "dashboard.js",
-     "start": 11853,
+     "start": 11849,
      "module": [],
      "uiPfad": []
     },
@@ -22868,10 +23366,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -22929,10 +23428,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -23004,10 +23504,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -23075,7 +23576,7 @@
     {
      "name": "ensureBookingSlug",
      "file": "dashboard.js",
-     "start": 11467,
+     "start": 11463,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -23085,7 +23586,7 @@
     {
      "name": "ensureClinicLocation",
      "file": "dashboard.js",
-     "start": 4504,
+     "start": 4505,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -23095,7 +23596,7 @@
     {
      "name": "ensureCompanyCode",
      "file": "dashboard.js",
-     "start": 11450,
+     "start": 11446,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -23115,7 +23616,7 @@
     {
      "name": "initAnfragenPanel",
      "file": "dashboard.js",
-     "start": 17403,
+     "start": 17332,
      "module": [
       "abrechnung",
       "anamnese",
@@ -23153,10 +23654,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -23243,10 +23745,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -23255,7 +23758,7 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 9356,
+     "start": 9357,
      "module": [
       "abrechnung",
       "anamnese",
@@ -23293,10 +23796,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -23305,7 +23809,7 @@
     {
      "name": "openStripePortal",
      "file": "dashboard.js",
-     "start": 1668,
+     "start": 1669,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -23353,10 +23857,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -23413,10 +23918,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -23493,10 +23999,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -23573,10 +24080,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -23623,10 +24131,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -23665,7 +24174,7 @@
     {
      "name": "wireAbrechnungSettings",
      "file": "module/abrechnung-einstellungen.js",
-     "start": 271,
+     "start": 291,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -23698,11 +24207,13 @@
     "api-backend/lib/status.js",
     "api-backend/lib/terminerinnerung-job.js",
     "api-backend/lib/therapiebericht.js",
+    "api-backend/routes/cockpit.js",
     "api-backend/routes/dokument-mail.js",
     "api-backend/routes/mailversand.js",
     "api-backend/routes/manifest.js",
     "api-backend/routes/mitarbeiter-zugang.js",
     "api-backend/routes/sondertag-mitteilung.js",
+    "api-backend/routes/support.js",
     "api-backend/server.js",
     "api-backend/setup/owner-passwort-reset.mjs",
     "api-backend/setup/pruefungen.js",
@@ -23779,7 +24290,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 362,
    "codeStumm": false
@@ -23913,10 +24425,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -23960,10 +24473,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -24028,10 +24542,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -24113,7 +24628,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 41,
    "codeStumm": false
@@ -24179,10 +24695,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -24238,7 +24755,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 42,
    "codeStumm": false
@@ -24262,7 +24780,6 @@
     "booking.js",
     "dashboard.html",
     "index-old.html",
-    "index.html",
     "module/einstellungen-nav.js",
     "module/leiste-zuordnung.test.js",
     "module/leistungs-raum.test.js",
@@ -24285,7 +24802,7 @@
     {
      "name": "anfrageKorrekturenPruefen",
      "file": "api-backend/server.js",
-     "start": 4298,
+     "start": 4325,
      "module": [],
      "uiPfad": []
     },
@@ -24299,7 +24816,7 @@
     {
      "name": "findMatchingServiceId",
      "file": "dashboard.js",
-     "start": 2837,
+     "start": 2838,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24337,10 +24854,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -24353,7 +24871,7 @@
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 9738,
+     "start": 9734,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24391,10 +24909,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -24407,7 +24926,7 @@
     {
      "name": "loadServices",
      "file": "dashboard.js",
-     "start": 7747,
+     "start": 7748,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24445,10 +24964,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -24492,10 +25012,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -24546,10 +25067,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -24593,10 +25115,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -24640,16 +25163,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "updateBkDuration",
      "file": "dashboard.js",
-     "start": 4301,
+     "start": 4302,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24687,10 +25211,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -24712,7 +25237,7 @@
     {
      "name": "autoSeedGkvServices",
      "file": "dashboard.js",
-     "start": 7768,
+     "start": 7769,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24750,10 +25275,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -24762,7 +25288,7 @@
     {
      "name": "ensureBlankoBonusServices",
      "file": "dashboard.js",
-     "start": 6171,
+     "start": 6172,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -24773,7 +25299,7 @@
     {
      "name": "migratePodologieLegacyServices",
      "file": "dashboard.js",
-     "start": 7955,
+     "start": 7956,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24811,10 +25337,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -24861,10 +25388,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -24885,7 +25413,7 @@
     {
      "name": "renderServices",
      "file": "dashboard.js",
-     "start": 8144,
+     "start": 8145,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24923,10 +25451,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -24947,7 +25476,7 @@
     {
      "name": "wireBusinessModal",
      "file": "dashboard.js",
-     "start": 13673,
+     "start": 13669,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24985,10 +25514,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -25049,9 +25579,10 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
-   "sqlTreffer": 67,
+   "sqlTreffer": 68,
    "codeStumm": false
   },
   {
@@ -25150,16 +25681,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderAbrechnungSettings",
      "file": "module/abrechnung-einstellungen.js",
-     "start": 86,
+     "start": 88,
      "module": [
       "abrechnung",
       "anamnese",
@@ -25197,16 +25729,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderOverview",
      "file": "dashboard.js",
-     "start": 1003,
+     "start": 1004,
      "module": [
       "abrechnung",
       "anamnese",
@@ -25244,10 +25777,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -25291,10 +25825,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -25302,7 +25837,7 @@
     {
      "name": "_speichereBetriebsart",
      "file": "module/abrechnung-einstellungen.js",
-     "start": 510,
+     "start": 530,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -25312,7 +25847,7 @@
     {
      "name": "wireAbrechnungSettings",
      "file": "module/abrechnung-einstellungen.js",
-     "start": 271,
+     "start": 291,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -25365,7 +25900,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 49,
    "codeStumm": false
@@ -25449,10 +25985,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -25511,7 +26048,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 30,
    "codeStumm": false
@@ -25580,10 +26118,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -25641,7 +26180,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 32,
    "codeStumm": false
@@ -25707,16 +26247,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 9738,
+     "start": 9734,
      "module": [
       "abrechnung",
       "anamnese",
@@ -25754,10 +26295,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -25808,10 +26350,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -25819,7 +26362,7 @@
     {
      "name": "loadEmpCertificates",
      "file": "dashboard.js",
-     "start": 9824,
+     "start": 9820,
      "module": [
       "abrechnung",
       "anamnese",
@@ -25857,10 +26400,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -25911,7 +26455,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 50,
    "codeStumm": false
@@ -25983,16 +26528,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1764,
+     "start": 1791,
      "module": [],
      "uiPfad": []
     },
@@ -26037,10 +26583,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -26084,10 +26631,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -26131,16 +26679,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadEmpDaySchedule",
      "file": "dashboard.js",
-     "start": 9586,
+     "start": 9582,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26178,16 +26727,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadEmpUrlaubSection",
      "file": "dashboard.js",
-     "start": 8971,
+     "start": 8972,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26225,10 +26775,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -26286,10 +26837,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -26297,7 +26849,7 @@
     {
      "name": "deleteEmpTimeOff",
      "file": "dashboard.js",
-     "start": 9027,
+     "start": 9028,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26335,10 +26887,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -26347,7 +26900,7 @@
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 8781,
+     "start": 8782,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26385,10 +26938,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -26407,7 +26961,7 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 9356,
+     "start": 9357,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26445,10 +26999,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -26501,7 +27056,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 44,
    "codeStumm": false
@@ -26580,7 +27136,7 @@
     {
      "name": "loadPatientDetailUeberweisung",
      "file": "dashboard.js",
-     "start": 7335,
+     "start": 7336,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26618,10 +27174,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -26667,10 +27224,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -26727,10 +27285,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -26778,7 +27337,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 45,
    "codeStumm": false
@@ -26831,14 +27391,14 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 13423,
+     "start": 13419,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "bootScheduleViewToggle",
      "file": "dashboard.js",
-     "start": 11923,
+     "start": 11919,
      "module": [],
      "uiPfad": []
     }
@@ -26847,7 +27407,7 @@
     {
      "name": "saveUserPref",
      "file": "dashboard.js",
-     "start": 12002,
+     "start": 11998,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26885,10 +27445,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -26897,7 +27458,7 @@
     {
      "name": "switchBusiness",
      "file": "dashboard.js",
-     "start": 13835,
+     "start": 13831,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -26947,7 +27508,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 41,
    "codeStumm": false
@@ -26976,21 +27538,21 @@
     {
      "name": "loadVehiclesForPicker",
      "file": "dashboard.js",
-     "start": 3050,
+     "start": 3051,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3212,
+     "start": 3213,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 3090,
+     "start": 3091,
      "module": [],
      "uiPfad": []
     }
@@ -26999,7 +27561,7 @@
     {
      "name": "loadFbVehicles",
      "file": "dashboard.js",
-     "start": 15004,
+     "start": 14964,
      "module": [
       "abrechnung",
       "anamnese",
@@ -27037,10 +27599,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -27049,7 +27612,7 @@
     {
      "name": "saveVehicleEditCore",
      "file": "dashboard.js",
-     "start": 15116,
+     "start": 15076,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -27098,7 +27661,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 52,
    "codeStumm": false
@@ -27179,16 +27743,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadWarteliste",
      "file": "dashboard.js",
-     "start": 15966,
+     "start": 15926,
      "module": [
       "abrechnung",
       "anamnese",
@@ -27281,10 +27846,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -27292,7 +27858,7 @@
     {
      "name": "initWlModal",
      "file": "dashboard.js",
-     "start": 16124,
+     "start": 16084,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -27417,16 +27983,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1764,
+     "start": 1791,
      "module": [],
      "uiPfad": []
     },
@@ -27471,10 +28038,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -27518,10 +28086,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -27565,10 +28134,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -27619,16 +28189,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1145,
+     "start": 1146,
      "module": [
       "abrechnung",
       "anamnese",
@@ -27666,16 +28237,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderHoursGrid",
      "file": "dashboard.js",
-     "start": 8482,
+     "start": 8483,
      "module": [
       "abrechnung",
       "anamnese",
@@ -27713,16 +28285,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderHoursMiniCal",
      "file": "dashboard.js",
-     "start": 8575,
+     "start": 8576,
      "module": [
       "abrechnung",
       "anamnese",
@@ -27760,10 +28333,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -27807,10 +28381,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -27829,7 +28404,7 @@
     {
      "name": "loadEmpHours",
      "file": "dashboard.js",
-     "start": 9646,
+     "start": 9642,
      "module": [
       "abrechnung",
       "anamnese",
@@ -27867,10 +28442,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -27926,7 +28502,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 53,
    "codeStumm": false
@@ -27992,10 +28569,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -28040,7 +28618,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 45,
    "codeStumm": false
@@ -28100,7 +28679,7 @@
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 6730,
+     "start": 6731,
      "module": [
       "abrechnung",
       "anamnese",
@@ -28138,16 +28717,17 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2356,
+     "start": 2357,
      "module": [
       "abrechnung",
       "anamnese",
@@ -28185,10 +28765,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -28234,10 +28815,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -28247,7 +28829,7 @@
     {
      "name": "wireBefreiungCard",
      "file": "dashboard.js",
-     "start": 7021,
+     "start": 7022,
      "module": [
       "abrechnung",
       "anamnese",
@@ -28285,10 +28867,11 @@
       "ueberblick",
       "vehEditSaveBtn",
       "verordnungen",
-      "vorlagen"
+      "vorlagen",
+      "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -28336,7 +28919,8 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 51,
    "codeStumm": false

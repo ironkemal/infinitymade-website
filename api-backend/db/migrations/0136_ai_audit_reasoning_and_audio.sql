@@ -1,6 +1,6 @@
 -- 0136_ai_audit_reasoning_and_audio.sql
--- Entwurf 0136 — vor Live-Apply (nach GO) nach api-backend/db/migrations/0136_ai_audit_reasoning_and_audio.sql verschieben, SaaS-Datum setzen, erwartete-zaehler.json und db/SCHEMA*.sql erneuern
--- Zaehlerneutral (nur 2 nullable Spalten auf public.ai_audit_log).
+-- SaaS: angewandt 28.11.2026 (Management-API, Kemal-GO, Ledger 20261128011200)
+-- Zaehlerneutral (nur 2 nullable integer-Spalten mit CHECK >= 0 auf public.ai_audit_log).
 --
 -- Zweck (Faz 1A KI-Tracking & Kostenrechnung):
 --   1. `reasoning_tokens`: speichert verdeckte Reasoning-Tokens bei Reasoning-Modellen (z. B. gpt-5-Familie).
